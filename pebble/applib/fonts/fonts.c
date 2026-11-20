@@ -112,7 +112,7 @@ static const struct {
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
   // Pick the largest emoji font that still fits the requested height, skipping any that fails
   // to load so a smaller one can still be used
-  for (uint32_t i = 0; i < ARRAY_LENGTH(s_emoji_fonts); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(s_emoji_fonts); i++) {
     if (s_emoji_fonts[i].height <= font_height) {
       FontInfo *font = sys_font_get_system_font(s_emoji_fonts[i].key_name);
       if (font) {

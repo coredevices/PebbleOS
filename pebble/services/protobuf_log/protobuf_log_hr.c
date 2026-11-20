@@ -38,7 +38,7 @@ ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
     .type = ProtobufLogType_Measurements,
     .measurements = {
       .types = measure_types,
-      .num_types = ARRAY_LENGTH(measure_types),
+      .num_types = PBL_ARRAY_SIZE(measure_types),
     },
   };
 
@@ -48,5 +48,5 @@ ProtobufLogRef protobuf_log_hr_create(ProtobufLogTransportCB transport) {
 bool protobuf_log_hr_add_sample(ProtobufLogRef ref, time_t sample_utc, uint8_t bpm,
                                 uint8_t confidence, bool off_wrist) {
   uint32_t values[] = {bpm, protobuf_log_hr_quality(confidence, off_wrist)};
-  return protobuf_log_session_add_measurements(ref, sample_utc, ARRAY_LENGTH(values), values);
+  return protobuf_log_session_add_measurements(ref, sample_utc, PBL_ARRAY_SIZE(values), values);
 }

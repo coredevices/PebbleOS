@@ -303,7 +303,7 @@ void test_gbitmap_sequence__1bit_to_1bit_notification(void) {
   const int check_frames[] = {1, 4, 23, 24, 25, 31, 75};
 
   int current_frame = 0;
-  for (int i = 0; i < ARRAY_LENGTH(check_frames); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(check_frames); ++i) {
     // Advance to the next frame we're interested in.
     for (; current_frame < check_frames[i]; ++current_frame) {
       bool status = gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr);
@@ -361,7 +361,7 @@ void test_gbitmap_sequence__dispose_op_previous(void) {
   };
 
   for (int loop = 0; loop < 2; loop++) {
-    for (int i = 0; i < ARRAY_LENGTH(frames); i++) {
+    for (int i = 0; i < PBL_ARRAY_SIZE(frames); i++) {
       cl_assert(gbitmap_sequence_update_bitmap_next_frame(bitmap_sequence, bitmap, nullptr));
       prv_check_pixels(bitmap, frames[i]);
     }

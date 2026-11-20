@@ -43,7 +43,7 @@ bool system_resource_is_valid(void) {
   return resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION);
 }
 
-#define NUM_SYSTEM_FONTS ARRAY_LENGTH(s_font_resource_keys)
+#define NUM_SYSTEM_FONTS PBL_ARRAY_SIZE(s_font_resource_keys)
 
 // Total number of fonts = NUM_SYSTEM_FONTS + 1 for the fallback font
 FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
@@ -80,7 +80,7 @@ static uint8_t prv_primary_font_slot(void) {
 static void prv_invalidate_system_fonts(void) {
   // Shared fonts reload lazily. A concurrent render may miss a glyph for one frame;
   // the next lookup retries after initialization completes.
-  for (size_t i = 0; i < ARRAY_LENGTH(s_system_fonts_info_table); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_system_fonts_info_table); ++i) {
     FontInfo info = s_system_fonts_info_table[i];
     info.loaded = false;
     pbl_mpu_user_ro_write(&s_system_fonts_info_table[i], &info, sizeof(info));
@@ -274,7 +274,7 @@ PBL_SYSCALL(GFont, sys_font_get_system_font, (VAL, const char *, font_key)) {
 }
 
 static bool prv_is_system_font_info(const FontInfo *fontinfo) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_system_fonts_info_table); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_system_fonts_info_table); ++i) {
     if (fontinfo == &s_system_fonts_info_table[i]) {
       return true;
     }

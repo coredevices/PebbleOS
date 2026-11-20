@@ -262,7 +262,7 @@ static void prv_setup_type_menu_window(AlarmEditorData *data) {
   };
   const char *title = pbl_i18n_get("New Alarm", data);
   OptionMenu *option_menu = settings_option_menu_create(
-      title, OptionMenuContentType_Default, 0, &callbacks, ARRAY_LENGTH(s_type_labels),
+      title, OptionMenuContentType_Default, 0, &callbacks, PBL_ARRAY_SIZE(s_type_labels),
       false /* icons_enabled */, s_type_labels, data);
   PBL_ASSERTN(option_menu);
   data->alarm_type_menu = option_menu;

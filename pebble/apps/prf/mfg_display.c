@@ -263,7 +263,7 @@ static int prv_cmd_display(const struct pbl_shell *sh, size_t argc, char **argv)
 #endif
   };
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(ARGS); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(ARGS); ++i) {
     if (!strcmp(argv[1], ARGS[i])) {
       // Enter mfg mode first: its menu launches from a callback and would cover the display app.
       if (!mfg_is_mfg_mode()) {

@@ -79,7 +79,7 @@ static void prv_filter_menu_select(OptionMenu *option_menu, int selection, void 
 
 static void prv_filter_menu_push(SettingsNotificationsData *data) {
   AlertMask mask = alerts_get_mask();
-  size_t cycle_len = ARRAY_LENGTH(s_alert_mode_values);
+  size_t cycle_len = PBL_ARRAY_SIZE(s_alert_mode_values);
   size_t index = 0;
   for (size_t i = 0; i < cycle_len; i++) {
     if (s_alert_mode_values[i] == mask) {
@@ -161,7 +161,7 @@ static const char *s_window_timeouts_labels[] = {
   pbl_i18n_noop("None"),
 };
 
-static_assert(ARRAY_LENGTH(s_window_timeouts_ms) == ARRAY_LENGTH(s_window_timeouts_labels), "");
+static_assert(PBL_ARRAY_SIZE(s_window_timeouts_ms) == PBL_ARRAY_SIZE(s_window_timeouts_labels), "");
 
 static int prv_window_timeout_get_selection_index(void) {
   const int DEFAULT_IDX = 3;
@@ -169,7 +169,7 @@ static int prv_window_timeout_get_selection_index(void) {
   PBL_ASSERTN(s_window_timeouts_ms[DEFAULT_IDX] == NOTIF_WINDOW_TIMEOUT_DEFAULT);
 
   const uint32_t timeout_ms = alerts_preferences_get_notification_window_timeout_ms();
-  for (size_t i = 0; i < ARRAY_LENGTH(s_window_timeouts_ms); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_window_timeouts_ms); i++) {
     if (s_window_timeouts_ms[i] == timeout_ms) {
       return i;
     }
@@ -192,7 +192,7 @@ static void prv_window_timeout_menu_push(SettingsNotificationsData *data) {
   /// Status bar title for the Notification Window Timeout settings screen
   const char *title = pbl_i18n_noop("Timeout");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_window_timeouts_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_window_timeouts_labels), true /* icons_enabled */,
                             s_window_timeouts_labels, data);
 }
 
@@ -224,7 +224,7 @@ static void prv_design_style_menu_push(SettingsNotificationsData *data) {
   /// Status bar title for the Notification Design Style settings screen
   const char *title = pbl_i18n_noop("Banner Style");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_design_style_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_design_style_labels), true /* icons_enabled */,
                             s_design_style_labels, data);
 }
 #endif /* PBL_BW */
@@ -256,7 +256,7 @@ static void prv_vibe_delay_menu_push(SettingsNotificationsData *data) {
   /// Status bar title for the Notification Vibe Timing settings screen
   const char *title = pbl_i18n_noop("Vibe Timing");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_vibe_delay_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_vibe_delay_labels), true /* icons_enabled */,
                             s_vibe_delay_labels, data);
 }
 
@@ -269,7 +269,7 @@ static const char *s_status_bar_style_labels[] = {
   [NotificationStatusBarStyle_LargeBold] = pbl_i18n_noop("Big & Bold"),
 };
 
-static_assert(ARRAY_LENGTH(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
+static_assert(PBL_ARRAY_SIZE(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");
 
 static int prv_status_bar_style_get_selection_index(void) {
   const NotificationStatusBarStyle style = alerts_preferences_get_notification_status_bar_style();
@@ -290,7 +290,7 @@ static void prv_status_bar_style_menu_push(SettingsNotificationsData *data) {
   /// Status bar title for the Notification Status Bar Style settings screen
   const char *title = pbl_i18n_noop("Clock Style");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_status_bar_style_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_status_bar_style_labels), true /* icons_enabled */,
                             s_status_bar_style_labels, data);
 }
 
@@ -308,7 +308,8 @@ static const char *s_notification_grouping_range_labels[] = {
   [NotificationGroupingRange_All] = pbl_i18n_noop("All"),
 };
 
-static_assert(ARRAY_LENGTH(s_notification_grouping_range_labels) == NotificationGroupingRangeCount,
+static_assert(PBL_ARRAY_SIZE(s_notification_grouping_range_labels) ==
+                  NotificationGroupingRangeCount,
               "");
 
 static void prv_notification_grouping_range_menu_select(OptionMenu *option_menu, int selection,
@@ -325,7 +326,7 @@ static void prv_notification_grouping_range_menu_push(SettingsNotificationsData 
   const char *title = pbl_i18n_noop("Group by Sender");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine,
                             alerts_preferences_get_notification_grouping_range(), &callbacks,
-                            ARRAY_LENGTH(s_notification_grouping_range_labels),
+                            PBL_ARRAY_SIZE(s_notification_grouping_range_labels),
                             true /* icons_enabled */, s_notification_grouping_range_labels, data);
 }
 

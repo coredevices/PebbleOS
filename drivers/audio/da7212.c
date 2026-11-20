@@ -208,7 +208,7 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
   uint8_t status;
   int ret;
 
-  ret = prv_write_seq(dev, s_power_up, ARRAY_LENGTH(s_power_up));
+  ret = prv_write_seq(dev, s_power_up, PBL_ARRAY_SIZE(s_power_up));
   if (ret != 0) {
     return ret;
   }
@@ -223,7 +223,7 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
     return -EIO;
   }
 
-  ret = prv_write_seq(dev, s_path, ARRAY_LENGTH(s_path));
+  ret = prv_write_seq(dev, s_path, PBL_ARRAY_SIZE(s_path));
   if (ret != 0) {
     return ret;
   }
@@ -242,7 +242,7 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
     return 0;
   }
 
-  return prv_write_seq(dev, s_dai_master, ARRAY_LENGTH(s_dai_master));
+  return prv_write_seq(dev, s_dai_master, PBL_ARRAY_SIZE(s_dai_master));
 }
 
 static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audio_codec_cfg *cfg) {

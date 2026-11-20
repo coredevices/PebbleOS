@@ -29,7 +29,7 @@ uint32_t resources[] = {
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context) {
   KinoLayerDemoData *data = context;
   kino_layer_pause(&data->kino_layer);
-  int index = ++data->resource_index % ARRAY_LENGTH(resources);
+  int index = ++data->resource_index % PBL_ARRAY_SIZE(resources);
   kino_layer_set_reel_with_resource(&data->kino_layer, resources[index]);
   kino_layer_play(&data->kino_layer);
 }

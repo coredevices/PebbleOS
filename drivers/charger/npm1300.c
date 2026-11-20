@@ -426,7 +426,7 @@ static int prv_init(const struct pbl_charger *charger) {
     {NPM1300_BCHGISETLSB, PBL_FIELD_GET(NPM1300_BCHGISET_LSB_MASK, chg_current_ma / 2U)},
   };
 
-  ret = prv_write_seq(pmic, setup, ARRAY_LENGTH(setup));
+  ret = prv_write_seq(pmic, setup, PBL_ARRAY_SIZE(setup));
   if (ret != 0) {
     PBL_LOG_ERR("Setup failed (%d)", ret);
     return ret;
@@ -457,7 +457,7 @@ static int prv_init(const struct pbl_charger *charger) {
     {NPM1300_BCHGVBATLOWCHARGE, 1},
   };
 
-  ret = prv_write_seq(pmic, charge_setup, ARRAY_LENGTH(charge_setup));
+  ret = prv_write_seq(pmic, charge_setup, PBL_ARRAY_SIZE(charge_setup));
   if (ret != 0) {
     PBL_LOG_ERR("Charger setup failed (%d)", ret);
     return ret;

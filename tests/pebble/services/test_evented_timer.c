@@ -333,28 +333,28 @@ void test_evented_timer__clear_process_timers(void) {
   EventedTimerID app_timers[20];
   EventedTimerID worker_timers[5];
 
-  for (size_t i = 0; i < ARRAY_LENGTH(app_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(app_timers); i++) {
     app_timers[i] = evented_timer_register(100, i % 2, stub_evented_timer_callback, 0);
   }
   s_current_task = PebbleTask_Worker;
-  for (size_t i = 0; i < ARRAY_LENGTH(worker_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(worker_timers); i++) {
     worker_timers[i] = evented_timer_register(50, false, stub_evented_timer_callback, 0);
   }
 
   evented_timer_clear_process_timers(PebbleTask_App);
 
-  for (size_t i = 0; i < ARRAY_LENGTH(app_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(app_timers); i++) {
     cl_assert(!evented_timer_exists(app_timers[i]));
   }
-  for (size_t i = 0; i < ARRAY_LENGTH(worker_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(worker_timers); i++) {
     cl_assert(evented_timer_exists(worker_timers[i]));
   }
   // Nothing ran, so nothing had to wait.
   cl_assert_equal_i(s_num_submitted, 0);
-  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), ARRAY_LENGTH(worker_timers));
+  cl_assert_equal_i(fake_pbl_malloc_num_net_allocs(), PBL_ARRAY_SIZE(worker_timers));
 
   // Only the worker's are still armed.
-  for (size_t i = 0; i < ARRAY_LENGTH(worker_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(worker_timers); i++) {
     fake_work_fire(fake_work_get_next());
   }
   cl_assert(fake_work_get_next() == nullptr);

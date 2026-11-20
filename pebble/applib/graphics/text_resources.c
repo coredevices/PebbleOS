@@ -708,7 +708,7 @@ static Codepoint prv_plain_latin_codepoint(Codepoint codepoint) {
   if (codepoint >= 0xff01 && codepoint <= 0xff5e) {
     return codepoint - 0xff01 + '!';
   }
-  if (codepoint >= 0x2100 && codepoint < 0x2100 + ARRAY_LENGTH(s_letterlike_latin) &&
+  if (codepoint >= 0x2100 && codepoint < 0x2100 + PBL_ARRAY_SIZE(s_letterlike_latin) &&
       s_letterlike_latin[codepoint - 0x2100] != 0) {
     return s_letterlike_latin[codepoint - 0x2100];
   }
@@ -810,7 +810,7 @@ static const GlyphData *prv_get_glyph(FontCache *font_cache, Codepoint codepoint
   const FontInfo *owner = nullptr;
   const FontResource *font_res = nullptr;
   const Codepoint substitutes[] = {font_info->base.md.wildcard_codepoint, ' '};
-  for (unsigned int i = 0; i < ARRAY_LENGTH(substitutes); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(substitutes); i++) {
     data = prv_get_glyph_in_font(font_cache, substitutes[i], font_info, need_bitmap, &owner,
                                  &font_res);
     if (data) {

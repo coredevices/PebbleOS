@@ -335,7 +335,7 @@ void test_health_db__step_averages(void) {
     },
   };
 
-  for (int i = 0; i < ARRAY_LENGTH(entries); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(entries); ++i) {
     cl_assert_equal_i(health_db_insert((uint8_t *)entries[i].key, strlen(entries[i].key),
                                        (uint8_t *)entries[i].val, strlen(entries[i].val)),
                       S_SUCCESS);

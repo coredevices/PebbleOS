@@ -160,7 +160,7 @@ void test_prefs_db__dark_mode_schedule(void) {
     {.to_minute = 60},
   };
   const DarkModeSchedule expected = {.from_hour = 19, .from_minute = 0, .to_hour = 7};
-  for (size_t i = 0; i < ARRAY_LENGTH(invalid); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(invalid); i++) {
     shell_prefs_set_dark_mode_schedule(&schedule);
     prv_insert_from_phone("darkModeSchedule", &invalid[i], sizeof(invalid[i]));
     shell_prefs_get_dark_mode_schedule(&read);

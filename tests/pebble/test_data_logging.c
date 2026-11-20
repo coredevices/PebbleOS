@@ -469,8 +469,9 @@ void test_data_logging__invalid_session_garbage(void) {
   uint32_t data[] = {1, 2, 3};
 
   // Make sure logging to bogus sessions does the right thing.
-  cl_assert_equal_i(data_logging_log(0, data, ARRAY_LENGTH(data)), DATA_LOGGING_INVALID_PARAMS);
-  cl_assert_equal_i(data_logging_log(&data, data, ARRAY_LENGTH(data)), DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(0, data, PBL_ARRAY_SIZE(data)), DATA_LOGGING_INVALID_PARAMS);
+  cl_assert_equal_i(data_logging_log(&data, data, PBL_ARRAY_SIZE(data)),
+                    DATA_LOGGING_INVALID_PARAMS);
 
   // Make sure closing invalid sessions doesn't crash. It's defined to be a no-op
   data_logging_finish(0);
@@ -490,7 +491,7 @@ void test_data_logging__invalid_session_use_after_close(void) {
   fake_sys_work_callbacks_invoke_pending();
 
   // Log to the session after it's closed.
-  cl_assert_equal_i(data_logging_log(session, data, ARRAY_LENGTH(data)),
+  cl_assert_equal_i(data_logging_log(session, data, PBL_ARRAY_SIZE(data)),
                     DATA_LOGGING_INVALID_PARAMS);
 
   // Finish the session again without a crash.
@@ -508,7 +509,7 @@ void test_data_logging__invalid_params(void) {
 
   // Log to the session after it's closed.
   cl_assert_equal_i(data_logging_log(session, nullptr, 4), DATA_LOGGING_INVALID_PARAMS);
-  cl_assert_equal_i(data_logging_log(nullptr, data, ARRAY_LENGTH(data)),
+  cl_assert_equal_i(data_logging_log(nullptr, data, PBL_ARRAY_SIZE(data)),
                     DATA_LOGGING_INVALID_PARAMS);
 
   // Finish the session without a crash

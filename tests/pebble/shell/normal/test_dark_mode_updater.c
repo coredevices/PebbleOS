@@ -45,7 +45,7 @@ static void prv_set_time(int hour, int minute) {
 }
 
 static bool prv_follows_minutes(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     const struct pbl_wallclock_work *w = s_fake_wallclock_started[i];
     if (w != nullptr && w->unit_ms == 60000U && w->every == 1U) {
       return true;

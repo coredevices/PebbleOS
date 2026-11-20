@@ -48,7 +48,7 @@ static void resource_storage_system_bank_init(void) {
 
   // Increment s_active_bank and call resource_storage_generic_check for each value to find
   // a bank that's valid.
-  for (s_active_bank = 0; s_active_bank < ARRAY_LENGTH(s_resource_banks); ++s_active_bank) {
+  for (s_active_bank = 0; s_active_bank < PBL_ARRAY_SIZE(s_resource_banks); ++s_active_bank) {
     PBL_LOG_INFO("Checking bank %u for system resources", s_active_bank);
     if (resource_storage_generic_check(SYSTEM_APP, 0, &entry, &SYSTEM_RESOURCE_VERSION)) {
       PBL_LOG_INFO("Valid system resources found!");
@@ -64,7 +64,7 @@ static void resource_storage_system_bank_init(void) {
 const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
   size_t unused_bank_index;
   if (s_valid_resources_found) {
-    unused_bank_index = (s_active_bank + 1) % ARRAY_LENGTH(s_resource_banks);
+    unused_bank_index = (s_active_bank + 1) % PBL_ARRAY_SIZE(s_resource_banks);
   } else {
     static int s_unused_bank_index = -1;
 
@@ -76,7 +76,7 @@ const SystemResourceBank *resource_storage_flash_get_unused_bank(void) {
       // because we want to target the same bank when both are unused so features like resumable
       // resource updates work as expected. We reset the bank on boot to make our watches a little
       // more resilient to the scenario where one of the resource banks has gone completely bad
-      s_unused_bank_index = rand() % ARRAY_LENGTH(s_resource_banks);
+      s_unused_bank_index = rand() % PBL_ARRAY_SIZE(s_resource_banks);
     }
     unused_bank_index = s_unused_bank_index;
   }
@@ -102,7 +102,7 @@ static uint32_t resource_storage_system_bank_read(ResourceStoreEntry *entry, uin
 bool resource_storage_flash_bytes_are_readonly(const void *bytes) {
 #ifdef CONFIG_MMAP_RESOURCES
   // Pointers inside the banks are in the always-mapped XIP window.
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_resource_banks); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_resource_banks); i++) {
     if ((bytes >= (const void *)(uintptr_t)(CONFIG_FLASH_BASE + s_resource_banks[i].begin)) &&
         (bytes < (const void *)(uintptr_t)(CONFIG_FLASH_BASE + s_resource_banks[i].end))) {
       return true;

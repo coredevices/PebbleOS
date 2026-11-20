@@ -102,7 +102,7 @@ void test_ancs_app_storage__hash_collisions(void) {
     {"exhibiters", "schlager"},
   };
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(collide_pairs); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(collide_pairs); ++i) {
     for (unsigned int j = 0; j < 2; ++j) {
       char *name = collide_pairs[i][j];
       app_data.bundle_id = name;
@@ -115,7 +115,7 @@ void test_ancs_app_storage__hash_collisions(void) {
   }
 
   ANCSAppData app_data_out = {};
-  for (unsigned int i = 0; i < ARRAY_LENGTH(collide_pairs); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(collide_pairs); ++i) {
     for (unsigned int j = 0; j < 2; ++j) {
       char *name = collide_pairs[i][j];
       app_data.bundle_id = name;
@@ -148,14 +148,14 @@ void test_ancs_app_storage__iter(void) {
     {.bundle_id = "com.google.Gmail", .display_name = "Gmail"},
   };
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(apps); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(apps); ++i) {
     apps[i].is_meta_changed = true;
     apps[i].is_local_changed = true;
     ancs_app_storage_save(&apps[i]);
   }
 
   ANCSAppData app_data_out = {};
-  for (unsigned int i = 0; i < ARRAY_LENGTH(apps); ++i) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(apps); ++i) {
     PBL_LOG_DBG("i: %d, name: %s", i, apps[i].bundle_id);
     ancs_app_storage_load(apps[i].bundle_id, &app_data_out);
 

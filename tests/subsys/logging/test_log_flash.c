@@ -182,7 +182,7 @@ void test_log_flash__basic(void) {
     "Last simple test message"
   };
 
-  int num_messages = ARRAY_LENGTH(test_messages);
+  int num_messages = PBL_ARRAY_SIZE(test_messages);
 
   setup_and_test_expected_msg((char **)test_messages, 0, 0, num_messages);
 }
@@ -380,7 +380,7 @@ void test_log_flash__multi_writes_per_log(void) {
     cl_assert(addr != PBL_LOG__FLASH_INVALID_ADDR);
     char *curr_msg = logs[i];
     bool rv;
-    for (int j = 0; j < ARRAY_LENGTH(write_sizes); j++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(write_sizes); j++) {
       int bytes_to_write = MIN(bytes_remaining, write_sizes[j]);
       int offset = log_len - bytes_remaining;
 

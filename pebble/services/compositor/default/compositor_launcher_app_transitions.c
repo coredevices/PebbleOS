@@ -26,9 +26,9 @@ static const int32_t s_custom_moook_frames_in[] = {0, 1, 2, 4, 12, 24, 48};
 static const int32_t s_custom_moook_frames_out[] = {12, 6, 3, 2, 1, 0};
 static const MoookConfig s_custom_moook_config = {
   .frames_in = s_custom_moook_frames_in,
-  .num_frames_in = ARRAY_LENGTH(s_custom_moook_frames_in),
+  .num_frames_in = PBL_ARRAY_SIZE(s_custom_moook_frames_in),
   .frames_out = s_custom_moook_frames_out,
-  .num_frames_out = ARRAY_LENGTH(s_custom_moook_frames_out),
+  .num_frames_out = PBL_ARRAY_SIZE(s_custom_moook_frames_out),
 };
 
 static void prv_move_region_of_bitmap_horizontally(GBitmap *bitmap, const GRect *region,

@@ -81,7 +81,7 @@ static int prv_cmd_config(const struct pbl_shell *sh, size_t argc, char **argv) 
   cfg.baudrate = (uint32_t)baudrate;
 
   if (argc > 3) {
-    ret = prv_parse_name(sh, argv[3], s_parities, ARRAY_LENGTH(s_parities), "parity");
+    ret = prv_parse_name(sh, argv[3], s_parities, PBL_ARRAY_SIZE(s_parities), "parity");
     if (ret < 0) {
       return ret;
     }
@@ -89,7 +89,7 @@ static int prv_cmd_config(const struct pbl_shell *sh, size_t argc, char **argv) 
   }
 
   if (argc > 4) {
-    ret = prv_parse_name(sh, argv[4], s_flow_ctrls, ARRAY_LENGTH(s_flow_ctrls), "flow control");
+    ret = prv_parse_name(sh, argv[4], s_flow_ctrls, PBL_ARRAY_SIZE(s_flow_ctrls), "flow control");
     if (ret < 0) {
       return ret;
     }

@@ -463,7 +463,7 @@ void test_remote_input__swipe_stays_on_screen(void) {
     RemoteInputSwipeDirection_Left,
     RemoteInputSwipeDirection_Right,
   };
-  for (unsigned d = 0; d < ARRAY_LENGTH(directions); d++) {
+  for (unsigned d = 0; d < PBL_ARRAY_SIZE(directions); d++) {
     s_touch_count = 0;
     cl_assert_equal_i(RemoteInputResult_Ok, remote_input_swipe(directions[d], 150));
     prv_run_sequence();

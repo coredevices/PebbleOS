@@ -23,7 +23,7 @@
 #include <resource/resource_storage_flash.h>
 #include <syscall/syscall.h>
 
-#define NUM_REGIONS ARRAY_LENGTH(s_flash_regions)
+#define NUM_REGIONS PBL_ARRAY_SIZE(s_flash_regions)
 
 #define FILE_WRITE_STRESS     (NUM_REGIONS)
 #define FILE_SUBSECTOR_STRESS (FILE_WRITE_STRESS + 1)

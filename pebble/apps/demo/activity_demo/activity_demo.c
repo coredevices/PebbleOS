@@ -79,7 +79,7 @@ static void prv_display_scalar_history_alert(ActivityDemoAppData *data, const ch
 
   // Get History
   int32_t values[7];
-  activity_get_metric(metric, ARRAY_LENGTH(values), values);
+  activity_get_metric(metric, PBL_ARRAY_SIZE(values), values);
   for (int i = 0; i < 7; i++) {
     char temp[32];
     snprintf(temp, sizeof(temp), "\n%d: %d", i, (int)values[i]);
@@ -119,7 +119,7 @@ static void prv_display_seconds_history_alert(ActivityDemoAppData *data, const c
 
   // Get History
   int32_t values[7];
-  activity_get_metric(metric, ARRAY_LENGTH(values), values);
+  activity_get_metric(metric, PBL_ARRAY_SIZE(values), values);
   for (int i = 0; i < 7; i++) {
     char elapsed[16];
     prv_convert_seconds_to_time(values[i], elapsed, sizeof(elapsed));
@@ -706,12 +706,12 @@ static void debug_window_load(Window *window) {
     }
   };
   static const SimpleMenuSection sections[] = {
-    {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+    {.items = menu_items, .num_items = PBL_ARRAY_SIZE(menu_items)}
   };
 
   data->debug_card.menu_items = menu_items;
   data->debug_card.menu_layer =
-      simple_menu_layer_create(*root_bounds, window, sections, ARRAY_LENGTH(sections), data);
+      simple_menu_layer_create(*root_bounds, window, sections, PBL_ARRAY_SIZE(sections), data);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->debug_card.menu_layer));
 
   // Init status

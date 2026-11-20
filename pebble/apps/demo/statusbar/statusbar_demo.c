@@ -73,7 +73,7 @@ static Window *prv_window_create(void) {
     },
   };
 
-  Description description = descriptions[app_window_stack_count() % ARRAY_LENGTH(descriptions)];
+  Description description = descriptions[app_window_stack_count() % PBL_ARRAY_SIZE(descriptions)];
   const GColor8 window_color = (GColor8){.argb = description.window_color};
   const GColor8 status_bar_color = (GColor8){.argb = description.status_bar_color};
 

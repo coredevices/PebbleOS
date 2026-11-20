@@ -48,7 +48,7 @@ typedef struct {
 
 static void prv_refresh(AppState *data) {
   snprintf(data->header_buf, sizeof(data->header_buf), "%u/%u %s", data->font_index + 1,
-           (unsigned int)ARRAY_LENGTH(s_fonts), s_fonts[data->font_index].label);
+           (unsigned int)PBL_ARRAY_SIZE(s_fonts), s_fonts[data->font_index].label);
   snprintf(data->info_buf, sizeof(data->info_buf), "U+%04X '%c'", data->codepoint, data->codepoint);
   data->glyph_buf[0] = (char)data->codepoint;
   data->glyph_buf[1] = '\0';
@@ -70,7 +70,7 @@ static void prv_click_handler(ClickRecognizerRef recognizer, void *context) {
     data->codepoint =
         (data->codepoint == LAST_GLYPH) ? FIRST_GLYPH : (uint8_t)(data->codepoint + 1);
   } else if (button == BUTTON_ID_SELECT) {
-    data->font_index = (data->font_index + 1) % ARRAY_LENGTH(s_fonts);
+    data->font_index = (data->font_index + 1) % PBL_ARRAY_SIZE(s_fonts);
   }
   prv_refresh(data);
 }

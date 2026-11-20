@@ -40,7 +40,7 @@
 
 static_assert(PATCH_CODE_OFFSET == PATCH_BUF_OFFSET + sizeof(PATCH_HDR) + sizeof(uint32_t));
 static_assert(sizeof(PATCH_CODE) <= PATCH_CODE_SIZE);
-static_assert(ARRAY_LENGTH(PATCH_ENTRIES) <= SF32LB52_PATCH_NUM_CHANNELS);
+static_assert(PBL_ARRAY_SIZE(PATCH_ENTRIES) <= SF32LB52_PATCH_NUM_CHANNELS);
 
 void pbl_rproc_sf32lb__patch_install(const struct pbl_rproc_sf32lb *lcpu) {
   uintptr_t base = lcpu->patch_base;
@@ -69,12 +69,12 @@ void pbl_rproc_sf32lb__patch_install(const struct pbl_rproc_sf32lb *lcpu) {
 
   pbl_writel(0U, base + SF32LB52_PATCH_CER_OFFSET);
 
-  for (i = 0U; i < ARRAY_LENGTH(PATCH_ENTRIES); i++) {
+  for (i = 0U; i < PBL_ARRAY_SIZE(PATCH_ENTRIES); i++) {
     pbl_writel(PATCH_ENTRIES[i][0] & PATCH_CH_ADDR_MASK, base + SF32LB52_PATCH_CH_OFFSET(i));
     pbl_writel(PBL_BIT(i), base + SF32LB52_PATCH_CSR_OFFSET);
     pbl_writel(PATCH_ENTRIES[i][1], base + SF32LB52_PATCH_CDR_OFFSET);
   }
 
   pbl_writel(0U, base + SF32LB52_PATCH_CSR_OFFSET);
-  pbl_writel(PBL_GENMASK(ARRAY_LENGTH(PATCH_ENTRIES) - 1U, 0U), base + SF32LB52_PATCH_CER_OFFSET);
+  pbl_writel(PBL_GENMASK(PBL_ARRAY_SIZE(PATCH_ENTRIES) - 1U, 0U), base + SF32LB52_PATCH_CER_OFFSET);
 }

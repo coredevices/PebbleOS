@@ -181,7 +181,7 @@ static struct ServiceRunLevelSetting s_runlevel_settings[] = {
 };
 
 void services_normal_set_runlevel(RunLevel runlevel) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_runlevel_settings); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_runlevel_settings); ++i) {
     struct ServiceRunLevelSetting *service = &s_runlevel_settings[i];
     service->set_enable_fn(((1 << runlevel) & service->enable_mask) != 0);
   }

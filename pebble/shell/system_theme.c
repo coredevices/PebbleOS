@@ -130,7 +130,8 @@ static const PreferredContentSize s_platform_default_content_sizes[] = {
 
 PBL_T_STATIC PreferredContentSize prv_convert_content_size_between_platforms(
     PreferredContentSize size, PlatformType from_platform, PlatformType to_platform) {
-  const size_t num_platform_default_content_sizes = ARRAY_LENGTH(s_platform_default_content_sizes);
+  const size_t num_platform_default_content_sizes =
+      PBL_ARRAY_SIZE(s_platform_default_content_sizes);
   PBL_ASSERTN(from_platform < num_platform_default_content_sizes);
   PBL_ASSERTN(to_platform < num_platform_default_content_sizes);
 

@@ -438,7 +438,7 @@ static int prv_config_ram_playback(const struct pbl_aw86225 *dev) {
     {AW862XX_REG_PLAYCFG2, prv_gain_for_strength(dev, dev->state->strength)},
   };
 
-  for (size_t i = 0; i < ARRAY_LENGTH(regs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(regs); i++) {
     ret = prv_write_register(dev, regs[i][0], regs[i][1]);
     if (ret != 0) {
       return ret;
@@ -485,7 +485,7 @@ static int prv_start_f0_detection(const struct pbl_aw86225 *dev) {
     {AW862XX_REG_PLAYCFG4, AW862XX_PLAYCFG4_GO},
   };
 
-  for (size_t i = 0; i < ARRAY_LENGTH(regs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(regs); i++) {
     ret = prv_write_register(dev, regs[i][0], regs[i][1]);
     if (ret != 0) {
       return ret;

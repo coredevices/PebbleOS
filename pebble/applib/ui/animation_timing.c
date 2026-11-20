@@ -33,9 +33,9 @@ typedef struct {
 } EasingTable;
 
 static const EasingTable s_easing_tables[] = {
-  [AnimationCurveEaseIn] = {ARRAY_LENGTH(s_ease_in_table), s_ease_in_table},
-  [AnimationCurveEaseOut] = {ARRAY_LENGTH(s_ease_out_table), s_ease_out_table},
-  [AnimationCurveEaseInOut] = {ARRAY_LENGTH(s_ease_in_out_table), s_ease_in_out_table},
+  [AnimationCurveEaseIn] = {PBL_ARRAY_SIZE(s_ease_in_table), s_ease_in_table},
+  [AnimationCurveEaseOut] = {PBL_ARRAY_SIZE(s_ease_out_table), s_ease_out_table},
+  [AnimationCurveEaseInOut] = {PBL_ARRAY_SIZE(s_ease_in_out_table), s_ease_in_out_table},
 };
 
 int32_t animation_timing_segmented(int32_t time_normalized, int32_t index, uint32_t num_segments,

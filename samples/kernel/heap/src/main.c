@@ -61,7 +61,7 @@ int main(void) {
   pbl_heap_free(&s_heap, name, CALLER);
 
   /* Allocation fails with NULL, which the caller handles. */
-  while (num_blocks < ARRAY_LENGTH(blocks)) {
+  while (num_blocks < PBL_ARRAY_SIZE(blocks)) {
     blocks[num_blocks] = pbl_heap_alloc(&s_heap, BLOCK_SIZE, CALLER);
     if (blocks[num_blocks] == NULL) {
       break;

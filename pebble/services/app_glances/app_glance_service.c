@@ -194,7 +194,7 @@ static AppGlance *prv_copy_user_glance(const AppGlance *glance) {
   }
 
   *copy = *glance;
-  for (size_t i = 0; i < ARRAY_LENGTH(copy->slices); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(copy->slices); i++) {
     char *template_string = copy->slices[i].icon_and_subtitle.template_string;
     template_string[sizeof(copy->slices[i].icon_and_subtitle.template_string) - 1] = '\0';
   }

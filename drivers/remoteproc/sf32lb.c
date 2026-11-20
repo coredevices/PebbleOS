@@ -327,7 +327,7 @@ void pbl_rproc_sf32lb_coredump_prepare(void) {
 uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc *rproc, uintptr_t pa) {
   const struct pbl_rproc_sf32lb *lcpu = prv_lcpu(rproc);
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(lcpu->ranges); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(lcpu->ranges); i++) {
     const struct pbl_rproc_sf32lb_range *range = &lcpu->ranges[i];
 
     if (pa >= range->pa && pa - range->pa < range->size) {

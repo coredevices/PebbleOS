@@ -99,8 +99,8 @@ static int prv_cmd_line_all(const struct pbl_shell *sh, size_t argc, char **argv
   static const char *const widths[] = {"8", "6", "5", "4", "3", "2", "1"};
 
   pbl_shell_print(sh, "Antialiasing?, Width, Total time (us), Total cycles");
-  for (size_t i = 0; i < ARRAY_LENGTH(aa); i++) {
-    for (size_t j = 0; j < ARRAY_LENGTH(widths); j++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(aa); i++) {
+    for (size_t j = 0; j < PBL_ARRAY_SIZE(widths); j++) {
       prv_perftest_line(sh, aa[i], widths[j]);
     }
   }
@@ -303,9 +303,9 @@ static int prv_cmd_text_all(const struct pbl_shell *sh, size_t argc, char **argv
   static const char *const offsets[] = {"0", "2000"};
 
   pbl_shell_print(sh, "Font, Type, Offset, Total avg us, Flash avg us");
-  for (size_t type = 0; type < ARRAY_LENGTH(types); type++) {
-    for (size_t font = 0; font < ARRAY_LENGTH(fonts); font++) {
-      for (size_t offset = 0; offset < ARRAY_LENGTH(offsets); offset++) {
+  for (size_t type = 0; type < PBL_ARRAY_SIZE(types); type++) {
+    for (size_t font = 0; font < PBL_ARRAY_SIZE(fonts); font++) {
+      for (size_t offset = 0; offset < PBL_ARRAY_SIZE(offsets); offset++) {
         prv_perftest_text(sh, types[type], fonts[font], offsets[offset]);
       }
     }

@@ -32,7 +32,7 @@
 static const uint32_t segments[] = { 200, 100, 400 };
 VibePattern pat = {
   .durations = segments,
-  .num_segments = ARRAY_LENGTH(segments),
+  .num_segments = PBL_ARRAY_SIZE(segments),
 };
 vibes_enqueue_custom_pattern(pat);
 \endcode
@@ -62,7 +62,7 @@ typedef struct {
  VibePatternWithAmplitudes pat = {
    .durations = segments,
    .amplitudes = amplitudes,
-   .num_segments = ARRAY_LENGTH(segments),
+   .num_segments = PBL_ARRAY_SIZE(segments),
  };
  vibes_enqueue_custom_pattern_with_amplitudes(pat);
  \endcode

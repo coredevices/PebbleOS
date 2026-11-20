@@ -207,7 +207,7 @@ static bool prv_get_metric_daily_history(HealthServiceState *state, HealthMetric
   }
 
   // Read in the metric history
-  if (!sys_activity_get_metric(prv_get_activity_metric(metric), ARRAY_LENGTH(daily->totals),
+  if (!sys_activity_get_metric(prv_get_activity_metric(metric), PBL_ARRAY_SIZE(daily->totals),
                                daily->totals)) {
     PBL_LOG_ERR("Error fetching metric data");
     return false;
@@ -243,10 +243,10 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   *stats = (HealthServiceMetricStats){};
   const enum pbl_stats_op op = (PBL_STATS_OP_SUM | PBL_STATS_OP_AVERAGE | PBL_STATS_OP_COUNT |
                                 PBL_STATS_OP_MIN | PBL_STATS_OP_MAX);
-  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+  pbl_stats_calculate(op, daily_totals.totals, PBL_ARRAY_SIZE(daily_totals.totals),
                       health_service_private_weekday_filter, (void *)(uintptr_t)local_tm->tm_wday,
                       &stats->weekday.sum);
-  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+  pbl_stats_calculate(op, daily_totals.totals, PBL_ARRAY_SIZE(daily_totals.totals),
                       health_service_private_weekend_filter, (void *)(uintptr_t)local_tm->tm_wday,
                       &stats->weekend.sum);
   // We want to sum only the days that are this far from index 0 (which is local_tm.tm_wday)
@@ -254,7 +254,7 @@ static bool prv_get_metric_stats(HealthServiceState *state, HealthMetric metric,
   if (day_offset < 0) {
     day_offset += PBL_DAY_PER_WEEK;
   }
-  pbl_stats_calculate(op, daily_totals.totals, ARRAY_LENGTH(daily_totals.totals),
+  pbl_stats_calculate(op, daily_totals.totals, PBL_ARRAY_SIZE(daily_totals.totals),
                       health_service_private_weekly_filter, (void *)(uintptr_t)day_offset,
                       &stats->weekly.sum);
 
@@ -529,7 +529,7 @@ static HealthValue prv_compute_aggregate_using_daily_totals(HealthServiceState *
   // If we are summing, scale the values for the first and last day of the time range. For
   // min, max, and avg scaling does not apply.
   if (aggregation == HealthAggregationSum) {
-    prv_adjust_value_boundaries(daily_history.totals, ARRAY_LENGTH(daily_history.totals),
+    prv_adjust_value_boundaries(daily_history.totals, PBL_ARRAY_SIZE(daily_history.totals),
                                 &time_range);
   }
 
@@ -671,7 +671,7 @@ static HealthValue prv_compute_aggregate_using_minute_history(HealthServiceState
   HealthMinuteData *minute_data = state->cache->minute_data;
   bool more_data = true;
   while (more_data && (time_start < time_end)) {
-    uint32_t num_records = ARRAY_LENGTH(state->cache->minute_data);
+    uint32_t num_records = PBL_ARRAY_SIZE(state->cache->minute_data);
     PBL_LOG_DBG("Fetching %" PRIu32 " minute records for %d to %d...", num_records, (int)time_start,
                 (int)time_end);
     bool success = sys_activity_get_minute_history(minute_data, &num_records, &time_start);
@@ -1431,12 +1431,12 @@ void health_service_activities_iterate(HealthActivityMask activity_mask, pbl_tim
     return;
   }
 
-  uint32_t num_sessions = ARRAY_LENGTH(state->cache->sessions);
+  uint32_t num_sessions = PBL_ARRAY_SIZE(state->cache->sessions);
   if (!sys_activity_get_sessions(&num_sessions, state->cache->sessions)) {
     return;
   }
 
-  const uint32_t actual_num_sessions = MIN(num_sessions, ARRAY_LENGTH(state->cache->sessions));
+  const uint32_t actual_num_sessions = MIN(num_sessions, PBL_ARRAY_SIZE(state->cache->sessions));
   prv_sessions_sort(state->cache->sessions, actual_num_sessions, direction);
 
   for (uint32_t idx = 0; idx < actual_num_sessions; idx++) {

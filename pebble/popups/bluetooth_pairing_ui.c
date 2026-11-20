@@ -146,7 +146,7 @@ static void prv_update_prf_info_text_layers_text(BTPairingUIData *data) {
   } else {
     prv_update_text_layer_with_translation(&data->info_text_layer,
                                            &translations[data->translated_str_idx]);
-    data->translated_str_idx = (data->translated_str_idx + 1) % ARRAY_LENGTH(translations);
+    data->translated_str_idx = (data->translated_str_idx + 1) % PBL_ARRAY_SIZE(translations);
   }
 
   if ((data->num_strings_shown + 1) % 3 == 0) {

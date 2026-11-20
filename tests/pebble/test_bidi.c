@@ -478,7 +478,7 @@ void test_bidi__gate_matches_the_class_table(void) {
     "\ufe8d\ufe91", // Arabic presentation forms
     "\ufb2a\ufb2b", // Hebrew presentation forms
   };
-  for (size_t i = 0; i < ARRAY_LENGTH(rtl_blocks); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(rtl_blocks); i++) {
     const utf8_t *s = (const utf8_t *)rtl_blocks[i];
     cl_assert(bidi_is_needed(s, s + strlen(rtl_blocks[i])));
     cl_assert(bidi_paragraph_is_rtl(s, s + strlen(rtl_blocks[i])));

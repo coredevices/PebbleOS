@@ -88,7 +88,7 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
 void mpu_init(void) {
   arch_mpu_init();
 #ifndef CONFIG_ARCH_POSIX
-  prv_regions_add(s_kernel_regions, ARRAY_LENGTH(s_kernel_regions));
+  prv_regions_add(s_kernel_regions, PBL_ARRAY_SIZE(s_kernel_regions));
 #endif
 #ifdef CONFIG_SOC_HAS_MPU_REGIONS
   prv_regions_add(pbl_soc_mpu_regions, pbl_soc_num_mpu_regions);

@@ -25,7 +25,7 @@ static const EmojiEntry s_emoji_table[] = JUMBOJI_TABLE(EMOJI_ENTRY);
 //////////////////////
 
 void test_jumboji__jumboji_table(void) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_emoji_table); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_emoji_table); i++) {
     const EmojiEntry *emoji = &s_emoji_table[i];
     const Codepoint codepoint = utf8_peek_codepoint((utf8_t *)emoji->string, nullptr);
     if (emoji->codepoint != codepoint) {

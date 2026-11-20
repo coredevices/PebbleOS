@@ -127,7 +127,7 @@ void test_event_syscalls__subscribe_rejected(void) {
     PEBBLE_SYS_NOTIFICATION_EVENT, PBL_BT_PEBBLE_PAIRING_EVENT, PEBBLE_PUT_BYTES_EVENT,
     PEBBLE_BLOBDB_EVENT,           PEBBLE_PROCESS_KILL_EVENT,   PEBBLE_NUM_EVENTS,
   };
-  for (size_t i = 0; i < ARRAY_LENGTH(types); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(types); i++) {
     stubs_syscall_init();
     cl_assert_panic(prv_subscribe(types[i]));
     assert_syscall_failed();

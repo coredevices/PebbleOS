@@ -207,7 +207,7 @@ static GTextNode *prv_card_view_constructor(TimelineLayout *timeline_layout) {
   };
   static const LayoutNodeVerticalConfig s_vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(s_vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_vertical_config_nodes,
     .container.extent.offset.y = CARD_MARGIN_TOP,
     .container.extent.margin.h = CARD_MARGIN_TOP + CARD_MARGIN_BOTTOM,
@@ -262,7 +262,7 @@ static GTextNode *prv_create_team_node(const LayoutLayer *layout_ref, int team_o
   };
   const LayoutNodeVerticalConfig vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
     .container.extent.offset.y = TEAM_MARGIN_TOP,
     .container.extent.margin.h = TEAM_MARGIN_TOP + TEAM_MARGIN_BOTTOM,

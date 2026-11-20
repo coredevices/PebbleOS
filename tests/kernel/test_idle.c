@@ -45,7 +45,7 @@ const struct pbl_idle_state pbl_soc_idle_states[] = {
     .enter = prv_enter_deep,
   },
 };
-const size_t pbl_soc_num_idle_states = ARRAY_LENGTH(pbl_soc_idle_states);
+const size_t pbl_soc_num_idle_states = PBL_ARRAY_SIZE(pbl_soc_idle_states);
 
 uint64_t timekeeping_idle_begin(pbl_tick_t ticks, pbl_tick_t exit_ticks) {
   s_exit_ticks = exit_ticks;

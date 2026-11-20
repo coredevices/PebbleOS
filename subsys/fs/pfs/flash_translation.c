@@ -38,7 +38,7 @@ static const struct pbl_ftl__region s_region_list[] = {
 };
 
 //! Total number of regions listed in s_region_list
-static const unsigned int TOTAL_NUM_FLASH_REGIONS = ARRAY_LENGTH(s_region_list);
+static const unsigned int TOTAL_NUM_FLASH_REGIONS = PBL_ARRAY_SIZE(s_region_list);
 
 //! Keeps track of the current total size of our filesystem in bytes.
 static uint32_t s_ftl_size;

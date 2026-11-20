@@ -191,7 +191,7 @@ void test_ancs_pebble_actions__test_sms_reply(void) {
   const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
   const bool complete = prv_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
+      s_sms_ancs_data + header_len, PBL_ARRAY_SIZE(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
@@ -229,7 +229,7 @@ void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
   const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
   const bool complete = prv_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
+      s_sms_ancs_data + header_len, PBL_ARRAY_SIZE(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
@@ -267,7 +267,7 @@ void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
   const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
   const bool complete = prv_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
+      s_sms_ancs_data + header_len, PBL_ARRAY_SIZE(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
@@ -293,7 +293,7 @@ void test_ancs_pebble_actions__test_group_sms(void) {
   bool error = false;
   const bool complete =
       prv_get_attr_ptrs(s_group_sms_ancs_data + header_len,
-                        ARRAY_LENGTH(s_group_sms_ancs_data) - header_len, notif_attributes);
+                        PBL_ARRAY_SIZE(s_group_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
@@ -320,7 +320,7 @@ void test_ancs_pebble_actions__test_group_sms(void) {
 // const size_t header_len = RESPONSE_HEADER_LENGTH;
 // bool error = false;
 // const bool complete = ancs_util_get_attr_ptrs(s_email_ancs_data + header_len,
-//                                               ARRAY_LENGTH(s_email_ancs_data) - header_len,
+//                                               PBL_ARRAY_SIZE(s_email_ancs_data) - header_len,
 //                                               s_fetched_notif_attributes,
 //                                               ANCS_NOTIF_ATTR_COUNT,
 //                                               notif_attributes,

@@ -38,7 +38,7 @@
  * @code{.c}
  * int32_t steps[7];
  *
- * if (activity_get_metric(ActivityMetricStepCount, ARRAY_LENGTH(steps), steps)) {
+ * if (activity_get_metric(ActivityMetricStepCount, PBL_ARRAY_SIZE(steps), steps)) {
  *   // steps[0] is today, steps[1] yesterday, ...; -1 where no data is available
  * }
  *
@@ -50,7 +50,7 @@
  *
  * @code{.c}
  * ActivitySession sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
- * uint32_t count = ARRAY_LENGTH(sessions);
+ * uint32_t count = PBL_ARRAY_SIZE(sessions);
  *
  * if (activity_get_sessions(&count, sessions)) {
  *   for (uint32_t i = 0; i < count; i++) {

@@ -172,7 +172,7 @@ static void prv_color_preview_update_proc(Layer *layer, GContext *ctx) {
   AppData *app_data = app_state_get_user_data();
 
   if (app_data->selected_color_index < 0 ||
-      app_data->selected_color_index >= (int)ARRAY_LENGTH(s_color_table)) {
+      app_data->selected_color_index >= (int)PBL_ARRAY_SIZE(s_color_table)) {
     return;
   }
 
@@ -214,12 +214,12 @@ static void prv_color_preview_update_proc(Layer *layer, GContext *ctx) {
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (ARRAY_LENGTH(s_color_table) == 0) {
+  if (PBL_ARRAY_SIZE(s_color_table) == 0) {
     return;
   }
 
   if (app_data->selected_color_index == 0) {
-    app_data->selected_color_index = ARRAY_LENGTH(s_color_table) - 1;
+    app_data->selected_color_index = PBL_ARRAY_SIZE(s_color_table) - 1;
   } else {
     app_data->selected_color_index--;
   }
@@ -235,11 +235,11 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *data) {
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *data) {
   AppData *app_data = app_state_get_user_data();
 
-  if (ARRAY_LENGTH(s_color_table) == 0) {
+  if (PBL_ARRAY_SIZE(s_color_table) == 0) {
     return;
   }
 
-  if (app_data->selected_color_index == (int)ARRAY_LENGTH(s_color_table) - 1) {
+  if (app_data->selected_color_index == (int)PBL_ARRAY_SIZE(s_color_table) - 1) {
     app_data->selected_color_index = 0;
   } else {
     app_data->selected_color_index++;
@@ -261,7 +261,7 @@ static void prv_select_click_handler(ClickRecognizerRef recognizer, void *data) 
   AppData *app_data = app_state_get_user_data();
   char model[MFG_INFO_MODEL_STRING_LENGTH];
 
-  if (ARRAY_LENGTH(s_color_table) == 0 || app_data->selected_color_index == -1) {
+  if (PBL_ARRAY_SIZE(s_color_table) == 0 || app_data->selected_color_index == -1) {
     return;
   }
 
@@ -306,7 +306,7 @@ static void prv_handle_init(void) {
   // Create up arrow (pointing up)
   static GPoint UP_ARROW_POINTS[] = {{0, 10}, {7, 0}, {14, 10}};
   static const GPathInfo UP_ARROW_PATH_INFO = {
-    .num_points = ARRAY_LENGTH(UP_ARROW_POINTS),
+    .num_points = PBL_ARRAY_SIZE(UP_ARROW_POINTS),
     .points = UP_ARROW_POINTS
   };
   PathLayer *up_arrow = &data->up_arrow;
@@ -330,7 +330,7 @@ static void prv_handle_init(void) {
   text_layer_init(color, &GRect(5, 100, window->layer.bounds.size.w - 10, 28));
   text_layer_set_font(color, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   text_layer_set_text_alignment(color, GTextAlignmentCenter);
-  if (ARRAY_LENGTH(s_color_table) > 0) {
+  if (PBL_ARRAY_SIZE(s_color_table) > 0) {
     data->selected_color_index = 0;
     snprintf(data->color_text, sizeof(data->color_text), "%s (%s)", s_color_table[0].name,
              s_color_table[0].short_name);
@@ -343,7 +343,7 @@ static void prv_handle_init(void) {
   // Create down arrow (pointing down)
   static GPoint DOWN_ARROW_POINTS[] = {{0, 0}, {7, 10}, {14, 0}};
   static const GPathInfo DOWN_ARROW_PATH_INFO = {
-    .num_points = ARRAY_LENGTH(DOWN_ARROW_POINTS),
+    .num_points = PBL_ARRAY_SIZE(DOWN_ARROW_POINTS),
     .points = DOWN_ARROW_POINTS
   };
   PathLayer *down_arrow = &data->down_arrow;

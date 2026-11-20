@@ -77,7 +77,7 @@ class ParseAccelSamplesFile:
         { -163, -941, -114},
         { -230, -963, -110},
       };
-      *len = ARRAY_LENGTH(samples);
+      *len = PBL_ARRAY_SIZE(samples);
       return samples;
     }
     """
@@ -143,7 +143,7 @@ class ParseAccelSamplesFile:
         if self.session_id is not None:
             if self.format == "c":
                 print("  };")
-                print("  *len = ARRAY_LENGTH(samples);")
+                print("  *len = PBL_ARRAY_SIZE(samples);")
                 print("  return samples;")
                 print("}\n")
             else:
@@ -319,7 +319,7 @@ class ParseMinuteStatsFile:
     def _finish_session(self):
         if self.session_start_time_utc is not None:
             print("  };")
-            print("  *len = ARRAY_LENGTH(samples);")
+            print("  *len = PBL_ARRAY_SIZE(samples);")
             print("  return samples;")
             print("}\n")
 
@@ -338,7 +338,7 @@ class ParseMinuteStatsFile:
             {8, 9, 10},
             {11, 12, 13},
           };
-          *len = ARRAY_LENGTH(samples);
+          *len = PBL_ARRAY_SIZE(samples);
           return samples;
         }
         """
@@ -442,7 +442,7 @@ class ParseMinuteStatsFile:
             {8, 9, 10, 11},
             {11, 12, 13, 14},
           };
-          *len = ARRAY_LENGTH(samples);
+          *len = PBL_ARRAY_SIZE(samples);
           return samples;
         }
         """
@@ -569,7 +569,7 @@ class ParseMinuteStatsFile:
             {8, 9, 10},
             {11, 12, 13},
           };
-          *len = ARRAY_LENGTH(samples);
+          *len = PBL_ARRAY_SIZE(samples);
           return samples;
         }
         """

@@ -77,7 +77,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
     case MenuLayerStyleTitle:
       return (MenuDetailInfo){
         .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+        .num_rows = PBL_ARRAY_SIZE(menu_detail_row_data_notifications),
         .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
         .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
         .highlight_background_color = GColorFolly,
@@ -85,7 +85,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
     case MenuLayerStyleTitleAndSubtitle:
       return (MenuDetailInfo){
         .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+        .num_rows = PBL_ARRAY_SIZE(menu_detail_row_data_notifications),
         .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
         .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
         .highlight_background_color = GColorIslamicGreen,
@@ -93,7 +93,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
     case MenuLayerStyleTitleAndSubtitleAndIcon:
       return (MenuDetailInfo){
         .rows = menu_detail_row_data_notifications,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_notifications),
+        .num_rows = PBL_ARRAY_SIZE(menu_detail_row_data_notifications),
         .selected_cell_height = MENU_CELL_ROUND_FOCUSED_TALL_CELL_HEIGHT,
         .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_SHORT_CELL_HEIGHT,
         .highlight_background_color = GColorFolly,
@@ -101,7 +101,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
     case MenuLayerStyleTitleAndIconOnRight:
       return (MenuDetailInfo){
         .rows = menu_detail_row_data_days,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_days),
+        .num_rows = PBL_ARRAY_SIZE(menu_detail_row_data_days),
         .selected_cell_height = menu_cell_basic_cell_height(),
         .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
         .highlight_background_color = GColorIslamicGreen,
@@ -109,7 +109,7 @@ static MenuDetailInfo prv_get_row_details_for_style(MenuLayerStyle style) {
     case MenuLayerStyleTitleAndSubtitleAndValue:
       return (MenuDetailInfo){
         .rows = menu_detail_row_data_alarms,
-        .num_rows = ARRAY_LENGTH(menu_detail_row_data_alarms),
+        .num_rows = PBL_ARRAY_SIZE(menu_detail_row_data_alarms),
         .selected_cell_height = MENU_CELL_ROUND_FOCUSED_SHORT_CELL_HEIGHT,
         .unselected_cell_height = MENU_CELL_ROUND_UNFOCUSED_TALL_CELL_HEIGHT,
         .highlight_background_color = GColorIslamicGreen,
@@ -260,7 +260,7 @@ static int16_t prv_menu_chooser_get_cell_height(struct MenuLayer *menu_layer, Me
 
 static uint16_t prv_menu_chooser_get_num_rows_callback(struct MenuLayer *menu_layer,
                                                        uint16_t section_index, void *context) {
-  return ARRAY_LENGTH(menu_chooser_row_data);
+  return PBL_ARRAY_SIZE(menu_chooser_row_data);
 }
 
 static void prv_menu_chooser_draw_row_callback(GContext *ctx, const Layer *cell_layer,

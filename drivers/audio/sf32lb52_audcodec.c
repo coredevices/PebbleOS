@@ -135,7 +135,7 @@ static inline void prv_field(uintptr_t reg, uint32_t mask, uint32_t value) {
 }
 
 static const struct prv_rate *prv_find_rate(uint32_t rate) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     if (s_rates[i].rate == rate) {
       return &s_rates[i];
     }
@@ -275,7 +275,7 @@ static int prv_calibrate(const struct pbl_audio_sf32lb52_audcodec *dev) {
   prv_set(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_LF_VCIN);
   prv_write(REG(PLL_CAL_CFG), PBL_FIELD_PREP(AUDCODEC_PLL_CAL_CFG_LEN_MASK, CAL_LEN));
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_vco_target) && ret == 0; i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_vco_target) && ret == 0; i++) {
     ret = prv_cal_vco(dev, s_vco_target[i], deltas, &dev->state->vco[i]);
   }
 
@@ -498,7 +498,7 @@ static int prv_init(const struct pbl_audio_dai *dai) {
 }
 
 static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     caps->rates |= pbl_audio_rate_bit(s_rates[i].rate);
   }
   caps->min_channels = 1U;

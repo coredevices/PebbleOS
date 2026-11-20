@@ -195,7 +195,7 @@ bool activity_insights_settings_read(const char *insight_name,
 
   if (!rv) {
     // Use default value if we didn't find anything else
-    for (unsigned i = 0; i < ARRAY_LENGTH(AIS_DEFAULTS); ++i) {
+    for (unsigned i = 0; i < PBL_ARRAY_SIZE(AIS_DEFAULTS); ++i) {
       if (strcmp(insight_name, AIS_DEFAULTS[i].key) == 0) {
         PBL_LOG_DBG("Using default for insight %s", insight_name);
         *settings_out = AIS_DEFAULTS[i].default_val;

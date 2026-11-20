@@ -92,7 +92,7 @@ static struct test_dev *const s_all[] = {
 
 void test_device__initialize(void) {
   s_order[0] = '\0';
-  for (size_t i = 0; i < ARRAY_LENGTH(s_all); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_all); i++) {
     *s_all[i]->dev.state = (struct pbl_device_state){};
     s_all[i]->res = 0;
   }

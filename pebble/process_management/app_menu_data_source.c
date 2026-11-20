@@ -57,7 +57,7 @@ static const struct {
 // Returns 0 if not in table. Otherwise, returns the rank in `s_override_table`. Rank is
 // where the lowest index returns the highest rank
 static int prv_override_index(AppInstallId app_id) {
-  const uint32_t num_overrides = ARRAY_LENGTH(s_override_table);
+  const uint32_t num_overrides = PBL_ARRAY_SIZE(s_override_table);
   for (uint32_t i = 0; i < num_overrides; i++) {
     AppInstallId cur_id = s_override_table[i].install_id;
     if (cur_id == app_id) {

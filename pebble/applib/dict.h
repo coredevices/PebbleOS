@@ -98,7 +98,7 @@
 //! };
 //! uint8_t buffer[256];
 //! uint32_t size = sizeof(buffer);
-//! dict_serialize_tuplets_to_buffer(pairs, ARRAY_LENGTH(pairs), buffer, &size);
+//! dict_serialize_tuplets_to_buffer(pairs, PBL_ARRAY_SIZE(pairs), buffer, &size);
 //!
 //! // buffer now contains the serialized information
 //! \endcode

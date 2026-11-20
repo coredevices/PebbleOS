@@ -877,7 +877,7 @@
       { 24, 0x52, 2342, 171, 0},
       { 4, 0x44, 2826, 169, 0},
     };
-    *len = ARRAY_LENGTH(samples);
+    *len = PBL_ARRAY_SIZE(samples);
     return samples;
   }
 
@@ -1759,7 +1759,7 @@
       { 24, 0x52, 2342, 171, 0},
       { 4, 0x44, 2826, 169, 0},
     };
-    *len = ARRAY_LENGTH(samples);
+    *len = PBL_ARRAY_SIZE(samples);
     return samples;
   }
 
@@ -2641,6 +2641,6 @@
       { 24, 0x52, 2342, 171, 0},
       { 4, 0x44, 2826, 169, 0},
     };
-    *len = ARRAY_LENGTH(samples);
+    *len = PBL_ARRAY_SIZE(samples);
     return samples;
   }

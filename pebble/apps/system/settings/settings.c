@@ -128,7 +128,7 @@ static void prv_window_load(Window *window) {
 
 #ifdef CONFIG_SETTINGS_ICONS
   // Load icons
-  for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(data->icons); i++) {
     if (SETTINGS_MENU_ICON_RESOURCES[i] != RESOURCE_ID_INVALID) {
       data->icons[i] = gbitmap_create_with_resource(SETTINGS_MENU_ICON_RESOURCES[i]);
     } else {
@@ -177,7 +177,7 @@ static void prv_window_unload(Window *window) {
 
 #ifdef CONFIG_SETTINGS_ICONS
   // Free icons
-  for (size_t i = 0; i < ARRAY_LENGTH(data->icons); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(data->icons); i++) {
     if (data->icons[i]) {
       gbitmap_destroy(data->icons[i]);
     }

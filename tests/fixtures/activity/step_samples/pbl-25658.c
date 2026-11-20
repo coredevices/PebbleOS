@@ -4896,7 +4896,7 @@ AccelRawData *activity_sample_non_walk_pbl_25658_14(int *len) {
     { 520, 496, -856},
     { 472, 208, -848},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -13028,7 +13028,7 @@ AccelRawData *activity_sample_non_walk_pbl_25658_15(int *len) {
     { 304, 296, -888},
     { 304, 208, -872},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

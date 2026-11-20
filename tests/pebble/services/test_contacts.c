@@ -98,7 +98,7 @@ static Address addresses[] = {
   {.id = {ADDRESS_1_UUID},
    .type = AddressTypePhoneNumber,
    .attr_list = {
-     .num_attributes = ARRAY_LENGTH(address1_attributes), .attributes = address1_attributes
+     .num_attributes = PBL_ARRAY_SIZE(address1_attributes), .attributes = address1_attributes
    }},
 };
 
@@ -130,9 +130,9 @@ void test_contacts__get_contact_by_uuid(void) {
   cl_assert(contact);
   cl_assert_equal_m(&contact->id, &uuid, UUID_SIZE);
   cl_assert_equal_i(contact->flags, 0);
-  prv_assert_attributes_equal(&contact->attr_list, attributes, ARRAY_LENGTH(attributes));
-  cl_assert_equal_i(contact->addr_list.num_addresses, ARRAY_LENGTH(addresses));
-  for (size_t i = 0; i < ARRAY_LENGTH(addresses); i++) {
+  prv_assert_attributes_equal(&contact->attr_list, attributes, PBL_ARRAY_SIZE(attributes));
+  cl_assert_equal_i(contact->addr_list.num_addresses, PBL_ARRAY_SIZE(addresses));
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(addresses); i++) {
     const Address *address = &contact->addr_list.addresses[i];
     cl_assert_equal_m(&address->id, &addresses[i].id, UUID_SIZE);
     cl_assert_equal_i(address->type, addresses[i].type);

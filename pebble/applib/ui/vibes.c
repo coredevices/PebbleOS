@@ -7,9 +7,9 @@
 #include <applib/ui/vibes.h>
 #include <syscall/syscall.h>
 
-#define PATTERN_FROM_DURATIONS(pat, array)                      \
-  (pat) = (VibePattern) {                                       \
-    .durations = (array), .num_segments = ARRAY_LENGTH((array)) \
+#define PATTERN_FROM_DURATIONS(pat, array)                        \
+  (pat) = (VibePattern) {                                         \
+    .durations = (array), .num_segments = PBL_ARRAY_SIZE((array)) \
   }
 
 static const uint32_t SHORT_PULSE_DURATIONS[] = {250};

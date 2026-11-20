@@ -296,23 +296,23 @@ void test_dict__merge(void) {
 
     uint32_t tmp_size = 0;
     const uint32_t source_size =
-        dict_calc_buffer_size_from_tuplets(source_tuplets, ARRAY_LENGTH(source_tuplets));
+        dict_calc_buffer_size_from_tuplets(source_tuplets, PBL_ARRAY_SIZE(source_tuplets));
     const uint32_t min_dest_size =
-        dict_calc_buffer_size_from_tuplets(dest_tuplets, ARRAY_LENGTH(dest_tuplets));
+        dict_calc_buffer_size_from_tuplets(dest_tuplets, PBL_ARRAY_SIZE(dest_tuplets));
 
     const uint32_t dest_size =
         test_not_enough_storage ? min_dest_size : min_dest_size + source_size;
 
     uint8_t source_buffer[source_size];
     tmp_size = source_size; // dict_serialize_tuplets_to_buffer modifies this.
-    dict_serialize_tuplets_to_buffer(source_tuplets, ARRAY_LENGTH(source_tuplets), source_buffer,
+    dict_serialize_tuplets_to_buffer(source_tuplets, PBL_ARRAY_SIZE(source_tuplets), source_buffer,
                                      &tmp_size);
     DictionaryIterator source_iter;
     dict_read_begin_from_buffer(&source_iter, source_buffer, source_size);
 
     uint8_t dest_buffer[dest_size];
     tmp_size = dest_size; // dict_serialize_tuplets_to_buffer modifies this.
-    dict_serialize_tuplets_to_buffer(dest_tuplets, ARRAY_LENGTH(dest_tuplets), dest_buffer,
+    dict_serialize_tuplets_to_buffer(dest_tuplets, PBL_ARRAY_SIZE(dest_tuplets), dest_buffer,
                                      &tmp_size);
     DictionaryIterator dest_iter;
     dict_read_begin_from_buffer(&dest_iter, dest_buffer, tmp_size);

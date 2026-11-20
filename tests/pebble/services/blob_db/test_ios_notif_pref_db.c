@@ -206,7 +206,7 @@ void test_ios_notif_pref_db__is_dirty_insert_from_phone(void) {
 
   // Insert a bunch of known apps "from the phone"
   // They should NOT be dirty (the phone is the source of truth)
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     ios_notif_pref_db_insert((uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -224,7 +224,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
 
   // Insert a bunch of known apps "from the watch"
   // These should be dirty (the phone is the source of truth)
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     ios_notif_pref_db_store_prefs((uint8_t *)keys[i], key_len, nullptr, nullptr);
   }
 
@@ -234,7 +234,7 @@ void test_ios_notif_pref_db__is_dirty_insert_locally(void) {
 
   BlobDBDirtyItem *dirty_list = ios_notif_pref_db_get_dirty_list();
   cl_assert(dirty_list);
-  cl_assert(list_count((ListNode *)dirty_list) == ARRAY_LENGTH(keys));
+  cl_assert(list_count((ListNode *)dirty_list) == PBL_ARRAY_SIZE(keys));
 
   // Mark some items as synced
   ios_notif_pref_db_mark_synced((uint8_t *)keys[0], key_len);

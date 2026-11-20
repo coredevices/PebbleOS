@@ -24,10 +24,10 @@
 #include <process_management/app_manager.h>
 #include <sys/cdefs.h>
 
-#define StringListLiteral(str)                       \
-  {                                                  \
-    .serialized_byte_length = ARRAY_LENGTH(str) - 1, \
-    .data = str,                                     \
+#define StringListLiteral(str)                         \
+  {                                                    \
+    .serialized_byte_length = PBL_ARRAY_SIZE(str) - 1, \
+    .data = str,                                       \
   }
 
 const char *timeline_demo_strings[TimelinePinsDemoCount] = {
@@ -45,7 +45,7 @@ static void prv_set_timeline_icon(AttributeList *list, TimelineResourceId timeli
   attribute_list_add_uint32(list, AttributeIdIconLarge, card_res ?: timeline_res);
 }
 
-#define ARRAY_RAND(arr) arr[rand() % ARRAY_LENGTH(arr)]
+#define ARRAY_RAND(arr) arr[rand() % PBL_ARRAY_SIZE(arr)]
 
 static void prv_add_notification(int32_t delta_time_s) {
   const time_t now = pbl_realtime();
@@ -344,7 +344,7 @@ static void prv_menu_select(OptionMenu *option_menu, int selection, void *contex
 }
 
 static uint16_t prv_menu_get_num_rows(OptionMenu *option_menu, void *context) {
-  return ARRAY_LENGTH(timeline_demo_strings);
+  return PBL_ARRAY_SIZE(timeline_demo_strings);
 }
 
 static void prv_menu_draw_row(OptionMenu *option_menu, GContext *ctx, const Layer *cell_layer,

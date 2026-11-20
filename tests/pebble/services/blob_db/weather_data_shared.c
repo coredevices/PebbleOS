@@ -119,7 +119,7 @@ void weather_shared_data_write_strings(struct pbl_serialized_array *strings, con
                                        const char *phrase) {
   uint8_t *cursor = strings->data;
   const char *values[] = {location, phrase};
-  for (size_t i = 0; i < ARRAY_LENGTH(values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(values); i++) {
     const uint16_t length = strlen(values[i]);
     memcpy(cursor, &length, sizeof(length));
     memcpy(cursor + sizeof(length), values[i], length);

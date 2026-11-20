@@ -2850,7 +2850,7 @@ AccelRawData *activity_sample_walk_200_pbl_28396_8(int *len) {
     { -64, -288, -984},
     { -80, -280, -984},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -5728,7 +5728,7 @@ AccelRawData *activity_sample_walk_200_pbl_28396_10(int *len) {
     { -344, 40, -872},
     { -392, 264, -1032},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -8686,7 +8686,7 @@ AccelRawData *activity_sample_walk_200_pbl_28396_11(int *len) {
     { 0, -200, -992},
     { 8, -208, -984},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 

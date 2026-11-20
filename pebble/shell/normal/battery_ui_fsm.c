@@ -112,7 +112,7 @@ static void prv_display_warning(void *data) {
   const uint8_t percent =
       pbl_ratio32_to_percent(((PreciseBatteryChargeState *)data)->charge_percent);
   bool new_warning = false;
-  const BatteryUIWarningLevel num_points = ARRAY_LENGTH(s_warning_points) - 1;
+  const BatteryUIWarningLevel num_points = PBL_ARRAY_SIZE(s_warning_points) - 1;
 
   while (s_warning_points_index < num_points &&
          percent <= prv_get_warning_percent(s_warning_points_index + 1)) {
@@ -221,7 +221,7 @@ static void prv_transition(BatteryUIStateID next_state, void *data) {
 }
 
 static bool prv_is_valid_transition(BatteryUIStateID next_state) {
-  const uint8_t count = ARRAY_LENGTH(ui_states[s_state].next_state);
+  const uint8_t count = PBL_ARRAY_SIZE(ui_states[s_state].next_state);
   for (int i = 0; i < count; i++) {
     if (ui_states[s_state].next_state[i] == next_state) {
       return true;

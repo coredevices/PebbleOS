@@ -120,7 +120,7 @@ void test_blob_db_sync__dirty_list(void) {
   int value_len = strlen(values[0]);
 
   // insert all keys
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -128,20 +128,20 @@ void test_blob_db_sync__dirty_list(void) {
   blob_db_get_dirty_dbs(ids, &num_ids);
   cl_assert_equal_i(num_ids, 1);
   dirty_list = blob_db_get_dirty_list(BlobDBIdTest);
-  cl_assert_equal_i(list_count(&dirty_list->node), ARRAY_LENGTH(keys));
+  cl_assert_equal_i(list_count(&dirty_list->node), PBL_ARRAY_SIZE(keys));
 
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != nullptr);
   }
 
   blob_db_util_free_dirty_list(dirty_list);
 
   // mark one as synced and re-check
-  for (int synced_idx = 1; synced_idx < ARRAY_LENGTH(keys); ++synced_idx) {
+  for (int synced_idx = 1; synced_idx < PBL_ARRAY_SIZE(keys); ++synced_idx) {
     blob_db_mark_synced(BlobDBIdTest, (uint8_t *)keys[synced_idx - 1], key_len);
     dirty_list = blob_db_get_dirty_list(BlobDBIdTest);
-    cl_assert_equal_i(list_count(&dirty_list->node), ARRAY_LENGTH(keys) - synced_idx);
-    for (int i = synced_idx; i < ARRAY_LENGTH(keys); ++i) {
+    cl_assert_equal_i(list_count(&dirty_list->node), PBL_ARRAY_SIZE(keys) - synced_idx);
+    for (int i = synced_idx; i < PBL_ARRAY_SIZE(keys); ++i) {
       cl_assert(list_find(&dirty_list->node, prv_list_key_comparator, keys[i]) != nullptr);
     }
     blob_db_util_free_dirty_list(dirty_list);
@@ -155,7 +155,7 @@ void test_blob_db_sync__sync_all(void) {
   int value_len = strlen(values[0]);
 
   // insert all keys
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -172,7 +172,7 @@ void test_blob_db_sync__sync_oom(void) {
   int value_len = strlen(values[0]);
 
   // insert all keys
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -183,7 +183,7 @@ void test_blob_db_sync__sync_oom(void) {
   // build the initial list
   char *extra_keys[] = {"keyA", "keyB"};
   char *extra_values[] = {"valA", "valB"};
-  for (int i = 0; i < ARRAY_LENGTH(extra_keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(extra_keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)extra_keys[i], key_len, (uint8_t *)extra_values[i],
                    value_len);
   }
@@ -200,7 +200,7 @@ void test_blob_db_sync__sync_some(void) {
   int value_len = strlen(values[0]);
 
   // insert all keys, mark some as synced
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
     // choose two that are not consecutive, that leaves 3 still to be synced
     if (i == 1 || i == 3) {
@@ -221,7 +221,7 @@ void test_blob_db_sync__timeout_and_retry(void) {
   int value_len = strlen(values[0]);
 
   // insert all keys, mark some as synced
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -248,7 +248,7 @@ void test_blob_db_sync__sync_while_syncing(void) {
   char *values[] = {"val1", "val2", "val3", "val4", "val5"};
   int value_len = strlen(values[0]);
 
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -269,7 +269,7 @@ static BlobDBSyncSession *prv_start_sync_with_two_keys(void) {
   char *values[] = {"val1", "val2"};
   int value_len = strlen(values[0]);
 
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(BlobDBIdTest, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
 
@@ -354,7 +354,7 @@ static void prv_fill_stop_return_session(BlobDBId id) {
 
   fake_blob_db_set_id(id);
   blob_db_init_dbs();
-  for (int i = 0; i < ARRAY_LENGTH(keys); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(keys); ++i) {
     blob_db_insert(id, (uint8_t *)keys[i], key_len, (uint8_t *)values[i], value_len);
   }
   s_num_writebacks = 0;

@@ -88,7 +88,7 @@ static bool s_do_not_disturb_manually_enabled = false;
 static bool s_do_not_disturb_smart_dnd_enabled = false;
 
 static const char *const s_dnd_schedule_slot_keys[] = {DND_SCHEDULE_SLOT_KEYS};
-static_assert(ARRAY_LENGTH(s_dnd_schedule_slot_keys) == DND_NUM_SCHEDULE_SLOTS);
+static_assert(PBL_ARRAY_SIZE(s_dnd_schedule_slot_keys) == DND_NUM_SCHEDULE_SLOTS);
 static DoNotDisturbScheduleSlot s_dnd_schedule_slots[DND_NUM_SCHEDULE_SLOTS];
 
 #define PREF_KEY_FIRST_USE_COMPLETE "firstUseComplete"

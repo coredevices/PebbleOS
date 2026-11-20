@@ -182,7 +182,7 @@ static bool prv_lis2dw12_read_fifo(uint8_t samples) {
      .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
   };
 
-  return pbl_i2c_transfer(&s_dev->i2c, msgs, ARRAY_LENGTH(msgs)) == 0;
+  return pbl_i2c_transfer(&s_dev->i2c, msgs, PBL_ARRAY_SIZE(msgs)) == 0;
 }
 
 static int16_t prv_raw_to_s12(const uint8_t *raw) {

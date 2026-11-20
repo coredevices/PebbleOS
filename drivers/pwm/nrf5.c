@@ -187,7 +187,7 @@ int pbl_pwm_nrf5_init(const struct pbl_device *dev) {
   prv_putreg(pwm, NRF52_PWM_DECODER_OFFSET, PWM_DECODER_LOAD_INDIVIDUAL);
   prv_putreg(pwm, NRF52_PWM_LOOP_OFFSET, 0U);
   prv_putreg(pwm, NRF52_PWM_SEQ0_PTR_OFFSET, (uint32_t)(uintptr_t)pwm->state->seq);
-  prv_putreg(pwm, NRF52_PWM_SEQ0_CNT_OFFSET, ARRAY_LENGTH(pwm->state->seq));
+  prv_putreg(pwm, NRF52_PWM_SEQ0_CNT_OFFSET, PBL_ARRAY_SIZE(pwm->state->seq));
   prv_putreg(pwm, NRF52_PWM_SEQ0_REFRESH_OFFSET, 0U);
   prv_putreg(pwm, NRF52_PWM_SEQ0_ENDDELAY_OFFSET, 0U);
   prv_putreg(pwm, NRF52_PWM_ENABLE_OFFSET, PWM_ENABLE_ENABLED);

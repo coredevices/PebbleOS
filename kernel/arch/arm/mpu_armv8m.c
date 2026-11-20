@@ -30,7 +30,7 @@ static const uint8_t s_type_to_mair[] = {
   [TYPE_IDX(PBL_MPU_DEVICE)] = ARM_MPU_MAIR_ATTR(0U, ARM_MPU_MAIR_DEVICE_NGNRNE),
 };
 
-static_assert(ARRAY_LENGTH(s_type_to_mair) <= 4, "memory types must fit in MAIR0");
+static_assert(PBL_ARRAY_SIZE(s_type_to_mair) <= 4, "memory types must fit in MAIR0");
 
 static uint32_t prv_ap_to_access(uint32_t ap) {
   // AP=0b10 could have been set for NO_ACCESS or P_RO, and AP=0b11 for
@@ -56,7 +56,7 @@ void arch_mpu_init(void) {
     arch_writel(0U, ARM_MPU_RLAR);
   }
   uint32_t mair0 = 0U;
-  for (unsigned int i = 0U; i < ARRAY_LENGTH(s_type_to_mair); i++) {
+  for (unsigned int i = 0U; i < PBL_ARRAY_SIZE(s_type_to_mair); i++) {
     mair0 |= (uint32_t)s_type_to_mair[i] << (i * 8U);
   }
   arch_writel(mair0, ARM_MPU_MAIR(0));
@@ -74,7 +74,7 @@ void arm_mpu_region_encode(unsigned int slot, const struct pbl_mpu_region *regio
                            uint32_t *attr) {
   (void)slot;
   PBL_ASSERTN((region->base & 0x1f) == 0 && (region->size & 0x1f) == 0);
-  PBL_ASSERTN((region->attr & PBL_MPU_ACCESS_MSK) < ARRAY_LENGTH(s_access_to_ap));
+  PBL_ASSERTN((region->attr & PBL_MPU_ACCESS_MSK) < PBL_ARRAY_SIZE(s_access_to_ap));
 
   const uint32_t sh =
       (region->attr & PBL_MPU_SHAREABLE) ? ARM_MPU_RBAR_SH_INNER : ARM_MPU_RBAR_SH_NON;

@@ -438,7 +438,7 @@ void test_workout_active__sports_pace(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -457,7 +457,7 @@ void test_workout_active__sports_pace_long_values(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -476,7 +476,7 @@ void test_workout_active__sports_speed(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Speed, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -497,7 +497,7 @@ void test_workout_active__sports_no_hrm(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 0);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -516,7 +516,7 @@ void test_workout_active__sports_hr_z0(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -535,7 +535,7 @@ void test_workout_active__sports_hr_z1(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -554,7 +554,7 @@ void test_workout_active__sports_hr_z2(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -573,7 +573,7 @@ void test_workout_active__sports_hr_z3(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -594,7 +594,7 @@ void test_workout_active__sports_custom_field(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Custom};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -615,7 +615,7 @@ void test_workout_active__sports_custom_long_values(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Custom};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -636,7 +636,7 @@ void test_workout_active__sports_custom_hanging_label(void) {
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Custom};
 
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      top_metric, middle_metric, ARRAY_LENGTH(scrollable_metrics), scrollable_metrics,
+      top_metric, middle_metric, PBL_ARRAY_SIZE(scrollable_metrics), scrollable_metrics,
       &s_sports_data, &s_sports_controller);
   prv_create_window_and_render(active_window, 1);
   cl_check(gbitmap_pbi_eq(&s_ctx.dest_bitmap, TEST_PBI_FILE));
@@ -1026,7 +1026,7 @@ void test_workout_active__left_hand_metrics_use_parent_coordinates(void) {
   display_orientation_set_left(true);
   WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Pace, WorkoutMetricType_Hr};
   WorkoutActiveWindow *active_window = workout_active_create_triple_layout(
-      WorkoutMetricType_Duration, WorkoutMetricType_Distance, ARRAY_LENGTH(scrollable_metrics),
+      WorkoutMetricType_Duration, WorkoutMetricType_Distance, PBL_ARRAY_SIZE(scrollable_metrics),
       scrollable_metrics, &s_sports_data, &s_sports_controller);
   Window *window = (Window *)active_window;
   Layer *base = window->layer.first_child;

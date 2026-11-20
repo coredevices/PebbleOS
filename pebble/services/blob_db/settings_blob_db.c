@@ -130,7 +130,7 @@ static const char *s_syncable_settings[] = {
   "musicShowAlbumArt",
 };
 
-static const size_t s_num_syncable_settings = ARRAY_LENGTH(s_syncable_settings);
+static const size_t s_num_syncable_settings = PBL_ARRAY_SIZE(s_syncable_settings);
 
 //! Notification preferences from notifpref file that should be synced
 static const char *s_syncable_notif_prefs[] = {
@@ -161,7 +161,7 @@ static const char *s_syncable_notif_prefs[] = {
   "dndAutoDismiss",
 };
 
-static const size_t s_num_syncable_notif_prefs = ARRAY_LENGTH(s_syncable_notif_prefs);
+static const size_t s_num_syncable_notif_prefs = PBL_ARRAY_SIZE(s_syncable_notif_prefs);
 
 static bool s_initialized = false;
 
@@ -319,12 +319,12 @@ static void prv_settings_change_callback(const void *key, size_t key_len, uint32
 
 static const struct prv_syncable_keys s_shell_prefs_keys = {
   .keys = s_syncable_settings,
-  .num_keys = ARRAY_LENGTH(s_syncable_settings),
+  .num_keys = PBL_ARRAY_SIZE(s_syncable_settings),
 };
 
 static const struct prv_syncable_keys s_notif_prefs_keys = {
   .keys = s_syncable_notif_prefs,
-  .num_keys = ARRAY_LENGTH(s_syncable_notif_prefs),
+  .num_keys = PBL_ARRAY_SIZE(s_syncable_notif_prefs),
 };
 
 static struct pbl_settings_watch s_shell_prefs_watch = {

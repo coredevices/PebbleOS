@@ -184,15 +184,15 @@ static void prv_charge_draw_bar(GContext *ctx, GPoint origin, int16_t left_y, in
     GPointPrecise(CHARGE_BAR_CENTER_X - prv_charge_bar_half_width(left_y), left_y),
     GPointPrecise(CHARGE_BAR_CENTER_X + prv_charge_bar_half_width(right_y), right_y),
   };
-  prv_charge_draw_path(ctx, origin, points, ARRAY_LENGTH(points));
+  prv_charge_draw_path(ctx, origin, points, PBL_ARRAY_SIZE(points));
 }
 
 static void prv_charge_draw_drips(GContext *ctx, GPoint origin, uint32_t frame) {
-  if (frame < 1 || frame > ARRAY_LENGTH(s_charge_drips)) {
+  if (frame < 1 || frame > PBL_ARRAY_SIZE(s_charge_drips)) {
     return;
   }
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_charge_drips[0]); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_charge_drips[0]); i++) {
     const int16_t *drip = s_charge_drips[frame - 1][i];
     if (drip[0] == drip[1]) {
       continue;
@@ -201,7 +201,7 @@ static void prv_charge_draw_drips(GContext *ctx, GPoint origin, uint32_t frame) 
       GPointPrecise(CHARGE_BAR_CENTER_X, drip[0]),
       GPointPrecise(CHARGE_BAR_CENTER_X, drip[1]),
     };
-    prv_charge_draw_path(ctx, origin, points, ARRAY_LENGTH(points));
+    prv_charge_draw_path(ctx, origin, points, PBL_ARRAY_SIZE(points));
   }
 }
 

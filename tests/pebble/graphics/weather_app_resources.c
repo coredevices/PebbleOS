@@ -44,7 +44,7 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
   *c0 = (GDrawCommand){
     .type = GDrawCommandTypePath,
     .fill_color = GColorWhite,
-    .num_points = ARRAY_LENGTH(c0_points),
+    .num_points = PBL_ARRAY_SIZE(c0_points),
   };
   memcpy(c0->points, c0_points, sizeof(c0_points));
 
@@ -54,7 +54,7 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
     .path_open = true,
     .stroke_color = GColorBlack,
     .stroke_width = 3,
-    .num_points = ARRAY_LENGTH(c1_points),
+    .num_points = PBL_ARRAY_SIZE(c1_points),
   };
   memcpy(c1->points, c1_points, sizeof(c1_points));
 
@@ -65,7 +65,7 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
     .stroke_color = GColorBlack,
     .stroke_width = 3,
     .path_open = true,
-    .num_points = ARRAY_LENGTH(c2_points),
+    .num_points = PBL_ARRAY_SIZE(c2_points),
   };
   memcpy(c2->points, c2_points, sizeof(c2_points));
 
@@ -80,9 +80,9 @@ GDrawCommandImage *weather_app_resource_create_cloud() {
   return image;
 }
 
-#define COPY_POINTS(target, source)                   \
-  for (size_t i = 0; i < ARRAY_LENGTH(source); i++) { \
-    (target)[i] = (source)[i];                        \
+#define COPY_POINTS(target, source)                     \
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(source); i++) { \
+    (target)[i] = (source)[i];                          \
   }
 
 GDrawCommandImage *weather_app_resource_create_cloud_25px(void) {
@@ -131,7 +131,7 @@ GDrawCommandImage *weather_app_resource_create_sun(void) {
     .stroke_color = GColorBlack,
     .stroke_width = 3,
     .path_open = true,
-    .num_points = ARRAY_LENGTH(c0_points),
+    .num_points = PBL_ARRAY_SIZE(c0_points),
   };
   memcpy(c0->points, c0_points, sizeof(c0_points));
 
@@ -153,7 +153,7 @@ GDrawCommandImage *weather_app_resource_create_sun(void) {
     .stroke_color = GColorBlack,
     .stroke_width = 3,
     .fill_color = GColorWhite,
-    .num_points = ARRAY_LENGTH(c4_points),
+    .num_points = PBL_ARRAY_SIZE(c4_points),
   };
   memcpy(c4->points, c4_points, sizeof(c4_points));
 

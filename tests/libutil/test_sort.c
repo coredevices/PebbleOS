@@ -39,7 +39,7 @@ static int prv_int32_cmp_desc(const void *a, const void *b) {
 void test_sort__uint8_array(void) {
   uint8_t array[] = {9, 1, 8, 2, 7, 3, 6, 4, 6, 5, 5};
 
-  sort_bubble(array, ARRAY_LENGTH(array), sizeof(uint8_t), prv_uint8_cmp);
+  sort_bubble(array, PBL_ARRAY_SIZE(array), sizeof(uint8_t), prv_uint8_cmp);
 
   uint8_t sorted[] = {1, 2, 3, 4, 5, 5, 6, 6, 7, 8, 9};
   cl_assert_equal_m(array, sorted, sizeof(array));
@@ -48,7 +48,7 @@ void test_sort__uint8_array(void) {
 void test_sort__int32_array(void) {
   int32_t array[] = {-9, 1, 8, 2, 7, 3, -6, 4, 6, 5, 5};
 
-  sort_bubble(array, ARRAY_LENGTH(array), sizeof(int32_t), prv_int32_cmp);
+  sort_bubble(array, PBL_ARRAY_SIZE(array), sizeof(int32_t), prv_int32_cmp);
 
   int32_t sorted[] = {-9, -6, 1, 2, 3, 4, 5, 5, 6, 7, 8};
   cl_assert_equal_m(array, sorted, sizeof(array));
@@ -57,7 +57,7 @@ void test_sort__int32_array(void) {
 void test_sort__int32_array_desc(void) {
   int32_t array[] = {-9, 1, 8, 2, 7, 3, -6, 4, 6, 5, 5};
 
-  sort_bubble(array, ARRAY_LENGTH(array), sizeof(int32_t), prv_int32_cmp_desc);
+  sort_bubble(array, PBL_ARRAY_SIZE(array), sizeof(int32_t), prv_int32_cmp_desc);
 
   int32_t sorted[] = {8, 7, 6, 5, 5, 4, 3, 2, 1, -6, -9};
   cl_assert_equal_m(array, sorted, sizeof(array));
@@ -66,7 +66,7 @@ void test_sort__int32_array_desc(void) {
 void test_sort__single_element_array(void) {
   int32_t array[] = {1};
 
-  sort_bubble(array, ARRAY_LENGTH(array), sizeof(int32_t), prv_int32_cmp);
+  sort_bubble(array, PBL_ARRAY_SIZE(array), sizeof(int32_t), prv_int32_cmp);
 
   int32_t sorted[] = {1};
   cl_assert_equal_m(array, sorted, sizeof(array));
@@ -92,7 +92,7 @@ void test_sort__sort_structs(void) {
     {.number = -123},
   };
 
-  sort_bubble(array, ARRAY_LENGTH(array), sizeof(MyStruct), prv_MyStruct_cmp);
+  sort_bubble(array, PBL_ARRAY_SIZE(array), sizeof(MyStruct), prv_MyStruct_cmp);
 
   MyStruct sorted[] = {
     {.number = -123},

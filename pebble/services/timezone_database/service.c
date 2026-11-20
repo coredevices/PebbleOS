@@ -135,7 +135,7 @@ bool timezone_database_load_region_name(uint16_t region_id, char *region_name) {
   // Read the continent index, which is the first byte
   uint8_t continent_index = 0;
   prv_database_read(region_offset, &continent_index, sizeof(continent_index));
-  PBL_ASSERTN(continent_index < ARRAY_LENGTH(CONTINENT_NAMES));
+  PBL_ASSERTN(continent_index < PBL_ARRAY_SIZE(CONTINENT_NAMES));
 
   // Copy the continent name into our buffer, followed by a slash.
   const int continent_name_length = strlen(CONTINENT_NAMES[continent_index]);

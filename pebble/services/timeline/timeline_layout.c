@@ -507,7 +507,7 @@ static GTextNode *prv_create_hour_text_node(const TimelineLayout *layout) {
   };
   static const LayoutNodeHorizontalConfig s_horizontal_config = {
     .container.extent.node.type = LayoutNodeType_Horizontal,
-    .container.num_nodes = ARRAY_LENGTH(s_horizontal_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(s_horizontal_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&s_horizontal_config_nodes,
   };
 

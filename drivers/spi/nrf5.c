@@ -106,13 +106,13 @@ static int prv_configure(const struct pbl_spi_bus *bus, const struct pbl_spi_dev
   size_t i;
 
   // Only SPIM3 runs above 8 MHz
-  for (i = (prv_is_spim3(spi)) ? 0U : 2U; i < ARRAY_LENGTH(s_frequencies); i++) {
+  for (i = (prv_is_spim3(spi)) ? 0U : 2U; i < PBL_ARRAY_SIZE(s_frequencies); i++) {
     if (s_frequencies[i].hz <= dev->max_hz) {
       break;
     }
   }
 
-  if (i == ARRAY_LENGTH(s_frequencies)) {
+  if (i == PBL_ARRAY_SIZE(s_frequencies)) {
     return -EINVAL;
   }
 

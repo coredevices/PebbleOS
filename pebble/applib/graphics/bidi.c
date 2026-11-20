@@ -597,7 +597,7 @@ Codepoint bidi_mirror_codepoint(Codepoint cp) {
     return cp;
   }
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_mirror_pairs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_mirror_pairs); i++) {
     if (s_mirror_pairs[i].first == cp) {
       return s_mirror_pairs[i].second;
     }

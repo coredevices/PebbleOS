@@ -597,7 +597,7 @@ static uint32_t prv_read_and_convert_pcm(int16_t *out, uint32_t max_out_samples)
       pcm_stream_read(&s_state.pcm_stream, s_state.raw_buf, input_samples * bytes_per_sample);
   if (bytes_read > 0) {
     if (!(s_state.pcm_format & 1)) {
-      s_state.pcm_tail_samples = ARRAY_LENGTH(s_state.prev_samples);
+      s_state.pcm_tail_samples = PBL_ARRAY_SIZE(s_state.prev_samples);
     }
     return prv_convert_pcm(out, s_state.raw_buf, bytes_read / bytes_per_sample);
   }

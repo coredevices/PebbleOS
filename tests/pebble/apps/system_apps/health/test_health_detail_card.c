@@ -157,7 +157,7 @@ void test_health_detail_card__render_no_subtitle(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(s_zones),
+    .num_zones = PBL_ARRAY_SIZE(s_zones),
     .zones = s_zones,
   };
 
@@ -188,7 +188,7 @@ void test_health_detail_card__render_zones(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(s_zones),
+    .num_zones = PBL_ARRAY_SIZE(s_zones),
     .zones = s_zones,
   };
 
@@ -224,7 +224,7 @@ void test_health_detail_card__render_bg_and_zone_colors(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(s_zones),
+    .num_zones = PBL_ARRAY_SIZE(s_zones),
     .zones = s_zones,
   };
 
@@ -263,7 +263,7 @@ void test_health_detail_card__render_crown(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(zones),
+    .num_zones = PBL_ARRAY_SIZE(zones),
     .zones = zones,
   };
 
@@ -293,7 +293,7 @@ void test_health_detail_card__render_zone_hide_typical(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(s_zones),
+    .num_zones = PBL_ARRAY_SIZE(s_zones),
     .zones = s_zones,
   };
 
@@ -323,7 +323,7 @@ void test_health_detail_card__scroll_down(void) {
     .bg_color = BG_COLOR,
     .daily_avg = 900,
     .weekly_max = 1300,
-    .num_zones = ARRAY_LENGTH(s_zones),
+    .num_zones = PBL_ARRAY_SIZE(s_zones),
     .zones = s_zones,
   };
 

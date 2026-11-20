@@ -123,7 +123,7 @@ static void prv_load_notification_storage(NotificationsData *data) {
     {.id = AttributeIdTitle, .cstring = title},
   };
   AttributeList attr_list = {
-    .num_attributes = ARRAY_LENGTH(attributes),
+    .num_attributes = PBL_ARRAY_SIZE(attributes),
     .attributes = attributes,
   };
   notification_storage_iterate_strings_after(data->history.grouping_cutoff, &attr_list,

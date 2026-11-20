@@ -197,7 +197,7 @@ struct pbl_spi_dev {
     .ops = (_ops),                                                                               \
     .state = &sym##_spi_state,                                                                   \
     .cs_gpios = sym##_cs_gpios,                                                                  \
-    .num_cs = ARRAY_LENGTH(sym##_cs_gpios),                                                      \
+    .num_cs = PBL_ARRAY_SIZE(sym##_cs_gpios),                                                    \
   }
 
 /**

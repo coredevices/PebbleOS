@@ -50,12 +50,12 @@ static int prv_cmd_report(const struct pbl_shell *sh, size_t argc, char **argv) 
   long value;
   long sync = 1;
 
-  for (type = 0; type < ARRAY_LENGTH(s_type_names); type++) {
+  for (type = 0; type < PBL_ARRAY_SIZE(s_type_names); type++) {
     if (strcmp(argv[1], s_type_names[type]) == 0) {
       break;
     }
   }
-  if (type == ARRAY_LENGTH(s_type_names)) {
+  if (type == PBL_ARRAY_SIZE(s_type_names)) {
     pbl_shell_error(sh, "invalid type '%s'", argv[1]);
     return -EINVAL;
   }

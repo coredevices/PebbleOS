@@ -1530,7 +1530,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
 
     ActualValue *actual = &result.total;
     ExpectedValue *expected = &entry->total;
-    for (int j = 0; j < ARRAY_LENGTH(metrics); j++, actual++, expected++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(metrics); j++, actual++, expected++) {
       result.weighted_err +=
           prv_compute_test_error(metrics[j], expected, actual, entry->weight, &result.all_passed);
     }
@@ -1555,13 +1555,13 @@ void test_kraepelin_algorithm__sleep_tests(void) {
   printf("\n%-24s", "name");
 
   // Print header line
-  for (int i = 0; i < ARRAY_LENGTH(metrics); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(metrics); i++) {
     printf(" exp_%-8s act_%-7s", metrics[i], metrics[i]);
   }
   printf(" %-10s %-10s", "weight_err", "status");
 
   printf("\n------------------------");
-  for (int i = 0; i < ARRAY_LENGTH(metrics); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(metrics); i++) {
     printf("| ---------------------- ");
   }
 
@@ -1584,7 +1584,7 @@ void test_kraepelin_algorithm__sleep_tests(void) {
     // Print each metric for this test
     ActualValue *actual = &results->total;
     ExpectedValue *expected = &entry->total;
-    for (int j = 0; j < ARRAY_LENGTH(metrics); j++, actual++, expected++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(metrics); j++, actual++, expected++) {
       char *indicator;
       if (actual->passed) {
         indicator = "  ";
@@ -1714,7 +1714,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
 
     ActualValue *actual = &result.activity_type;
     ExpectedValue *expected = &entry->activity_type;
-    for (int j = 0; j < ARRAY_LENGTH(metrics); j++, actual++, expected++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(metrics); j++, actual++, expected++) {
       result.weighted_err +=
           prv_compute_test_error(metrics[j], expected, actual, entry->weight, &result.all_passed);
     }
@@ -1739,13 +1739,13 @@ void test_kraepelin_algorithm__activity_tests(void) {
   printf("\n%-24s", "name");
 
   // Print header line
-  for (int i = 0; i < ARRAY_LENGTH(metrics); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(metrics); i++) {
     printf(" exp_%-8s act_%-7s", metrics[i], metrics[i]);
   }
   printf(" %-10s %-10s", "weight_err", "status");
 
   printf("\n------------------------");
-  for (int i = 0; i < ARRAY_LENGTH(metrics); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(metrics); i++) {
     printf("| ---------------------- ");
   }
 
@@ -1768,7 +1768,7 @@ void test_kraepelin_algorithm__activity_tests(void) {
     // Print each metric for this test
     ActualValue *actual = &results->activity_type;
     ExpectedValue *expected = &entry->activity_type;
-    for (int j = 0; j < ARRAY_LENGTH(metrics); j++, actual++, expected++) {
+    for (int j = 0; j < PBL_ARRAY_SIZE(metrics); j++, actual++, expected++) {
       char *indicator;
       if (actual->passed) {
         indicator = "  ";
@@ -1817,7 +1817,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
         .vmc = 1205,
       },
     };
-    prv_test_minute_data(samples, num_samples, exp_minutes, ARRAY_LENGTH(exp_minutes));
+    prv_test_minute_data(samples, num_samples, exp_minutes, PBL_ARRAY_SIZE(exp_minutes));
   }
 
   // Run the working at desk sample
@@ -1832,7 +1832,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
         .vmc = 1787,
       },
     };
-    prv_test_minute_data(samples, num_samples, exp_minutes, ARRAY_LENGTH(exp_minutes));
+    prv_test_minute_data(samples, num_samples, exp_minutes, PBL_ARRAY_SIZE(exp_minutes));
   }
 
   // Run the not moving sample
@@ -1852,7 +1852,7 @@ void test_kraepelin_algorithm__minute_stats(void) {
         .vmc = 0,
       },
     };
-    prv_test_minute_data(samples, num_samples, exp_minutes, ARRAY_LENGTH(exp_minutes));
+    prv_test_minute_data(samples, num_samples, exp_minutes, PBL_ARRAY_SIZE(exp_minutes));
   }
 }
 

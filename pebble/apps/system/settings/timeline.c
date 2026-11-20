@@ -129,14 +129,14 @@ static void prv_push_before_time_menu(SettingsTimelinePeekData *data) {
     .select = prv_before_time_menu_select,
   };
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, selected, &callbacks,
-                            ARRAY_LENGTH(s_before_time_strings), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_before_time_strings), true /* icons_enabled */,
                             s_before_time_strings, data);
 }
 
 #if TIMELINE_PEEK_WATCHFACE_FIT_SUPPORTED
 static UnsupportedFacesMenuIndex prv_unsupported_face_mode_to_index(
     TimelinePeekUnsupportedFaceMode mode) {
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_unsupported_faces_values); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_unsupported_faces_values); i++) {
     if (s_unsupported_faces_values[i] == mode) {
       return i;
     }
@@ -159,7 +159,7 @@ static void prv_push_unsupported_faces_menu(SettingsTimelinePeekData *data) {
     .select = prv_unsupported_faces_menu_select,
   };
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, selected, &callbacks,
-                            ARRAY_LENGTH(s_unsupported_faces_strings), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_unsupported_faces_strings), true /* icons_enabled */,
                             s_unsupported_faces_strings, data);
 }
 #endif

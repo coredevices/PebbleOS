@@ -635,7 +635,7 @@ static void prv_check_file_exists(const char *filename) {
 
 void test_app_cache__purge_orphaned_files(void) {
   // create some 'standard' files
-  for (uint32_t i = 0; i < ARRAY_LENGTH(descriptions); ++i) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(descriptions); ++i) {
     prv_file_create(descriptions[i].name, descriptions[i].size);
   }
   // create some app and res files and list them in the app cache
@@ -662,7 +662,7 @@ void test_app_cache__purge_orphaned_files(void) {
     prv_check_file_exists(filename);
   }
   // finally, make sure the 'standard' files are all there
-  for (uint32_t i = 0; i < ARRAY_LENGTH(descriptions); ++i) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(descriptions); ++i) {
     prv_check_file_exists(descriptions[i].name);
   }
 }
@@ -670,13 +670,13 @@ void test_app_cache__purge_orphaned_files(void) {
 void test_app_cache__purge_orphaned_files_no_apps(void) {
   // make sure nothing goes awry if there are no installed apps
   // create some 'standard' files
-  for (uint32_t i = 0; i < ARRAY_LENGTH(descriptions); ++i) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(descriptions); ++i) {
     prv_file_create(descriptions[i].name, descriptions[i].size);
   }
   // re-initialize the app-cache (which will attempt to purge resource files too)
   app_cache_init();
   // make sure the 'standard' files are all there
-  for (uint32_t i = 0; i < ARRAY_LENGTH(descriptions); ++i) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(descriptions); ++i) {
     prv_check_file_exists(descriptions[i].name);
   }
 }

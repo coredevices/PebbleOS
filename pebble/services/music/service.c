@@ -151,7 +151,7 @@ static bool prv_str_differs(const char *dest, const char *src, size_t src_length
 
 //! Free the currently-stored album art. Caller must hold the mutex.
 static void prv_free_album_art_locked(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_music_ctx.album_art); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_music_ctx.album_art); i++) {
     imaging_image_destroy(s_music_ctx.album_art[i].bitmap);
     s_music_ctx.album_art[i].bitmap = nullptr;
   }
@@ -159,7 +159,7 @@ static void prv_free_album_art_locked(void) {
 
 // Makes room for the art of another track, at the cost of the oldest one
 static void prv_retire_album_art_locked(void) {
-  const size_t last = ARRAY_LENGTH(s_music_ctx.album_art) - 1;
+  const size_t last = PBL_ARRAY_SIZE(s_music_ctx.album_art) - 1;
 
   if (!s_music_ctx.album_art[0].bitmap) {
     return;
@@ -173,7 +173,7 @@ static void prv_retire_album_art_locked(void) {
 
 // Shows the art kept of the current track, if there is any
 static bool prv_recall_album_art_locked(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_music_ctx.album_art); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_music_ctx.album_art); i++) {
     typeof(s_music_ctx.album_art[0]) art = s_music_ctx.album_art[i];
 
     if (art.bitmap && (strcmp(art.title, s_music_ctx.title) == 0) &&

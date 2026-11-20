@@ -41,7 +41,7 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 
 static uint32_t prv_wallclock_work_count(uint32_t unit_s) {
   uint32_t count = 0;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     if (s_fake_wallclock_started[i] != nullptr &&
         s_fake_wallclock_started[i]->unit_ms == unit_s * 1000U) {
       count++;
@@ -219,10 +219,10 @@ static int prv_handle_write(uint8_t chr, const uint8_t *buffer, uint16_t length)
 
     fake_gattc_service_written(ChrControlPoint, 0);
     if (strcmp((const char *)&buffer[1], "com.tests.NotAnApp") == 0) {
-      prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_fake_app_info_dict),
+      prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_fake_app_info_dict),
                                          (uint8_t *)s_fake_app_info_dict);
     } else {
-      prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
+      prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_message_app_info_dict),
                                          (uint8_t *)s_message_app_info_dict);
     }
     return 0;
@@ -239,75 +239,76 @@ static int prv_handle_write(uint8_t chr, const uint8_t *buffer, uint16_t length)
   }
 
   if (uid == complete_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t *)s_complete_dict);
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_complete_dict), (uint8_t *)s_complete_dict);
     s_num_ds_notifications_received++;
   } else if (uid == chunked_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_one),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_chunked_dict_part_one),
                                        (uint8_t *)s_chunked_dict_part_one);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_chunked_dict_part_two),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_chunked_dict_part_two),
                                        (uint8_t *)s_chunked_dict_part_two);
     s_num_ds_notifications_received += 2;
   } else if (uid == message_size_attr_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_size_attr_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_message_size_attr_dict),
                                        (uint8_t *)s_message_size_attr_dict);
     s_num_ds_notifications_received++;
   } else if (uid == attribute_at_end_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end.attribute_data),
-                                       (uint8_t *)memory_with_attribute_id_at_end.attribute_data);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(memory_with_attribute_id_at_end_p2),
+    prv_fake_receiving_ds_notification(
+        PBL_ARRAY_SIZE(memory_with_attribute_id_at_end.attribute_data),
+        (uint8_t *)memory_with_attribute_id_at_end.attribute_data);
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(memory_with_attribute_id_at_end_p2),
                                        (uint8_t *)memory_with_attribute_id_at_end_p2);
     s_num_ds_notifications_received += 2;
   } else if (uid == invalid_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_invalid_attribute_length),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_invalid_attribute_length),
                                        (uint8_t *)s_invalid_attribute_length);
     s_num_ds_notifications_received++;
   } else if (uid == loading_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_loading_response),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_loading_response),
                                        (uint8_t *)s_loading_response);
     s_num_ds_notifications_received++;
   } else if (uid == no_content_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_this_message_has_no_content_response),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_this_message_has_no_content_response),
                                        (uint8_t *)s_this_message_has_no_content_response);
     s_num_ds_notifications_received++;
   } else if (uid == s_invalid_param_uid) {
     fake_gattc_service_written(ChrControlPoint, 0xA2);
     s_num_ds_notifications_received++;
   } else if (uid == multiple_complete_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_multiple_complete_dicts),
                                        (uint8_t *)s_multiple_complete_dicts);
     s_num_ds_notifications_received += 3;
   } else if (uid == split_timestamp_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_one),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_split_timestamp_dict_part_one),
                                        (uint8_t *)s_split_timestamp_dict_part_one);
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_split_timestamp_dict_part_two),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_split_timestamp_dict_part_two),
                                        (uint8_t *)s_split_timestamp_dict_part_two);
     s_num_ds_notifications_received += 2;
   } else if (uid == message_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_dict), (uint8_t *)s_message_dict);
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_message_dict), (uint8_t *)s_message_dict);
     s_num_ds_notifications_received++;
   } else if (uid == app_name_title_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_app_name_title_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_app_name_title_dict),
                                        (uint8_t *)s_app_name_title_dict);
     s_num_ds_notifications_received++;
   } else if (uid == unknown_app_message_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_unknown_app_dict),
                                        (uint8_t *)s_unknown_app_dict);
     s_num_ds_notifications_received++;
   } else if (uid == unknown_app_unique_title_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_unknown_app_unique_title_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_unknown_app_unique_title_dict),
                                        (uint8_t *)s_unknown_app_unique_title_dict);
     s_num_ds_notifications_received++;
   } else if (uid == mms_no_caption_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_no_caption_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_mms_no_caption_dict),
                                        (uint8_t *)s_mms_no_caption_dict);
     s_num_ds_notifications_received++;
   } else if (uid == mms_with_caption_dict_uid) {
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_mms_with_caption_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_mms_with_caption_dict),
                                        (uint8_t *)s_mms_with_caption_dict);
     s_num_ds_notifications_received++;
   } else if (uid == s_get_wrong_data_uid) {
     // We wanted a notification attributes message, but got a app attributes message...
-    prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
+    prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_message_app_info_dict),
                                        (uint8_t *)s_message_app_info_dict);
     s_num_ds_notifications_received++;
   }
@@ -674,10 +675,10 @@ void test_ancs__disconnection(void) {
 }
 
 void test_ancs__unrequested_notifications(void) {
-  prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t *)s_complete_dict);
+  prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_complete_dict), (uint8_t *)s_complete_dict);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
-  prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
+  prv_fake_receiving_ds_notification(PBL_ARRAY_SIZE(s_message_app_info_dict),
                                      (uint8_t *)s_message_app_info_dict);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 }

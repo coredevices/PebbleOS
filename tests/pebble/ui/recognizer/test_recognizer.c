@@ -570,7 +570,7 @@ void test_recognizer__add_remove_list(void) {
 static int s_list_idx = 0;
 static bool prv_list_iterator(Recognizer *recognizer, void *context) {
   const char *names[] = {"R1", "R2", "R3"};
-  cl_assert(s_list_idx < ARRAY_LENGTH(names));
+  cl_assert(s_list_idx < PBL_ARRAY_SIZE(names));
   char s[20];
   snprintf(s, sizeof(s), "%s != %s", (const char *)recognizer->subscriber.data, names[s_list_idx]);
   cl_assert_(strcmp(recognizer->subscriber.data, names[s_list_idx++]) == 0, s);

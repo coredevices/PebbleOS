@@ -98,7 +98,7 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
       scaled_tl,
     };
 
-    GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
+    GPath path = {.num_points = PBL_ARRAY_SIZE(path_points), .points = path_points};
 
     gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, nullptr);
   } else {
@@ -107,7 +107,7 @@ static void prv_collapse_animation(GContext *ctx, uint32_t distance_normalized, 
       tl, tr, br, bl, l, scaled_l, scaled_bl, scaled_br, scaled_tr, scaled_tl, scaled_l, l,
     };
 
-    GPath path = {.num_points = ARRAY_LENGTH(path_points), .points = path_points};
+    GPath path = {.num_points = PBL_ARRAY_SIZE(path_points), .points = path_points};
 
     gpath_draw_filled_with_cb(ctx, &path, ring_fill_cb, nullptr);
   }

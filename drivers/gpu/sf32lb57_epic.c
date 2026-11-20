@@ -323,8 +323,8 @@ static bool prv_video(const struct pbl_gpu_blit *blit, struct prv_video *video) 
     int32_t dy;
 
     // What the rotated source covers, a pixel wider on every side
-    for (size_t i = 0U; i < ARRAY_LENGTH(xs); i++) {
-      for (size_t j = 0U; j < ARRAY_LENGTH(ys); j++) {
+    for (size_t i = 0U; i < PBL_ARRAY_SIZE(xs); i++) {
+      for (size_t j = 0U; j < PBL_ARRAY_SIZE(ys); j++) {
         const int32_t x = (int32_t)((cos * xs[i] - sin * ys[j]) / TRIG_MAX_RATIO) + tf->pivot_x;
         const int32_t y = (int32_t)((sin * xs[i] + cos * ys[j]) / TRIG_MAX_RATIO) + tf->pivot_y;
 

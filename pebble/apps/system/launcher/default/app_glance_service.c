@@ -259,7 +259,7 @@ static LauncherAppGlance *prv_load_glance_for_node(const AppMenuNode *node,
   LauncherAppGlance *glance = nullptr;
 
   // Check if the UUID matches a known system glance
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_system_glance_factories); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_system_glance_factories); i++) {
     const SystemAppGlanceFactory *factory = &s_system_glance_factories[i];
     if (uuid_equal(&factory->uuid, &node->uuid)) {
       glance = factory->constructor(node);

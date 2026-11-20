@@ -292,7 +292,7 @@ static void prv_init(void) {
     TupletCString(SPORTS_CUSTOM_VALUE_KEY, "")
   };
   app_sync_init(&data->sync, data->sync_buffer, sizeof(data->sync_buffer), initial_values,
-                ARRAY_LENGTH(initial_values), prv_sync_tuple_changed_callback,
+                PBL_ARRAY_SIZE(initial_values), prv_sync_tuple_changed_callback,
                 prv_sync_error_callback, data);
 
   data->workout_controller = (WorkoutController){

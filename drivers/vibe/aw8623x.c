@@ -177,7 +177,7 @@ static int prv_probe(const struct pbl_aw8623x *dev) {
     {AW8623X_VBATCTRL, AW8623X_VBATCTRL_VBAT_MODE_HW},
   };
 
-  for (size_t i = 0; i < ARRAY_LENGTH(config); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(config); i++) {
     ret = prv_write_register(dev, config[i][0], config[i][1]);
     if (ret != 0) {
       PBL_LOG_ERR("Could not write register 0x%02x (%d)", config[i][0], ret);

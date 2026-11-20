@@ -476,7 +476,7 @@ void test_music_endpoint__ignore_malformatted_messages(void) {
     {malformatted_title, sizeof(malformatted_title)},
     {malformatted_player, sizeof(malformatted_player)}
   };
-  for (int i = 0; i < ARRAY_LENGTH(test_vectors); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_vectors); ++i) {
     prv_receive_pp_data(test_vectors[i].data, test_vectors[i].length);
     PebbleEvent e = fake_event_get_last();
     cl_assert_equal_i(e.type, PEBBLE_NULL_EVENT);
@@ -596,7 +596,7 @@ void test_music_endpoint__send_playback_command(void) {
   };
 
   fake_transport_set_sent_cb(s_transport, prv_assert_playback_command_sent_cb);
-  for (int i = 0; i < ARRAY_LENGTH(cmds); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(cmds); ++i) {
     music_command_send(cmds[i]);
     fake_comm_session_process_send_next();
     cl_assert_equal_i(s_is_playback_cmd_sent, true);

@@ -154,7 +154,7 @@ void content_indicator_deinit(ContentIndicator *content_indicator) {
   }
 
   // Deinit the data for each of the directions
-  for (size_t i = 0; i < ARRAY_LENGTH(content_indicator->direction_data); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(content_indicator->direction_data); i++) {
     ContentIndicatorDirectionData *direction_data = &content_indicator->direction_data[i];
     prv_content_indicator_reset_direction(direction_data);
   }

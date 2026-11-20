@@ -77,7 +77,7 @@ static const AppRegistryEntry *prv_get_registry_list_entry(AppInstallId id,
     return nullptr;
   }
 
-  for (int i = 0; i < (int)ARRAY_LENGTH(APP_RECORDS); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(APP_RECORDS); i++) {
     if (APP_RECORDS[i].id == id) {
       if (record_order_out) {
         *record_order_out = i + 1;
@@ -91,7 +91,7 @@ static const AppRegistryEntry *prv_get_registry_list_entry(AppInstallId id,
 // optimization: sort the UUID's and then search more quickly. This will most likely
 // require many changes to the JSON generation script.
 AppInstallId app_get_install_id_for_uuid_from_registry(const Uuid *uuid) {
-  for (uint16_t i = 0; i < ARRAY_LENGTH(APP_RECORDS); i++) {
+  for (uint16_t i = 0; i < PBL_ARRAY_SIZE(APP_RECORDS); i++) {
     const AppRegistryEntry *reg_entry = &APP_RECORDS[i];
 
     if (reg_entry->type == AppInstallStorageFw) {
@@ -268,7 +268,7 @@ void app_install_enumerate_entries(AppInstallEnumerateCb cb, void *data) {
   AppInstallEntry *entry = pbl_malloc_check(sizeof(AppInstallEntry));
 
   // Iterate over the registry
-  for (uint32_t i = 0; i < ARRAY_LENGTH(APP_RECORDS); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(APP_RECORDS); i++) {
     if (app_install_get_entry_for_install_id(APP_RECORDS[i].id, entry)) {
       // if a false is returned from the function, then stop iterating.
       if (cb(entry, data) == false) {
@@ -592,7 +592,7 @@ static GColor prv_hard_coded_color_for_3rd_party_apps(Uuid *uuid) {
 #include "app_install_manager_known_apps.h"
   };
 
-  for (size_t i = 0; i < ARRAY_LENGTH(mappings); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(mappings); i++) {
     if (uuid_equal(uuid, &mappings[i].uuid)) {
       return (GColor){.argb = mappings[i].color_argb};
     }
@@ -627,7 +627,7 @@ static GColor prv_valid_color_from_uuid(GColor color, Uuid *uuid) {
   for (uint8_t *b = &uuid->byte0; b <= &uuid->byte15; b++) {
     uuid_byte_sum += *b;
   }
-  return fall_back_colors[uuid_byte_sum % ARRAY_LENGTH(fall_back_colors)];
+  return fall_back_colors[uuid_byte_sum % PBL_ARRAY_SIZE(fall_back_colors)];
 }
 
 static bool prv_app_install_entry_from_app_db_entry(AppInstallId id, AppDBEntry *db_entry,

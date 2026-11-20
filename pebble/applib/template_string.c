@@ -753,7 +753,7 @@ static void prv_filter_end(TemplateStringState *state) {
 
 PBL_T_STATIC void prv_template_evaluate_filter(TemplateStringState *state, const char *filter_name,
                                                const char *parameters_start) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_filter_impls); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_filter_impls); i++) {
     if (strcmp(s_filter_impls[i].name, filter_name) == 0) {
       state->position = parameters_start;
       s_filter_impls[i].cb(state);

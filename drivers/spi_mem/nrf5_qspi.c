@@ -120,7 +120,7 @@ static PBL_ALWAYS_INLINE const struct pbl_spi_mem_nrf5_qspi *prv_qspi(
 }
 
 static int prv_read_idx(uint8_t opcode) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_reads); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_reads); i++) {
     if (s_reads[i].opcode == opcode) {
       return (int)i;
     }
@@ -130,7 +130,7 @@ static int prv_read_idx(uint8_t opcode) {
 }
 
 static int prv_write_idx(uint8_t opcode) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_writes); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_writes); i++) {
     if (s_writes[i].opcode == opcode) {
       return (int)i;
     }
@@ -140,7 +140,7 @@ static int prv_write_idx(uint8_t opcode) {
 }
 
 static int prv_erase_idx(uint8_t opcode) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_erases); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_erases); i++) {
     if (s_erases[i].opcode == opcode) {
       return (int)i;
     }
@@ -505,7 +505,7 @@ static int prv_init(const struct pbl_spi_mem *mem) {
 
   data->psel[0] = pbl_gpio_nrf5_pin(&qspi->sck);
   data->psel[1] = pbl_gpio_nrf5_pin(&qspi->csn);
-  for (size_t i = 0U; i < ARRAY_LENGTH(qspi->io); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(qspi->io); i++) {
     data->psel[2U + i] = pbl_gpio_nrf5_pin(&qspi->io[i]);
   }
   prv_psel_set(qspi, data->psel);

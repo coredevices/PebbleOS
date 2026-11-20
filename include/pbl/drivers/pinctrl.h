@@ -99,7 +99,7 @@ struct pbl_pinctrl_state {
   static const struct pbl_pinctrl_state sym = {       \
     .ctrl = (_ctrl),                                  \
     .pins = sym##_pins,                               \
-    .num_pins = ARRAY_LENGTH(sym##_pins),             \
+    .num_pins = PBL_ARRAY_SIZE(sym##_pins),           \
   }
 
 /** @brief State identifiers. */

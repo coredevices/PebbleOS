@@ -131,7 +131,7 @@ static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps 
 }
 
 static void prv_free(struct pbl_audio_nrf5_i2s_state *state) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(state->bounce); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(state->bounce); i++) {
     pbl_free(state->bounce[i]);
     state->bounce[i] = nullptr;
   }
@@ -148,7 +148,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   }
 
   *state = (struct pbl_audio_nrf5_i2s_state){0};
-  for (size_t i = 0U; i < ARRAY_LENGTH(state->bounce); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(state->bounce); i++) {
     state->bounce[i] = pbl_malloc(BOUNCE_BYTES);
     if (state->bounce[i] == nullptr) {
       prv_free(state);

@@ -87,18 +87,18 @@ static void prv_start_test(GfxTest *test, AppData *app_data) {
 
 static uint16_t prv_get_num_rows(struct MenuLayer *menu_layer, uint16_t section,
                                  void *callback_context) {
-  return (uint16_t)ARRAY_LENGTH(s_tests);
+  return (uint16_t)PBL_ARRAY_SIZE(s_tests);
 }
 
 static void prv_draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index,
                          void *callback_context) {
-  PBL_ASSERTN(cell_index->row < ARRAY_LENGTH(s_tests));
+  PBL_ASSERTN(cell_index->row < PBL_ARRAY_SIZE(s_tests));
   menu_cell_title_draw(ctx, cell_layer, s_tests[cell_index->row]->name);
 }
 
 static void prv_click_handler(struct MenuLayer *menu_layer, MenuIndex *cell_index,
                               void *callback_context) {
-  PBL_ASSERTN(cell_index->row < ARRAY_LENGTH(s_tests));
+  PBL_ASSERTN(cell_index->row < PBL_ARRAY_SIZE(s_tests));
   prv_start_test(s_tests[cell_index->row], (AppData *)callback_context);
 }
 

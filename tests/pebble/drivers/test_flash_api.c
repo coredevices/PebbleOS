@@ -43,7 +43,7 @@ static int prv_write(const struct pbl_flash *flash, uint32_t addr, const void *b
 }
 
 static int prv_erase(const struct pbl_flash *flash, uint32_t addr, uint32_t size) {
-  cl_assert(s_num_erases < (int)ARRAY_LENGTH(s_erases));
+  cl_assert(s_num_erases < (int)PBL_ARRAY_SIZE(s_erases));
   s_erases[s_num_erases++] = (struct erase_cmd){.addr = addr, .size = size};
   return s_erase_ret;
 }

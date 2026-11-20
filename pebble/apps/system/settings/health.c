@@ -37,7 +37,7 @@ static const char *s_hrm_interval_labels[] = {
 };
 
 static int prv_hrm_interval_to_index(HRMonitoringInterval interval) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_hrm_intervals); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_hrm_intervals); i++) {
     if (s_hrm_intervals[i] == interval) {
       return (int)i;
     }
@@ -60,7 +60,7 @@ static const char *s_spo2_interval_labels[] = {
 };
 
 static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_spo2_intervals); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_spo2_intervals); i++) {
     if (s_spo2_intervals[i] == interval) {
       return (int)i;
     }
@@ -86,7 +86,7 @@ enum SettingsHealthItem {
 /////////////////////////////
 
 static void prv_hrm_interval_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  if (selection >= 0 && (size_t)selection < ARRAY_LENGTH(s_hrm_intervals)) {
+  if (selection >= 0 && (size_t)selection < PBL_ARRAY_SIZE(s_hrm_intervals)) {
     activity_prefs_set_hrm_measurement_interval(s_hrm_intervals[selection]);
   }
   app_window_stack_remove(&option_menu->window, true /*animated*/);
@@ -99,7 +99,7 @@ static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
   };
   const char *title = pbl_i18n_noop("HR Monitoring");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_hrm_interval_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_hrm_interval_labels), true /* icons_enabled */,
                             s_hrm_interval_labels, data);
 }
 
@@ -107,7 +107,7 @@ static void prv_hrm_interval_menu_push(SettingsHealthData *data) {
 /////////////////////////////
 
 static void prv_spo2_interval_menu_select(OptionMenu *option_menu, int selection, void *context) {
-  if (selection >= 0 && (size_t)selection < ARRAY_LENGTH(s_spo2_intervals)) {
+  if (selection >= 0 && (size_t)selection < PBL_ARRAY_SIZE(s_spo2_intervals)) {
     activity_prefs_set_spo2_measurement_interval(s_spo2_intervals[selection]);
   }
   app_window_stack_remove(&option_menu->window, true /*animated*/);
@@ -120,7 +120,7 @@ static void prv_spo2_interval_menu_push(SettingsHealthData *data) {
   };
   const char *title = pbl_i18n_noop("SpO2 Monitoring");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_spo2_interval_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_spo2_interval_labels), true /* icons_enabled */,
                             s_spo2_interval_labels, data);
 }
 #endif

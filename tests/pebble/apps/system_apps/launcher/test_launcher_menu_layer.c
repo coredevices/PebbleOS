@@ -113,7 +113,7 @@ static const LauncherMenuLayerTestAppNode s_fake_app_nodes[LauncherMenuLayerTest
 
 AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source, uint16_t row_index) {
   cl_assert(source);
-  cl_assert(row_index < ARRAY_LENGTH(s_fake_app_nodes));
+  cl_assert(row_index < PBL_ARRAY_SIZE(s_fake_app_nodes));
   const LauncherMenuLayerTestAppNode *test_node = &s_fake_app_nodes[row_index];
   static AppMenuNode node_copy;
   node_copy = test_node->node;
@@ -129,7 +129,7 @@ AppMenuNode *app_menu_data_source_get_node_at_index(AppMenuDataSource *source, u
 
 uint16_t app_menu_data_source_get_count(AppMenuDataSource *source) {
   cl_assert(source);
-  return ARRAY_LENGTH(s_fake_app_nodes);
+  return PBL_ARRAY_SIZE(s_fake_app_nodes);
 }
 
 static GBitmap s_default_app_icon_bitmap;

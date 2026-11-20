@@ -36,12 +36,12 @@
  * };
  * ProtobufLogConfig config = {
  *   .type = ProtobufLogType_Measurements,
- *   .measurements = { .num_types = ARRAY_LENGTH(types), .types = types },
+ *   .measurements = { .num_types = PBL_ARRAY_SIZE(types), .types = types },
  * };
  * ProtobufLogRef log = protobuf_log_create(&config, NULL, 0);
  *
  * uint32_t values[] = { bpm, quality };
- * protobuf_log_session_add_measurements(log, pbl_realtime(), ARRAY_LENGTH(values), values);
+ * protobuf_log_session_add_measurements(log, pbl_realtime(), PBL_ARRAY_SIZE(values), values);
  *
  * protobuf_log_session_delete(log);
  * @endcode

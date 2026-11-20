@@ -322,7 +322,7 @@ static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
   };
   const LayoutNodeVerticalConfig vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
   };
 #if PBL_RECT
@@ -332,7 +332,7 @@ static GTextNode *prv_metric_constructor(const LayoutLayer *layout,
   };
   const LayoutNodeHorizontalConfig horizontal_config = {
     .container.extent.node.type = LayoutNodeType_Horizontal,
-    .container.num_nodes = ARRAY_LENGTH(horizontal_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(horizontal_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&horizontal_config_nodes,
   };
 #endif

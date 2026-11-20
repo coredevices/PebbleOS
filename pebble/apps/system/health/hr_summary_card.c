@@ -224,7 +224,7 @@ Layer *health_hr_summary_card_create(HealthData *health_data) {
         gdraw_command_sequence_create_with_resource(RESOURCE_ID_HEALTH_APP_PULSING_HEART),
     .progress_bar =
         {
-          .num_segments = ARRAY_LENGTH(s_hr_summary_progress_segments),
+          .num_segments = PBL_ARRAY_SIZE(s_hr_summary_progress_segments),
           .segments = s_hr_summary_progress_segments,
         },
     .now_bpm = health_data_hr_get_current_bpm(health_data),

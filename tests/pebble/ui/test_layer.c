@@ -82,7 +82,7 @@ void recognizer_manager_deregister_recognizer(RecognizerManager *manager, Recogn
 void test_layer__add_child_and_remove_from_parent(void) {
   Layer parent, child_a, child_b, child_c, grand_child_a;
   Layer *layers[] = {&parent, &child_a, &child_b, &child_c, &grand_child_a};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   // Create this hierarchy:
@@ -150,7 +150,7 @@ void test_layer__add_child_and_remove_from_parent(void) {
 void test_layer__remove_child_layers(void) {
   Layer parent, child_a, child_b;
   Layer *layers[] = {&parent, &child_a, &child_b};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   // Create this hierarchy:
@@ -171,7 +171,7 @@ void test_layer__remove_child_layers(void) {
 void test_layer__insert_below(void) {
   Layer parent, child_a, child_b, child_c;
   Layer *layers[] = {&parent, &child_a, &child_b, &child_c};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   // Create this hierarchy:
@@ -210,7 +210,7 @@ void test_layer__insert_below(void) {
 void test_layer__insert_above(void) {
   Layer parent, child_a, child_b, child_c;
   Layer *layers[] = {&parent, &child_a, &child_b, &child_c};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   // Create this hierarchy:
@@ -267,7 +267,7 @@ void test_layer__traverse(void) {
 
   // go to child if possible
   Layer *actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(aa, actual);
   cl_assert_equal_i(1, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -275,7 +275,7 @@ void test_layer__traverse(void) {
 
   // go to child if possible
   actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(aaa, actual);
   cl_assert_equal_i(2, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -284,7 +284,7 @@ void test_layer__traverse(void) {
 
   // go to child if possible
   actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(aaaa, actual);
   cl_assert_equal_i(3, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -294,7 +294,7 @@ void test_layer__traverse(void) {
 
   // go back two levels and then to sibling
   actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(ab, actual);
   cl_assert_equal_i(1, current_stack);
   cl_assert_equal_p(a, stack[0]);
@@ -302,22 +302,22 @@ void test_layer__traverse(void) {
 
   // go back one level and then to sibling
   actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(b, actual);
   cl_assert_equal_i(0, current_stack);
   cl_assert_equal_p(b, stack[0]);
 
   // no more siblings on root level
   actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, true);
+      __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack, true);
   cl_assert_equal_p(nullptr, actual);
   cl_assert_equal_i(0, current_stack);
 
   // do not descend
   stack[0] = a;
   current_stack = 0;
-  actual =
-      __layer_tree_traverse_next__test_accessor(stack, ARRAY_LENGTH(stack), &current_stack, false);
+  actual = __layer_tree_traverse_next__test_accessor(stack, PBL_ARRAY_SIZE(stack), &current_stack,
+                                                     false);
   cl_assert_equal_p(b, actual);
   cl_assert_equal_i(0, current_stack);
   cl_assert_equal_p(b, stack[0]);
@@ -347,7 +347,7 @@ void test_layer__traverse(void) {
 void test_layer__is_ancestor(void) {
   Layer parent, child_a, child_b, child_c;
   Layer *layers[] = {&parent, &child_a, &child_b, &child_c};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
 
@@ -370,7 +370,7 @@ void test_layer__is_ancestor(void) {
 void test_layer__find_layer_contains_point(void) {
   Layer parent, child_a, child_b, child_c, child_d, child_e, child_f;
   Layer *layers[] = {&parent, &child_a, &child_b, &child_c, &child_d, &child_e, &child_f};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   layer_set_frame(&parent, &GRect(0, 0, 20, 20));
@@ -421,7 +421,7 @@ static bool prv_override_layer_contains_point(const Layer *layer, const GPoint *
 void test_layer__find_layer_contains_point_override_layer_contains_point(void) {
   Layer parent, child_a, child_b;
   Layer *layers[] = {&parent, &child_a, &child_b};
-  for (int i = 0; i < ARRAY_LENGTH(layers); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(layers); ++i) {
     layer_init(layers[i], &GRectZero);
   }
   layer_set_frame(&parent, &GRect(0, 0, 20, 20));

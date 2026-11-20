@@ -181,7 +181,7 @@ PBL_T_STATIC ResourceId prv_get_emoji_icon_by_string(const EmojiEntry *table, co
   }
   Codepoint emoji_codepoint = NULL_CODEPOINT;
   utf8_each_codepoint(str, prv_each_emoji_codepoint, &emoji_codepoint);
-  for (unsigned int i = 0; i < ARRAY_LENGTH(s_emoji_table); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(s_emoji_table); i++) {
     const EmojiEntry *emoji = &s_emoji_table[i];
     if (emoji->codepoint == emoji_codepoint) {
       return emoji->resource_id;
@@ -454,7 +454,7 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
   };
   const LayoutNodeVerticalConfig vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
-    .container.num_nodes = ARRAY_LENGTH(vertical_config_nodes),
+    .container.num_nodes = PBL_ARRAY_SIZE(vertical_config_nodes),
     .container.nodes = (LayoutNodeConfig **)&vertical_config_nodes,
   };
   return layout_create_text_node_from_config(&layout->layout,

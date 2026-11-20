@@ -22,7 +22,7 @@ static const char *s_runlevel_names[] = {
 };
 
 static void prv_list_runlevels(const struct pbl_shell *sh) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_runlevel_names); ++i) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_runlevel_names); ++i) {
     pbl_shell_print(sh, "%u - %s", (unsigned int)i, s_runlevel_names[i]);
   }
 }

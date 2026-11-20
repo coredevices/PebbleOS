@@ -67,7 +67,7 @@ extern const struct pbl_battery *const BATTERY;
     .constant_charge_current_ua = (_chg_current_ua),                                 \
     .charge_term_current_ua = (_term_current_ua),                                    \
     .constant_charge_voltage_uv = (_chg_voltage_uv),                                 \
-    __VA_OPT__(.ocv = sym##_ocv, .ocv_count = ARRAY_LENGTH(sym##_ocv), )             \
+    __VA_OPT__(.ocv = sym##_ocv, .ocv_count = PBL_ARRAY_SIZE(sym##_ocv), )           \
   }
 
 /** @} */

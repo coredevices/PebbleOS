@@ -77,7 +77,7 @@ static int prv_latency(const struct pbl_hyperbus *bus, uint8_t *clocks) {
     return ret;
   }
 
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_latencies); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_latencies); i++) {
     if (rate_hz <= s_latencies[i].max_hz) {
       *clocks = s_latencies[i].clocks;
       return 0;

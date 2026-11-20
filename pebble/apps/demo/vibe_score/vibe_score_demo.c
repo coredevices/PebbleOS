@@ -16,7 +16,7 @@
 static uint32_t s_vibe_score_resources[] = {
   RESOURCE_ID_VIBE_SCORE_NUDGE_NUDGE,
 };
-static VibeScore *s_vibe_scores[ARRAY_LENGTH(s_vibe_score_resources)];
+static VibeScore *s_vibe_scores[PBL_ARRAY_SIZE(s_vibe_score_resources)];
 
 static void prv_do_vibe(NumberWindow *nw, void *ctx) {
   int selected_idx = number_window_get_value(nw);
@@ -26,14 +26,14 @@ static void prv_do_vibe(NumberWindow *nw, void *ctx) {
 }
 
 static void prv_load_scores(void) {
-  int num_scores = ARRAY_LENGTH(s_vibe_scores);
+  int num_scores = PBL_ARRAY_SIZE(s_vibe_scores);
   for (int i = 0; i < num_scores; i++) {
     s_vibe_scores[i] = vibe_score_create_with_resource(s_vibe_score_resources[i]);
   }
 }
 
 static void prv_unload_scores(void) {
-  int num_scores = ARRAY_LENGTH(s_vibe_scores);
+  int num_scores = PBL_ARRAY_SIZE(s_vibe_scores);
   for (int i = 0; i < num_scores; i++) {
     vibe_score_destroy(s_vibe_scores[i]);
   }
@@ -47,7 +47,7 @@ static void handle_init(void) {
   app_state_set_user_data(vibe_num_window);
 
   number_window_set_value(vibe_num_window, 0);
-  number_window_set_max(vibe_num_window, ARRAY_LENGTH(s_vibe_scores) - 1);
+  number_window_set_max(vibe_num_window, PBL_ARRAY_SIZE(s_vibe_scores) - 1);
   number_window_set_min(vibe_num_window, 0);
   number_window_set_step_size(vibe_num_window, 1);
 

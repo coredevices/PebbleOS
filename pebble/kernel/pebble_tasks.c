@@ -82,7 +82,7 @@ void pebble_task_register(PebbleTask task, struct pbl_thread *thread) {
 
 static uint32_t prv_read_task_run_time(const struct pbl_thread *thread) {
   struct pbl_thread_stats stats[CONFIG_KERNEL_MAX_THREADS];
-  size_t count = pbl_thread_stats_snapshot(stats, ARRAY_LENGTH(stats), nullptr);
+  size_t count = pbl_thread_stats_snapshot(stats, PBL_ARRAY_SIZE(stats), nullptr);
   for (size_t i = 0; i < count; i++) {
     if (stats[i].thread == thread) {
       return stats[i].run_time;
@@ -155,7 +155,7 @@ PebbleTask pebble_task_get_task_for_thread(const struct pbl_thread *thread) {
   if (thread == nullptr) {
     return PebbleTask_Unknown;
   }
-  for (int i = 0; i < (int)ARRAY_LENGTH(g_task_threads); ++i) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(g_task_threads); ++i) {
     if (g_task_threads[i] == thread) {
       return i;
     }
@@ -225,7 +225,7 @@ static void prv_collect_task_cpu_stats(void) {
 
   struct pbl_thread_stats stats[CONFIG_KERNEL_MAX_THREADS];
   uint32_t total_run_time;
-  size_t count = pbl_thread_stats_snapshot(stats, ARRAY_LENGTH(stats), &total_run_time);
+  size_t count = pbl_thread_stats_snapshot(stats, PBL_ARRAY_SIZE(stats), &total_run_time);
 
   uint32_t delta_total = total_run_time - s_prev_total_run_time;
   s_prev_total_run_time = total_run_time;

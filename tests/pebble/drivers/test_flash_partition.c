@@ -61,7 +61,7 @@ static void prv_check_layout(const struct pbl_flash_partition *parts, size_t len
 }
 
 void test_flash_partition__dual_slot_layout(void) {
-  prv_check_layout(s_dual_slot_partitions, ARRAY_LENGTH(s_dual_slot_partitions));
+  prv_check_layout(s_dual_slot_partitions, PBL_ARRAY_SIZE(s_dual_slot_partitions));
 }
 
 void test_flash_partition__single_slot_layout(void) {

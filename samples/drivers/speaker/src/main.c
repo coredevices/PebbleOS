@@ -38,7 +38,7 @@ static void prv_fill(int16_t *samples) {
   for (size_t i = 0U; i < PERIOD_FRAMES; i++, s_play.frame++) {
     size_t note = s_play.frame / NOTE_FRAMES;
 
-    if (note >= ARRAY_LENGTH(s_notes)) {
+    if (note >= PBL_ARRAY_SIZE(s_notes)) {
       samples[i] = 0;
       continue;
     }
@@ -58,7 +58,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
   (void)pbl_audio_period_ready(audio, period);
 
   /* Done once the whole ring holds silence: the last notes have played out. */
-  if (s_play.frame >= ARRAY_LENGTH(s_notes) * NOTE_FRAMES && ++s_play.tail == PERIODS + 1U) {
+  if (s_play.frame >= PBL_ARRAY_SIZE(s_notes) * NOTE_FRAMES && ++s_play.tail == PERIODS + 1U) {
     pbl_sem_give(&s_play.done);
   }
 }
@@ -106,7 +106,7 @@ int main(void) {
     prv_fill((int16_t *)stream.buf + i * PERIOD_FRAMES);
   }
 
-  printf("speaker: playing %d notes at %d Hz\n", (int)ARRAY_LENGTH(s_notes), (int)RATE);
+  printf("speaker: playing %d notes at %d Hz\n", (int)PBL_ARRAY_SIZE(s_notes), (int)RATE);
 
 #ifdef CONFIG_CHARGER_HIGH_LOAD
   /* The speaker draws more than the battery gives by default. */
@@ -115,7 +115,7 @@ int main(void) {
 
   ret = pbl_audio_start(SPEAKER, &stream);
   if (ret == 0) {
-    ret = pbl_sem_take(&s_play.done, PBL_MSEC(ARRAY_LENGTH(s_notes) * NOTE_MS + 1000U));
+    ret = pbl_sem_take(&s_play.done, PBL_MSEC(PBL_ARRAY_SIZE(s_notes) * NOTE_MS + 1000U));
     (void)pbl_audio_stop(SPEAKER);
   }
 

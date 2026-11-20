@@ -62,7 +62,7 @@ static int prv_heartbeat_offset(AnimationProgress progress) {
   const int times[] = {0, 70, 150, 220, HEARTBEAT_MS};
   const int offsets[] = {0, 6, 0, 3, 0};
   const int elapsed = progress * HEARTBEAT_MS / ANIMATION_NORMALIZED_MAX;
-  for (size_t i = 1; i < ARRAY_LENGTH(times); i++) {
+  for (size_t i = 1; i < PBL_ARRAY_SIZE(times); i++) {
     if (elapsed <= times[i]) {
       return offsets[i - 1] +
              (offsets[i] - offsets[i - 1]) * (elapsed - times[i - 1]) / (times[i] - times[i - 1]);

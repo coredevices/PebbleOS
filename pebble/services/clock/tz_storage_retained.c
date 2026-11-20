@@ -18,18 +18,18 @@ static_assert(sizeof(TimezoneInfo) <= sizeof(s_regs) * sizeof(uint32_t),
               "TimezoneInfo must fit in the timezone registers");
 
 void tz_storage_save(const TimezoneInfo *tz_info) {
-  uint32_t raw[ARRAY_LENGTH(s_regs)] = {};
+  uint32_t raw[PBL_ARRAY_SIZE(s_regs)] = {};
 
   memcpy(raw, tz_info, sizeof(*tz_info));
-  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_regs); i++) {
     retained_write(s_regs[i], raw[i]);
   }
 }
 
 void tz_storage_load(TimezoneInfo *tz_info) {
-  uint32_t raw[ARRAY_LENGTH(s_regs)];
+  uint32_t raw[PBL_ARRAY_SIZE(s_regs)];
 
-  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_regs); i++) {
     raw[i] = retained_read(s_regs[i]);
   }
   memcpy(tz_info, raw, sizeof(*tz_info));
@@ -41,7 +41,7 @@ bool tz_storage_is_set(void) {
 }
 
 void tz_storage_clear(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_regs); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_regs); i++) {
     retained_write(s_regs[i], 0U);
   }
 }

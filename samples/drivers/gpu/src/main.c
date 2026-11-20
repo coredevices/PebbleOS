@@ -165,7 +165,7 @@ int main(void) {
    * cannot do it refuses before drawing, for the caller to draw it otherwise.
    */
   blit.alpha = PBL_GPU_ALPHA_OPAQUE;
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_transforms); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_transforms); i++) {
     const struct transform *t = &s_transforms[i];
     struct pbl_gpu_transform transform = {
       .angle = t->angle,

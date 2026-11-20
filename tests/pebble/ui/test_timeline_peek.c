@@ -305,10 +305,10 @@ static void prv_render_timeline_peek_screen(const TimelinePeekItemConfig *config
 
 void test_timeline_peek__content_sizes(void) {
   ScreenGrid grid;
-  screen_grid_init(&grid, ARRAY_LENGTH(s_content_size_items));
+  screen_grid_init(&grid, PBL_ARRAY_SIZE(s_content_size_items));
   for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
     system_theme_set_content_size(size);
-    for (size_t row = 0; row < ARRAY_LENGTH(s_content_size_items); row++) {
+    for (size_t row = 0; row < PBL_ARRAY_SIZE(s_content_size_items); row++) {
       prv_render_timeline_peek_screen(&s_content_size_items[row]);
       screen_grid_add(&grid, &s_ctx, size, row);
     }

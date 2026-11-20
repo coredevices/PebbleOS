@@ -791,8 +791,8 @@ static ActionMenuLevel *prv_create_template_level_from_action(ActionMenuLevel *p
       pbl_i18n_noop("Call me"),
       pbl_i18n_noop("Call you later"),
     };
-    template_level = prv_create_level(ARRAY_LENGTH(strings), parent_level);
-    for (size_t i = 0; i < (int)ARRAY_LENGTH(strings); i++) {
+    template_level = prv_create_level(PBL_ARRAY_SIZE(strings), parent_level);
+    for (size_t i = 0; i < (int)PBL_ARRAY_SIZE(strings); i++) {
       const char *label = pbl_i18n_get(strings[i], i18n_owner);
       action_menu_level_add_action(template_level, label, prv_action_menu_cb, action);
     }
@@ -807,7 +807,7 @@ static ActionMenuLevel *prv_create_emoji_level_from_action(ActionMenuLevel *pare
   static const char *short_strings[] = {"😃", "😉", "😂", "😍", "😘", "\xe2\x9d\xa4", "😇",
                                         "😎", "😛", "😟", "😩", "😭", "😴",           "😐",
                                         "😯", "👍", "👎", "👌", "💩", "🎉",           "🍺"};
-  const uint16_t num_items = ARRAY_LENGTH(short_strings);
+  const uint16_t num_items = PBL_ARRAY_SIZE(short_strings);
 
   ActionMenuLevel *emoji_level = prv_create_level(num_items, parent_level);
   emoji_level->display_mode = ActionMenuLevelDisplayModeGlyphGrid;

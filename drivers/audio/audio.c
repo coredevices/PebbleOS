@@ -28,7 +28,7 @@ static const uint32_t s_rates[] = {
 };
 
 uint32_t pbl_audio_rate_bit(uint32_t rate) {
-  for (size_t i = 0U; i < ARRAY_LENGTH(s_rates); i++) {
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     if (s_rates[i] == rate) {
       return PBL_BIT(i);
     }

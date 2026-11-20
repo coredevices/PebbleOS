@@ -233,7 +233,7 @@ static void prv_init_glyph_grid(void) {
   action_menu_layer_init(&s_aml,
                          &GRect(13, 17, PBL_IF_ROUND_ELSE(260, 200), PBL_IF_ROUND_ELSE(260, 240)));
   layer_add_child(&s_root_layer, &s_aml.layer);
-  for (int i = 0; i < ARRAY_LENGTH(s_emoji_items); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_emoji_items); ++i) {
     s_emoji_items[i] = (ActionMenuItem){.label = "😃", .is_leaf = 1};
   }
   action_menu_layer_set_glyph_grid(&s_aml, true);
@@ -243,7 +243,7 @@ static void prv_init_glyph_grid(void) {
                                     .selection_changed = prv_record_selection_changed,
                                   },
                                   nullptr);
-  action_menu_layer_set_short_items(&s_aml, s_emoji_items, ARRAY_LENGTH(s_emoji_items), 0);
+  action_menu_layer_set_short_items(&s_aml, s_emoji_items, PBL_ARRAY_SIZE(s_emoji_items), 0);
 }
 
 static GPoint prv_glyph_point(int index) {
@@ -303,7 +303,7 @@ static void prv_init_aml_with_wide_items(void) {
                                     .selection_changed = prv_record_selection_changed,
                                   },
                                   nullptr);
-  action_menu_layer_set_items(&s_aml, s_wide_items, ARRAY_LENGTH(s_wide_items), 0, 0);
+  action_menu_layer_set_items(&s_aml, s_wide_items, PBL_ARRAY_SIZE(s_wide_items), 0, 0);
   prv_reset_counters();
 }
 
@@ -365,7 +365,7 @@ void test_action_menu_layer__tap_short_row_adopts_first_column(void) {
                                   },
                                   nullptr);
   // 5 items in columns of 3: row 0 = items 0-2, row 1 = items 3-4.
-  action_menu_layer_set_short_items(&s_aml, s_short_items, ARRAY_LENGTH(s_short_items), 0);
+  action_menu_layer_set_short_items(&s_aml, s_short_items, PBL_ARRAY_SIZE(s_short_items), 0);
   prv_reset_counters();
 
   menu_layer_touch_handle_tap(&s_aml.menu_layer, prv_tap_point_for_row(&s_aml.menu_layer, 1));
@@ -385,7 +385,7 @@ void test_action_menu_layer__tap_short_row_adopts_first_column(void) {
 void test_action_menu_layer__glyph_grid_touch_activates_each_item_immediately(void) {
   prv_init_glyph_grid();
   const TouchNavWidgetOps *ops = prv_glyph_grid_touch_ops();
-  for (int i = 0; i < ARRAY_LENGTH(s_emoji_items); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(s_emoji_items); ++i) {
     const int capacity = PBL_IF_ROUND_ELSE(7, 3);
     const int anchor = (i / capacity) * capacity + (i % capacity == 0);
     prv_set_selected_index(&s_aml, anchor, false);

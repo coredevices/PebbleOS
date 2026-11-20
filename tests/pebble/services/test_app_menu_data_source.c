@@ -243,7 +243,7 @@ void test_app_menu_data_source__check_default_order_apps(void) {
                             },
                             &menu_layer);
   uint16_t num_apps = app_menu_data_source_get_count(&data_source);
-  cl_assert_equal_i(num_apps, ARRAY_LENGTH(app_default_order));
+  cl_assert_equal_i(num_apps, PBL_ARRAY_SIZE(app_default_order));
 
   for (uint16_t i = 0; i < num_apps; i++) {
     AppMenuNode *node = app_menu_data_source_get_node_at_index(&data_source, i);
@@ -272,7 +272,7 @@ void test_app_menu_data_source__transform_index(void) {
                             },
                             &menu_layer);
   uint16_t num_apps = app_menu_data_source_get_count(&data_source);
-  cl_assert_equal_i(num_apps, ARRAY_LENGTH(app_default_order));
+  cl_assert_equal_i(num_apps, PBL_ARRAY_SIZE(app_default_order));
 
   for (uint16_t i = 0; i < num_apps; i++) {
     AppMenuNode *node = app_menu_data_source_get_node_at_index(&data_source, i);
@@ -291,7 +291,7 @@ void test_app_menu_data_source__check_default_order_watchfaces(void) {
                             },
                             &menu_layer);
   uint16_t num_apps = app_menu_data_source_get_count(&data_source);
-  cl_assert_equal_i(num_apps, ARRAY_LENGTH(watchface_default_order));
+  cl_assert_equal_i(num_apps, PBL_ARRAY_SIZE(watchface_default_order));
 
   for (uint16_t i = 0; i < num_apps; i++) {
     AppMenuNode *node = app_menu_data_source_get_node_at_index(&data_source, i);
@@ -350,7 +350,7 @@ void test_app_menu_data_source__change_order_apps(void) {
                               APP_ID_ALARMS,     APP_ID_WATCHFACES, APP_ID_WORKOUT,
                               BG_COUNTER_APP_ID, MENU_LAYER_APP_ID};
 
-  uint8_t num_entries = ARRAY_LENGTH(app_order);
+  uint8_t num_entries = PBL_ARRAY_SIZE(app_order);
   prv_test_new_order_with_filter_callback(app_order, num_entries, app_filter_callback);
 }
 
@@ -358,7 +358,7 @@ void test_app_menu_data_source__change_order_watchfaces(void) {
   AppInstallId watchface_order[] = {BIG_TIME_APP_ID, APP_ID_TICTOC};
 
   for (int i = 0; i < 10; i++) {
-    uint8_t num_entries = ARRAY_LENGTH(watchface_order);
+    uint8_t num_entries = PBL_ARRAY_SIZE(watchface_order);
     prv_shuffle(watchface_order, num_entries);
     prv_test_new_order_with_filter_callback(watchface_order, num_entries,
                                             watchface_filter_callback);
@@ -371,7 +371,7 @@ void test_app_menu_data_source__last_app_not_in_order_file(void) {
                               APP_ID_ALARMS,    APP_ID_WATCHFACES, APP_ID_WORKOUT,
                               BG_COUNTER_APP_ID};
 
-  uint8_t num_entries = ARRAY_LENGTH(app_order);
+  uint8_t num_entries = PBL_ARRAY_SIZE(app_order);
   prv_write_order_to_file(app_order, num_entries);
 
   app_menu_data_source_init(&data_source,
@@ -408,7 +408,7 @@ void test_app_menu_data_source__floating_music_app(void) {
                                   APP_ID_ALARMS,     APP_ID_WATCHFACES, APP_ID_WORKOUT,
                                   BG_COUNTER_APP_ID, MENU_LAYER_APP_ID};
 
-  uint8_t num_entries = ARRAY_LENGTH(written_order);
+  uint8_t num_entries = PBL_ARRAY_SIZE(written_order);
   prv_write_order_to_file(written_order, num_entries);
 
   app_install_mark_prioritized(APP_ID_MUSIC, true /* can expire */);
@@ -440,7 +440,7 @@ void test_app_menu_data_source__all_floating_apps(void) {
                                   APP_ID_SETTINGS,   APP_ID_NOTIFICATIONS, APP_ID_ALARMS,
                                   APP_ID_WATCHFACES, BG_COUNTER_APP_ID,    MENU_LAYER_APP_ID};
 
-  uint8_t num_entries = ARRAY_LENGTH(written_order);
+  uint8_t num_entries = PBL_ARRAY_SIZE(written_order);
   prv_write_order_to_file(written_order, num_entries);
 
   app_install_mark_prioritized(APP_ID_MUSIC, true /* can expire */);
@@ -495,7 +495,7 @@ void test_app_menu_data_source__complete_sorted_order(void) {
   static_assert(MENU_LAYER_APP_ID < BIG_TIME_APP_ID,
                 "MENU_LAYER_APP_ID is unexpectedly >= BIG_TIME_APP_ID.");
 
-  const uint8_t num_entries = ARRAY_LENGTH(storage_order);
+  const uint8_t num_entries = PBL_ARRAY_SIZE(storage_order);
   prv_write_order_to_file(storage_order, num_entries);
 
   app_menu_data_source_init(&data_source,
@@ -535,7 +535,7 @@ void test_app_menu_data_source__settings_app_floats_to_top_if_absent_from_storag
     MENU_LAYER_APP_ID,
   };
 
-  const uint8_t num_entries = ARRAY_LENGTH(storage_order);
+  const uint8_t num_entries = PBL_ARRAY_SIZE(storage_order);
   prv_write_order_to_file(storage_order, num_entries);
 
   app_menu_data_source_init(&data_source,
@@ -597,7 +597,7 @@ void test_app_menu_data_source__app_node_comparator_equality_cases(void) {
   };
 
   AppMenuNode *app_list = nullptr;
-  const uint16_t num_apps = ARRAY_LENGTH(app_menu_nodes);
+  const uint16_t num_apps = PBL_ARRAY_SIZE(app_menu_nodes);
   for (uint16_t i = 0; i < num_apps; i++) {
     app_list = (AppMenuNode *)list_sorted_add(&app_list->node, &app_menu_nodes[i].node,
                                               prv_app_node_comparator, true /* ascending */);

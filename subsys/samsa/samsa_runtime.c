@@ -163,7 +163,7 @@ static void *prv_g2h_mapped(const Process *p, uint32_t g, bool *mapped) {
   if (g == 0) {
     return nullptr;
   }
-  for (unsigned i = 0; i < ARRAY_LENGTH(p->regions); i++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(p->regions); i++) {
     const SamsaRegion *r = &p->regions[i];
     if (g - r->guest_base < r->size) {
       return r->host + (g - r->guest_base);
@@ -220,7 +220,7 @@ static uint32_t prv_h2g(Process *p, const void *h) {
   if (h == nullptr) {
     return 0;
   }
-  for (unsigned i = 0; i < ARRAY_LENGTH(p->regions); i++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(p->regions); i++) {
     const SamsaRegion *r = &p->regions[i];
     if (prv_in(h, r->host, r->size)) {
       return r->guest_base + (uint32_t)((const uint8_t *)h - r->host);
@@ -531,7 +531,7 @@ static uint32_t s_raw_guest[RAW_SLOTS];
 static uint32_t prv_raw_call(unsigned k, void *a0, uint64_t a1) {
   const uint32_t w[3] = {samsa_h2g(a0), (uint32_t)a1, (uint32_t)(a1 >> 32)};
   uint32_t r = 0;
-  samsa_call_guest(s_raw_guest[k], w, ARRAY_LENGTH(w), &r);
+  samsa_call_guest(s_raw_guest[k], w, PBL_ARRAY_SIZE(w), &r);
   return r;
 }
 
@@ -699,9 +699,9 @@ static void prv_reset(Process *p) {
   };
   p->hooks[0] = (SamsaHook){SAMSA_GUEST_HOOKS, SAMSA_GUEST_HOOKS + g_samsa_num_thunks * 4};
   p->cpu.regions = p->regions;
-  p->cpu.num_regions = ARRAY_LENGTH(p->regions);
+  p->cpu.num_regions = PBL_ARRAY_SIZE(p->regions);
   p->cpu.hooks = p->hooks;
-  p->cpu.num_hooks = ARRAY_LENGTH(p->hooks);
+  p->cpu.num_hooks = PBL_ARRAY_SIZE(p->hooks);
   p->cpu.bus = &s_bus;
   p->cpu.user = p;
 }

@@ -316,7 +316,7 @@ void test_ppogatt__initialize(void) {
 
 static uint32_t prv_wallclock_work_count(void) {
   uint32_t count = 0;
-  for (size_t i = 0; i < ARRAY_LENGTH(s_fake_wallclock_started); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_fake_wallclock_started); i++) {
     if (s_fake_wallclock_started[i] != nullptr) {
       count++;
     }
@@ -404,7 +404,7 @@ void test_ppogatt__handles_meta_v1(void) {
     },
   };
 
-  for (int i = 0; i < ARRAY_LENGTH(metas); ++i) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(metas); ++i) {
     prv_notify_services_discovered(1);
     pbl_pp_gatt_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
                                             (const uint8_t *)metas[i].meta, sizeof(PPoGATTMetaV1),

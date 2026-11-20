@@ -181,7 +181,7 @@ static void prv_plot4(GBitmap *fb, GRect *clip_box, GPoint center, GPoint offset
    *    xn mirrored points
    */
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(quadrant_mask_mul); i++) {
+  for (unsigned int i = 0; i < PBL_ARRAY_SIZE(quadrant_mask_mul); i++) {
     if (quadrant_mask_mul[i].mask & quadrant) {
       int16_t x = center.x + (offset.x * quadrant_mask_mul[i].x_mul);
       int16_t y = center.y + (offset.y * quadrant_mask_mul[i].y_mul);

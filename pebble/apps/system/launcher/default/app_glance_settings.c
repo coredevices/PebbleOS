@@ -93,10 +93,10 @@ static void prv_charging_icon_node_draw_cb(GContext *ctx, const GRect *rect,
   // Stretch the closest bolt to the digit height
   const GRect digits = prv_get_digit_frame(ctx, structured_glance);
   const int16_t h = digits.size.h;
-  const bool is_large = (h >= (int16_t)ARRAY_LENGTH(s_charging_icon_rows_large));
+  const bool is_large = (h >= (int16_t)PBL_ARRAY_SIZE(s_charging_icon_rows_large));
   const ChargingIconRow *rows = is_large ? s_charging_icon_rows_large : s_charging_icon_rows_small;
-  const int16_t num_rows = is_large ? ARRAY_LENGTH(s_charging_icon_rows_large)
-                                    : ARRAY_LENGTH(s_charging_icon_rows_small);
+  const int16_t num_rows = is_large ? PBL_ARRAY_SIZE(s_charging_icon_rows_large)
+                                    : PBL_ARRAY_SIZE(s_charging_icon_rows_small);
   const int16_t width =
       (is_large ? CHARGING_ICON_LARGE_WIDTH : CHARGING_ICON_SMALL_WIDTH) * h / num_rows;
 
@@ -146,7 +146,7 @@ static void prv_battery_icon_node_draw_cb(GContext *ctx, const GRect *rect,
       {0, h - 1},
     };
     GPath battery_silhouette_path = (GPath){
-      .num_points = ARRAY_LENGTH(battery_silhouette_path_points),
+      .num_points = PBL_ARRAY_SIZE(battery_silhouette_path_points),
       .points = (GPoint *)battery_silhouette_path_points,
       .offset = origin,
     };

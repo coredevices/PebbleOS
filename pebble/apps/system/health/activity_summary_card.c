@@ -186,7 +186,7 @@ Layer *health_activity_summary_card_create(HealthData *health_data) {
     .health_data = health_data,
     .icon = kino_reel_create_with_resource(RESOURCE_ID_HEALTH_APP_ACTIVITY),
     .progress_bar = {
-      .num_segments = ARRAY_LENGTH(s_activity_summary_progress_segments),
+      .num_segments = PBL_ARRAY_SIZE(s_activity_summary_progress_segments),
       .segments = s_activity_summary_progress_segments,
     },
   };

@@ -225,7 +225,7 @@ void test_process_manager__initialize(void) {
 }
 
 void test_process_manager__check_SDK_compatible(void) {
-  for (uint32_t i = 0; i < ARRAY_LENGTH(s_test_cases); i++) {
+  for (uint32_t i = 0; i < PBL_ARRAY_SIZE(s_test_cases); i++) {
     // skipping 0, since it's INSTALL_ID_INVALID
     cl_assert_equal_b(process_manager_check_SDK_compatible(i + 1), s_test_cases[i].should_pass);
   }

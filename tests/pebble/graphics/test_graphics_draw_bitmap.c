@@ -235,7 +235,7 @@ static void prv_composite_test_draw_bitmap(GContext *ctx, GBitmap *bitmap, GPoin
 }
 
 static void prv_composite_test(const char *unit_test_name, GCompOp compositing_mode) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_composite_tests); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_composite_tests); i++) {
     const CompositeTest *test_data = &s_composite_tests[i];
 
     // Skip invalid GBitmapFormat and GCompOp combinations

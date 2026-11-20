@@ -359,7 +359,7 @@ void test_graphics_draw_circle_${BIT_DEPTH_NAME}__quadrants_aa(void) {
   };
 
   // note: not the prettiest, fast a quick way to render all the scenarios Nitin was interested in
-  for (int i = 0; i < ARRAY_LENGTH(test_config); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_config); i++) {
     TestConfig c = test_config[i];
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
@@ -567,7 +567,7 @@ void test_graphics_draw_circle_${BIT_DEPTH_NAME}__arc_stroked(void){
     }
   };
 
-  for (int i = 0; i < ARRAY_LENGTH(test_angles); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_angles); i++) {
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
     uint16_t radius = 10;
@@ -592,7 +592,7 @@ void test_graphics_draw_circle_${BIT_DEPTH_NAME}__arc_stroked(void){
     cl_check_(gbitmap_pbi_eq(&ctx.dest_bitmap, filename), filename);
   }
 
-  for (int i = 0; i < ARRAY_LENGTH(test_angles); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(test_angles); i++) {
     setup_test_aa_sw(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);
     GPoint pt = CENTER_OF_ORIGIN_RECT;
     uint16_t radius = 10;

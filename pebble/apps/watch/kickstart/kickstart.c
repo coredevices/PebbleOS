@@ -163,7 +163,7 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
   // start the path with start_outer_point
   path.points[path.num_points++] = start_outer_point;
   // loop through and add all the corners b/w start and end
-  for (uint16_t i = 0; i < ARRAY_LENGTH(corners); i++) {
+  for (uint16_t i = 0; i < PBL_ARRAY_SIZE(corners); i++) {
     if (corners[i] > 0 && corners[i] < current) {
       path.points[path.num_points++] = prv_steps_to_point(corners[i], total, outer_bounds);
     }
@@ -172,7 +172,7 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
   path.points[path.num_points++] = end_outer_point;
   path.points[path.num_points++] = end_inner_point;
   // loop though backwards and add all the corners b/w end and start
-  for (int i = ARRAY_LENGTH(corners) - 1; i >= 0; i--) {
+  for (int i = PBL_ARRAY_SIZE(corners) - 1; i >= 0; i--) {
     if (corners[i] > 0 && corners[i] < current) {
       path.points[path.num_points++] = prv_inset_point(
           &frame, prv_steps_to_point(corners[i], total, outer_bounds), fill_thickness);

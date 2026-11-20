@@ -334,7 +334,7 @@ static const int32_t s_extended_moook_out[] = {
 };
 static const MoookConfig s_extended_moook_out_config = {
   .frames_out = s_extended_moook_out,
-  .num_frames_out = ARRAY_LENGTH(s_extended_moook_out),
+  .num_frames_out = PBL_ARRAY_SIZE(s_extended_moook_out),
   .no_bounce_back = true,
 };
 
@@ -367,7 +367,7 @@ static Animation *prv_create_transition_adding_concurrent(TimelinePeek *peek, Pe
 static const int32_t s_custom_moook_in[] = {0, 1, INTERPOLATE_MOOOK_BOUNCE_BACK};
 static const MoookConfig s_custom_moook_in_config = {
   .frames_in = s_custom_moook_in,
-  .num_frames_in = ARRAY_LENGTH(s_custom_moook_in),
+  .num_frames_in = PBL_ARRAY_SIZE(s_custom_moook_in),
 };
 
 static int64_t prv_interpolate_custom_moook_in(AnimationProgress progress, int64_t from,

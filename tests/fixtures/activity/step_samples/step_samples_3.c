@@ -469,7 +469,7 @@ AccelRawData *activity_sample_driving_4(int *len) {
     { -368, -256, -680},
     { -208, -224, -672},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -1944,7 +1944,7 @@ AccelRawData *activity_sample_100_steps_heather_16(int *len) {
     { 40, 120, -1024},
     { -24, 112, -1040},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -3550,7 +3550,7 @@ AccelRawData *activity_sample_100_steps_heather_17(int *len) {
     { -448, 896, 472},
     { -424, 784, 416},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -5103,7 +5103,7 @@ AccelRawData *activity_sample_100_steps_heather_18(int *len) {
     { 32, -96, -1016},
     { 24, -120, -976},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -6709,7 +6709,7 @@ AccelRawData *activity_sample_100_steps_heather_19(int *len) {
     { -288, 984, 208},
     { -312, 1024, 192},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -8391,7 +8391,7 @@ AccelRawData *activity_sample_100_steps_heather_20(int *len) {
     { -64, 728, 448},
     { -152, 896, 528},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -11711,7 +11711,7 @@ AccelRawData *activity_sample_taking_vitamins(int *len) {
     { 40, -272, -992},
     { 56, -320, -992},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -14667,7 +14667,7 @@ AccelRawData *activity_sample_washing_up_2(int *len) {
     { 168, -240, -960},
     { 152, -272, -912},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }
 
@@ -22349,6 +22349,6 @@ AccelRawData *activity_sample_reading_paper(int *len) {
     { -136, -328, -976},
     { -144, -320, -976},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }

@@ -35,7 +35,7 @@ static int prv_cmd_nav_log(const struct pbl_shell *sh, size_t argc, char **argv)
     const uint8_t idx =
         (uint8_t)((state->log_head + TOUCH_NAV_LOG_ENTRIES - count + i) % TOUCH_NAV_LOG_ENTRIES);
     const TouchNavLogEntry *e = &state->log[idx];
-    const char *name = (e->kind < ARRAY_LENGTH(kind_names)) ? kind_names[e->kind] : "?";
+    const char *name = (e->kind < PBL_ARRAY_SIZE(kind_names)) ? kind_names[e->kind] : "?";
     pbl_shell_print(sh, "  [%u] %s detail=%u", i, name, e->detail);
   }
 

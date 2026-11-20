@@ -62,7 +62,7 @@ DataLoggingResult dls_log(DataLoggingSession *logging_session, const void *data,
 
   TestPLDLSRecord *records = (TestPLDLSRecord *)data;
   for (int i = 0; i < num_items; i++) {
-    cl_assert(s_num_dls_records < ARRAY_LENGTH(s_dls_records));
+    cl_assert(s_num_dls_records < PBL_ARRAY_SIZE(s_dls_records));
     s_dls_records[s_num_dls_records++] = records[i];
   }
 
@@ -170,11 +170,11 @@ static TestPLParsedMsg *prv_parse_encoded_mset_payload(void *buffer) {
 
   s_parsed_msg = (TestPLParsedMsg){
     .msrmt = {
-      .num_types = ARRAY_LENGTH(s_types),
+      .num_types = PBL_ARRAY_SIZE(s_types),
       .types = s_types,
-      .num_samples = ARRAY_LENGTH(s_offsets),
+      .num_samples = PBL_ARRAY_SIZE(s_offsets),
       .offset_sec = s_offsets,
-      .num_values = ARRAY_LENGTH(s_values),
+      .num_values = PBL_ARRAY_SIZE(s_values),
       .values = s_values,
     },
   };
@@ -235,10 +235,10 @@ static TestPLParsedMsg *prv_parse_encoded_event_payload(void *buffer) {
 
   s_parsed_msg = (TestPLParsedMsg){
     .events = {
-      .num_events = ARRAY_LENGTH(events),
+      .num_events = PBL_ARRAY_SIZE(events),
       .events = events,
       .uuids = event_uuids,
-      .num_sessions = ARRAY_LENGTH(event_sessions),
+      .num_sessions = PBL_ARRAY_SIZE(event_sessions),
       .sessions = event_sessions,
     },
   };
@@ -471,11 +471,11 @@ void test_protobuf_log__measurements_simple(void) {
       .msrmt = {
         .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
-        .num_types = ARRAY_LENGTH(types),
+        .num_types = PBL_ARRAY_SIZE(types),
         .types = types,
-        .num_samples = ARRAY_LENGTH(offset_sec),
+        .num_samples = PBL_ARRAY_SIZE(offset_sec),
         .offset_sec = offset_sec,
-        .num_values = ARRAY_LENGTH(values),
+        .num_values = PBL_ARRAY_SIZE(values),
         .values = values,
       },
     };
@@ -494,11 +494,11 @@ void test_protobuf_log__measurements_simple(void) {
       .msrmt = {
         .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
-        .num_types = ARRAY_LENGTH(types),
+        .num_types = PBL_ARRAY_SIZE(types),
         .types = types,
-        .num_samples = ARRAY_LENGTH(offset_sec),
+        .num_samples = PBL_ARRAY_SIZE(offset_sec),
         .offset_sec = offset_sec,
-        .num_values = ARRAY_LENGTH(values),
+        .num_values = PBL_ARRAY_SIZE(values),
         .values = values,
       },
     };
@@ -521,11 +521,11 @@ void test_protobuf_log__measurements_simple(void) {
       .msrmt = {
         .time_utc = pbl_realtime(),
         .utc_to_local = time_util_utc_to_local_offset(),
-        .num_types = ARRAY_LENGTH(types),
+        .num_types = PBL_ARRAY_SIZE(types),
         .types = types,
-        .num_samples = ARRAY_LENGTH(offset_sec),
+        .num_samples = PBL_ARRAY_SIZE(offset_sec),
         .offset_sec = offset_sec,
-        .num_values = ARRAY_LENGTH(values),
+        .num_values = PBL_ARRAY_SIZE(values),
         .values = values,
       }
     };
@@ -548,11 +548,11 @@ void test_protobuf_log__measurements_multiple(void) {
     .msrmt = {
       .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
-      .num_types = ARRAY_LENGTH(types),
+      .num_types = PBL_ARRAY_SIZE(types),
       .types = types,
-      .num_samples = ARRAY_LENGTH(offset_sec),
+      .num_samples = PBL_ARRAY_SIZE(offset_sec),
       .offset_sec = offset_sec,
-      .num_values = ARRAY_LENGTH(values),
+      .num_values = PBL_ARRAY_SIZE(values),
       .values = values,
     },
   };
@@ -596,11 +596,11 @@ void test_protobuf_log__measurements_multiple(void) {
     .msrmt = {
       .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
-      .num_types = ARRAY_LENGTH(types),
+      .num_types = PBL_ARRAY_SIZE(types),
       .types = types,
-      .num_samples = ARRAY_LENGTH(offset_sec_b),
+      .num_samples = PBL_ARRAY_SIZE(offset_sec_b),
       .offset_sec = offset_sec_b,
-      .num_values = ARRAY_LENGTH(values_b),
+      .num_values = PBL_ARRAY_SIZE(values_b),
       .values = values_b,
     }
   };
@@ -629,7 +629,7 @@ void test_protobuf_log__measurements_auto_flush(void) {
     ProtobufLogMeasurementType_Steps, ProtobufLogMeasurementType_BPM
   };
   const int num_samples = 50;
-  const int num_values_per_sample = ARRAY_LENGTH(types);
+  const int num_values_per_sample = PBL_ARRAY_SIZE(types);
   uint32_t offset_sec[num_samples];
   uint32_t values[num_samples * num_values_per_sample];
 
@@ -708,11 +708,11 @@ void test_protobuf_log__measurements_with_data_logging(void) {
     .msrmt = {
       .time_utc = pbl_realtime(),
       .utc_to_local = time_util_utc_to_local_offset(),
-      .num_types = ARRAY_LENGTH(types),
+      .num_types = PBL_ARRAY_SIZE(types),
       .types = types,
-      .num_samples = ARRAY_LENGTH(offset_sec),
+      .num_samples = PBL_ARRAY_SIZE(offset_sec),
       .offset_sec = offset_sec,
-      .num_values = ARRAY_LENGTH(values),
+      .num_values = PBL_ARRAY_SIZE(values),
       .values = values,
     }
   };
@@ -738,9 +738,9 @@ void test_protobuf_log__hr_samples(void) {
       .utc_to_local = time_util_utc_to_local_offset(),
       .num_types = 2,
       .types = types,
-      .num_samples = ARRAY_LENGTH(offset_sec),
+      .num_samples = PBL_ARRAY_SIZE(offset_sec),
       .offset_sec = offset_sec,
-      .num_values = ARRAY_LENGTH(values),
+      .num_values = PBL_ARRAY_SIZE(values),
       .values = values,
     }
   };
@@ -819,7 +819,7 @@ void test_protobuf_log__events_basic(void) {
   TestPLParsedMsg input = {
     .type = ProtobufLogType_Events,
     .events = {
-      .num_events = ARRAY_LENGTH(events),
+      .num_events = PBL_ARRAY_SIZE(events),
       .events = events,
     }
   };
@@ -836,7 +836,7 @@ void test_protobuf_log__events_basic(void) {
   cl_assert(session_ref != nullptr);
 
   bool success;
-  for (int i = 0; i < ARRAY_LENGTH(events); i++) {
+  for (int i = 0; i < PBL_ARRAY_SIZE(events); i++) {
     success = protobuf_log_session_add_event(session_ref, &events[i]);
     cl_assert(success);
   }

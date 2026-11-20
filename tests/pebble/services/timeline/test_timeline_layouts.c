@@ -366,7 +366,7 @@ void test_timeline_layouts__weather_city_clears_page_arrow(void) {
     config.location_name = "";
     prv_construct_and_render_layout(&config, 0);
     memcpy(expected, s_ctx.dest_bitmap.addr + offset, arrow_height * row_size);
-    for (size_t i = 0; i < ARRAY_LENGTH(locations); i++) {
+    for (size_t i = 0; i < PBL_ARRAY_SIZE(locations); i++) {
       config.location_name = locations[i];
       prv_construct_and_render_layout(&config, 0);
       cl_assert(memcmp(expected, s_ctx.dest_bitmap.addr + offset, arrow_height * row_size) == 0);

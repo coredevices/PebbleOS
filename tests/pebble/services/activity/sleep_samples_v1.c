@@ -459,6 +459,6 @@ AlgMinuteFileSampleV5 *activity_sample_sleep_v1_1(int *len) {
     {0, 0x67, 32},
     {0, 0x55, 0},
   };
-  *len = ARRAY_LENGTH(samples);
+  *len = PBL_ARRAY_SIZE(samples);
   return samples;
 }

@@ -136,7 +136,7 @@ static uint8_t prv_get_scaled_brightness(void) {
 
 static int prv_intensity_get_selection_index() {
   const uint8_t intensity = prv_get_scaled_brightness();
-  for (int i = 0; i < (int)ARRAY_LENGTH(s_intensity_values); i++) {
+  for (int i = 0; i < (int)PBL_ARRAY_SIZE(s_intensity_values); i++) {
     if (s_intensity_values[i] == intensity) {
       return i;
     }
@@ -156,7 +156,7 @@ static void prv_intensity_menu_push(SettingsBacklightData *data) {
   };
   const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("INTENSITY"), pbl_i18n_noop("Intensity"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_intensity_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_intensity_labels), true /* icons_enabled */,
                             s_intensity_labels, data);
 }
 
@@ -192,7 +192,7 @@ static void prv_display_orientation_menu_push(SettingsDisplayData *data) {
 
   const char *title = pbl_i18n_noop("Orientation");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_display_orientation_labels), true,
+                            PBL_ARRAY_SIZE(s_display_orientation_labels), true,
                             s_display_orientation_labels, data);
 }
 #endif
@@ -208,7 +208,7 @@ static const char *s_timeout_labels[] = {
 
 static int prv_timeout_get_selection_index() {
   uint32_t timeout_ms = backlight_get_timeout_ms();
-  for (size_t i = 0; i < ARRAY_LENGTH(s_timeout_values); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_timeout_values); i++) {
     if (s_timeout_values[i] == timeout_ms) {
       return i;
     }
@@ -228,7 +228,7 @@ static void prv_timeout_menu_push(SettingsBacklightData *data) {
   };
   const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("TIMEOUT"), pbl_i18n_noop("Timeout"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_timeout_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_timeout_labels), true /* icons_enabled */,
                             s_timeout_labels, data);
 }
 
@@ -254,7 +254,7 @@ static void prv_touch_wake_menu_push(SettingsBacklightData *data) {
   const char *title =
       PBL_IF_RECT_ELSE(pbl_i18n_noop("WAKE ON TOUCH"), pbl_i18n_noop("Wake on touch"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_touch_wake_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_touch_wake_labels), true /* icons_enabled */,
                             s_touch_wake_labels, data);
 }
 #endif
@@ -282,7 +282,7 @@ static void prv_dynamic_mode_menu_push(SettingsBacklightData *data) {
   const char *title =
       PBL_IF_RECT_ELSE(pbl_i18n_noop("DYNAMIC BACKLIGHT"), pbl_i18n_noop("Dynamic Backlight"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_dynamic_mode_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_dynamic_mode_labels), true /* icons_enabled */,
                             s_dynamic_mode_labels, data);
 }
 #endif
@@ -315,7 +315,7 @@ static void prv_preset_menu_push(SettingsDisplayData *data) {
   };
   const char *title = PBL_IF_RECT_ELSE(pbl_i18n_noop("BACKLIGHT"), pbl_i18n_noop("Backlight"));
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_backlight_preset_labels), true /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_backlight_preset_labels), true /* icons_enabled */,
                             s_backlight_preset_labels, data);
 }
 
@@ -338,7 +338,7 @@ static void prv_legacy_app_mode_menu_push(SettingsDisplayData *data) {
   };
   const char *title = pbl_i18n_noop("Legacy App Display");
   settings_option_menu_push(title, OptionMenuContentType_SingleLine, index, &callbacks,
-                            ARRAY_LENGTH(s_legacy_app_mode_labels), false /* icons_enabled */,
+                            PBL_ARRAY_SIZE(s_legacy_app_mode_labels), false /* icons_enabled */,
                             s_legacy_app_mode_labels, data);
 }
 #endif

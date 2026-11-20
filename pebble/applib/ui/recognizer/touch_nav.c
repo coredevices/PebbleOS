@@ -121,7 +121,7 @@ static bool prv_registry_contains_node(TouchNavState *state, const TouchNavWidge
   const TouchNavWidgetNode *const heads[] = {
     state->menu_head, state->swap_head, state->scroll_head
   };
-  for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(heads); i++) {
     for (const TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
       if (n == node) {
         return true;
@@ -135,7 +135,7 @@ static bool prv_registry_contains_layer(TouchNavState *state, const struct Layer
   const TouchNavWidgetNode *const heads[] = {
     state->menu_head, state->scroll_head, state->swap_head
   };
-  for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(heads); i++) {
     for (const TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
       if (n->layer == layer) {
         return true;
@@ -221,7 +221,7 @@ static TouchNavWidgetNode *prv_resolve_widget_target(TouchNavState *state) {
   }
   TouchNavWidgetNode *const heads[] = {state->menu_head, state->scroll_head, state->swap_head};
   for (struct Layer *layer = state->manager->active_layer; layer; layer = layer->parent) {
-    for (unsigned i = 0; i < ARRAY_LENGTH(heads); i++) {
+    for (unsigned i = 0; i < PBL_ARRAY_SIZE(heads); i++) {
       for (TouchNavWidgetNode *n = heads[i]; n; n = n->next) {
         if (n->layer == layer) {
           return n->ops ? n : nullptr;

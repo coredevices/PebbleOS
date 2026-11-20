@@ -167,7 +167,7 @@ static void prv_animation_create(SamsaCpu *c,
                                  Animation *(*from_array)(Animation **array, uint32_t len)) {
   Animation *array[ANIMATION_MAX_CREATE_VARGS];
   uint32_t len = 0;
-  while (len < ARRAY_LENGTH(array)) {
+  while (len < PBL_ARRAY_SIZE(array)) {
     uint32_t g = samsa_arg(c, len);
     if (g == 0) {
       break;

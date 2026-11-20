@@ -117,7 +117,7 @@ static int prv_enable(const struct pbl_aw2016 *dev) {
   // Only GCR1 is writable until the oscillator runs, and writes are still acknowledged
   pbl_sleep_ms(AW2016_STARTUP_MS);
 
-  return prv_write_registers(dev, &s_config[1], ARRAY_LENGTH(s_config) - 1U);
+  return prv_write_registers(dev, &s_config[1], PBL_ARRAY_SIZE(s_config) - 1U);
 }
 
 static int prv_write_color(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t brightness) {
@@ -125,7 +125,7 @@ static int prv_write_color(const struct pbl_aw2016 *dev, uint32_t rgb_color, uin
 
   prv_color_regs(regs, rgb_color, brightness);
 
-  return prv_write_registers(dev, regs, ARRAY_LENGTH(regs));
+  return prv_write_registers(dev, regs, PBL_ARRAY_SIZE(regs));
 }
 
 // Tells a chip that lost its configuration apart from a fault downstream of it
@@ -149,8 +149,8 @@ static void prv_verify(const struct pbl_aw2016 *dev, uint32_t rgb_color, uint8_t
 
   prv_color_regs(regs, rgb_color, brightness);
 
-  prv_verify_registers(dev, s_config, ARRAY_LENGTH(s_config));
-  prv_verify_registers(dev, regs, ARRAY_LENGTH(regs));
+  prv_verify_registers(dev, s_config, PBL_ARRAY_SIZE(s_config));
+  prv_verify_registers(dev, regs, PBL_ARRAY_SIZE(regs));
 }
 
 int pbl_aw2016_init(const struct pbl_device *d) {

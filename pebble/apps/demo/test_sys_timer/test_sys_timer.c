@@ -127,7 +127,7 @@ static void reg_timer_3_callback(struct pbl_work *work) {
 
 // =================================================================================
 static void prv_cancel_timers(void) {
-  for (size_t i = 0; i < ARRAY_LENGTH(s_timers); i++) {
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(s_timers); i++) {
     pbl_delayed_work_cancel_sync(&s_timers[i]);
   }
   pbl_delayed_work_cancel_sync(&s_long_timer);
@@ -323,14 +323,14 @@ static void prv_window_load(Window *window) {
     {.title = "panic", .callback = panic_menu_cb}
   };
   static const SimpleMenuSection sections[] = {
-    {.items = menu_items, .num_items = ARRAY_LENGTH(menu_items)}
+    {.items = menu_items, .num_items = PBL_ARRAY_SIZE(menu_items)}
   };
 
   Layer *window_layer = window_get_root_layer(data->window);
   GRect bounds = window_layer->bounds;
 
   data->menu_layer =
-      simple_menu_layer_create(bounds, data->window, sections, ARRAY_LENGTH(sections), nullptr);
+      simple_menu_layer_create(bounds, data->window, sections, PBL_ARRAY_SIZE(sections), nullptr);
   layer_add_child(window_layer, simple_menu_layer_get_layer(data->menu_layer));
 }
 

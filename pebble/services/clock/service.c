@@ -1086,7 +1086,7 @@ const char *clock_get_relative_daypart_string(time_t current_timestamp,
   pbl_localtime_r(&current_timestamp, &current_tm);
 
   // Look for the furthest time in the future that we are "above"
-  for (int i = ARRAY_LENGTH(daypart_messages) - 1; i >= 0; i--) {
+  for (int i = PBL_ARRAY_SIZE(daypart_messages) - 1; i >= 0; i--) {
     if ((current_tm.tm_hour + hours_in_the_future) >= daypart_messages[i].hour_offset) {
       message = daypart_messages[i].message;
       break;
