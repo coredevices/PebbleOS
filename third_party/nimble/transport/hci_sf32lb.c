@@ -147,11 +147,11 @@ static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
 };
 
 static inline volatile struct ring *prv_tx(void) {
-  return (volatile struct ring *)LCPU->mem.base;
+  return (volatile struct ring *)pbl_rproc_sf32lb_get_ipc_mem(BT_CONTROLLER)->base;
 }
 
 static inline volatile struct ring *prv_rx(void) {
-  return (volatile struct ring *)(LCPU->sram.base + RX_RING_OFFSET);
+  return (volatile struct ring *)(pbl_rproc_sf32lb_get_sram(BT_CONTROLLER)->base + RX_RING_OFFSET);
 }
 
 static uint32_t prv_ring_used(uint32_t rd, uint32_t wr, uint32_t size) {
@@ -182,13 +182,14 @@ static bool prv_ring_empty(volatile struct ring *ring) {
 }
 
 static void prv_ring_reset_tx(void) {
+  const struct pbl_mem_region *mem = pbl_rproc_sf32lb_get_ipc_mem(BT_CONTROLLER);
   volatile struct ring *tx = prv_tx();
 
   tx->rd_idx = 0U;
   tx->wr_idx = 0U;
-  tx->wr_buf = LCPU->mem.base + sizeof(struct ring);
-  tx->rd_buf = pbl_rproc_sf32lb_da(LCPU, tx->wr_buf);
-  tx->size = (int16_t)RING_POOL_SIZE(LCPU->mem.size);
+  tx->wr_buf = mem->base + sizeof(struct ring);
+  tx->rd_buf = pbl_rproc_sf32lb_da(BT_CONTROLLER, tx->wr_buf);
+  tx->size = (int16_t)RING_POOL_SIZE(mem->size);
   pbl_wmb();
 }
 
@@ -284,7 +285,7 @@ static void prv_mbox_tx_done(const struct pbl_mbox_client *cl, const void *msg, 
     prv_set_busy(false);
   } else if (s_open) {
     // the LCPU took the doorbell before draining the ring
-    (void)pbl_mbox_send(&LCPU->tx_chan, nullptr);
+    (void)pbl_mbox_send(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), nullptr);
   }
   pbl_irq_unlock();
 }
@@ -314,7 +315,7 @@ static int prv_write(const void *data, size_t len) {
       prv_set_busy(true);
       pbl_irq_unlock();
 
-      (void)pbl_mbox_send(&LCPU->tx_chan, nullptr);
+      (void)pbl_mbox_send(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), nullptr);
       continue;
     }
 
@@ -380,7 +381,7 @@ static void prv_hci_task_main(void *unused) {
 }
 
 static void prv_nvds_config(const uint8_t *bd_addr) {
-  uint8_t *nvds = (uint8_t *)(LCPU->sram.base + NVDS_OFFSET);
+  uint8_t *nvds = (uint8_t *)(pbl_rproc_sf32lb_get_sram(BT_CONTROLLER)->base + NVDS_OFFSET);
   uint8_t *p = nvds + NVDS_HDR_LEN;
 
   if (bd_addr != nullptr) {
@@ -425,21 +426,24 @@ void ble_transport_ll_reinit(void) {
 
   prv_ring_reset_tx();
 
-  ret = pbl_mbox_request(&LCPU->rx_chan, &s_mbox_cl);
+  ret = pbl_mbox_request(pbl_rproc_sf32lb_get_rx_chan(BT_CONTROLLER), &s_mbox_cl);
   PBL_ASSERT(ret == 0, "LCPU RX doorbell request failed (%d)", ret);
 
-  ret = pbl_mbox_request(&LCPU->tx_chan, &s_mbox_cl);
+  ret = pbl_mbox_request(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), &s_mbox_cl);
   PBL_ASSERT(ret == 0, "LCPU TX doorbell request failed (%d)", ret);
 
   s_open = true;
 
   prv_controller_config();
 
-  ret = pbl_rproc_boot(&LCPU->rproc);
+  ret = pbl_rproc_boot(BT_CONTROLLER);
   PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
 }
 
 void ble_transport_ll_init(void) {
+  // The role may name any remote processor; the getters below take the SF32LB driver's
+  PBL_ASSERTN(BT_CONTROLLER->ops == &pbl_rproc_sf32lb_ops);
+
   ble_transport_ll_reinit();
 
   ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
@@ -457,15 +461,15 @@ void ble_transport_ll_init(void) {
 }
 
 void ble_transport_ll_deinit(void) {
-  pbl_mbox_free(&LCPU->tx_chan);
-  pbl_mbox_free(&LCPU->rx_chan);
+  pbl_mbox_free(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER));
+  pbl_mbox_free(pbl_rproc_sf32lb_get_rx_chan(BT_CONTROLLER));
 
   pbl_irq_lock();
   s_open = false;
   prv_set_busy(false);
   pbl_irq_unlock();
 
-  pbl_rproc_shutdown(&LCPU->rproc);
+  pbl_rproc_shutdown(BT_CONTROLLER);
 }
 
 static int prv_write_mbuf(uint8_t h4_type, struct os_mbuf *om) {

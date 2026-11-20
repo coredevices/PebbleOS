@@ -311,6 +311,7 @@ class header, as `SPEAKER`:
 | `console_uart` | `uart` | |
 | `qemu_uart` | `uart` | |
 | `bt_hci_uart` | `uart` | `NIMBLE_HCI_UART` |
+| `bt_controller` | `rproc` | `NIMBLE_HCI_SF32LB` |
 | `display` | `display` | `DISPLAY` |
 | `backlight` | `backlight` | `BACKLIGHT` |
 | `flash` | `flash` | `FLASH` |

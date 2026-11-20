@@ -324,7 +324,9 @@ void pbl_rproc_sf32lb_coredump_prepare(void) {
 }
 #endif
 
-uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc_sf32lb *lcpu, uintptr_t pa) {
+uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc *rproc, uintptr_t pa) {
+  const struct pbl_rproc_sf32lb *lcpu = prv_lcpu(rproc);
+
   for (size_t i = 0U; i < ARRAY_LENGTH(lcpu->ranges); i++) {
     const struct pbl_rproc_sf32lb_range *range = &lcpu->ranges[i];
 
@@ -334,6 +336,22 @@ uintptr_t pbl_rproc_sf32lb_da(const struct pbl_rproc_sf32lb *lcpu, uintptr_t pa)
   }
 
   return 0U;
+}
+
+const struct pbl_mem_region *pbl_rproc_sf32lb_get_ipc_mem(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->mem;
+}
+
+const struct pbl_mem_region *pbl_rproc_sf32lb_get_sram(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->sram;
+}
+
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_tx_chan(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->tx_chan;
+}
+
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_rx_chan(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->rx_chan;
 }
 
 const struct pbl_rproc_ops pbl_rproc_sf32lb_ops = {
