@@ -475,6 +475,11 @@ static int prv_init(const struct pbl_audio_dai *dai) {
     return ret;
   }
 
+  ret = pbl_device_init(&dev->dma->ctrl->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = pbl_clk_enable(&dev->clk);
   if (ret != 0) {
     return ret;
