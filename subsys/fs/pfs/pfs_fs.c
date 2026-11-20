@@ -16,29 +16,6 @@
 
 static bool s_mounted;
 
-static int prv_errno(int status) {
-  switch (status) {
-    case E_INVALID_ARGUMENT:
-      return -EINVAL;
-    case E_DOES_NOT_EXIST:
-      return -ENOENT;
-    case E_BUSY:
-      return -EBUSY;
-    case E_OUT_OF_RESOURCES:
-      return -EMFILE;
-    case E_OUT_OF_STORAGE:
-      return -ENOSPC;
-    case E_OUT_OF_MEMORY:
-      return -ENOMEM;
-    default:
-      return -EIO;
-  }
-}
-
-static int prv_status(status_t status) {
-  return (status >= 0) ? 0 : prv_errno(status);
-}
-
 static int prv_check_name(const char *name) {
   size_t len = strlen(name);
 
@@ -93,7 +70,7 @@ static int prv_open(struct pbl_fs_file *file, const char *name, uint32_t flags) 
   if ((flags & PBL_FS_O_REPLACE) != 0) {
     fd = pfs_open(name, (op_flags & ~OP_FLAG_WRITE) | OP_FLAG_OVERWRITE | OP_FLAG_DEFER_CREATE,
                   FILE_TYPE_STATIC, 0);
-    if ((fd == E_DOES_NOT_EXIST) && ((flags & PBL_FS_O_CREATE) != 0)) {
+    if ((fd == -ENOENT) && ((flags & PBL_FS_O_CREATE) != 0)) {
       fd = pfs_open(name, op_flags, FILE_TYPE_STATIC, 0);
     }
   } else {
@@ -101,7 +78,7 @@ static int prv_open(struct pbl_fs_file *file, const char *name, uint32_t flags) 
   }
 
   if (fd < 0) {
-    return prv_errno(fd);
+    return fd;
   }
 
   file->filep = (void *)(uintptr_t)fd;
@@ -118,7 +95,7 @@ static ssize_t prv_read(struct pbl_fs_file *file, void *buf, size_t len) {
   int fd = prv_fd(file);
   int offset = pfs_seek(fd, 0, FSeekCur);
   if (offset < 0) {
-    return prv_errno(offset);
+    return offset;
   }
 
   len = PBL_MIN(len, pfs_get_file_size(fd) - (size_t)offset);
@@ -126,12 +103,7 @@ static ssize_t prv_read(struct pbl_fs_file *file, void *buf, size_t len) {
     return 0;
   }
 
-  int ret = pfs_read(fd, buf, len);
-  if (ret < 0) {
-    return prv_errno(ret);
-  }
-
-  return ret;
+  return pfs_read(fd, buf, len);
 }
 
 static ssize_t prv_write(struct pbl_fs_file *file, const void *buf, size_t len) {
@@ -139,43 +111,20 @@ static ssize_t prv_write(struct pbl_fs_file *file, const void *buf, size_t len) 
     return 0;
   }
 
-  int ret = pfs_write(prv_fd(file), buf, len);
-  if (ret == E_RANGE) {
-    return -EFBIG;
-  }
-
-  if (ret < 0) {
-    return prv_errno(ret);
-  }
-
-  return ret;
+  return pfs_write(prv_fd(file), buf, len);
 }
 
 static off_t prv_lseek(struct pbl_fs_file *file, off_t offset, int whence) {
   int fd = prv_fd(file);
-  int ret;
 
   switch (whence) {
     case PBL_FS_SEEK_SET:
-      ret = pfs_seek(fd, offset, FSeekSet);
-      break;
+      return pfs_seek(fd, offset, FSeekSet);
     case PBL_FS_SEEK_CUR:
-      ret = pfs_seek(fd, offset, FSeekCur);
-      break;
+      return pfs_seek(fd, offset, FSeekCur);
     default:
-      ret = pfs_seek(fd, (off_t)pfs_get_file_size(fd) + offset, FSeekSet);
-      break;
+      return pfs_seek(fd, (off_t)pfs_get_file_size(fd) + offset, FSeekSet);
   }
-
-  if (ret == E_RANGE) {
-    return -EINVAL;
-  }
-
-  if (ret < 0) {
-    return prv_errno(ret);
-  }
-
-  return ret;
 }
 
 static off_t prv_tell(struct pbl_fs_file *file) {
@@ -199,11 +148,11 @@ static int prv_truncate(struct pbl_fs_file *file, off_t length) {
     return 0;
   }
 
-  return prv_status(pfs_create_deferred(fd, length));
+  return pfs_create_deferred(fd, length);
 }
 
 static int prv_close(struct pbl_fs_file *file) {
-  return prv_status(pfs_close(prv_fd(file)));
+  return pfs_close(prv_fd(file));
 }
 
 static int prv_opendir(struct pbl_fs_dir *dir, const char *name) {
@@ -244,7 +193,7 @@ static int prv_mount(struct pbl_fs_mount *mp) {
     return -EBUSY;
   }
 
-  int ret = prv_status(pfs_init(true));
+  int ret = pfs_init(true);
   if (ret == 0) {
     s_mounted = true;
   }
@@ -270,7 +219,7 @@ static int prv_unlink(struct pbl_fs_mount *mp, const char *name) {
     return ret;
   }
 
-  return prv_status(pfs_remove(name));
+  return pfs_remove(name);
 }
 
 static int prv_stat(struct pbl_fs_mount *mp, const char *name, struct pbl_fs_dirent *entry) {
@@ -280,7 +229,7 @@ static int prv_stat(struct pbl_fs_mount *mp, const char *name, struct pbl_fs_dir
   }
 
   size_t size;
-  ret = prv_status(pfs_stat(name, &size));
+  ret = pfs_stat(name, &size);
   if (ret < 0) {
     return ret;
   }
