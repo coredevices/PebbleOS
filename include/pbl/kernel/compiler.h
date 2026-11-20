@@ -172,6 +172,13 @@
 #define PBL_CLZ(x) PBL_CLZ_IMPL(x)
 
 /**
+ * @brief Count trailing zero bits.
+ *
+ * @param x Unsigned int; undefined for 0.
+ */
+#define PBL_CTZ(x) PBL_CTZ_IMPL(x)
+
+/**
  * @brief Count set bits.
  *
  * @param x Unsigned int.

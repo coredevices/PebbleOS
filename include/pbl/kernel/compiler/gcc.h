@@ -26,6 +26,7 @@
 #define PBL_TYPES_COMPATIBLE_IMPL(a, b) __builtin_types_compatible_p(a, b)
 #define PBL_CHOOSE_EXPR_IMPL(c, a, b)   __builtin_choose_expr(c, a, b)
 #define PBL_CLZ_IMPL(x)                 __builtin_clz(x)
+#define PBL_CTZ_IMPL(x)                 __builtin_ctz(x)
 #define PBL_POPCOUNT_IMPL(x)            __builtin_popcount(x)
 #define PBL_BSWAP16_IMPL(x)             __builtin_bswap16(x)
 #define PBL_BSWAP32_IMPL(x)             __builtin_bswap32(x)
