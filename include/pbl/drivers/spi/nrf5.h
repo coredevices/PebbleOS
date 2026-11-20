@@ -37,6 +37,8 @@ struct pbl_spi_nrf5 {
   uintptr_t base;
   /** Interrupt line. */
   pbl_irq_t irq;
+  /** Whether it is SPIM3, which runs up to 32 MHz. */
+  bool spim3;
   /** SCK pin. */
   struct pbl_gpio sck;
   /** MOSI pin, or unconnected. */
@@ -56,21 +58,23 @@ extern const struct pbl_spi_bus_ops pbl_spi_nrf5_ops;
  * @param _name Name.
  * @param _base Registers.
  * @param _irq Interrupt line.
+ * @param _spim3 Whether it is SPIM3, which runs up to 32 MHz.
  * @param _sck SCK pin, from PBL_GPIO().
  * @param _mosi MOSI pin, from PBL_GPIO(), or unconnected.
  * @param _miso MISO pin, from PBL_GPIO(), or unconnected.
  * @param ... Chip select pins, from PBL_GPIO(), by chip select number.
  */
-#define PBL_SPI_NRF5_DEFINE(sym, _name, _base, _irq, _sck, _mosi, _miso, ...) \
-  PBL_SPI_BUS_STATE_DEFINE(sym, __VA_ARGS__);                                 \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_nrf5, struct pbl_spi_bus, bus){     \
-    .bus = PBL_SPI_BUS_INIT(sym, _name, nullptr, &pbl_spi_nrf5_ops),          \
-    .base = (_base),                                                          \
-    .irq = (_irq),                                                            \
-    .sck = _sck,                                                              \
-    .mosi = _mosi,                                                            \
-    .miso = _miso,                                                            \
-  };                                                                          \
+#define PBL_SPI_NRF5_DEFINE(sym, _name, _base, _irq, _spim3, _sck, _mosi, _miso, ...) \
+  PBL_SPI_BUS_STATE_DEFINE(sym, __VA_ARGS__);                                         \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_nrf5, struct pbl_spi_bus, bus){             \
+    .bus = PBL_SPI_BUS_INIT(sym, _name, nullptr, &pbl_spi_nrf5_ops),                  \
+    .base = (_base),                                                                  \
+    .irq = (_irq),                                                                    \
+    .spim3 = (_spim3),                                                                \
+    .sck = _sck,                                                                      \
+    .mosi = _mosi,                                                                    \
+    .miso = _miso,                                                                    \
+  };                                                                                  \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_SPI_NRF5_IRQ_PRIO, pbl_spi_nrf5_irq_handler, &sym##_inst, 0)
 
 /**

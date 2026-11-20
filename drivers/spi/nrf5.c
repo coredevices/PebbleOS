@@ -15,8 +15,6 @@
 // EasyDMA only reaches data RAM
 #define IS_IN_RAM(p) (((uintptr_t)(p) & 0xe0000000U) == 0x20000000U)
 
-#define SPIM3_BASE 0x4002f000U
-
 // nRF52840 anomaly 195: SPIM3 keeps drawing current once disabled unless this is written
 #define SPIM3_ANOMALY_195_OFFSET 0x0004U
 
@@ -28,11 +26,6 @@ static const struct {
   {4000000U, SPIM_FREQUENCY_M4},   {2000000U, SPIM_FREQUENCY_M2},   {1000000U, SPIM_FREQUENCY_M1},
   {500000U, SPIM_FREQUENCY_K500},  {250000U, SPIM_FREQUENCY_K250},  {125000U, SPIM_FREQUENCY_K125},
 };
-
-// SPIM3 runs up to 32 MHz and has its own anomaly
-static bool prv_is_spim3(const struct pbl_spi_nrf5 *spi) {
-  return spi->base == SPIM3_BASE;
-}
 
 static const struct pbl_spi_nrf5 *prv_spi(const struct pbl_spi_bus *bus) {
   return PBL_CONTAINER_OF(bus, const struct pbl_spi_nrf5, bus);
@@ -106,7 +99,7 @@ static int prv_configure(const struct pbl_spi_bus *bus, const struct pbl_spi_dev
   size_t i;
 
   // Only SPIM3 runs above 8 MHz
-  for (i = (prv_is_spim3(spi)) ? 0U : 2U; i < PBL_ARRAY_SIZE(s_frequencies); i++) {
+  for (i = (spi->spim3) ? 0U : 2U; i < PBL_ARRAY_SIZE(s_frequencies); i++) {
     if (s_frequencies[i].hz <= dev->max_hz) {
       break;
     }
@@ -146,7 +139,7 @@ static void prv_disable(const struct pbl_spi_bus *bus) {
 
   prv_putreg(spi, NRF52_SPIM_INTENCLR_OFFSET, SPIM_INT_END);
   prv_putreg(spi, NRF52_SPIM_ENABLE_OFFSET, SPIM_ENABLE_DISABLED);
-  if (prv_is_spim3(spi)) {
+  if (spi->spim3) {
     prv_putreg(spi, SPIM3_ANOMALY_195_OFFSET, 1U);
   }
   prv_event_clear(spi, NRF52_SPIM_EVENTS_END_OFFSET);
