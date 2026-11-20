@@ -107,3 +107,20 @@ void test_kernel_applib_state__log_across_start_releases_what_it_took(void) {
   cl_assert(state != nullptr);
   kernel_applib_release_log_state(state);
 }
+
+void test_kernel_applib_state__log_of_a_thread_without_a_task(void) {
+  prv_boot();
+  s_current_task = PebbleTask_Unknown;
+
+  LogState *state = kernel_applib_get_log_state();
+  cl_assert(state != nullptr);
+  cl_assert(!fake_mutex_all_unlocked());
+  cl_assert(kernel_applib_get_log_state() == nullptr);
+
+  kernel_applib_release_log_state(state);
+  cl_assert(fake_mutex_all_unlocked());
+
+  state = kernel_applib_get_log_state();
+  cl_assert(state != nullptr);
+  kernel_applib_release_log_state(state);
+}
