@@ -28,7 +28,7 @@ size_t trng_read(struct trng_dev *trng, void *ptr, size_t size) {
     uint32_t rand;
     size_t n = left < sizeof(rand) ? left : sizeof(rand);
 
-    PBL_ASSERTN(rng_rand(&rand));
+    PBL_ASSERTN(rng_rand(&rand) == 0);
     memcpy(out, &rand, n);
     out += n;
     left -= n;

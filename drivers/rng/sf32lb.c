@@ -45,7 +45,7 @@ static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t 
   return 0;
 }
 
-bool rng_rand(uint32_t *rand_out) {
+int rng_rand(uint32_t *rand_out) {
   int ret;
 
   if (!s_inited) {
@@ -54,7 +54,7 @@ bool rng_rand(uint32_t *rand_out) {
 
   ret = pbl_clk_enable(&s_rng->clk);
   if (ret != 0) {
-    return false;
+    return ret;
   }
 
   if (!s_inited) {
@@ -77,7 +77,7 @@ bool rng_rand(uint32_t *rand_out) {
 
   pbl_clk_disable(&s_rng->clk);
 
-  return ret == 0;
+  return ret;
 }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_trng)

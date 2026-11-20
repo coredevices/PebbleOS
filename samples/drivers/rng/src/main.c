@@ -16,7 +16,7 @@ int main(void) {
   unsigned int ones = 0U, repeats = 0U;
 
   for (int i = 0; i < WORDS; i++) {
-    if (!rng_rand(&val)) {
+    if (rng_rand(&val) != 0) {
       fprintf(stderr, "rng: generation failed\n");
       return -EIO;
     }
@@ -26,7 +26,7 @@ int main(void) {
 
   /* A good source sets about half of the bits, and does not repeat itself. */
   for (int i = 0; i < STATS_WORDS; i++) {
-    if (!rng_rand(&val)) {
+    if (rng_rand(&val) != 0) {
       fprintf(stderr, "rng: generation failed\n");
       return -EIO;
     }

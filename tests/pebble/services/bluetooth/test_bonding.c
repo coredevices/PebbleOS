@@ -88,12 +88,12 @@ int pbl_bt_unpair(const struct pbl_bt_device_internal *addr) {
   return 0;
 }
 
-bool rng_rand(uint32_t *rand_out) {
+int rng_rand(uint32_t *rand_out) {
   static uint32_t s_next = 0x1234;
 
   *rand_out = s_next++;
 
-  return true;
+  return 0;
 }
 
 void bt_settings_set_unfaithful(bool is_unfaithful) {

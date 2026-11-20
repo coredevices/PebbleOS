@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/rng.h>
 
-bool rng_rand(uint32_t *rand_out) {
+int rng_rand(uint32_t *rand_out) {
   *rand_out = 0x51454d55U;
-  return true;
+  return 0;
 }
