@@ -111,18 +111,20 @@ void test_graphics_draw_rotated_bitmap__origin_bw_assign(void) {
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(0), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
+                               GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_assign_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(45), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
+                               GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_assign_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_assign_center_45.Xbit.pbi"));
@@ -134,18 +136,20 @@ void test_graphics_draw_rotated_bitmap__origin_bw_set(void) {
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(0), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
+                               GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_set_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(45), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
+                               GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_set_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_bw_set_center_45.Xbit.pbi"));
@@ -157,19 +161,19 @@ void test_graphics_draw_rotated_bitmap__offset_bw(void) {
 
   // No Clip, Angle 0, Offset
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(0),
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_bw_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_bw_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_bw, GPoint(27, 40), PBL_DEG_TO_TRIGANGLE(45),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_bw_center_45.Xbit.pbi"));
 }
@@ -180,19 +184,20 @@ void test_graphics_draw_rotated_bitmap__origin_color_assign(void) {
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(0), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
+                               GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_color_assign_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
                           "draw_rotated_bitmap_origin_color_assign_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
                           "draw_rotated_bitmap_origin_color_assign_center_45.Xbit.pbi"));
@@ -201,7 +206,7 @@ void test_graphics_draw_rotated_bitmap__origin_color_assign(void) {
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
   graphics_context_set_fill_color(&ctx, GColorBlue);
   graphics_fill_rect(&ctx, &GRect(0, 0, 20, 10));
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(gbitmap_pbi_eq(
       &ctx.dest_bitmap, "draw_rotated_bitmap_origin_color_assign_center_45_transparent.Xbit.pbi"));
@@ -213,19 +218,20 @@ void test_graphics_draw_rotated_bitmap__origin_color_set(void) {
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(0), GPointZero);
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
+                               GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_color_set_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_color_set_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(
       gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_origin_color_set_center_45.Xbit.pbi"));
@@ -234,7 +240,7 @@ void test_graphics_draw_rotated_bitmap__origin_color_set(void) {
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpSet);
   graphics_context_set_fill_color(&ctx, GColorBlue);
   graphics_fill_rect(&ctx, &GRect(0, 0, 20, 10));
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), PBL_DEG_TO_TRIGANGLE(45),
                                GPointZero);
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap,
                           "draw_rotated_bitmap_origin_color_set_center_45_transparent.Xbit.pbi"));
@@ -246,19 +252,19 @@ void test_graphics_draw_rotated_bitmap__offset_color(void) {
 
   // No Clip, Angle 0
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(0),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(0),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_color_0.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPointZero, PBL_DEG_TO_TRIGANGLE(45),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_color_corner_45.Xbit.pbi"));
 
   // Top-left center rotation point, Angle 45
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), DEG_TO_TRIGANGLE(45),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 30), PBL_DEG_TO_TRIGANGLE(45),
                                GPoint(20, 20));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_color_center_45.Xbit.pbi"));
 }
@@ -269,25 +275,25 @@ void test_graphics_draw_rotated_bitmap__offset_edge(void) {
 
   // bottom edge center rotation point, Angle 2
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 59), DEG_TO_TRIGANGLE(2),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 59), PBL_DEG_TO_TRIGANGLE(2),
                                GPoint(72, 84));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_bottomedge_2.Xbit.pbi"));
 
   // top edge center rotation point, Angle 2
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 1), DEG_TO_TRIGANGLE(2),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(30, 1), PBL_DEG_TO_TRIGANGLE(2),
                                GPoint(72, 84));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_topedge_2.Xbit.pbi"));
 
   // left edge center rotation point, Angle 2
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(1, 30), DEG_TO_TRIGANGLE(2),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(1, 30), PBL_DEG_TO_TRIGANGLE(2),
                                GPoint(72, 84));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_leftedge_2.Xbit.pbi"));
 
   // right edge center rotation point, Angle 2
   setup_test_rotate_bitmap(&ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(59, 30), DEG_TO_TRIGANGLE(2),
+  graphics_draw_rotated_bitmap(&ctx, test_image_color, GPoint(59, 30), PBL_DEG_TO_TRIGANGLE(2),
                                GPoint(72, 84));
   cl_check(gbitmap_pbi_eq(&ctx.dest_bitmap, "draw_rotated_bitmap_offset_rightedge_2.Xbit.pbi"));
 }
@@ -312,15 +318,15 @@ void test_graphics_draw_rotated_bitmap__data_row_handling(void) {
   setup_test_rotate_bitmap(ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
   graphics_draw_rotated_bitmap(
       ctx, test_image, GPoint(test_image->bounds.size.w / 2 - 1, test_image->bounds.size.h / 2 - 1),
-      DEG_TO_TRIGANGLE(0), center);
+      PBL_DEG_TO_TRIGANGLE(0), center);
   cl_check(gbitmap_pbi_eq(&ctx->dest_bitmap, "draw_rotated_bitmap_stamp_0deg.Xbit.pbi"));
 
   // Top-left corner rotation point, Angle 45
   setup_test_rotate_bitmap(ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(ctx, test_image, GPoint(71, 71), DEG_TO_TRIGANGLE(45), center);
+  graphics_draw_rotated_bitmap(ctx, test_image, GPoint(71, 71), PBL_DEG_TO_TRIGANGLE(45), center);
   cl_check(gbitmap_pbi_eq(&ctx->dest_bitmap, "draw_rotated_bitmap_stamp_45deg.Xbit.pbi"));
   // Top-left corner rotation point, Angle 180
   setup_test_rotate_bitmap(ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, GCompOpAssign);
-  graphics_draw_rotated_bitmap(ctx, test_image, GPoint(71, 71), DEG_TO_TRIGANGLE(180), center);
+  graphics_draw_rotated_bitmap(ctx, test_image, GPoint(71, 71), PBL_DEG_TO_TRIGANGLE(180), center);
   cl_check(gbitmap_pbi_eq(&ctx->dest_bitmap, "draw_rotated_bitmap_stamp_180deg.Xbit.pbi"));
 }

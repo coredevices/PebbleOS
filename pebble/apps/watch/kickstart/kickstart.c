@@ -100,7 +100,7 @@ static GPoint prv_steps_to_point(int32_t cur, int32_t total, GRect frame) {
 #elif PBL_ROUND
   // Simply a calculated point on the circumference
   const int32_t angle = DIV_X(360 * MULT_X(cur, total));
-  return gpoint_from_polar(frame, GOvalScaleModeFitCircle, DEG_TO_TRIGANGLE(angle));
+  return gpoint_from_polar(frame, GOvalScaleModeFitCircle, PBL_DEG_TO_TRIGANGLE(angle));
 #endif
 }
 
@@ -198,7 +198,7 @@ static void prv_draw_outer_ring(GContext *ctx, int32_t current, int32_t total,
 
 #elif PBL_ROUND
   const int32_t degree = total ? (360 * current / total) : 0;
-  const int32_t to_angle = DEG_TO_TRIGANGLE(degree);
+  const int32_t to_angle = PBL_DEG_TO_TRIGANGLE(degree);
   graphics_fill_radial(ctx, outer_bounds, GOvalScaleModeFitCircle, fill_thickness, 0, to_angle);
 #endif
 }
@@ -211,7 +211,7 @@ static void prv_draw_outer_dots(GContext *ctx, GRect bounds) {
   const int num_dots = 12;
   for (int i = 0; i < num_dots; i++) {
     GPoint pos = gpoint_from_polar(inset_bounds, GOvalScaleModeFitCircle,
-                                   DEG_TO_TRIGANGLE(i * 360 / num_dots));
+                                   PBL_DEG_TO_TRIGANGLE(i * 360 / num_dots));
 
     const int dot_radius = 2;
     graphics_context_set_fill_color(ctx, GColorDarkGray);

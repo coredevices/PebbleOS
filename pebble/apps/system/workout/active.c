@@ -1307,8 +1307,8 @@ static void prv_draw_zones(GContext *ctx, WorkoutActiveWindow *window, GSize siz
 #define PAGE_INDICATOR_X(size) ((size).h >= 200 ? 7 : 4)
 
 static int32_t prv_gauge_angle(int thousandths) {
-  return DEG_TO_TRIGANGLE(-GAUGE_SPAN_DEG / 2) +
-         DEG_TO_TRIGANGLE(GAUGE_SPAN_DEG) / 1000 * thousandths;
+  return PBL_DEG_TO_TRIGANGLE(-GAUGE_SPAN_DEG / 2) +
+         PBL_DEG_TO_TRIGANGLE(GAUGE_SPAN_DEG) / 1000 * thousandths;
 }
 
 // Bezel gauge split into the four zones, with a pointer at the heart rate.
@@ -1319,8 +1319,9 @@ static void prv_draw_gauge_ring(GContext *ctx, WorkoutActiveWindow *window, GRec
       prv_gauge_angle(1000 * prv_bar_progress(window, 0) / ANIMATION_NORMALIZED_MAX);
   for (int i = 0; i < 4; i++) {
     const bool active = bpm > 0 && i == (int)zone;
-    const int32_t start = prv_gauge_angle(i * 250) + DEG_TO_TRIGANGLE(2);
-    const int32_t end = PBL_MIN(prv_gauge_angle((i + 1) * 250) - DEG_TO_TRIGANGLE(2), sweep_end);
+    const int32_t start = prv_gauge_angle(i * 250) + PBL_DEG_TO_TRIGANGLE(2);
+    const int32_t end =
+        PBL_MIN(prv_gauge_angle((i + 1) * 250) - PBL_DEG_TO_TRIGANGLE(2), sweep_end);
     if (end <= start) {
       continue;
     }

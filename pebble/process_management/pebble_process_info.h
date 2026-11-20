@@ -140,7 +140,7 @@ typedef enum {
 // sdk.major:0x5 .minor:0x3e -- Update Connection Service APIs (rev 66)
 // sdk.major:0x5 .minor:0x3f -- Enabled support for 8K App Messages (rev 67)
 // sdk.major:0x5 .minor:0x40 -- Allow disabling of error dialogs for the voice API (rev 68)
-// sdk.major:0x5 .minor:0x41 -- DEG_TO_TRIGANGLE (rev 69)
+// sdk.major:0x5 .minor:0x41 -- PBL_DEG_TO_TRIGANGLE (rev 69)
 // sdk.major:0x5 .minor:0x42 -- Export gbitmap_get_data_row_info (rev 70)
 // sdk.major:0x5 .minor:0x43 -- Export ContentIndicator (rev 71)
 // sdk.major:0x5 .minor:0x45 -- Export grect_inset (rev 73)

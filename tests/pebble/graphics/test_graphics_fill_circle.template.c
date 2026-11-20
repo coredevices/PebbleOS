@@ -758,8 +758,8 @@ void test_graphics_fill_circle_${BIT_DEPTH_NAME}__radial_grect(void) {
 }
 
 void prv_test_dithering_color(GContext *ctx, GColor color) {
-  const uint32_t angle_end = DEG_TO_TRIGANGLE(405);
-  const uint32_t angle_start = DEG_TO_TRIGANGLE(135);
+  const uint32_t angle_end = PBL_DEG_TO_TRIGANGLE(405);
+  const uint32_t angle_start = PBL_DEG_TO_TRIGANGLE(135);
   GRect rect = GRect(10, 10, 40, 40);
 
   setup_test_aa_sw(ctx, fb, ORIGIN_RECT_NO_CLIP, ORIGIN_RECT_NO_CLIP, true, 1);

@@ -105,7 +105,7 @@ static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data, MagData 
 
   // per freescale AN4249, roll is unstable close to vertical but pitch is ok
   int32_t corr = 0;
-  if (TRIGANGLE_TO_DEG(pitch) > 82) {
+  if (PBL_TRIGANGLE_TO_DEG(pitch) > 82) {
     pitch = TRIG_MAX_ANGLE / 4;
     roll = 0;
   } else if (accel_data->z < 0) {

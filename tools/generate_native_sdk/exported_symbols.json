@@ -229,10 +229,12 @@
             }, {
               "type": "define",
               "name": "TRIGANGLE_TO_DEG",
+              "implName": "PBL_TRIGANGLE_TO_DEG",
               "addedRevision": "18"
             }, {
               "type": "define",
               "name": "DEG_TO_TRIGANGLE",
+              "implName": "PBL_DEG_TO_TRIGANGLE",
               "addedRevision": "68"
             }, {
               "type": "function",

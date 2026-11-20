@@ -52,21 +52,21 @@
 
 /**
  * Converts from a fixed point value representation to the equivalent value in degrees
- * @see DEG_TO_TRIGANGLE
+ * @see PBL_DEG_TO_TRIGANGLE
  * @see TRIG_MAX_ANGLE
  * @param trig_angle Angle, scaled so that TRIG_MAX_ANGLE is 360 degrees.
  * @return Angle in degrees.
  */
-#define TRIGANGLE_TO_DEG(trig_angle) (((trig_angle) * 360) / TRIG_MAX_ANGLE)
+#define PBL_TRIGANGLE_TO_DEG(trig_angle) (((trig_angle) * 360) / TRIG_MAX_ANGLE)
 
 /**
  * Converts from an angle in degrees to the equivalent fixed point value representation
- * @see TRIGANGLE_TO_DEG
+ * @see PBL_TRIGANGLE_TO_DEG
  * @see TRIG_MAX_ANGLE
  * @param angle Angle in degrees.
  * @return Angle, scaled so that TRIG_MAX_ANGLE is 360 degrees.
  */
-#define DEG_TO_TRIGANGLE(angle) (((angle) * TRIG_MAX_ANGLE) / 360)
+#define PBL_DEG_TO_TRIGANGLE(angle) (((angle) * TRIG_MAX_ANGLE) / 360)
 
 /**
  * @brief Look-up the sine of the given angle from a pre-computed table.

@@ -67,7 +67,7 @@
 #define GLOBE_CRUMPLE_DELAY_SEGMENTS     8
 #define GLOBE_CRUMPLE_POINT_DURATION_NUM 2
 #define GLOBE_CRUMPLE_POINT_DURATION_DEN 3
-#define GLOBE_CRUMPLE_SWEEP_ANGLE        DEG_TO_TRIGANGLE(-45)
+#define GLOBE_CRUMPLE_SWEEP_ANGLE        PBL_DEG_TO_TRIGANGLE(-45)
 #define GLOBE_CRADLE_CENTER_Y_OFFSET     5
 // Small rect (flint/asterix 144x168): the intro art was drawn for taller
 // screens — the cradle sequence, stand and arm scale down to fit between a
@@ -87,8 +87,8 @@
 #define GLOBE_CRADLE_ARM_CENTER_Y             60
 #define GLOBE_CRADLE_ARM_OUTER_RADIUS         64
 #define GLOBE_CRADLE_ARM_THICKNESS            6
-#define GLOBE_CRADLE_ARM_START_ANGLE          DEG_TO_TRIGANGLE(20)
-#define GLOBE_CRADLE_ARM_END_ANGLE            DEG_TO_TRIGANGLE(205)
+#define GLOBE_CRADLE_ARM_START_ANGLE          PBL_DEG_TO_TRIGANGLE(20)
+#define GLOBE_CRADLE_ARM_END_ANGLE            PBL_DEG_TO_TRIGANGLE(205)
 #define GLOBE_CRADLE_WIPE_MARGIN              8
 #define GLOBE_TAP_THRESHOLD                   20
 #define GLOBE_DRAG_AXIS_THRESHOLD             5

@@ -55,13 +55,13 @@ static void prv_test_0_set(Layer *layer, GContext *ctx) {
 static void prv_test_45_assign(Layer *layer, GContext *ctx) {
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
   graphics_draw_rotated_bitmap(ctx, (GBitmap *)&s_gfx_rotated_bitmap_bitmap, bitmap_center,
-                               DEG_TO_TRIGANGLE(45), bitmap_center);
+                               PBL_DEG_TO_TRIGANGLE(45), bitmap_center);
 }
 
 static void prv_test_45_set(Layer *layer, GContext *ctx) {
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   graphics_draw_rotated_bitmap(ctx, (GBitmap *)&s_gfx_rotated_bitmap_bitmap, bitmap_center,
-                               DEG_TO_TRIGANGLE(45), bitmap_center);
+                               PBL_DEG_TO_TRIGANGLE(45), bitmap_center);
 }
 
 static void prv_test_0_assign_64px(Layer *layer, GContext *ctx) {
@@ -79,13 +79,13 @@ static void prv_test_0_set_64px(Layer *layer, GContext *ctx) {
 static void prv_test_45_assign_64px(Layer *layer, GContext *ctx) {
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
   graphics_draw_rotated_bitmap(ctx, (GBitmap *)&s_gfx_rotated_bitmap_64_bitmap, bitmap_64_center,
-                               DEG_TO_TRIGANGLE(45), bitmap_64_center);
+                               PBL_DEG_TO_TRIGANGLE(45), bitmap_64_center);
 }
 
 static void prv_test_45_set_64px(Layer *layer, GContext *ctx) {
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   graphics_draw_rotated_bitmap(ctx, (GBitmap *)&s_gfx_rotated_bitmap_64_bitmap, bitmap_64_center,
-                               DEG_TO_TRIGANGLE(45), bitmap_64_center);
+                               PBL_DEG_TO_TRIGANGLE(45), bitmap_64_center);
 }
 
 static void prv_teardown(Window *window) {
