@@ -6,8 +6,11 @@
 #include <pbl/drivers/regulator.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/units.h>
+
+PBL_LOG_MODULE_DEFINE(driver_regulator, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
 
 static int prv_switch_on(const struct pbl_regulator *reg) {
   int ret;

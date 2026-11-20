@@ -10,7 +10,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_touch_ft6236, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_touch, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
 #define FT6236_RESET_MS     5U
 #define FT6236_POR_DELAY_MS 80U

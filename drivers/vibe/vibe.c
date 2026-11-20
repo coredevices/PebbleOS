@@ -4,7 +4,10 @@
 #include <errno.h>
 
 #include <pbl/drivers/vibe.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
+
+PBL_LOG_MODULE_DEFINE(driver_vibe, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_vibe_class, "vibe");
 

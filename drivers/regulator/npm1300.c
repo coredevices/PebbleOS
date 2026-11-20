@@ -10,7 +10,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_regulator_npm1300, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_regulator, CONFIG_DRIVER_REGULATOR_LOG_LEVEL);
 
 // BUCK block: per-rail registers at base + rail * stride
 #define NPM1300_BUCK_ENASET(n)          (0x0400U + 2U * (n))

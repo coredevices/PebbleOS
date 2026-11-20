@@ -14,7 +14,7 @@
 
 #include <hardware/sf32lb52_trng.h>
 
-PBL_LOG_MODULE_DEFINE(driver_rng_sf32lb, CONFIG_DRIVER_RNG_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_rng, CONFIG_DRIVER_RNG_LOG_LEVEL);
 
 #define TRNG_TIMEOUT_US 3000U
 

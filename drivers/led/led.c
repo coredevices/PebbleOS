@@ -4,6 +4,9 @@
 #include <errno.h>
 
 #include <pbl/drivers/led.h>
+#include <pbl/logging/logging.h>
+
+PBL_LOG_MODULE_DEFINE(driver_led, CONFIG_DRIVER_LED_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_led_class, "led");
 

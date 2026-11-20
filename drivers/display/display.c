@@ -10,7 +10,10 @@
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
+
+PBL_LOG_MODULE_DEFINE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_display_class, "display");
 

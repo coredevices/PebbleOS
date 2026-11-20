@@ -15,7 +15,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_vibe_aw8623x, CONFIG_DRIVER_VIBE_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_vibe, CONFIG_DRIVER_VIBE_LOG_LEVEL);
 
 #define AW8623X_PLAYCFG3                0x08U
 #define AW8623X_PLAYCFG3_BRK_EN         PBL_BIT(2)

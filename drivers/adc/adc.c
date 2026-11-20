@@ -4,7 +4,10 @@
 #include <errno.h>
 
 #include <pbl/drivers/adc.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
+
+PBL_LOG_MODULE_DEFINE(driver_adc, CONFIG_DRIVER_ADC_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_adc_class, "adc");
 

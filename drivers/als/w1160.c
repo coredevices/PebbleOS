@@ -15,7 +15,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_als_w1160, CONFIG_DRIVER_ALS_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_als, CONFIG_DRIVER_ALS_LOG_LEVEL);
 
 // Registers
 #define W1160_STATE_REG            0x00
