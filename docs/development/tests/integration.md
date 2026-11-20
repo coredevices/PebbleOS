@@ -447,8 +447,11 @@ pbl -b build-prf itest --no-build --bt-hci virtual --main-build "$PWD/build-main
 The emulator has no bootloader, so it only checks the transfer. A watch
 installs it, boots it, and goes back to PRF when the phone asks; it has to
 be running PRF to start with, as set up for a release check (the
-bootloader and PRF alone on the flash). The idle shutdown tests take about
-12 minutes each, so CI does not run them.
+bootloader and PRF alone on the flash). `--flash-before` sets that up: on a
+watch whose bootloader boots firmware slots, it erases their headers, so
+PRF runs as the fallback; on asterix, `pbl run --provision` writes PRF to
+its partition and erases the firmware, so the bootloader copies PRF in. The idle shutdown
+tests take about 12 minutes each, so CI does not run them.
 
 Left for a person: the Back+Up+Select hold that reboots into PRF,
 charging a watch, the MFG menu's tests (checked in the factory), and the

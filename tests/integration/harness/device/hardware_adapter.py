@@ -45,6 +45,8 @@ class HardwareAdapter(DeviceAdapter):
         command = ["pbl", "-b", self.build.path, "run"]
         if self.build.variant != "prf":
             command.append("--resources")
+        elif not self._has_slots:
+            command.append("--provision")
         if self.config.serial:
             command += ["--tty", self.config.serial[0]]
         return command
@@ -104,8 +106,15 @@ class HardwareAdapter(DeviceAdapter):
                 )
         raise HarnessError(f"{what} failed ({result.returncode}); see {log}")
 
+    @property
+    def _has_slots(self):
+        """Whether the bootloader boots the firmware from slots, falling back
+        to PRF, rather than copying the firmware or PRF into place, which
+        flashing PRF with --provision sets up."""
+        return bool(self.build.config.get("CONFIG_PBLBOOT"))
+
     def flash(self):
-        if self.build.variant == "prf":
+        if self.build.variant == "prf" and self._has_slots:
             self.invalidate_firmware_slots()
         self._run_repowered(self._flash_command(), "flash")
 
@@ -132,9 +141,12 @@ class HardwareAdapter(DeviceAdapter):
         """Boot PRF again, e.g. after a test installed the normal firmware."""
         # The runner may need the serial port the connections hold.
         self.disconnect()
-        self.invalidate_firmware_slots()
-        if not self._hard_reset():
-            raise HarnessError("booting PRF needs a power supply")
+        if self._has_slots:
+            self.invalidate_firmware_slots()
+            if not self._hard_reset():
+                raise HarnessError("booting PRF needs a power supply")
+        else:
+            self._run_repowered(self._flash_command(), "flash")
         self.connect()
         self.wait_ready()
 
