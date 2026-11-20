@@ -11,7 +11,7 @@
 
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
 PebbleOS runs the samples on its Cortex-M7: the console, the kernel and its
-system timer work so far.
+system timer, the LEDs and the joystick work so far.
 
 ## Hardware
 
@@ -26,6 +26,16 @@ system timer work so far.
   64 MHz HSI oscillator so far
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX)
+
+## Buttons and LEDs
+
+| Device | Pins | PebbleOS |
+| --- | --- | --- |
+| Joystick left, up, center, down | PK4, PK6, PK2, PK3, active low | Back, Up, Select and Down buttons (`gpio-keys`) |
+| LD1 to LD4, green, orange, red, blue | PI12 to PI15, active low | LEDs (`gpio-leds`), LD1 being the status LED |
+
+Joystick right (PK5) and the User button (PC13) are not described: a watch
+has four buttons.
 
 ## Flashing
 

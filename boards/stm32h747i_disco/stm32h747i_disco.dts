@@ -6,9 +6,66 @@
 #include "st/stm32h747xi.dtsi"
 #include "stm32h747i_disco-pinctrl.dtsi"
 
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
 / {
 	model = "STMicroelectronics STM32H747I-DISCO";
 	compatible = "st,stm32h747i-disco", "st,stm32h747";
+
+	// The joystick, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "JoyLeft";
+			gpios = <&gpiok 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+		};
+
+		button-up {
+			label = "JoyUp";
+			gpios = <&gpiok 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+		};
+
+		button-select {
+			label = "JoySel";
+			gpios = <&gpiok 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+		};
+
+		button-down {
+			label = "JoyDown";
+			gpios = <&gpiok 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_green: led-green {
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpioi 12 GPIO_ACTIVE_LOW>;
+		};
+
+		led_orange: led-orange {
+			color = <LED_COLOR_ID_ORANGE>;
+			gpios = <&gpioi 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led_red: led-red {
+			color = <LED_COLOR_ID_RED>;
+			gpios = <&gpioi 14 GPIO_ACTIVE_LOW>;
+		};
+
+		led_blue: led-blue {
+			color = <LED_COLOR_ID_BLUE>;
+			gpios = <&gpioi 15 GPIO_ACTIVE_LOW>;
+		};
+	};
 };
 
 &clk_hse {
