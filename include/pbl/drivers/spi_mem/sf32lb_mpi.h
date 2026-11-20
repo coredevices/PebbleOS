@@ -74,14 +74,13 @@ extern const struct pbl_spi_mem_ops pbl_spi_mem_sf32lb_mpi_ops;
  * @param _mem_size Memory-mapped window size, in bytes.
  * @param _max_hz Highest bus clock, in Hz, or 0 to keep the divider the boot code left.
  */
-#define PBL_SPI_MEM_SF32LB_MPI_DEFINE(sym, _name, _mpi, _mem_base, _mem_size, _max_hz)           \
-  PBL_SPI_MEM_STATE_DEFINE(sym);                                                                 \
-  static struct pbl_spi_mem_sf32lb_mpi_data sym##_data;                                          \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb_mpi, struct pbl_spi_mem, mem) {             \
-    .mem =                                                                                       \
-        PBL_SPI_MEM_INIT(sym, _name, PBL_DEVICE_DEPS(&(_mpi)->dev), &pbl_spi_mem_sf32lb_mpi_ops, \
-                         PBL_SPI_MEM_SF32LB_MPI_XIP(_mem_base, _mem_size)),                      \
-    .mpi = (_mpi), .data = &sym##_data, .max_hz = (_max_hz),                                     \
+#define PBL_SPI_MEM_SF32LB_MPI_DEFINE(sym, _name, _mpi, _mem_base, _mem_size, _max_hz) \
+  PBL_SPI_MEM_STATE_DEFINE(sym);                                                       \
+  static struct pbl_spi_mem_sf32lb_mpi_data sym##_data;                                \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_sf32lb_mpi, struct pbl_spi_mem, mem) {   \
+    .mem = PBL_SPI_MEM_INIT(sym, _name, &(_mpi)->dev, &pbl_spi_mem_sf32lb_mpi_ops,     \
+                            PBL_SPI_MEM_SF32LB_MPI_XIP(_mem_base, _mem_size)),         \
+    .mpi = (_mpi), .data = &sym##_data, .max_hz = (_max_hz),                           \
   }
 
 /** @} */
