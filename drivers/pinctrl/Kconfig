@@ -31,6 +31,14 @@ config PINCTRL_SF32LB57
       Pin multiplexer and pad configuration of the SiFli SF32LB57 HPSYS
       pads.
 
+config PINCTRL_STM32
+    bool "ST STM32 pin controller"
+    default y
+    depends on DT_HAS_ST_STM32H743_PINCTRL_ENABLED
+    select CLK
+    help
+      Pin multiplexer and pad configuration of the ST STM32 GPIO ports.
+
 config PINCTRL_SHELL
     bool "Pin controller shell commands"
     default DRIVER_SHELL
