@@ -9,7 +9,6 @@
 #if defined(CONFIG_BT_AMS_CLIENT)
 #include <comm/ble/kernel_le_client/ams/ams.h>
 #endif
-#include <comm/ble/kernel_le_client/dis/dis_definition.h>
 #if UNITTEST
 #include <comm/ble/kernel_le_client/test/test_definition.h>
 #endif
@@ -45,7 +44,6 @@ enum {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   KernelLEClientPPoGATT,
 #endif
-  KernelLEClientDIS,
 #endif
   KernelLEClientNum,
 };
@@ -106,32 +104,20 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
   },
 #else
 #if defined(CONFIG_PP_TRANSPORT_GATT)
-  [KernelLEClientPPoGATT] =
-      {
-        .debug_name = "PPoG",
-        .service_uuid = &pbl_pp_gatt_service_uuid,
-        .characteristic_uuids = pbl_pp_gatt_characteristic_uuids,
-        .num_characteristics = PBL_PP_GATT_CHARACTERISTIC_NUM,
-        .handle_service_discovered = pbl_pp_gatt_handle_service_discovered,
-        .handle_service_removed = pbl_pp_gatt_handle_service_removed,
-        .invalidate_all_references = pbl_pp_gatt_invalidate_all_references,
-        .can_handle_characteristic = pbl_pp_gatt_can_handle_characteristic,
-        .handle_write_response = nullptr,
-        .handle_subscribe = pbl_pp_gatt_handle_subscribe,
-        .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
-      },
-#endif
-  [KernelLEClientDIS] = {
-    .debug_name = "DIS",
-    .service_uuid = &s_dis_service_uuid,
-    .characteristic_uuids = s_dis_characteristic_uuids,
-    .num_characteristics = NumDISCharacteristic,
-    .handle_service_discovered = dis_handle_service_discovered,
-    .handle_service_removed = dis_handle_service_removed,
-    .invalidate_all_references = dis_invalidate_all_references,
-    .can_handle_characteristic = nullptr,
-    .handle_read_or_notification = nullptr,
+  [KernelLEClientPPoGATT] = {
+    .debug_name = "PPoG",
+    .service_uuid = &pbl_pp_gatt_service_uuid,
+    .characteristic_uuids = pbl_pp_gatt_characteristic_uuids,
+    .num_characteristics = PBL_PP_GATT_CHARACTERISTIC_NUM,
+    .handle_service_discovered = pbl_pp_gatt_handle_service_discovered,
+    .handle_service_removed = pbl_pp_gatt_handle_service_removed,
+    .invalidate_all_references = pbl_pp_gatt_invalidate_all_references,
+    .can_handle_characteristic = pbl_pp_gatt_can_handle_characteristic,
+    .handle_write_response = nullptr,
+    .handle_subscribe = pbl_pp_gatt_handle_subscribe,
+    .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
   },
+#endif
 #endif // UNITTEST
 };
 

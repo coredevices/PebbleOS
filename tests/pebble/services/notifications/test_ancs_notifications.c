@@ -136,14 +136,14 @@ void test_ancs_notifications__handle_phone_call_message(void) {
     .category = PBL_BT_ANCS_CATEGORY_INCOMING_CALL,
   };
 
-  ancs_notifications_handle_message(&notif, false, false, notif_attributes, app_attributes);
+  ancs_notifications_handle_message(&notif, false, notif_attributes, app_attributes);
 
   // We just processed an incoming phone call event, there better be a phone event scheduled!
   PebbleEvent event = fake_event_get_last();
 
   cl_assert_equal_i(event.type, PEBBLE_PHONE_EVENT);
   cl_assert_equal_i(event.phone.type, PhoneEventType_Incoming);
-  cl_assert_equal_i(event.phone.source, PhoneCallSource_ANCS_Legacy);
+  cl_assert_equal_i(event.phone.source, PhoneCallSource_ANCS);
 }
 
 static void prv_send_social_message(uint32_t uid, uint8_t flags) {
@@ -202,7 +202,7 @@ static void prv_send_social_message(uint32_t uid, uint8_t flags) {
     .category = PBL_BT_ANCS_CATEGORY_SOCIAL,
   };
 
-  ancs_notifications_handle_message(&notif, false, false, notif_attributes, app_attributes);
+  ancs_notifications_handle_message(&notif, false, notif_attributes, app_attributes);
 }
 
 void test_ancs_notifications__silent_property_sets_silent_header(void) {
@@ -229,12 +229,7 @@ void test_ancs_notifications__handle_phone_call_removed(void) {
     .category = PBL_BT_ANCS_CATEGORY_INCOMING_CALL,
   };
 
-  // Make sure we don't send any events when this isn't iOS9
-  ancs_notifications_handle_notification_removed(&notif, false);
-  cl_assert_equal_i(fake_event_get_count(), 0);
-
-  // Make sure that we trigger an event when this is iOS9
-  ancs_notifications_handle_notification_removed(&notif, true);
+  ancs_notifications_handle_notification_removed(&notif);
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert_equal_i(event.type, PEBBLE_PHONE_EVENT);
@@ -244,7 +239,7 @@ void test_ancs_notifications__handle_phone_call_removed(void) {
 
   // Make sure that having a matching notification in notif_db still results in a call hide event
   fake_notification_storage_set_existing_ancs_notification(&(Uuid)UUID_SYSTEM, uid);
-  ancs_notifications_handle_notification_removed(&notif, true);
+  ancs_notifications_handle_notification_removed(&notif);
   event = fake_event_get_last();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert_equal_i(event.type, PEBBLE_PHONE_EVENT);

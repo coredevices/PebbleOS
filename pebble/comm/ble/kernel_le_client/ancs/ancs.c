@@ -118,11 +118,6 @@ typedef enum {
   NotificationQueueOpPerformAction,
 } NotificationQueueOp;
 
-typedef enum {
-  ANCSVersion_Unknown,
-  ANCSVersion_iOS9OrNewer,
-} ANCSVersion;
-
 typedef struct {
   ListNode list_node;
   NotificationQueueOp op;
@@ -147,7 +142,6 @@ typedef struct ANCSClient {
   ClientEvent *notif_attrs;
   NotificationQueueNode *queue;
   bool alive_check_pending;
-  ANCSVersion version;
   // Alive-check intervals with no NS traffic; reset by any NS notification.
   // Triggers a CCCD re-subscribe at the threshold to recover silent NS.
   uint8_t alive_checks_without_ns;
@@ -651,7 +645,6 @@ static void prv_release_attributes(void) {
 
 static void prv_put_ancs_message(const struct pbl_bt_ancs_attr *const *app_attrs) {
   ancs_notifications_handle_message(&s_ancs_client->queue->notif, s_ancs_client->queue->recovered,
-                                    s_ancs_client->version >= ANCSVersion_iOS9OrNewer,
                                     s_ancs_client->notif_attrs->attrs, app_attrs);
 }
 
@@ -887,8 +880,7 @@ static void prv_handle_notification(const struct pbl_bt_ancs_notif *notif) {
       break;
     case PBL_BT_ANCS_EVENT_REMOVED:
       PBL_LOG_DBG("Removed ANCS notification");
-      ancs_notifications_handle_notification_removed(
-          notif, s_ancs_client->version >= ANCSVersion_iOS9OrNewer);
+      ancs_notifications_handle_notification_removed(notif);
       break;
   }
 }
@@ -954,12 +946,6 @@ void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   } else {
     launcher_task_add_callback(prv_serialize_action_launcher_task_cb, action_ptr);
   }
-}
-
-void ancs_handle_ios9_or_newer_detected(void) {
-  // The ANCSClient is created as soon as the gateway is connected (see kernel_le_client.c).
-  PBL_ASSERTN(s_ancs_client);
-  s_ancs_client->version = ANCSVersion_iOS9OrNewer;
 }
 
 // -------------------------------------------------------------------------------------------------

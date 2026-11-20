@@ -617,7 +617,7 @@ struct pbl_bt_device_internal gatt_client_characteristic_get_device(
 }
 
 // -------------------------------------------------------------------------------------------------
-// Used by and extern'd for ppogatt.c and dis.c
+// Used by and extern'd for ppogatt.c
 
 GAPLEConnection *gatt_client_characteristic_get_connection(
     pbl_bt_characteristic_t characteristic_ref) {
