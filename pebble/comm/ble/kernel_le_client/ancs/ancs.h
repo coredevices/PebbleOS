@@ -30,6 +30,3 @@ void ancs_handle_services_changed(void);
 
 //! Performs an action on a notification, an enum pbl_bt_ancs_action. Any task.
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id);
-
-// For now, the iOS 9+ ANCS feature detection is done via the DIS service
-void ancs_handle_ios9_or_newer_detected(void);

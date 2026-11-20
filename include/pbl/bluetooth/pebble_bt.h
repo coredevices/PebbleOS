@@ -19,8 +19,8 @@
  * Uuid uuid;
  * pbl_bt_pebble_uuid_expand(&uuid, PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT);
  *
- * static const Uuid s_app_launch_uuid = {
- *   PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_APP_LAUNCH_SERVICE_UUID_32BIT),
+ * static const Uuid s_ppogatt_uuid = {
+ *   PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT),
  * };
  * @endcode
  * @{
@@ -60,11 +60,6 @@
 #define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT (0x40000001)
 /** @brief Reversed PPoGATT data write characteristic, written by the phone. */
 #define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x40000003)
-
-/** @brief Service UUID of the Pebble App Launch service. */
-#define PBL_BT_PEBBLE_APP_LAUNCH_SERVICE_UUID_32BIT (0x20000000)
-/** @brief Pebble App Launch characteristic. */
-#define PBL_BT_PEBBLE_APP_LAUNCH_CHARACTERISTIC_UUID_32BIT (0x20000001)
 
 /**
  * @brief Expand a 32-bit (or 16-bit) Pebble UUID with the Pebble Base UUID.

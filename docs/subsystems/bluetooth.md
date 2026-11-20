@@ -126,9 +126,8 @@ liveness check, the music service) sit on top of those two in
 `pebble/comm/ble/kernel_le_client/`, on KernelMain: what a client reports on
 the NimBLE host thread is passed on there.
 
-The other clients of the phone's services (app launch, device information,
-PPoGATT) still go through the discovery and subscription layer of
-`pebble/comm/ble/`.
+PPoGATT, the other client of the phone's services, still goes through the
+discovery and subscription layer of `pebble/comm/ble/`.
 
 ## Advertising
 

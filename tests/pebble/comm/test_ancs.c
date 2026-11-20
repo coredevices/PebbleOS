@@ -591,12 +591,6 @@ void test_ancs__notification_dismissal(void) {
     .category_count = 1,
   };
 
-  // Notification removal without DIS service - notification shouldn't be acted upon
-  prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
-  cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 0);
-
-  // DIS service / iOS 9+ detected - enabling notification dismissal
-  ancs_handle_ios9_or_newer_detected();
   prv_fake_receiving_ns_notification(sizeof(ns_notification), (uint8_t *)&ns_notification);
   cl_assert_equal_i(fake_kernel_services_notifications_acted_upon_count(), 1);
 }
