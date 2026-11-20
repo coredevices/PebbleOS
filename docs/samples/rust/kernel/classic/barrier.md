@@ -1,4 +1,4 @@
-# Barrier in Rust
+# Rust: Barrier
 
 The {doc}`barrier sample <../../../kernel/classic/barrier>` written in
 {doc}`Rust <../../../../development/build_system/rust>`, on the `pebbleos`

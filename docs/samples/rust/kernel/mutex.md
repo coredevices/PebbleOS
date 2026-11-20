@@ -1,4 +1,4 @@
-# Mutex in Rust
+# Rust: Mutexes
 
 The {doc}`mutex sample <../../kernel/mutex>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

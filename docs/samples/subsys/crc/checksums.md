@@ -1,4 +1,4 @@
-# CRC
+# CRC: Checksums
 
 This sample computes the {doc}`CRC <../../../subsystems/crc>`-8 and CRC-32
 of the usual check string, `123456789`, then the CRC-32 again in two chunks:

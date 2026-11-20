@@ -1,4 +1,4 @@
-# Message queue in Rust
+# Rust: Message queues
 
 The {doc}`message queue sample <../../kernel/msgq>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

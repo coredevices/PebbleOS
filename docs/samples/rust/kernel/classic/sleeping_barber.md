@@ -1,4 +1,4 @@
-# Sleeping barber in Rust
+# Rust: Sleeping barber
 
 The {doc}`sleeping barber sample <../../../kernel/classic/sleeping_barber>`
 written in {doc}`Rust <../../../../development/build_system/rust>`, on the

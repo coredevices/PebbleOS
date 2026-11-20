@@ -1,4 +1,4 @@
-# Timer in Rust
+# Rust: Timers
 
 The {doc}`timer sample <../../kernel/timer>` written in {doc}`Rust
 <../../../development/build_system/rust>`, on the `pebbleos` crate.

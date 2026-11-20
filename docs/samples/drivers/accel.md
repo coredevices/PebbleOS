@@ -1,4 +1,4 @@
-# Accelerometer
+# Accelerometer: Samples and gestures
 
 This sample reads the accelerometer, `ACCEL`, once with
 `pbl_accel_peek()`, then has it sample every 40 ms for 5 seconds, in

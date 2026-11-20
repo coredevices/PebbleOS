@@ -1,4 +1,4 @@
-# Delayed work
+# Kernel: Delayed work
 
 This sample runs work after a delay, in three common shapes: a debounce, where
 every edge of a button pushes the work back; a timeout, which keeps its first

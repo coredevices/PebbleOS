@@ -1,4 +1,4 @@
-# Loader
+# Loader: Images
 
 This sample loads a small image the way apps are loaded: the loader copies
 its stored part to RAM, clears the part after it that is not stored, and

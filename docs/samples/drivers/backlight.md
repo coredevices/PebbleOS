@@ -1,4 +1,4 @@
-# Backlight
+# Backlight: Brightness and color
 
 This sample ramps the backlight from off to full brightness and back in steps
 of 5, then, at full brightness, sets it to red, green, blue and white. A

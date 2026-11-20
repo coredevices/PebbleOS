@@ -1,6 +1,6 @@
-# Central
+# NimBLE: Central
 
-This sample is the other end of the {doc}`peripheral` sample. It scans
+This sample is the other end of the {doc}`peripheral <peripheral>` sample. It scans
 until it hears a device advertising that sample's service UUID, connects to
 it, and works through its GATT service as a client:
 

@@ -1,4 +1,4 @@
-# Priority inversion
+# Synchronization: Priority inversion
 
 This sample has a low priority thread hold a mutex that `main()`, of high
 priority, needs, while a medium priority thread that needs no lock keeps the

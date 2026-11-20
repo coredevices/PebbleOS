@@ -1,4 +1,4 @@
-# Ambient light
+# Ambient light: Lux readings
 
 This sample reads the ambient light sensor five times, a second apart. It
 primes the sensor first with `pbl_als_prime()`, which lets sensors that sample

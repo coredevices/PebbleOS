@@ -1,4 +1,4 @@
-# Settings
+# Settings: Key-value store
 
 This sample keeps a settings file, a store of key-value records in a single
 file on the {doc}`file system <../../../subsystems/fs>`. Each write appends a

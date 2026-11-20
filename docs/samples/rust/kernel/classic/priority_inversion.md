@@ -1,4 +1,4 @@
-# Priority inversion in Rust
+# Rust: Priority inversion
 
 The {doc}`priority inversion sample
 <../../../kernel/classic/priority_inversion>` written in {doc}`Rust

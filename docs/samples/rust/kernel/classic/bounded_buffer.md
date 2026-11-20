@@ -1,4 +1,4 @@
-# Bounded buffer in Rust
+# Rust: Bounded buffer
 
 The {doc}`bounded buffer sample <../../../kernel/classic/bounded_buffer>`
 written in {doc}`Rust <../../../../development/build_system/rust>`, on the

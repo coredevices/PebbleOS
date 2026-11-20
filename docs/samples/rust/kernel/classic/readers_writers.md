@@ -1,4 +1,4 @@
-# Readers and writers in Rust
+# Rust: Readers and writers
 
 The {doc}`readers and writers sample
 <../../../kernel/classic/readers_writers>` written in {doc}`Rust

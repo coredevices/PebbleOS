@@ -1,4 +1,4 @@
-# LVGL render
+# LVGL: Render
 
 This sample runs the render demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: a scene per drawing primitive,

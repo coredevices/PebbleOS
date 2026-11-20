@@ -1,4 +1,4 @@
-# ANCS client
+# Bluetooth: ANCS client
 
 This sample is a peripheral that shows the notifications of an iOS device
 with the ANCS client (`pbl/bluetooth/clients/ancs.h`), on NimBLE alone.

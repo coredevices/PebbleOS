@@ -1,4 +1,4 @@
-# Dining philosophers in Rust
+# Rust: Dining philosophers
 
 The {doc}`dining philosophers sample
 <../../../kernel/classic/dining_philosophers>` written in {doc}`Rust

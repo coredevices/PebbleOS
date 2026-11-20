@@ -1,4 +1,4 @@
-# Magnetometer
+# Magnetometer: Field readings
 
 This sample has the magnetometer, `MAG`, measure the magnetic field five
 times a second for 3 seconds, and prints the latest measurement every second

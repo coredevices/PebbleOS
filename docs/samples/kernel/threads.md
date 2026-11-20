@@ -1,4 +1,4 @@
-# Threads
+# Kernel: Threads
 
 This sample creates three {doc}`threads <../../kernel/threads>` from `main()`:
 one of higher priority, which runs to its end before `pbl_thread_create()`

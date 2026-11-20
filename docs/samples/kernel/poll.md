@@ -1,4 +1,4 @@
-# Poll groups
+# Kernel: Poll groups
 
 This sample is an event loop: one thread that waits on a queue of button
 events and a queue of accelerometer samples at once, each with its own message

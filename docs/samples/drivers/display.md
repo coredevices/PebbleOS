@@ -1,4 +1,4 @@
-# Display
+# Display: Full and partial updates
 
 This sample draws colour bars across the display, `DISPLAY`, and sends the
 whole frame with `pbl_display_update_sync()`. Three seconds later it draws a

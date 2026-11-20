@@ -1,4 +1,4 @@
-# Random numbers
+# RNG: Random words
 
 This sample prints a few words from the hardware random number generator with
 `rng_rand()`, then draws a thousand more and counts how many repeat the one

@@ -1,4 +1,4 @@
-# Dining philosophers
+# Synchronization: Dining philosophers
 
 This sample seats five threads at a table with five forks, mutexes, each
 needing the two next to it. Taking the left one first deadlocks when everyone

@@ -1,4 +1,4 @@
-# Shell commands
+# Shell: Commands
 
 This sample registers {doc}`shell <../../../subsystems/shell>` commands: one
 whose argument count the shell checks, one with subcommands, and one that

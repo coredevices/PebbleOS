@@ -1,4 +1,4 @@
-# Flash
+# Flash: Geometry and reads
 
 This sample prints the geometry of the board's storage flash, the `FLASH`
 device, reads its first 64 KiB in chunks and checks the CRC-32 of what it

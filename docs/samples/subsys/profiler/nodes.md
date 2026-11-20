@@ -1,4 +1,4 @@
-# Profiler
+# Profiler: Nodes
 
 This sample times two ways of sorting with
 {doc}`profiler <../../../subsystems/profiler>` nodes. Each node, defined with

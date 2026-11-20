@@ -1,4 +1,4 @@
-# Time
+# Kernel: Time
 
 This sample measures a sleep with the uptime, sets the wall clock and reads it
 back a second later, and waits for a condition with `PBL_POLL_SLEEP_MS()`,

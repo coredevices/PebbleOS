@@ -1,4 +1,4 @@
-# Semaphores
+# Kernel: Semaphores
 
 This sample uses a semaphore in its two roles. As a signal, an interrupt (a
 timer callback here) tells a waiting thread that a transfer is done, and the

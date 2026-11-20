@@ -1,4 +1,4 @@
-# Secure Connections peripheral
+# NimBLE: Secure Connections peripheral
 
 This sample only lets a peer in with LE Secure Connections and a passkey:
 security mode 1, level 4. Its `prj.conf` turns off legacy pairing, asks for

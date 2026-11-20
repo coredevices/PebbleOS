@@ -1,4 +1,4 @@
-# LVGL music player
+# LVGL: Music player
 
 This sample runs the music player demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: a screen full of artwork, text and

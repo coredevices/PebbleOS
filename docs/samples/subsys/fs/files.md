@@ -1,4 +1,4 @@
-# Files
+# File system: Files
 
 This sample mounts PFS, the {doc}`file system <../../../subsystems/fs>` of
 the external flash, at the root, and works with files on it.

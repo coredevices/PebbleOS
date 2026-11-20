@@ -1,4 +1,4 @@
-# LVGL stress
+# LVGL: Stress
 
 This sample runs the stress demo that comes with
 {doc}`LVGL <../../../third_party/lvgl>`: one round of objects of every kind

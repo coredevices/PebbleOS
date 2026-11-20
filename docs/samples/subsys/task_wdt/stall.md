@@ -1,4 +1,4 @@
-# Task watchdog
+# Task watchdog: Stalled thread
 
 This sample watches its main thread with the
 {doc}`task watchdog <../../../subsystems/task_watchdog>`, on a channel that

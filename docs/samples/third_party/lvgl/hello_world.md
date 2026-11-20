@@ -1,4 +1,4 @@
-# LVGL hello world
+# LVGL: Hello world
 
 This sample starts {doc}`LVGL <../../../third_party/lvgl>` on the display with
 `pbl_lvgl_init()`, puts a label and a spinner on the active screen and

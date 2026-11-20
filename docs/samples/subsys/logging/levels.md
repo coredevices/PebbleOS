@@ -1,4 +1,4 @@
-# Log levels
+# Logging: Levels
 
 This sample has a {doc}`log module <../../../subsystems/logging>` of its own.
 Its `Kconfig` sources the log level template, which defines

@@ -1,4 +1,4 @@
-# Input events
+# Input: Events
 
 This sample prints every event the input devices report for 30 seconds: keys
 pressed and released, touch axes and gestures. It registers a callback with
