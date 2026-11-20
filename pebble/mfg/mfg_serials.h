@@ -22,11 +22,9 @@ const char *mfg_get_hw_version(void);
 const char *mfg_get_pcba_serial_number(void);
 
 typedef enum MfgSerialsResult {
-  MfgSerialsResultSuccess = OtpWriteSuccess,
-  MfgSerialsResultAlreadyWritten = OtpWriteFailAlreadyWritten,
-  MfgSerialsResultCorrupt = OtpWriteFailCorrupt,
-  MfgSerialsResultFailIncorrectLength = 3,
-  MfgSerialsResultFailNoMoreSpace = 4,
+  MfgSerialsResultSuccess,
+  MfgSerialsResultFailIncorrectLength,
+  MfgSerialsResultFailNoMoreSpace,
 } MfgSerialsResult;
 
 //! Writes a new final assembly serial number to OTP.
@@ -36,8 +34,8 @@ typedef enum MfgSerialsResult {
 //! @param serial_size The length of the buffer in bytes including terminating
 //! zero. Must be 13.
 //! @param[out] out_index Will contain the OTP index that was used to write the
-//! serial number, if the return value was OtpWriteSuccess.
-//! @return OtpWriteSuccess if the write was successful or
+//! serial number, if the return value was MfgSerialsResultSuccess.
+//! @return MfgSerialsResultSuccess if the write was successful or
 //! MfgSerialsResultFailNoMoreSpace if all 3 slots were taken already, or
 //! MfgSerialsResultFailIncorrectLength if the serial_size was not 13.
 MfgSerialsResult mfg_write_serial_number(const char *serial, size_t serial_size,

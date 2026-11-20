@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/drivers/flash.h>
@@ -42,10 +43,6 @@ char *otp_get_slot(const uint8_t index) {
   return s_slot[index];
 }
 
-uint8_t *otp_get_lock(const uint8_t index) {
-  return nullptr;
-}
-
 bool otp_is_locked(const uint8_t index) {
   const struct pbl_flash_otp_cell *cell = prv_cell(index);
   struct pbl_flash_otp_info info;
@@ -62,39 +59,39 @@ bool otp_is_locked(const uint8_t index) {
   return locked;
 }
 
-OtpWriteResult otp_write_slot(const uint8_t index, const char *value) {
+int otp_write_slot(const uint8_t index, const char *value) {
   const struct pbl_flash_otp_cell *cell = prv_cell(index);
   char *existing_val;
   size_t len;
 
   if (cell == nullptr) {
-    return OtpWriteFailCorrupt;
+    return -EINVAL;
   }
 
   len = strlen(value);
   if (len >= cell->len) {
-    return OtpWriteFailCorrupt;
+    return -EINVAL;
   }
 
   existing_val = otp_get_slot(index);
   if (existing_val == nullptr) {
-    return OtpWriteFailCorrupt;
+    return -EIO;
   }
 
   for (size_t i = 0U; i < cell->len; i++) {
     if ((uint8_t)existing_val[i] != FLASH_ERASE_VAL) {
-      return OtpWriteFailAlreadyWritten;
+      return -EEXIST;
     }
   }
 
   if (pbl_flash_otp_write(FLASH, cell->offset, value, len + 1U) != 0) {
-    return OtpWriteFailCorrupt;
+    return -EIO;
   }
 
   existing_val = otp_get_slot(index);
   if ((existing_val == nullptr) || (memcmp(existing_val, value, len + 1U) != 0)) {
-    return OtpWriteFailCorrupt;
+    return -EIO;
   }
 
-  return OtpWriteSuccess;
+  return 0;
 }

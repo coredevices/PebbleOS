@@ -1128,12 +1128,11 @@ void test_spi_nor__otp_slots(void) {
   prv_reset(CHIP_GD25Q256E);
   prv_init(&s_nor_q);
 
-  cl_assert_equal_i(otp_write_slot(OTP_SERIAL, "Q123456789AB"), OtpWriteSuccess);
+  cl_assert_equal_i(otp_write_slot(OTP_SERIAL, "Q123456789AB"), 0);
   cl_assert_equal_s((const char *)&s_sec[1][0x20], "Q123456789AB");
   cl_assert_equal_s(otp_get_slot(OTP_SERIAL), "Q123456789AB");
-  cl_assert_equal_i(otp_write_slot(OTP_SERIAL, "X"), OtpWriteFailAlreadyWritten);
-  cl_assert_equal_i(otp_write_slot(OTP_HWVER, "0123456789012345678901234567890123"),
-                    OtpWriteFailCorrupt);
+  cl_assert_equal_i(otp_write_slot(OTP_SERIAL, "X"), -EEXIST);
+  cl_assert_equal_i(otp_write_slot(OTP_HWVER, "0123456789012345678901234567890123"), -EINVAL);
   cl_assert(!otp_is_locked(OTP_SERIAL));
 
   s_sr2 |= PBL_BIT(3);

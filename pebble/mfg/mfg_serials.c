@@ -54,14 +54,12 @@ static MfgSerialsResult prv_mfg_write_data_to_slot(const uint8_t *slot_indices, 
                                                    uint8_t *out_index) {
   for (unsigned int i = 0; i < num_slots; ++i) {
     const uint8_t index = slot_indices[i];
-    const OtpWriteResult result = otp_write_slot(index, data);
-    if (result == OtpWriteSuccess) {
+    if (otp_write_slot(index, data) == 0) {
       if (out_index) {
         *out_index = index;
       }
       return MfgSerialsResultSuccess;
     }
-    // if OtpWriteFailCorrupt or OtpWriteFailAlreadyWritten, continue to next slot.
   }
   return MfgSerialsResultFailNoMoreSpace;
 }
@@ -99,15 +97,8 @@ MfgSerialsResult mfg_write_hw_version(const char *hwver, size_t hwver_size, uint
 
 #include <pbl/shell/shell.h>
 
-static int prv_print_feedback(const struct pbl_shell *sh, const MfgSerialsResult result,
-                              const uint8_t index, const char *name) {
+static int prv_print_feedback(const struct pbl_shell *sh, const MfgSerialsResult result) {
   switch (result) {
-    case MfgSerialsResultAlreadyWritten:
-      pbl_shell_error(sh, "%s already present! %s", name, otp_get_slot(index));
-      return -EEXIST;
-    case MfgSerialsResultCorrupt:
-      pbl_shell_error(sh, "Writing failed; %s may be corrupt!", name);
-      return -EIO;
     case MfgSerialsResultFailIncorrectLength:
       pbl_shell_error(sh, "Incorrect length");
       return -EINVAL;
@@ -129,15 +120,14 @@ static int prv_cmd_serial(const struct pbl_shell *sh, size_t argc, char **argv) 
   }
 
   MfgSerialsResult result;
-  uint8_t index = 0;
   size_t len = strlen(argv[1]);
   if ((len >= 11) && (len <= MFG_SERIAL_NUMBER_SIZE)) {
-    result = mfg_write_serial_number(argv[1], len, &index);
+    result = mfg_write_serial_number(argv[1], len, nullptr);
   } else {
     result = MfgSerialsResultFailIncorrectLength;
   }
 
-  return prv_print_feedback(sh, result, index, "Serial");
+  return prv_print_feedback(sh, result);
 }
 
 static int prv_cmd_hwver(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -147,15 +137,14 @@ static int prv_cmd_hwver(const struct pbl_shell *sh, size_t argc, char **argv) {
   }
 
   MfgSerialsResult result;
-  uint8_t index = 0;
   size_t len = strlen(argv[1]);
   if (len > 0) {
-    result = mfg_write_hw_version(argv[1], len, &index);
+    result = mfg_write_hw_version(argv[1], len, nullptr);
   } else {
     result = MfgSerialsResultFailIncorrectLength;
   }
 
-  return prv_print_feedback(sh, result, index, "HW version");
+  return prv_print_feedback(sh, result);
 }
 
 static int prv_cmd_pcbaserial(const struct pbl_shell *sh, size_t argc, char **argv) {
@@ -165,15 +154,14 @@ static int prv_cmd_pcbaserial(const struct pbl_shell *sh, size_t argc, char **ar
   }
 
   MfgSerialsResult result;
-  uint8_t index = 0;
   size_t len = strlen(argv[1]);
   if ((len > 0) && (len <= MFG_PCBA_SERIAL_NUMBER_SIZE)) {
-    result = mfg_write_pcba_serial_number(argv[1], len, &index);
+    result = mfg_write_pcba_serial_number(argv[1], len, nullptr);
   } else {
     result = MfgSerialsResultFailIncorrectLength;
   }
 
-  return prv_print_feedback(sh, result, index, "PCBA Serial");
+  return prv_print_feedback(sh, result);
 }
 
 PBL_SHELL_SUBCMD_ADD(sub_mfg, serial, nullptr, "Read or write the serial number [serial]",

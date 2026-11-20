@@ -31,24 +31,6 @@ enum {
   NUM_OTP_SLOTS = 3,
 };
 
-/** @brief Result of otp_write_slot(). */
-typedef enum {
-  /** Slot written and verified. */
-  OtpWriteSuccess = 0,
-  /** Slot already holds data. */
-  OtpWriteFailAlreadyWritten = 1,
-  /** Invalid slot or value, or the write could not be verified. */
-  OtpWriteFailCorrupt = 2,
-} OtpWriteResult;
-
-/**
- * @brief Get the lock byte of a slot.
- *
- * @param index Slot index.
- * @return Lock byte, or NULL when slots have no individual lock.
- */
-uint8_t *otp_get_lock(const uint8_t index);
-
 /**
  * @brief Check whether the OTP storage is locked.
  *
@@ -73,8 +55,11 @@ char *otp_get_slot(const uint8_t index);
  *
  * @param index Slot index.
  * @param value NUL-terminated string, at most 31 characters.
- * @return Write result.
+ * @retval 0 Written and verified.
+ * @retval -EEXIST The slot already holds data.
+ * @retval -EINVAL Invalid slot or value.
+ * @retval -EIO The write failed or could not be verified.
  */
-OtpWriteResult otp_write_slot(const uint8_t index, const char *value);
+int otp_write_slot(const uint8_t index, const char *value);
 
 /** @} */
