@@ -118,6 +118,8 @@ struct pbl_dma_sf32lb {
   struct pbl_dma_controller ctrl;
   /** Registers. */
   uintptr_t base;
+  /** Memory the controller reaches at another address than the CPU. */
+  struct pbl_dma_window window;
   /** Clock. */
   struct pbl_clk clk;
   /** Interrupt line of each channel. */
@@ -151,31 +153,35 @@ void pbl_dma_sf32lb_irq_handler(const struct pbl_dma_sf32lb_chan_irq *irq);
  * @param sym Symbol of the controller.
  * @param _name Name.
  * @param _base Registers.
+ * @param _window Memory the controller reaches at another address, from PBL_DMA_WINDOW().
  * @param _clk Clock, from PBL_CLK().
  * @param _irq0 Interrupt line of channel 0, followed by those of channels 1 to 7.
  */
-#define PBL_DMA_SF32LB_DEFINE(sym, _name, _base, _clk, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5, \
-                              _irq6, _irq7)                                                      \
-  PBL_DMA_SF32LB_DEFINE_(sym, false, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5,     \
-                         _irq6, _irq7, _clk)
+#define PBL_DMA_SF32LB_DEFINE(sym, _name, _base, _window, _clk, _irq0, _irq1, _irq2, _irq3, _irq4, \
+                              _irq5, _irq6, _irq7)                                                 \
+  PBL_DMA_SF32LB_DEFINE_(sym, false, _name, _base, (_window), _irq0, _irq1, _irq2, _irq3, _irq4,   \
+                         _irq5, _irq6, _irq7, _clk)
 
 /**
  * @brief Define the SF32LB57 GPDMA1, as for PBL_DMA_SF32LB_DEFINE().
  */
-#define PBL_DMA_SF32LB57_GPDMA_DEFINE(sym, _name, _base, _clk, _irq0, _irq1, _irq2, _irq3, _irq4,  \
-                                      _irq5, _irq6, _irq7)                                         \
-  PBL_DMA_SF32LB_DEFINE_(sym, true, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, \
-                         _irq7, _clk)
+#define PBL_DMA_SF32LB57_GPDMA_DEFINE(sym, _name, _base, _window, _clk, _irq0, _irq1, _irq2,    \
+                                      _irq3, _irq4, _irq5, _irq6, _irq7)                        \
+  PBL_DMA_SF32LB_DEFINE_(sym, true, _name, _base, (_window), _irq0, _irq1, _irq2, _irq3, _irq4, \
+                         _irq5, _irq6, _irq7, _clk)
 
 /** @cond INTERNAL_HIDDEN */
-// The clock goes last, as its initializer holds commas
-#define PBL_DMA_SF32LB_DEFINE_(sym, _gpdma, _name, _base, _irq0, _irq1, _irq2, _irq3, _irq4,    \
-                               _irq5, _irq6, _irq7, ...)                                        \
+// The window comes in parentheses and the clock goes last, as their initializers hold commas
+#define PBL_DMA_SF32LB__UNWRAP(...) __VA_ARGS__
+
+#define PBL_DMA_SF32LB_DEFINE_(sym, _gpdma, _name, _base, _window, _irq0, _irq1, _irq2, _irq3,  \
+                               _irq4, _irq5, _irq6, _irq7, ...)                                 \
   PBL_DMA_CONTROLLER_STATE_DEFINE(sym, PBL_DMA_SF32LB_NUM_CHANNELS);                            \
   PBL_DEVICE_INSTANCE(sym, struct pbl_dma_sf32lb, struct pbl_dma_controller, ctrl){             \
     .ctrl =                                                                                     \
         PBL_DMA_CONTROLLER_INIT(sym, _name, pbl_dma_sf32lb_init, nullptr, &pbl_dma_sf32lb_ops), \
     .base = (_base),                                                                            \
+    .window = PBL_DMA_SF32LB__UNWRAP _window,                                                   \
     .clk = __VA_ARGS__,                                                                         \
     .irqs = {_irq0, _irq1, _irq2, _irq3, _irq4, _irq5, _irq6, _irq7},                           \
     .gpdma = (_gpdma),                                                                          \

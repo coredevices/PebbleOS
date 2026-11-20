@@ -8,6 +8,7 @@
 
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/display.h>
+#include <pbl/drivers/dma.h>
 #include <pbl/drivers/gpio.h>
 #include <pbl/drivers/panel.h>
 #include <pbl/drivers/pinctrl.h>
@@ -53,6 +54,8 @@ struct pbl_display_sf32lb_lcdc {
   struct pbl_display_sf32lb_lcdc_state *state;
   /** Controller registers. */
   uintptr_t base;
+  /** Memory the controller reaches at another address than the CPU. */
+  struct pbl_dma_window window;
   /** Controller interrupt. */
   pbl_irq_t irq;
   /** Controller clock. */
@@ -75,6 +78,7 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  * @param sym Symbol of the display.
  * @param _name Name.
  * @param _base Controller registers.
+ * @param _window Memory the controller reaches at another address, from PBL_DMA_WINDOW().
  * @param _irq Controller interrupt.
  * @param _clk Controller clock, from PBL_CLK().
  * @param _rst Controller reset, from PBL_RESET().
@@ -86,24 +90,26 @@ extern const struct pbl_display_ops pbl_display_sf32lb_lcdc_ops;
  * @param _pinctrl Default state of the panel interface pins.
  * @param _pinctrl_sleep Their state while the panel is power cycled, or NULL.
  */
-#define PBL_DISPLAY_SF32LB_LCDC_DEFINE(sym, _name, _base, _irq, _clk, _rst, _panel, _width,       \
-                                       _height, _rotation, _round_mask, _pinctrl, _pinctrl_sleep) \
-  static_assert((_rotation) == 0 || (_rotation) == 180, "rotation of 0 or 180 degrees");          \
-  PBL_DISPLAY_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_display_sf32lb_lcdc_state sym##_lcdc_state;                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_display_sf32lb_lcdc, struct pbl_display, disp){             \
-    .disp = PBL_DISPLAY_INIT(sym, _name, nullptr, &pbl_display_sf32lb_lcdc_ops, _width, _height,  \
-                             PBL_DISPLAY_FORMAT_ARGB2222, (_rotation) == 180,                     \
-                             .round_mask = (_round_mask)),                                        \
-    .state = &sym##_lcdc_state,                                                                   \
-    .base = (_base),                                                                              \
-    .irq = (_irq),                                                                                \
-    .clk = _clk,                                                                                  \
-    .rst = _rst,                                                                                  \
-    .panel = (_panel),                                                                            \
-    .pinctrl = PBL_PINCTRL(_pinctrl, _pinctrl_sleep, 0),                                          \
-  };                                                                                              \
-  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_DISPLAY_SF32LB_LCDC_IRQ_PRIO,                                  \
+#define PBL_DISPLAY_SF32LB_LCDC_DEFINE(sym, _name, _base, _window, _irq, _clk, _rst, _panel,     \
+                                       _width, _height, _rotation, _round_mask, _pinctrl,        \
+                                       _pinctrl_sleep)                                           \
+  static_assert((_rotation) == 0 || (_rotation) == 180, "rotation of 0 or 180 degrees");         \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                 \
+  static struct pbl_display_sf32lb_lcdc_state sym##_lcdc_state;                                  \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_display_sf32lb_lcdc, struct pbl_display, disp){            \
+    .disp = PBL_DISPLAY_INIT(sym, _name, nullptr, &pbl_display_sf32lb_lcdc_ops, _width, _height, \
+                             PBL_DISPLAY_FORMAT_ARGB2222, (_rotation) == 180,                    \
+                             .round_mask = (_round_mask)),                                       \
+    .state = &sym##_lcdc_state,                                                                  \
+    .base = (_base),                                                                             \
+    .window = _window,                                                                           \
+    .irq = (_irq),                                                                               \
+    .clk = _clk,                                                                                 \
+    .rst = _rst,                                                                                 \
+    .panel = (_panel),                                                                           \
+    .pinctrl = PBL_PINCTRL(_pinctrl, _pinctrl_sleep, 0),                                         \
+  };                                                                                             \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_DISPLAY_SF32LB_LCDC_IRQ_PRIO,                                 \
                       pbl_display_sf32lb_lcdc_irq_handler, &sym##_inst, 0)
 
 /**

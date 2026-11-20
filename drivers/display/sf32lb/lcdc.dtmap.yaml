@@ -8,6 +8,8 @@ define: PBL_DISPLAY_SF32LB_LCDC_DEFINE
 args:
   - name: true
   - reg: 0
+  - dma-window: true
+    default: "{}"
   - irq: 0
   - clock: 0
   - reset: 0
