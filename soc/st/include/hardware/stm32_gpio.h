@@ -11,6 +11,8 @@
 #define STM32_GPIO_OTYPER_OFFSET  0x0004
 #define STM32_GPIO_OSPEEDR_OFFSET 0x0008
 #define STM32_GPIO_PUPDR_OFFSET   0x000c
+#define STM32_GPIO_IDR_OFFSET     0x0010
+#define STM32_GPIO_BSRR_OFFSET    0x0018
 #define STM32_GPIO_AFR_OFFSET(n)  (0x0020 + ((n) / 8U) * 4U)
 
 #define STM32_GPIO_PORT_SIZE 0x400U
@@ -28,4 +30,6 @@
 #define GPIO_PUPDR_NONE      0U
 #define GPIO_PUPDR_UP        1U
 #define GPIO_PUPDR_DOWN      2U
+#define GPIO_BSRR_SET(n)     PBL_BIT(n)
+#define GPIO_BSRR_RESET(n)   PBL_BIT((n) + 16U)
 #define GPIO_AFR_MASK(n)     (0xfU << (((n) % 8U) * 4U))

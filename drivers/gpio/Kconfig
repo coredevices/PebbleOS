@@ -34,6 +34,23 @@ config GPIO_SF32LB_IRQ_PRIO
     help
       Priority of the port interrupt.
 
+config GPIO_STM32
+    bool "ST STM32"
+    default y
+    depends on DT_HAS_ST_STM32H743_PINCTRL_ENABLED
+    select CLK
+    select INTC
+    help
+      Support for the ST STM32 GPIO ports, and their interrupts through
+      EXTI.
+
+config GPIO_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 12
+    depends on GPIO_STM32
+    help
+      Priority of the EXTI interrupts.
+
 config GPIO_QEMU
     bool "QEMU GPIO"
     default y
