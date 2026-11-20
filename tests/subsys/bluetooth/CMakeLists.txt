@@ -20,3 +20,10 @@ pbl_clar_test(test_ancs_client
     tests/fakes/fake_gattc_service.c
   INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
 )
+
+pbl_clar_test(test_ams_client
+  SOURCES
+    subsys/bluetooth/clients/ams/ams.c
+    tests/fakes/fake_gattc_service.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
+)

@@ -10,6 +10,7 @@ config BT_GATT_CLIENT
 
 menu "Clients"
 
+rsource "ams/Kconfig"
 rsource "ancs/Kconfig"
 
 endmenu

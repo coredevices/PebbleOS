@@ -116,6 +116,12 @@ used without the rest of the subsystem:
   it. The firmware's notification session (queueing, timeouts, the liveness
   check) sits on top of it in `pebble/comm/ble/kernel_le_client/ancs/`, on
   KernelMain.
+- `pbl/bluetooth/clients/ams.h` (`BT_AMS_CLIENT`) is the client of the Apple
+  Media Service: it sends commands to the media player, registers for
+  attributes of the player, the queue and the track and reports their values
+  as the device updates them, and reads the whole of a value that was cut. A
+  client (`PBL_BT_AMS_CLIENT_DEFINE()`) serves one connection; the values of
+  the service are in `pbl/bluetooth/ams.h`.
 
 The other clients of the phone's services (media, app launch, device
 information, PPoGATT) still go through the discovery and subscription layer
