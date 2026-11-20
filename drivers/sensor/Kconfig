@@ -58,6 +58,31 @@ config TEMP_SIM
 
 endif # TEMP
 
+menuconfig MAG
+    bool "Magnetometers"
+    select SENSOR
+    help
+      Magnetometer drivers. The board's magnetometer is the mag role,
+      MAG.
+
+if MAG
+
+config MAG_MMC5603NJ
+    bool "MEMSIC MMC5603NJ"
+    default y
+    depends on DT_HAS_MEMSIC_MMC5603_ENABLED
+    select I2C
+    help
+      Support for the MEMSIC MMC5603NJ magnetometer.
+
+config MAG_SIM
+    bool "Simulator"
+    help
+      Simulated magnetometer, measuring a field set through its
+      simulator API (pbl/drivers/sensor/sim.h).
+
+endif # MAG
+
 menuconfig PRESSURE
     bool "Pressure sensors"
     select SENSOR

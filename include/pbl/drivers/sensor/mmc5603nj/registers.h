@@ -6,8 +6,8 @@
 #include <pbl/util/bits.h>
 
 /**
- * @defgroup drivers_imu_mmc5603nj_registers MMC5603NJ registers
- * @ingroup drivers_imu_mmc5603nj
+ * @defgroup drivers_sensor_mmc5603nj_registers MMC5603NJ registers
+ * @ingroup drivers_sensor_mmc5603nj
  * @brief MMC5603NJ register map, from the MEMSIC datasheet (Rev. B).
  *
  * Datasheet:
