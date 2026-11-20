@@ -53,8 +53,8 @@ struct pbl_clk_sf32lb57_pmuc {
 
 static const struct pbl_clk_cal_ops s_cal_ops;
 
-static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(
-    &s_cal_ops, &s_params, PBL_CLK(SF32LB57_PMUC, SF32LB57_CLK_LRC10), GATE_CYCLES, PERIOD_MS);
+PBL_CLK_CAL_DEFINE(s_cal, &s_cal_ops, &s_params, PBL_CLK(SF32LB57_PMUC, SF32LB57_CLK_LRC10),
+                   GATE_CYCLES, PERIOD_MS);
 
 static uintptr_t s_rcc;
 static uint64_t s_gate_start_ms;
@@ -67,7 +67,7 @@ static inline uint32_t prv_cal_result(void) {
   return pbl_readl(s_rcc + SF32LB57_HPSYS_RCC_RC10CAL2_OFFSET);
 }
 
-static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
+static int prv_cal_start(const struct pbl_clk_cal *cal, uint32_t cycles) {
   uint32_t ctrl;
   int ret;
 
@@ -95,7 +95,7 @@ static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
   return ret;
 }
 
-static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
+static int prv_cal_finish(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
   const uint32_t result = prv_cal_result();
   uint32_t count;
 

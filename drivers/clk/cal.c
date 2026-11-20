@@ -18,66 +18,69 @@ PBL_LOG_MODULE_DEFINE(clk_cal, CONFIG_CLK_CAL_LOG_LEVEL);
 #define MAX_RETRIES 5U
 #define POLL_MS     10U
 
-static struct pbl_clk_cal *s_cals;
+static const struct pbl_clk_cal *s_cals;
 
 static double prv_gate_s(const struct pbl_clk_cal *cal, uint32_t cycles) {
-  return cycles / (cal->rate_mhz / 1000.0);
+  return cycles / (cal->state->rate_mhz / 1000.0);
 }
 
-static void prv_set_rate(struct pbl_clk_cal *cal, uint64_t mhz) {
-  if (mhz != cal->rate_mhz) {
-    cal->rate_mhz = mhz;
+static void prv_set_rate(const struct pbl_clk_cal *cal, uint64_t mhz) {
+  if (mhz != cal->state->rate_mhz) {
+    cal->state->rate_mhz = mhz;
     pbl_clk_rate_changed(&cal->clk);
   }
 }
 
-static void prv_publish(struct pbl_clk_cal *cal) {
-  double hz = pbl_freq_track_get(&cal->ft);
+static void prv_publish(const struct pbl_clk_cal *cal) {
+  double hz = pbl_freq_track_get(&cal->state->ft);
 
-  if (cal->held_mhz == 0U) {
+  if (cal->state->held_mhz == 0U) {
     prv_set_rate(cal, (uint64_t)llround(hz * 1000.0));
   }
 }
 
-static void prv_feed(struct pbl_clk_cal *cal, double hz) {
-  if (pbl_freq_track_update(&cal->ft, hz, cal->gate_cycles / hz, pbl_uptime_ms()) != 0) {
-    cal->rejected++;
+static void prv_feed(const struct pbl_clk_cal *cal, double hz) {
+  struct pbl_clk_cal_state *st = cal->state;
+
+  if (pbl_freq_track_update(&st->ft, hz, cal->gate_cycles / hz, pbl_uptime_ms()) != 0) {
+    st->rejected++;
     PBL_LOG_DBG("Rejected %d mHz", (int)llround(hz * 1000.0));
     return;
   }
 
-  cal->accepted++;
+  st->accepted++;
   prv_publish(cal);
 }
 
-static void prv_schedule(struct pbl_clk_cal *cal, uint32_t ms) {
-  pbl_timer_start(&cal->timer, PBL_MSEC(ms));
+static void prv_schedule(const struct pbl_clk_cal *cal, uint32_t ms) {
+  pbl_timer_start(&cal->state->timer, PBL_MSEC(ms));
 }
 
 static void prv_timer_cb(struct pbl_timer *timer) {
-  struct pbl_clk_cal *cal = container_of(timer, struct pbl_clk_cal, timer);
+  struct pbl_clk_cal_state *st = container_of(timer, struct pbl_clk_cal_state, timer);
+  const struct pbl_clk_cal *cal = st->cal;
   double hz;
   int ret;
 
-  if (cal->paused) {
+  if (st->paused) {
     prv_schedule(cal, RETRY_MS);
     return;
   }
 
-  if (!cal->gate_running) {
+  if (!st->gate_running) {
     ret = cal->ops->start(cal, cal->gate_cycles);
     if (ret == 0) {
-      cal->gate_running = true;
+      st->gate_running = true;
       prv_schedule(cal, (uint32_t)(prv_gate_s(cal, cal->gate_cycles) * 1000.0) + 1U);
       return;
     }
-    if (ret == -EBUSY && cal->retries < MAX_RETRIES) {
-      cal->retries++;
+    if (ret == -EBUSY && st->retries < MAX_RETRIES) {
+      st->retries++;
       prv_schedule(cal, RETRY_MS);
       return;
     }
-    cal->failed++;
-    if (cal->accepted > 0U) {
+    st->failed++;
+    if (st->accepted > 0U) {
       PBL_LOG_WRN("Calibration skipped (%d)", ret);
     } else {
       PBL_LOG_DBG("Calibration not ready (%d)", ret);
@@ -89,34 +92,37 @@ static void prv_timer_cb(struct pbl_timer *timer) {
       prv_schedule(cal, POLL_MS);
       return;
     }
-    cal->gate_running = false;
+    st->gate_running = false;
     if (ret == 0) {
       prv_feed(cal, hz);
     } else {
-      cal->failed++;
+      st->failed++;
       PBL_LOG_WRN("Calibration failed (%d)", ret);
     }
   }
 
-  cal->retries = 0U;
-  prv_schedule(cal, (cal->accepted > 0U) ? cal->period_ms : RETRY_MS);
+  st->retries = 0U;
+  prv_schedule(cal, (st->accepted > 0U) ? cal->period_ms : RETRY_MS);
 }
 
-void pbl_clk_cal_start(struct pbl_clk_cal *cal, double nominal_hz) {
-  pbl_freq_track_init(&cal->ft, cal->params);
-  cal->rate_mhz = (uint64_t)llround(nominal_hz * 1000.0);
-  pbl_timer_init(&cal->timer, prv_timer_cb);
+void pbl_clk_cal_start(const struct pbl_clk_cal *cal, double nominal_hz) {
+  struct pbl_clk_cal_state *st = cal->state;
+
+  st->cal = cal;
+  pbl_freq_track_init(&st->ft, cal->params);
+  st->rate_mhz = (uint64_t)llround(nominal_hz * 1000.0);
+  pbl_timer_init(&st->timer, prv_timer_cb);
 
   pbl_irq_lock();
-  cal->next = s_cals;
+  st->next = s_cals;
   s_cals = cal;
   pbl_irq_unlock();
 
   prv_schedule(cal, 0U);
 }
 
-struct pbl_clk_cal *pbl_clk_cal_find(const char *name) {
-  for (struct pbl_clk_cal *cal = s_cals; cal != nullptr; cal = cal->next) {
+const struct pbl_clk_cal *pbl_clk_cal_find(const char *name) {
+  for (const struct pbl_clk_cal *cal = s_cals; cal != nullptr; cal = cal->state->next) {
     if (strcmp(cal->clk.ctrl->dev.name, name) == 0) {
       return cal;
     }
@@ -125,17 +131,18 @@ struct pbl_clk_cal *pbl_clk_cal_find(const char *name) {
   return nullptr;
 }
 
-int pbl_clk_cal_sample(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
+int pbl_clk_cal_sample(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
+  struct pbl_clk_cal_state *st = cal->state;
   int ret = -EBUSY;
 
   // Let a periodic gate in progress finish, and keep the next one off.
   for (;;) {
     pbl_irq_lock();
-    if (!cal->gate_running) {
-      cal->paused = true;
+    if (!st->gate_running) {
+      st->paused = true;
     }
     pbl_irq_unlock();
-    if (cal->paused) {
+    if (st->paused) {
       break;
     }
     pbl_thread_sleep(PBL_MSEC(POLL_MS));
@@ -156,39 +163,41 @@ int pbl_clk_cal_sample(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
     }
   }
 
-  cal->paused = false;
+  st->paused = false;
 
   return ret;
 }
 
-void pbl_clk_cal_hold(struct pbl_clk_cal *cal, uint64_t rate_mhz) {
+void pbl_clk_cal_hold(const struct pbl_clk_cal *cal, uint64_t rate_mhz) {
   pbl_irq_lock();
-  cal->held_mhz = rate_mhz;
+  cal->state->held_mhz = rate_mhz;
   pbl_irq_unlock();
 
   if (rate_mhz != 0U) {
     prv_set_rate(cal, rate_mhz);
-  } else if (cal->accepted > 0U) {
+  } else if (cal->state->accepted > 0U) {
     prv_publish(cal);
   }
 }
 
 void pbl_clk_cal_get_status(const struct pbl_clk_cal *cal, struct pbl_clk_cal_status *status) {
+  const struct pbl_clk_cal_state *st = cal->state;
+
   pbl_irq_lock();
-  double hz = pbl_freq_track_get(&cal->ft);
+  double hz = pbl_freq_track_get(&st->ft);
 
   *status = (struct pbl_clk_cal_status){
     .tracked_mhz = (uint64_t)llround(hz * 1000.0),
-    .rate_mhz = cal->rate_mhz,
-    .sigma_ppb = (uint32_t)llround(pbl_freq_track_get_dev(&cal->ft) * 1e9),
-    .accepted = cal->accepted,
-    .rejected = cal->rejected,
-    .failed = cal->failed,
-    .held = cal->held_mhz != 0U,
+    .rate_mhz = st->rate_mhz,
+    .sigma_ppb = (uint32_t)llround(pbl_freq_track_get_dev(&st->ft) * 1e9),
+    .accepted = st->accepted,
+    .rejected = st->rejected,
+    .failed = st->failed,
+    .held = st->held_mhz != 0U,
   };
   pbl_irq_unlock();
 }
 
 uint64_t pbl_clk_cal_get_rate(const struct pbl_clk_cal *cal) {
-  return cal->rate_mhz;
+  return cal->state->rate_mhz;
 }

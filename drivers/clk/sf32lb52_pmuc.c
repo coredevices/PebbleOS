@@ -76,8 +76,8 @@ struct pbl_clk_sf32lb52_pmuc {
 
 static const struct pbl_clk_cal_ops s_cal_ops;
 
-static struct pbl_clk_cal s_cal = PBL_CLK_CAL_INIT(
-    &s_cal_ops, &s_params, PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10), GATE_CYCLES, PERIOD_MS);
+PBL_CLK_CAL_DEFINE(s_cal, &s_cal_ops, &s_params, PBL_CLK(SF32LB52_PMUC, SF32LB52_CLK_LRC10),
+                   GATE_CYCLES, PERIOD_MS);
 
 static const struct pbl_clk_sf32lb52_pmuc *s_pmuc;
 static bool s_hxt48_requested;
@@ -158,7 +158,7 @@ static int prv_start_gate(uint32_t cycles) {
   return PBL_POLL_BUSY_US((prv_result() & BT_MAC_RCCAL_RESULT_DONE) == 0U, 0U, DONE_TIMEOUT_US);
 }
 
-static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
+static int prv_cal_finish(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
   uint32_t count;
   int ret;
 
@@ -178,7 +178,7 @@ static int prv_cal_finish(struct pbl_clk_cal *cal, uint32_t cycles, double *hz) 
   return 0;
 }
 
-static int prv_cal_start(struct pbl_clk_cal *cal, uint32_t cycles) {
+static int prv_cal_start(const struct pbl_clk_cal *cal, uint32_t cycles) {
   int ret;
 
   if (cycles == 0U || cycles > PBL_FIELD_GET(BT_MAC_RCCAL_CTRL_LENGTH_MASK, UINT32_MAX)) {
