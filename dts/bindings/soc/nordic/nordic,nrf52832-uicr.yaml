@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf52832-uicr.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 user information configuration registers
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Non-volatile registers the firmware programs, as the reset pin, the debug access port
+  protection and the REGOUT0 voltage.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-uicr
+      - items:
+          - enum:
+              - nordic,nrf52833-uicr
+              - nordic,nrf52840-uicr
+          - const: nordic,nrf52832-uicr
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    uicr@10001000 {
+        compatible = "nordic,nrf52840-uicr", "nordic,nrf52832-uicr";
+        reg = <0x10001000 0x1000>;
+    };
