@@ -765,7 +765,9 @@ labels: [hpsys_rcc, pmuc]
 
 When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` for the
 first `reg` entry of each, translated through the `ranges` above as for
-instances. The node may be disabled, as its registers
+instances. A label may also name another entry, as `{label: flash0, reg: mem}`,
+which gives `PBL_DT_REG_FLASH0_MEM` for the entry of that name in `reg-names`.
+The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
 

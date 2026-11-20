@@ -2364,6 +2364,11 @@ REGS_DTS = """/dts-v1/;
             reg = <0x1000 0x400>;
         };
 
+        flash: flash@2000 {
+            reg = <0x2000 0x100>, <0x80000 0x10000>;
+            reg-names = "regs", "mem";
+        };
+
         nameless: bus-node {
         };
     };
@@ -2387,6 +2392,13 @@ def regs(tmp_path, labels, config="SOC_ACME"):
 def test_regs_are_translated_through_ranges(tmp_path):
     text = regs(tmp_path, ["rcc"])
     assert "#define PBL_DT_REG_RCC 0x40001000UL" in text
+
+
+def test_regs_by_name(tmp_path):
+    text = regs(tmp_path, [{"label": "flash", "reg": "mem"}])
+    assert "#define PBL_DT_REG_FLASH_MEM 0x40080000UL" in text
+    with pytest.raises(DtError, match="no reg named 'xip'"):
+        regs(tmp_path, [{"label": "flash", "reg": "xip"}])
 
 
 def test_regs_of_disabled_code_are_left_out(tmp_path):

@@ -1510,16 +1510,26 @@ def regs_header(tree, regs, config):
     for symbol, labels, error in regs:
         if symbol not in config:
             continue
-        for label in labels:
+        for item in labels:
+            label, reg = (
+                (item, None) if isinstance(item, str) else (item["label"], item["reg"])
+            )
             node = nodes.get(label)
             if node is None:
                 raise error(f"no node labelled '{label}'")
+            index = 0
+            if reg is not None:
+                names = node.strings("reg-names") if node.has("reg-names") else []
+                if reg not in names:
+                    raise error(f"{node.path} has no reg named '{reg}'")
+                index = names.index(reg)
             cells = node.u32s("reg") if node.has("reg") else []
             entry = node.address_cells + node.size_cells
-            if len(cells) < entry:
+            if len(cells) < entry * (index + 1):
                 raise error(f"{node.path} has no reg")
+            cells = cells[entry * index :]
             address = translate(node, cells_number(cells[: node.address_cells]))
-            name = c_ident(label).upper()
+            name = c_ident(label if reg is None else f"{label}_{reg}").upper()
             defines[f"PBL_DT_REG_{name}"] = f"{address:#x}UL"
     if defines:
         lines.append("")
