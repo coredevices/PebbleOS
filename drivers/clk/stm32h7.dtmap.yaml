@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h743-rcc
+config: CLK_STM32H7
+class: clk
+symbol: pbl_clk_stm32h7
+define: PBL_CLK_STM32H7_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - reg: 0
+    of: st,syscfg
+  - string: st,supply-config
+    of: st,syscfg
+    values:
+      ldo: PBL_CLK_STM32H7_SUPPLY_LDO
+      direct-smps: PBL_CLK_STM32H7_SUPPLY_DIRECT_SMPS
+      smps-1v8-ldo: PBL_CLK_STM32H7_SUPPLY_SMPS_1V8_LDO
+      smps-2v5-ldo: PBL_CLK_STM32H7_SUPPLY_SMPS_2V5_LDO
+      smps-1v8-ext-ldo: PBL_CLK_STM32H7_SUPPLY_SMPS_1V8_EXT_LDO
+      smps-2v5-ext-ldo: PBL_CLK_STM32H7_SUPPLY_SMPS_2V5_EXT_LDO
+      smps-1v8-ext-bypass: PBL_CLK_STM32H7_SUPPLY_SMPS_1V8_EXT_BYPASS
+      smps-2v5-ext-bypass: PBL_CLK_STM32H7_SUPPLY_SMPS_2V5_EXT_BYPASS
+      bypass: PBL_CLK_STM32H7_SUPPLY_BYPASS
+  - clock: 0
+  - clock: 1
+  - assigned-clocks: PBL_CLK_ASSIGNED
+    optional: true
