@@ -205,8 +205,8 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
 #define PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, _ops, _deps, _width, _height, _format, _rotated, \
                                      _fb, _fb_size, _fb_ram, ...)                                 \
   {                                                                                               \
-    .dev =                                                                                        \
-        PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_init, nullptr, _deps, &pbl_display_class),  \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_display_dev_init, nullptr, _deps,                \
+                                 &pbl_display_class),                                             \
     .ops = (_ops),                                                                                \
     .state = &sym##_display_state,                                                                \
     .props =                                                                                      \
@@ -244,7 +244,7 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
  * @param dev Display device.
  * @return 0 or a negative errno.
  */
-int pbl_display_init(const struct pbl_device *dev);
+int pbl_display_dev_init(const struct pbl_device *dev);
 
 /**
  * @brief Report the end of the update in flight.

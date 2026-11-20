@@ -203,12 +203,12 @@ extern const struct pbl_gpu *const GPU;
  * @param _deps Dependencies from PBL_DEVICE_DEPS(), or NULL.
  * @param ... Capabilities, designated initializers of struct pbl_gpu_caps.
  */
-#define PBL_GPU_INIT(sym, _name, _ops, _deps, ...)                                          \
-  {                                                                                         \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_init, nullptr, _deps, &pbl_gpu_class), \
-    .ops = (_ops), .state = &sym##_gpu_state, .caps = {                                     \
-      __VA_ARGS__                                                                           \
-    }                                                                                       \
+#define PBL_GPU_INIT(sym, _name, _ops, _deps, ...)                                              \
+  {                                                                                             \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_dev_init, nullptr, _deps, &pbl_gpu_class), \
+    .ops = (_ops), .state = &sym##_gpu_state, .caps = {                                         \
+      __VA_ARGS__                                                                               \
+    }                                                                                           \
   }
 
 /**
@@ -217,7 +217,7 @@ extern const struct pbl_gpu *const GPU;
  * @param dev GPU device.
  * @return 0 or a negative errno.
  */
-int pbl_gpu_init(const struct pbl_device *dev);
+int pbl_gpu_dev_init(const struct pbl_device *dev);
 
 /**
  * @brief Get what a GPU can do.

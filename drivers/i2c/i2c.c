@@ -19,7 +19,7 @@ PBL_LOG_MODULE_DEFINE(driver_i2c, CONFIG_DRIVER_I2C_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_i2c_bus_class, "i2c");
 
-int pbl_i2c_bus_init(const struct pbl_device *dev) {
+int pbl_i2c_bus_dev_init(const struct pbl_device *dev) {
   const struct pbl_i2c_bus *bus = container_of(dev, const struct pbl_i2c_bus, dev);
 
   *bus->state = (struct pbl_i2c_bus_state){0};

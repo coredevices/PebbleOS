@@ -72,7 +72,7 @@ static void prv_framebuffer_deinit(const struct pbl_display *disp) {
 #endif
 }
 
-int pbl_display_init(const struct pbl_device *dev) {
+int pbl_display_dev_init(const struct pbl_device *dev) {
   const struct pbl_display *disp = container_of(dev, const struct pbl_display, dev);
   int ret;
 
