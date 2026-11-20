@@ -201,6 +201,9 @@ struct service_op {
   uint32_t generation;
   uint8_t chr;
   enum service_op_type type;
+  /* What was read so far. */
+  uint8_t *value;
+  uint16_t len;
 };
 
 static int prv_status(int rc) {
@@ -386,13 +389,13 @@ static int prv_service_op_cb(uint16_t conn_handle, const struct ble_gatt_error *
   struct service_op *op = arg;
   struct pbl_bt_gattc_service *svc = op->svc;
   const struct pbl_bt_gattc_service_cb *cb = prv_service_cb(svc, op->generation);
-  const int status = prv_status(error->status);
-  uint8_t *flat = nullptr;
-  uint16_t len = 0;
+  int status = prv_status(error->status);
+  /* Other than 0 ends a read that has more to come. */
+  int rc = 0;
 
   if (cb == nullptr) {
-    pbl_free(op);
-    return 0;
+    rc = BLE_HS_EDONE;
+    goto done;
   }
 
   switch (op->type) {
@@ -408,26 +411,36 @@ static int prv_service_op_cb(uint16_t conn_handle, const struct ble_gatt_error *
       }
       break;
     case SERVICE_OP_READ:
-      if (cb->read == nullptr) {
-        break;
-      }
-      if (status == 0 && attr != nullptr && attr->om != nullptr) {
-        len = OS_MBUF_PKTLEN(attr->om);
-        flat = pbl_malloc(len);
-        if (flat == nullptr) {
-          cb->read(svc, op->chr, -ENOMEM, nullptr, 0);
-          break;
+      /* The value comes in parts, and then that it is done. */
+      if (error->status == 0 && attr != nullptr) {
+        const uint16_t len = (attr->om != nullptr) ? OS_MBUF_PKTLEN(attr->om) : 0;
+        uint8_t *value;
+
+        if (len == 0) {
+          return 0;
         }
-        os_mbuf_copydata(attr->om, 0, len, flat);
+        value = pbl_realloc(op->value, op->len + len);
+        if (value != nullptr) {
+          os_mbuf_copydata(attr->om, 0, len, &value[op->len]);
+          op->value = value;
+          op->len += len;
+          return 0;
+        }
+        status = -ENOMEM;
+        rc = BLE_HS_EDONE;
       }
-      cb->read(svc, op->chr, status, flat, len);
-      pbl_free(flat);
+      if (cb->read != nullptr) {
+        cb->read(svc, op->chr, status, status == 0 ? op->value : nullptr,
+                 status == 0 ? op->len : 0);
+      }
       break;
   }
 
+done:
+  pbl_free(op->value);
   pbl_free(op);
 
-  return 0;
+  return rc;
 }
 
 /* Starts an operation on a characteristic, on its CCCD for the subscriptions. */
@@ -463,7 +476,7 @@ static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum se
   } else if (type == SERVICE_OP_WRITE) {
     rc = ble_gattc_write_flat(conn_handle, handle, data, len, prv_service_op_cb, op);
   } else {
-    rc = ble_gattc_read(conn_handle, handle, prv_service_op_cb, op);
+    rc = ble_gattc_read_long(conn_handle, handle, 0, prv_service_op_cb, op);
   }
   if (rc != 0) {
     pbl_free(op);

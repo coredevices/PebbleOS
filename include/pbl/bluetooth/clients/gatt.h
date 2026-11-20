@@ -209,7 +209,7 @@ int pbl_bt_gattc_service_write(struct pbl_bt_gattc_service *svc, uint8_t chr, co
                                uint16_t len);
 
 /**
- * @brief Read the value of a characteristic.
+ * @brief Read the value of a characteristic, all of it however long.
  *
  * @retval 0 Asked, @c read follows.
  * @retval -ENOTCONN The characteristic was not found (yet).
