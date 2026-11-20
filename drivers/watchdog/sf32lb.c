@@ -30,7 +30,7 @@
 
 #define WDT_CMD_TIMEOUT_US 48000U
 
-static McuRebootReason s_cached_reset_flag;
+static struct pbl_mcu_reboot_reason s_cached_reset_flag;
 // Registers, and counts per timeout at the rate of the clock, once the device is up
 static uintptr_t s_base;
 static uintptr_t s_cfg;
@@ -119,11 +119,11 @@ bool watchdog_check_reset_flag(void) {
   return (prv_pmuc_getreg(PMUC(WSR)) & WSR_WDT_RESET) != 0U;
 }
 
-McuRebootReason watchdog_clear_reset_flag(void) {
+struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void) {
   uint32_t wsr = prv_pmuc_getreg(PMUC(WSR));
   prv_pmuc_putreg(PMUC(WCR), 0xffffffffU);
 
-  s_cached_reset_flag = (McuRebootReason){
+  s_cached_reset_flag = (struct pbl_mcu_reboot_reason){
     .brown_out_reset = 0,
 #ifdef CONFIG_SOC_SF32LB57
     .pin_reset = 0,
@@ -142,7 +142,7 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   return s_cached_reset_flag;
 }
 
-McuRebootReason watchdog_get_reset_flag(void) {
+struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void) {
   return s_cached_reset_flag;
 }
 

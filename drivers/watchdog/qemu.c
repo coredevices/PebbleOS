@@ -30,7 +30,7 @@
 #define RESET_REASON_SOFT (1 << 1)
 #define RESET_REASON_WDOG (1 << 2)
 
-static McuRebootReason s_cached_reset_flag;
+static struct pbl_mcu_reboot_reason s_cached_reset_flag;
 
 void watchdog_init(void) {
   REG32(WDOG_LOCK) = WDOG_UNLOCK;
@@ -53,11 +53,11 @@ bool watchdog_check_reset_flag(void) {
   return (REG32(SYSCTRL_RESET_REASON) & RESET_REASON_WDOG) != 0;
 }
 
-McuRebootReason watchdog_clear_reset_flag(void) {
+struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void) {
   uint32_t reason = REG32(SYSCTRL_RESET_REASON);
   REG32(SYSCTRL_RESET_REASON) = reason;
 
-  s_cached_reset_flag = (McuRebootReason){
+  s_cached_reset_flag = (struct pbl_mcu_reboot_reason){
     .power_on_reset = (reason & RESET_REASON_POR) != 0,
     .software_reset = (reason & RESET_REASON_SOFT) != 0,
     .independent_watchdog_reset = (reason & RESET_REASON_WDOG) != 0,
@@ -66,6 +66,6 @@ McuRebootReason watchdog_clear_reset_flag(void) {
   return s_cached_reset_flag;
 }
 
-McuRebootReason watchdog_get_reset_flag(void) {
+struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void) {
   return s_cached_reset_flag;
 }

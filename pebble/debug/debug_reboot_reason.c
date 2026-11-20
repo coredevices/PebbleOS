@@ -16,7 +16,7 @@ RebootReasonCode reboot_reason_get_last_reboot_reason(void) {
   return s_last_reboot_reason_code;
 }
 
-void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason) {
+void debug_reboot_reason_print(struct pbl_mcu_reboot_reason mcu_reboot_reason) {
   RebootReason reason;
   reboot_reason_get(&reason);
   s_last_reboot_reason_code = reason.code;

@@ -5,4 +5,4 @@
 
 #include <pbl/drivers/mcu_reboot_reason.h>
 
-void debug_reboot_reason_print(McuRebootReason mcu_reboot_reason);
+void debug_reboot_reason_print(struct pbl_mcu_reboot_reason mcu_reboot_reason);

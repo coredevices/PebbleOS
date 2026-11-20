@@ -15,7 +15,7 @@
  */
 
 /** @brief Reset cause flags. */
-typedef struct McuRebootReason {
+struct pbl_mcu_reboot_reason {
   union {
     struct {
       /** Brown-out reset. */
@@ -38,6 +38,6 @@ typedef struct McuRebootReason {
     /** All flags as a bit mask. */
     uint8_t reset_mask;
   };
-} McuRebootReason;
+};
 
 /** @} */
