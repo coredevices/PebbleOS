@@ -82,8 +82,8 @@ struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   return nullptr;
 }
 
-status_t persist_service_delete_file(const Uuid *uuid) {
-  return E_INVALID_OPERATION;
+int persist_service_delete_file(const Uuid *uuid) {
+  return -ENOTSUP;
 }
 
 void wakeup_enable(bool enable) {

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +19,6 @@
 #include <pbl/util/units.h>
 
 #include <process_management/app_install_manager.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_persist, CONFIG_SERVICE_PERSIST_LOG_LEVEL);
 
@@ -60,26 +60,23 @@ static inline void prv_unlock(void) {
 // "ps" prefix + 32 hex chars (16-byte UUID) + NUL.
 #define PERSIST_FILE_NAME_MAX_LENGTH sizeof("/ps000102030405060708090a0b0c0d0e0f")
 
-static status_t prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) {
+static void prv_get_file_name(char *name, size_t buf_len, const Uuid *uuid) {
   // Persist files are named "ps<uuid-hex>". The "ps" prefix indicates the file
   // is in struct pbl_settings_file format. The UUID is stable across reinstalls, so the
   // file follows the app regardless of its (volatile) AppInstallId.
   const uint8_t *b = (const uint8_t *)uuid;
-  return snprintf(name, buf_len,
-                  "/ps%02x%02x%02x%02x%02x%02x%02x%02x"
-                  "%02x%02x%02x%02x%02x%02x%02x%02x",
-                  b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12],
-                  b[13], b[14], b[15]);
+  snprintf(name, buf_len,
+           "/ps%02x%02x%02x%02x%02x%02x%02x%02x"
+           "%02x%02x%02x%02x%02x%02x%02x%02x",
+           b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13],
+           b[14], b[15]);
 }
 
-status_t persist_service_delete_file(const Uuid *uuid) {
+int persist_service_delete_file(const Uuid *uuid) {
   char name[PERSIST_FILE_NAME_MAX_LENGTH];
 
-  status_t status = prv_get_file_name(name, sizeof(name), uuid);
-  if (FAILED(status)) {
-    return status;
-  }
-  return status_from_errno(pbl_fs_unlink(name));
+  prv_get_file_name(name, sizeof(name), uuid);
+  return pbl_fs_unlink(name);
 }
 
 size_t persist_service_get_max_size(void) {
@@ -105,11 +102,11 @@ typedef struct PBL_PACKED {
   Uuid uuid;
 } LegacyPersistMapField;
 
-static status_t prv_copy_file(const char *from, const char *to) {
+static int prv_copy_file(const char *from, const char *to) {
   struct pbl_fs_file from_file;
   int ret = pbl_fs_open(&from_file, from, PBL_FS_O_READ);
   if (ret < 0) {
-    return status_from_errno(ret);
+    return ret;
   }
 
   size_t size = pbl_fs_size(&from_file);
@@ -124,24 +121,24 @@ static status_t prv_copy_file(const char *from, const char *to) {
 
   if (ret < 0) {
     pbl_fs_close(&from_file);
-    return status_from_errno(ret);
+    return ret;
   }
 
-  status_t rv = S_SUCCESS;
+  int rv = 0;
   const size_t chunk_size = 128;
   uint8_t *buf = pbl_malloc(chunk_size);
   if (buf == nullptr) {
-    rv = E_OUT_OF_MEMORY;
+    rv = -ENOMEM;
   } else {
     size_t remaining = size;
     while (remaining > 0) {
       size_t n = PBL_MIN(remaining, chunk_size);
       if ((ret = pbl_fs_read(&from_file, buf, n)) != (int)n) {
-        rv = (ret >= 0) ? E_INTERNAL : status_from_errno(ret);
+        rv = (ret >= 0) ? -EIO : ret;
         break;
       }
       if ((ret = pbl_fs_write(&to_file, buf, n)) != (int)n) {
-        rv = (ret >= 0) ? E_INTERNAL : status_from_errno(ret);
+        rv = (ret >= 0) ? -EIO : ret;
         break;
       }
       remaining -= n;
@@ -173,11 +170,9 @@ static void prv_migrate_legacy_persist_files(void) {
     snprintf(old_name, sizeof(old_name), "/ps%06d", field.id);
 
     char new_name[PERSIST_FILE_NAME_MAX_LENGTH];
-    if (FAILED(prv_get_file_name(new_name, sizeof(new_name), &field.uuid))) {
-      continue;
-    }
+    prv_get_file_name(new_name, sizeof(new_name), &field.uuid);
 
-    if (PASSED(prv_copy_file(old_name, new_name))) {
+    if (prv_copy_file(old_name, new_name) == 0) {
       pbl_fs_unlink(old_name);
     }
   }
@@ -208,9 +203,9 @@ struct pbl_settings_file *persist_service_lock_and_get_store(const Uuid *uuid) {
   PBL_ASSERTN(store);
   if (!store->file_open) {
     char filename[PERSIST_FILE_NAME_MAX_LENGTH];
-    PBL_ASSERTN(PASSED(prv_get_file_name(filename, sizeof(filename), uuid)));
-    PBL_ASSERTN(PASSED(pbl_settings_open_growable(&store->file, filename, PERSIST_STORAGE_MAX_SPACE,
-                                                  PERSIST_STORAGE_INITIAL_ALLOC)));
+    prv_get_file_name(filename, sizeof(filename), uuid);
+    PBL_ASSERTN(pbl_settings_open_growable(&store->file, filename, PERSIST_STORAGE_MAX_SPACE,
+                                           PERSIST_STORAGE_INITIAL_ALLOC) == 0);
     store->file_open = true;
   }
   return &store->file;
