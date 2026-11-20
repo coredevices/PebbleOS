@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/system/status_codes.h>
 #include <pbl/util/uuid.h>
+
+#include <applib/status.h>
 
 //! @file persist.h
 

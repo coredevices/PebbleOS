@@ -1,13 +1,9 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/*!
-  \file status_codes.h
-  \brief Global status codes and related macros.
- */
-
 #pragma once
 
+#include <errno.h>
 #include <stdint.h>
 
 //! Status codes. See \ref status_t
@@ -65,11 +61,30 @@ typedef enum StatusCode {
 
 } StatusCode;
 
-// Use the int-sized int from the watch's processor.
 //! Return value for system operations. See \ref StatusCode for possible values.
 typedef int32_t status_t;
 
-#define DECLARE_DOMAIN_STATUS(e) ((status_t)(e & (1 << 30)))
-
-#define PASSED(s) ((status_t)(s) >= 0)
-#define FAILED(s) ((status_t)(s) < 0)
+static inline status_t status_from_errno(int err) {
+  switch (err) {
+    case 0:
+      return S_SUCCESS;
+    case -ENOENT:
+      return E_DOES_NOT_EXIST;
+    case -EBUSY:
+      return E_BUSY;
+    case -EMFILE:
+      return E_OUT_OF_RESOURCES;
+    case -ENOSPC:
+      return E_OUT_OF_STORAGE;
+    case -ENOMEM:
+      return E_OUT_OF_MEMORY;
+    case -EINVAL:
+    case -ENAMETOOLONG:
+      return E_INVALID_ARGUMENT;
+    case -ERANGE:
+    case -EFBIG:
+      return E_RANGE;
+    default:
+      return E_INTERNAL;
+  }
+}

@@ -5,7 +5,7 @@
   "revision" : "116",
   "version" : "2.0",
   "files": [
-    "include/pbl/system/status_codes.h",
+    "pebble/applib/status.h",
     "pebble/applib/dict.h",
     "include/pbl/util/list.h",
     "include/pbl/util/math.h",

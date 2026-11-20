@@ -9,10 +9,10 @@
 
 #include <applib/app_time32.h>
 #include <applib/app_wakeup.h>
+#include <applib/status.h>
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
 #include <syscall/syscall.h>
-#include <system/status_errno.h>
 
 static void do_handle(PebbleEvent *e, void *context) {
   WakeupHandler wakeup_handler = app_state_get_wakeup_handler();
