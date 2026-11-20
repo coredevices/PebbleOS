@@ -22,14 +22,16 @@ config BACKLIGHT_HAS_COLOR
 
 config BACKLIGHT_AW9364E
     bool "AW9364E"
-    default DT_HAS_AWINIC_AW9364E_ENABLED
+    default y
+    depends on DT_HAS_AWINIC_AW9364E_ENABLED
     select GPIO
     help
       Support for the AW9364E LED controller.
 
 config BACKLIGHT_LED
     bool "LED"
-    default DT_HAS_LED_BACKLIGHT_ENABLED
+    default y
+    depends on DT_HAS_LED_BACKLIGHT_ENABLED
     select LED
     select BACKLIGHT_HAS_COLOR if LED_HAS_COLOR
     help
@@ -37,15 +39,16 @@ config BACKLIGHT_LED
 
 config BACKLIGHT_PWM
     bool "PWM"
-    default DT_HAS_PWM_BACKLIGHT_ENABLED
+    default y
+    depends on DT_HAS_PWM_BACKLIGHT_ENABLED
     select PWM
     help
       Support for a backlight driven by a PWM peripheral.
 
 config BACKLIGHT_QEMU
     bool "QEMU"
-    default DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
-    depends on SOC_QEMU_PEBBLE
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
     help
       Emulated backlight controller that writes to the QEMU
       pebble-display MMIO registers.

@@ -21,14 +21,16 @@ if ACCEL
 
 config ACCEL_LIS2DW12
     bool "ST LIS2DW12"
-    default DT_HAS_ST_LIS2DW12_ENABLED
+    default y
+    depends on DT_HAS_ST_LIS2DW12_ENABLED
     select I2C
     help
       Support for the ST LIS2DW12 accelerometer.
 
 config ACCEL_LSM6DSO
     bool "ST LSM6DSO"
-    default DT_HAS_ST_LSM6DSO_ENABLED
+    default y
+    depends on DT_HAS_ST_LSM6DSO_ENABLED
     select I2C
     help
       Support for the ST LSM6DSO accelerometer/gyroscope.
@@ -128,7 +130,8 @@ if MAG
 
 config MAG_MMC5603NJ
     bool "MEMSIC MMC5603NJ"
-    default DT_HAS_MEMSIC_MMC5603_ENABLED
+    default y
+    depends on DT_HAS_MEMSIC_MMC5603_ENABLED
     select I2C
     help
       Support for the MEMSIC MMC5603NJ magnetometer.

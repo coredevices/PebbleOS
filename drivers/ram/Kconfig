@@ -20,7 +20,8 @@ config RAM_SHELL
 
 config RAM_HYPERRAM
     bool "HyperRAM"
-    default DT_HAS_CYPRESS_HYPERRAM_ENABLED
+    default y
+    depends on DT_HAS_CYPRESS_HYPERRAM_ENABLED
     select REGULATOR
     select HYPERBUS
     help
@@ -29,8 +30,8 @@ config RAM_HYPERRAM
 
 config RAM_QEMU
     bool "QEMU PSRAM"
-    default DT_HAS_QEMU_PEBBLE_PSRAM_ENABLED
-    depends on SOC_QEMU_PEBBLE
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_PSRAM_ENABLED
     help
       Support for the PSRAM of the QEMU Pebble machines.
 

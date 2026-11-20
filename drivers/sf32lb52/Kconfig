@@ -3,7 +3,8 @@
 
 config SF32LB52_HXT
     bool "SF32LB52 crystal trim"
-    default DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
     depends on SOC_SF32LB52 && FLASH_OTP
     help
       Apply the 48 MHz crystal load capacitance trim from the SoC factory

@@ -10,7 +10,8 @@ if PMIC
 
 config PMIC_NPM1300
     bool "Nordic nPM1300 charger"
-    default DT_HAS_NORDIC_NPM1300_ENABLED
+    default y
+    depends on DT_HAS_NORDIC_NPM1300_ENABLED
     select BATTERY_HIGH_LOAD
     select MFD
     select MFD_NPM1300

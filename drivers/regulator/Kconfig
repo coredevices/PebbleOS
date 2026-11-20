@@ -10,8 +10,8 @@ config REGULATOR
 # Not only for its consumers: it also switches off a regulator nothing uses
 config REGULATOR_SF32LB52_PMUC
     bool "SiFli SF32LB52 PMUC regulators"
-    default DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
     select REGULATOR
     help
       Support for LDO18, the supply of the package memory in the
@@ -19,8 +19,8 @@ config REGULATOR_SF32LB52_PMUC
 
 config REGULATOR_SF32LB57_PMUC
     bool "SiFli SF32LB57 PMUC regulators"
-    default DT_HAS_SIFLI_SF32LB57_PMUC_ENABLED
-    depends on SOC_SF32LB57
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_PMUC_ENABLED
     select REGULATOR
     help
       Support for LDO18, the supply of the package memory in the
@@ -30,7 +30,8 @@ if REGULATOR
 
 config REGULATOR_NPM1300
     bool "Nordic nPM1300 regulators"
-    default DT_HAS_NORDIC_NPM1300_ENABLED
+    default y
+    depends on DT_HAS_NORDIC_NPM1300_ENABLED
     select MFD
     select MFD_NPM1300
     help
@@ -38,7 +39,8 @@ config REGULATOR_NPM1300
 
 config REGULATOR_FIXED
     bool "Fixed regulators"
-    default DT_HAS_REGULATOR_FIXED_ENABLED
+    default y
+    depends on DT_HAS_REGULATOR_FIXED_ENABLED
     select GPIO
     help
       Support for rails switched by a GPIO.

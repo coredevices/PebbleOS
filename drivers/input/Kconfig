@@ -5,7 +5,8 @@ menu "Input"
 
 config INPUT_ADC_KEYS
     bool "ADC keys"
-    default DT_HAS_ADC_KEYS_IRQ_ENABLED
+    default y
+    depends on DT_HAS_ADC_KEYS_IRQ_ENABLED
     depends on INPUT
     select ADC
     select GPIO
@@ -15,7 +16,8 @@ config INPUT_ADC_KEYS
 
 config INPUT_GPIO_KEYS
     bool "GPIO keys"
-    default DT_HAS_GPIO_KEYS_ENABLED
+    default y
+    depends on DT_HAS_GPIO_KEYS_ENABLED
     depends on INPUT
     select GPIO
     help

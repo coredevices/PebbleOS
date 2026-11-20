@@ -23,8 +23,8 @@ config TEMP_NRF5
 
 config TEMP_SF32LB
     bool "SiFli SF32LB"
-    default DT_HAS_SIFLI_SF32LB52_TSEN_ENABLED
-    depends on SOC_SF32LB52
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_TSEN_ENABLED
     select CLK
     help
       Support for the SiFli SF32LB temperature sensor.

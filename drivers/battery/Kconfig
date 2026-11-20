@@ -9,7 +9,8 @@ config BATTERY_HIGH_LOAD
 
 config BATTERY_SIMPLE
     bool
-    default DT_HAS_SIMPLE_BATTERY_ENABLED
+    default y
+    depends on DT_HAS_SIMPLE_BATTERY_ENABLED
     help
       The battery cell described in the devicetree, for chargers and fuel
       gauges to read.
