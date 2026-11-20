@@ -52,6 +52,16 @@ pbl_clar_test(test_mag_sim
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_sensor
+  SOURCES
+    drivers/base/device.c
+    drivers/sensor/sensor.c
+  DEFINES
+    CONFIG_DEVICE_LOG_LEVEL=0
+    CONFIG_DRIVER_SENSOR_LOG_LEVEL=0
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_flash_partition
   SOURCES
     tests/fakes/fake_spi_flash.c
