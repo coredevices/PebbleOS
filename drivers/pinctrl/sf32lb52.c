@@ -18,6 +18,8 @@
 #define NUM_SA_PADS 13U
 #define NUM_PA_PADS 45U
 
+static_assert(NUM_SA_PADS + NUM_PA_PADS == PBL_PINCTRL_SF32LB52__NUM_PADS);
+
 #define AON_PULL_FIRST_PAD 34U
 #define AON_PULL_LAST_PAD  44U
 #define AON_PULL_PAWK_BASE 28U
@@ -154,12 +156,12 @@ static int prv_configure_pin(const struct pbl_pinctrl_sf32lb52 *ctrl, uint32_t p
     if (pad >= NUM_PA_PADS) {
       return -EINVAL;
     }
-    reg = ctrl->pad_pa + pad * 4U;
+    reg = ctrl->base + SF32LB52_PINMUX_PAD_PA_OFFSET(pad);
   } else if (port == PBL_PINCTRL_SF32LB52_PORT_SA) {
     if (pad >= NUM_SA_PADS) {
       return -EINVAL;
     }
-    reg = ctrl->pad_sa + pad * 4U;
+    reg = ctrl->base + SF32LB52_PINMUX_PAD_SA_OFFSET(pad);
   } else {
     return -EINVAL;
   }
@@ -238,9 +240,9 @@ static int prv_get(const struct pbl_pinctrl_controller *ctrl, uint16_t pad, uint
   const struct pbl_pinctrl_sf32lb52 *sf32 = prv_ctrl(ctrl);
 
   if (pad < NUM_SA_PADS) {
-    *val = pbl_readl(sf32->pad_sa + pad * 4U);
+    *val = pbl_readl(sf32->base + SF32LB52_PINMUX_PAD_SA_OFFSET(pad));
   } else if (pad < NUM_SA_PADS + NUM_PA_PADS) {
-    *val = pbl_readl(sf32->pad_pa + (pad - NUM_SA_PADS) * 4U);
+    *val = pbl_readl(sf32->base + SF32LB52_PINMUX_PAD_PA_OFFSET(pad - NUM_SA_PADS));
   } else {
     return -EINVAL;
   }
@@ -252,19 +254,10 @@ int pbl_pinctrl_sf32lb52_modify(uint32_t pin, uint32_t mask) {
   return prv_configure_pin(&pbl_pinctrl_sf32lb52_hpsys_inst, pin, mask);
 }
 
-static const struct pbl_pinctrl_controller_ops s_ops = {
+const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb52_ops = {
   .configure = prv_configure,
   .get = prv_get,
 };
-
-#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon)                         \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb52, struct pbl_pinctrl_controller, ctrl) {   \
-    .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &s_ops, NUM_SA_PADS + NUM_PA_PADS), \
-    .pad_sa = (_base) + SF32LB52_PINMUX_PAD_SA_OFFSET(0),                                        \
-    .pad_pa = (_base) + SF32LB52_PINMUX_PAD_PA_OFFSET(0), .cfg = (_cfg), .rtc = (_rtc),          \
-    .aon = (_aon),                                                                               \
-  }
 
 #define PBL_PINCTRL_SF32LB52_DT_STATE(sym, ...)       \
   static const uint32_t sym##_pins[] = {__VA_ARGS__}; \
