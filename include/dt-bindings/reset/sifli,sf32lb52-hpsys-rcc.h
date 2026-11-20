@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
-/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 
-#pragma once
+#ifndef _DT_BINDINGS_RESET_SIFLI_SF32LB52_HPSYS_RCC_H
+#define _DT_BINDINGS_RESET_SIFLI_SF32LB52_HPSYS_RCC_H
 
 /* Abstract IDs: new resets go at the end. */
 #define SF32LB52_HPSYS_RCC_RST_DMAC1    0
@@ -42,3 +43,5 @@
 #define SF32LB52_HPSYS_RCC_RST_GPADC    35
 #define SF32LB52_HPSYS_RCC_RST_TSEN     36
 #define SF32LB52_HPSYS_RCC_RST_I2C4     37
+
+#endif /* _DT_BINDINGS_RESET_SIFLI_SF32LB52_HPSYS_RCC_H */
