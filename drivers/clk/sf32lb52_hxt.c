@@ -6,9 +6,11 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/device.h>
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk/sf32lb.h>
-#include <pbl/drivers/sf32lb52/hxt.h>
+#include <pbl/drivers/clk/sf32lb52_hxt.h>
+#include <pbl/drivers/flash.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -20,7 +22,7 @@
 
 #include <hardware/sf32lb52_pmuc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_sf32lb52_hxt, CONFIG_DRIVER_SF32LB52_HXT_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_clk, CONFIG_DRIVER_CLK_LOG_LEVEL);
 
 #define CFG_MAX_SIZE    256U
 #define CFG_HDR_SIZE    2U
@@ -54,7 +56,8 @@ static size_t prv_find_record(const uint8_t *cfg, size_t size, uint8_t id, uint8
 }
 
 // The system clock leaves the crystal while it changes, and the DLLs relock to it after
-static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_sf32lb52_hxt *hxt, uint32_t cbank) {
+static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_clk_sf32lb52_hxt *hxt,
+                                            uint32_t cbank) {
   const uintptr_t cr1 = hxt->base + SF32LB52_PMUC_HXT_CR1_OFFSET;
   struct pbl_clk_sf32lb_hxt48_state state;
   unsigned int key;
@@ -71,8 +74,9 @@ static PBL_SECTION_RAM void prv_apply_cbank(const struct pbl_sf32lb52_hxt *hxt, 
   pbl_irq_restore_all(key);
 }
 
-int pbl_sf32lb52_hxt_init(const struct pbl_device *dev) {
-  const struct pbl_sf32lb52_hxt *hxt = container_of(dev, const struct pbl_sf32lb52_hxt, dev);
+int pbl_clk_sf32lb52_hxt_init(const struct pbl_device *dev) {
+  const struct pbl_clk_sf32lb52_hxt *hxt =
+      container_of(dev, const struct pbl_clk_sf32lb52_hxt, dev);
   uint8_t cfg[CFG_MAX_SIZE];
   uint8_t rec[sizeof(uint32_t)];
 
