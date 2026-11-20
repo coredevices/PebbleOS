@@ -413,9 +413,9 @@ static void prv_dump_log_system_cb(void *context) {
 
     // use the read buffer to also hold build id str. Each byte of the build ID requires 2
     // characters.
-    const int off =
-        MEMBER_SIZE(DumpLogState, msg_buf) - 2 * MEMBER_SIZE(FlashLoggingHeader, build_id) - 1;
-    uint8_t build_id[MEMBER_SIZE(FlashLoggingHeader, build_id)];
+    const int off = PBL_SIZEOF_FIELD(DumpLogState, msg_buf) -
+                    2 * PBL_SIZEOF_FIELD(FlashLoggingHeader, build_id) - 1;
+    uint8_t build_id[PBL_SIZEOF_FIELD(FlashLoggingHeader, build_id)];
     uint32_t build_id_addr = flash_addr + offsetof(FlashLoggingHeader, build_id);
 
     pbl_flash_read(FLASH, build_id_addr, (uint8_t *)build_id, sizeof(build_id));
