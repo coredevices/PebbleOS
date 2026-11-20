@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 
 #include <pbl/fs/fs.h>
@@ -137,7 +138,7 @@ void test_app_cache__cleanup(void) {
  *************************************/
 
 void test_app_cache__easy_evict(void) {
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
   cl_assert_equal_i(app1.id, app_cache_get_next_eviction());
 }
 
@@ -147,17 +148,17 @@ void test_app_cache__easy_evict(void) {
 
 void test_app_cache__add_remove_evict(void) {
   // add all three
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
 
   // remove 2
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app1.id));
+  cl_assert_equal_i(0, app_cache_remove_entry(app1.id));
   PebbleEvent e = fake_event_get_last();
   cl_assert_equal_i(e.type, PEBBLE_APP_CACHE_EVENT);
   cl_assert_equal_i(e.app_cache_event.cache_event_type, PebbleAppCacheEvent_Removed);
   cl_assert_equal_i(e.app_cache_event.install_id, app1.id);
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app3.id));
+  cl_assert_equal_i(0, app_cache_remove_entry(app3.id));
   e = fake_event_get_last();
   cl_assert_equal_i(e.type, PEBBLE_APP_CACHE_EVENT);
   cl_assert_equal_i(e.app_cache_event.cache_event_type, PebbleAppCacheEvent_Removed);
@@ -176,16 +177,16 @@ void test_app_cache__add_remove_evict(void) {
 
 void test_app_cache__add_update_evict(void) {
   // add all three
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
 
   time_t now = pbl_realtime();
   pbl_realtime_set(now + 2);
 
   // remove 2
-  cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app1.id));
-  cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app3.id));
+  cl_assert_equal_i(0, app_cache_app_launched(app1.id));
+  cl_assert_equal_i(0, app_cache_app_launched(app3.id));
 
   // ensure the one that has the lowest priority is evicted
   cl_assert_equal_i(app2.id, app_cache_get_next_eviction());
@@ -197,14 +198,14 @@ void test_app_cache__add_update_evict(void) {
 
 void test_app_cache__add_remove_all_evict(void) {
   // add all three
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
 
   // remove 3
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app1.id));
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app2.id));
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app3.id));
+  cl_assert_equal_i(0, app_cache_remove_entry(app1.id));
+  cl_assert_equal_i(0, app_cache_remove_entry(app2.id));
+  cl_assert_equal_i(0, app_cache_remove_entry(app3.id));
 
   cl_assert_equal_i(fake_event_get_count(), 3);
 
@@ -222,7 +223,7 @@ void test_app_cache__update_all_lots_evict_one(void) {
   static const uint16_t NUM_UPDATES = 10;
 
   for (int i = 1; i <= NUM_ITEMS; i++) {
-    cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(i, 0));
+    cl_assert_equal_i(0, app_cache_add_entry(i, 0));
   }
 
   // repeat LOOPS times
@@ -233,7 +234,7 @@ void test_app_cache__update_all_lots_evict_one(void) {
         continue;
       }
 
-      cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(j));
+      cl_assert_equal_i(0, app_cache_app_launched(j));
     }
 
     // increment time so everything won't happen in the same second
@@ -253,28 +254,28 @@ void test_app_cache__frequent_app_outlives_newer_idle_app(void) {
   const time_t day = 24 * 60 * 60;
   time_t now = pbl_realtime();
 
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
   for (int i = 0; i < 5; i++) {
-    cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(app1.id));
+    cl_assert_equal_i(0, app_cache_app_launched(app1.id));
   }
 
   // app2 is installed 3 days later but never opened
   pbl_realtime_set(now + 3 * day);
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
   cl_assert_equal_i(app2.id, app_cache_get_next_eviction());
 
   // ...but it does win against an app last used much longer ago than its launches cover
   pbl_realtime_set(now + 40 * day);
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_remove_entry(app2.id));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_remove_entry(app2.id));
   cl_assert_equal_i(app1.id, app_cache_get_next_eviction());
 }
 
 void test_app_cache__clear(void) {
   // add all three
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
 
   app_cache_flush();
 
@@ -295,9 +296,9 @@ typedef struct PBL_PACKED {
 
 void test_app_cache__corrupt_key(void) {
   // add three cache entries
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app1.id, app1.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app2.id, app2.size));
-  cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(app3.id, app3.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app1.id, app1.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app2.id, app2.size));
+  cl_assert_equal_i(0, app_cache_add_entry(app3.id, app3.size));
 
   // add one with a key value of length 3
   // Raw struct pbl_settings_file calls
@@ -390,8 +391,8 @@ void prv_load_lotta_apps(void) {
   for (int i = 0; i < 50; i++) {
     // time is the basis of the priority. Set the time so we know what priority.
     pbl_realtime_set(t_data[i].priority);
-    cl_assert_equal_i(S_SUCCESS, app_cache_add_entry(t_data[i].id, t_data[i].size));
-    cl_assert_equal_i(S_SUCCESS, app_cache_app_launched(t_data[i].id));
+    cl_assert_equal_i(0, app_cache_add_entry(t_data[i].id, t_data[i].size));
+    cl_assert_equal_i(0, app_cache_app_launched(t_data[i].id));
     // increment time so everything won't happen in the same second
   }
 
@@ -417,7 +418,7 @@ void test_app_cache__free_up_space_keeps_running_processes(void) {
 
   prv_cleanup();
   // ask for everything: only the two running processes may survive
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(SIZE_SUM));
+  cl_assert_equal_i(0, app_cache_free_up_space(SIZE_SUM));
   fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_b(true, app_cache_entry_exists(17));
   cl_assert_equal_b(true, app_cache_entry_exists(50));
@@ -434,7 +435,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = 150000;
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert(after_size <= (before_size - to_free));
@@ -444,7 +445,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = 207357;
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - to_free));
@@ -454,7 +455,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = 1; // should remove 207357
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - 207357));
@@ -464,7 +465,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = (207357 + 22644);
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, (before_size - to_free));
@@ -474,7 +475,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = SIZE_SUM;
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, 0);
@@ -484,7 +485,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = 0;
   before_size = app_cache_get_size();
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(E_INVALID_ARGUMENT, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(-EINVAL, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, before_size);
@@ -494,7 +495,7 @@ void test_app_cache__free_up_space_lots_apps(void) {
   to_free = SIZE_SUM + 1;
   before_size = app_cache_get_size();
   cl_assert(before_size < to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert_equal_i(after_size, 0);
@@ -558,7 +559,7 @@ void test_app_cache__free_up_space_save_defaults(void) {
   before_size = app_cache_get_size();
   PBL_LOG_DBG("%d %d %d", to_free, after_free, before_size);
   cl_assert(before_size >= to_free);
-  cl_assert_equal_i(S_SUCCESS, app_cache_free_up_space(to_free));
+  cl_assert_equal_i(0, app_cache_free_up_space(to_free));
   fake_sys_work_callbacks_invoke_pending();
   after_size = app_cache_get_size();
   cl_assert(after_size == (before_size - to_free));

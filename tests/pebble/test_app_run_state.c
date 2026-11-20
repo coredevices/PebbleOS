@@ -9,7 +9,6 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
-#include <pbl/system/status_codes.h>
 #include <pbl/util/list.h>
 
 #include <process_management/app_run_state.h>
@@ -90,7 +89,7 @@ bool pbl_sys_work_call(void (*cb)(void *data), void *data) {
   return true;
 }
 
-status_t app_cache_app_launched(AppInstallId id) {
+int app_cache_app_launched(AppInstallId id) {
   return 0;
 }
 

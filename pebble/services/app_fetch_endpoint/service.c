@@ -215,13 +215,13 @@ void prv_put_bytes_event_sys_work_cb(void *data) {
                 s_fetch_state.total_size);
 
     // signify in the app cache that the app binaries are now loaded
-    status_t added = app_cache_add_entry(s_fetch_state.app_id, s_fetch_state.total_size);
-    if (added == S_SUCCESS) {
+    int added = app_cache_add_entry(s_fetch_state.app_id, s_fetch_state.total_size);
+    if (added == 0) {
       // Set prev_error as a Success.
       s_fetch_state.prev_error = AppFetchResultSuccess;
       prv_put_event_simple(AppFetchEventTypeFinish);
     } else {
-      PBL_LOG_ERR("Failed to insert into app cache: %" PRId32, added);
+      PBL_LOG_ERR("Failed to insert into app cache: %d", added);
       prv_put_event_error(AppFetchResultGeneralFailure);
     }
     prv_cleanup(AppFetchResultSuccess);

@@ -6,7 +6,6 @@
 #include <pbl/kernel/heap.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/vibe_pattern.h>
-#include <pbl/system/status_codes.h>
 
 #include <applib/app_comm.h>
 #include <applib/graphics/framebuffer.h>
@@ -186,8 +185,8 @@ bool app_cache_entry_exists(AppInstallId app_id) {
   return true;
 }
 
-status_t app_cache_remove_entry(AppInstallId app_id) {
-  return S_SUCCESS;
+int app_cache_remove_entry(AppInstallId app_id) {
+  return 0;
 }
 
 int app_db_get_app_entry_for_install_id(AppInstallId app_id, AppDBEntry *entry) {
@@ -264,7 +263,7 @@ void reboot_set_slot_of_last_launched_app(uint32_t app_slot) {
 void sys_exit(int status) {
 }
 
-status_t app_cache_app_launched(AppInstallId id) {
+int app_cache_app_launched(AppInstallId id) {
   return 0;
 }
 
