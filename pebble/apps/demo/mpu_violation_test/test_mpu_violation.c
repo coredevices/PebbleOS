@@ -52,7 +52,7 @@ extern const uint32_t _heap_start[];
 extern const uint32_t __ramfunc_start[];
 #endif
 
-KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
+PBL_KERNEL_READONLY_DATA static uint32_t s_ro_bss_probe;
 
 typedef enum {
   TestKind_WorkerRamWrite,

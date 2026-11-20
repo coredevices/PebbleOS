@@ -47,9 +47,9 @@ Static regions cannot overlap. The last four of the
 brings ({doc}`threads`) and its stack and syscall stack guards, which the kernel
 adds.
 
-`KERNEL_READONLY_DATA` places a variable in the read-only BSS, which apps can
+`PBL_KERNEL_READONLY_DATA` places a variable in the read-only BSS, which apps can
 read. ARMv8-M cannot let only privileged code write to a region, so all writes
-go through `KERNEL_READONLY_DATA_SET()` or `pbl_mpu_user_ro_write()`, which lift
+go through `PBL_KERNEL_READONLY_DATA_SET()` or `pbl_mpu_user_ro_write()`, which lift
 the region around the copy with interrupts masked.
 
 `sys mpu` prints the programmed regions, as does a memory fault.

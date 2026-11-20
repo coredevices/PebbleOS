@@ -37,15 +37,15 @@
  */
 
 /** Places a variable where unprivileged code can read it but not write to it. */
-#define KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
+#define PBL_KERNEL_READONLY_DATA PBL_SECTION(".kernel_unpriv_ro_bss")
 
 /**
- * @brief Assign a @ref KERNEL_READONLY_DATA variable. Privileged code only.
+ * @brief Assign a @ref PBL_KERNEL_READONLY_DATA variable. Privileged code only.
  *
  * @param var Variable.
  * @param val Value.
  */
-#define KERNEL_READONLY_DATA_SET(var, val)              \
+#define PBL_KERNEL_READONLY_DATA_SET(var, val)          \
   do {                                                  \
     typeof(var) val_ = (val);                           \
     pbl_mpu_user_ro_write(&(var), &val_, sizeof(val_)); \

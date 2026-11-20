@@ -46,8 +46,8 @@ bool system_resource_is_valid(void) {
 #define NUM_SYSTEM_FONTS PBL_ARRAY_SIZE(s_font_resource_keys)
 
 // Total number of fonts = NUM_SYSTEM_FONTS + 1 for the fallback font
-FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] KERNEL_READONLY_DATA;
-_Atomic uint32_t g_font_language_generation KERNEL_READONLY_DATA;
+FontInfo s_system_fonts_info_table[NUM_SYSTEM_FONTS + 1] PBL_KERNEL_READONLY_DATA;
+_Atomic uint32_t g_font_language_generation PBL_KERNEL_READONLY_DATA;
 
 #ifndef CONFIG_RECOVERY_FW
 #define NUM_LANGUAGE_FONTS \

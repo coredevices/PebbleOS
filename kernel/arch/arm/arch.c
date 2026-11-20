@@ -51,7 +51,7 @@ static_assert(FIRST_MPU_REGION % ARCH_THREAD_MPU_REGIONS == 0, "thread slots mus
 struct pbl_thread *pbl_cur;
 
 #ifdef CONFIG_USERSPACE
-struct pbl_thread *arch_cur_user KERNEL_READONLY_DATA;
+struct pbl_thread *arch_cur_user PBL_KERNEL_READONLY_DATA;
 
 PBL_USED void arm_cur_user_set(struct pbl_thread *t) {
   arm_mpu_user_ro_write32(mpu_user_ro_slot, (uint32_t *)&arch_cur_user, (uint32_t)t);
