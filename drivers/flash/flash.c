@@ -381,6 +381,8 @@ int pbl_flash_dev_init(const struct pbl_device *dev) {
   int ret;
 
   st->flash = flash;
+  pbl_mutex_init(&st->lock);
+  pbl_sem_init(&st->erase_sem, 1U, 1U);
   pbl_delayed_work_init(&st->poll_timer, prv_poll_timer_fn);
   pbl_delayed_work_init(&st->resume_timer, prv_resume_timer_fn);
 
