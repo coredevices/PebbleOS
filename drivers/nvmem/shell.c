@@ -15,7 +15,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   PBL_DEVICE_CLASS_FOREACH(&pbl_nvmem_class, dev) {
     const struct pbl_nvmem *nvmem = PBL_CONTAINER_OF(dev, const struct pbl_nvmem, dev);
 
-    pbl_shell_print(sh, "%s: %zu bytes, word %u, stride %u%s", dev->name, nvmem->size,
+    pbl_shell_print(sh, "%s: %zu bytes, word %u, stride %u%s", pbl_device_name(dev), nvmem->size,
                     nvmem->word_size, nvmem->stride,
                     pbl_device_is_ready(dev) ? "" : " (not ready)");
   }

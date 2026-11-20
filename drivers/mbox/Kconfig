@@ -28,7 +28,7 @@ config MBOX_SF32LB_IRQ_PRIO
 config MBOX_SHELL
     bool "Mailbox shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The mbox shell command, to list the controllers with their channel
       counters and ring a channel.

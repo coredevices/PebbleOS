@@ -14,7 +14,7 @@ static int prv_cmd_show(const struct pbl_shell *sh, size_t argc, char **argv) {
     const struct pbl_pinctrl_controller *ctrl =
         PBL_CONTAINER_OF(dev, const struct pbl_pinctrl_controller, dev);
 
-    pbl_shell_print(sh, "%s: %u pads", ctrl->dev.name, ctrl->num_pads);
+    pbl_shell_print(sh, "%s: %u pads", pbl_device_name(&ctrl->dev), ctrl->num_pads);
 
     if (ctrl->ops->get == nullptr) {
       continue;

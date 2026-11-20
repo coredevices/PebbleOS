@@ -322,7 +322,7 @@ int pbl_audio_start(const struct pbl_audio *audio, const struct pbl_audio_stream
   prv_unlock(audio);
 
   if (ret != 0) {
-    PBL_LOG_DBG("Start of %s failed (%d)", audio->dev.name, ret);
+    PBL_LOG_DBG("Start of %s failed (%d)", pbl_device_name(&audio->dev), ret);
   }
 
   return ret;

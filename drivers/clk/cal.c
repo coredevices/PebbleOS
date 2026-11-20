@@ -121,6 +121,7 @@ void pbl_clk_cal_start(const struct pbl_clk_cal *cal, double nominal_hz) {
   prv_schedule(cal, 0U);
 }
 
+#ifdef CONFIG_DEVICE_NAMES
 const struct pbl_clk_cal *pbl_clk_cal_find(const char *name) {
   for (const struct pbl_clk_cal *cal = s_cals; cal != nullptr; cal = cal->state->next) {
     if (strcmp(cal->clk.ctrl->dev.name, name) == 0) {
@@ -130,6 +131,7 @@ const struct pbl_clk_cal *pbl_clk_cal_find(const char *name) {
 
   return nullptr;
 }
+#endif
 
 int pbl_clk_cal_sample(const struct pbl_clk_cal *cal, uint32_t cycles, double *hz) {
   struct pbl_clk_cal_state *st = cal->state;

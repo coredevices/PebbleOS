@@ -12,7 +12,7 @@ if ADC
 config ADC_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The adc shell command, to list the ADCs and convert a channel.
 

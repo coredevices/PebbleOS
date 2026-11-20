@@ -33,7 +33,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     const struct pbl_clk_controller *ctrl =
         PBL_CONTAINER_OF(dev, const struct pbl_clk_controller, dev);
 
-    pbl_shell_print(sh, "%s: %u clocks", dev->name, ctrl->num_clks);
+    pbl_shell_print(sh, "%s: %u clocks", pbl_device_name(dev), ctrl->num_clks);
     for (uint16_t id = 0U; id < ctrl->num_clks; id++) {
       const struct pbl_clk clk = PBL_CLK(ctrl, id);
       struct pbl_clk parent;
@@ -45,7 +45,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
 
       if (pbl_clk_get_parent(&clk, &parent) == 0) {
         pbl_shell_print(sh, "  %u: %" PRIu64 " mHz, from %s %" PRIu32 ", %u users", id, rate_mhz,
-                        parent.ctrl->dev.name, parent.id, ctrl->use_counts[id]);
+                        pbl_device_name(&parent.ctrl->dev), parent.id, ctrl->use_counts[id]);
       } else {
         pbl_shell_print(sh, "  %u: %" PRIu64 " mHz, %u users", id, rate_mhz, ctrl->use_counts[id]);
       }

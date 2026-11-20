@@ -19,8 +19,8 @@ static int prv_cmd_info(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_shell_print(sh,
                   "%s: %" PRIu32 " bytes at 0x%08" PRIxPTR ", %s, %" PRIu32
                   " users, powered on %" PRIu32 " times",
-                  EXTRAM->dev.name, (uint32_t)size, base, st->on ? "on" : "off", st->users,
-                  st->power_cycles);
+                  pbl_device_name(&EXTRAM->dev), (uint32_t)size, base, st->on ? "on" : "off",
+                  st->users, st->power_cycles);
   pbl_shell_print(sh,
                   "scratch heap: %" PRIu32 " of %" PRIu32 " bytes in %u allocations, peak %" PRIu32
                   ", largest free %" PRIu32,

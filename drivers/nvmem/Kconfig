@@ -21,7 +21,7 @@ config NVMEM_SF32LB
 config NVMEM_SHELL
     bool "Non-volatile memory shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The nvmem shell command, to list the memories and read from them.
 

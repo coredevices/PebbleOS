@@ -88,8 +88,10 @@ struct pbl_device_class {
 
 /** @brief A hardware device. */
 struct pbl_device {
+#ifdef CONFIG_DEVICE_NAMES
   /** Name, for logs. */
   const char *name;
+#endif
   /** Optional. Returns 0, @c -ENODEV if the device is not present, or another negative errno. */
   int (*init)(const struct pbl_device *dev);
   /** Optional. Bus or multi-function device the device sits on, initialized first. */
@@ -129,6 +131,14 @@ struct pbl_mem_region {
  */
 #define PBL_DEVICE_STATE_DEFINE(sym) static struct pbl_device_state sym##_device_state
 
+/** @cond INTERNAL_HIDDEN */
+#ifdef CONFIG_DEVICE_NAMES
+#define PBL_DEVICE__NAME(_name) .name = (_name),
+#else
+#define PBL_DEVICE__NAME(_name)
+#endif
+/** @endcond */
+
 /**
  * @brief Initializer for the struct pbl_device of device instance @p sym, in class @p _cls.
  *
@@ -142,8 +152,7 @@ struct pbl_mem_region {
  */
 #define PBL_DEVICE_INIT_CLASS(sym, _name, _init, _parent, _cls) \
   {                                                             \
-    .name = (_name),                                            \
-    .init = (_init),                                            \
+    PBL_DEVICE__NAME(_name).init = (_init),                     \
     .parent = (_parent),                                        \
     .cls = (_cls),                                              \
     .state = &sym##_device_state,                               \
@@ -309,6 +318,21 @@ PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device *const, devices);
     } else
 
 /**
+ * @brief Get the name of a device.
+ *
+ * @param dev Device.
+ * @return Its name, or "?" without @c CONFIG_DEVICE_NAMES.
+ */
+static inline const char *pbl_device_name(const struct pbl_device *dev) {
+#ifdef CONFIG_DEVICE_NAMES
+  return dev->name;
+#else
+  return "?";
+#endif
+}
+
+#ifdef CONFIG_DEVICE_NAMES
+/**
  * @brief Find a registered device of a class by name.
  *
  * @param cls Class.
@@ -316,5 +340,6 @@ PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device *const, devices);
  * @return Device, or NULL if there is none.
  */
 const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, const char *name);
+#endif
 
 /** @} */

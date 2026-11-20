@@ -91,14 +91,14 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
     struct pbl_audio_caps caps;
 
     if (pbl_audio_get_caps(audio, &caps) != 0) {
-      pbl_shell_print(sh, "%s: %s (not ready)", dev->name, prv_dir_name(audio));
+      pbl_shell_print(sh, "%s: %s (not ready)", pbl_device_name(dev), prv_dir_name(audio));
       continue;
     }
 
     pbl_shell_print(sh,
                     "%s: %s rates 0x%" PRIx32 " channels %u-%u gain %" PRId32 "..%" PRId32
                     " mdB step %" PRId32 "%s",
-                    dev->name, prv_dir_name(audio), caps.rates, caps.min_channels,
+                    pbl_device_name(dev), prv_dir_name(audio), caps.rates, caps.min_channels,
                     caps.max_channels, caps.gain_min_mdb, caps.gain_max_mdb, caps.gain_step_mdb,
                     pbl_audio_is_running(audio) ? " (running)" : "");
   }

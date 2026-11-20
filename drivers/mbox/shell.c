@@ -16,11 +16,11 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
         PBL_CONTAINER_OF(dev, const struct pbl_mbox_controller, dev);
 
     if (!pbl_device_is_ready(dev)) {
-      pbl_shell_print(sh, "%s (not ready)", dev->name);
+      pbl_shell_print(sh, "%s (not ready)", pbl_device_name(dev));
       continue;
     }
 
-    pbl_shell_print(sh, "%s", dev->name);
+    pbl_shell_print(sh, "%s", pbl_device_name(dev));
     for (uint8_t idx = 0U; idx < ctrl->num_chans; idx++) {
       const struct pbl_mbox_chan_state *st = &ctrl->chans[idx];
 

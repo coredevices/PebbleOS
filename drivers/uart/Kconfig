@@ -70,7 +70,7 @@ config UART_POSIX_BT_HCI
 config UART_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The uart shell command, to list the ports, change their line
       settings and send text.

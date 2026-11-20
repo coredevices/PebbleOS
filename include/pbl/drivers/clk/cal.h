@@ -140,6 +140,7 @@ struct pbl_clk_cal_status {
  */
 void pbl_clk_cal_start(const struct pbl_clk_cal *cal, double nominal_hz);
 
+#ifdef CONFIG_DEVICE_NAMES
 /**
  * @brief Find a calibrated clock by the name of its controller.
  *
@@ -147,6 +148,7 @@ void pbl_clk_cal_start(const struct pbl_clk_cal *cal, double nominal_hz);
  * @return Calibrated clock, or NULL if none is started under that name.
  */
 const struct pbl_clk_cal *pbl_clk_cal_find(const char *name);
+#endif
 
 /**
  * @brief Take one raw gate, outside the periodic calibration, which waits meanwhile.

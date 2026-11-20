@@ -15,7 +15,7 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   PBL_DEVICE_CLASS_FOREACH(&pbl_spi_bus_class, dev) {
     const struct pbl_spi_bus *bus = PBL_CONTAINER_OF(dev, const struct pbl_spi_bus, dev);
 
-    pbl_shell_print(sh, "%s: %u chip selects%s", dev->name, bus->num_cs,
+    pbl_shell_print(sh, "%s: %u chip selects%s", pbl_device_name(dev), bus->num_cs,
                     pbl_device_is_ready(dev) ? "" : " (not ready)");
   }
 

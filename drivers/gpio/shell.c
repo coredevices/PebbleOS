@@ -43,9 +43,9 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   PBL_DEVICE_CLASS_FOREACH(&pbl_gpio_port_class, dev) {
     const struct pbl_gpio_port *port = PBL_CONTAINER_OF(dev, const struct pbl_gpio_port, dev);
 
-    pbl_shell_print(sh, "%s: %u pins%s%s%s", port->dev.name, port->num_pins,
+    pbl_shell_print(sh, "%s: %u pins%s%s%s", pbl_device_name(&port->dev), port->num_pins,
                     (port->intc != nullptr) ? ", irq " : "",
-                    (port->intc != nullptr) ? port->intc->dev.name : "",
+                    (port->intc != nullptr) ? pbl_device_name(&port->intc->dev) : "",
                     pbl_device_is_ready(&port->dev) ? "" : " (not ready)");
   }
 
@@ -173,8 +173,8 @@ static int prv_watch_stop(const struct pbl_shell *sh) {
     return ret;
   }
 
-  pbl_shell_print(sh, "%s %u: %" PRIu32 " interrupts", s_watch.intc->dev.name, s_watch.hwirq,
-                  s_watch_count);
+  pbl_shell_print(sh, "%s %u: %" PRIu32 " interrupts", pbl_device_name(&s_watch.intc->dev),
+                  s_watch.hwirq, s_watch_count);
   s_watch.intc = nullptr;
 
   return 0;
@@ -190,8 +190,8 @@ static int prv_cmd_irq(const struct pbl_shell *sh, size_t argc, char **argv) {
     if (s_watch.intc == nullptr) {
       pbl_shell_print(sh, "no pin watched");
     } else {
-      pbl_shell_print(sh, "%s %u: %" PRIu32 " interrupts", s_watch.intc->dev.name, s_watch.hwirq,
-                      s_watch_count);
+      pbl_shell_print(sh, "%s %u: %" PRIu32 " interrupts", pbl_device_name(&s_watch.intc->dev),
+                      s_watch.hwirq, s_watch_count);
     }
     return 0;
   }

@@ -59,7 +59,7 @@ config GPIO_NPM1300
 config GPIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The gpio shell command, to list the ports and to read, drive,
       configure and watch pins.

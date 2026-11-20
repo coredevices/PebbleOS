@@ -130,7 +130,7 @@ config AUDIO_DA7212
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
-    depends on SHELL
+    depends on SHELL && DEVICE_NAMES
     help
       The audio shell command, to list the devices, record and play tones.
 

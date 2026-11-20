@@ -16,7 +16,7 @@ PBL_ITERABLE_SECTION_DECLARE(const struct pbl_device_depends, dev_deps);
 static int prv_init_list(const struct pbl_device *dev, const struct pbl_device *const *deps) {
   for (const struct pbl_device *const *dep = deps; *dep != nullptr; dep++) {
     if (pbl_device_init(*dep) != 0) {
-      PBL_LOG_DBG("%s: dependency %s unavailable", dev->name, (*dep)->name);
+      PBL_LOG_DBG("%s: dependency %s unavailable", pbl_device_name(dev), pbl_device_name(*dep));
       return -ENODEV;
     }
   }
@@ -30,7 +30,7 @@ static int prv_init_deps(const struct pbl_device *dev) {
   // A parent bringing its children up from its own init is not waited for
   if (parent != nullptr && parent->state->status != PBL_DEVICE_INITIALIZING &&
       pbl_device_init(parent) != 0) {
-    PBL_LOG_DBG("%s: parent %s unavailable", dev->name, parent->name);
+    PBL_LOG_DBG("%s: parent %s unavailable", pbl_device_name(dev), pbl_device_name(parent));
     return -ENODEV;
   }
 
@@ -65,9 +65,9 @@ int pbl_device_init(const struct pbl_device *dev) {
   if (res == 0 && dev->init != nullptr) {
     res = dev->init(dev);
     if (res == -ENODEV) {
-      PBL_LOG_DBG("%s not present", dev->name);
+      PBL_LOG_DBG("%s not present", pbl_device_name(dev));
     } else if (res != 0) {
-      PBL_LOG_ERR("%s init failed (%d)", dev->name, res);
+      PBL_LOG_ERR("%s init failed (%d)", pbl_device_name(dev), res);
     }
   }
 
@@ -110,6 +110,7 @@ int pbl_device_init_children(const struct pbl_device *parent) {
   return failures;
 }
 
+#ifdef CONFIG_DEVICE_NAMES
 const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, const char *name) {
   const struct pbl_device *dev;
 
@@ -121,3 +122,4 @@ const struct pbl_device *pbl_device_find(const struct pbl_device_class *cls, con
 
   return nullptr;
 }
+#endif

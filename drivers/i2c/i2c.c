@@ -96,7 +96,7 @@ int pbl_i2c_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_msg *msgs, ui
 
   if (ret != 0) {
     PBL_ANALYTICS_ADD(i2c_transfer_error_count, 1);
-    PBL_LOG_DBG("Transfer to 0x%02x on %s failed (%d)", dev->addr, bus->dev.name, ret);
+    PBL_LOG_DBG("Transfer to 0x%02x on %s failed (%d)", dev->addr, pbl_device_name(&bus->dev), ret);
   }
 
   return ret;
