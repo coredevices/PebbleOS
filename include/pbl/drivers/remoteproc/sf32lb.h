@@ -70,9 +70,9 @@ struct pbl_rproc_sf32lb {
     uintptr_t capture;
     /** Bluetooth controller (@c sifli,bt-mac). */
     uintptr_t mac;
-    /** ADC (@c sifli,gpadc). */
+    /** ADC (@c io-channels). */
     uintptr_t gpadc;
-    /** DMA controller (@c sifli,dmac). */
+    /** DMA controller (@c dmas). */
     uintptr_t dmac;
     /** LPSYS clock and reset controller (@c sifli,lpsys-rcc). */
     uintptr_t lpsys_rcc;
