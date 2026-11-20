@@ -10,7 +10,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_panel_co5300, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_panel, CONFIG_DRIVER_PANEL_LOG_LEVEL);
 
 #define CO5300_RESET_MS      10U
 #define CO5300_RESET_WAIT_MS 50U

@@ -38,7 +38,7 @@
 #define CAL_SIZE 8U
 #define CAL_MV   100
 
-PBL_LOG_MODULE_DEFINE(adc_sf32lb57_gpadc, CONFIG_ADC_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_adc, CONFIG_DRIVER_ADC_LOG_LEVEL);
 
 // The transfer, as two points: a raw value and its voltage
 struct pbl_adc_sf32lb57_gpadc_state {

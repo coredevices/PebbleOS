@@ -26,7 +26,7 @@ config ADC_SF32LB57_GPADC
       General purpose ADC of the SiFli SF32LB57, read one channel at a
       time, with the factory calibration in its eFuse.
 
-module = ADC
+module = DRIVER_ADC
 module-str = ADC
 source "subsys/logging/Kconfig.template.log_level"
 

@@ -12,7 +12,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_led_aw2016, CONFIG_DRIVER_LED_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_led, CONFIG_DRIVER_LED_LOG_LEVEL);
 
 #define AW2016_REG_RSTR         0x00U
 #define AW2016_REG_RSTR_CHIP_ID 0x09U

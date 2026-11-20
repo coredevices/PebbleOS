@@ -10,7 +10,7 @@
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DEFINE(driver_audio_da7212, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
 #define DA7212_PLL_STATUS          0x03U
 #define DA7212_CIF_CTRL            0x1dU

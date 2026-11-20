@@ -5,7 +5,10 @@
 
 #include <pbl/drivers/touch.h>
 #include <pbl/input/input.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
+
+PBL_LOG_MODULE_DEFINE(driver_touch, CONFIG_DRIVER_TOUCH_LOG_LEVEL);
 
 PBL_DEVICE_CLASS_DEFINE(pbl_touch_class, "touch");
 

@@ -19,7 +19,7 @@
 
 #include <hardware/sf32lb52_lcdc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_display_sf32lb_lcdc, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 
 #define LCDC_BUSY_TIMEOUT_US 100000U
 

@@ -22,7 +22,7 @@
 #include <hardware/sf32lb52_audcodec.h>
 #include <hardware/sf32lb52_pmuc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_audio_sf32lb52, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
 static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
               "ring buffers must own their cache lines");

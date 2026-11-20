@@ -15,7 +15,7 @@
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_mag_mmc5603nj, CONFIG_DRIVER_IMU_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(driver_mag, CONFIG_DRIVER_IMU_LOG_LEVEL);
 
 #define MMC5603NJ_RATE_HZ_MAX 255U
 

@@ -16,7 +16,7 @@
 
 #include <hardware/sf32lb52_crc.h>
 
-PBL_LOG_MODULE_DEFINE(driver_crc_sf32lb, CONFIG_DRIVER_CRC_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(driver_crc, CONFIG_DRIVER_CRC_LOG_LEVEL);
 
 #define CRC32_POLY 0x04C11DB7U
 
