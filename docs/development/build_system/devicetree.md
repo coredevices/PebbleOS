@@ -195,7 +195,8 @@ other way around:
   ```
 - **Pins.** On SoCs with a pin controller, pins are pin control states, with
   the generic pin configuration properties (`input-enable`, `bias-pull-up`,
-  `drive-strength`, `output-low`). Peripherals that select their own pins,
+  `drive-strength`, `output-low`). A group names its pins as its binding does:
+  `pins` and `function` strings, or `pinmux` cells packing pin and function. Peripherals that select their own pins,
   as on the nRF52, take them as GPIO properties named after the signal
   (`scl-gpios`, `sck-gpios`, `tx-gpios`).
 - **References.** A device that uses another one points to it, with the
@@ -505,7 +506,7 @@ args:
 | `provides` | Templates of references to this driver's devices, when they differ from the class's |
 | `header` | Driver headers the `provides` templates need, e.g. for the modes of the parts a panel driver supports |
 | `ids` | How the abstract IDs of a binding map to the numbers of the driver; see below |
-| `pinctrl` | For pin controllers: how pins and their configuration become C |
+| `pinctrl` | For pin controllers: how pins and their configuration become C. `pin` formats each of `pins` with `{pin}` and `{function}`, `pinmux` each cell of `pinmux` with `{value}`; `flags` and `values` add the C of the configuration properties |
 | `children` | For devices made of named children, such as the regulators of a PMIC |
 | `drives` | Compatibles of the child a node must have for the driver to bind to it, for a controller with a driver per kind of memory it can drive |
 
