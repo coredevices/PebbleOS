@@ -322,6 +322,7 @@ class header, as `SPEAKER`:
 | `bt_controller` | `rproc` | `NIMBLE_HCI_SF32LB` |
 | `display` | `display` | `DISPLAY` |
 | `backlight` | `backlight` | `BACKLIGHT` |
+| `status_led` | `led` | |
 | `flash` | `flash` | `FLASH` |
 | `accel` | `accel` | `ACCEL` |
 | `mag` | `mag` | `MAG` |
