@@ -3,6 +3,8 @@
 
 #include "quick_launch.h"
 
+#include <errno.h>
+
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
@@ -46,7 +48,6 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
-#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -1319,22 +1320,21 @@ static bool prv_set_pref_backing(const PrefsTableEntry *entry, const void *value
     return false;
   }
 
-  status_t rv = E_ERROR;
+  int rv = -EIO;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   {
     struct pbl_settings_file file = {};
     if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) == 0) {
       // Keys in the backing store include the null terminator, so we add 1 to key_len
-      rv = status_from_errno(
-          pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len));
-      if (rv != S_SUCCESS) {
-        PBL_LOG_WRN("Failed to set pref '%s' (%" PRIi32 ")", entry->key, (int32_t)rv);
+      rv = pbl_settings_set(&file, entry->key, strlen(entry->key) + 1, value, value_len);
+      if (rv < 0) {
+        PBL_LOG_WRN("Failed to set pref '%s' (%d)", entry->key, rv);
       }
       pbl_settings_close(&file);
     }
   }
   pbl_mutex_unlock(&s_mutex);
-  return (rv == S_SUCCESS);
+  return (rv == 0);
 }
 
 // ------------------------------------------------------------------------------------

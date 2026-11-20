@@ -13,7 +13,6 @@
 #include <process_management/process_manager.h>
 #include <shell/prefs.h>
 #include <shell/prefs_private.h>
-#include <system/status_errno.h>
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -61,16 +60,12 @@ cleanup:
 
 static bool prv_pref_set(const char *key, const void *val, size_t val_len) {
   struct pbl_settings_file file = {};
-  status_t rv;
-  if ((rv = status_from_errno(
-           pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN))) != S_SUCCESS) {
-    goto cleanup;
+  if (pbl_settings_open(&file, SHELL_PREFS_FILE_NAME, SHELL_PREFS_FILE_LEN) < 0) {
+    return false;
   }
-  rv = status_from_errno(
-      pbl_settings_set(&file, key, strnlen(key, PBL_SETTINGS_KEY_MAX_LEN) + 1, val, val_len));
+  int rv = pbl_settings_set(&file, key, strnlen(key, PBL_SETTINGS_KEY_MAX_LEN) + 1, val, val_len);
   pbl_settings_close(&file);
-cleanup:
-  return (rv == S_SUCCESS);
+  return (rv == 0);
 }
 
 bool shell_prefs_get_clock_24h_style(void) {
