@@ -30,6 +30,10 @@ BACKLIGHT_LIT_S = (0.5, 2.5)
 
 # Booting at this VBAT, the fuel gauge estimates under 5%: PRF's low battery.
 LOW_BATTERY_MV = 3500
+# Boards whose battery model reaches 5% lower
+LOW_BATTERY_MV_BOARD = {
+    "asterix": 3300,
+}
 # The fuel gauge's first reading after boot, within this of the PPK2's.
 BATTERY_LOG = r"Percent: \d+, V: (-?\d+) mV"
 VBAT_TOLERANCE_MV = 100
@@ -103,9 +107,11 @@ def _boot_at(dut, power, voltage_mv):
     pytest.fail(f"VBAT reads {vbat_mv} mV with the supply at {voltage_mv} mV")
 
 
-def test_low_battery(dut, power):
+def test_low_battery(dut, build, power):
     try:
-        since = _boot_at(dut, power, LOW_BATTERY_MV)
+        since = _boot_at(
+            dut, power, LOW_BATTERY_MV_BOARD.get(build.board, LOW_BATTERY_MV)
+        )
         dut.wait_for_log(r"Battery low: enter low power mode", 60, since)
         assert "Low Power App" in Ui(dut).window_stack()
     finally:
