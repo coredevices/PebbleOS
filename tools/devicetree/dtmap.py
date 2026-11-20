@@ -37,8 +37,13 @@ from fdt import DtError
 
 SPEC_DIRS = ("drivers", "kernel", "soc")
 # Functions of a block that share its registers are sibling nodes at its address, as the I2C and
-# SPI of a serial engine, and only one of them may be enabled
-DTC_FLAGS = ("-Wno-unique_unit_address", "-Wunique_unit_address_if_enabled")
+# SPI of a serial engine, and only one of them may be enabled. A display controller may be the
+# quad SPI host of its panel, so not every SPI bus is named spi.
+DTC_FLAGS = (
+    "-Wno-unique_unit_address",
+    "-Wunique_unit_address_if_enabled",
+    "-Wno-spi_bus_bridge",
+)
 SPEC_KEYS = {
     "compatible",
     "config",
