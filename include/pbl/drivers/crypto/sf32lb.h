@@ -25,6 +25,10 @@ struct pbl_crypto_sf32lb {
   struct pbl_clk clk;
 };
 
+/** @cond INTERNAL_HIDDEN */
+int pbl_crypto_sf32lb_init(const struct pbl_device *dev);
+/** @endcond */
+
 /**
  * @brief Define the crypto engine.
  *
@@ -39,7 +43,7 @@ struct pbl_crypto_sf32lb {
   PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                    \
   PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_crypto_sf32lb, struct pbl_device, dev); \
   const struct pbl_crypto_sf32lb sym##_inst = {                                        \
-    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr),                     \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_crypto_sf32lb_init, nullptr, nullptr),      \
     .base = (_base),                                                                   \
     .clk = _clk,                                                                       \
   }
