@@ -18,6 +18,7 @@ ASSERT_SAME_BIT(PlatformFeatureCompass, PLATFORM_FEATURE_COMPASS);
 ASSERT_SAME_BIT(PlatformFeatureTouch, PLATFORM_FEATURE_TOUCH);
 ASSERT_SAME_BIT(PlatformFeatureRGBBacklight, PLATFORM_FEATURE_RGB_BACKLIGHT);
 ASSERT_SAME_BIT(PlatformFeatureSpeaker, PLATFORM_FEATURE_SPEAKER);
+ASSERT_SAME_BIT(PlatformFeatureBarometer, PLATFORM_FEATURE_BAROMETER);
 
 uint32_t platform_get_features(void) {
   uint32_t features = 0;
@@ -44,6 +45,9 @@ uint32_t platform_get_features(void) {
 #endif
 #ifdef CONFIG_PLATFORM_SPEAKER
   features |= PLATFORM_FEATURE_SPEAKER;
+#endif
+#ifdef CONFIG_PLATFORM_BAROMETER
+  features |= PLATFORM_FEATURE_BAROMETER;
 #endif
   return features;
 }
