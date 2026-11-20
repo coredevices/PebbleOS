@@ -11,13 +11,6 @@
 
 #include <hardware/sf32lb52_hpsys_rcc.h>
 
-#define RCC_NUM_LINES 64U
-
-struct pbl_reset_sf32lb {
-  struct pbl_reset_controller ctrl;
-  uintptr_t base;
-};
-
 static inline uintptr_t prv_reg(const struct pbl_reset_controller *ctrl, uint32_t offset,
                                 uint32_t id) {
   return container_of(ctrl, const struct pbl_reset_sf32lb, ctrl)->base + offset + ((id >> 5) << 2);
@@ -35,18 +28,10 @@ static int prv_reset_deassert(const struct pbl_reset_controller *ctrl, uint32_t 
   return 0;
 }
 
-static const struct pbl_reset_controller_ops s_reset_ops = {
+const struct pbl_reset_controller_ops pbl_reset_sf32lb_ops = {
   .assert = prv_reset_assert,
   .deassert = prv_reset_deassert,
 };
-
-#define PBL_RESET_SF32LB_DEFINE(sym, _name, _base)                                         \
-  PBL_RESET_CONTROLLER_STATE_DEFINE(sym);                                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_reset_sf32lb, struct pbl_reset_controller, ctrl) {   \
-    .ctrl = PBL_RESET_CONTROLLER_INIT(sym, _name "_reset", nullptr, nullptr, &s_reset_ops, \
-                                      RCC_NUM_LINES),                                      \
-    .base = (_base),                                                                       \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_hpsys_rcc_reset)
 #include PBL_DT_INSTANCES(sifli_sf32lb57_hpsys_rcc_reset)
