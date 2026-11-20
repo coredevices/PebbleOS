@@ -131,6 +131,17 @@ struct pbl_clk {
  */
 #define PBL_CLK(_ctrl, _id) {.ctrl = (_ctrl), .id = (_id)}
 
+/**
+ * @brief Check whether two clock references name the same clock.
+ *
+ * @param a Clock.
+ * @param b Clock.
+ * @return True if both are the same clock of the same controller.
+ */
+static inline bool pbl_clk_eq(const struct pbl_clk *a, const struct pbl_clk *b) {
+  return a->ctrl == b->ctrl && a->id == b->id;
+}
+
 /** @brief Parent and rate a clock is set to when its controller comes up. */
 struct pbl_clk_assigned {
   /** Clock. */

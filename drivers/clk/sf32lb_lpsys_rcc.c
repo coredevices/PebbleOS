@@ -100,18 +100,14 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
   }
 }
 
-static bool prv_same(const struct pbl_clk *a, const struct pbl_clk *b) {
-  return a->ctrl == b->ctrl && a->id == b->id;
-}
-
 static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                           const struct pbl_clk *parent) {
   const struct pbl_clk_sf32lb_lpsys_rcc *rcc = prv_rcc(ctrl);
   bool hxt48;
 
-  if (prv_same(parent, &rcc->hxt48)) {
+  if (pbl_clk_eq(parent, &rcc->hxt48)) {
     hxt48 = true;
-  } else if (prv_same(parent, &rcc->hrc48)) {
+  } else if (pbl_clk_eq(parent, &rcc->hrc48)) {
     hxt48 = false;
   } else {
     return -EINVAL;
