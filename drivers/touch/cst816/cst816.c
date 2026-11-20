@@ -13,6 +13,7 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -85,9 +86,10 @@ static int prv_write(const struct pbl_cst816 *cst, uint8_t reg, uint8_t val) {
 }
 
 static int prv_boot_read(const struct pbl_cst816 *cst, uint16_t reg, uint8_t *buf, uint32_t len) {
-  const uint8_t addr[] = {reg >> 8, reg & 0xFF};
+  uint8_t addr[2];
   int ret;
 
+  pbl_put_be16(reg, addr);
   ret = pbl_i2c_write(&cst->i2c_boot, addr, sizeof(addr));
   if (ret != 0) {
     return ret;
@@ -104,8 +106,7 @@ static int prv_boot_write(const struct pbl_cst816 *cst, uint16_t reg, const uint
     return -EINVAL;
   }
 
-  buf[0] = reg >> 8;
-  buf[1] = reg & 0xFF;
+  pbl_put_be16(reg, buf);
   memcpy(&buf[sizeof(reg)], data, len);
 
   return pbl_i2c_write(&cst->i2c_boot, buf, sizeof(reg) + len);
@@ -177,7 +178,7 @@ static int prv_read_checksum(const struct pbl_cst816 *cst, uint16_t *checksum) {
     return ret;
   }
 
-  *checksum = ((uint16_t)data[1] << 8) | data[0];
+  *checksum = pbl_get_le16(data);
 
   return 0;
 }
@@ -200,17 +201,18 @@ static int prv_wait_page_ready(const struct pbl_cst816 *cst) {
 }
 
 static int prv_fw_update(const struct pbl_cst816 *cst) {
-  uint16_t start_addr = ((uint16_t)app_bin[1] << 8) | app_bin[0];
-  uint16_t length = ((uint16_t)app_bin[3] << 8) | app_bin[2];
-  const uint16_t checksum = ((uint16_t)app_bin[5] << 8) | app_bin[4];
+  uint16_t start_addr = pbl_get_le16(&app_bin[0]);
+  uint16_t length = pbl_get_le16(&app_bin[2]);
+  const uint16_t checksum = pbl_get_le16(&app_bin[4]);
   const uint8_t *page = &app_bin[CST816_FW_HEADER_SIZE];
   uint16_t checksum_read;
   uint16_t page_len;
   int ret;
 
   while (length > 0U) {
-    const uint8_t addr[] = {start_addr & 0xFF, start_addr >> 8};
+    uint8_t addr[2];
 
+    pbl_put_le16(start_addr, addr);
     page_len = MIN(length, CST816_FW_PAGE_SIZE);
     PBL_LOG_DBG("Writing 0x%04x, %u bytes", start_addr, page_len);
 

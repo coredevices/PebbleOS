@@ -12,6 +12,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/imu/units.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -80,7 +81,7 @@ static int prv_read_sample(MagData *sample) {
 
   // Unsigned, offset by 2^15
   for (uint8_t i = 0U; i < 3U; i++) {
-    raw[i] = (int16_t)((((uint16_t)data[2U * i] << 8) | data[2U * i + 1U]) - (1U << 15));
+    raw[i] = (int16_t)(pbl_get_be16(&data[2U * i]) - (1U << 15));
   }
 
   sample->x = prv_get_axis(raw, AXIS_X);

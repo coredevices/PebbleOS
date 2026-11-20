@@ -10,6 +10,7 @@
 #include <pbl/drivers/flash/spi_nor.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -272,10 +273,6 @@ static int prv_exec_chunked(const struct pbl_flash_spi_nor *nor, struct pbl_spi_
   return 0;
 }
 
-static uint32_t prv_le32(const uint8_t *p) {
-  return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
-}
-
 static int prv_read_sfdp(const struct pbl_flash_spi_nor *nor, uint32_t addr, void *buf,
                          size_t len) {
   struct pbl_spi_mem_op op =
@@ -289,7 +286,7 @@ static int prv_read_sfdp(const struct pbl_flash_spi_nor *nor, uint32_t addr, voi
 static int prv_read_table(const struct pbl_flash_spi_nor *nor, const uint8_t *ph, uint32_t *dw,
                           uint8_t max_dwords, uint8_t *ndwords) {
   uint8_t raw[SFDP_BFPT_MAX_DWORDS * sizeof(uint32_t)];
-  uint32_t ptp = (uint32_t)ph[4] | ((uint32_t)ph[5] << 8) | ((uint32_t)ph[6] << 16);
+  uint32_t ptp = pbl_get_le24(&ph[4]);
   uint8_t n = MIN(ph[3], max_dwords);
   int ret;
 
@@ -299,7 +296,7 @@ static int prv_read_table(const struct pbl_flash_spi_nor *nor, const uint8_t *ph
   }
 
   for (uint8_t i = 0U; i < n; i++) {
-    dw[i] = prv_le32(&raw[i * sizeof(uint32_t)]);
+    dw[i] = pbl_get_le32(&raw[i * sizeof(uint32_t)]);
   }
 
   *ndwords = n;
@@ -322,7 +319,7 @@ static int prv_read_sfdp_tables(const struct pbl_flash_spi_nor *nor, struct sfdp
     return ret;
   }
 
-  if (prv_le32(hdr) != SFDP_SIGNATURE) {
+  if (pbl_get_le32(hdr) != SFDP_SIGNATURE) {
     return 0;
   }
 
@@ -809,7 +806,7 @@ static int prv_init(const struct pbl_flash *flash) {
     return ret;
   }
 
-  jedec_id = (uint32_t)id[0] | ((uint32_t)id[1] << 8) | ((uint32_t)id[2] << 16);
+  jedec_id = pbl_get_le24(id);
   if (jedec_id != nor->part->id) {
     PBL_LOG_ERR("Flash id 0x%06" PRIx32 ", expected 0x%06" PRIx32, jedec_id, nor->part->id);
     return -ENODEV;

@@ -16,6 +16,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/imu/units.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -217,7 +218,7 @@ static uint8_t prv_fs_bits(void) {
 }
 
 static int16_t prv_raw_to_s16(const uint8_t *raw) {
-  return (int16_t)((uint16_t)raw[0] | ((uint16_t)raw[1] << 8U));
+  return (int16_t)pbl_get_le16(raw);
 }
 
 static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {

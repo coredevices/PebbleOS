@@ -5,6 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/mfd/npm1300.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
 
 void pbl_npm1300_lock(const struct pbl_npm1300 *pmic) {
@@ -16,9 +17,10 @@ void pbl_npm1300_unlock(const struct pbl_npm1300 *pmic) {
 }
 
 int pbl_npm1300_read(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t *val) {
-  uint8_t regad[2] = {reg >> 8, reg & 0xFF};
+  uint8_t regad[2];
   int ret;
 
+  pbl_put_be16(reg, regad);
   pbl_npm1300_lock(pmic);
   ret = pbl_i2c_write_read(&pmic->i2c, regad, sizeof(regad), val, 1);
   pbl_npm1300_unlock(pmic);
@@ -27,9 +29,11 @@ int pbl_npm1300_read(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t *val)
 }
 
 int pbl_npm1300_write(const struct pbl_npm1300 *pmic, uint16_t reg, uint8_t val) {
-  uint8_t d[3] = {reg >> 8, reg & 0xFF, val};
+  uint8_t d[3];
   int ret;
 
+  pbl_put_be16(reg, d);
+  d[2] = val;
   pbl_npm1300_lock(pmic);
   ret = pbl_i2c_write(&pmic->i2c, d, sizeof(d));
   pbl_npm1300_unlock(pmic);
