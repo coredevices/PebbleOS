@@ -140,15 +140,23 @@ struct pbl_mbox_controller {
   uint16_t txpoll_period_ms;
 };
 
+/** @cond INTERNAL_HIDDEN */
+void pbl_mbox_poll(struct pbl_timer *timer);
+/** @endcond */
+
 /**
  * @brief Define the state of a controller, for providers.
  *
- * @param sym Controller symbol.
+ * @param sym Controller symbol, of type struct pbl_mbox_controller.
  * @param _num_chans Number of channels.
  */
-#define PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans)        \
-  PBL_DEVICE_STATE_DEFINE(sym);                                  \
-  static struct pbl_mbox_controller_state sym##_mbox_ctrl_state; \
+#define PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans)           \
+  PBL_DEVICE_STATE_DEFINE(sym);                                     \
+  extern const struct pbl_mbox_controller sym;                      \
+  static struct pbl_mbox_controller_state sym##_mbox_ctrl_state = { \
+    .poll = PBL_TIMER_INITIALIZER(pbl_mbox_poll),                   \
+    .ctrl = &sym,                                                   \
+  };                                                                \
   static struct pbl_mbox_chan_state sym##_mbox_chans[_num_chans]
 
 /**
