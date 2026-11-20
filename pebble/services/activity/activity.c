@@ -37,7 +37,6 @@
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <syscall/syscall.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DEFINE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -555,7 +554,7 @@ static void prv_settings_rewrite_cb(struct pbl_settings_file *old_file,
 // Migrate settings from an earlier version now if necessary
 static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *file,
                                                       uint16_t *written_version) {
-  status_t result = E_ERROR;
+  int result;
 
   ActivitySettingsKey key = ActivitySettingsKeyStepCountHistory;
   if (!pbl_settings_exists(file, &key, sizeof(key))) {
@@ -565,9 +564,8 @@ static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *
 
   // See which version we are on
   key = ActivitySettingsKeyVersion;
-  result = status_from_errno(
-      pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version)));
-  if (result != S_SUCCESS) {
+  result = pbl_settings_get(file, &key, sizeof(key), written_version, sizeof(*written_version));
+  if (result < 0) {
     // Version 1 had no settings key in it.
     *written_version = 1;
   }
@@ -584,16 +582,16 @@ static struct pbl_settings_file *prv_settings_migrate(struct pbl_settings_file *
   if ((version == 1) || (version == 2)) {
     // Both older versions store metric values as uint16_t, so re-create the file (at the new,
     // bigger size in the version 1 case) while widening metric records to uint32_t.
-    result = status_from_errno(pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr));
-    if (result != S_SUCCESS) {
-      PBL_LOG_ERR("Failure %" PRIi32 " while re-writing setting file", (int32_t)result);
+    result = pbl_settings_rewrite(file, prv_settings_rewrite_cb, nullptr);
+    if (result < 0) {
+      PBL_LOG_ERR("Failure %d while re-writing setting file", result);
     }
   } else {
     // If the version is totally unexpected, remove the file and create a new one
     PBL_LOG_ERR("Unknown settings file version %" PRIu16 "", version);
   }
 
-  if (result != S_SUCCESS) {
+  if (result < 0) {
     // Delete the old file and create a new one if migration failed
     activity_private_settings_close(file);
     pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 
 #include <pbl/i18n/i18n.h>
@@ -30,7 +31,6 @@
 
 #include <applib/event_service_client.h>
 #include <resource/timeline_resource_ids.auto.h>
-#include <system/status_errno.h>
 
 PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
@@ -323,20 +323,20 @@ static const char *prv_get_variant(const InsightCopyVariants *set, int variant) 
 
 // ------------------------------------------------------------------------------------------------
 // Helper functions for saving insight state to settings file
-static bool prv_restore_state(struct pbl_settings_file *file, ActivitySettingsKey key,
-                              void *val_out, size_t val_out_len) {
-  return status_from_errno(pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len));
+static int prv_restore_state(struct pbl_settings_file *file, ActivitySettingsKey key, void *val_out,
+                             size_t val_out_len) {
+  return pbl_settings_get(file, &key, sizeof(key), val_out, val_out_len);
 }
 
 // ------------------------------------------------------------------------------------------------
-static bool prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
-  bool rv = false;
-
+static int prv_save_state(ActivitySettingsKey key, void *val, size_t val_len) {
   struct pbl_settings_file *file = activity_private_settings_open();
-  if (file) {
-    rv = status_from_errno(pbl_settings_set(file, &key, sizeof(key), val, val_len));
-    activity_private_settings_close(file);
+  if (!file) {
+    return -EIO;
   }
+
+  int rv = pbl_settings_set(file, &key, sizeof(key), val, val_len);
+  activity_private_settings_close(file);
   return rv;
 }
 
