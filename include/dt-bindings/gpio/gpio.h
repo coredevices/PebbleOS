@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
-/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 
-#pragma once
+#ifndef _DT_BINDINGS_GPIO_GPIO_H
+#define _DT_BINDINGS_GPIO_GPIO_H
 
 /* Flags of a GPIO specifier, the values of the upstream binding */
 #define GPIO_ACTIVE_HIGH      0
@@ -14,3 +15,5 @@
 #define GPIO_OPEN_SOURCE      (GPIO_SINGLE_ENDED | GPIO_LINE_OPEN_SOURCE)
 #define GPIO_PULL_UP          16
 #define GPIO_PULL_DOWN        32
+
+#endif /* _DT_BINDINGS_GPIO_GPIO_H */

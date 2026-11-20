@@ -1,7 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
-/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 
-#pragma once
+#ifndef _DT_BINDINGS_POWER_SIFLI_SF32LB57_PMUC_H
+#define _DT_BINDINGS_POWER_SIFLI_SF32LB57_PMUC_H
 
 /* Power domains */
 #define SF32LB57_PMUC_PD_HPSYS 0
@@ -11,3 +12,5 @@
 #define SF32LB57_PMUC_HPSYS_D1 2
 #define SF32LB57_PMUC_HPSYS_S0 3
 #define SF32LB57_PMUC_HPSYS_S1 4
+
+#endif /* _DT_BINDINGS_POWER_SIFLI_SF32LB57_PMUC_H */
