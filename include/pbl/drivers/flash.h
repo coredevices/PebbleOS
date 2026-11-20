@@ -261,12 +261,9 @@ static inline const struct pbl_flash_geometry *pbl_flash_get_geometry(
  *
  * @param sym Symbol of the flash instance.
  */
-#define PBL_FLASH_STATE_DEFINE(sym)                   \
-  PBL_DEVICE_STATE_DEFINE(sym);                       \
-  static struct pbl_flash_state sym##_flash_state = { \
-    .lock = PBL_MUTEX_INITIALIZER,                    \
-    .erase_sem = PBL_SEM_INITIALIZER(1, 1),           \
-  }
+#define PBL_FLASH_STATE_DEFINE(sym) \
+  PBL_DEVICE_STATE_DEFINE(sym);     \
+  static struct pbl_flash_state sym##_flash_state
 
 /**
  * @brief Initializer for the struct pbl_flash of flash @p sym.
