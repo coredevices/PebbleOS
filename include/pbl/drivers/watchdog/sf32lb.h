@@ -44,16 +44,11 @@ int pbl_watchdog_sf32lb_init(const struct pbl_device *dev);
  * @param _clk Clock, from PBL_CLK().
  * @param _cfg HPSYS configuration registers.
  */
-#define PBL_WATCHDOG_SF32LB_DEFINE(sym, _name, _base, _clk, _cfg)                        \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                          \
-  extern const struct pbl_watchdog_sf32lb sym##_inst;                                    \
-  PBL_DEVICE_REGISTER(sym##_inst, &sym##_inst.dev);                                      \
-  PBL_DEVICE_ALIAS(sym, sym##_inst, struct pbl_watchdog_sf32lb, struct pbl_device, dev); \
-  const struct pbl_watchdog_sf32lb sym##_inst = {                                        \
-    .dev = PBL_DEVICE_INIT(sym, _name, pbl_watchdog_sf32lb_init, nullptr, nullptr),      \
-    .base = (_base),                                                                     \
-    .clk = _clk,                                                                         \
-    .cfg = (_cfg),                                                                       \
+#define PBL_WATCHDOG_SF32LB_DEFINE(sym, _name, _base, _clk, _cfg)                   \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                     \
+  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_watchdog_sf32lb) {                        \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_watchdog_sf32lb_init, nullptr, nullptr), \
+    .base = (_base), .clk = _clk, .cfg = (_cfg),                                    \
   }
 
 /** @} */
