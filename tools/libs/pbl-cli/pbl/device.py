@@ -8,6 +8,8 @@ execute one of the device commands.
 """
 
 import os
+import struct
+import zlib
 
 from pbl import runners, util
 from pbl.errors import CommandContextError
@@ -40,6 +42,45 @@ def _flash_files(build, names):
     return tuple(f for _, files in images for f in files)
 
 
+# What the bootloader checks ahead of the recovery firmware: the lengths of
+# this description and of the firmware, and the firmware's CRC.
+RECOVERY_DESCRIPTION = struct.Struct("<III")
+
+
+def _installs_recovery(build):
+    """Whether the bootloader installs the build from the recovery partition:
+    the recovery firmware, on boards whose bootloader copies the firmware into
+    place rather than booting it from a slot."""
+    return build.variant == "prf" and not build.config.CONFIG_PBLBOOT
+
+
+def _recovery_image(build):
+    """``(file, offset)``: the build as the recovery partition holds it."""
+    offset, size = build.flash_region("SAFE_FIRMWARE")
+    with open(build.bin, "rb") as f:
+        firmware = f.read()
+    image = RECOVERY_DESCRIPTION.pack(
+        RECOVERY_DESCRIPTION.size, len(firmware), zlib.crc32(firmware)
+    )
+    image += firmware
+    if len(image) > size:
+        raise CommandContextError(
+            f"the recovery firmware ({len(image)} bytes) does not fit "
+            f"SAFE_FIRMWARE ({size})"
+        )
+    path = build.join("recovery.bin")
+    with open(path, "wb") as f:
+        f.write(image)
+    return path, offset
+
+
+def _code_range(build):
+    """``(address, size)`` of the flash the firmware runs from, to its end."""
+    config = build.config
+    offset = config.CONFIG_FLASH_OFFSET or 0
+    return config.CONFIG_FLASH_BASE + offset, config.CONFIG_FLASH_SIZE - offset
+
+
 def make_runner(
     build,
     args,
@@ -49,13 +90,16 @@ def make_runner(
     extra_args=(),
     watch=None,
     images=None,
+    provision=False,
 ):
     """Create the runner for ``build``, honoring ``--runner``.
 
     Without it, the board's first runner that can handle the build and one
     of ``commands`` is picked. ``watch``, the lab's (:class:`pbl.lab.Watch`),
     gives the ports the command line leaves out. ``images`` names the images
-    of the build to flash, all of them by default.
+    of the build to flash, all of them by default. ``provision`` installs a
+    recovery firmware build the way the bootloader does, see
+    :func:`_installs_recovery`.
     """
     data_files = []
     if resources and build.variant != "prf":
@@ -63,11 +107,23 @@ def make_runner(
         offset, _ = build.flash_region("SYSTEM_RESOURCES_BANK_0")
         data_files.append((build.pbpack, offset))
 
+    # Installed the way the bootloader does it: the firmware is erased, so it
+    # copies the recovery firmware into place on the next boot.
+    flash_files = _flash_files(build, images)
+    erase_code = ()
+    if provision and build.variant != "prf":
+        raise CommandContextError("only a recovery firmware build is provisioned")
+    if provision and _installs_recovery(build) and "app" in (images or ["app"]):
+        app = dict(build.images()).get("app", [])
+        flash_files = tuple(f for f in flash_files if f not in app)
+        data_files.append(_recovery_image(build))
+        erase_code = _code_range(build)
+
     cfg = runners.RunnerConfig(
         board_dir=os.path.join(build.topdir, "boards", build.board_spec.name),
         soc=build.config.CONFIG_SOC or None,
         hex_file=build.hex,
-        flash_files=_flash_files(build, images),
+        flash_files=flash_files,
         elf_file=build.elf,
         bin_file=build.bin,
         pbpack_file=build.pbpack if build.variant != "prf" else None,
@@ -75,6 +131,7 @@ def make_runner(
         if build.config.CONFIG_PBLBOOT
         else None,
         data_files=tuple(data_files),
+        erase_code=erase_code,
         erase_ranges=tuple(erase_ranges),
         sftool=build.tool("sftool") or "sftool",
         gdb=build.tool("gdb"),

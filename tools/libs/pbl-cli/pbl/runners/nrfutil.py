@@ -19,6 +19,7 @@ class NrfUtilRunner(Runner):
         return RunnerCaps(
             commands={"flash", "erase"},
             flash_data=True,
+            erase_code=True,
         )
 
     @property
@@ -72,6 +73,10 @@ class NrfUtilRunner(Runner):
         if command == "flash":
             if self.cfg.data_files:
                 self._check_ext_mem("write files to the flash")
+            if self.cfg.erase_code:
+                # The end address is inclusive
+                address, size = self.cfg.erase_code
+                self._nrfutil(f"erase --pages {address:#x}-{address + size - 1:#x}")
             for hex_file in self.cfg.flash_files:
                 self._program(hex_file)
             for file, offset in self.cfg.data_files:

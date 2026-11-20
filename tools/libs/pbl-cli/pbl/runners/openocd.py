@@ -34,6 +34,7 @@ class OpenOcdRunner(Runner):
         return RunnerCaps(
             commands={"flash", "erase", "debug", "debugserver"},
             flash_data=True,
+            erase_code=True,
         )
 
     def locks(self, command):
@@ -69,14 +70,18 @@ class OpenOcdRunner(Runner):
 
     def _flash_data(self):
         self._check_flash_cfg("write files to the flash")
+        erase = ""
+        if self.cfg.erase_code:
+            address, size = self.cfg.erase_code
+            erase = f"flash erase_address {address:#x} {size:#x}; "
         writes = "".join(f"pbl_write {{{f}}} {o:#x}; " for f, o in self.cfg.data_files)
+        programmed = ["Programming Started", "Programming Finished"]
         self._run_command(
-            f"init; reset halt; {self._program()}"
+            f"init; reset halt; {erase}{self._program()}"
             f"source {{{self._flash_cfg}}}; {writes}"
             "echo {Data Finished}; reset;",
             expect=[
-                "Programming Started",
-                "Programming Finished",
+                *(programmed if self.cfg.flash_files else []),
                 "Data Finished",
                 "shutdown",
             ],
@@ -84,7 +89,7 @@ class OpenOcdRunner(Runner):
         )
 
     def do_run(self, command):
-        if command == "flash" and self.cfg.data_files:
+        if command == "flash" and (self.cfg.data_files or self.cfg.erase_code):
             self._flash_data()
         elif command == "flash":
             self._run_command(
