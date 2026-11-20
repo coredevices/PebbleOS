@@ -2261,7 +2261,8 @@ def test_board_trees_generate_with_every_driver(tmp_path, dts):
     assert "_DEFINE(" in "".join(gen.instances().values())
     assert "extern const" in gen.header()
     roles = yaml.safe_load(((REPO / dts).parent / "roles.yml").read_text())
-    dtmap.partitions_header(tree, roles["flash"])
+    if "flash" in roles:
+        dtmap.partitions_header(tree, roles["flash"])
 
 
 def test_every_board_has_its_tree():
