@@ -8,10 +8,10 @@
 
 void keyed_circular_cache_init(KeyedCircularCache *c, KeyedCircularCacheKey *key_buffer,
                                void *data_buffer, size_t item_size, size_t total_items) {
-  UTIL_ASSERT(c);
-  UTIL_ASSERT(key_buffer);
-  UTIL_ASSERT(data_buffer);
-  UTIL_ASSERT(item_size);
+  PBL_UTIL_ASSERT(c);
+  PBL_UTIL_ASSERT(key_buffer);
+  PBL_UTIL_ASSERT(data_buffer);
+  PBL_UTIL_ASSERT(item_size);
 
   *c = (KeyedCircularCache){
     .cache_keys = key_buffer,
@@ -47,7 +47,7 @@ void keyed_circular_cache_push(KeyedCircularCache *c, KeyedCircularCacheKey key,
   c->cache_keys[c->next_item_to_erase_idx] = key;
 
   c->next_item_to_erase_idx++;
-  UTIL_ASSERT(c->next_item_to_erase_idx <= c->total_items);
+  PBL_UTIL_ASSERT(c->next_item_to_erase_idx <= c->total_items);
   if (c->next_item_to_erase_idx == c->total_items) {
     c->next_item_to_erase_idx = 0;
   }

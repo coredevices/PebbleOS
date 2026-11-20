@@ -73,7 +73,7 @@ uint16_t circular_buffer_write_prepare(CircularBuffer *buffer, uint8_t **data_ou
 }
 
 void circular_buffer_write_finish(CircularBuffer *buffer, uint16_t written_length) {
-  UTIL_ASSERT(buffer->data_length + written_length <= buffer->buffer_size);
+  PBL_UTIL_ASSERT(buffer->data_length + written_length <= buffer->buffer_size);
   buffer->data_length += written_length;
   buffer->write_in_progress = false;
 }
@@ -125,7 +125,7 @@ uint16_t circular_buffer_copy_offset(const CircularBuffer *buffer, uint16_t star
 
 bool circular_buffer_read_or_copy(const CircularBuffer *buffer, uint8_t **data_out, size_t length,
                                   void *(*malloc_imp)(size_t), bool *caller_should_free) {
-  UTIL_ASSERT(buffer && malloc_imp && data_out && caller_should_free);
+  PBL_UTIL_ASSERT(buffer && malloc_imp && data_out && caller_should_free);
   if (buffer->data_length < length) {
     return false;
   }

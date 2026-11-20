@@ -8,7 +8,7 @@ Fixed_S64_32 math_fixed_recursive_filter(Fixed_S64_32 x, int num_input_coefficie
                                          int num_output_coefficients, const Fixed_S64_32 *cb,
                                          const Fixed_S64_32 *ca, Fixed_S64_32 *state_x,
                                          Fixed_S64_32 *state_y) {
-  UTIL_ASSERT(num_input_coefficients >= 1);
+  PBL_UTIL_ASSERT(num_input_coefficients >= 1);
 
   // shift the input over by one
   for (int k = num_input_coefficients - 1; k > 0; k--) {

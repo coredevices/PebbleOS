@@ -200,7 +200,7 @@ SingleListNode *slist_concatenate(SingleListNode *list_a, SingleListNode *list_b
 void slist_foreach(SingleListNode *head, SingleListForEachCallback each_cb, void *context);
 
 /**
- * @brief Log every node of a list with UTIL_LOG().
+ * @brief Log every node of a list with PBL_UTIL_LOG().
  *
  * @param head Head of the list.
  */

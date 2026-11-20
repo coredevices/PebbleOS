@@ -8,10 +8,10 @@
 
 void circular_cache_init(CircularCache *c, uint8_t *buffer, size_t item_size, int total_items,
                          Comparator compare_cb) {
-  UTIL_ASSERT(c);
-  UTIL_ASSERT(buffer);
-  UTIL_ASSERT(item_size);
-  UTIL_ASSERT(compare_cb);
+  PBL_UTIL_ASSERT(c);
+  PBL_UTIL_ASSERT(buffer);
+  PBL_UTIL_ASSERT(item_size);
+  PBL_UTIL_ASSERT(compare_cb);
 
   *c = (CircularCache){
     .cache = buffer,
@@ -51,7 +51,7 @@ void circular_cache_push(CircularCache *c, void *new_item) {
   }
   memcpy(old_item, new_item, c->item_size);
   ++c->next_erased_item_idx;
-  UTIL_ASSERT(c->next_erased_item_idx <= c->total_items);
+  PBL_UTIL_ASSERT(c->next_erased_item_idx <= c->total_items);
   if (c->next_erased_item_idx == c->total_items) {
     c->next_erased_item_idx = 0;
   }
@@ -59,7 +59,7 @@ void circular_cache_push(CircularCache *c, void *new_item) {
 
 void circular_cache_fill(CircularCache *c, uint8_t *item) {
   // If you need item_destructor and fill, add an index pointing to the oldest item for destruction
-  UTIL_ASSERT(c->item_destructor == nullptr);
+  PBL_UTIL_ASSERT(c->item_destructor == nullptr);
   for (int i = 0; i < c->total_items; ++i) {
     memcpy(c->cache + i * c->item_size, item, c->item_size);
   }
