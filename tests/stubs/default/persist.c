@@ -70,6 +70,6 @@ PBL_WEAK void persist_service_client_open(const Uuid *uuid) {
 PBL_WEAK void persist_service_client_close(const Uuid *uuid) {
 }
 
-PBL_WEAK status_t persist_service_delete_file(const Uuid *uuid) {
-  return S_SUCCESS;
+PBL_WEAK int persist_service_delete_file(const Uuid *uuid) {
+  return 0;
 }

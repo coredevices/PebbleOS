@@ -6,7 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/system/status_codes.h>
 #include <pbl/util/uuid.h>
 
 /**
@@ -23,7 +22,7 @@
  *
  * @code{.c}
  * struct pbl_settings_file *file = persist_service_lock_and_get_store(&app_uuid);
- * status_t rv = pbl_settings_set(file, &key, sizeof(key), &value, sizeof(value));
+ * int rv = pbl_settings_set(file, &key, sizeof(key), &value, sizeof(value));
  * persist_service_unlock_store(file);
  * @endcode
  * @{
@@ -86,8 +85,9 @@ void persist_service_client_close(const Uuid *uuid);
  * @brief Delete the persist file of an app.
  *
  * @param uuid App UUID.
- * @return Status of the file removal.
+ * @retval 0 File removed.
+ * @return Negative errno from the file system on failure.
  */
-status_t persist_service_delete_file(const Uuid *uuid);
+int persist_service_delete_file(const Uuid *uuid);
 
 /** @} */
