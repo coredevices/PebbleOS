@@ -151,8 +151,12 @@
 	};
 
 	bmp390: pressure@76 {
-		compatible = "bosch,bmp390";
+		compatible = "bosch,bmp380";
 		reg = <0x76>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <6 IRQ_TYPE_EDGE_RISING>;
+		vddd-supply = <&buck1>;
+		vdda-supply = <&buck1>;
 	};
 };
 

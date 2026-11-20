@@ -15,6 +15,7 @@
 PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 
 #define BMP390_CHIP_ID              0x00
+#define BMP380_CHIP_ID_VAL          0x50
 #define BMP390_CHIP_ID_VAL          0x60
 #define BMP390_ERR_REG              0x02
 #define BMP390_STATUS               0x03
@@ -111,7 +112,7 @@ static int prv_init(const struct pbl_pressure *pressure) {
   int ret;
 
   ret = pbl_i2c_reg_read_byte(&dev->i2c, BMP390_CHIP_ID, &val);
-  if (ret != 0 || val != BMP390_CHIP_ID_VAL) {
+  if (ret != 0 || (val != BMP380_CHIP_ID_VAL && val != BMP390_CHIP_ID_VAL)) {
     PBL_LOG_ERR("Unexpected chip ID 0x%02x (%d)", val, ret);
     return -ENODEV;
   }
@@ -195,4 +196,4 @@ const struct pbl_pressure_ops pbl_bmp390_ops = {
   .read = prv_read,
 };
 
-#include PBL_DT_INSTANCES(bosch_bmp390)
+#include PBL_DT_INSTANCES(bosch_bmp380)

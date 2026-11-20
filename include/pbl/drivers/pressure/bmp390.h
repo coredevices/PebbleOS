@@ -11,7 +11,7 @@
 /**
  * @defgroup drivers_pressure_bmp390 BMP390
  * @ingroup drivers_pressure
- * @brief Bosch BMP390 @ref drivers_pressure driver.
+ * @brief Bosch BMP380/BMP390 @ref drivers_pressure driver (compatible bosch,bmp380).
  *
  * Runs one forced-mode conversion per read and leaves the sensor in sleep mode otherwise.
  *
