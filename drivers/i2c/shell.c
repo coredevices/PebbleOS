@@ -44,7 +44,7 @@ static int prv_parse_byte(const struct pbl_shell *sh, const char *arg, uint8_t *
   return 0;
 }
 
-static int prv_cmd_buses(const struct pbl_shell *sh, size_t argc, char **argv) {
+static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_i2c_bus_class, dev) {
@@ -143,7 +143,7 @@ static int prv_cmd_write(const struct pbl_shell *sh, size_t argc, char **argv) {
 }
 
 static const struct pbl_shell_cmd sub_i2c[] = {
-  PBL_SHELL_CMD(buses, nullptr, "List the buses", prv_cmd_buses),
+  PBL_SHELL_CMD(list, nullptr, "List the buses", prv_cmd_list),
   PBL_SHELL_CMD_ARG(scan, nullptr, "Probe every address with an empty write <bus>", prv_cmd_scan, 2,
                     0),
   PBL_SHELL_CMD_ARG(read, nullptr, "Read registers <bus> <addr> <reg> [len]", prv_cmd_read, 4, 1),

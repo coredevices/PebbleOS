@@ -37,7 +37,7 @@ static int prv_parse_pin(const struct pbl_shell *sh, char **argv, struct pbl_gpi
   return 0;
 }
 
-static int prv_cmd_ports(const struct pbl_shell *sh, size_t argc, char **argv) {
+static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
   const struct pbl_device *dev;
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_gpio_port_class, dev) {
@@ -254,7 +254,7 @@ static int prv_cmd_irq(const struct pbl_shell *sh, size_t argc, char **argv) {
 #endif
 
 static const struct pbl_shell_cmd sub_gpio[] = {
-  PBL_SHELL_CMD(ports, nullptr, "List the ports", prv_cmd_ports),
+  PBL_SHELL_CMD(list, nullptr, "List the ports", prv_cmd_list),
   PBL_SHELL_CMD_ARG(get, nullptr, "Read a pin's physical level <port> <pin>", prv_cmd_get, 3, 0),
   PBL_SHELL_CMD_ARG(set, nullptr, "Drive a pin's physical level <port> <pin> <0|1>", prv_cmd_set, 4,
                     0),
