@@ -7,21 +7,16 @@
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_pressure(const struct pbl_shell *sh, size_t argc, char **argv) {
-  int32_t millicelsius;
   uint32_t pa;
-  uint32_t mc;
   int ret;
 
-  ret = pbl_pressure_read(PRESSURE, &pa, &millicelsius);
+  ret = pbl_pressure_read(PRESSURE, &pa);
   if (ret != 0) {
     pbl_shell_error(sh, "read failed (%d)", ret);
     return ret;
   }
 
-  mc = (uint32_t)(millicelsius < 0 ? -millicelsius : millicelsius);
-  pbl_shell_print(
-      sh, "%" PRIu32 " Pa (%" PRIu32 ".%02" PRIu32 " hPa) %s%" PRIu32 ".%02" PRIu32 " C", pa,
-      pa / 100U, pa % 100U, millicelsius < 0 ? "-" : "", mc / 1000U, (mc % 1000U) / 10U);
+  pbl_shell_print(sh, "%" PRIu32 " Pa (%" PRIu32 ".%02" PRIu32 " hPa)", pa, pa / 100U, pa % 100U);
 
   return 0;
 }

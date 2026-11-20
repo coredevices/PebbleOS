@@ -57,9 +57,9 @@ extern const struct pbl_pressure_ops pbl_bmp390_ops;
 /** Parse the 21 trimming bytes starting at register 0x31. */
 void pbl_bmp390_parse_calib(const uint8_t raw[21], struct pbl_bmp390_calib *calib);
 
-/** Compensate a raw sample with the datasheet formulas: pressure in Pa, temperature in mdegC. */
-void pbl_bmp390_compensate(const struct pbl_bmp390_calib *calib, uint32_t raw_press,
-                           uint32_t raw_temp, uint32_t *pa, int32_t *millicelsius);
+/** Compensate a raw sample with the datasheet formulas: pressure in Pa. */
+uint32_t pbl_bmp390_compensate(const struct pbl_bmp390_calib *calib, uint32_t raw_press,
+                               uint32_t raw_temp);
 /** @endcond */
 
 /**

@@ -18,10 +18,9 @@
  *
  * @code{.c}
  * uint32_t pa;
- * int32_t millicelsius;
  *
- * if (pbl_pressure_read(PRESSURE, &pa, &millicelsius) == 0) {
- *   // pa is in pascals, millicelsius in millidegrees Celsius
+ * if (pbl_pressure_read(PRESSURE, &pa) == 0) {
+ *   // pa is in pascals
  * }
  * @endcode
  * @{
@@ -33,8 +32,8 @@ struct pbl_pressure;
 struct pbl_pressure_ops {
   /** Bring the hardware up. Returns 0, -ENODEV if the part does not answer, or a negative errno. */
   int (*init)(const struct pbl_pressure *pressure);
-  /** Run one conversion: pressure in pascals, sensor temperature in millidegrees Celsius. */
-  int (*read)(const struct pbl_pressure *pressure, uint32_t *pa, int32_t *millicelsius);
+  /** Run one conversion: pressure in pascals. */
+  int (*read)(const struct pbl_pressure *pressure, uint32_t *pa);
 };
 
 /** @brief Pressure sensor runtime state. */
@@ -92,10 +91,9 @@ extern const struct pbl_pressure *const PRESSURE;
  *
  * @param pressure Pressure sensor.
  * @param[out] pa Pressure in pascals.
- * @param[out] millicelsius Sensor temperature in millidegrees Celsius, or NULL.
  * @return 0, -ENODEV if the sensor is not ready, -ETIMEDOUT if the conversion timed out, or a
  *         negative errno.
  */
-int pbl_pressure_read(const struct pbl_pressure *pressure, uint32_t *pa, int32_t *millicelsius);
+int pbl_pressure_read(const struct pbl_pressure *pressure, uint32_t *pa);
 
 /** @} */
