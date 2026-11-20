@@ -9,7 +9,7 @@
 #include <pbl/shell/shell.h>
 
 static int prv_accel_read(const struct pbl_shell *sh, size_t argc, char **argv) {
-  AccelDriverSample sample;
+  struct pbl_accel_sample sample;
   int ret;
 
   ret = pbl_accel_peek(ACCEL, &sample);

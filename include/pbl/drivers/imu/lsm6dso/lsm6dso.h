@@ -50,7 +50,7 @@
 #define LSM6DSO_FIFO_SIZE LSM6DSO_FIFO_THRESHOLD
 
 /** @brief LSM6DSO driver state, owned by the driver. */
-typedef struct LSM6DSOState {
+struct pbl_lsm6dso_state {
   /** Watch mounted rotated 180 degrees: X and Y are inverted. */
   bool rotated;
   /** Shake detection requested. */
@@ -84,14 +84,14 @@ typedef struct LSM6DSOState {
   bool wu_active;
   /** The INT1 servicing pass was requeued while the pad stayed high. */
   bool int1_requeued;
-} LSM6DSOState;
+};
 
 /** @brief LSM6DSO accelerometer. */
 struct pbl_lsm6dso {
   /** Accelerometer, child of the I2C bus. */
   struct pbl_accel accel;
   /** Driver state. */
-  LSM6DSOState *state;
+  struct pbl_lsm6dso_state *state;
   /** I2C device. */
   struct pbl_i2c_dev i2c;
   /** INT1 interrupt line. */
@@ -121,7 +121,7 @@ extern const struct pbl_accel_ops pbl_lsm6dso_ops;
  */
 #define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, ...)                                \
   PBL_ACCEL_STATE_DEFINE(sym);                                                   \
-  static LSM6DSOState sym##_lsm6dso_state;                                       \
+  static struct pbl_lsm6dso_state sym##_lsm6dso_state;                           \
   PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_accel, accel) {        \
     .accel = PBL_ACCEL_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops),     \
     .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__, \

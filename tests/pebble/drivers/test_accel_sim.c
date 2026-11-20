@@ -84,7 +84,7 @@ void test_accel_sim__fed_samples_replay_in_order(void) {
 
 void test_accel_sim__feed_latches_without_subscriber(void) {
   const struct pbl_accel_sim_sample sample = {.x = 7};
-  AccelDriverSample peeked;
+  struct pbl_accel_sample peeked;
 
   cl_assert_equal_i(pbl_accel_sim_feed(SIM_ACCEL, &sample, 1), 1);
   prv_fire();

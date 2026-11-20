@@ -18,8 +18,8 @@ static struct pbl_accel_sim_sample s_latest;
 static bool s_timer_running;
 static struct pbl_delayed_work s_timer;
 
-static void prv_construct_sample(AccelDriverSample *sample) {
-  *sample = (AccelDriverSample){
+static void prv_construct_sample(struct pbl_accel_sample *sample) {
+  *sample = (struct pbl_accel_sample){
     .timestamp_us = pbl_realtime_ms() * 1000,
     .x = s_latest.x,
     .y = s_latest.y,
@@ -49,7 +49,7 @@ static void prv_timer_fn(struct pbl_work *work) {
   }
 
   if (s_num_samples > 0U) {
-    AccelDriverSample sample;
+    struct pbl_accel_sample sample;
 
     prv_construct_sample(&sample);
     pbl_accel_report_sample(accel, &sample);
@@ -155,7 +155,7 @@ static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_sampl
   return 0;
 }
 
-static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *sample) {
+static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *sample) {
   prv_construct_sample(sample);
 
   return 0;

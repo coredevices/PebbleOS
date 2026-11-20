@@ -14,7 +14,7 @@
 #define LISTEN_S    5
 
 /* Written by the listener, which runs with the device lock held. */
-static AccelDriverSample s_last;
+static struct pbl_accel_sample s_last;
 static unsigned int s_samples;
 static unsigned int s_shakes;
 static unsigned int s_taps;
@@ -56,7 +56,7 @@ static const struct pbl_accel_listener s_listener = {
 };
 
 int main(void) {
-  AccelDriverSample now;
+  struct pbl_accel_sample now;
   uint32_t interval_us;
   uint32_t batch;
   int ret;

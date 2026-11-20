@@ -253,7 +253,7 @@ static void prv_run_component_display(AppData *data) {
   char comp_detail[48] = "";
   switch (data->component) {
     case ComponentAccel: {
-      AccelDriverSample sample;
+      struct pbl_accel_sample sample;
       pbl_accel_peek(ACCEL, &sample);
       comp_name = "Accel";
       snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x,

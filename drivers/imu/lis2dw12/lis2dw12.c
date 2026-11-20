@@ -213,7 +213,7 @@ static int16_t prv_axis_raw_mg(IMUCoordinateAxis axis, const uint8_t *raw) {
   return val;
 }
 
-static void prv_raw_to_mg(const uint8_t *raw, AccelDriverSample *sample) {
+static void prv_raw_to_mg(const uint8_t *raw, struct pbl_accel_sample *sample) {
   sample->x = prv_axis_raw_mg(AXIS_X, raw);
   sample->y = prv_axis_raw_mg(AXIS_Y, raw);
   sample->z = prv_axis_raw_mg(AXIS_Z, raw);
@@ -308,7 +308,7 @@ static void prv_lis2dw12_drain_fifo(void) {
 }
 
 static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
-  AccelDriverSample sample = {};
+  struct pbl_accel_sample sample = {};
   IMUCoordinateAxis axis = AXIS_Z;
   int16_t val = 0;
   bool found = false;
@@ -925,7 +925,7 @@ static bool prv_data_ready(bool *read_ok) {
   return !*read_ok || (status & LIS2DW12_STATUS_DRDY) != 0U;
 }
 
-static int prv_peek(const struct pbl_accel *accel, AccelDriverSample *data) {
+static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *data) {
   int err = 0;
   bool ret;
   uint8_t ctrl1;
