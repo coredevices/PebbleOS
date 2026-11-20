@@ -4,9 +4,7 @@
 #include <errno.h>
 
 #include <pbl/devicetree.h>
-#include <pbl/drivers/adc.h>
-#include <pbl/drivers/clk.h>
-#include <pbl/drivers/nvmem.h>
+#include <pbl/drivers/adc/sf32lb57_gpadc.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/logging/logging.h>
@@ -16,7 +14,7 @@
 #include <hardware/sf32lb57_gpadc.h>
 #include <hardware/sf32lb57_hpsys_cfg.h>
 
-#define NUM_CHANNELS 12U
+#define NUM_CHANNELS PBL_ADC_SF32LB57_GPADC__NUM_CHANNELS
 #define NUM_SLOTS    12U
 
 // Conversion timing for its fixed 48 MHz clock, in clock cycles, as the vendor sets it
@@ -39,23 +37,6 @@
 #define CAL_MV   100
 
 PBL_LOG_MODULE_DECLARE(driver_adc, CONFIG_DRIVER_ADC_LOG_LEVEL);
-
-// The transfer, as two points: a raw value and its voltage
-struct pbl_adc_sf32lb57_gpadc_state {
-  int32_t raw_lo;
-  int32_t uv_lo;
-  int32_t raw_hi;
-  int32_t uv_hi;
-};
-
-struct pbl_adc_sf32lb57_gpadc {
-  struct pbl_adc adc;
-  uintptr_t base;
-  uintptr_t cfg;
-  struct pbl_clk clk;
-  struct pbl_nvmem_cell cal;
-  struct pbl_adc_sf32lb57_gpadc_state *state;
-};
 
 static const struct pbl_adc_sf32lb57_gpadc *prv_gpadc(const struct pbl_adc *adc) {
   return PBL_CONTAINER_OF(adc, const struct pbl_adc_sf32lb57_gpadc, adc);
@@ -209,17 +190,9 @@ static int prv_init(const struct pbl_adc *adc) {
   return 0;
 }
 
-static const struct pbl_adc_ops s_ops = {
+const struct pbl_adc_ops pbl_adc_sf32lb57_gpadc_ops = {
   .init = prv_init,
   .read = prv_read,
 };
-
-#define PBL_ADC_SF32LB57_GPADC_DEFINE(sym, _name, _base, _cfg, _clk, _cal)           \
-  PBL_ADC_STATE_DEFINE(sym);                                                         \
-  static struct pbl_adc_sf32lb57_gpadc_state sym##_gpadc_state;                      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_adc_sf32lb57_gpadc, struct pbl_adc, adc) {     \
-    .adc = PBL_ADC_INIT(sym, _name, nullptr, &s_ops, NUM_CHANNELS), .base = (_base), \
-    .cfg = (_cfg), .clk = _clk, .cal = _cal, .state = &sym##_gpadc_state,            \
-  }
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_gpadc)
