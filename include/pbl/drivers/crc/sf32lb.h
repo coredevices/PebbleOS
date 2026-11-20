@@ -25,6 +25,10 @@ struct pbl_crc_sf32lb {
   struct pbl_clk clk;
 };
 
+/** @cond INTERNAL_HIDDEN */
+int pbl_crc_sf32lb_init(const struct pbl_device *dev);
+/** @endcond */
+
 /**
  * @brief Define the CRC unit.
  *
@@ -33,10 +37,11 @@ struct pbl_crc_sf32lb {
  * @param _base Registers.
  * @param _clk Clock, from PBL_CLK().
  */
-#define PBL_CRC_SF32LB_DEFINE(sym, _name, _base, _clk)                                           \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                                  \
-  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_crc_sf32lb) {                                          \
-    .dev = PBL_DEVICE_INIT(sym, _name, nullptr, nullptr, nullptr), .base = (_base), .clk = _clk, \
+#define PBL_CRC_SF32LB_DEFINE(sym, _name, _base, _clk)                                          \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                 \
+  PBL_DEVICE_INSTANCE_DEV(sym, struct pbl_crc_sf32lb) {                                         \
+    .dev = PBL_DEVICE_INIT(sym, _name, pbl_crc_sf32lb_init, nullptr, nullptr), .base = (_base), \
+    .clk = _clk,                                                                                \
   }
 
 /** @} */

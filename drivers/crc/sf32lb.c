@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -34,16 +35,9 @@ enum algo {
   ALGO_CRC32_LEGACY,
 };
 
-enum state {
-  STATE_UNTESTED,
-  STATE_OK,
-  STATE_BROKEN,
-};
-
 extern const struct pbl_crc_sf32lb pbl_crc_sf32lb_inst;
 
 static const struct pbl_crc_sf32lb *const s_crc = &pbl_crc_sf32lb_inst;
-static volatile enum state s_state = STATE_UNTESTED;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
   return pbl_readl(s_crc->base + offset);
@@ -99,7 +93,7 @@ static size_t prv_compute(enum algo algo, uint32_t *value, const void *data, siz
   return done;
 }
 
-static bool prv_check(enum algo algo, uint32_t init, uint32_t expected) {
+static int prv_check(enum algo algo, uint32_t init, uint32_t expected) {
   static const char vector[] = "0123456789abcdef";
   const size_t len = sizeof(vector) - 1;
 
@@ -114,23 +108,26 @@ static bool prv_check(enum algo algo, uint32_t init, uint32_t expected) {
     PBL_LOG_ERR("CRC unit self-test failed (algo %d): 0x%08" PRIx32 "/0x%08" PRIx32
                 ", expected 0x%08" PRIx32,
                 algo, whole, resumed, expected);
-    return false;
+    return -EIO;
   }
-  return true;
+
+  return 0;
 }
 
-static bool prv_ready(void) {
-  if (s_state == STATE_UNTESTED) {
-    if (pbl_device_init(&s_crc->clk.ctrl->dev) != 0) {
-      s_state = STATE_BROKEN;
-      return false;
-    }
+int pbl_crc_sf32lb_init(const struct pbl_device *dev) {
+  int ret;
 
-    const bool ok = prv_check(ALGO_CRC32, 0, 0x68c4f033U) &&
-                    prv_check(ALGO_CRC32_LEGACY, 0xffffffffU, 0x50b663c0U);
-    s_state = ok ? STATE_OK : STATE_BROKEN;
+  ret = prv_check(ALGO_CRC32, 0, 0x68c4f033U);
+  if (ret != 0) {
+    return ret;
   }
-  return s_state == STATE_OK;
+
+  return prv_check(ALGO_CRC32_LEGACY, 0xffffffffU, 0x50b663c0U);
+}
+
+// Before the unit is up, or if it failed its self-test, callers fall back to software
+static bool prv_ready(void) {
+  return pbl_device_is_ready(&s_crc->dev);
 }
 
 size_t pbl_crc_hw_crc32(uint32_t *crc, const void *data, size_t len) {
