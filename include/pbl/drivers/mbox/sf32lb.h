@@ -55,10 +55,12 @@ int pbl_mbox_sf32lb_init(const struct pbl_device *dev);
  * @param _name Device name.
  * @param _base Base address.
  * @param _clk Clock, or PBL_CLK(nullptr, 0) if not controlled by this CPU.
+ * @param _num_chans Doorbells used, up to PBL_MBOX_SF32LB_NUM_DOORBELLS.
  * @param ... Interrupt, if it reaches this CPU.
  */
-#define PBL_MBOX_SF32LB_DEFINE(sym, _name, _base, _clk, ...)                           \
-  PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, PBL_MBOX_SF32LB_NUM_DOORBELLS);                \
+#define PBL_MBOX_SF32LB_DEFINE(sym, _name, _base, _clk, _num_chans, ...)               \
+  static_assert((_num_chans) <= PBL_MBOX_SF32LB_NUM_DOORBELLS);                        \
+  PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans);                                   \
   PBL_DEVICE_INSTANCE(sym, struct pbl_mbox_sf32lb, struct pbl_mbox_controller, ctrl){  \
     .ctrl = PBL_MBOX_CONTROLLER_INIT(sym, _name, pbl_mbox_sf32lb_init, nullptr,        \
                                      &pbl_mbox_sf32lb_ops, 1U),                        \
