@@ -139,8 +139,8 @@ static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_e
 PBL_PP_SESSION_LISTENER_DEFINE(my_service, prv_session_cb, NULL);
 ```
 
-Data logging, app launch, analytics and the cache of the system session's
-capabilities are listeners. Listeners run in the context of the transport,
+Data logging, analytics and the cache of the system session's capabilities
+are listeners. Listeners run in the context of the transport,
 which may hold its own lock, so they must not block. Apps learn about
 sessions through `PEBBLE_COMM_SESSION_EVENT`, which the subsystem puts for
 every session that opens or closes.
