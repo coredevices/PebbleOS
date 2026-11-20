@@ -29,7 +29,7 @@
 	backlight: backlight {
 		compatible = "pwm-backlight";
 		pwms = <&pwm0 0 3906250 0>;
-		enable-gpios = <&gpio1 8 0>;
+		enable-gpios = <&gpio1 8 GPIO_ACTIVE_HIGH>;
 	};
 
 	buttons: gpio-keys {
@@ -229,9 +229,9 @@
 };
 
 &qspi {
-	sck-gpios = <&gpio0 19 0>;
-	cs-gpios = <&gpio0 17 0>;
-	io-gpios = <&gpio0 20 0>, <&gpio0 21 0>, <&gpio0 22 0>, <&gpio0 23 0>;
+	sck-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+	io-gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>, <&gpio0 21 GPIO_ACTIVE_HIGH>, <&gpio0 22 GPIO_ACTIVE_HIGH>, <&gpio0 23 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 
 	flash0: flash@0 {
@@ -280,8 +280,8 @@
 
 &uart0 {
 	current-speed = <1000000>;
-	tx-gpios = <&gpio0 27 0>;
-	rx-gpios = <&gpio0 5 0>;
+	tx-gpios = <&gpio0 27 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
 	nordic,timer = <&timer2>;
 	status = "okay";
 };
@@ -291,14 +291,14 @@
 };
 
 &rtc2_pwm {
-	gpios = <&gpio1 15 0>;
+	gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
 &spi3 {
-	sck-gpios = <&gpio0 6 0>;
-	mosi-gpios = <&gpio0 8 0>;
-	cs-gpios = <&gpio1 3 0>;
+	sck-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+	mosi-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 
 	display: display@0 {
@@ -307,28 +307,28 @@
 		spi-max-frequency = <1000000>;
 		spi-cs-high;
 		spi-lsb-first;
-		enable-gpios = <&gpio0 4 0>;
+		enable-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
 		sharp,vcom-mode = "pwm";
 		pwms = <&rtc2_pwm 0 8333333 0>;
 	};
 };
 
 &pwm0 {
-	out-gpios = <&gpio0 26 0>;
+	out-gpios = <&gpio0 26 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
 &pdm {
-	clk-gpios = <&gpio1 0 0>;
-	din-gpios = <&gpio0 24 0>;
+	clk-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+	din-gpios = <&gpio0 24 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
 &i2s {
-	sck-gpios = <&gpio0 12 0>;
-	lrck-gpios = <&gpio0 7 0>;
-	mck-gpios = <&gpio1 9 0>;
-	sdout-gpios = <&gpio0 13 0>;
+	sck-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+	lrck-gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+	mck-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
+	sdout-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
