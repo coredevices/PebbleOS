@@ -140,6 +140,11 @@ static int prv_init(const struct pbl_audio_dai *dai) {
     return ret;
   }
 
+  ret = pbl_device_init(&pdm->dma->ctrl->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = pbl_device_init(&pdm->rst.ctrl->dev);
   if (ret != 0) {
     return ret;
