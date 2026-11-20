@@ -4,7 +4,7 @@
 #include "kernel_le_client.h"
 
 #if defined(CONFIG_BT_ANCS_CLIENT)
-#include <comm/ble/kernel_le_client/ancs/ancs_definition.h>
+#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
 #include <comm/ble/kernel_le_client/ams/ams_definition.h>
@@ -25,10 +25,12 @@
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/services/bluetooth/advertising.h>
 
+#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/gatt_client_accessors.h>
 #include <comm/ble/gatt_client_discovery.h>
 #include <comm/ble/gatt_client_operations.h>
 #include <comm/ble/gatt_client_subscriptions.h>
+#include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 
@@ -43,9 +45,6 @@ enum {
 #else
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   KernelLEClientPPoGATT,
-#endif
-#if defined(CONFIG_BT_ANCS_CLIENT)
-  KernelLEClientANCS,
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
   KernelLEClientAMS,
@@ -125,22 +124,6 @@ static const KernelLEClient s_clients[KernelLEClientNum] = {
         .handle_write_response = nullptr,
         .handle_subscribe = pbl_pp_gatt_handle_subscribe,
         .handle_read_or_notification = pbl_pp_gatt_handle_read_or_notification,
-      },
-#endif
-#if defined(CONFIG_BT_ANCS_CLIENT)
-  [KernelLEClientANCS] =
-      {
-        .debug_name = "ANCS",
-        .service_uuid = &s_ancs_service_uuid,
-        .characteristic_uuids = s_ancs_characteristic_uuids,
-        .num_characteristics = NumANCSCharacteristic,
-        .handle_service_discovered = ancs_handle_service_discovered,
-        .handle_service_removed = ancs_handle_service_removed,
-        .invalidate_all_references = ancs_invalidate_all_references,
-        .can_handle_characteristic = ancs_can_handle_characteristic,
-        .handle_write_response = ancs_handle_write_response,
-        .handle_subscribe = ancs_handle_subscribe,
-        .handle_read_or_notification = ancs_handle_read_or_notification,
       },
 #endif
 #if defined(CONFIG_BT_AMS_CLIENT)
@@ -243,6 +226,13 @@ static void prv_handle_services_added(PebbleBLEGATTClientServicesAdded *added_se
   }
 }
 
+// Clients that find their service themselves look for it again: it may be among the added.
+static void prv_handle_services_changed(void) {
+#if defined(CONFIG_BT_ANCS_CLIENT)
+  ancs_handle_services_changed();
+#endif
+}
+
 static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientServiceEvent *event) {
   PebbleBLEGATTClientServiceEventInfo *event_info = event->info;
   if (event_info->status == PBL_BT_ERRNO_SERVICE_DISCOVERY_DISCONNECTED) {
@@ -265,12 +255,15 @@ static void prv_handle_gatt_service_discovery_event(const PebbleBLEGATTClientSer
   switch (event_info->type) {
     case PebbleServicesRemoved:
       prv_handle_services_removed(&event_info->services_removed_data);
+      prv_handle_services_changed();
       break;
     case PebbleServicesInvalidateAll:
       prv_handle_all_services_invalidated();
+      prv_handle_services_changed();
       break;
     case PebbleServicesAdded:
       prv_handle_services_added(&event_info->services_added_data, &event_info->device);
+      prv_handle_services_changed();
       break;
     default:
       pbl_panic();
@@ -416,18 +409,30 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
   if (connected) {
     PBL_LOG_DBG("Connected to Gateway!");
 
-#if defined(CONFIG_BT_ANCS_CLIENT)
-    ancs_create();
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-    ams_create();
-#endif
 #if defined(CONFIG_PP_TRANSPORT_GATT)
     pbl_pp_gatt_create();
 #endif
 
+    // First, so that the clients that look for their service themselves do not hold it up.
     gatt_client_discovery_discover_all(&device);
 
+#if defined(CONFIG_BT_ANCS_CLIENT)
+    uint16_t conn_handle = 0;
+    bool found = false;
+    bt_lock();
+    const GAPLEConnection *connection = gap_le_connection_by_device(&device);
+    if (connection) {
+      conn_handle = connection->conn_handle;
+      found = true;
+    }
+    bt_unlock();
+    if (found) {
+      ancs_create(conn_handle);
+    }
+#endif
+#if defined(CONFIG_BT_AMS_CLIENT)
+    ams_create();
+#endif
   } else {
     PBL_LOG_DBG("Disconnected from Gateway!");
 #if defined(CONFIG_PP_TRANSPORT_GATT)

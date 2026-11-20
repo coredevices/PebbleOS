@@ -8,6 +8,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/ancs/ancs_filtering.h>
+#include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/attributes_actions.h>
 #include <pbl/util/pstring.h>
@@ -75,13 +76,13 @@ static bool prv_match_contains(const char *haystack, size_t haystack_len, const 
   return false;
 }
 
-static char *prv_attr_to_cstring(const ANCSAttribute *attr, size_t *len_out) {
-  if (!attr || (attr->length == 0)) {
+static char *prv_attr_to_cstring(const struct pbl_bt_ancs_attr *attr, size_t *len_out) {
+  if (!attr || (attr->len == 0)) {
     *len_out = 0;
     return nullptr;
   }
-  char *str = pbl_zalloc_check(attr->length + 1);
-  pbl_pstring16_to_cstring(&attr->pstr, str);
+  char *str = pbl_zalloc_check(attr->len + 1);
+  ancs_attr_to_cstring(attr, str);
   *len_out = strlen(str);
   return str;
 }
@@ -109,9 +110,9 @@ static bool prv_match_rule(uint8_t match_type, uint8_t match_field, bool case_se
 }
 
 bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
-                                  const ANCSAttribute *title_attr,
-                                  const ANCSAttribute *subtitle_attr,
-                                  const ANCSAttribute *body_attr) {
+                                  const struct pbl_bt_ancs_attr *title_attr,
+                                  const struct pbl_bt_ancs_attr *subtitle_attr,
+                                  const struct pbl_bt_ancs_attr *body_attr) {
   if (!app_notif_prefs) {
     return false;
   }
@@ -173,8 +174,9 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
   return matched;
 }
 
-void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute *app_id,
-                               const ANCSAttribute *display_name, const ANCSAttribute *title) {
+void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const struct pbl_bt_ancs_attr *app_id,
+                               const struct pbl_bt_ancs_attr *display_name,
+                               const struct pbl_bt_ancs_attr *title) {
   // When we receive a notification, information about the app that sent us the notification
   // is recorded in the notif_pref_db. We sync this DB with the phone which allows us to
   // do things like add non ANCS actions, or filter notifications by app
@@ -200,10 +202,10 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
 
   // The app name should be the display name
   // If there is no display name (Apple Pay) then fallback to the title
-  const ANCSAttribute *app_name_attr = nullptr;
-  if (display_name && display_name->length > 0) {
+  const struct pbl_bt_ancs_attr *app_name_attr = nullptr;
+  if (display_name && display_name->len > 0) {
     app_name_attr = display_name;
-  } else if (title && title->length > 0) {
+  } else if (title && title->len > 0) {
     app_name_attr = title;
   }
 
@@ -214,10 +216,10 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
       existing_name = attribute_get_string(&app_notif_prefs->attr_list, AttributeIdAppName, "");
     }
 
-    if (!pbl_pstring16_equal_cstring(&app_name_attr->pstr, existing_name)) {
+    if (!ancs_attr_equal_cstring(app_name_attr, existing_name)) {
       // If the existing name doesn't match our new name, update the name
-      app_name_buff = pbl_zalloc_check(app_name_attr->length + 1);
-      pbl_pstring16_to_cstring(&app_name_attr->pstr, app_name_buff);
+      app_name_buff = pbl_zalloc_check(app_name_attr->len + 1);
+      ancs_attr_to_cstring(app_name_attr, app_name_buff);
       attribute_list_add_cstring(&new_attr_list, AttributeIdAppName, app_name_buff);
       list_dirty = true;
       PBL_LOG_INFO("Adding app name to app prefs: <%s>", app_name_buff);
@@ -280,7 +282,7 @@ void ancs_filtering_record_app(iOSNotifPrefs **notif_prefs, const ANCSAttribute 
       new_action_group = &app_notif_prefs->action_group;
     }
 
-    ios_notif_pref_db_store_prefs(app_id->value, app_id->length, &new_attr_list, new_action_group);
+    ios_notif_pref_db_store_prefs(app_id->value, app_id->len, &new_attr_list, new_action_group);
 
     // Update our copy of the prefs with the new data
     const size_t buf_size = attributes_actions_get_buffer_size(&new_attr_list, new_action_group);

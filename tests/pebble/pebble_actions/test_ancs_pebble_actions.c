@@ -3,14 +3,13 @@
 
 #include <errno.h>
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 
 #include <clar.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_util.h>
 
 // Test Data
 ///////////////////////////////////////////////////////////
@@ -27,6 +26,45 @@
 ///////////////////////////////////////////////////////////
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
+
+static const struct pbl_bt_ancs_notif s_notif = {.category = PBL_BT_ANCS_CATEGORY_SOCIAL};
+
+// Command and notification UID.
+#define RESPONSE_HEADER_LENGTH 5
+
+//! Finds the attributes of a response to Get Notification Attributes.
+//! @return Whether it has all those every phone answers with.
+static bool prv_get_attr_ptrs(const uint8_t *data, size_t length,
+                              const struct pbl_bt_ancs_attr *attrs[]) {
+  static const uint8_t ids[ANCS_NOTIF_ATTR_COUNT] = {
+    [ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL] = PBL_BT_ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL,
+    [ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL] = PBL_BT_ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL,
+    [ANCS_NOTIF_ATTR_APP_ID] = PBL_BT_ANCS_NOTIF_ATTR_APP_IDENTIFIER,
+    [ANCS_NOTIF_ATTR_TITLE] = PBL_BT_ANCS_NOTIF_ATTR_TITLE,
+    [ANCS_NOTIF_ATTR_SUBTITLE] = PBL_BT_ANCS_NOTIF_ATTR_SUBTITLE,
+    [ANCS_NOTIF_ATTR_MESSAGE] = PBL_BT_ANCS_NOTIF_ATTR_MESSAGE,
+    [ANCS_NOTIF_ATTR_DATE] = PBL_BT_ANCS_NOTIF_ATTR_DATE,
+  };
+
+  for (size_t offset = 0; offset + sizeof(struct pbl_bt_ancs_attr) <= length;) {
+    struct pbl_bt_ancs_attr *attr = (struct pbl_bt_ancs_attr *)&data[offset];
+
+    offset += sizeof(struct pbl_bt_ancs_attr) + attr->len;
+    cl_assert(offset <= length);
+    for (int i = 0; i < ANCS_NOTIF_ATTR_COUNT; i++) {
+      if (ids[i] == attr->id) {
+        attrs[i] = attr;
+      }
+    }
+  }
+
+  for (int i = ANCS_NOTIF_ATTR_APP_ID; i < ANCS_NOTIF_ATTR_COUNT; i++) {
+    if (attrs[i] == nullptr) {
+      return false;
+    }
+  }
+  return true;
+}
 
 static const uint8_t *s_expected_send_data = nullptr;
 static bool s_sent_action = false;
@@ -147,24 +185,23 @@ void test_ancs_pebble_actions__cleanup(void) {
 void test_ancs_pebble_actions__test_sms_reply(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+  const struct pbl_bt_ancs_attr *notif_attributes[ANCS_NOTIF_ATTR_COUNT] = {};
+  const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-  const size_t header_len = sizeof(GetNotificationAttributesMsg);
+  const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
-  const bool complete = ancs_util_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len,
-      s_fetched_notif_attributes, NUM_FETCHED_NOTIF_ATTRIBUTES, notif_attributes, &error);
+  const bool complete = prv_get_attr_ptrs(
+      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
 
   time_t timestamp = 0;
   ANCSAppMetadata app_metadata = {};
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->len);
   TimelineItem *notif = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
-                                                      notif_prefs, timestamp, ANCSProperty_None);
+                                                      notif_prefs, timestamp, &s_notif);
 
   cl_assert(notif);
   cl_assert_equal_i(notif->action_group.num_actions, 2);
@@ -186,24 +223,23 @@ void test_ancs_pebble_actions__test_sms_reply(void) {
 void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
   prv_support_sms_replies_no_emoji();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+  const struct pbl_bt_ancs_attr *notif_attributes[ANCS_NOTIF_ATTR_COUNT] = {};
+  const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-  const size_t header_len = sizeof(GetNotificationAttributesMsg);
+  const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
-  const bool complete = ancs_util_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len,
-      s_fetched_notif_attributes, NUM_FETCHED_NOTIF_ATTRIBUTES, notif_attributes, &error);
+  const bool complete = prv_get_attr_ptrs(
+      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
 
   time_t timestamp = 0;
   ANCSAppMetadata app_metadata = {};
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->len);
   TimelineItem *notif = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
-                                                      notif_prefs, timestamp, ANCSProperty_None);
+                                                      notif_prefs, timestamp, &s_notif);
 
   cl_assert(notif);
   cl_assert_equal_i(notif->action_group.num_actions, 2);
@@ -225,14 +261,13 @@ void test_ancs_pebble_actions__test_sms_reply_no_emoji(void) {
 void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+  const struct pbl_bt_ancs_attr *notif_attributes[ANCS_NOTIF_ATTR_COUNT] = {};
+  const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-  const size_t header_len = sizeof(GetNotificationAttributesMsg);
+  const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
-  const bool complete = ancs_util_get_attr_ptrs(
-      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len,
-      s_fetched_notif_attributes, NUM_FETCHED_NOTIF_ATTRIBUTES, notif_attributes, &error);
+  const bool complete = prv_get_attr_ptrs(
+      s_sms_ancs_data + header_len, ARRAY_LENGTH(s_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
@@ -241,7 +276,7 @@ void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
   ANCSAppMetadata app_metadata = {};
 
   TimelineItem *item = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
-                                                     nullptr, timestamp, ANCSProperty_None);
+                                                     nullptr, timestamp, &s_notif);
 
   cl_assert(item);
   cl_assert_equal_i(item->action_group.num_actions, 1);
@@ -251,24 +286,24 @@ void test_ancs_pebble_actions__test_sms_replies_unsupported(void) {
 void test_ancs_pebble_actions__test_group_sms(void) {
   prv_support_sms_replies();
 
-  ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+  const struct pbl_bt_ancs_attr *notif_attributes[ANCS_NOTIF_ATTR_COUNT] = {};
+  const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-  const size_t header_len = sizeof(GetNotificationAttributesMsg);
+  const size_t header_len = RESPONSE_HEADER_LENGTH;
   bool error = false;
-  const bool complete = ancs_util_get_attr_ptrs(
-      s_group_sms_ancs_data + header_len, ARRAY_LENGTH(s_group_sms_ancs_data) - header_len,
-      s_fetched_notif_attributes, NUM_FETCHED_NOTIF_ATTRIBUTES, notif_attributes, &error);
+  const bool complete =
+      prv_get_attr_ptrs(s_group_sms_ancs_data + header_len,
+                        ARRAY_LENGTH(s_group_sms_ancs_data) - header_len, notif_attributes);
 
   cl_assert(complete);
   cl_assert(!error);
 
   time_t timestamp = 0;
   ANCSAppMetadata app_metadata = {};
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  iOSNotifPrefs *notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->len);
   TimelineItem *item = ancs_item_create_and_populate(notif_attributes, app_attrs, &app_metadata,
-                                                     notif_prefs, timestamp, ANCSProperty_None);
+                                                     notif_prefs, timestamp, &s_notif);
 
   cl_assert(item);
 
@@ -279,15 +314,15 @@ void test_ancs_pebble_actions__test_group_sms(void) {
 }
 
 // void test_ancs_pebble_actions__test_email(void) {
-// ANCSAttribute *notif_attributes[NUM_FETCHED_NOTIF_ATTRIBUTES] = {};
-// ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+// const struct pbl_bt_ancs_attr *notif_attributes[ANCS_NOTIF_ATTR_COUNT] = {};
+// const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-// const size_t header_len = sizeof(GetNotificationAttributesMsg);
+// const size_t header_len = RESPONSE_HEADER_LENGTH;
 // bool error = false;
 // const bool complete = ancs_util_get_attr_ptrs(s_email_ancs_data + header_len,
 //                                               ARRAY_LENGTH(s_email_ancs_data) - header_len,
 //                                               s_fetched_notif_attributes,
-//                                               NUM_FETCHED_NOTIF_ATTRIBUTES,
+//                                               ANCS_NOTIF_ATTR_COUNT,
 //                                               notif_attributes,
 //                                               &error);
 

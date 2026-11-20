@@ -92,6 +92,35 @@ The firmware builds on that in its Bluetooth service:
 - Both take the local IRK from the root keys in the PRF store, so that a phone
   sees one watch. The phone's name is kept there as well.
 
+## GATT clients
+
+The clients of the services of a peer are built on NimBLE alone, and can be
+used without the rest of the subsystem:
+
+- `pbl/bluetooth/clients/gatt.h` (`BT_GATT_CLIENT`) is what clients share.
+  `pbl_bt_gattc_discover()` finds one service and the value and CCCD handles
+  of its characteristics, one discovery at a time, since NimBLE cannot tell
+  the responses of concurrent ones apart. A service client
+  (`PBL_BT_GATTC_SERVICE_DEFINE()`) builds on it for one service of one
+  connection: it subscribes, writes and reads by characteristic, and reports
+  the outcomes and the notifications. Notification listeners are fed by
+  whoever handles the GAP events of a connection, with
+  `pbl_bt_gattc_notify_rx()`.
+- `pbl/bluetooth/clients/ancs.h` (`BT_ANCS_CLIENT`) is the client of the Apple
+  Notification Center Service. It reports the notifications of the device,
+  and on request gets their attributes and those of their apps, gathering
+  the responses that come in parts, and performs their actions. A client
+  (`PBL_BT_ANCS_CLIENT_DEFINE()`) serves one connection and runs one request
+  at a time; the values of the service are in `pbl/bluetooth/ancs.h`. The
+  {doc}`ANCS client sample <../samples/subsys/bluetooth/ancs_client>` shows
+  it. The firmware's notification session (queueing, timeouts, the liveness
+  check) sits on top of it in `pebble/comm/ble/kernel_le_client/ancs/`, on
+  KernelMain.
+
+The other clients of the phone's services (media, app launch, device
+information, PPoGATT) still go through the discovery and subscription layer
+of `pebble/comm/ble/`.
+
 ## Advertising
 
 The firmware advertises with NimBLE directly, from its Bluetooth service

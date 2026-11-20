@@ -36,21 +36,21 @@ static uint8_t app_id_data[] = {
   0x04, 0x00,           // length
   'P',  'h',  'i', 'l', // Value
 };
-static ANCSAttribute *s_app_id_attr = (ANCSAttribute *)&app_id_data;
+static struct pbl_bt_ancs_attr *s_app_id_attr = (struct pbl_bt_ancs_attr *)&app_id_data;
 
 static uint8_t display_name_data[] = {
   0x00,                                // id
   0x07, 0x00,                          // length
   'A',  'w',  'e', 's', 'o', 'm', 'e', // Value
 };
-static ANCSAttribute *s_display_name_attr = (ANCSAttribute *)&display_name_data;
+static struct pbl_bt_ancs_attr *s_display_name_attr = (struct pbl_bt_ancs_attr *)&display_name_data;
 
 static uint8_t title_data[] = {
   0x01,                                                                  // id
   0x0E, 0x00,                                                            // length
   'A',  'p',  'p', 'l', 'e', ' ', 'P', 'a', 'y', ' ', '=', ' ', ':', '(' // Value
 };
-static ANCSAttribute *s_title_attr = (ANCSAttribute *)&title_data;
+static struct pbl_bt_ancs_attr *s_title_attr = (struct pbl_bt_ancs_attr *)&title_data;
 
 typedef union {
   struct pbl_string_list list;
@@ -412,7 +412,7 @@ void test_ancs_filtering__matches_text_rule_body_case_insensitive(void) {
                                 0x12, 0x00, // length
                                 'M',  'e',  'e', 't', 'i', 'n', 'g', ' ', 'i',
                                 's',  ' ',  'S', 'P', 'A', 'M', ' ', 'n', 'o'};
-  ANCSAttribute *body_attr = (ANCSAttribute *)&body_data;
+  struct pbl_bt_ancs_attr *body_attr = (struct pbl_bt_ancs_attr *)&body_data;
 
   FilteringRules filtering_rules;
   // count=1, type=text, field=body, case=insensitive, pattern="spam\0"
@@ -475,7 +475,7 @@ void test_ancs_filtering__matches_text_rule_title_via_subtitle(void) {
     0x0B, 0x00,                                             // length
     'S',  'o',  'm', 'e', ' ', 'S', 'e', 'r', 'v', 'e', 'r' // Value
   };
-  ANCSAttribute *subtitle_attr = (ANCSAttribute *)&subtitle_data;
+  struct pbl_bt_ancs_attr *subtitle_attr = (struct pbl_bt_ancs_attr *)&subtitle_data;
 
   FilteringRules filtering_rules;
   // count=1, type=text, field=title, case=insensitive, pattern="server\0"

@@ -473,7 +473,7 @@ static void prv_action_handle_response(PebbleEvent *e, void *context) {
       // Perform the dismiss after showing the UI (to try and improve perceived responsiveness)
       if (should_perform_dismiss) {
         // Call this directly so that we don't get another action result
-        ancs_perform_action(ancs_uid, ActionIDNegative);
+        ancs_perform_action(ancs_uid, PBL_BT_ANCS_ACTION_NEGATIVE);
       }
       break;
     }

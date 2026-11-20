@@ -25,15 +25,15 @@ void test_ancs_notifications_util__initialize(void) {
 void test_ancs_notifications_util__cleanup(void) {
 }
 
-static ANCSAttribute *prv_create_ancs_attr(const char *str) {
+static struct pbl_bt_ancs_attr *prv_create_ancs_attr(const char *str) {
   const size_t len = strlen(str);
-  ANCSAttribute *attr = malloc(sizeof(ANCSAttribute) + len);
-  attr->length = len;
+  struct pbl_bt_ancs_attr *attr = malloc(sizeof(struct pbl_bt_ancs_attr) + len);
+  attr->len = len;
   memcpy(&attr->value, str, len);
   return attr;
 }
 
-static void prv_destroy_ancs_attr(ANCSAttribute *attr) {
+static void prv_destroy_ancs_attr(struct pbl_bt_ancs_attr *attr) {
   free(attr);
 }
 
@@ -59,22 +59,22 @@ void test_ancs_notifications_util__parse_timestamp(void) {
   time_t actual = pbl_mktime(&apr_3_13_00);
   pbl_realtime_set(actual);
 
-  ANCSAttribute *valid_date = prv_create_ancs_attr("20150403T130000");
+  struct pbl_bt_ancs_attr *valid_date = prv_create_ancs_attr("20150403T130000");
   time_t calculated = ancs_notifications_util_parse_timestamp(valid_date);
   prv_destroy_ancs_attr(valid_date);
   cl_assert_equal_i(calculated, actual);
 
-  ANCSAttribute *invalid_date = prv_create_ancs_attr("b4150403T123456");
+  struct pbl_bt_ancs_attr *invalid_date = prv_create_ancs_attr("b4150403T123456");
   calculated = ancs_notifications_util_parse_timestamp(invalid_date);
   prv_destroy_ancs_attr(invalid_date);
   cl_assert_equal_i(calculated, 0);
 
-  ANCSAttribute *crazy_bad_date = prv_create_ancs_attr("F");
+  struct pbl_bt_ancs_attr *crazy_bad_date = prv_create_ancs_attr("F");
   calculated = ancs_notifications_util_parse_timestamp(crazy_bad_date);
   prv_destroy_ancs_attr(crazy_bad_date);
   cl_assert_equal_i(calculated, 0);
 
-  ANCSAttribute *zero_length_date = prv_create_ancs_attr("");
+  struct pbl_bt_ancs_attr *zero_length_date = prv_create_ancs_attr("");
   calculated = ancs_notifications_util_parse_timestamp(zero_length_date);
   prv_destroy_ancs_attr(zero_length_date);
   cl_assert_equal_i(calculated, 0);

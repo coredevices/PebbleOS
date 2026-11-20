@@ -20,16 +20,20 @@ void ios_notif_pref_db_free_prefs(iOSNotifPrefs *prefs) {
   return;
 }
 
-void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs, const ANCSAttribute *app_id,
-                               const ANCSAttribute *display_name, const ANCSAttribute *title) {
+void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs,
+                               const struct pbl_bt_ancs_attr *app_id,
+                               const struct pbl_bt_ancs_attr *display_name,
+                               const struct pbl_bt_ancs_attr *title) {
 }
 
 bool ancs_filtering_is_muted(const iOSNotifPrefs *app_notif_prefs) {
   return false;
 }
 
-bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs, const ANCSAttribute *title,
-                                  const ANCSAttribute *subtitle, const ANCSAttribute *body) {
+bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
+                                  const struct pbl_bt_ancs_attr *title,
+                                  const struct pbl_bt_ancs_attr *subtitle,
+                                  const struct pbl_bt_ancs_attr *body) {
   return false;
 }
 
@@ -109,27 +113,30 @@ void test_ancs_notifications__handle_phone_call_message(void) {
     0x07, 7, 0x00, 'D', 'e', 'c', 'l', 'i', 'n', 'e',
   };
 
-  ANCSAttribute *notif_attributes[] = {
-    [FetchedNotifAttributeIndexAppID] = (ANCSAttribute *)&app_id,
-    [FetchedNotifAttributeIndexTitle] = (ANCSAttribute *)&title,
-    [FetchedNotifAttributeIndexSubtitle] = (ANCSAttribute *)&subtitle,
-    [FetchedNotifAttributeIndexMessage] = (ANCSAttribute *)&message,
-    [FetchedNotifAttributeIndexDate] = (ANCSAttribute *)&date,
-    [FetchedNotifAttributeIndexPositiveActionLabel] = (ANCSAttribute *)&positive_action,
-    [FetchedNotifAttributeIndexNegativeActionLabel] = (ANCSAttribute *)&negative_action,
+  const struct pbl_bt_ancs_attr *notif_attributes[] = {
+    [ANCS_NOTIF_ATTR_APP_ID] = (struct pbl_bt_ancs_attr *)&app_id,
+    [ANCS_NOTIF_ATTR_TITLE] = (struct pbl_bt_ancs_attr *)&title,
+    [ANCS_NOTIF_ATTR_SUBTITLE] = (struct pbl_bt_ancs_attr *)&subtitle,
+    [ANCS_NOTIF_ATTR_MESSAGE] = (struct pbl_bt_ancs_attr *)&message,
+    [ANCS_NOTIF_ATTR_DATE] = (struct pbl_bt_ancs_attr *)&date,
+    [ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL] = (struct pbl_bt_ancs_attr *)&positive_action,
+    [ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL] = (struct pbl_bt_ancs_attr *)&negative_action,
   };
 
   const uint8_t app_display_name[] = {
     0x00, 5, 0x0, 'P', 'h', 'o', 'n', 'e',
   };
 
-  ANCSAttribute *app_attributes[] = {
-    [FetchedAppAttributeIndexDisplayName] = (ANCSAttribute *)&app_display_name,
+  const struct pbl_bt_ancs_attr *app_attributes[] = {
+    [ANCS_APP_ATTR_DISPLAY_NAME] = (struct pbl_bt_ancs_attr *)&app_display_name,
   };
 
-  ANCSProperty properties = ANCSProperty_IncomingCall;
+  const struct pbl_bt_ancs_notif notif = {
+    .uid = 37,
+    .category = PBL_BT_ANCS_CATEGORY_INCOMING_CALL,
+  };
 
-  ancs_notifications_handle_message(37, properties, notif_attributes, app_attributes);
+  ancs_notifications_handle_message(&notif, false, false, notif_attributes, app_attributes);
 
   // We just processed an incoming phone call event, there better be a phone event scheduled!
   PebbleEvent event = fake_event_get_last();
@@ -139,7 +146,7 @@ void test_ancs_notifications__handle_phone_call_message(void) {
   cl_assert_equal_i(event.phone.source, PhoneCallSource_ANCS_Legacy);
 }
 
-static void prv_send_social_message(uint32_t uid, ANCSProperty properties) {
+static void prv_send_social_message(uint32_t uid, uint8_t flags) {
   static const uint8_t app_id[] = {
     0x00, 17,  0x00, 'c', 'o', 'm', '.', 't', 'e', 's',
     't',  's', '.',  'F', 'a', 'k', 'e', 'A', 'p', 'p',
@@ -171,38 +178,44 @@ static void prv_send_social_message(uint32_t uid, ANCSProperty properties) {
     0x00,
   };
 
-  ANCSAttribute *notif_attributes[] = {
-    [FetchedNotifAttributeIndexAppID] = (ANCSAttribute *)&app_id,
-    [FetchedNotifAttributeIndexTitle] = (ANCSAttribute *)&title,
-    [FetchedNotifAttributeIndexSubtitle] = (ANCSAttribute *)&subtitle,
-    [FetchedNotifAttributeIndexMessage] = (ANCSAttribute *)&message,
-    [FetchedNotifAttributeIndexDate] = (ANCSAttribute *)&date,
-    [FetchedNotifAttributeIndexPositiveActionLabel] = (ANCSAttribute *)&positive_action,
-    [FetchedNotifAttributeIndexNegativeActionLabel] = (ANCSAttribute *)&negative_action,
+  const struct pbl_bt_ancs_attr *notif_attributes[] = {
+    [ANCS_NOTIF_ATTR_APP_ID] = (struct pbl_bt_ancs_attr *)&app_id,
+    [ANCS_NOTIF_ATTR_TITLE] = (struct pbl_bt_ancs_attr *)&title,
+    [ANCS_NOTIF_ATTR_SUBTITLE] = (struct pbl_bt_ancs_attr *)&subtitle,
+    [ANCS_NOTIF_ATTR_MESSAGE] = (struct pbl_bt_ancs_attr *)&message,
+    [ANCS_NOTIF_ATTR_DATE] = (struct pbl_bt_ancs_attr *)&date,
+    [ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL] = (struct pbl_bt_ancs_attr *)&positive_action,
+    [ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL] = (struct pbl_bt_ancs_attr *)&negative_action,
   };
 
   static const uint8_t app_display_name[] = {
     0x00, 7, 0x0, 'F', 'a', 'k', 'e', 'A', 'p', 'p',
   };
 
-  ANCSAttribute *app_attributes[] = {
-    [FetchedAppAttributeIndexDisplayName] = (ANCSAttribute *)&app_display_name,
+  const struct pbl_bt_ancs_attr *app_attributes[] = {
+    [ANCS_APP_ATTR_DISPLAY_NAME] = (struct pbl_bt_ancs_attr *)&app_display_name,
   };
 
-  ancs_notifications_handle_message(uid, properties, notif_attributes, app_attributes);
+  const struct pbl_bt_ancs_notif notif = {
+    .uid = uid,
+    .flags = flags,
+    .category = PBL_BT_ANCS_CATEGORY_SOCIAL,
+  };
+
+  ancs_notifications_handle_message(&notif, false, false, notif_attributes, app_attributes);
 }
 
 void test_ancs_notifications__silent_property_sets_silent_header(void) {
   // Force the "update existing" path so the stored item is captured by the fake storage
   fake_notification_storage_set_existing_ancs_notification(&(Uuid)UUID_SYSTEM, UINT32_MAX);
 
-  // Without ANCSProperty_Silent the stored notification is not marked silent
-  prv_send_social_message(37, ANCSProperty_None);
+  // Without the silent flag the stored notification is not marked silent
+  prv_send_social_message(37, 0);
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 1);
   cl_assert_equal_i(fake_notification_storage_get_last_notification()->header.silent, 0);
 
-  // With ANCSProperty_Silent the stored notification is marked silent
-  prv_send_social_message(38, ANCSProperty_Silent);
+  // With the silent flag the stored notification is marked silent
+  prv_send_social_message(38, PBL_BT_ANCS_FLAG_SILENT);
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 2);
   cl_assert_equal_i(fake_notification_storage_get_last_notification()->header.silent, 1);
   cl_assert_equal_i(fake_notification_storage_get_last_notification()->header.ancs_notif, 1);
@@ -210,14 +223,18 @@ void test_ancs_notifications__silent_property_sets_silent_header(void) {
 
 void test_ancs_notifications__handle_phone_call_removed(void) {
   const uint32_t uid = 5;
+  const struct pbl_bt_ancs_notif notif = {
+    .uid = uid,
+    .event = PBL_BT_ANCS_EVENT_REMOVED,
+    .category = PBL_BT_ANCS_CATEGORY_INCOMING_CALL,
+  };
 
   // Make sure we don't send any events when this isn't iOS9
-  ancs_notifications_handle_notification_removed(uid, ANCSProperty_IncomingCall);
+  ancs_notifications_handle_notification_removed(&notif, false);
   cl_assert_equal_i(fake_event_get_count(), 0);
 
   // Make sure that we trigger an event when this is iOS9
-  ancs_notifications_handle_notification_removed(uid,
-                                                 ANCSProperty_IncomingCall | ANCSProperty_iOS9);
+  ancs_notifications_handle_notification_removed(&notif, true);
   PebbleEvent event = fake_event_get_last();
   cl_assert_equal_i(fake_event_get_count(), 1);
   cl_assert_equal_i(event.type, PEBBLE_PHONE_EVENT);
@@ -227,8 +244,7 @@ void test_ancs_notifications__handle_phone_call_removed(void) {
 
   // Make sure that having a matching notification in notif_db still results in a call hide event
   fake_notification_storage_set_existing_ancs_notification(&(Uuid)UUID_SYSTEM, uid);
-  ancs_notifications_handle_notification_removed(uid,
-                                                 ANCSProperty_IncomingCall | ANCSProperty_iOS9);
+  ancs_notifications_handle_notification_removed(&notif, true);
   event = fake_event_get_last();
   cl_assert_equal_i(fake_event_get_count(), 2);
   cl_assert_equal_i(event.type, PEBBLE_PHONE_EVENT);

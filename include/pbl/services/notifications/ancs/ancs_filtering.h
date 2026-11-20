@@ -3,9 +3,8 @@
 
 #pragma once
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_filtering ANCS filtering
@@ -28,8 +27,10 @@
  * @param title Notification title, used as the name when there is no display name (e.g. Apple
  *              Pay).
  */
-void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs, const ANCSAttribute *app_id,
-                               const ANCSAttribute *display_name, const ANCSAttribute *title);
+void ancs_filtering_record_app(iOSNotifPrefs **app_notif_prefs,
+                               const struct pbl_bt_ancs_attr *app_id,
+                               const struct pbl_bt_ancs_attr *display_name,
+                               const struct pbl_bt_ancs_attr *title);
 
 /**
  * @brief Check whether an app is muted now.
@@ -59,7 +60,9 @@ uint8_t ancs_filtering_get_mute_type(const iOSNotifPrefs *app_notif_prefs);
  * @param body Notification body.
  * @return true if the notification should be filtered out.
  */
-bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs, const ANCSAttribute *title,
-                                  const ANCSAttribute *subtitle, const ANCSAttribute *body);
+bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
+                                  const struct pbl_bt_ancs_attr *title,
+                                  const struct pbl_bt_ancs_attr *subtitle,
+                                  const struct pbl_bt_ancs_attr *body);
 
 /** @} */

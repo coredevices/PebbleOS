@@ -5,7 +5,6 @@ pbl_clar_test(test_ancs_pebble_actions
   MODULES settings timeline_item time rand
   SOURCES
     pebble/applib/ui/preferred_durations.c
-    pebble/comm/ble/kernel_le_client/ancs/ancs_util.c
     pebble/services/blob_db/ios_notif_pref_db.c
     pebble/services/notifications/ancs/ancs_filtering.c
     pebble/services/notifications/ancs/ancs_item.c

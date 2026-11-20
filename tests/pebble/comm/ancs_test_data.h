@@ -226,7 +226,7 @@ static TimelineItem s_message_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}
@@ -519,7 +519,7 @@ static TimelineItem s_app_name_title_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}
@@ -578,7 +578,7 @@ static TimelineItem s_unknown_app_parsed_item = {
              .num_attributes = 2,
              .attributes =
                  (Attribute[2]){
-                   {.id = AttributeIdAncsAction, .uint8 = ActionIDPositive},
+                   {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_POSITIVE},
                    {.id = AttributeIdTitle, .cstring = "Like"}
                  }
            }},
@@ -587,7 +587,7 @@ static TimelineItem s_unknown_app_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}
@@ -645,7 +645,7 @@ static TimelineItem s_unknown_app_unique_title_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}
@@ -699,7 +699,7 @@ static TimelineItem s_mms_no_caption_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}
@@ -756,7 +756,7 @@ static TimelineItem s_mms_with_caption_parsed_item = {
        .attr_list = (AttributeList){
          .num_attributes = 2,
          .attributes = (Attribute[2]){
-           {.id = AttributeIdAncsAction, .uint8 = ActionIDNegative},
+           {.id = AttributeIdAncsAction, .uint8 = PBL_BT_ANCS_ACTION_NEGATIVE},
            {.id = AttributeIdTitle, .cstring = "Dismiss"}
          }
        }}

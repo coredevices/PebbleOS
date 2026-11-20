@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -27,7 +28,6 @@
 #include <apps/system/timeline/pin_window.h>
 #include <apps/system/timeline/timeline.h>
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>
@@ -858,7 +858,7 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       const char *caller_id = attribute_get_string(&item->attr_list, AttributeIdTitle, "Unknown");
       prv_put_outgoing_call_event(item->header.ancs_uid, caller_id);
       notifications_handle_notification_action_result(nullptr);
-      ancs_perform_action(item->header.ancs_uid, ActionIDPositive);
+      ancs_perform_action(item->header.ancs_uid, PBL_BT_ANCS_ACTION_POSITIVE);
       break;
     }
     // TODO: a positive action is not necessarily a dismiss

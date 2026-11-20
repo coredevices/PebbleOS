@@ -14,8 +14,8 @@ static const unsigned ANCS_APP_NAME_STORAGE_SIZE = 30;
 static CircularCache *s_cache = nullptr;
 
 typedef struct {
-  ANCSAttribute *app_id;
-  ANCSAttribute *app_name;
+  struct pbl_bt_ancs_attr *app_id;
+  struct pbl_bt_ancs_attr *app_name;
 } AncsAppNameStorageEntry;
 
 static int prv_comparator(void *a, void *b) {
@@ -26,11 +26,11 @@ static int prv_comparator(void *a, void *b) {
     return -1;
   }
 
-  if (entry_a->app_id->length != entry_b->app_id->length) {
+  if (entry_a->app_id->len != entry_b->app_id->len) {
     return -1;
   }
 
-  return (memcmp(entry_a->app_id->value, entry_b->app_id->value, entry_a->app_id->length));
+  return (memcmp(entry_a->app_id->value, entry_b->app_id->value, entry_a->app_id->len));
 }
 
 static void prv_destructor(void *item) {
@@ -59,19 +59,22 @@ void ancs_app_name_storage_deinit(void) {
   }
 }
 
-void ancs_app_name_storage_store(const ANCSAttribute *app_id, const ANCSAttribute *app_name) {
+void ancs_app_name_storage_store(const struct pbl_bt_ancs_attr *app_id,
+                                 const struct pbl_bt_ancs_attr *app_name) {
   if (!app_id || !app_name) {
     return;
   }
 
   // copy app id
-  ANCSAttribute *app_id_copy = pbl_zalloc_check(sizeof(ANCSAttribute) + app_id->length);
+  struct pbl_bt_ancs_attr *app_id_copy =
+      pbl_zalloc_check(sizeof(struct pbl_bt_ancs_attr) + app_id->len);
   ;
-  memcpy(app_id_copy, app_id, sizeof(ANCSAttribute) + app_id->length);
+  memcpy(app_id_copy, app_id, sizeof(struct pbl_bt_ancs_attr) + app_id->len);
   // copy app name
-  ANCSAttribute *app_name_copy = pbl_zalloc_check(sizeof(ANCSAttribute) + app_name->length);
+  struct pbl_bt_ancs_attr *app_name_copy =
+      pbl_zalloc_check(sizeof(struct pbl_bt_ancs_attr) + app_name->len);
   ;
-  memcpy(app_name_copy, app_name, sizeof(ANCSAttribute) + app_name->length);
+  memcpy(app_name_copy, app_name, sizeof(struct pbl_bt_ancs_attr) + app_name->len);
   AncsAppNameStorageEntry entry = {
     .app_id = app_id_copy,
     .app_name = app_name_copy,
@@ -79,9 +82,9 @@ void ancs_app_name_storage_store(const ANCSAttribute *app_id, const ANCSAttribut
   circular_cache_push(s_cache, &entry);
 }
 
-ANCSAttribute *ancs_app_name_storage_get(const ANCSAttribute *app_id) {
+const struct pbl_bt_ancs_attr *ancs_app_name_storage_get(const struct pbl_bt_ancs_attr *app_id) {
   AncsAppNameStorageEntry entry = {
-    .app_id = (ANCSAttribute *)app_id,
+    .app_id = (struct pbl_bt_ancs_attr *)app_id,
   };
   AncsAppNameStorageEntry *found = circular_cache_get(s_cache, &entry);
   if (found) {

@@ -15,8 +15,6 @@
 #include <pbl/services/timeline/timeline_actions.h>
 #include <pbl/util/testing.h>
 
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
-
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
 typedef enum {

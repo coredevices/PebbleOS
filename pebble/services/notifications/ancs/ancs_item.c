@@ -7,6 +7,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/notifications/ancs/ancs_item.h>
+#include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/string.h>
@@ -36,43 +37,47 @@ static int prv_add_ellipsis(char *buffer, int length) {
   return strlen(s_utf8_ellipsis);
 }
 
-static bool prv_should_add_sender_attr(const ANCSAttribute *app_id, const ANCSAttribute *title) {
+static bool prv_should_add_sender_attr(const struct pbl_bt_ancs_attr *app_id,
+                                       const struct pbl_bt_ancs_attr *title) {
   return ((ancs_notifications_util_is_sms(app_id) || ancs_notifications_util_is_phone(app_id)) &&
-          title && title->length > 0);
+          title && title->len > 0);
 }
 
-//! @param pstring The pstring to copy into the buffer
-//! @param buffer The buffer into which to copy the pstring attr. The buffer
+//! @param attr The attribute to copy into the buffer
+//! @param buffer The buffer into which to copy the value of the attribute. The buffer
 //! is assumed to be large enough to contain the string plus an optional
 //! ellipsis plus the zero terminator.
 //! @param add_ellipsis True if ellipsis must be added to buffer
-static char *prv_copy_pstring_and_add_ellipsis(const struct pbl_pstring16 *pstring, char *buffer,
-                                               bool add_ellipsis) {
-  size_t bytes_added = pstring->str_length + 1;
-  pbl_pstring16_to_cstring(pstring, buffer);
+static char *prv_copy_attr_and_add_ellipsis(const struct pbl_bt_ancs_attr *attr, char *buffer,
+                                            bool add_ellipsis) {
+  size_t bytes_added = attr->len + 1;
+  ancs_attr_to_cstring(attr, buffer);
   if (add_ellipsis) {
-    bytes_added += prv_add_ellipsis(buffer, pstring->str_length);
+    bytes_added += prv_add_ellipsis(buffer, attr->len);
   }
   return buffer + bytes_added;
 }
 
-static size_t prv_max_ellipsified_cstring_size(const ANCSAttribute *attr) {
-  if ((attr == nullptr) || (attr->length == 0)) {
+static size_t prv_max_ellipsified_cstring_size(const struct pbl_bt_ancs_attr *attr) {
+  if ((attr == nullptr) || (attr->len == 0)) {
     return 0;
   }
-  return (size_t)attr->length + strlen(s_utf8_ellipsis) + 1 /* zero terminator */;
+  return (size_t)attr->len + strlen(s_utf8_ellipsis) + 1 /* zero terminator */;
 }
 
-static uint8_t *prv_add_pstring_to_attribute(uint8_t *buffer, const ANCSAttribute *ancs_attr,
+static uint8_t *prv_add_pstring_to_attribute(uint8_t *buffer,
+                                             const struct pbl_bt_ancs_attr *ancs_attr,
                                              int max_length, Attribute *attribute,
                                              AttributeId attribute_id) {
   attribute_init_string(attribute, (char *)buffer, attribute_id);
-  return (uint8_t *)prv_copy_pstring_and_add_ellipsis(&ancs_attr->pstr, (char *)buffer,
-                                                      (ancs_attr->length == max_length));
+  return (uint8_t *)prv_copy_attr_and_add_ellipsis(ancs_attr, (char *)buffer,
+                                                   (ancs_attr->len == max_length));
 }
 
-static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer, const ANCSAttribute *sender,
-                                                int sender_max_length, const ANCSAttribute *caption,
+static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer,
+                                                const struct pbl_bt_ancs_attr *sender,
+                                                int sender_max_length,
+                                                const struct pbl_bt_ancs_attr *caption,
                                                 int caption_max_length, const char *action_msg,
                                                 Attribute *attribute, AttributeId attribute_id) {
   // Sets an attribute to <sender> ' ' <action_msg> ( '\n' '"' <caption> '"' )
@@ -81,23 +86,23 @@ static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer, const ANCSAttri
   attribute_init_string(attribute, (char *)buffer, attribute_id);
 
   const char *stripped_caption = nullptr;
-  char caption_buf[caption ? caption->length + 1 : 0];
-  if (caption && caption->length > 0) {
-    pbl_pstring16_to_cstring(&caption->pstr, caption_buf);
+  char caption_buf[caption ? caption->len + 1 : 0];
+  if (caption && caption->len > 0) {
+    ancs_attr_to_cstring(caption, caption_buf);
     // Inserting a caption to an image can easily cause accidental leading whitespace
     stripped_caption = string_strip_leading_whitespace(caption_buf);
   }
 
-  const size_t max_msg_length = sender->length + (stripped_caption ? strlen(stripped_caption) : 0) +
+  const size_t max_msg_length = sender->len + (stripped_caption ? strlen(stripped_caption) : 0) +
                                 MULTIMEDIA_INDICATOR_LENGTH + strlen(s_utf8_ellipsis) + 1;
 
   // Sender and action message
-  int pos = snprintf((char *)buffer, max_msg_length, "%.*s %s", sender->length,
-                     (char *)sender->value, action_msg);
+  int pos = snprintf((char *)buffer, max_msg_length, "%.*s %s", sender->len, (char *)sender->value,
+                     action_msg);
   if (pos < (int)max_msg_length && stripped_caption && !IS_EMPTY_STRING(stripped_caption)) {
     // Quoted caption
     pos += snprintf((char *)buffer + pos, max_msg_length - pos, "\n\"%s\"", stripped_caption);
-    if (caption->length == caption_max_length) {
+    if (caption->len == caption_max_length) {
       // Overwrite the last quote with ellipsis
       const size_t quote_len = 1;
       pos += prv_add_ellipsis((char *)buffer, pos - quote_len);
@@ -117,14 +122,16 @@ static int prv_set_multimedia_action_msg(char *buffer, size_t length) {
 //! @param ancs_action_id The ANCS action id (positive or negative action)
 //! @param title The ANCS title attribute of the notification
 //! @param app_id The ANCS app id attribute of the notification
-//! @param properties The ANCS properties of the notification
+//! @param is_voice_mail Whether the notification is a voicemail
 //! @return Pointer to the end of the buffer (*buffer + size of strings)
 static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction *action,
-                                            ActionId ancs_action_id, const ANCSAttribute *title,
-                                            const ANCSAttribute *app_id, ANCSProperty properties) {
+                                            enum pbl_bt_ancs_action ancs_action_id,
+                                            const struct pbl_bt_ancs_attr *title,
+                                            const struct pbl_bt_ancs_attr *app_id,
+                                            bool is_voice_mail) {
   const bool is_phone_app = ancs_notifications_util_is_phone(app_id);
-  const bool is_voice_mail = (is_phone_app && (properties & ANCSProperty_VoiceMail));
-  if (ancs_action_id == ActionIDNegative) {
+  is_voice_mail = is_voice_mail && is_phone_app;
+  if (ancs_action_id == PBL_BT_ANCS_ACTION_NEGATIVE) {
     action->type =
         is_voice_mail ? TimelineItemActionTypeAncsDelete : TimelineItemActionTypeAncsNegative;
   } else {
@@ -140,7 +147,7 @@ static uint8_t *prv_fill_native_ancs_action(uint8_t **buffer, TimelineItemAction
     *buffer = pbl_malloc_check(prv_max_ellipsified_cstring_size(title));
   }
 
-  uint8_t *rv = prv_add_pstring_to_attribute(*buffer, title, ACTION_MAX_LENGTH,
+  uint8_t *rv = prv_add_pstring_to_attribute(*buffer, title, ANCS_ACTION_MAX_LENGTH,
                                              &action->attr_list.attributes[1], AttributeIdTitle);
 
   // We want to rename the "Clear" action to "Dismiss"
@@ -175,23 +182,23 @@ static uint8_t *prv_fill_pebble_ancs_action(uint8_t **buffer, uint8_t *buf_end,
   return *buffer;
 }
 
-static void prv_populate_attributes(TimelineItem *item, uint8_t **buffer,
-                                    const ANCSAttribute *title, const ANCSAttribute *display_name,
-                                    const ANCSAttribute *subtitle, const ANCSAttribute *message,
-                                    const ANCSAttribute *app_id,
-                                    const ANCSAppMetadata *app_metadata,
-                                    const iOSNotifPrefs *notif_prefs, bool has_multimedia) {
+static void prv_populate_attributes(
+    TimelineItem *item, uint8_t **buffer, const struct pbl_bt_ancs_attr *title,
+    const struct pbl_bt_ancs_attr *display_name, const struct pbl_bt_ancs_attr *subtitle,
+    const struct pbl_bt_ancs_attr *message, const struct pbl_bt_ancs_attr *app_id,
+    const ANCSAppMetadata *app_metadata, const iOSNotifPrefs *notif_prefs, bool has_multimedia) {
   int attr_idx = 0;
 
   if (prv_should_add_sender_attr(app_id, title)) {
     // Copy the title into the sender attribute so we don't lose it in the multimedia case
-    *buffer = prv_add_pstring_to_attribute(
-        *buffer, title, TITLE_MAX_LENGTH, &item->attr_list.attributes[attr_idx], AttributeIdSender);
+    *buffer =
+        prv_add_pstring_to_attribute(*buffer, title, ANCS_TITLE_MAX_LENGTH,
+                                     &item->attr_list.attributes[attr_idx], AttributeIdSender);
     attr_idx++;
   }
 
   // The sender is in the title for iMessage
-  const ANCSAttribute *sender = title;
+  const struct pbl_bt_ancs_attr *sender = title;
   if (has_multimedia) {
     // Move the title (sender) to the body for MMS
     if (ancs_notifications_util_is_group_sms(app_id, subtitle)) {
@@ -203,37 +210,37 @@ static void prv_populate_attributes(TimelineItem *item, uint8_t **buffer,
     }
   }
 
-  if (title && title->length > 0) {
-    *buffer = prv_add_pstring_to_attribute(*buffer, title, TITLE_MAX_LENGTH,
+  if (title && title->len > 0) {
+    *buffer = prv_add_pstring_to_attribute(*buffer, title, ANCS_TITLE_MAX_LENGTH,
                                            &item->attr_list.attributes[attr_idx], AttributeIdTitle);
     attr_idx++;
   }
-  if (display_name && display_name->length > 0) {
+  if (display_name && display_name->len > 0) {
     *buffer =
-        prv_add_pstring_to_attribute(*buffer, display_name, TITLE_MAX_LENGTH,
+        prv_add_pstring_to_attribute(*buffer, display_name, ANCS_TITLE_MAX_LENGTH,
                                      &item->attr_list.attributes[attr_idx], AttributeIdAppName);
     attr_idx++;
   }
-  if (subtitle && subtitle->length > 0) {
+  if (subtitle && subtitle->len > 0) {
     *buffer =
-        prv_add_pstring_to_attribute(*buffer, subtitle, SUBTITLE_MAX_LENGTH,
+        prv_add_pstring_to_attribute(*buffer, subtitle, ANCS_SUBTITLE_MAX_LENGTH,
                                      &item->attr_list.attributes[attr_idx], AttributeIdSubtitle);
     attr_idx++;
   }
-  if (sender && sender->length > 0 && has_multimedia) {
+  if (sender && sender->len > 0 && has_multimedia) {
     char action_msg[MULTIMEDIA_INDICATOR_LENGTH];
     prv_set_multimedia_action_msg(action_msg, sizeof(action_msg));
     *buffer = prv_add_action_msg_to_attribute(
-        *buffer, sender, TITLE_MAX_LENGTH, message, MESSAGE_MAX_LENGTH, action_msg,
+        *buffer, sender, ANCS_TITLE_MAX_LENGTH, message, ANCS_MESSAGE_MAX_LENGTH, action_msg,
         &item->attr_list.attributes[attr_idx], AttributeIdBody);
     attr_idx++;
-  } else if (message && message->length > 0) {
-    *buffer = prv_add_pstring_to_attribute(*buffer, message, MESSAGE_MAX_LENGTH,
+  } else if (message && message->len > 0) {
+    *buffer = prv_add_pstring_to_attribute(*buffer, message, ANCS_MESSAGE_MAX_LENGTH,
                                            &item->attr_list.attributes[attr_idx], AttributeIdBody);
     attr_idx++;
   }
-  if (app_id && app_id->length > 0) {
-    *buffer = prv_add_pstring_to_attribute(*buffer, app_id, APP_ID_MAX_LENGTH,
+  if (app_id && app_id->len > 0) {
+    *buffer = prv_add_pstring_to_attribute(*buffer, app_id, ANCS_APP_ID_MAX_LENGTH,
                                            &item->attr_list.attributes[attr_idx],
                                            AttributeIdiOSAppIdentifier);
     attr_idx++;
@@ -289,8 +296,8 @@ static void prv_populate_attributes(TimelineItem *item, uint8_t **buffer,
 }
 
 static bool prv_should_hide_reply_because_group_sms(const TimelineItemAction *action,
-                                                    const ANCSAttribute *app_id,
-                                                    const ANCSAttribute *subtitle) {
+                                                    const struct pbl_bt_ancs_attr *app_id,
+                                                    const struct pbl_bt_ancs_attr *subtitle) {
   if (action->type != TimelineItemActionTypeAncsResponse) {
     return false;
   }
@@ -299,22 +306,23 @@ static bool prv_should_hide_reply_because_group_sms(const TimelineItemAction *ac
 }
 
 static void prv_populate_actions(TimelineItem *item, uint8_t **buffer, uint8_t *buf_end,
-                                 const ANCSAttribute *positive_action,
-                                 const ANCSAttribute *negative_action,
-                                 const ANCSAttribute *subtitle, const ANCSAttribute *app_id,
+                                 const struct pbl_bt_ancs_attr *positive_action,
+                                 const struct pbl_bt_ancs_attr *negative_action,
+                                 const struct pbl_bt_ancs_attr *subtitle,
+                                 const struct pbl_bt_ancs_attr *app_id,
                                  const TimelineItemActionGroup *pebble_actions,
-                                 ANCSProperty properties) {
+                                 bool is_voice_mail) {
   TimelineItemAction *action = item->action_group.actions;
 
   // The order the actions get filled is important. See comment in ancs_item_create_and_populate
   if (positive_action) {
-    *buffer = prv_fill_native_ancs_action(buffer, action, ActionIDPositive, positive_action, app_id,
-                                          properties);
+    *buffer = prv_fill_native_ancs_action(buffer, action, PBL_BT_ANCS_ACTION_POSITIVE,
+                                          positive_action, app_id, is_voice_mail);
     action++;
   }
   if (negative_action) {
-    *buffer = prv_fill_native_ancs_action(buffer, action, ActionIDNegative, negative_action, app_id,
-                                          properties);
+    *buffer = prv_fill_native_ancs_action(buffer, action, PBL_BT_ANCS_ACTION_NEGATIVE,
+                                          negative_action, app_id, is_voice_mail);
     action++;
   }
   if (pebble_actions) {
@@ -330,20 +338,20 @@ static void prv_populate_actions(TimelineItem *item, uint8_t **buffer, uint8_t *
   }
 }
 
-TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
-                                            ANCSAttribute *app_attributes[],
+TimelineItem *ancs_item_create_and_populate(const struct pbl_bt_ancs_attr *const *notif_attributes,
+                                            const struct pbl_bt_ancs_attr *const *app_attributes,
                                             const ANCSAppMetadata *app_metadata,
                                             iOSNotifPrefs *notif_prefs, time_t timestamp,
-                                            ANCSProperty properties) {
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  const ANCSAttribute *display_name = app_attributes[FetchedAppAttributeIndexDisplayName];
-  const ANCSAttribute *title = notif_attributes[FetchedNotifAttributeIndexTitle];
+                                            const struct pbl_bt_ancs_notif *notif) {
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  const struct pbl_bt_ancs_attr *display_name = app_attributes[ANCS_APP_ATTR_DISPLAY_NAME];
+  const struct pbl_bt_ancs_attr *title = notif_attributes[ANCS_NOTIF_ATTR_TITLE];
   const bool has_multimedia =
-      (ancs_notifications_util_is_sms(app_id) && (properties & ANCSProperty_MultiMedia));
+      (ancs_notifications_util_is_sms(app_id) && (notif->flags & PBL_BT_ANCS_FLAG_MULTIMEDIA));
 
   if (display_name) {
     // dedupe title & display name, they often are the same
-    if (pbl_pstring16_equal(&display_name->pstr, &title->pstr)) {
+    if (ancs_attr_equal(display_name, title)) {
       title = nullptr;
     }
 
@@ -354,23 +362,23 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
     }
   }
 
-  const ANCSAttribute *subtitle = notif_attributes[FetchedNotifAttributeIndexSubtitle];
-  const ANCSAttribute *message = notif_attributes[FetchedNotifAttributeIndexMessage];
+  const struct pbl_bt_ancs_attr *subtitle = notif_attributes[ANCS_NOTIF_ATTR_SUBTITLE];
+  const struct pbl_bt_ancs_attr *message = notif_attributes[ANCS_NOTIF_ATTR_MESSAGE];
 
   // Action labels (optional)
-  const ANCSAttribute *positive_action =
-      notif_attributes[FetchedNotifAttributeIndexPositiveActionLabel];
-  if (positive_action && positive_action->length == 0) {
+  const struct pbl_bt_ancs_attr *positive_action =
+      notif_attributes[ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL];
+  if (positive_action && positive_action->len == 0) {
     positive_action = nullptr;
   }
-  const ANCSAttribute *negative_action =
-      notif_attributes[FetchedNotifAttributeIndexNegativeActionLabel];
-  if (negative_action && negative_action->length == 0) {
+  const struct pbl_bt_ancs_attr *negative_action =
+      notif_attributes[ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL];
+  if (negative_action && negative_action->len == 0) {
     negative_action = nullptr;
   }
 
   // See if we support any additional actions (beyond what ANCS supports) for this type of notif
-  if (app_id && app_id->length == 0) {
+  if (app_id && app_id->len == 0) {
     app_id = nullptr;
   }
 
@@ -441,10 +449,9 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
     }
   }
 
-  int num_attr = ((title && title->length > 0 && !has_multimedia) ? 1 : 0) +
-                 ((display_name && display_name->length > 0) ? 1 : 0) +
-                 ((subtitle->length > 0) ? 1 : 0) + ((app_id->length > 0) ? 1 : 0) +
-                 ((message->length > 0 || has_multimedia) ? 1 : 0) +
+  int num_attr = ((title && title->len > 0 && !has_multimedia) ? 1 : 0) +
+                 ((display_name && display_name->len > 0) ? 1 : 0) + ((subtitle->len > 0) ? 1 : 0) +
+                 ((app_id->len > 0) ? 1 : 0) + ((message->len > 0 || has_multimedia) ? 1 : 0) +
                  (prv_should_add_sender_attr(app_id, title) ? 1 : 0) + 1; // for icon
 
 #if PBL_COLOR
@@ -486,22 +493,23 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
 
   uint8_t *buf_end = buffer + required_space_for_strings;
   prv_populate_actions(item, &buffer, buf_end, positive_action, negative_action, subtitle, app_id,
-                       notif_prefs ? &notif_prefs->action_group : nullptr, properties);
+                       notif_prefs ? &notif_prefs->action_group : nullptr,
+                       notif->category == PBL_BT_ANCS_CATEGORY_VOICEMAIL);
 
   return item;
 }
 
 // Replace the dismiss action of a timeline item with the ancs negative action
 void ancs_item_update_dismiss_action(TimelineItem *item, uint32_t uid,
-                                     const ANCSAttribute *attr_action_neg) {
+                                     const struct pbl_bt_ancs_attr *attr_action_neg) {
   TimelineItemAction *dismiss = timeline_item_find_dismiss_action(item);
 
   if (dismiss) {
     attribute_list_init_list(NUM_NATIVE_ANCS_ACTION_ATTRS + 1, &dismiss->attr_list);
 
     uint8_t *string_buffer = nullptr;
-    prv_fill_native_ancs_action(&string_buffer, dismiss, ActionIDNegative, attr_action_neg, nullptr,
-                                ANCSProperty_None);
+    prv_fill_native_ancs_action(&string_buffer, dismiss, PBL_BT_ANCS_ACTION_NEGATIVE,
+                                attr_action_neg, nullptr, false);
 
     // Add ancs ID as attribute since reminder's parent needs to be the associated pin
     dismiss->attr_list.attributes[NUM_NATIVE_ANCS_ACTION_ATTRS].id = AttributeIdAncsId;

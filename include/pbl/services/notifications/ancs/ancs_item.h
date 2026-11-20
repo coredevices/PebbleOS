@@ -5,9 +5,8 @@
 
 #include "ancs_notifications_util.h"
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_item ANCS items
@@ -22,20 +21,20 @@
  * Strings that reach the ANCS length limit are ellipsized. Actions are, in order, the ANCS
  * positive and negative actions followed by the actions from @p notif_prefs.
  *
- * @param notif_attributes Notification attributes, indexed by FetchedNotifAttributeIndex.
- * @param app_attributes App attributes (the display name), indexed by FetchedAppAttributeIndex.
+ * @param notif_attributes Notification attributes, indexed by enum ancs_notif_attr.
+ * @param app_attributes App attributes (the display name), indexed by enum ancs_app_attr.
  * @param app_metadata Icon and color of the app.
  * @param notif_prefs iOS notification prefs of the app, may be NULL.
  * @param timestamp Time the notification occurred.
- * @param properties ANCS properties (category, flags).
+ * @param notif The notification, as the phone told of it.
  * @return New item allocated on the calling task's heap (free with timeline_item_destroy()), or
  *         NULL if out of memory. Header fields other than the timestamp are left for the caller.
  */
-TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
-                                            ANCSAttribute *app_attributes[],
+TimelineItem *ancs_item_create_and_populate(const struct pbl_bt_ancs_attr *const *notif_attributes,
+                                            const struct pbl_bt_ancs_attr *const *app_attributes,
                                             const ANCSAppMetadata *app_metadata,
                                             iOSNotifPrefs *notif_prefs, time_t timestamp,
-                                            ANCSProperty properties);
+                                            const struct pbl_bt_ancs_notif *notif);
 
 /**
  * @brief Replace the dismiss action of an item with an ANCS negative action.
@@ -47,6 +46,6 @@ TimelineItem *ancs_item_create_and_populate(ANCSAttribute *notif_attributes[],
  * @param attr_action_neg Negative action label from that notification.
  */
 void ancs_item_update_dismiss_action(TimelineItem *item, uint32_t uid,
-                                     const ANCSAttribute *attr_action_neg);
+                                     const struct pbl_bt_ancs_attr *attr_action_neg);
 
 /** @} */
