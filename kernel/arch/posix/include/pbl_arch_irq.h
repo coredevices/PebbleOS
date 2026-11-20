@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+#define ARCH_IRQ_PRIO_LOWEST 0U
+
 #define ARCH_IRQ_HANDLER(_n)  ARCH_IRQ_HANDLER_(_n)
 #define ARCH_IRQ_HANDLER_(_n) pbl_isr_##_n
 

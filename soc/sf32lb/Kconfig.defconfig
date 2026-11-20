@@ -34,9 +34,6 @@ endif # NIMBLE
 config NUM_IRQS
     default 99
 
-config NUM_IRQ_PRIO_BITS
-    default 3
-
 endif # SOC_SF32LB52
 
 if SOC_SF32LB57
@@ -50,8 +47,5 @@ endchoice
 
 config NUM_IRQS
     default 106
-
-config NUM_IRQ_PRIO_BITS
-    default 3
 
 endif # SOC_SF32LB57

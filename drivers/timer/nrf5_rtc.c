@@ -76,7 +76,7 @@ static void prv_isr(void) {
 }
 
 // Lowest priority, as the kernel's own interrupts.
-PBL_IRQ_CONNECT(RTC1, (1U << CONFIG_NUM_IRQ_PRIO_BITS) - 1U, prv_isr, , 0);
+PBL_IRQ_CONNECT(RTC1, PBL_IRQ_PRIO_LOWEST, prv_isr, , 0);
 
 // Both devices share the timer.
 static int prv_init(const struct pbl_device *dev) {

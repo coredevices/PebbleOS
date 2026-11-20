@@ -46,7 +46,4 @@ endif # NIMBLE
 config NUM_IRQS
     default 48
 
-config NUM_IRQ_PRIO_BITS
-    default 3
-
 endif # SOC_NRF52
