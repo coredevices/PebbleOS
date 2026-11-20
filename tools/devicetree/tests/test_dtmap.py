@@ -2362,6 +2362,7 @@ REGS_DTS = """/dts-v1/;
 
         rcc: clock-controller@1000 {
             reg = <0x1000 0x400>;
+            acme,num-gates = <12>;
         };
 
         flash: flash@2000 {
@@ -2376,7 +2377,7 @@ REGS_DTS = """/dts-v1/;
 """
 
 
-def regs(tmp_path, labels, config="SOC_ACME"):
+def regs(tmp_path, labels, config="SOC_ACME", props=()):
     def error(message):
         return DtError(f"acme.regs.yaml: {message}")
 
@@ -2386,7 +2387,9 @@ def regs(tmp_path, labels, config="SOC_ACME"):
         [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
         check=True,
     )
-    return dtmap.regs_header(fdt.load(dtb), [("SOC_ACME", labels, error)], {config})
+    return dtmap.regs_header(
+        fdt.load(dtb), [("SOC_ACME", labels, list(props), error)], {config}
+    )
 
 
 def test_regs_are_translated_through_ranges(tmp_path):
@@ -2401,6 +2404,13 @@ def test_regs_by_name(tmp_path):
     assert "#define PBL_DT_SIZE_FLASH_MEM 0x10000UL" in text
     with pytest.raises(DtError, match="no reg named 'xip'"):
         regs(tmp_path, [{"label": "flash", "reg": "xip"}])
+
+
+def test_regs_props(tmp_path):
+    text = regs(tmp_path, [], props=[{"label": "rcc", "prop": "acme,num-gates"}])
+    assert "#define PBL_DT_PROP_RCC_ACME_NUM_GATES 12U" in text
+    with pytest.raises(DtError, match="has no 'acme,missing'"):
+        regs(tmp_path, [], props=[{"label": "rcc", "prop": "acme,missing"}])
 
 
 def test_regs_of_disabled_code_are_left_out(tmp_path):

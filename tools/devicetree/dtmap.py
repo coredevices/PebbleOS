@@ -1390,7 +1390,8 @@ class Generator:
 PARTITIONS = "fixed-partitions"
 PARTITIONS_HEADER = "devicetree/partitions.h"
 REGS_HEADER = "devicetree/regs.h"
-REGS_KEYS = {"config", "labels"}
+REGS_KEYS = {"config", "labels", "props"}
+REGS_PROP_KEYS = {"label", "prop"}
 KIB = 1024
 MIB = 1024 * KIB
 
@@ -1533,21 +1534,35 @@ def load_regs(srcdir, appdir=None):
         def error(message, path=path):
             return DtError(f"{path}: {message}")
 
-        check_keys(error, data, REGS_KEYS, "regs", ("config", "labels"))
-        regs.append((data["config"], as_list(data["labels"]), error))
+        check_keys(error, data, REGS_KEYS, "regs", ("config",))
+        if "labels" not in data and "props" not in data:
+            raise error("neither 'labels' nor 'props'")
+        props = as_list(data.get("props", []))
+        for prop in props:
+            check_keys(error, prop, REGS_PROP_KEYS, "props", ("label", "prop"))
+        regs.append((data["config"], as_list(data.get("labels", [])), props, error))
     return regs
 
 
 def regs_header(tree, regs, config):
-    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code."""
+    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code, and
+    PBL_DT_PROP_* of the properties they name."""
     lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
     nodes = {}
     if tree is not None:
         nodes = {label: node for node in tree.nodes() for label in node.labels}
     defines = {}
-    for symbol, labels, error in regs:
+    for symbol, labels, props, error in regs:
         if symbol not in config:
             continue
+        for item in props:
+            node = nodes.get(item["label"])
+            if node is None:
+                raise error(f"no node labelled '{item['label']}'")
+            if not node.has(item["prop"]):
+                raise error(f"{node.path} has no '{item['prop']}'")
+            name = c_ident(f"{item['label']}_{item['prop']}").upper()
+            defines[f"PBL_DT_PROP_{name}"] = f"{node.u32(item['prop'])}U"
         for item in labels:
             label, reg = (
                 (item, None) if isinstance(item, str) else (item["label"], item["reg"])
