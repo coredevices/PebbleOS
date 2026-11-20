@@ -10,6 +10,7 @@
 
 #include <pbl/crypto/sha256.h>
 #include <pbl/drivers/crypto.h>
+#include <pbl/util/byteorder.h>
 
 #include <mbedtls/platform_util.h>
 #include <mbedtls/sha256.h>
@@ -102,16 +103,11 @@ void pbl_sha256_final(struct pbl_sha256_ctx *ctx, uint8_t digest[PBL_SHA256_DIGE
     used = 0;
   }
   memset(&ctx->buf[used], 0, PBL_SHA256_BLOCK_SIZE - 8U - used);
-  for (unsigned int i = 0; i < 8U; i++) {
-    ctx->buf[PBL_SHA256_BLOCK_SIZE - 8U + i] = (uint8_t)(bits >> (56U - 8U * i));
-  }
+  pbl_put_be64(bits, &ctx->buf[PBL_SHA256_BLOCK_SIZE - 8U]);
   prv_blocks(ctx->state, ctx->buf, 1);
 
   for (unsigned int i = 0; i < 8U; i++) {
-    digest[4U * i] = (uint8_t)(ctx->state[i] >> 24);
-    digest[4U * i + 1U] = (uint8_t)(ctx->state[i] >> 16);
-    digest[4U * i + 2U] = (uint8_t)(ctx->state[i] >> 8);
-    digest[4U * i + 3U] = (uint8_t)ctx->state[i];
+    pbl_put_be32(ctx->state[i], &digest[4U * i]);
   }
 
   mbedtls_platform_zeroize(ctx, sizeof(*ctx));
