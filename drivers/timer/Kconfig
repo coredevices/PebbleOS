@@ -30,6 +30,14 @@ config TIMER_SF32LB_LPTIM
       calibrated LRC10 or the 32 kHz crystal. It keeps running and wakes the
       CPU up in deep sleep.
 
+config TIMER_STM32_TIM
+    bool "ST STM32 TIM5"
+    select CLK
+    help
+      Clock source and clock event device on TIM5, the 32-bit timer of the
+      STM32H7, counting about 1 MHz from its kernel clock. It stops in Stop
+      mode.
+
 config TIMER_POSIX
     bool "POSIX"
     help
