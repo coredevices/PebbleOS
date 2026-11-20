@@ -139,7 +139,7 @@ int pbl_log_binary_format(char *buffer, int buffer_len, const uint8_t log_level,
   msg->message_length = 0;
 
   // Ensure we only send the last 15 characters of a filename
-  const char *filename = GET_FILE_NAME(src_filename_path);
+  const char *filename = PBL_BASENAME(src_filename_path);
   int filename_length = strlen(filename);
   if (filename_length > 15) {
     // If we have to truncate, truncate at the beginning as opposed to the end.

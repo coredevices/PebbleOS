@@ -34,7 +34,7 @@ static void prv_draw_processed_func(KinoReel *reel, GContext *ctx, GPoint offset
 
   graphics_draw_bitmap_in_rect_processed(
       ctx, bitmap_reel->bitmap, &bounds,
-      NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, nullptr));
+      PBL_NULL_SAFE_FIELD_ACCESS(processor, bitmap_processor, nullptr));
 
   // Restore previous compositing mode
   graphics_context_set_compositing_mode(ctx, prev_compositing_mode);

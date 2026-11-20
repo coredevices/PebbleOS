@@ -35,13 +35,13 @@ typedef struct LauncherAppGlanceWeather {
 static KinoReel *prv_get_icon(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(weather_glance, icon, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(weather_glance, icon, nullptr);
 }
 
 static const char *prv_get_title(LauncherAppGlanceStructured *structured_glance) {
   LauncherAppGlanceWeather *weather_glance =
       launcher_app_glance_structured_get_data(structured_glance);
-  return NULL_SAFE_FIELD_ACCESS(weather_glance, title, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(weather_glance, title, nullptr);
 }
 
 static void prv_weather_glance_subtitle_dynamic_text_node_update(
@@ -89,7 +89,7 @@ static void prv_weather_event_handler([[maybe_unused]] PebbleEvent *event, void 
 
   // Update the icon for the forecast's weather type
   const WeatherType weather_type =
-      NULL_SAFE_FIELD_ACCESS(forecast, current_weather_type, WeatherType_Unknown);
+      PBL_NULL_SAFE_FIELD_ACCESS(forecast, current_weather_type, WeatherType_Unknown);
   const uint32_t new_weather_icon_resource_id =
       prv_get_weather_icon_resource_id_for_type(weather_type);
   if (weather_glance->icon_resource_id != new_weather_icon_resource_id) {
@@ -103,7 +103,7 @@ static void prv_weather_event_handler([[maybe_unused]] PebbleEvent *event, void 
   memset(weather_glance->title, 0, weather_glance_title_size);
   // Choose the title we should display based on whether or not we have a forecast
   const char *title =
-      NULL_SAFE_FIELD_ACCESS(forecast, location_name, weather_glance->fallback_title);
+      PBL_NULL_SAFE_FIELD_ACCESS(forecast, location_name, weather_glance->fallback_title);
   // Subtract 1 from the size as a shortcut for null terminating the title since we zero it out
   // above
   strncpy(weather_glance->title, title, weather_glance_title_size - 1);

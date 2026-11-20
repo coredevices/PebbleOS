@@ -489,7 +489,7 @@ static void prv_draw_processed(KinoReel *reel, GContext *ctx, GPoint offset,
 
 static uint32_t prv_get_elapsed(KinoReel *reel) {
   LauncherAppGlanceStructured *structured_glance = kino_reel_custom_get_data(reel);
-  return NULL_SAFE_FIELD_ACCESS(structured_glance, selection_animation_elapsed_ms, 0);
+  return PBL_NULL_SAFE_FIELD_ACCESS(structured_glance, selection_animation_elapsed_ms, 0);
 }
 
 static bool prv_set_elapsed(KinoReel *reel, uint32_t elapsed_ms) {
@@ -511,7 +511,7 @@ static bool prv_set_elapsed(KinoReel *reel, uint32_t elapsed_ms) {
 static uint32_t prv_get_duration(KinoReel *reel) {
   // TODO: loop the selection animation
   LauncherAppGlanceStructured *structured_glance = kino_reel_custom_get_data(reel);
-  return NULL_SAFE_FIELD_ACCESS(structured_glance, selection_animation_duration_ms, 0);
+  return PBL_NULL_SAFE_FIELD_ACCESS(structured_glance, selection_animation_duration_ms, 0);
 }
 
 static void prv_destructor(KinoReel *reel) {
@@ -553,7 +553,7 @@ LauncherAppGlanceStructured *launcher_app_glance_structured_create(
 }
 
 void *launcher_app_glance_structured_get_data(LauncherAppGlanceStructured *structured_glance) {
-  return NULL_SAFE_FIELD_ACCESS(structured_glance, data, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(structured_glance, data, nullptr);
 }
 
 void launcher_app_glance_structured_notify_service_glance_changed(

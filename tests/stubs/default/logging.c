@@ -15,7 +15,7 @@ PBL_WEAK int g_pbl_log_level = 0;
 
 PBL_WEAK void stub_log_internal(uint8_t log_level, const char *src_filename, int src_line_number,
                                 const char *fmt, va_list args) {
-  printf("%s:%d> ", GET_FILE_NAME(src_filename), src_line_number);
+  printf("%s:%d> ", PBL_BASENAME(src_filename), src_line_number);
   vprintf(fmt, args);
   printf("\n");
 }

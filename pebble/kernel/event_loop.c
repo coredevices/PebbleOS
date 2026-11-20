@@ -414,7 +414,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
     case PEBBLE_APP_LAUNCH_EVENT:
       if (!app_install_is_app_running(e->launch_app.id)) {
         const LaunchConfigCommon common =
-            NULL_SAFE_FIELD_ACCESS(e->launch_app.data, common, (LaunchConfigCommon){});
+            PBL_NULL_SAFE_FIELD_ACCESS(e->launch_app.data, common, (LaunchConfigCommon){});
         process_manager_launch_process(&(ProcessLaunchConfig){
           .id = e->launch_app.id,
           .common = common,
@@ -438,7 +438,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
       if (!app_install_is_worker_running(e->launch_app.id)) {
         process_manager_launch_process(&(ProcessLaunchConfig){
           .id = e->launch_app.id,
-          .common = NULL_SAFE_FIELD_ACCESS(e->launch_app.data, common, (LaunchConfigCommon){}),
+          .common = PBL_NULL_SAFE_FIELD_ACCESS(e->launch_app.data, common, (LaunchConfigCommon){}),
           .worker = true,
         });
       }

@@ -289,8 +289,8 @@ static Window *prv_remove_item(WindowStackItem *pop_item,
 
 Window *window_stack_get_top_window(WindowStack *window_stack) {
   WindowStackItem *item =
-      (WindowStackItem *)NULL_SAFE_FIELD_ACCESS(window_stack, list_head, nullptr);
-  return NULL_SAFE_FIELD_ACCESS(item, window, nullptr);
+      (WindowStackItem *)PBL_NULL_SAFE_FIELD_ACCESS(window_stack, list_head, nullptr);
+  return PBL_NULL_SAFE_FIELD_ACCESS(item, window, nullptr);
 }
 
 void window_stack_push(WindowStack *window_stack, Window *window, bool animated) {

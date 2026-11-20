@@ -18,7 +18,7 @@
  * @param default_value Value when @p struct_ptr is NULL.
  * @return <tt>struct_ptr->field_name</tt>, or @p default_value.
  */
-#define NULL_SAFE_FIELD_ACCESS(struct_ptr, field_name, default_value) \
+#define PBL_NULL_SAFE_FIELD_ACCESS(struct_ptr, field_name, default_value) \
   ((struct_ptr) ? ((struct_ptr)->field_name) : (default_value))
 
 /** @} */

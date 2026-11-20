@@ -73,7 +73,7 @@ static void prv_log_serial(uint8_t log_level, const char *src_filename, int src_
   prv_log_timestamp();
 
   // Write out the filename
-  src_filename = GET_FILE_NAME(src_filename);
+  src_filename = PBL_BASENAME(src_filename);
   prv_write(src_filename);
 
   // Write out the line number

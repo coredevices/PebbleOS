@@ -41,7 +41,7 @@ void string_strip_trailing_whitespace(const char *string, char *string_out);
  *
  * @param s String, not NULL.
  */
-#define IS_EMPTY_STRING(s) (s[0] == '\0')
+#define PBL_IS_EMPTY_STRING(s) (s[0] == '\0')
 
 /**
  * @brief Get the file name part of a path.
@@ -49,7 +49,7 @@ void string_strip_trailing_whitespace(const char *string, char *string_out);
  * @param file Path.
  * @return Part of @p file after its last '/', or @p file itself.
  */
-#define GET_FILE_NAME(file) (strrchr(file, '/') ? (strrchr(file, '/') + 1) : (file))
+#define PBL_BASENAME(file) (strrchr(file, '/') ? (strrchr(file, '/') + 1) : (file))
 
 /**
  * @brief Format an unsigned integer as "0x" followed by 8 hex digits.

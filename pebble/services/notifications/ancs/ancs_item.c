@@ -99,7 +99,7 @@ static uint8_t *prv_add_action_msg_to_attribute(uint8_t *buffer,
   // Sender and action message
   int pos = snprintf((char *)buffer, max_msg_length, "%.*s %s", sender->len, (char *)sender->value,
                      action_msg);
-  if (pos < (int)max_msg_length && stripped_caption && !IS_EMPTY_STRING(stripped_caption)) {
+  if (pos < (int)max_msg_length && stripped_caption && !PBL_IS_EMPTY_STRING(stripped_caption)) {
     // Quoted caption
     pos += snprintf((char *)buffer + pos, max_msg_length - pos, "\n\"%s\"", stripped_caption);
     if (caption->len == caption_max_length) {

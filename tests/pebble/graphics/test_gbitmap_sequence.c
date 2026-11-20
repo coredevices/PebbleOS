@@ -47,7 +47,7 @@ void stub_log_internal(uint8_t log_level, const char *src_filename, int src_line
   if ((log_level == APP_LOG_LEVEL_WARNING) && strstr(fmt, "PREVIOUS")) {
     s_dispose_previous_warnings++;
   }
-  printf("%s:%d> ", GET_FILE_NAME(src_filename), src_line_number);
+  printf("%s:%d> ", PBL_BASENAME(src_filename), src_line_number);
   vprintf(fmt, args);
   printf("\n");
 }

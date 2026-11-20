@@ -137,7 +137,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
   // We need to set the subtitle to the name of a vibe score if it's NULL at this point
   if (!subtitle) {
     subtitle = vibe_score_info_get_name(alerts_preferences_get_vibe_score_for_client(client));
-    if (subtitle && IS_EMPTY_STRING(subtitle)) {
+    if (subtitle && PBL_IS_EMPTY_STRING(subtitle)) {
       subtitle = nullptr;
     }
   }

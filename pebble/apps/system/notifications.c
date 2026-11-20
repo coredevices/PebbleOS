@@ -284,10 +284,10 @@ static void prv_group_window_draw_row(GContext *ctx, const Layer *cell_layer, Me
 
   TimelineItem *notification = &loaded_node->notification;
   const char *message = attribute_get_string(&notification->attr_list, AttributeIdBody, "");
-  if (IS_EMPTY_STRING(message)) {
+  if (PBL_IS_EMPTY_STRING(message)) {
     message = attribute_get_string(&notification->attr_list, AttributeIdSubtitle, "");
   }
-  if (IS_EMPTY_STRING(message)) {
+  if (PBL_IS_EMPTY_STRING(message)) {
     message = attribute_get_string(&notification->attr_list, AttributeIdTitle, "[Empty]");
   }
 
@@ -784,15 +784,15 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
   const char *body = attribute_get_string(&notification->attr_list, AttributeIdBody, "");
 
   // We show the app name if we don't have a custom icon, otherwise we use the title
-  if (!IS_EMPTY_STRING(app_name) && loaded_node->icon_is_default) {
+  if (!PBL_IS_EMPTY_STRING(app_name) && loaded_node->icon_is_default) {
     title = app_name;
   }
 
-  if (!IS_EMPTY_STRING(title) && !IS_EMPTY_STRING(subtitle)) {
+  if (!PBL_IS_EMPTY_STRING(title) && !PBL_IS_EMPTY_STRING(subtitle)) {
     // we got a title & subtitle, we're done
-  } else if (IS_EMPTY_STRING(title) && IS_EMPTY_STRING(subtitle)) {
+  } else if (PBL_IS_EMPTY_STRING(title) && PBL_IS_EMPTY_STRING(subtitle)) {
     // we got neither, use the body
-    if (IS_EMPTY_STRING(body)) {
+    if (PBL_IS_EMPTY_STRING(body)) {
       // we're screwed... empty message
       title = "[Empty]";
     } else {
@@ -800,11 +800,11 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
       title = body;
       subtitle = strchr(body, '\n'); // NULL handled gracefully downstream
     }
-  } else if (IS_EMPTY_STRING(title)) {
+  } else if (PBL_IS_EMPTY_STRING(title)) {
     // no title, but yes subtitle.
     title = subtitle;
     subtitle = body;
-  } else if (IS_EMPTY_STRING(subtitle)) {
+  } else if (PBL_IS_EMPTY_STRING(subtitle)) {
     // no subtitle, but yes title
     subtitle = body;
   } else {
@@ -813,7 +813,7 @@ static void prv_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIn
 
   if (notifications_history_row_is_collapsed_group(row)) {
     title = prv_get_group_title(notifications_data, row);
-    subtitle = !IS_EMPTY_STRING(body) ? body : subtitle;
+    subtitle = !PBL_IS_EMPTY_STRING(body) ? body : subtitle;
   }
 
   draw_cell(ctx, cell_layer, title, subtitle, loaded_node->icon);

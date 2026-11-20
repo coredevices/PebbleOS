@@ -22,7 +22,7 @@ static void log_internal(uint8_t log_level, const char *src_filename, int src_li
   // this implementation for log_internal constructs the logged string inside of a static buffer
   // so we can compare it against some test expectation
 
-  printf("%s:%d> ", GET_FILE_NAME(src_filename), src_line_number);
+  printf("%s:%d> ", PBL_BASENAME(src_filename), src_line_number);
 
   static char buffer[256];
   const int written = vsprintf(buffer, fmt, args);

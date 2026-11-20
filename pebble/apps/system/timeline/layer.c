@@ -989,7 +989,7 @@ void timeline_layer_init(TimelineLayer *layer, const GRect *frame_ref,
   layer_set_clips(&layer->layer, false);
   layer_set_update_proc(&layer->layer, prv_update_proc);
   TimelineIterState *state = timeline_model_get_current_state();
-  layer->current_day = NULL_SAFE_FIELD_ACCESS(state, current_day, 0);
+  layer->current_day = PBL_NULL_SAFE_FIELD_ACCESS(state, current_day, 0);
   const TimelineLayerStyle *style = prv_get_style();
   // The arrow is inverted on round, so hide it by extending the width of the sidebar
   layer->sidebar_width = frame_ref->size.w + PBL_IF_ROUND_ELSE(style->sidebar_arrow_size.w, 0);
