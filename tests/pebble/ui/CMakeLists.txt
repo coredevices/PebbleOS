@@ -444,6 +444,34 @@ pbl_clar_test(test_expandable_dialog
   TEST_IMAGES
 )
 
+pbl_clar_test(test_actionable_dialog
+  MODULES resources graphics_bitdepth gdraw text_render png text_layer
+  SOURCES
+    pebble/applib/graphics/gtransform.c
+    pebble/applib/graphics/text_resources.c
+    pebble/applib/ui/layer.c
+    pebble/applib/ui/menu_layer_system_cells.c
+    pebble/shell/system_theme_style.c
+    subsys/logging/hexdump.c
+    tests/fakes/fake_gbitmap_get_data_row.c
+    tests/fakes/fake_rtc.c
+    tests/stubs/stubs_animation.c
+    tests/stubs/stubs_system_theme.c
+    pebble/applib/ui/action_bar_layer.c
+    pebble/applib/ui/animation_interpolate.c
+    pebble/applib/ui/dialogs/actionable_dialog.c
+    pebble/applib/ui/dialogs/dialog.c
+    pebble/applib/ui/dialogs/dialog_private.c
+    pebble/applib/ui/kino/kino_layer.c
+    pebble/applib/ui/kino/kino_player.c
+    pebble/applib/ui/kino/kino_reel_custom.c
+    pebble/applib/ui/window.c
+  PLATFORMS gabbro
+  DEFINES USE_DISPLAY_PERIMETER_ON_FONT_LAYOUT=1 CONFIG_ORIENTATION_MANAGER
+  OVERRIDES dummy_board
+  TEST_IMAGES
+)
+
 pbl_clar_test(test_text_layer
   MODULES gtypes
   SOURCES
