@@ -6,114 +6,14 @@ driver class. They live in `samples/`, and are meant to be read, run and
 copied from.
 
 ```{toctree}
-:maxdepth: 1
-:caption: Kernel
+:maxdepth: 2
 
-kernel/threads.md
-kernel/mutex.md
-kernel/semaphore.md
-kernel/msgq.md
-kernel/poll.md
-kernel/timer.md
-kernel/work.md
-kernel/delayed_work.md
-kernel/heap.md
-kernel/time.md
-kernel/idle.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Classic synchronization problems
-
-kernel/classic/dining_philosophers.md
-kernel/classic/bounded_buffer.md
-kernel/classic/readers_writers.md
-kernel/classic/sleeping_barber.md
-kernel/classic/priority_inversion.md
-kernel/classic/barrier.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Subsystems
-
-subsys/bluetooth/ancs_client.md
-subsys/crc/checksums.md
-subsys/crypto/sha256.md
-subsys/crypto/aes.md
-subsys/fs/files.md
-subsys/settings/store.md
-subsys/i18n/catalog.md
-subsys/input/events.md
-subsys/loader/image.md
-subsys/logging/levels.md
-subsys/profiler/nodes.md
-subsys/shell/commands.md
-subsys/task_wdt/stall.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Drivers
-
-drivers/accel.md
-drivers/als.md
-drivers/backlight.md
-drivers/charger.md
-drivers/display.md
-drivers/flash.md
-drivers/gpu.md
-drivers/mag.md
-drivers/mic.md
-drivers/ram.md
-drivers/rng.md
-drivers/rtc.md
-drivers/speaker.md
-drivers/temp.md
-drivers/touch.md
-drivers/vibe.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: NimBLE
-
-third_party/nimble/broadcaster.md
-third_party/nimble/observer.md
-third_party/nimble/peripheral.md
-third_party/nimble/central.md
-third_party/nimble/peripheral_hr.md
-third_party/nimble/central_hr.md
-third_party/nimble/peripheral_sc_only.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Rust
-
+kernel/index.md
+subsys/index.md
+drivers/index.md
+third_party/index.md
 rust/index.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Third-party
-
-third_party/lvgl/hello_world.md
-third_party/lvgl/input.md
-third_party/lvgl/benchmark.md
-third_party/lvgl/keypad_encoder.md
-third_party/lvgl/music.md
-third_party/lvgl/render.md
-third_party/lvgl/stress.md
-third_party/lvgl/widgets.md
-```
-
-```{toctree}
-:maxdepth: 1
-:caption: Benchmarks
-
-benchmarks/kernel.md
+benchmarks/index.md
 ```
 
 `samples/hello_world` is the smallest one, described in
