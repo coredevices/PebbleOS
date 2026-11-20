@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdint.h>
 
+#include <pbl/device.h>
 #include <pbl/devicetree.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/drivers/rng/sf32lb.h>
@@ -21,7 +22,6 @@ PBL_LOG_MODULE_DEFINE(driver_rng, CONFIG_DRIVER_RNG_LOG_LEVEL);
 extern const struct pbl_rng_sf32lb pbl_rng_sf32lb_inst;
 
 static const struct pbl_rng_sf32lb *const s_rng = &pbl_rng_sf32lb_inst;
-static bool s_inited;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
   return pbl_readl(s_rng->base + offset);
@@ -45,28 +45,35 @@ static int prv_generate(uint32_t cmd, uint32_t valid, uint32_t offset, uint32_t 
   return 0;
 }
 
-int rng_rand(uint32_t *rand_out) {
+int pbl_rng_sf32lb_init(const struct pbl_device *dev) {
+  uint32_t seed;
   int ret;
-
-  if (!s_inited) {
-    PBL_ASSERTN(pbl_device_init(&s_rng->clk.ctrl->dev) == 0);
-  }
 
   ret = pbl_clk_enable(&s_rng->clk);
   if (ret != 0) {
     return ret;
   }
 
-  if (!s_inited) {
-    uint32_t val = prv_getreg(SF32LB52_TRNG_CTRL_OFFSET);
-    prv_putreg(SF32LB52_TRNG_CTRL_OFFSET,
-               val & ~(TRNG_CTRL_GEN_SEED_STOP | TRNG_CTRL_GEN_RAND_NUM_STOP));
+  prv_putreg(SF32LB52_TRNG_CTRL_OFFSET,
+             prv_getreg(SF32LB52_TRNG_CTRL_OFFSET) &
+                 ~(TRNG_CTRL_GEN_SEED_STOP | TRNG_CTRL_GEN_RAND_NUM_STOP));
 
-    ret = prv_generate(TRNG_CTRL_GEN_SEED_START, TRNG_STAT_SEED_VALID,
-                       SF32LB52_TRNG_RAND_SEED_OFFSET(0), rand_out);
-    PBL_ASSERTN(ret == 0);
+  ret = prv_generate(TRNG_CTRL_GEN_SEED_START, TRNG_STAT_SEED_VALID,
+                     SF32LB52_TRNG_RAND_SEED_OFFSET(0), &seed);
 
-    s_inited = true;
+  pbl_clk_disable(&s_rng->clk);
+
+  return ret;
+}
+
+int rng_rand(uint32_t *rand_out) {
+  int ret;
+
+  PBL_ASSERTN(pbl_device_is_ready(&s_rng->dev));
+
+  ret = pbl_clk_enable(&s_rng->clk);
+  if (ret != 0) {
+    return ret;
   }
 
   ret = prv_generate(TRNG_CTRL_GEN_RAND_NUM_START, TRNG_STAT_RAND_NUM_VALID,
