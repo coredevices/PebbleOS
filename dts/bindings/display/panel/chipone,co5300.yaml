@@ -25,6 +25,9 @@ properties:
   compatible:
     const: chipone,co5300
 
+  reg:
+    const: 0
+
   reset-gpios:
     maxItems: 1
 
@@ -38,6 +41,7 @@ properties:
 
 required:
   - compatible
+  - reg
   - reset-gpios
   - spi-max-frequency
   - panel-timing
@@ -48,8 +52,12 @@ examples:
   - |
     #include <dt-bindings/gpio/gpio.h>
     display-controller {
-        panel {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        panel@0 {
             compatible = "chipone,co5300";
+            reg = <0>;
             reset-gpios = <&gpio1 43 GPIO_ACTIVE_LOW>;
             te-gpios = <&gpio1 47 GPIO_ACTIVE_HIGH>;
             spi-max-frequency = <48000000>;
