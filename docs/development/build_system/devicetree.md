@@ -764,9 +764,9 @@ config: SOC_SF32LB52
 labels: [hpsys_rcc, pmuc]
 ```
 
-When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` and
-`PBL_DT_SIZE_<LABEL>` for the first `reg` entry of each, translated through the
-`ranges` above as for instances. The node may be disabled, as its registers
+When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` for the
+first `reg` entry of each, translated through the `ranges` above as for
+instances. The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
 

@@ -2401,7 +2401,6 @@ def regs(tmp_path, labels, config="SOC_ACME"):
 def test_regs_are_translated_through_ranges(tmp_path):
     text = regs(tmp_path, ["rcc"])
     assert "#define PBL_DT_REG_RCC 0x40001000UL" in text
-    assert "#define PBL_DT_SIZE_RCC 0x400U" in text
 
 
 def test_regs_of_disabled_code_are_left_out(tmp_path):
