@@ -130,6 +130,19 @@ Code under `#if defined(PBL_HEALTH)` has to become a check like the one
 above, or it is left out of the binary without a word from the compiler.
 Both branches are in the binary; a check costs a call.
 
+`platform_has_feature()` is not in the SDK of the frozen platforms. A project
+that still builds for those keeps their code under `#if`:
+
+```c
+#if defined(PBL_FLEXIBLE)
+  const bool has_health = platform_has_feature(PlatformFeatureHealth);
+#else
+  const bool has_health = PBL_IF_HEALTH_ELSE(true, false);
+#endif
+```
+
+`PBL_IF_HEALTH_ELSE(true, false)` alone says the same in every binary.
+
 **Require the feature.** A binary only for watches that have it.
 
 ```json

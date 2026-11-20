@@ -34,7 +34,6 @@ from pebble_sdk_platform import (
     PlatformError,
     bezel_platforms,
     bundle_description,
-    flexible_name,
     flexible_targets,
     parse_flexible_name,
     pebble_platforms,
@@ -251,14 +250,22 @@ def _package_build(lib, platform):
     or None. A flexible binary that requires features also takes what the
     package built for its class without them: that asks the watch for the
     features, which only costs the check."""
-    candidates = [platform]
+    include_dir = os.path.join(lib["path"], "include", lib["name"])
+    if os.path.isdir(os.path.join(include_dir, platform)):
+        return platform
     parsed = parse_flexible_name(platform)
-    if parsed and parsed[2]:
-        candidates.append(flexible_name(parsed[0], parsed[1]))
-    for name in candidates:
-        if os.path.isdir(os.path.join(lib["path"], "include", lib["name"], name)):
-            return name
-    return None
+    if not parsed or not os.path.isdir(include_dir):
+        return None
+    # Of the package's builds for the class, the one that requires the most
+    # of what this binary requires.
+    best = None
+    for name in sorted(os.listdir(include_dir)):
+        other = parse_flexible_name(name)
+        if not other or other[:2] != parsed[:2] or not set(other[2]) <= set(parsed[2]):
+            continue
+        if best is None or len(other[2]) > len(parse_flexible_name(best)[2]):
+            best = name
+    return best
 
 
 def _required_package_build(lib, platform):
@@ -282,17 +289,16 @@ def _package_resources(project, platform):
         media = lib.get("pebble", {}).get("resources", {}).get("media")
         if not media:
             continue
-        resources_dir = os.path.join(
-            lib["path"], "resources", _required_package_build(lib, platform)
-        )
+        build = _required_package_build(lib, platform)
+        resources_dir = os.path.join(lib["path"], "resources", build)
         if not os.path.isdir(resources_dir):
             raise ProjectError(
                 f"Package {lib['name']} is missing resources for the {platform} platform"
             )
         for resource in media:
-            if not platform_matches(
-                platform, resource.get("targetPlatforms", [platform])
-            ):
+            # What the package's build has, which is not this one's when the
+            # package was built without its features.
+            if not platform_matches(build, resource.get("targetPlatforms", [build])):
                 continue
             reso = os.path.join(
                 resources_dir, f"{resource['file']}.{resource['name']}.reso"
@@ -444,7 +450,12 @@ def configure(args):
             f"{', '.join(installed)}"
         )
 
-    if platforms and not info.get("flexible") and not args.platforms:
+    if (
+        platforms
+        and project_type == "app"
+        and not info.get("flexible")
+        and not args.platforms
+    ):
         _bezel_note(platforms, installed)
 
     platform_info = {}
@@ -477,16 +488,15 @@ def configure(args):
     by_name = [
         r.get("name", "?")
         for r in info.get("resources", {}).get("media", [])
-        if r.get("targetPlatforms")
-        and flexible_builds
+        if flexible_builds
+        and any(t in installed for t in r.get("targetPlatforms") or [])
         and not any(platform_matches(p, r["targetPlatforms"]) for p in flexible_builds)
-        and any(platform_matches(p, r["targetPlatforms"]) for p in platforms)
     ]
     if by_name:
         _warn(
-            f"the resources {', '.join(by_name)} are for platforms by name and are in "
-            'no flexible binary: say what they are for with tags, as in "color~rect", '
-            "or drop their targetPlatforms"
+            f"{', '.join(by_name)}: targeted at platforms by name, so in no flexible "
+            'binary. Say what a resource is for with tags, as in "color~rect", or drop '
+            "its targetPlatforms"
         )
 
     project = {
@@ -634,7 +644,7 @@ def configure(args):
         ]
         if borrowed:
             _note(
-                f"{p} links what {', '.join(borrowed)} built without the features it "
+                f"{p} links what {', '.join(borrowed)} built without all the features it "
                 "requires. That is right for a package that asks for features with "
                 "PBL_IF_<FEATURE>_ELSE or platform_has_feature(), and not for one that "
                 "decides with #ifdef."
