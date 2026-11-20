@@ -3,9 +3,8 @@
 
 #pragma once
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs_nexmo Nexmo reauthentication
@@ -21,7 +20,8 @@
  * @param message Message attribute.
  * @return true for a Messages notification containing the Pebble check-in code.
  */
-bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *message);
+bool nexmo_is_reauth_sms(const struct pbl_bt_ancs_attr *app_id,
+                         const struct pbl_bt_ancs_attr *message);
 
 /**
  * @brief Forward a reauthentication SMS to the phone and dismiss it.
@@ -34,7 +34,8 @@ bool nexmo_is_reauth_sms(const ANCSAttribute *app_id, const ANCSAttribute *messa
  * @param message Message attribute.
  * @param existing_notif_prefs Existing prefs of the Messages app.
  */
-void nexmo_handle_reauth_sms(uint32_t uid, const ANCSAttribute *app_id,
-                             const ANCSAttribute *message, iOSNotifPrefs *existing_notif_prefs);
+void nexmo_handle_reauth_sms(uint32_t uid, const struct pbl_bt_ancs_attr *app_id,
+                             const struct pbl_bt_ancs_attr *message,
+                             iOSNotifPrefs *existing_notif_prefs);
 
 /** @} */

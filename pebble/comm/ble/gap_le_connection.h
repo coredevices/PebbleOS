@@ -44,6 +44,9 @@ typedef struct GAPLEConnection {
   //! The remote device its (connection) address.
   struct pbl_bt_device_internal device;
 
+  //! The handle of the connection in the stack.
+  uint16_t conn_handle;
+
   //! Whether we are the master for this connection.
   bool local_is_master : 1;
 

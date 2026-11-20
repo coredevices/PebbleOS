@@ -1,6 +1,10 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
+#include <pbl/bluetooth/clients/ancs.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
@@ -8,10 +12,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_definition.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_util.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////
@@ -28,7 +29,7 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
 ///////////////////////////////////////////////////////////
 
 #include <fake_events.h>
-#include <fake_gatt_client_subscriptions.h>
+#include <fake_gattc_service.h>
 #include <fake_kernel_services_notifications.h>
 #include <fake_notification_storage.h>
 #include <fake_pbl_malloc.h>
@@ -67,10 +68,40 @@ EventedTimerID evented_timer_register(uint32_t timeout_ms, bool repeating,
 
 #include "ancs_test_data.h"
 
+// The characteristics of the service, as the client has them.
+enum {
+  ChrNotificationSource,
+  ChrDataSource,
+  ChrControlPoint,
+};
+
+enum {
+  CommandIDGetNotificationAttributes = 0,
+  CommandIDGetAppAttributes = 1,
+  CommandIDPerformNotificationAction = 2,
+};
+
+//! What the Notification Source notifies.
+typedef struct PBL_PACKED {
+  uint8_t event_id;
+  uint8_t event_flags;
+  uint8_t category_id;
+  uint8_t category_count;
+  uint32_t uid;
+} NSNotification;
+
+//! What a Get Notification Attributes command and its response start with.
+typedef struct PBL_PACKED {
+  uint8_t command_id;
+  uint32_t notification_uid;
+} GetNotificationAttributesMsg;
+
+#define EventFlagSilent      PBL_BT_ANCS_FLAG_SILENT
+#define EventFlagPreExisting PBL_BT_ANCS_FLAG_PRE_EXISTING
+#define EventFlagMultiMedia  (1 << 5)
+
 const uint32_t s_invalid_param_uid = 0x12;
 const uint32_t s_get_wrong_data_uid = 0xee;
-
-static pbl_bt_characteristic_t s_characteristics[NumANCSCharacteristic] = {1, 2, 3};
 
 // Helper Functions
 ///////////////////////////////////////////////////////////
@@ -82,21 +113,19 @@ static bool s_gatt_client_op_write_should_fail_unlimited = false;
 static bool s_gatt_client_op_write_should_fail_once = false;
 
 static void prv_fake_receiving_ds_notification(size_t value_length, uint8_t *value) {
-  pbl_bt_characteristic_t characteristic = s_characteristics[ANCSCharacteristicData];
-  ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
+  fake_gattc_service_notified(ChrDataSource, value, value_length);
 }
 
 static void prv_fake_receiving_ns_notification(size_t value_length, uint8_t *value) {
-  pbl_bt_characteristic_t characteristic = s_characteristics[ANCSCharacteristicNotification];
-  ancs_handle_read_or_notification(characteristic, (const uint8_t *)value, value_length, 0);
+  fake_gattc_service_notified(ChrNotificationSource, value, value_length);
 }
 
 static void prv_send_notification_with_event_flags(const uint8_t *ancs_notification_dict,
                                                    int event_flags) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
+    .event_id = PBL_BT_ANCS_EVENT_ADDED,
     .event_flags = event_flags,
-    .category_id = CategoryIDSocial,
+    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
     .category_count = 1,
     .uid = 1,
   };
@@ -140,19 +169,17 @@ void prv_cmp_last_received_notification(TimelineItem *item) {
   free(buf2);
 }
 
-// Called from inside prv_write_control_point_request.
-// If this function is called we have requested a ds_notification
-enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
-                                       const uint8_t *buffer, size_t length) {
-  cl_assert_equal_i(characteristic, s_characteristics[ANCSCharacteristicControl]);
+// What the phone answers to a command written to the Control Point, right away.
+static int prv_handle_write(uint8_t chr, const uint8_t *buffer, uint16_t length) {
+  cl_assert_equal_i(chr, ChrControlPoint);
 
   if (s_gatt_client_op_write_should_fail_once) {
     s_gatt_client_op_write_should_fail_once = false;
-    return PBL_BT_ERRNO_INVALID_PARAMETER;
+    return -EIO;
   }
 
   if (s_gatt_client_op_write_should_fail_unlimited) {
-    return PBL_BT_ERRNO_INVALID_PARAMETER;
+    return -EIO;
   }
 
   const uint32_t complete_dict_uid =
@@ -187,23 +214,29 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
   const uint32_t mms_with_caption_dict_uid =
       ((GetNotificationAttributesMsg *)s_mms_with_caption_dict)->notification_uid;
 
-  const CPDSMessage *cmd_header = (const CPDSMessage *)buffer;
-  if (cmd_header->command_id == CommandIDGetAppAttributes) {
+  if (buffer[0] == CommandIDGetAppAttributes) {
     s_num_requested_app_attributes++;
 
-    if (strcmp((const char *)cmd_header->data, "com.tests.NotAnApp") == 0) {
+    fake_gattc_service_written(ChrControlPoint, 0);
+    if (strcmp((const char *)&buffer[1], "com.tests.NotAnApp") == 0) {
       prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_fake_app_info_dict),
                                          (uint8_t *)s_fake_app_info_dict);
     } else {
       prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_message_app_info_dict),
                                          (uint8_t *)s_message_app_info_dict);
     }
-    return PBL_BT_ERRNO_OK;
+    return 0;
   }
 
   // else: notif request
   uint32_t uid = ((GetNotificationAttributesMsg *)buffer)->notification_uid;
   s_num_requested_notif_attributes++;
+
+  // The alive check, which asks for no attribute, is answered by the tests.
+  if (buffer[0] == CommandIDGetNotificationAttributes && uid != s_invalid_param_uid &&
+      length > sizeof(GetNotificationAttributesMsg)) {
+    fake_gattc_service_written(ChrControlPoint, 0);
+  }
 
   if (uid == complete_dict_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_complete_dict), (uint8_t *)s_complete_dict);
@@ -237,7 +270,7 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
                                        (uint8_t *)s_this_message_has_no_content_response);
     s_num_ds_notifications_received++;
   } else if (uid == s_invalid_param_uid) {
-    ancs_handle_write_response(0, 0xA2);
+    fake_gattc_service_written(ChrControlPoint, 0xA2);
     s_num_ds_notifications_received++;
   } else if (uid == multiple_complete_dict_uid) {
     prv_fake_receiving_ds_notification(ARRAY_LENGTH(s_multiple_complete_dicts),
@@ -279,7 +312,7 @@ enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic,
     s_num_ds_notifications_received++;
   }
 
-  return PBL_BT_ERRNO_OK;
+  return 0;
 }
 
 // Tests
@@ -298,11 +331,12 @@ void test_ancs__initialize(void) {
   fake_kernel_services_notifications_reset();
   fake_notification_storage_reset();
   fake_event_init();
-  fake_gatt_client_subscriptions_set_subscribe_return_value(PBL_BT_ERRNO_OK);
+  fake_gattc_service_init();
+  fake_gattc_service_set_write_handler(prv_handle_write);
   fake_rtc_init(0, 0);
 
-  ancs_create();
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_create(1);
+  fake_gattc_service_discovered(0);
 }
 
 void test_ancs__cleanup(void) {
@@ -317,13 +351,11 @@ void test_ancs__cleanup(void) {
 // fails; we must reject the service instead of asserting (which crash-loops the
 // watch into recovery).
 void test_ancs__should_fail_soft_on_subscribe_failure(void) {
-  cl_assert(ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
-
-  fake_gatt_client_subscriptions_set_subscribe_return_value(PBL_BT_ERRNO_INVALID_PARAMETER);
-  ancs_handle_service_discovered(s_characteristics);
+  fake_gattc_service_set_subscribe_rc(-ENOTCONN);
+  fake_gattc_service_discovered(0);
 
   // ANCS is left disconnected rather than crashing:
-  cl_assert(!ancs_can_handle_characteristic(s_characteristics[ANCSCharacteristicData]));
+  cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
 }
 
 // Janky black box smoke-test to exercise the ANCS message re-assembly state
@@ -437,9 +469,9 @@ void test_ancs__app_name_cache(void) {
 
 void test_ancs__ancs_invalid_param(void) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
+    .event_id = PBL_BT_ANCS_EVENT_ADDED,
     .event_flags = 0,
-    .category_id = CategoryIDSocial,
+    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
     .category_count = 1,
     .uid = 0,
   };
@@ -488,9 +520,9 @@ extern void prv_is_ancs_alive_launcher_task_cb(void *data);
 // Send a notification whose uid the fake never answers, so the head wedges.
 static void prv_send_unanswered_notification(uint32_t uid) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
+    .event_id = PBL_BT_ANCS_EVENT_ADDED,
     .event_flags = 0,
-    .category_id = CategoryIDSocial,
+    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
     .category_count = 1,
     .uid = uid,
   };
@@ -503,8 +535,8 @@ void test_ancs__alive_check_disconnection(void) {
   cl_assert_equal_i(prv_get_state(), ANCSClientStateAliveCheck);
   cl_assert_equal_i(s_num_requested_notif_attributes, 1);
   // simulate a disconnection/reconnection
-  ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(0);
   // we should be back in the Idle state
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
   // Make sure we can still receive notifications
@@ -519,42 +551,42 @@ void test_ancs__alive_check_disconnection(void) {
 // answers normally again.
 void test_ancs__alive_check_rejected_warns_user_once(void) {
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 0);
 
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 
   // Further rejections, including across a reconnect, don't repeat the warning.
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
-  ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
-  ancs_handle_service_discovered(s_characteristics);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(0);
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 1);
 
   // iOS answers normally again: a later block warns again.
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0xA2);
+  fake_gattc_service_written(ChrControlPoint, 0xA2);
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0x03);
+  fake_gattc_service_written(ChrControlPoint, 0x03);
   cl_assert_equal_i(fake_kernel_services_notifications_ancs_notifications_count(), 2);
 
   prv_check_ancs_alive();
-  ancs_handle_write_response(0, 0xA2);
+  fake_gattc_service_written(ChrControlPoint, 0xA2);
 }
 
 void test_ancs__notification_dismissal(void) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationRemoved,
+    .event_id = PBL_BT_ANCS_EVENT_REMOVED,
     .event_flags = 0,
-    .category_id = CategoryIDSocial,
+    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
     .category_count = 1,
   };
 
@@ -605,7 +637,7 @@ void test_ancs__notification_parsing(void) {
   prv_cmp_last_received_notification(&s_unknown_app_unique_title_parsed_item);
 }
 
-// EventFlagSilent must be propagated as ANCSProperty_Silent and end up as
+// EventFlagSilent must be propagated and end up as
 // header.silent on the stored notification
 void test_ancs__silent_event_flag(void) {
   // Without the Silent flag the stored notification must not be marked silent
@@ -625,17 +657,14 @@ void test_ancs__silent_event_flag(void) {
 // Make sure we send an ANCS_DISCONNECTED event whenever our session goes away
 void test_ancs__disconnection(void) {
   // Simulate a disconnection/reconnection
-  ancs_handle_service_removed(s_characteristics, NumANCSCharacteristic);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(0);
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
   fake_event_clear_last();
 
-  // If we unexpectedly register another session, make sure we send the event
-  ancs_handle_service_discovered(s_characteristics);
-  cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
-  fake_event_clear_last();
-
-  ancs_invalidate_all_references();
+  // The service is gone
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(-ENOENT);
   cl_assert_equal_i(fake_event_get_last().type, PEBBLE_ANCS_DISCONNECTED_EVENT);
 
   // Make sure that losing BT altogether sends the event
@@ -655,9 +684,9 @@ void test_ancs__unrequested_notifications(void) {
 
 void test_ancs__handle_unexpected_notifications(void) {
   NSNotification ns_notification = {
-    .event_id = EventIDNotificationAdded,
+    .event_id = PBL_BT_ANCS_EVENT_ADDED,
     .event_flags = 0,
-    .category_id = CategoryIDSocial,
+    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
     .category_count = 1,
     .uid = s_get_wrong_data_uid,
   };
@@ -693,8 +722,22 @@ void test_ancs__reset_after_retry(void) {
   s_block_event_callback = true;
   s_gatt_client_op_write_should_fail_once = true;
   prv_send_notification((uint8_t *)&s_complete_dict);
-  ancs_invalidate_all_references();
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(-ENOENT);
   cl_assert_equal_i(prv_get_state(), ANCSClientStateIdle);
+}
+
+// Services of the phone that change leave the session alone if ANCS is still where it was: the
+// client then reports nothing.
+void test_ancs__services_changed_elsewhere(void) {
+  prv_send_unanswered_notification(0xD0000001);
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+  fake_event_clear_last();
+
+  ancs_handle_services_changed();
+
+  cl_assert_equal_i(prv_get_state(), ANCSClientStateRequestedNotification);
+  cl_assert(fake_event_get_last().type != PEBBLE_ANCS_DISCONNECTED_EVENT);
 }
 
 // A lost DS response must not wedge the queue: the watchdog drops the stuck head.
@@ -770,17 +813,18 @@ void test_ancs__alive_check_escalates_when_wedged(void) {
 #define COMPLETE_DICT_TIME 1383675568
 
 static void prv_subscribe_data_source(void) {
-  ancs_handle_subscribe(s_characteristics[ANCSCharacteristicData], BLESubscriptionNotifications,
-                        PBL_BT_GATT_ERROR_SUCCESS);
+  fake_gattc_service_subscribed(ChrDataSource, true, 0);
 }
 
 // Establish a session, lose it at lost_time and reconnect at now.
 static void prv_reconnect(time_t lost_time, time_t now) {
   prv_subscribe_data_source();
   pbl_realtime_set(lost_time);
-  ancs_invalidate_all_references();
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(-ENOENT);
   pbl_realtime_set(now);
-  ancs_handle_service_discovered(s_characteristics);
+  ancs_handle_services_changed();
+  fake_gattc_service_discovered(0);
   prv_subscribe_data_source();
 }
 
@@ -830,9 +874,9 @@ void test_ancs__pre_existing_window_ends_after_10_s(void) {
 // void test_ancs__should_handle_response_with_multiple_notifications(void) {
 //
 //  NSNotification ns_notification = {
-//    .event_id = EventIDNotificationAdded,
+//    .event_id = PBL_BT_ANCS_EVENT_ADDED,
 //    .event_flags = 0,
-//    .category_id = CategoryIDSocial,
+//    .category_id = PBL_BT_ANCS_CATEGORY_SOCIAL,
 //    .category_count = 1,
 //    .uid = 0,
 //  };

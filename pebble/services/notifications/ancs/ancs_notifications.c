@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/malloc.h>
@@ -22,8 +23,6 @@
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
 #include <pbl/util/pstring.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
@@ -80,8 +79,8 @@ static void prv_handle_ancs_update(TimelineItem *notification,
   timeline_item_destroy(notification);
 }
 
-static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
-                                               const ANCSAttribute *app_id) {
+static time_t prv_get_timestamp_from_ancs_date(const struct pbl_bt_ancs_attr *date,
+                                               const struct pbl_bt_ancs_attr *app_id) {
   time_t timestamp = ancs_notifications_util_parse_timestamp(date);
   if (timestamp == 0) {
     // Another ANCS / iOS quirk, some apps (i.e. the Phone app)
@@ -90,8 +89,8 @@ static time_t prv_get_timestamp_from_ancs_date(const ANCSAttribute *date,
     timestamp = pbl_realtime();
 
     // copy out app ID to a char buffer
-    char app_id_buffer[app_id->length + 1];
-    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
+    char app_id_buffer[app_id->len + 1];
+    ancs_attr_to_cstring(app_id, app_id_buffer);
     PBL_LOG_WRN("No valid date. Offending iOS app: %s", app_id_buffer);
   }
 
@@ -108,10 +107,10 @@ static bool prv_calendar_reminder_filter(SerializedTimelineItemHeader *hdr, void
   return false;
 }
 
-static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app_id,
+static bool prv_should_ignore_because_calendar_reminder(const struct pbl_bt_ancs_attr *app_id,
                                                         time_t timestamp,
-                                                        const ANCSAttribute *title) {
-  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_CALENDAR_APP_ID)) {
+                                                        const struct pbl_bt_ancs_attr *title) {
+  if (!ancs_attr_equal_cstring(app_id, IOS_CALENDAR_APP_ID)) {
     return false;
   }
 
@@ -121,8 +120,8 @@ static bool prv_should_ignore_because_calendar_reminder(const ANCSAttribute *app
   }
 
   // copy out calendar event title to a char buffer
-  char calendar_title_buffer[title->length + 1];
-  pbl_pstring16_to_cstring(&title->pstr, calendar_title_buffer);
+  char calendar_title_buffer[title->len + 1];
+  ancs_attr_to_cstring(title, calendar_title_buffer);
 
   TimelineItem reminder;
 
@@ -146,16 +145,16 @@ static bool prv_reminder_filter(SerializedTimelineItemHeader *hdr, void *context
   return false;
 }
 
-static bool prv_should_ignore_because_time_reminder(const ANCSAttribute *app_id, time_t timestamp,
-                                                    const ANCSAttribute *title, uint32_t uid,
-                                                    const ANCSAttribute *attr_action_neg) {
-  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_REMINDERS_APP_ID)) {
+static bool prv_should_ignore_because_time_reminder(
+    const struct pbl_bt_ancs_attr *app_id, time_t timestamp, const struct pbl_bt_ancs_attr *title,
+    uint32_t uid, const struct pbl_bt_ancs_attr *attr_action_neg) {
+  if (!ancs_attr_equal_cstring(app_id, IOS_REMINDERS_APP_ID)) {
     return false;
   }
 
   // copy out reminder title to a char buffer
-  char reminder_title_buffer[title->length + 1];
-  pbl_pstring16_to_cstring(&title->pstr, reminder_title_buffer);
+  char reminder_title_buffer[title->len + 1];
+  ancs_attr_to_cstring(title, reminder_title_buffer);
 
   TimelineItem reminder;
 
@@ -196,20 +195,20 @@ static bool prv_should_ignore_because_duplicate(TimelineItem *notification,
   return (notification->header.ancs_uid == existing_header->ancs_uid);
 }
 
-static bool prv_should_ignore_because_apple_mail_dot_app_bug(const ANCSAttribute *app_id,
-                                                             const ANCSAttribute *message) {
+static bool prv_should_ignore_because_apple_mail_dot_app_bug(
+    const struct pbl_bt_ancs_attr *app_id, const struct pbl_bt_ancs_attr *message) {
   // Apple's Mail.app sometimes sends a notification with "Loading..." or
   // "This message has no content." when Mail.app is still fetching the body of the email.
   // Obviously this only works around the issue when the language is set to English.
-  if (!pbl_pstring16_equal_cstring(&app_id->pstr, IOS_MAIL_APP_ID)) {
+  if (!ancs_attr_equal_cstring(app_id, IOS_MAIL_APP_ID)) {
     return false;
   }
   static const char loading_str[] = "Loading\xe2\x80\xa6";
-  if (pbl_pstring16_equal_cstring(&message->pstr, loading_str)) {
+  if (ancs_attr_equal_cstring(message, loading_str)) {
     return true;
   }
   static const char no_content_str[] = "This message has no content.";
-  if (pbl_pstring16_equal_cstring(&message->pstr, no_content_str)) {
+  if (ancs_attr_equal_cstring(message, no_content_str)) {
     return true;
   }
   return false;
@@ -243,26 +242,26 @@ static bool prv_should_ignore_because_muted(const iOSNotifPrefs *app_notif_prefs
 }
 
 static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
-                                           ANCSAttribute **notif_attributes,
+                                           const struct pbl_bt_ancs_attr *const *notif_attributes,
                                            iOSNotifPrefs *app_notif_prefs) {
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  const ANCSAttribute *message = notif_attributes[FetchedNotifAttributeIndexMessage];
-  const ANCSAttribute *title = notif_attributes[FetchedNotifAttributeIndexTitle];
-  const ANCSAttribute *subtitle = notif_attributes[FetchedNotifAttributeIndexSubtitle];
-  const ANCSAttribute *negative_action =
-      notif_attributes[FetchedNotifAttributeIndexNegativeActionLabel];
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  const struct pbl_bt_ancs_attr *message = notif_attributes[ANCS_NOTIF_ATTR_MESSAGE];
+  const struct pbl_bt_ancs_attr *title = notif_attributes[ANCS_NOTIF_ATTR_TITLE];
+  const struct pbl_bt_ancs_attr *subtitle = notif_attributes[ANCS_NOTIF_ATTR_SUBTITLE];
+  const struct pbl_bt_ancs_attr *negative_action =
+      notif_attributes[ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL];
 
   if (prv_should_ignore_because_muted(app_notif_prefs)) {
-    char app_id_buffer[app_id->length + 1];
-    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
+    char app_id_buffer[app_id->len + 1];
+    ancs_attr_to_cstring(app_id, app_id_buffer);
 
     PBL_LOG_DBG("Ignoring notification from <%s>: Muted", app_id_buffer);
     return true;
   }
 
   if (ancs_filtering_matches_rules(app_notif_prefs, title, subtitle, message)) {
-    char app_id_buffer[app_id->length + 1];
-    pbl_pstring16_to_cstring(&app_id->pstr, app_id_buffer);
+    char app_id_buffer[app_id->len + 1];
+    ancs_attr_to_cstring(app_id, app_id_buffer);
 
     PBL_LOG_DBG("Ignoring notification from <%s>: Matched filtering rule", app_id_buffer);
     return true;
@@ -300,23 +299,26 @@ static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
   return false;
 }
 
-void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
-                                       ANCSAttribute **notif_attributes,
-                                       ANCSAttribute **app_attributes) {
+void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bool is_recovered,
+                                       bool ios_9,
+                                       const struct pbl_bt_ancs_attr *const *notif_attributes,
+                                       const struct pbl_bt_ancs_attr *const *app_attributes) {
   PBL_ASSERTN(notif_attributes && app_attributes);
 
-  const ANCSAttribute *app_id = notif_attributes[FetchedNotifAttributeIndexAppID];
-  if (!app_id || app_id->length == 0) {
+  const uint32_t uid = notif->uid;
+
+  const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
+  if (!app_id || app_id->len == 0) {
     PBL_LOG_ERR("Can't handle notifications without an app id");
     return;
   }
 
-  const ANCSAttribute *title = notif_attributes[FetchedNotifAttributeIndexTitle];
-  const ANCSAttribute *display_name = app_attributes[FetchedAppAttributeIndexDisplayName];
-  const ANCSAttribute *date = notif_attributes[FetchedNotifAttributeIndexDate];
-  const ANCSAttribute *message = notif_attributes[FetchedNotifAttributeIndexMessage];
+  const struct pbl_bt_ancs_attr *title = notif_attributes[ANCS_NOTIF_ATTR_TITLE];
+  const struct pbl_bt_ancs_attr *display_name = app_attributes[ANCS_APP_ATTR_DISPLAY_NAME];
+  const struct pbl_bt_ancs_attr *date = notif_attributes[ANCS_NOTIF_ATTR_DATE];
+  const struct pbl_bt_ancs_attr *message = notif_attributes[ANCS_NOTIF_ATTR_MESSAGE];
 
-  iOSNotifPrefs *app_notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->length);
+  iOSNotifPrefs *app_notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->len);
   ancs_filtering_record_app(&app_notif_prefs, app_id, display_name, title);
 
   if (nexmo_is_reauth_sms(app_id, message)) {
@@ -330,7 +332,6 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
     goto cleanup;
   }
 
-  const bool is_recovered = (properties & ANCSProperty_Recovered);
   if (is_recovered) {
     const bool has_valid_date = date && (ancs_notifications_util_parse_timestamp(date) != 0);
     if (prv_should_ignore_because_not_missed(has_valid_date, timestamp)) {
@@ -343,11 +344,11 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   // It would be nice to handle FaceTime calls with the phone service but it doesn't look like we
   // can.
   const bool is_notification_from_phone_app = ancs_notifications_util_is_phone(app_id);
-  const bool has_incoming_call_property = (properties & ANCSProperty_IncomingCall);
-  const bool has_missed_call_property = (properties & ANCSProperty_MissedCall);
+  const bool has_incoming_call_property = (notif->category == PBL_BT_ANCS_CATEGORY_INCOMING_CALL);
+  const bool has_missed_call_property = (notif->category == PBL_BT_ANCS_CATEGORY_MISSED_CALL);
   if (is_notification_from_phone_app) {
     if (has_incoming_call_property) {
-      ancs_phone_call_handle_incoming(uid, properties, notif_attributes);
+      ancs_phone_call_handle_incoming(uid, ios_9, notif_attributes);
       goto cleanup;
     }
 
@@ -362,7 +363,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   // add a notification
   const ANCSAppMetadata *app_metadata = ancs_notifications_util_get_app_metadata(app_id);
   TimelineItem *notification = ancs_item_create_and_populate(
-      notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, properties);
+      notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, notif);
   if (!notification) {
     goto cleanup;
   }
@@ -370,7 +371,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   notification->header.type = TimelineItemTypeNotification;
   notification->header.layout = LayoutIdNotification;
   notification->header.ancs_notif = true;
-  notification->header.silent = ((properties & ANCSProperty_Silent) != 0);
+  notification->header.silent = ((notif->flags & PBL_BT_ANCS_FLAG_SILENT) != 0);
 
   notification_storage_lock();
   // filter out duplicate notifications
@@ -396,7 +397,7 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
   // if missed call, also add a pin
   if (is_notification_from_phone_app && has_missed_call_property) {
     TimelineItem *missed_call_pin = ancs_item_create_and_populate(
-        notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, properties);
+        notif_attributes, app_attributes, app_metadata, app_notif_prefs, timestamp, notif);
     if (missed_call_pin == nullptr) {
       goto cleanup;
     }
@@ -412,13 +413,15 @@ void ancs_notifications_handle_session_lost(void) {
   s_session_lost_time = pbl_realtime();
 }
 
-void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSProperty properties) {
+void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif,
+                                                    bool ios_9) {
   // Dismissal from phone is only properly supported on iOS 9 and up
   // The presence of the DIS service tells us we have at least iOS 9
-  const bool ios_9 = (properties & ANCSProperty_iOS9);
   if (!ios_9) {
     return;
   }
+
+  const uint32_t ancs_uid = notif->uid;
 
   Uuid *notification_id = pbl_malloc_check(sizeof(Uuid));
 
@@ -433,7 +436,7 @@ void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSPrope
     pbl_free(notification_id);
   }
 
-  if (properties & ANCSProperty_IncomingCall) {
+  if (notif->category == PBL_BT_ANCS_CATEGORY_INCOMING_CALL) {
     ancs_phone_call_handle_removed(ancs_uid, ios_9);
   }
 }

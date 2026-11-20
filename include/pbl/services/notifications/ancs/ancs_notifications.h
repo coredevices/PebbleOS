@@ -5,9 +5,8 @@
 
 #include <stdlib.h>
 
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/services/timeline/item.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs ANCS notifications
@@ -22,17 +21,53 @@
  * @{
  */
 
+/** @brief The attributes got of a notification, in the order they are asked for. */
+enum ancs_notif_attr {
+  ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL,
+  ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL,
+  ANCS_NOTIF_ATTR_APP_ID,
+  ANCS_NOTIF_ATTR_TITLE,
+  ANCS_NOTIF_ATTR_SUBTITLE,
+  ANCS_NOTIF_ATTR_MESSAGE,
+  ANCS_NOTIF_ATTR_DATE,
+  ANCS_NOTIF_ATTR_COUNT,
+};
+
+/** @brief The attributes got of the app of a notification. */
+enum ancs_app_attr {
+  ANCS_APP_ATTR_DISPLAY_NAME,
+  ANCS_APP_ATTR_COUNT,
+};
+
+/**
+ * @name Longest values taken
+ *
+ * The phone cuts the title, the subtitle and the message to theirs.
+ * @{
+ */
+#define ANCS_APP_ID_MAX_LENGTH 60
+/* Long enough for filtering rules to match text near the end of verbose titles. */
+#define ANCS_TITLE_MAX_LENGTH    128
+#define ANCS_SUBTITLE_MAX_LENGTH 40
+#define ANCS_MESSAGE_MAX_LENGTH  200
+#define ANCS_DATE_LENGTH         15
+#define ANCS_ACTION_MAX_LENGTH   10
+/** @} */
+
 /**
  * @brief Handle a notification fetched from ANCS.
  *
- * @param uid ANCS UID of the notification.
- * @param properties ANCS properties (category, flags, iOS version).
- * @param notif_attributes Notification attributes, indexed by FetchedNotifAttributeIndex.
- * @param app_attributes App attributes, indexed by FetchedAppAttributeIndex.
+ * @param notif The notification, as the phone told of it.
+ * @param recovered Whether it predates the session, seen right after reconnecting: it may
+ * have been missed while disconnected.
+ * @param ios_9 Whether the phone runs iOS 9 or later.
+ * @param notif_attributes Notification attributes, indexed by enum ancs_notif_attr.
+ * @param app_attributes App attributes, indexed by enum ancs_app_attr.
  */
-void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
-                                       ANCSAttribute **notif_attributes,
-                                       ANCSAttribute **app_attributes);
+void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bool recovered,
+                                       bool ios_9,
+                                       const struct pbl_bt_ancs_attr *const *notif_attributes,
+                                       const struct pbl_bt_ancs_attr *const *app_attributes);
 
 /**
  * @brief Handle the removal of a notification from the iOS notification center.
@@ -40,10 +75,11 @@ void ancs_notifications_handle_message(uint32_t uid, ANCSProperty properties,
  * Only honored on iOS 9 and later: the stored notification is marked dismissed, and an incoming
  * call UI is hidden.
  *
- * @param ancs_uid ANCS UID of the removed notification.
- * @param properties ANCS properties.
+ * @param notif The removed notification, as the phone told of it.
+ * @param ios_9 Whether the phone runs iOS 9 or later.
  */
-void ancs_notifications_handle_notification_removed(uint32_t ancs_uid, ANCSProperty properties);
+void ancs_notifications_handle_notification_removed(const struct pbl_bt_ancs_notif *notif,
+                                                    bool ios_9);
 
 /**
  * @brief Tell the user that iOS refuses to share notifications with this watch.
@@ -57,7 +93,7 @@ void ancs_notifications_handle_access_denied(void);
  * @brief Record that the ANCS session went away.
  *
  * Notifications posted after this point are recovered when iOS re-sends them as pre-existing on
- * reconnection (see ANCSProperty_Recovered).
+ * reconnection.
  */
 void ancs_notifications_handle_session_lost(void);
 

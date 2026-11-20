@@ -4,12 +4,13 @@
 #include "ancs.h"
 
 #include "ancs_app_name_storage.h"
-#include "ancs_definition.h"
-#include "ancs_types.h"
-#include "ancs_util.h"
 
+#include <errno.h>
+#include <stdatomic.h>
 #include <string.h>
 
+#include <pbl/bluetooth/ancs.h>
+#include <pbl/bluetooth/clients/ancs.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -19,13 +20,10 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
-#include <pbl/util/buffer.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
-#include <comm/ble/gatt_client_operations.h>
-#include <comm/ble/gatt_client_subscriptions.h>
 #include <kernel/event_loop.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
@@ -33,25 +31,17 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 // -----------------------------------------------------------------------------
 // Static function prototypes
 
-static void prv_handle_notification_attributes_response(const uint8_t *data, size_t length);
-
-static void prv_handle_app_attributes_response(const uint8_t *data, size_t length);
-
 static void prv_get_notification_attributes(uint32_t uid);
 
-static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size);
-
-static void prv_reset_reassembly_context(void);
+static void prv_release_attributes(void);
 
 PBL_T_STATIC void prv_check_ancs_alive(void);
 
-static void prv_perform_action(uint32_t notification_uid, ActionId action_id);
+static void prv_perform_action(uint32_t notification_uid, enum pbl_bt_ancs_action action);
 
 static void prv_op_timeout_start(void);
 
 static void prv_op_timeout_stop(void);
-
-static void prv_op_timeout_kick(void);
 
 // -----------------------------------------------------------------------------
 // Static variables
@@ -72,15 +62,56 @@ static void prv_op_timeout_kick(void);
 // in-flight queue head forever (which blocks every later notification).
 #define ANCS_OP_RESPONSE_TIMEOUT_SECONDS 10
 
+//! The attributes asked for of a notification. Phones that know no action labels answer
+//! without them.
+static const struct pbl_bt_ancs_attr_req s_notif_attr_reqs[ANCS_NOTIF_ATTR_COUNT] = {
+  [ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL] =
+      {.id = PBL_BT_ANCS_NOTIF_ATTR_POSITIVE_ACTION_LABEL, .optional = true},
+  [ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL] =
+      {.id = PBL_BT_ANCS_NOTIF_ATTR_NEGATIVE_ACTION_LABEL, .optional = true},
+  [ANCS_NOTIF_ATTR_APP_ID] = {.id = PBL_BT_ANCS_NOTIF_ATTR_APP_IDENTIFIER},
+  [ANCS_NOTIF_ATTR_TITLE] = {.id = PBL_BT_ANCS_NOTIF_ATTR_TITLE, .max_len = ANCS_TITLE_MAX_LENGTH},
+  [ANCS_NOTIF_ATTR_SUBTITLE] =
+      {.id = PBL_BT_ANCS_NOTIF_ATTR_SUBTITLE, .max_len = ANCS_SUBTITLE_MAX_LENGTH},
+  [ANCS_NOTIF_ATTR_MESSAGE] =
+      {.id = PBL_BT_ANCS_NOTIF_ATTR_MESSAGE, .max_len = ANCS_MESSAGE_MAX_LENGTH},
+  [ANCS_NOTIF_ATTR_DATE] = {.id = PBL_BT_ANCS_NOTIF_ATTR_DATE, .max_len = ANCS_DATE_LENGTH},
+};
+
+static const struct pbl_bt_ancs_attr_req s_app_attr_reqs[ANCS_APP_ATTR_COUNT] = {
+  [ANCS_APP_ATTR_DISPLAY_NAME] = {.id = PBL_BT_ANCS_APP_ATTR_DISPLAY_NAME},
+};
+
+//! Room for the longest response: its header, and each attribute with its own.
+#define RESPONSE_MAX_LENGTH                                                                   \
+  (5 + ANCS_NOTIF_ATTR_COUNT * sizeof(struct pbl_bt_ancs_attr) + 2 * ANCS_ACTION_MAX_LENGTH + \
+   ANCS_APP_ID_MAX_LENGTH + ANCS_TITLE_MAX_LENGTH + ANCS_SUBTITLE_MAX_LENGTH +                \
+   ANCS_MESSAGE_MAX_LENGTH + ANCS_DATE_LENGTH)
+
+PBL_BT_ANCS_CLIENT_DEFINE(s_client, RESPONSE_MAX_LENGTH);
+
+// The client calls back on the host task; the session runs on KernelMain.
+
+typedef enum {
+  ClientEventDiscovered,
+  ClientEventSubscribed,
+  ClientEventNotification,
+  ClientEventNotifAttrs,
+  ClientEventAppAttrs,
+  ClientEventActionPerformed,
+} ClientEventType;
+
 typedef struct {
-  uint8_t command_id;
-  union {
-    struct pbl_buffer buffer;
-    // `struct pbl_buffer` has a variable sized uint8_t at the end of the struct. `buffer_storage`
-    // adds the required backing storage space right after it:
-    uint8_t buffer_storage[sizeof(struct pbl_buffer) + NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH];
-  };
-} ReassemblyContext;
+  ClientEventType type;
+  uint32_t session;
+  int status;
+  uint32_t uid;
+  enum pbl_bt_ancs_source source;
+  struct pbl_bt_ancs_notif notif;
+  //! Copies of the attributes got, in data; null for the ones the response lacked.
+  const struct pbl_bt_ancs_attr *attrs[ANCS_NOTIF_ATTR_COUNT];
+  uint8_t data[];
+} ClientEvent;
 
 typedef enum {
   NotificationQueueOpGetAttributes = 0,
@@ -96,18 +127,24 @@ typedef struct {
   ListNode list_node;
   NotificationQueueOp op;
   uint32_t uid;
-  ActionId action_id; // Only valid if op == NotificationQueueOpPerformAction
-  ANCSProperty properties;
+  enum pbl_bt_ancs_action action_id; // Only valid if op == NotificationQueueOpPerformAction
+  // Only valid if op == NotificationQueueOpGetAttributes:
+  struct pbl_bt_ancs_notif notif;
+  //! Pre-existing notification seen right after reconnecting, possibly missed while disconnected
+  bool recovered;
 } NotificationQueueNode;
 
 typedef struct ANCSClient {
   ANCSClientState state;
-  pbl_bt_characteristic_t characteristics[NumANCSCharacteristic];
+  uint16_t conn_handle;
+  //! Whether the service was found: its characteristics can be used.
+  bool discovered;
   struct pbl_wallclock_work is_alive_work;
   struct pbl_wallclock_work is_alive_response_work;
   // Watchdog for the in-flight Control Point request.
   struct pbl_wallclock_work op_timeout_work;
-  ANCSAttribute *attributes[NUM_FETCHED_NOTIF_ATTRIBUTES];
+  //! The attributes of the notification at the head of the queue, once got.
+  ClientEvent *notif_attrs;
   NotificationQueueNode *queue;
   bool alive_check_pending;
   ANCSVersion version;
@@ -118,7 +155,6 @@ typedef struct ANCSClient {
   uint8_t consecutive_busy_alive_checks;
   // Consecutive alive checks whose Control Point write iOS rejected.
   uint8_t consecutive_rejected_alive_checks;
-  ReassemblyContext reassembly_ctx;
 } ANCSClient;
 
 static ANCSClient *s_ancs_client;
@@ -138,11 +174,8 @@ static bool prv_can_transition_state(ANCSClientState new_state) {
               new_state == ANCSClientStatePerformingAction ||
               new_state == ANCSClientStateAliveCheck);
     case ANCSClientStateRequestedNotification:
-      return (new_state == ANCSClientStateReassemblingNotification ||
-              new_state == ANCSClientStateRequestedApp || new_state == ANCSClientStateRetrying ||
+      return (new_state == ANCSClientStateRequestedApp || new_state == ANCSClientStateRetrying ||
               new_state == ANCSClientStateIdle);
-    case ANCSClientStateReassemblingNotification:
-      return (new_state == ANCSClientStateRequestedApp || new_state == ANCSClientStateIdle);
     case ANCSClientStatePerformingAction:
       return (new_state == ANCSClientStateIdle);
     case ANCSClientStateRequestedApp:
@@ -218,7 +251,7 @@ static void prv_notif_queue_push_common(NotificationQueueNode *node) {
   }
 }
 
-static void prv_notif_queue_push_action(uint32_t uid, ActionId action_id) {
+static void prv_notif_queue_push_action(uint32_t uid, enum pbl_bt_ancs_action action_id) {
   NotificationQueueNode *node = pbl_malloc(sizeof(NotificationQueueNode));
   if (!node) {
     PBL_LOG_WRN("ANCS action alloc failed, dropping (uid=%" PRIu32 ")", uid);
@@ -252,7 +285,10 @@ static bool prv_evict_oldest_attr_request(void) {
   return false;
 }
 
-static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty properties) {
+static void prv_notif_queue_push_attr_request(const struct pbl_bt_ancs_notif *notif,
+                                              bool recovered) {
+  const uint32_t uid = notif->uid;
+
   if (list_count((ListNode *)s_ancs_client->queue) >= ANCS_NOTIF_QUEUE_MAX_DEPTH) {
     // Evict a stale entry rather than drop the fresh one.
     if (!prv_evict_oldest_attr_request()) {
@@ -269,7 +305,8 @@ static void prv_notif_queue_push_attr_request(uint32_t uid, ANCSProperty propert
   *node = (NotificationQueueNode){
     .op = NotificationQueueOpGetAttributes,
     .uid = uid,
-    .properties = properties,
+    .notif = *notif,
+    .recovered = recovered,
   };
 
   prv_notif_queue_push_common(node);
@@ -316,8 +353,9 @@ PBL_T_STATIC bool prv_queue_contains_uid(uint32_t uid) {
 
 static void prv_reset_and_idle(void) {
   prv_op_timeout_stop();
+  pbl_bt_ancs_client_cancel(&s_client);
   prv_set_state(ANCSClientStateIdle);
-  prv_reset_reassembly_context();
+  prv_release_attributes();
   // Back to Idle: not wedged.
   s_ancs_client->consecutive_busy_alive_checks = 0;
 }
@@ -327,7 +365,7 @@ static void prv_reset_and_retry(void *unused) {
     return;
   }
 
-  prv_reset_reassembly_context();
+  prv_release_attributes();
   prv_notif_queue_next();
 }
 
@@ -386,17 +424,9 @@ static void prv_op_timeout_start(void) {
                            ANCS_OP_RESPONSE_TIMEOUT_SECONDS);
 }
 
-static void prv_op_timeout_kick(void) {
-  // DS data is progress; refresh the window so slow reassembly isn't killed.
-  if (s_ancs_client && pbl_wallclock_work_is_running(&s_ancs_client->op_timeout_work)) {
-    prv_op_timeout_start();
-  }
-}
-
 // -----------------------------------------------------------------------------
 // Is Alive Logic
 
-#define ANCS_INVALID_PARAM                       0xA2
 #define ANCS_IS_ALIVE_NEXT_CHECK_TIME_MINUTES    15 // Check every 15 minutes for faster recovery
 #define ANCS_IS_ALIVE_RESPONSE_WAIT_TIME_SECONDS 5  // 5 seconds
 
@@ -424,7 +454,7 @@ static void prv_is_ancs_alive_response_timeout_fn(struct pbl_work *work);
 // Persists across connections so reconnects don't repeat the warning.
 static bool s_cp_rejected_warning_shown;
 
-static void prv_handle_alive_check_rejected(enum pbl_bt_gatt_error error) {
+static void prv_handle_alive_check_rejected(int error) {
   if (++s_ancs_client->consecutive_rejected_alive_checks <
       ANCS_REJECTED_ALIVE_CHECKS_BEFORE_WARNING) {
     return;
@@ -476,32 +506,21 @@ static void prv_resubscribe_to_ancs(void) {
     return;
   }
 
-  // Check if we have valid characteristic handles to re-subscribe to
-  if (s_ancs_client->characteristics[ANCSCharacteristicNotification] ==
-      PBL_BT_CHARACTERISTIC_INVALID) {
-    PBL_LOG_WRN("Cannot resubscribe to ANCS: no valid characteristic handles");
+  if (!s_ancs_client->discovered) {
+    PBL_LOG_WRN("Cannot resubscribe to ANCS: service not found");
     return;
   }
 
   PBL_LOG_INFO("Re-subscribing to ANCS characteristics");
 
-  // Unsubscribe first to clear local subscription state, then re-subscribe.
-  // Without this, gatt_client_subscriptions_subscribe() sees the existing local
-  // subscription and returns PBL_BT_ERRNO_INVALID_STATE without writing the CCCD to
-  // the remote device. iOS may have silently dropped its subscription state
-  // (e.g. during a PPoGATT reset), so we must re-write the CCCD to restore it.
-  for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
-    pbl_bt_characteristic_t charx = s_ancs_client->characteristics[c];
-    if (charx != PBL_BT_CHARACTERISTIC_INVALID) {
-      // Unsubscribe to clear the local state (ignore errors -- the subscription
-      // may already have been cleaned up)
-      gatt_client_subscriptions_subscribe(charx, BLESubscriptionNone);
+  // iOS may have silently dropped its subscription state (e.g. during a PPoGATT reset): write
+  // the CCCDs again, off first.
+  for (int source = PBL_BT_ANCS_SOURCE_DATA; source >= PBL_BT_ANCS_SOURCE_NOTIFICATION; --source) {
+    (void)pbl_bt_ancs_client_subscribe(&s_client, source, false);
 
-      const enum pbl_bt_errno e =
-          gatt_client_subscriptions_subscribe(charx, BLESubscriptionNotifications);
-      if (e != PBL_BT_ERRNO_OK) {
-        PBL_LOG_ERR("Failed to resubscribe to ANCS charx %d: %d", c, e);
-      }
+    const int rc = pbl_bt_ancs_client_subscribe(&s_client, source, true);
+    if (rc != 0) {
+      PBL_LOG_ERR("Failed to resubscribe to ANCS source %d: %d", source, rc);
     }
   }
 }
@@ -522,7 +541,7 @@ static void prv_is_ancs_alive_response_timeout_launcher_task_cb(void *data) {
   prv_resubscribe_to_ancs();
 
   // Always re-arm the alive-check timer here, even though a successful
-  // resubscribe will also re-arm it from ancs_handle_subscribe(). Recovery is
+  // resubscribe will also re-arm it from prv_handle_subscribed(). Recovery is
   // not guaranteed: characteristics may be invalidated, the CCCD write may
   // fail synchronously, or iOS may never reply with a CCCD response. Without
   // this re-arm those paths leave the timer permanently stopped and the watch
@@ -564,20 +583,15 @@ PBL_T_STATIC void prv_check_ancs_alive(void) {
                   s_ancs_client->alive_checks_without_ns);
       s_ancs_client->alive_checks_without_ns = 0;
       prv_resubscribe_to_ancs();
-      // ancs_handle_subscribe() will re-arm on success; schedule a backup so
+      // prv_handle_subscribed() will re-arm on success; schedule a backup so
       // we still tick if the CCCD response never lands.
       prv_ancs_is_alive_schedule_next_check();
       return;
     }
 
     prv_set_state(ANCSClientStateAliveCheck);
-    //! Sends an ANCS attribute fetch (to the Control Point). The notification UID is invalid, ANCS
-    //! will reply with 0xA2 (invalid param)
-    const GetNotificationAttributesMsg dummy_cmd = {
-      .command_id = CommandIDGetNotificationAttributes,
-      .notification_uid = INVALID_NOTIFICATION_UID,
-    };
-    prv_write_control_point_request((const CPDSMessage *)&dummy_cmd, sizeof(dummy_cmd));
+    //! Asks for a notification that does not exist: ANCS answers that the parameter is invalid.
+    (void)pbl_bt_ancs_client_get_notif_attrs(&s_client, INVALID_NOTIFICATION_UID, nullptr, 0);
     prv_ancs_is_alive_start_response_wait_timer();
   }
 }
@@ -628,267 +642,92 @@ static bool prv_just_connected(void) {
 }
 
 // -----------------------------------------------------------------------------
-// Data source (DS) notification reassembly logic
+// The attributes of the notification being handled
 
-static void prv_reset_reassembly_context(void) {
-  memset(s_ancs_client->attributes, 0, sizeof(s_ancs_client->attributes));
-  pbl_buffer_clear(&s_ancs_client->reassembly_ctx.buffer);
+static void prv_release_attributes(void) {
+  pbl_free(s_ancs_client->notif_attrs);
+  s_ancs_client->notif_attrs = nullptr;
 }
 
-static bool prv_is_reassembly_in_progress(void) {
-  return (s_ancs_client->state == ANCSClientStateReassemblingNotification);
+static void prv_put_ancs_message(const struct pbl_bt_ancs_attr *const *app_attrs) {
+  ancs_notifications_handle_message(&s_ancs_client->queue->notif, s_ancs_client->queue->recovered,
+                                    s_ancs_client->version >= ANCSVersion_iOS9OrNewer,
+                                    s_ancs_client->notif_attrs->attrs, app_attrs);
 }
 
-static bool prv_reassembly_start(const uint8_t *const data, const size_t length) {
-  PBL_ASSERTN(!prv_is_reassembly_in_progress());
-
-  ReassemblyContext *reassembly_ctx = &s_ancs_client->reassembly_ctx;
-
-  // Check that command ID is valid to prevent first part of buffer being occupied by invalid data
-  // when a new, valid message is received
-  const CPDSMessage *cmd_header = (const CPDSMessage *)data;
-  if (cmd_header->command_id < CommandIdInvalid) {
-    prv_set_state(ANCSClientStateReassemblingNotification);
-
-    // Keep around the command_id, we know what parser to call later on:
-    reassembly_ctx->command_id = cmd_header->command_id;
-
-    // Append the partial response to the reassembly buffer:
-    const int bytes_written = pbl_buffer_add(&reassembly_ctx->buffer, data, length);
-    // If this gets hit, NOTIFICATION_ATTRIBUTES_MAX_BUFFER_LENGTH is too small:
-    PBL_ASSERTN(bytes_written);
-
-    return true;
-  }
-  return false;
+//! Whether the service answered that a request made no sense, e.g. for a notification that is
+//! gone, rather than that something is wrong with the link.
+static bool prv_is_invalid_param(int status) {
+  return status == PBL_BT_ANCS_ERR_INVALID_PARAMETER;
 }
 
-static bool prv_reassembly_append(const uint8_t *const data, const size_t length) {
-  PBL_ASSERTN(s_ancs_client->state == ANCSClientStateReassemblingNotification);
-  return (pbl_buffer_add(&s_ancs_client->reassembly_ctx.buffer, data, length) != 0);
-}
-
-static uint8_t prv_current_command_id(const uint8_t *data) {
-  return ((const CPDSMessage *)data)->command_id;
-}
-
-static bool prv_reassembly_is_complete(const uint8_t *data, const size_t length, bool *out_error) {
-  switch (prv_current_command_id(data)) {
-    case CommandIDGetNotificationAttributes:
-      return ancs_util_is_complete_notif_attr_response(data, length, out_error);
-    case CommandIDGetAppAttributes:
-      return ancs_util_is_complete_app_attr_dict(data, length, out_error);
-    default:
-      *out_error = false;
-      break;
-  }
-  return false;
-}
-
-static void prv_reassembly_handle_complete_response(const uint8_t *data, const size_t length) {
-  switch (prv_current_command_id(data)) {
-    case CommandIDGetNotificationAttributes:
-      prv_handle_notification_attributes_response(data, length);
-      return;
-    default:
-      // pbl_panic();
-      prv_reset_and_next();
-      return;
-  }
-}
-
-static void prv_reassemble_ds_notification(uint32_t length, const uint8_t *data) {
-  const bool is_first_message = !prv_is_reassembly_in_progress();
-  if (is_first_message) {
-    if (s_ancs_client->state != ANCSClientStateRequestedNotification ||
-        !prv_reassembly_start(data, length)) {
-      // Discard data if data is not the start of a new message or we didn't request it.
-      return;
-    }
-  } else {
-    // We have stuff in sitting in the reassembly buffer; assume that this is
-    // data we need to finish reassembling the message
-    const bool is_success = prv_reassembly_append(data, length);
-
-    // [RC] This failure could be programmer error (in the reassembly code), but
-    // could also occur if the iPhone restarts after sending us an incomplete
-    // message, then we re-subscribe and start over from a different state
-    if (!is_success) {
-      PBL_LOG_ERR("ANCS reassembly buffer overflow; resetting ctx");
-      // TODO: separate analytics trackers instead of piling onto "parse error count"
-      prv_reset_due_to_parse_error();
-      return;
-    }
-  }
-
-  const uint8_t *response_data = s_ancs_client->reassembly_ctx.buffer.data;
-  int response_length = s_ancs_client->reassembly_ctx.buffer.bytes_written;
-
-  // Is the response complete? Or do we need to wait for more DS notifications?
-  bool parse_error = false;
-  const bool is_complete = prv_reassembly_is_complete(response_data, response_length, &parse_error);
-
-  if (parse_error) {
-    PBL_LOG_HEXDUMP_INFO(response_data, response_length);
-    prv_reset_due_to_parse_error();
-    return;
-  }
-
-  if (!is_complete) {
-    // Keep waiting
-    PBL_LOG_DBG("Incomplete response. Waiting for another DS notification.");
-    return;
-  }
-
-  // Got all the data, pass up to parser!
-  prv_reassembly_handle_complete_response(response_data, response_length);
-}
-
-static void prv_put_ancs_message(ANCSAttribute **app_attrs) {
-  ancs_notifications_handle_message(s_ancs_client->queue->uid, s_ancs_client->queue->properties,
-                                    s_ancs_client->attributes, app_attrs);
+static bool prv_is_parse_error(int status) {
+  return status == -EBADMSG || status == -ENOBUFS;
 }
 
 // -----------------------------------------------------------------------------
 // Get App Attributes request
 
-static void prv_handle_app_attributes_response(const uint8_t *data, size_t length) {
-  // Skip over the app id
-  while (length > 0) {
-    length--;
-    if (*data++ == 0) {
-      break;
-    }
+static void prv_handle_app_attrs(const ClientEvent *event) {
+  if (s_ancs_client->state != ANCSClientStateRequestedApp) {
+    return;
   }
 
-  ANCSAttribute *app_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
-
-  if (length == 0) {
-    goto fail;
-  }
-
-  bool error = false;
-  const bool complete = ancs_util_get_attr_ptrs(data, length, s_fetched_app_attributes,
-                                                NUM_FETCHED_APP_ATTRIBUTES, app_attrs, &error);
-  if (!complete || error) {
-    PBL_LOG_WRN("Error parsing app attributes");
-    goto fail;
-  }
-
-  // cache the app name
-  ANCSAttribute *app_id = s_ancs_client->attributes[FetchedNotifAttributeIndexAppID];
-  ANCSAttribute *app_name = app_attrs[FetchedAppAttributeIndexDisplayName];
-  ancs_app_name_storage_store(app_id, app_name);
-
-fail:
-  prv_put_ancs_message(app_attrs);
-  prv_reset_and_next();
-}
-
-// -----------------------------------------------------------------------------
-// Get Notification Attributes request
-
-static void prv_add_attributes_to_request(struct pbl_buffer *request_buffer) {
-  static const struct PBL_PACKED {
-    NotificationAttributeID positive_action : 8;
-    NotificationAttributeID negative_action : 8;
-    NotificationAttributeID app_id : 8;
-    NotificationAttributeID title : 8;
-    uint16_t max_title_length;
-    NotificationAttributeID subtitle : 8;
-    uint16_t max_subtitle_length;
-    NotificationAttributeID message : 8;
-    uint16_t max_message_length;
-    //! Finish with the Date because the response value for the Date is
-    //! fixed-length which allows us to determine whether the total response is
-    //! finished or whether we need to expect DS notifications with more data.
-    NotificationAttributeID date : 8;
-  } finishing_attributes = {
-    .positive_action = NotificationAttributeIDPositiveActionLabel,
-    .negative_action = NotificationAttributeIDNegativeActionLabel,
-    .app_id = NotificationAttributeIDAppIdentifier,
-    .title = NotificationAttributeIDTitle,
-    .max_title_length = TITLE_MAX_LENGTH,
-    .subtitle = NotificationAttributeIDSubtitle,
-    .max_subtitle_length = SUBTITLE_MAX_LENGTH,
-    .message = NotificationAttributeIDMessage,
-    .max_message_length = MESSAGE_MAX_LENGTH,
-    .date = NotificationAttributeIDDate,
-  };
-
-  pbl_buffer_add(request_buffer, (const uint8_t *)&finishing_attributes,
-                 sizeof(finishing_attributes));
-}
-
-static void prv_get_app_attributes(const ANCSAttribute *app_id) {
-  if (!app_id) {
+  if (prv_is_invalid_param(event->status)) {
     prv_reset_and_next();
     return;
   }
 
-  const size_t request_size = sizeof(GetAppAttributesMsg) + app_id->length + 1 + // NULL terminator
-                              ARRAY_LENGTH(s_fetched_app_attributes);
+  const struct pbl_bt_ancs_attr *app_attrs[ANCS_APP_ATTR_COUNT] = {};
 
-  GetAppAttributesMsg *request = pbl_zalloc_check(request_size);
-  *request = (GetAppAttributesMsg){
-    .command_id = CommandIDGetAppAttributes,
-  };
+  if (event->status == 0 && event->attrs[ANCS_APP_ATTR_DISPLAY_NAME] != nullptr) {
+    app_attrs[ANCS_APP_ATTR_DISPLAY_NAME] = event->attrs[ANCS_APP_ATTR_DISPLAY_NAME];
 
-  uint8_t *request_data_ptr = (uint8_t *)request + sizeof(GetAppAttributesMsg);
-  // app id
-  memcpy(request_data_ptr, app_id->value, app_id->length);
-  request_data_ptr += app_id->length;
-  // NULL terminator
-  *request_data_ptr = '\0';
-  request_data_ptr += 1;
-  // Requested attribute id(s)
-  for (unsigned i = 0; i < ARRAY_LENGTH(s_fetched_app_attributes); ++i) {
-    *request_data_ptr = s_fetched_app_attributes[i].id;
-    request_data_ptr++;
+    // cache the app name
+    const struct pbl_bt_ancs_attr *app_id =
+        s_ancs_client->notif_attrs->attrs[ANCS_NOTIF_ATTR_APP_ID];
+    ancs_app_name_storage_store(app_id, app_attrs[ANCS_APP_ATTR_DISPLAY_NAME]);
+  } else if (event->status == 0 || prv_is_parse_error(event->status)) {
+    PBL_LOG_WRN("Error parsing app attributes");
+  } else {
+    PBL_LOG_ERR("Control point error response: %d", event->status);
+    prv_reset_due_to_bt_error();
+    return;
   }
 
+  // The notification is put even without the name of its app.
+  prv_put_ancs_message(app_attrs);
+  prv_reset_and_next();
+}
+
+static void prv_get_app_attributes(const struct pbl_bt_ancs_attr *app_id) {
   prv_set_state(ANCSClientStateRequestedApp);
   prv_op_timeout_start();
 
-  bool success = prv_write_control_point_request((const CPDSMessage *)request, request_size);
-
-  pbl_free(request);
-
-  if (!success) {
+  const int rc = pbl_bt_ancs_client_get_app_attrs(&s_client, app_id->value, app_id->len,
+                                                  s_app_attr_reqs, ARRAY_LENGTH(s_app_attr_reqs));
+  if (rc != 0) {
     PBL_LOG_WRN("Failed to fetch app attributes for notification");
-    ANCSAttribute *empty_attrs[NUM_FETCHED_APP_ATTRIBUTES] = {};
+    const struct pbl_bt_ancs_attr *empty_attrs[ANCS_APP_ATTR_COUNT] = {};
     // we failed to fetch the app, but we got a notification
     prv_put_ancs_message(empty_attrs);
     prv_reset_and_next();
   }
 }
 
+// -----------------------------------------------------------------------------
+// Get Notification Attributes request
+
 static void prv_get_notification_attributes(uint32_t uid) {
-  const GetNotificationAttributesMsg cmd_header = {
-    .command_id = CommandIDGetNotificationAttributes,
-    .notification_uid = uid,
-  };
-
-  static const size_t request_max_size = 32;
-  struct pbl_buffer *request_buffer = pbl_malloc_check(sizeof(*request_buffer) + request_max_size);
-  pbl_buffer_init(request_buffer, request_max_size);
-  const size_t written_size =
-      pbl_buffer_add(request_buffer, (const uint8_t *)&cmd_header, sizeof(cmd_header));
-  PBL_ASSERTN(written_size == sizeof(cmd_header));
-
-  prv_add_attributes_to_request(request_buffer);
-
   bool retrying = (s_ancs_client->state == ANCSClientStateRetrying);
   prv_set_state(ANCSClientStateRequestedNotification);
-  // Arm before the write so completion/failure can cancel it.
+  // Arm before the request so completion/failure can cancel it.
   prv_op_timeout_start();
 
-  bool success = prv_write_control_point_request((const CPDSMessage *)request_buffer->data,
-                                                 request_buffer->bytes_written);
-
-  pbl_free(request_buffer);
-
-  if (!success) {
+  const int rc = pbl_bt_ancs_client_get_notif_attrs(&s_client, uid, s_notif_attr_reqs,
+                                                    ARRAY_LENGTH(s_notif_attr_reqs));
+  if (rc != 0) {
+    PBL_LOG_DBG("Control point write error: %d", rc);
     if (retrying) {
       prv_reset_and_flush();
     } else {
@@ -900,44 +739,60 @@ static void prv_get_notification_attributes(uint32_t uid) {
   }
 }
 
-static void prv_handle_notification_attributes_response(const uint8_t *data, size_t length) {
-  // Skip past the header, don't need it (for now):
-  data += sizeof(GetNotificationAttributesMsg);
-  length -= sizeof(GetNotificationAttributesMsg);
-
-  bool error = false;
-  const bool did_get_attrs =
-      ancs_util_get_attr_ptrs(data, length, s_fetched_notif_attributes,
-                              NUM_FETCHED_NOTIF_ATTRIBUTES, s_ancs_client->attributes, &error);
-  if (!did_get_attrs || error) {
-    PBL_LOG_ERR("Error parsing attributes: %u, %u", did_get_attrs, error);
-    prv_reset_and_next();
-    return;
+//! @return Whether the event is kept, for its attributes.
+static bool prv_handle_notif_attrs(ClientEvent *event) {
+  if (s_ancs_client->state == ANCSClientStateAliveCheck) {
+    if (prv_is_invalid_param(event->status)) {
+      // We got a response so cancel the response wait timer and setup another check.
+      prv_ancs_is_alive();
+      prv_reset_and_next();
+    } else if (event->status != 0) {
+      PBL_LOG_ERR("Control point error response: %d", event->status);
+      prv_handle_alive_check_rejected(event->status);
+      prv_reset_due_to_bt_error();
+    }
+    return false;
   }
 
-  const ANCSAttribute *app_id = s_ancs_client->attributes[FetchedNotifAttributeIndexAppID];
-  ANCSAttribute *app_name = ancs_app_name_storage_get(app_id);
+  if (s_ancs_client->state != ANCSClientStateRequestedNotification ||
+      s_ancs_client->queue == nullptr || s_ancs_client->queue->uid != event->uid) {
+    return false;
+  }
+
+  if (prv_is_invalid_param(event->status)) {
+    // We asked for a non-existent notification, go to the next one
+    prv_reset_and_next();
+    return false;
+  }
+
+  if (prv_is_parse_error(event->status)) {
+    PBL_LOG_ERR("Error parsing attributes: %d", event->status);
+    prv_reset_due_to_parse_error();
+    return false;
+  }
+
+  if (event->status != 0) {
+    PBL_LOG_ERR("Control point error response: %d", event->status);
+    prv_reset_due_to_bt_error();
+    return false;
+  }
+
+  s_ancs_client->notif_attrs = event;
+
+  const struct pbl_bt_ancs_attr *app_id = event->attrs[ANCS_NOTIF_ATTR_APP_ID];
+  const struct pbl_bt_ancs_attr *app_name = ancs_app_name_storage_get(app_id);
   if (app_name) {
     prv_put_ancs_message(&app_name);
     prv_reset_and_next();
   } else {
     prv_get_app_attributes(app_id);
   }
+
+  return true;
 }
 
 // -----------------------------------------------------------------------------
-// GATT Characteristic update & subscribe
-
-static ANCSCharacteristic prv_get_id_for_characteristic(
-    pbl_bt_characteristic_t characteristic_to_find) {
-  const pbl_bt_characteristic_t *characteristic = s_ancs_client->characteristics;
-  for (ANCSCharacteristic id = 0; id < NumANCSCharacteristic; ++id, ++characteristic) {
-    if (*characteristic == characteristic_to_find) {
-      return id;
-    }
-  }
-  return ANCSCharacteristicInvalid;
-}
+// Subscriptions and the Notification Source
 
 static void prv_put_ancs_disconnected_event(void) {
   if (s_session_active) {
@@ -952,307 +807,152 @@ static void prv_put_ancs_disconnected_event(void) {
   event_put(&event);
 }
 
-// Catching the subscription (CCCD write) confirmation for analytics purposes:
-void ancs_handle_subscribe(pbl_bt_characteristic_t subscribed_characteristic,
-                           BLESubscription subscription_type, enum pbl_bt_gatt_error error) {
-  ANCSCharacteristic characteristic_id = prv_get_id_for_characteristic(subscribed_characteristic);
-  if (characteristic_id != ANCSCharacteristicNotification &&
-      characteristic_id != ANCSCharacteristicData) {
-    // Only Notification and Data characteristics are expected to be subscribed to
-    pbl_panic();
-  }
+static void prv_handle_subscribed(enum pbl_bt_ancs_source source, int error) {
+  if (error == 0) {
+    PBL_LOG_INFO("ANCS subscribed: %u", source);
 
-  if (error == PBL_BT_GATT_ERROR_SUCCESS) {
-    PBL_LOG_INFO("ANCS subscribed: %u", characteristic_id);
-
-    if (characteristic_id == ANCSCharacteristicData) {
+    if (source == PBL_BT_ANCS_SOURCE_DATA) {
       prv_ancs_is_alive_start_tracking();
       prv_start_post_connection_ignore_window();
       s_session_active = true;
     }
   } else {
-    PBL_LOG_ERR("Failed to subscribe charx: %u (error=%u)", characteristic_id, error);
+    PBL_LOG_ERR("Failed to subscribe source: %u (error=%d)", source, error);
   }
 }
 
-void ancs_invalidate_all_references(void) {
-  for (int c = 0; c < NumANCSCharacteristic; c++) {
-    s_ancs_client->characteristics[c] = PBL_BT_CHARACTERISTIC_INVALID;
-  }
+static void prv_invalidate_all_references(void) {
+  s_ancs_client->discovered = false;
 
   prv_reset_and_flush();
   prv_put_ancs_disconnected_event();
 }
 
-void ancs_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                 uint8_t num_characteristics) {
-  // There should only be one ancs client
-  ancs_invalidate_all_references();
-}
-
-void ancs_handle_service_discovered(pbl_bt_characteristic_t *characteristics) {
+static void prv_handle_service_discovered(void) {
   PBL_LOG_DBG("In ANCS service discovery CB");
-  PBL_ASSERTN(characteristics); // should only be called if we found something!
 
   // Pause while re-subscribing, it will be resumed when re-subscribed:
   prv_ancs_is_alive_stop_timer();
 
-  if (s_ancs_client->characteristics[0] != PBL_BT_CHARACTERISTIC_INVALID) {
-    PBL_LOG_WRN("Multiple ANCS services registered?!");
-    ancs_invalidate_all_references();
-  }
+  s_ancs_client->discovered = true;
 
-  // Keep around the pbl_bt_characteristic_t references:
-  memcpy(s_ancs_client->characteristics, characteristics,
-         sizeof(pbl_bt_characteristic_t) * NumANCSCharacteristic);
-
-  // Subscribe to Data, then to Notification characteristics. Reject the service
-  // if subscribing fails instead of asserting (e.g. a "fake ANCS" without CCCD).
-  for (int c = ANCSCharacteristicData; c >= ANCSCharacteristicNotification; --c) {
-    const enum pbl_bt_errno e =
-        gatt_client_subscriptions_subscribe(characteristics[c], BLESubscriptionNotifications);
-    if (e != PBL_BT_ERRNO_OK) {
-      PBL_LOG_WRN("Failed to subscribe ANCS charx %d (err=%d), ignoring service", c, e);
-      ancs_invalidate_all_references();
+  // Subscribe to the Data Source, then to the Notification Source. Reject the service
+  // if subscribing fails instead of asserting.
+  for (int source = PBL_BT_ANCS_SOURCE_DATA; source >= PBL_BT_ANCS_SOURCE_NOTIFICATION; --source) {
+    const int rc = pbl_bt_ancs_client_subscribe(&s_client, source, true);
+    if (rc != 0) {
+      PBL_LOG_WRN("Failed to subscribe ANCS source %d (err=%d), ignoring service", source, rc);
+      prv_invalidate_all_references();
       return;
     }
   }
 }
 
-bool ancs_can_handle_characteristic(pbl_bt_characteristic_t characteristic) {
-  if (!s_ancs_client) {
-    return false;
-  }
-  for (int c = 0; c < NumANCSCharacteristic; ++c) {
-    if (s_ancs_client->characteristics[c] == characteristic) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// -------------------------------------------------------------------------------------------------
-// Handling inbound GATT Notifications
-
-static void prv_handle_ns_notification(uint32_t length, const uint8_t *notification) {
-  PBL_ASSERTN(notification != nullptr);
-
-  if (length != sizeof(NSNotification)) {
-    PBL_LOG_ERR("Received invalid ANCS NS Notification length=<%" PRIu32 ">", length);
-    return;
-  }
-
+static void prv_handle_notification(const struct pbl_bt_ancs_notif *notif) {
   // Any NS traffic (add/modify/remove) proves the subscription is still
   // delivering, so the silent-NS resubscribe watchdog can stand down.
   s_ancs_client->alive_checks_without_ns = 0;
 
-  NSNotification *nsnotification = (NSNotification *)notification;
-  ANCSProperty properties = ANCSProperty_None;
-
   PBL_LOG_VERBOSE("NSNotification: ");
-  PBL_LOG_VERBOSE("> EventID: %d", nsnotification->event_id);
-  PBL_LOG_VERBOSE("> EventFlags: <%d>", nsnotification->event_flags);
-  PBL_LOG_VERBOSE("> CategoryID: <%d>", nsnotification->category_id);
-  PBL_LOG_VERBOSE("> CategoryCount: <%d>", nsnotification->category_count);
-  PBL_LOG_VERBOSE("> NotificationUID: <%" PRIu32 ">", nsnotification->uid);
-  PBL_LOG_HEXDUMP_VERBOSE((uint8_t *)nsnotification, sizeof(NSNotification));
-
-  // Handle the CategoryID
-  if (nsnotification->category_id == CategoryIDMissedCall) {
-    properties |= ANCSProperty_MissedCall;
-  } else if (nsnotification->category_id == CategoryIDIncomingCall) {
-    properties |= ANCSProperty_IncomingCall;
-  } else if (nsnotification->category_id == CategoryIDVoicemail) {
-    properties |= ANCSProperty_VoiceMail;
-  }
-
-  // Handle the EventFlags
-  if (nsnotification->event_flags & EventFlagMultiMedia) {
-    properties |= ANCSProperty_MultiMedia;
-  }
-
-  if (nsnotification->event_flags & EventFlagSilent) {
-    properties |= ANCSProperty_Silent;
-  }
-
-  if (s_ancs_client->version >= ANCSVersion_iOS9OrNewer) {
-    properties |= ANCSProperty_iOS9;
-  }
+  PBL_LOG_VERBOSE("> EventID: %d", notif->event);
+  PBL_LOG_VERBOSE("> EventFlags: <%d>", notif->flags);
+  PBL_LOG_VERBOSE("> CategoryID: <%d>", notif->category);
+  PBL_LOG_VERBOSE("> CategoryCount: <%d>", notif->category_count);
+  PBL_LOG_VERBOSE("> NotificationUID: <%" PRIu32 ">", notif->uid);
 
   // Handle the EventID
-  switch (nsnotification->event_id) {
-    case EventIDNotificationAdded:
+  switch (notif->event) {
+    case PBL_BT_ANCS_EVENT_ADDED:
       // In iOS 8.2 several apps (especially mail.app) seem to be setting the pre-existing flag
       // when they shouldn't. This appeared to be fixed in iOS 9 beta 1.
       // By skipping the pre-existing check we will re-receive all the notifications
       // we got in the past 2 hours. To get past this ignore notifications for the first couple
       // seconds after connecting
-      if (prv_just_connected() && (nsnotification->event_flags & EventFlagPreExisting)) {
+      if (prv_just_connected() && (notif->flags & PBL_BT_ANCS_FLAG_PRE_EXISTING)) {
         if (s_had_session) {
           PBL_LOG_DBG("PreExisting ANCS notification after reconnecting");
-          prv_notif_queue_push_attr_request(nsnotification->uid,
-                                            properties | ANCSProperty_Recovered);
+          prv_notif_queue_push_attr_request(notif, true);
         } else {
           PBL_LOG_DBG("Ignoring notification because we just connected and PreExisting");
         }
       } else {
         PBL_LOG_DBG("Added ANCS notification!");
-        prv_notif_queue_push_attr_request(nsnotification->uid, properties);
+        prv_notif_queue_push_attr_request(notif, false);
       }
 
       break;
-    case EventIDNotificationModified:
+    case PBL_BT_ANCS_EVENT_MODIFIED:
       PBL_LOG_DBG("Modified ANCS notification!");
-      prv_notif_queue_push_attr_request(nsnotification->uid, properties);
+      prv_notif_queue_push_attr_request(notif, false);
       break;
-    case EventIDNotificationRemoved:
+    case PBL_BT_ANCS_EVENT_REMOVED:
       PBL_LOG_DBG("Removed ANCS notification");
-      ancs_notifications_handle_notification_removed(nsnotification->uid, properties);
+      ancs_notifications_handle_notification_removed(
+          notif, s_ancs_client->version >= ANCSVersion_iOS9OrNewer);
       break;
   }
-}
-
-static void prv_handle_ds_notification(uint32_t length, const uint8_t *data) {
-  PBL_ASSERTN(data != nullptr);
-
-  if (length < 1) {
-    PBL_LOG_ERR("Received ANCS DS notification of length 0");
-    return;
-  }
-
-  // Forward progress — refresh the watchdog.
-  prv_op_timeout_kick();
-
-  if (s_ancs_client->state == ANCSClientStateRequestedApp) {
-    prv_handle_app_attributes_response(data, length);
-  } else if (s_ancs_client->state == ANCSClientStateRequestedNotification ||
-             s_ancs_client->state == ANCSClientStateReassemblingNotification) {
-    prv_reassemble_ds_notification(length, data);
-  }
-}
-
-void ancs_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                      size_t value_length, enum pbl_bt_gatt_error error) {
-  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
-    PBL_LOG_ERR("Read or notification error: %d", error);
-    prv_reset_due_to_bt_error();
-    return;
-  }
-
-  ANCSCharacteristic characteristic_id = prv_get_id_for_characteristic(characteristic);
-  void (*handler)(uint32_t, const uint8_t *);
-  switch (characteristic_id) {
-    case ANCSCharacteristicNotification:
-      handler = prv_handle_ns_notification;
-      break;
-    case ANCSCharacteristicData:
-      handler = prv_handle_ds_notification;
-      break;
-    default:
-      pbl_panic();
-  }
-  handler(value_length, value);
-}
-
-// -----------------------------------------------------------------------------
-// Writing commands to the ANCS Control Point
-
-void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
-                                enum pbl_bt_gatt_error error) {
-  if (error == ANCS_INVALID_PARAM) {
-    if (s_ancs_client->state == ANCSClientStateAliveCheck) {
-      // We got a response so cancel the response wait timer and setup another check.
-      prv_ancs_is_alive();
-    }
-
-    // We asked for a non-existent notification, go to the next one
-    prv_reset_and_next();
-    return;
-  }
-
-  if (error != PBL_BT_GATT_ERROR_SUCCESS) {
-    PBL_LOG_ERR("Control point error response: %d", error);
-    if (s_ancs_client->state == ANCSClientStateAliveCheck) {
-      prv_handle_alive_check_rejected(error);
-    }
-    prv_reset_due_to_bt_error();
-    return;
-  }
-
-  PBL_LOG_DBG("Got ACK for Control Point write");
-
-  if (s_ancs_client->queue && (s_ancs_client->queue->op == NotificationQueueOpPerformAction)) {
-    // The action was successful
-    prv_reset_and_next();
-  }
-}
-
-static bool prv_write_control_point_request(const CPDSMessage *cmd, size_t size) {
-  const pbl_bt_characteristic_t cp = s_ancs_client->characteristics[ANCSCharacteristicControl];
-  const enum pbl_bt_errno error = gatt_client_op_write(cp, (const uint8_t *)cmd, size);
-
-  PBL_LOG_DBG("Writing to control point:");
-  PBL_LOG_HEXDUMP_DBG((const uint8_t *)cmd, size);
-
-  if (error != PBL_BT_ERRNO_OK) {
-    PBL_LOG_DBG("Control point write error: %d", error);
-    return false;
-  }
-
-  return true;
 }
 
 // -------------------------------------------------------------------------------------------------
 // Performing ANCS Notification Actions
 
-static void prv_perform_action(uint32_t notification_uid, ActionId action_id) {
-  prv_set_state(ANCSClientStatePerformingAction);
-  PerformNotificationActionMsg action_msg = {
-    .command_id = CommandIDPerformNotificationAction,
-    .notification_uid = notification_uid,
-    .action_id = action_id,
-  };
+static void prv_handle_action_performed(const ClientEvent *event) {
+  if (s_ancs_client->state != ANCSClientStatePerformingAction) {
+    return;
+  }
 
-  PBL_LOG_DBG("Taking action <%u> upon UID: %" PRIu32, action_id, notification_uid);
+  if (event->status == 0 || prv_is_invalid_param(event->status)) {
+    prv_reset_and_next();
+  } else {
+    PBL_LOG_ERR("Control point error response: %d", event->status);
+    prv_reset_due_to_bt_error();
+  }
+}
+
+static void prv_perform_action(uint32_t notification_uid, enum pbl_bt_ancs_action action) {
+  prv_set_state(ANCSClientStatePerformingAction);
+
+  PBL_LOG_DBG("Taking action <%u> upon UID: %" PRIu32, action, notification_uid);
 
   prv_op_timeout_start();
-  const bool success =
-      prv_write_control_point_request((const CPDSMessage *)&action_msg, sizeof(action_msg));
-  if (!success) {
+  if (pbl_bt_ancs_client_perform_action(&s_client, notification_uid, action) != 0) {
     prv_reset_and_next();
   }
 }
 
-static void prv_serialize_action(const PerformNotificationActionMsg *action_msg) {
+typedef struct {
+  uint32_t notification_uid;
+  uint8_t action_id;
+} PerformActionData;
+
+static void prv_serialize_action(const PerformActionData *action) {
   if (!s_ancs_client) {
     PBL_LOG_ERR("No ANCS client");
     return;
   }
 
-  prv_notif_queue_push_action(action_msg->notification_uid, action_msg->action_id);
+  prv_notif_queue_push_action(action->notification_uid, action->action_id);
 }
 
-void prv_serialize_action_launcher_task_cb(void *data) {
-  const PerformNotificationActionMsg *action_msg = (PerformNotificationActionMsg *)data;
-  prv_serialize_action(action_msg);
+static void prv_serialize_action_launcher_task_cb(void *data) {
+  prv_serialize_action(data);
   pbl_free(data);
 }
 
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   bool is_kernel_main = (pebble_task_get_current() == PebbleTask_KernelMain);
   // Avoid heap allocation when directly calling prv_serialize_action:
-  PerformNotificationActionMsg action_msg;
-  PerformNotificationActionMsg *action_msg_ptr =
-      is_kernel_main ? &action_msg : pbl_malloc_check(sizeof(PerformNotificationActionMsg));
-  *action_msg_ptr = (const PerformNotificationActionMsg){
-    .command_id = CommandIDPerformNotificationAction,
+  PerformActionData action;
+  PerformActionData *action_ptr =
+      is_kernel_main ? &action : pbl_malloc_check(sizeof(PerformActionData));
+  *action_ptr = (const PerformActionData){
     .notification_uid = notification_uid,
     .action_id = action_id,
   };
   if (is_kernel_main) {
-    prv_serialize_action(action_msg_ptr);
+    prv_serialize_action(action_ptr);
   } else {
-    launcher_task_add_callback(prv_serialize_action_launcher_task_cb, action_msg_ptr);
+    launcher_task_add_callback(prv_serialize_action_launcher_task_cb, action_ptr);
   }
 }
 
@@ -1265,22 +965,182 @@ void ancs_handle_ios9_or_newer_detected(void) {
 // -------------------------------------------------------------------------------------------------
 // Lifecycle
 
-void ancs_create(void) {
+//! At most this many events wait for KernelMain; notifications past it are dropped.
+#define CLIENT_EVENTS_MAX 32
+
+//! Tells the events of a session that ended from those of the current one.
+static uint32_t s_session;
+static atomic_uint s_num_client_events;
+
+static void prv_client_event_kernel_main_cb(void *data) {
+  ClientEvent *event = data;
+  bool kept = false;
+
+  atomic_fetch_sub(&s_num_client_events, 1);
+
+  if (s_ancs_client && event->session == s_session) {
+    switch (event->type) {
+      case ClientEventDiscovered:
+        // The service moved or went, if it was found before.
+        if (s_ancs_client->discovered) {
+          prv_invalidate_all_references();
+        }
+        if (event->status == 0) {
+          prv_handle_service_discovered();
+        } else {
+          PBL_LOG_DBG("No ANCS (%d)", event->status);
+        }
+        break;
+      case ClientEventSubscribed:
+        prv_handle_subscribed(event->source, event->status);
+        break;
+      case ClientEventNotification:
+        if (s_ancs_client->discovered) {
+          prv_handle_notification(&event->notif);
+        }
+        break;
+      case ClientEventNotifAttrs:
+        kept = prv_handle_notif_attrs(event);
+        break;
+      case ClientEventAppAttrs:
+        prv_handle_app_attrs(event);
+        break;
+      case ClientEventActionPerformed:
+        prv_handle_action_performed(event);
+        break;
+    }
+  }
+
+  if (!kept) {
+    pbl_free(event);
+  }
+}
+
+//! Puts an event with copies of the attributes that came with it, if any.
+static void prv_put_client_event(const ClientEvent *template,
+                                 const struct pbl_bt_ancs_attr *const *attrs, uint8_t num_attrs) {
+  if (atomic_fetch_add(&s_num_client_events, 1) >= CLIENT_EVENTS_MAX &&
+      template->type == ClientEventNotification) {
+    atomic_fetch_sub(&s_num_client_events, 1);
+    PBL_LOG_WRN("Dropping ANCS notification");
+    return;
+  }
+
+  size_t data_size = 0;
+  for (uint8_t i = 0; attrs != nullptr && i < num_attrs; i++) {
+    if (attrs[i] != nullptr) {
+      data_size += sizeof(*attrs[i]) + attrs[i]->len;
+    }
+  }
+
+  // On the host task: an event is lost rather than the watch reset when memory is short.
+  ClientEvent *event = pbl_malloc(sizeof(*event) + data_size);
+  if (event == nullptr) {
+    atomic_fetch_sub(&s_num_client_events, 1);
+    PBL_LOG_WRN("Dropping ANCS event %d: out of memory", template->type);
+    return;
+  }
+  *event = *template;
+  event->session = s_session;
+
+  uint8_t *data = event->data;
+  for (uint8_t i = 0; attrs != nullptr && i < num_attrs; i++) {
+    if (attrs[i] != nullptr) {
+      const size_t size = sizeof(*attrs[i]) + attrs[i]->len;
+      memcpy(data, attrs[i], size);
+      event->attrs[i] = (struct pbl_bt_ancs_attr *)data;
+      data += size;
+    }
+  }
+
+  launcher_task_add_callback(prv_client_event_kernel_main_cb, event);
+}
+
+static void prv_client_discovered(struct pbl_bt_ancs_client *client, int status) {
+  prv_put_client_event(&(ClientEvent){.type = ClientEventDiscovered, .status = status}, nullptr, 0);
+}
+
+static void prv_client_subscribed(struct pbl_bt_ancs_client *client, enum pbl_bt_ancs_source source,
+                                  bool enable, int status) {
+  if (enable) {
+    prv_put_client_event(
+        &(ClientEvent){.type = ClientEventSubscribed, .source = source, .status = status}, nullptr,
+        0);
+  }
+}
+
+static void prv_client_notification(struct pbl_bt_ancs_client *client,
+                                    const struct pbl_bt_ancs_notif *notif) {
+  prv_put_client_event(&(ClientEvent){.type = ClientEventNotification, .notif = *notif}, nullptr,
+                       0);
+}
+
+static void prv_client_notif_attrs(struct pbl_bt_ancs_client *client, int status, uint32_t uid,
+                                   const struct pbl_bt_ancs_attr *const *attrs, uint8_t num_attrs) {
+  prv_put_client_event(&(ClientEvent){.type = ClientEventNotifAttrs, .status = status, .uid = uid},
+                       attrs, num_attrs);
+}
+
+static void prv_client_app_attrs(struct pbl_bt_ancs_client *client, int status,
+                                 const struct pbl_bt_ancs_attr *const *attrs, uint8_t num_attrs) {
+  prv_put_client_event(&(ClientEvent){.type = ClientEventAppAttrs, .status = status}, attrs,
+                       num_attrs);
+}
+
+static void prv_client_action_performed(struct pbl_bt_ancs_client *client, int status,
+                                        uint32_t uid) {
+  prv_put_client_event(
+      &(ClientEvent){.type = ClientEventActionPerformed, .status = status, .uid = uid}, nullptr, 0);
+}
+
+static const struct pbl_bt_ancs_client_cb s_client_cb = {
+  .discovered = prv_client_discovered,
+  .subscribed = prv_client_subscribed,
+  .notification = prv_client_notification,
+  .notif_attrs = prv_client_notif_attrs,
+  .app_attrs = prv_client_app_attrs,
+  .action_performed = prv_client_action_performed,
+};
+
+static void prv_client_start(void) {
+  ++s_session;
+  const int rc = pbl_bt_ancs_client_start(&s_client, s_ancs_client->conn_handle, &s_client_cb);
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not look for ANCS (%d)", rc);
+  }
+}
+
+void ancs_handle_services_changed(void) {
+  if (!s_ancs_client) {
+    return;
+  }
+
+  // The session goes on if the service is still where it was: subscribing again would have
+  // the phone tell of every notification it has.
+  const int rc = pbl_bt_ancs_client_rediscover(&s_client);
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not look for ANCS again (%d)", rc);
+  }
+}
+
+void ancs_create(uint16_t conn_handle) {
   PBL_ASSERTN(s_ancs_client == nullptr);
   s_ancs_client = (ANCSClient *)pbl_zalloc_check(sizeof(ANCSClient));
+  s_ancs_client->conn_handle = conn_handle;
   pbl_wallclock_work_init(&s_ancs_client->is_alive_work, prv_is_ancs_alive_fn);
   pbl_wallclock_work_init(&s_ancs_client->is_alive_response_work,
                           prv_is_ancs_alive_response_timeout_fn);
   pbl_wallclock_work_init(&s_ancs_client->op_timeout_work, prv_op_timeout_fn);
-  pbl_buffer_init(&s_ancs_client->reassembly_ctx.buffer,
-                  sizeof(s_ancs_client->reassembly_ctx.buffer_storage));
   ancs_app_name_storage_init();
+  prv_client_start();
 }
 
 void ancs_destroy(void) {
   if (!s_ancs_client) {
     return;
   }
+  pbl_bt_ancs_client_stop(&s_client);
+  ++s_session;
   prv_ancs_is_alive_stop_timer();
   prv_op_timeout_stop();
 

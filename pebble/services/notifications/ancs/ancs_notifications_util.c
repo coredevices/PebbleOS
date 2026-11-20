@@ -13,7 +13,8 @@
 
 #include <resource/timeline_resource_ids.auto.h>
 
-const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id) {
+const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(
+    const struct pbl_bt_ancs_attr *app_id) {
   static const ANCSAppMetadata s_generic_app = {
 #if PBL_COLOR
     .app_color = GColorClearARGB8,
@@ -27,7 +28,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttrib
 
   for (unsigned int index = 0; index < ARRAY_LENGTH(map); ++index) {
     const struct ANCSAppMetadata *mapping = &map[index];
-    if (pbl_pstring16_equal_cstring(&app_id->pstr, mapping->app_id)) {
+    if (ancs_attr_equal_cstring(app_id, mapping->app_id)) {
       return mapping;
     }
   }
@@ -36,7 +37,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttrib
   return &s_generic_app;
 }
 
-time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_attr) {
+time_t ancs_notifications_util_parse_timestamp(const struct pbl_bt_ancs_attr *timestamp_attr) {
   PBL_ASSERTN(timestamp_attr);
   struct PBL_PACKED {
     char year[4];
@@ -51,7 +52,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
 
   // Make sure the attribute is the length we expect and that it doesn't have random NULL
   // characters in the middle
-  if (timestamp_attr->length < sizeof(timestamp) - 1 ||
+  if (timestamp_attr->len < sizeof(timestamp) - 1 ||
       strnlen((char *)timestamp_attr->value, sizeof(timestamp) - 1) < sizeof(timestamp) - 1) {
     // invalid length
     return 0;
@@ -87,22 +88,22 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
   return pbl_mktime(&time_tm);
 }
 
-bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id) {
-  return (app_id && pbl_pstring16_equal_cstring(&app_id->pstr, IOS_PHONE_APP_ID));
+bool ancs_notifications_util_is_phone(const struct pbl_bt_ancs_attr *app_id) {
+  return (app_id && ancs_attr_equal_cstring(app_id, IOS_PHONE_APP_ID));
 }
 
-bool ancs_notifications_util_is_sms(const ANCSAttribute *app_id) {
-  return (app_id && pbl_pstring16_equal_cstring(&app_id->pstr, IOS_SMS_APP_ID));
+bool ancs_notifications_util_is_sms(const struct pbl_bt_ancs_attr *app_id) {
+  return (app_id && ancs_attr_equal_cstring(app_id, IOS_SMS_APP_ID));
 }
 
-bool ancs_notifications_util_is_group_sms(const ANCSAttribute *app_id,
-                                          const ANCSAttribute *subtitle) {
+bool ancs_notifications_util_is_group_sms(const struct pbl_bt_ancs_attr *app_id,
+                                          const struct pbl_bt_ancs_attr *subtitle) {
   if (!ancs_notifications_util_is_sms(app_id)) {
     return false;
   }
 
   // The defining feature of a group sms (vs a regular sms) is that it has a subtitle field
-  if (!subtitle || subtitle->length == 0) {
+  if (!subtitle || subtitle->len == 0) {
     return false;
   }
 

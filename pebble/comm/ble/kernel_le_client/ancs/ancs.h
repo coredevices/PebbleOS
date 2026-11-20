@@ -3,77 +3,33 @@
 
 #pragma once
 
-#include <comm/ble/gatt_client_subscriptions.h>
+#include <stdint.h>
 
-//! @file ancs.h Module implementing an ANCS client.
-//! See http://bit.ly/ancs-spec for Apple's documentation of ANCS
+//! @file ancs.h The session with the Apple Notification Center Service of the phone: it queues
+//! the notifications the ANCS client reports, gets their attributes and hands them to the
+//! notification services. KernelMain only.
 
 typedef enum {
   ANCSClientStateIdle = 0,
   ANCSClientStateRequestedNotification,
-  ANCSClientStateReassemblingNotification,
   ANCSClientStatePerformingAction,
   ANCSClientStateRequestedApp,
   ANCSClientStateAliveCheck,
   ANCSClientStateRetrying,
 } ANCSClientState;
 
-//! Enum indexing the ANCS characteristics
-//! @note The order is actually important for ancs.c's implementation. Don't shuffle!
-typedef enum {
-  // Subscribe-able:
-  ANCSCharacteristicNotification = 0, //<! Notification Source
-  ANCSCharacteristicData = 1,         //<! Data Source
+//! Starts a session on the connection of the phone: looks for the service, and subscribes to
+//! it when the phone has it.
+void ancs_create(uint16_t conn_handle);
 
-  // Writable:
-  ANCSCharacteristicControl = 2, //<! Control Point
-  NumANCSCharacteristic,
-
-  ANCSCharacteristicInvalid = NumANCSCharacteristic,
-} ANCSCharacteristic;
-
-//! Creates the ANCS client.
-//! Must only be called from KernelMain!
-void ancs_create(void);
-
-//! Updates the pbl_bt_characteristic_t references, in case new ones have been obtained after a
-//! re-discovery of the remote services.
-//! @param characteristics Matrix of characteristics references of the ANCS service(s)
-//! @note This module only uses the first service instance, any others will be ignored.
-//! Must only be called from KernelMain!
-void ancs_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
-
-void ancs_invalidate_all_references(void);
-
-void ancs_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                 uint8_t num_characteristics);
-
-//! @param characteristic The characteristic for which to test whether the ANCS module handles
-//! reads/writes/notifications for it.
-//! @return True whether the ANCS module handles reads/writes/etc for it, false if not
-bool ancs_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
-
-//! Handles GATT write responses
-//! Must only be called from KernelMain!
-void ancs_handle_write_response(pbl_bt_characteristic_t characteristic,
-                                enum pbl_bt_gatt_error error);
-
-//! Handles GATT subscriptions
-//! Must only be called from KernelMain!
-void ancs_handle_subscribe(pbl_bt_characteristic_t characteristic,
-                           BLESubscription subscription_type, enum pbl_bt_gatt_error error);
-
-//! Handles GATT notifications
-//! Must only be called from KernelMain!
-void ancs_handle_read_or_notification(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                      size_t value_length, enum pbl_bt_gatt_error error);
-
-//! Destroys the ANCS client.
-//! Must only be called from KernelMain!
+//! Ends the session.
 void ancs_destroy(void);
 
-//! This function is safe to call from any task.
+//! The services of the phone changed: looks for the service again.
+void ancs_handle_services_changed(void);
+
+//! Performs an action on a notification, an enum pbl_bt_ancs_action. Any task.
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id);
 
-//! Called by kernel_le_client/dis/dis.c
+// For now, the iOS 9+ ANCS feature detection is done via the DIS service
 void ancs_handle_ios9_or_newer_detected(void);

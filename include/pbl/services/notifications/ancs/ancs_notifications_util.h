@@ -3,10 +3,12 @@
 
 #pragma once
 
+#include <string.h>
 #include <time.h>
 
+#include <pbl/bluetooth/ancs.h>
+
 #include <applib/graphics/gtypes.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 
 /**
  * @defgroup services_notifications_ancs_ancs_notifications_util ANCS utilities
@@ -45,12 +47,35 @@ typedef struct ANCSAppMetadata {
 } ANCSAppMetadata;
 
 /**
+ * @brief Copy the value of an attribute as a string.
+ *
+ * @param attr Attribute.
+ * @param[out] str The string, with room for the value and its terminator.
+ */
+static inline void ancs_attr_to_cstring(const struct pbl_bt_ancs_attr *attr, char *str) {
+  memcpy(str, attr->value, attr->len);
+  str[attr->len] = '\0';
+}
+
+/** @brief Whether the value of an attribute is a string; false if either is NULL. */
+static inline bool ancs_attr_equal_cstring(const struct pbl_bt_ancs_attr *attr, const char *str) {
+  return attr && str && (attr->len == strlen(str)) && (memcmp(attr->value, str, attr->len) == 0);
+}
+
+/** @brief Whether two attributes have the same value; false if either is NULL. */
+static inline bool ancs_attr_equal(const struct pbl_bt_ancs_attr *a,
+                                   const struct pbl_bt_ancs_attr *b) {
+  return a && b && (a->len == b->len) && (memcmp(a->value, b->value, a->len) == 0);
+}
+
+/**
  * @brief Look up the presentation of an app.
  *
  * @param app_id App identifier attribute.
  * @return Metadata of a known app, or a generic entry (NULL app_id, generic icon) otherwise.
  */
-const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttribute *app_id);
+const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(
+    const struct pbl_bt_ancs_attr *app_id);
 
 /**
  * @brief Parse an ANCS date attribute.
@@ -61,7 +86,7 @@ const ANCSAppMetadata *ancs_notifications_util_get_app_metadata(const ANCSAttrib
  * @param timestamp_attr Date attribute.
  * @return UTC timestamp, or 0 if the attribute is malformed.
  */
-time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_attr);
+time_t ancs_notifications_util_parse_timestamp(const struct pbl_bt_ancs_attr *timestamp_attr);
 
 /**
  * @brief Check whether an app identifier is the iOS Phone app.
@@ -69,7 +94,7 @@ time_t ancs_notifications_util_parse_timestamp(const ANCSAttribute *timestamp_at
  * @param app_id App identifier attribute, may be NULL.
  * @return true if it is the Phone app.
  */
-bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id);
+bool ancs_notifications_util_is_phone(const struct pbl_bt_ancs_attr *app_id);
 
 /**
  * @brief Check whether an app identifier is the iOS Messages app.
@@ -77,7 +102,7 @@ bool ancs_notifications_util_is_phone(const ANCSAttribute *app_id);
  * @param app_id App identifier attribute, may be NULL.
  * @return true if it is the Messages app.
  */
-bool ancs_notifications_util_is_sms(const ANCSAttribute *app_id);
+bool ancs_notifications_util_is_sms(const struct pbl_bt_ancs_attr *app_id);
 
 /**
  * @brief Check whether a notification is a group message.
@@ -86,7 +111,7 @@ bool ancs_notifications_util_is_sms(const ANCSAttribute *app_id);
  * @param subtitle Subtitle attribute; group messages from the Messages app have one.
  * @return true for a Messages notification with a non-empty subtitle.
  */
-bool ancs_notifications_util_is_group_sms(const ANCSAttribute *app_id,
-                                          const ANCSAttribute *subtitle);
+bool ancs_notifications_util_is_group_sms(const struct pbl_bt_ancs_attr *app_id,
+                                          const struct pbl_bt_ancs_attr *subtitle);
 
 /** @} */

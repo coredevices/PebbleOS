@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/analytics/analytics.h>
+#include <pbl/bluetooth/ancs.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
@@ -13,7 +14,6 @@
 
 #include <applib/event_service_client.h>
 #include <comm/ble/kernel_le_client/ancs/ancs.h>
-#include <comm/ble/kernel_le_client/ancs/ancs_types.h>
 #include <popups/phone_ui.h>
 
 PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);
@@ -310,7 +310,7 @@ void phone_call_answer(void) {
   PBL_LOG_DBG("Call accepted");
 
   if (prv_call_is_ancs()) {
-    ancs_perform_action(s_call_identifier, ActionIDPositive);
+    ancs_perform_action(s_call_identifier, PBL_BT_ANCS_ACTION_POSITIVE);
 
     // We don't show an ongoing call UI on iOS, so from this service's point of view the call is
     // now complete.
@@ -324,7 +324,7 @@ void phone_call_decline(void) {
   PBL_LOG_DBG("Call declined");
 
   if (prv_call_is_ancs()) {
-    ancs_perform_action(s_call_identifier, ActionIDNegative);
+    ancs_perform_action(s_call_identifier, PBL_BT_ANCS_ACTION_NEGATIVE);
     ancs_phone_call_temporarily_block_missed_calls();
     prv_cancel_call_watchdog();
   } else {

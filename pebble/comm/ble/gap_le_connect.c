@@ -157,6 +157,7 @@ void pbl_bt_handle_le_connection_complete_event(const struct pbl_bt_conn_complet
   const struct pbl_bt_sm_key *remote_irk = event->is_resolved ? &event->irk : nullptr;
   GAPLEConnection *connection =
       gap_le_connection_add(&event->peer_address, remote_irk, event->is_master);
+  connection->conn_handle = event->handle;
   connection->conn_params = *params;
   connection->gatt_mtu = event->mtu;
 

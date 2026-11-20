@@ -5,6 +5,8 @@
 #include <string.h>
 
 #include <pbl/kernel/work.h>
+#include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/notifications/ancs/ancs_phone_call.h>
 #include <pbl/services/phone_call_util.h>
 
@@ -51,18 +53,16 @@ static void prv_strip_formatting_chars(char *text) {
   *w_cursor = '\0';
 }
 
-void ancs_phone_call_handle_incoming(uint32_t uid, ANCSProperty properties,
-                                     ANCSAttribute **notif_attributes) {
+void ancs_phone_call_handle_incoming(uint32_t uid, bool ios_9,
+                                     const struct pbl_bt_ancs_attr *const *notif_attributes) {
   // This field holds the caller's name if the phone number belongs to a contact,
   // or the actual phone number if it does not belong to a contact
-  const ANCSAttribute *caller_id = notif_attributes[FetchedNotifAttributeIndexTitle];
+  const struct pbl_bt_ancs_attr *caller_id = notif_attributes[ANCS_NOTIF_ATTR_TITLE];
 
-  char caller_id_str[caller_id->length + 1];
-  pbl_pstring16_to_cstring(&caller_id->pstr, caller_id_str);
+  char caller_id_str[caller_id->len + 1];
+  ancs_attr_to_cstring(caller_id, caller_id_str);
   prv_strip_formatting_chars(caller_id_str);
   PebblePhoneCaller *caller = phone_call_util_create_caller(caller_id_str, nullptr);
-
-  const bool ios_9 = (properties & ANCSProperty_iOS9);
 
   prv_put_call_event(PhoneEventType_Incoming, uid, caller, ios_9);
 }

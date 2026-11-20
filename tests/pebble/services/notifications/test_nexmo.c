@@ -38,7 +38,7 @@ static bool s_performed_dismiss = false;
 
 void ancs_perform_action(uint32_t notification_uid, uint8_t action_id) {
   cl_assert_equal_i(notification_uid, s_expected_uid);
-  cl_assert_equal_i(action_id, ActionIDNegative);
+  cl_assert_equal_i(action_id, PBL_BT_ANCS_ACTION_NEGATIVE);
   s_performed_dismiss = true;
 }
 
@@ -46,7 +46,7 @@ void test_nexmo__initialize(void) {
   s_expected_attributes = nullptr;
   s_expected_actions = nullptr;
   s_performed_store = false;
-  s_expected_uid = INVALID_UID;
+  s_expected_uid = UINT32_MAX;
   s_performed_dismiss = false;
 }
 
@@ -55,8 +55,8 @@ void test_nexmo__cleanup(void) {
 
 void test_nexmo__is_reuath_sms(void) {
   uint8_t expected_app_id_buf[128];
-  ANCSAttribute *expected_app_id = (ANCSAttribute *)&expected_app_id_buf;
-  expected_app_id->length = strlen(IOS_SMS_APP_ID);
+  struct pbl_bt_ancs_attr *expected_app_id = (struct pbl_bt_ancs_attr *)&expected_app_id_buf;
+  expected_app_id->len = strlen(IOS_SMS_APP_ID);
   memcpy(expected_app_id->value, IOS_SMS_APP_ID, strlen(IOS_SMS_APP_ID));
 
   char valid_message[128];
@@ -65,19 +65,19 @@ void test_nexmo__is_reuath_sms(void) {
   strcat(valid_message, " possible postamble");
 
   uint8_t expected_message_buf[128];
-  ANCSAttribute *expected_message = (ANCSAttribute *)&expected_message_buf;
-  expected_message->length = strlen(valid_message);
+  struct pbl_bt_ancs_attr *expected_message = (struct pbl_bt_ancs_attr *)&expected_message_buf;
+  expected_message->len = strlen(valid_message);
   memcpy(expected_message->value, valid_message, strlen(valid_message));
 
   uint8_t bad_app_id_buf[128];
-  ANCSAttribute *bad_app_id = (ANCSAttribute *)&bad_app_id_buf;
-  bad_app_id->length = strlen(IOS_MAIL_APP_ID);
+  struct pbl_bt_ancs_attr *bad_app_id = (struct pbl_bt_ancs_attr *)&bad_app_id_buf;
+  bad_app_id->len = strlen(IOS_MAIL_APP_ID);
   memcpy(bad_app_id->value, IOS_MAIL_APP_ID, strlen(IOS_MAIL_APP_ID));
 
   const char *bad_string = "Phil was here";
   uint8_t bad_message_buf[128];
-  ANCSAttribute *bad_message = (ANCSAttribute *)&bad_message_buf;
-  bad_message->length = strlen(bad_string);
+  struct pbl_bt_ancs_attr *bad_message = (struct pbl_bt_ancs_attr *)&bad_message_buf;
+  bad_message->len = strlen(bad_string);
   memcpy(bad_message->value, bad_string, strlen(bad_string));
 
   cl_assert(nexmo_is_reauth_sms(expected_app_id, expected_message));
@@ -93,8 +93,8 @@ void test_nexmo__handle_reuath_sms(void) {
 
   // App ID
   uint8_t app_id_buf[128];
-  ANCSAttribute *app_id = (ANCSAttribute *)&app_id_buf;
-  app_id->length = strlen(IOS_SMS_APP_ID);
+  struct pbl_bt_ancs_attr *app_id = (struct pbl_bt_ancs_attr *)&app_id_buf;
+  app_id->len = strlen(IOS_SMS_APP_ID);
   memcpy(app_id->value, IOS_SMS_APP_ID, strlen(IOS_SMS_APP_ID));
 
   // Message
@@ -104,8 +104,8 @@ void test_nexmo__handle_reuath_sms(void) {
   strcat(valid_message, " possible postamble");
 
   uint8_t message_buf[128];
-  ANCSAttribute *message = (ANCSAttribute *)&message_buf;
-  message->length = strlen(valid_message);
+  struct pbl_bt_ancs_attr *message = (struct pbl_bt_ancs_attr *)&message_buf;
+  message->len = strlen(valid_message);
   memcpy(message->value, valid_message, strlen(valid_message));
 
   // Existing prefs
