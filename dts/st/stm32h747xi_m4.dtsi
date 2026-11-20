@@ -1,0 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include "stm32h747xi.dtsi"
+
+/ {
+	// SRAM1 to SRAM3 of the D2 domain, at their alias on the code bus of the Cortex-M4
+	sram0: memory@10000000 {
+		device_type = "memory";
+		reg = <0x10000000 0x48000>;
+	};
+};
