@@ -81,9 +81,6 @@ config PP_TRANSPORT_GATT_SYSTEM_ONLY
     default y if RECOVERY_FW
     depends on PP_TRANSPORT_GATT
 
-config PRESSURE
-    default y if DT_HAS_BOSCH_BMP390_ENABLED
-
 config SHELL
     default y
     depends on CONSOLE
