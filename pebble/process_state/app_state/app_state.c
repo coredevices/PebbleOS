@@ -142,12 +142,12 @@ typedef struct {
   ContentIndicatorsBuffer content_indicators_buffer;
 } AppState;
 
-KERNEL_READONLY_DATA static AppState *s_app_state_ptr;
+PBL_KERNEL_READONLY_DATA static AppState *s_app_state_ptr;
 
 bool app_state_configure(MemorySegment *app_state_ram, ProcessAppSDKType sdk_type,
                          int16_t obstruction_origin_y) {
-  KERNEL_READONLY_DATA_SET(s_app_state_ptr,
-                           memory_segment_split(app_state_ram, nullptr, sizeof(AppState)));
+  PBL_KERNEL_READONLY_DATA_SET(s_app_state_ptr,
+                               memory_segment_split(app_state_ram, nullptr, sizeof(AppState)));
   if (!s_app_state_ptr) {
     return false;
   }

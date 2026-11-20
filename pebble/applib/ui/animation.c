@@ -28,7 +28,7 @@
 #endif
 #include <pbl/util/testing.h>
 
-KERNEL_READONLY_DATA static bool s_paused = false;
+PBL_KERNEL_READONLY_DATA static bool s_paused = false;
 
 static void prv_run(AnimationState *state, uint32_t now, AnimationPrivate *top_level_animation,
                     uint32_t top_level_start_time, bool do_update);
@@ -1782,12 +1782,12 @@ Animation *animation_clone(Animation *animation_h) {
 
 // -------------------------------------------------------------------------------------------
 void animation_private_pause(void) {
-  KERNEL_READONLY_DATA_SET(s_paused, true);
+  PBL_KERNEL_READONLY_DATA_SET(s_paused, true);
 }
 
 // -------------------------------------------------------------------------------------------
 void animation_private_resume(void) {
-  KERNEL_READONLY_DATA_SET(s_paused, false);
+  PBL_KERNEL_READONLY_DATA_SET(s_paused, false);
 }
 
 #ifdef CONFIG_SHELL
