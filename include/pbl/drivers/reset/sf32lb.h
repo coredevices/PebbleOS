@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include <pbl/drivers/reset.h>
 
 /**
@@ -115,5 +117,35 @@ extern const struct pbl_reset_controller pbl_reset_sf32lb_hpsys_rcc;
 #define SF32LB57_HPSYS_RST_JPEGD    56
 #define SF32LB57_HPSYS_RST_I2C4     57
 /** @} */
+
+/** @brief HPSYS RCC reset controller. */
+struct pbl_reset_sf32lb {
+  /** Reset controller. */
+  struct pbl_reset_controller ctrl;
+  /** Registers. */
+  uintptr_t base;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_reset_controller_ops pbl_reset_sf32lb_ops;
+/** @endcond */
+
+/** Number of reset lines of the HPSYS RCC. */
+#define PBL_RESET_SF32LB_NUM_LINES 64U
+
+/**
+ * @brief Define the reset controller of an HPSYS RCC.
+ *
+ * @param sym Symbol of the controller.
+ * @param _name Name of the RCC; the controller is named after it.
+ * @param _base RCC registers.
+ */
+#define PBL_RESET_SF32LB_DEFINE(sym, _name, _base)                                        \
+  PBL_RESET_CONTROLLER_STATE_DEFINE(sym);                                                 \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_reset_sf32lb, struct pbl_reset_controller, ctrl) {  \
+    .ctrl = PBL_RESET_CONTROLLER_INIT(sym, _name "_reset", nullptr, nullptr,              \
+                                      &pbl_reset_sf32lb_ops, PBL_RESET_SF32LB_NUM_LINES), \
+    .base = (_base),                                                                      \
+  }
 
 /** @} */
