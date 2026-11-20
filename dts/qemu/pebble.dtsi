@@ -12,6 +12,7 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
 	};
 
 	soc {
