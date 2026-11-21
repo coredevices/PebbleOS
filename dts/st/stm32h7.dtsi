@@ -3,6 +3,7 @@
 
 #include <dt-bindings/clock/stm32h7-clks.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/mfd/stm32h7-rcc.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 
 / {
@@ -152,6 +153,27 @@
 			compatible = "st,stm32-rng";
 			reg = <0x48021800 0x400>;
 			clocks = <&rcc RNG_CK>;
+			status = "disabled";
+		};
+
+		dsi: dsi@50000000 {
+			compatible = "st,stm32-dsi";
+			reg = <0x50000000 0x800>;
+			clocks = <&rcc DSI_CK>, <&clk_hse>, <&rcc LTDC_CK>;
+			clock-names = "pclk", "ref", "px_clk";
+			resets = <&rcc STM32H7_APB3_RESET(DSI)>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		ltdc: display-controller@50001000 {
+			compatible = "st,stm32-ltdc";
+			reg = <0x50001000 0x200>;
+			interrupts = <88>, <89>;
+			clocks = <&rcc LTDC_CK>;
+			clock-names = "lcd";
+			resets = <&rcc STM32H7_APB3_RESET(LTDC)>;
 			status = "disabled";
 		};
 
