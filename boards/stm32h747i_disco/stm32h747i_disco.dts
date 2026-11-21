@@ -99,12 +99,13 @@
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>,
-			  <&rcc LPTIM1_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <0>, <&rcc LSE_CK>;
-	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 counts the LSE crystal
+				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>;
+	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 and the RTC count the LSE
+	// crystal
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <42000000>, <0>;
+			       <100000000>, <100000000>, <42000000>, <0>, <0>;
 };
 
 // The SMPS supplies VCORE, as the kit ships
@@ -248,6 +249,10 @@
 };
 
 &rng {
+	status = "okay";
+};
+
+&rtc {
 	status = "okay";
 };
 
