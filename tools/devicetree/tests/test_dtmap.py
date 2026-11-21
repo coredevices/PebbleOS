@@ -2001,6 +2001,16 @@ def test_compatible_models_get_kconfig_symbols():
     )
 
 
+def test_early_code_compatibles_get_kconfig_symbols(tmp_path):
+    (tmp_path / "drivers").mkdir()
+    (tmp_path / "drivers" / "timer.regs.yaml").write_text(
+        "config: TIMER_ACME\nlabels: [timer0]\ncompatible: acme,timer\n"
+    )
+    early = dtmap.regs_compatibles(tmp_path)
+    assert early == {"acme,timer"}
+    assert "acme,timer" in dtmap.kconfig_compatibles({}, early)
+
+
 def test_null_default_is_rejected():
     data = {**SPECS["acme,sensor"], "args": [{"prop": "x", "default": None}]}
     with pytest.raises(DtError, match="'default' has no value"):

@@ -783,6 +783,15 @@ The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
 
+Such code may also name the compatible it drives, for Kconfig to have
+`DT_HAS_<COMPATIBLE>_ENABLED` and pick it from the tree, as drivers do:
+
+```yaml
+config: TIMER_STM32_LPTIM
+labels: [lptimer1]
+compatible: st,stm32-lptimer-timer
+```
+
 ## Tests
 
 The generator has unit tests, run on the host:

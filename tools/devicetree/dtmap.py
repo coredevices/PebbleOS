@@ -1438,7 +1438,7 @@ class Generator:
 PARTITIONS = "fixed-partitions"
 PARTITIONS_HEADER = "devicetree/partitions.h"
 REGS_HEADER = "devicetree/regs.h"
-REGS_KEYS = {"config", "labels"}
+REGS_KEYS = {"config", "labels", "compatible"}
 KIB = 1024
 MIB = 1024 * KIB
 
@@ -1584,6 +1584,15 @@ def load_regs(srcdir, appdir=None):
         check_keys(error, data, REGS_KEYS, "regs", ("config", "labels"))
         regs.append((data["config"], as_list(data["labels"]), error))
     return regs
+
+
+def regs_compatibles(srcdir, appdir=None):
+    """The compatibles *.regs.yaml name, for their code to be selected from the tree."""
+    compatibles = set()
+    for path in find_files(srcdir, "*.regs.yaml", appdir):
+        with open(path) as f:
+            compatibles.update(as_list(yaml.safe_load(f).get("compatible", [])))
+    return compatibles
 
 
 def regs_header(tree, regs, config):
@@ -1877,12 +1886,13 @@ def kconfig_symbol(compatible):
     return "DT_HAS_" + re.sub(r"[^A-Z0-9]", "_", compatible.upper()) + "_ENABLED"
 
 
-def kconfig_compatibles(specs):
-    """Those with a DT_HAS symbol: of the drivers, the models they name, and the partitions."""
+def kconfig_compatibles(specs, early=()):
+    """Those with a DT_HAS symbol: of the drivers, the models they name, the partitions, and
+    those of the code that runs before there are devices."""
     models = {
         model for group in specs.values() for spec in group for model in spec.models
     }
-    return sorted({*specs, *models, PARTITIONS})
+    return sorted({*specs, *models, PARTITIONS, *early})
 
 
 def kconfig_text(tree, compatibles):
@@ -1946,7 +1956,8 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     else:
         (outdir / "board.dtb").unlink(missing_ok=True)
     kconfig = outdir / "Kconfig.dt"
-    write_if_changed(kconfig, kconfig_text(tree, kconfig_compatibles(specs)).encode())
+    compatibles = kconfig_compatibles(specs, regs_compatibles(srcdir, appdir))
+    write_if_changed(kconfig, kconfig_text(tree, compatibles).encode())
     paths = role_files(srcdir, board, revision, appdir, addons)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
