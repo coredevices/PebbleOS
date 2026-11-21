@@ -50,11 +50,12 @@ unevaluatedProperties: false
 
 examples:
   - |
+    #include <dt-bindings/dma/sifli,sf32lb52-dmac.h>
     audio-codec@50088000 {
         compatible = "sifli,sf32lb52-audcodec";
         reg = <0x50088000 0x1000>;
         clocks = <&hpsys_rcc 33>;
-        dmas = <&dmac1 3 41 2>;
+        dmas = <&dmac1 3 SF32LB52_DMAC1_REQ_AUDCODEC_DAC0 SF32LB52_DMA_PRIO_HIGH>;
         dma-names = "tx";
         #sound-dai-cells = <0>;
         sifli,pmuc = <&pmuc>;

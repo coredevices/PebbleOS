@@ -4,6 +4,7 @@
 #include <dt-bindings/clock/sifli,sf32lb52-hpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb52-pmuc.h>
+#include <dt-bindings/dma/sifli,sf32lb52-dmac.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/power/sifli,sf32lb52-pmuc.h>
 #include <dt-bindings/reset/sifli,sf32lb52-hpsys-rcc.h>

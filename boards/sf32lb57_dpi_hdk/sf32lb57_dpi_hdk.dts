@@ -75,7 +75,7 @@
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
 	current-speed = <1000000>;
-	dmas = <&gpdma1 6 5 2>;
+	dmas = <&gpdma1 6 SF32LB57_GPDMA1_REQ_USART1_RX SF32LB57_DMA_PRIO_HIGH>;
 	dma-names = "rx";
 	status = "okay";
 };
