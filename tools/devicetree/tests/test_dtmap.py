@@ -2392,11 +2392,13 @@ def regs(tmp_path, labels, config="SOC_ACME"):
 def test_regs_are_translated_through_ranges(tmp_path):
     text = regs(tmp_path, ["rcc"])
     assert "#define PBL_DT_REG_RCC 0x40001000UL" in text
+    assert "#define PBL_DT_SIZE_RCC 0x400UL" in text
 
 
 def test_regs_by_name(tmp_path):
     text = regs(tmp_path, [{"label": "flash", "reg": "mem"}])
     assert "#define PBL_DT_REG_FLASH_MEM 0x40080000UL" in text
+    assert "#define PBL_DT_SIZE_FLASH_MEM 0x10000UL" in text
     with pytest.raises(DtError, match="no reg named 'xip'"):
         regs(tmp_path, [{"label": "flash", "reg": "xip"}])
 
@@ -2986,3 +2988,84 @@ def test_dma_window_must_be_one(tmp_path):
     )
     with pytest.raises(DtError, match="more than one dma-ranges window"):
         dma_generate(tmp_path, text)
+
+
+KCONFIG_MEMORY_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    sram0: memory@20000000 {
+        device_type = "memory";
+        reg = <0x20000000 0x80000>;
+    };
+
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+
+        retained: memory@20000000 {
+            reg = <0x20000000 0x100>;
+            no-map;
+        };
+
+        ipc: memory@2007fc00 {
+            reg = <0x2007fc00 0x400>;
+            no-map;
+        };
+
+        unused: memory@2007f000 {
+            reg = <0x2007f000 0x100>;
+            status = "disabled";
+        };
+    };
+
+    soc {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges = <0x0 0x40000000 0x10000>;
+
+        rcc: clock-controller@1000 {
+            reg = <0x1000 0x100>, <0x2000 0x40>;
+        };
+    };
+};
+"""
+
+
+def test_kconfig_functions_read_regs_and_free_memory(tmp_path, monkeypatch):
+    import kconfigfunctions
+
+    path = tmp_path / "board.dts"
+    path.write_text(KCONFIG_MEMORY_DTS)
+    subprocess.run(
+        [
+            dtc(),
+            "-@",
+            "-q",
+            "-I",
+            "dts",
+            "-O",
+            "dtb",
+            "-o",
+            str(tmp_path / "board.dtb"),
+            str(path),
+        ],
+        check=True,
+    )
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path))
+    kconfigfunctions._tree.cache_clear()
+    k = kconfigfunctions
+    assert k.dt_has_nodelabel(None, None, "rcc") == "y"
+    assert k.dt_has_nodelabel(None, None, "nope") == "n"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc") == "0x40001000"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc", "1") == "0x40002000"
+    assert k.dt_nodelabel_reg_size(None, None, "rcc", "1") == "0x40"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc", "2") == "0x0"
+    assert k.dt_nodelabel_reg_addr(None, None, "nope") == "0x0"
+    assert k.dt_memory_free_addr(None, None, "sram0") == "0x20000100"
+    assert k.dt_memory_free_size(None, None, "sram0") == "0x7fb00"
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path / "none"))
+    assert k.dt_has_nodelabel(None, None, "rcc") == "n"
+    assert k.dt_memory_free_size(None, None, "sram0") == "0x0"
