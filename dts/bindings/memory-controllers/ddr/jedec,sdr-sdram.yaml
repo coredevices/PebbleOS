@@ -1,0 +1,127 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/memory-controllers/ddr/jedec,sdr-sdram.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: JEDEC SDR SDRAM
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  A single data rate SDRAM, which has nothing to read its geometry or timings
+  from, so they come from its datasheet. Timings are those of its speed
+  grade, in picoseconds.
+
+properties:
+  compatible:
+    items:
+      - enum:
+          - issi,is42s32800g
+      - const: jedec,sdr-sdram
+
+  reg:
+    maxItems: 1
+
+  io-width:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Data bus width, in bits.
+    enum: [8, 16, 32]
+
+  banks:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Internal banks.
+    enum: [2, 4]
+
+  row-bits:
+    description: Row address bits. A refresh period refreshes each row once.
+    minimum: 11
+    maximum: 13
+
+  col-bits:
+    description: Column address bits.
+    minimum: 8
+    maximum: 11
+
+  tRC:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Active to active of a bank, and refresh to refresh.
+
+  tRAS-min:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Active to precharge.
+
+  tRP:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Precharge to active.
+
+  tRCD:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Active to read or write.
+
+  tWR:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Write recovery, last data in to precharge.
+
+  tMRD:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Load mode register to the next command.
+
+  tXSR:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Self-refresh exit to active.
+
+  tREF-ms:
+    description: Refresh period, in milliseconds.
+
+  cas-latency-freqs:
+    $ref: /schemas/types.yaml#/definitions/uint32-matrix
+    description:
+      The CAS latencies of the speed grade, each with the highest clock it
+      allows, in Hz.
+    items:
+      items:
+        - description: CAS latency, in clock cycles.
+          minimum: 1
+          maximum: 3
+        - description: Highest clock, in Hz.
+
+required:
+  - compatible
+  - reg
+  - io-width
+  - banks
+  - row-bits
+  - col-bits
+  - tRC
+  - tRAS-min
+  - tRP
+  - tRCD
+  - tWR
+  - tMRD
+  - tXSR
+  - tREF-ms
+  - cas-latency-freqs
+
+additionalProperties: false
+
+examples:
+  - |
+    sdram@70000000 {
+        compatible = "issi,is42s32800g", "jedec,sdr-sdram";
+        reg = <0x70000000 0x2000000>;
+        io-width = <32>;
+        banks = <4>;
+        row-bits = <12>;
+        col-bits = <9>;
+        tRC = <60000>;
+        tRAS-min = <42000>;
+        tRP = <18000>;
+        tRCD = <18000>;
+        tWR = <12000>;
+        tMRD = <12000>;
+        tXSR = <70000>;
+        tREF-ms = <64>;
+        cas-latency-freqs = <2 100000000>, <3 166000000>;
+    };
