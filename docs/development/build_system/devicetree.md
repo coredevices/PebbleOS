@@ -30,7 +30,7 @@ for the machine, a board tree for each.
 | `boards/<board>/<board>-pinctrl.dtsi` | The pin control states of the board, on SoCs with a pin controller |
 | `boards/<board>/<board>_<revision>.dts` | A revision, e.g. `obelix_pvt.dts`, or `<board>.dts` for boards with one |
 | `include/dt-bindings/` | Constants the trees use, such as clock IDs and GPIO flags |
-| `dts/bindings/` | Bindings that upstream does not have |
+| `dts/bindings/` | Bindings that upstream does not have, or extends |
 
 A board tree includes its SoC tree, enables the peripherals it uses, and adds
 what is on the board: sensors on a bus, the flash on its controller, the panel,
@@ -128,7 +128,9 @@ other way around:
 
 - **Bindings.** A node follows the upstream binding of its compatible when
   there is one, property for property. A binding of our own goes in
-  `dts/bindings/`, written the way upstream would accept it.
+  `dts/bindings/`, written the way upstream would accept it. Where upstream
+  lacks what the hardware has, a copy of its binding at the same path in
+  `dts/bindings/`, with the additions, replaces it.
 - **Compatibles.** A compatible names the part, e.g. `jdi,lpm015m135a`, never a
   family or a board. A peripheral that a whole SoC series shares lists the part
   it is on first and the first part that had it last, as
