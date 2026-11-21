@@ -759,7 +759,7 @@ static void prv_hide_action_bar(void) {
     &s_phone_ui_data->caller_id_text_layer,
     &s_phone_ui_data->call_status_text_layer,
   };
-  for (unsigned i = 0; i < ARRAY_LENGTH(text_layers); ++i) {
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(text_layers); ++i) {
     TextLayer *text_layer = text_layers[i];
     text_layer->layer.frame.origin.x = TEXT_MARGIN_WIDTH;
     text_layer->layer.frame.size.w = text_width;
