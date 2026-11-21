@@ -87,6 +87,19 @@ static int prv_init(const struct pbl_display *disp) {
   const struct pbl_panel_timing *t = panel->timing;
   int ret;
 
+  ret = pbl_device_init(&panel->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // A frame wider than the panel, and as wide as it is tall, goes to it turned a quarter turn
+  if (disp->props.width > t->hactive && disp->props.width <= t->vactive) {
+    ret = pbl_panel_set_quarter_turn(panel, true);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
   if (disp->framebuffer == nullptr || disp->props.format != PBL_DISPLAY_FORMAT_RGB565 ||
       panel->bus_format != PBL_PANEL_BUS_FORMAT_MIPI_DSI_RGB888 || disp->props.width > t->hactive ||
       disp->props.height > t->vactive) {
@@ -111,11 +124,6 @@ static int prv_init(const struct pbl_display *disp) {
   // The DSI host takes the data enable inverted, and active high syncs
   prv_putreg(ltdc, STM32_LTDC_GCR_OFFSET, LTDC_GCR_HSPOL | LTDC_GCR_VSPOL | LTDC_GCR_LTDCEN);
   pbl_irq_enable(ltdc->irq);
-
-  ret = pbl_device_init(&panel->dev);
-  if (ret != 0) {
-    return ret;
-  }
 
   ret = pbl_panel_prepare(panel);
   if (ret != 0) {
