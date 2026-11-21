@@ -1150,7 +1150,7 @@ class Generator:
                         for c in node.children
                         if enabled(c)
                         and (
-                            c.name == step
+                            step in (c.name, c.basename)
                             if isinstance(step, str)
                             else c.unit_address == f"{step:x}"
                         )
