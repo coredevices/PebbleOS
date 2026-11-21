@@ -48,6 +48,9 @@ config FLASH_SPI_NOR_GD25LQ255E
 config FLASH_SPI_NOR_GD25Q256E
     bool "GigaDevice GD25Q256E"
 
+config FLASH_SPI_NOR_MT25QL512A
+    bool "Micron MT25QL512A"
+
 config FLASH_SPI_NOR_PY25Q128HA
     bool "Puya PY25Q128HA"
 
