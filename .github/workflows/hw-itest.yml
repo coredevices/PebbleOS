@@ -60,7 +60,7 @@ jobs:
       contents: read
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v16
+      image: ghcr.io/coredevices/pebbleos-docker:v17
 
     strategy:
       fail-fast: false
