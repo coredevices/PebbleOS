@@ -274,6 +274,39 @@
 			status = "disabled";
 		};
 
+		sai1: sai@40015800 {
+			compatible = "st,stm32h7-sai";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0 0x40015800 0x400>;
+			reg = <0x40015800 0x4>;
+			clocks = <&rcc SAI1_CK>, <&rcc PLL2_P>, <&rcc PLL2_P>;
+			clock-names = "pclk", "x8k", "x11k";
+			interrupts = <87>;
+			resets = <&rcc STM32H7_APB2_RESET(SAI1)>;
+			status = "disabled";
+
+			sai1a: audio-controller@4 {
+				compatible = "st,stm32-sai-sub-a";
+				reg = <0x4 0x20>;
+				clocks = <&rcc SAI1_CK>;
+				clock-names = "sai_ck";
+				dmas = <&dmamux1 87 0x400 0x01>;
+				#sound-dai-cells = <0>;
+				status = "disabled";
+			};
+
+			sai1b: audio-controller@24 {
+				compatible = "st,stm32-sai-sub-b";
+				reg = <0x24 0x20>;
+				clocks = <&rcc SAI1_CK>;
+				clock-names = "sai_ck";
+				dmas = <&dmamux1 88 0x400 0x01>;
+				#sound-dai-cells = <0>;
+				status = "disabled";
+			};
+		};
+
 		rtc: rtc@58004000 {
 			compatible = "st,stm32h7-rtc";
 			reg = <0x58004000 0x400>;
