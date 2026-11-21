@@ -32,3 +32,4 @@ devicetree.
 | Nordic nRF5 I2S | `nordic,nrf52832-i2s` | `CONFIG_AUDIO_NRF5_I2S` |
 | Digital microphones | `dmic-codec` | `CONFIG_AUDIO_DMIC` |
 | Dialog DA7212 codec | `dlg,da7212` | `CONFIG_AUDIO_DA7212` |
+| Cirrus Logic WM8994 codec | `wlf,wm8994` | `CONFIG_AUDIO_WM8994` |
