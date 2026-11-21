@@ -260,6 +260,28 @@
 			status = "disabled";
 		};
 
+		dsi: dsi@50000000 {
+			compatible = "st,stm32-dsi";
+			reg = <0x50000000 0x800>;
+			interrupts = <123>;
+			clocks = <&rcc DSI_CK>, <&clk_hse>, <&rcc LTDC_CK>;
+			clock-names = "pclk", "ref", "px_clk";
+			resets = <&rcc STM32H7_APB3_RESET(DSI)>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		ltdc: display-controller@50001000 {
+			compatible = "st,stm32-ltdc";
+			reg = <0x50001000 0x200>;
+			interrupts = <88>, <89>;
+			clocks = <&rcc LTDC_CK>;
+			clock-names = "lcd";
+			resets = <&rcc STM32H7_APB3_RESET(LTDC)>;
+			status = "disabled";
+		};
+
 		flash: flash-controller@52002000 {
 			compatible = "st,stm32h7-flash-controller";
 			reg = <0x52002000 0x1000>;
