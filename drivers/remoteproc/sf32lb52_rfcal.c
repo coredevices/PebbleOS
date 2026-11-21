@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-#include <pbl/drivers/nvmem/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/malloc.h>
@@ -71,14 +70,10 @@
 #define CMD_RD_DCCAL2 0x8000
 #define CMD_END       0xf000
 
-// Factory RF calibration, efuse bank 1
-#define RF_CAL_OFFSET 32U
-#define RF_CAL_SIZE   20U
+// The factory calibration record, the RF calibration in its first 20 bytes
+#define RF_CAL_SIZE 32U
 
 static struct pbl_rproc_sf32lb__rf s_rf;
-
-static const struct pbl_nvmem_cell s_rf_cal_cell =
-    PBL_NVMEM_CELL(SF32LB52_EFUSE, RF_CAL_OFFSET, RF_CAL_SIZE);
 
 static void prv_or(uintptr_t addr, uint32_t val) {
   pbl_writel(pbl_readl(addr) | val, addr);
@@ -96,7 +91,7 @@ static int8_t bt_rf_get_absolute_pwr_cal(uint8_t *edr_cal_flag, uint8_t *pa_bm_c
                                          uint8_t *dac_lsb_cnt_cal) {
   uint8_t cal[RF_CAL_SIZE];
 
-  if (pbl_nvmem_cell_read(&s_rf_cal_cell, cal, sizeof(cal)) != 0) {
+  if (pbl_nvmem_cell_read(s_rf.cal, cal, sizeof(cal)) != 0) {
     *edr_cal_flag = 0U;
     return 1;
   }

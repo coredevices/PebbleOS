@@ -151,6 +151,8 @@
 			sifli,lpsys-rcc = <&lpsys_rcc>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,pmuc = <&pmuc>;
+			nvmem-cells = <&factory_calibration>;
+			nvmem-cell-names = "calibration";
 			status = "disabled";
 		};
 
@@ -227,6 +229,20 @@
 			clocks = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_EFUSEC>;
 			sifli,pmuc = <&pmuc>;
 			read-only;
+
+			nvmem-layout {
+				compatible = "fixed-layout";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				unique_id: unique-id@0 {
+					reg = <0x0 0x10>;
+				};
+
+				factory_calibration: calibration@20 {
+					reg = <0x20 0x20>;
+				};
+			};
 		};
 
 		crypto: crypto@5000d000 {

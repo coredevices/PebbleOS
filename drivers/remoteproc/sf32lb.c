@@ -250,6 +250,7 @@ static void prv_rf_cal(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config) {
     .lpsys_rcc = lcpu->rf.lpsys_rcc,
     .hpsys_cfg = lcpu->rf.hpsys_cfg,
     .pmuc = lcpu->rf.pmuc,
+    .cal = &lcpu->rf.cal,
     .dma_buf = lcpu->sram.base + LCPU_EM_OFFSET,
 #ifdef CONFIG_SOC_SF32LB57
     .rf_config = lcpu->sram.base + RF_CONFIG_57_OFFSET,

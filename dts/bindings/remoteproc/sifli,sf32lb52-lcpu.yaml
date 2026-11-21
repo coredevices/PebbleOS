@@ -103,6 +103,13 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: Power management unit, for the buck during calibration.
 
+  nvmem-cells:
+    maxItems: 1
+    description: Factory calibration record, in the eFuse.
+
+  nvmem-cell-names:
+    const: calibration
+
 required:
   - compatible
   - reg
@@ -123,6 +130,8 @@ required:
   - sifli,lpsys-rcc
   - sifli,hpsys-cfg
   - sifli,pmuc
+  - nvmem-cells
+  - nvmem-cell-names
 
 additionalProperties: false
 
@@ -149,4 +158,6 @@ examples:
         sifli,lpsys-rcc = <&lpsys_rcc>;
         sifli,hpsys-cfg = <&hpsys_cfg>;
         sifli,pmuc = <&pmuc>;
+        nvmem-cells = <&factory_calibration>;
+        nvmem-cell-names = "calibration";
     };
