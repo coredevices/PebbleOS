@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-fmc
+config: RAM_STM32_FMC
+class: ram
+define: PBL_RAM_STM32_FMC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - pinctrl: default
+  - reg: 0
+    child: sdram
+  - size: 0
+    child: sdram
+  - compatible: true
+    child: sdram
+    values:
+      issi,is42s32800j: "&pbl_ram_sdram_is42s32800j"
