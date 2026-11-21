@@ -114,6 +114,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_LPTIM2_CK 162
 /** SYSCFG clock. */
 #define STM32H7_CLK_SYSCFG_CK 111
+/** I2C4 kernel clock. */
+#define STM32H7_CLK_I2C4_CK 163
 /** RNG kernel clock. */
 #define STM32H7_CLK_RNG_CK 127
 /** QUADSPI kernel clock. */
