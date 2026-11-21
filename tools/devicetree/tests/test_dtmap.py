@@ -2488,6 +2488,60 @@ def test_power_domains_and_required_opps(tmp_path):
     assert "PBL_DEVICE_DEPENDS(dt_rcc, &dt_rcc.dev, &dt_pmu.dev);" in body(gen)
 
 
+def test_entry_of_a_phandle_list(tmp_path):
+    classes = {
+        **CLASSES,
+        "dma": {"class": "dma", "type": "struct dma", "include": "dma.h"},
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    dma1: dma@1000 {
+        compatible = "acme,dma";
+        reg = <0x1000 0x100>;
+    };
+    dma2: dma@2000 {
+        compatible = "acme,dma";
+        reg = <0x2000 0x100>;
+    };
+    mux: mux@3000 {
+        compatible = "acme,mux";
+        reg = <0x3000 0x100>;
+        dma-masters = <&dma1>, <&dma2>;
+    };
+};
+"""
+    specs = {
+        "acme,mux": {
+            "compatible": "acme,mux",
+            "config": "MUX",
+            "class": "dma",
+            "define": "MUX",
+            "args": [
+                {"reg": 0},
+                {"reg": 0, "of": "dma-masters"},
+                {"reg": 0, "of": "dma-masters", "entry": 1},
+            ],
+        },
+    }
+    path, dtb = tmp_path / "mux.dts", tmp_path / "mux.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {"MUX"})
+    gen.run()
+    assert "MUX(dt_mux, 0x3000, 0x1000, 0x2000);" in body(gen)
+
+    specs["acme,mux"]["args"][2]["entry"] = 2
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    with pytest.raises(DtError, match="'dma-masters' has no entry 2"):
+        dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
+
+
 REGS_DTS = """/dts-v1/;
 / {
     #address-cells = <1>;

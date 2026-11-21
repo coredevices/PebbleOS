@@ -103,6 +103,7 @@ ARG_OPTIONS = {
     "wrap",
     "field",
     "of",
+    "entry",
     "child",
     "index",
     "item",
@@ -1165,10 +1166,13 @@ class Generator:
         if "of" in arg:
             if not node.has(arg["of"]):
                 return None
-            # The first phandle, as all cells of nvmem-cells are in the same device
-            node = self.tree.phandle(
-                node.u32s(arg["of"])[0], f"{dev.node.path}: '{arg['of']}'"
-            )
+            # The first phandle, as all cells of nvmem-cells are in the same device, unless
+            # another entry of a list of phandles is asked for, as a DMA controller of a router
+            entry = arg.get("entry", 0)
+            phandles = node.u32s(arg["of"])
+            if entry >= len(phandles):
+                raise dev.error(f"'{arg['of']}' has no entry {entry}")
+            node = self.tree.phandle(phandles[entry], f"{dev.node.path}: '{arg['of']}'")
         if kind == "name":
             return f'"{dev.name}"'
         # The node read, as the memory a device is given with memory-region
