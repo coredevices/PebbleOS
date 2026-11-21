@@ -177,6 +177,16 @@
 			status = "disabled";
 		};
 
+		dma2d: dma2d@52001000 {
+			compatible = "st,stm32-dma2d";
+			reg = <0x52001000 0x1000>;
+			interrupts = <90>;
+			clocks = <&rcc DMA2D_CK>;
+			clock-names = "dma2d";
+			resets = <&rcc STM32H7_AHB3_RESET(DMA2D)>;
+			status = "disabled";
+		};
+
 		flash: flash-controller@52002000 {
 			compatible = "st,stm32h7-flash-controller";
 			reg = <0x52002000 0x1000>;
