@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mag.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/work.h>
@@ -39,6 +39,12 @@ static bool s_saved_corr_present = false;
 static int16_t s_saved_corr[3] = {};
 
 static int32_t s_last_heading = -1; // the last heading we found
+
+typedef struct {
+  int16_t x;
+  int16_t y;
+  int16_t z;
+} MagData;
 
 static MagData s_mag_sample;
 
@@ -135,7 +141,8 @@ static void prv_calibration_time_expired_cb(struct pbl_work *work) {
       "Calibration time expired, complete, or app exit, "
       "dropping back to low frequency");
 
-  if (pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr) != 0) {
+  if (pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
+                          &(int32_t){ECOMPASS_SAMPLING_INTERVAL_US}) != 0) {
     PBL_LOG_WRN("Could not drop back to low frequency");
   }
 
@@ -188,7 +195,7 @@ static void prv_compass_data_service_stop(PebbleTask task) {
       accel_session_data_unsubscribe(s_accel_session);
       accel_session_delete(s_accel_session);
       s_accel_session = nullptr;
-      (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
+      (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){0});
     }
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
@@ -205,7 +212,8 @@ static void prv_compass_data_service_start(PebbleTask task) {
     accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
                                      prv_accel_for_compass_handler);
 
-    (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr);
+    (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
+                              &(int32_t){ECOMPASS_SAMPLING_INTERVAL_US});
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
@@ -217,15 +225,26 @@ static void prv_post_event_work(void *data) {
   event_put(&e);
 }
 
-static void prv_mag_sample_cb(const struct pbl_mag *mag, const MagData *sample, void *user_data) {
-  s_mag_sample = *sample;
+static void prv_mag_batch_cb(const struct pbl_sensor *sensor, const struct pbl_sensor_batch *batch,
+                             void *user_data) {
+  int32_t nt[3];
+
+  if (pbl_sensor_decode(sensor, batch, PBL_SENSOR_MAGN, batch->num_frames - 1U, 1U, nt) < 0) {
+    return;
+  }
+
+  s_mag_sample = (MagData){
+    .x = (int16_t)(nt[0] / 100),
+    .y = (int16_t)(nt[1] / 100),
+    .z = (int16_t)(nt[2] / 100),
+  };
 
   // event_put() may block on KernelMain, which takes the device lock: post outside of it
   pbl_sys_work_call_high(prv_post_event_work, nullptr);
 }
 
-static const struct pbl_mag_listener s_mag_listener = {
-  .sample = prv_mag_sample_cb,
+static const struct pbl_sensor_listener s_mag_listener = {
+  .batch = prv_mag_batch_cb,
 };
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +268,7 @@ void ecompass_service_init(void) {
   s_service_init = true;
   pbl_wallclock_work_init(&s_cb_info, prv_calibration_time_expired_cb);
 
-  (void)pbl_mag_set_listener(MAG, &s_mag_listener);
+  pbl_sensor_set_listener(MAG, &s_mag_listener);
 
   event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
                      &prv_compass_data_service_stop);
@@ -264,9 +283,9 @@ void ecompass_service_handle(void) {
   }
 
   MagData mag_data;
-  pbl_mag_lock(MAG);
+  pbl_sensor_lock(MAG);
   mag_data = s_mag_sample;
-  pbl_mag_unlock(MAG);
+  pbl_sensor_unlock(MAG);
 
   // industry standard for heading coordinates uses NED convention (check out
   // Freescale's AN4248 or ST's AN3192 as examples). Therefore, we map pebbles
@@ -284,7 +303,8 @@ void ecompass_service_handle(void) {
     // for a short duration in order to finish calibration more quickly
     if (!s_calib_run) {
       ecomp_corr_reset();
-      (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_CALIB_SAMPLING_INTERVAL_US, nullptr);
+      (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
+                                &(int32_t){ECOMPASS_CALIB_SAMPLING_INTERVAL_US});
       pbl_wallclock_work_start(&pbl_sys_workq_high, &s_cb_info, 60,
                                ECOMPASS_CALIBRATION_FAST_MINUTES);
       s_calib_run = true;
