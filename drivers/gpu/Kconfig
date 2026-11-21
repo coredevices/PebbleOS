@@ -25,4 +25,20 @@ config GPU_SF32LB57_EPIC_IRQ_PRIO
     help
       Priority of the accelerator interrupt.
 
+config GPU_STM32_DMA2D
+    bool "ST STM32 DMA2D"
+    default y
+    depends on DT_HAS_ST_STM32_DMA2D_ENABLED
+    select CLK
+    help
+      Support for the DMA2D (Chrom-ART) graphics accelerator of the STM32:
+      fills and blits with format conversion and blending.
+
+config GPU_STM32_DMA2D_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on GPU_STM32_DMA2D
+    help
+      Priority of the accelerator interrupt.
+
 endif # GPU

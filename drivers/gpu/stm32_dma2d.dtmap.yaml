@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32-dma2d
+config: GPU_STM32_DMA2D
+class: gpu
+define: PBL_GPU_STM32_DMA2D_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
