@@ -20,7 +20,7 @@
  *
  * Reports the first contact. The chip pulses its interrupt line low for each sample while
  * touched, and once more on release. It sleeps in hibernation while the touchscreen is off, out of
- * which only a reset wakes it.
+ * which only a reset wakes it: without a reset line, it stays in its active mode.
  * @{
  */
 
@@ -44,7 +44,7 @@ struct pbl_ft6236 {
   struct pbl_i2c_dev i2c;
   /** Interrupt, pulsed low by the chip. */
   struct pbl_irq_spec irq;
-  /** Reset line, active while the chip is held in reset. */
+  /** Reset line, active while the chip is held in reset, or not connected. */
   struct pbl_gpio reset;
   /** Pin states, the default one for the interrupt line. */
   struct pbl_pinctrl pinctrl;
@@ -61,7 +61,7 @@ extern const struct pbl_touch_ops pbl_ft6236_ops;
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param _irq Interrupt, from PBL_IRQ_SPEC().
- * @param _reset Reset line, from PBL_GPIO().
+ * @param _reset Reset line, from PBL_GPIO(), or PBL_GPIO(nullptr, 0, 0) without one.
  * @param _size_x Number of X coordinates it reports.
  * @param _size_y Number of Y coordinates it reports.
  * @param _inverted_x X axis is inverted.

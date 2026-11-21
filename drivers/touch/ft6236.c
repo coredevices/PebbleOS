@@ -49,8 +49,13 @@ static int prv_write(const struct pbl_ft6236 *ft, uint8_t reg, uint8_t val) {
   return pbl_i2c_write(&ft->i2c, buf, sizeof(buf));
 }
 
+// Without a reset line of its own, the chip is reset with the board, and was given time then
 static int prv_hw_reset(const struct pbl_ft6236 *ft) {
   int ret;
+
+  if (!pbl_gpio_is_connected(&ft->reset)) {
+    return 0;
+  }
 
   ret = pbl_gpio_set(&ft->reset, true);
   if (ret != 0) {
@@ -139,6 +144,11 @@ static int prv_sleep(const struct pbl_ft6236 *ft) {
     return ret;
   }
 
+  // Only a reset wakes it from hibernation
+  if (!pbl_gpio_is_connected(&ft->reset)) {
+    return 0;
+  }
+
   return prv_write(ft, FT6236_PMODE_REG, FT6236_PMODE_HIBERNATE);
 }
 
@@ -151,14 +161,16 @@ static int prv_init(const struct pbl_touch *touch) {
   state->ft = ft;
   pbl_work_init(&state->work, prv_work);
 
-  ret = pbl_device_init(&ft->reset.port->dev);
-  if (ret != 0) {
-    return ret;
-  }
+  if (pbl_gpio_is_connected(&ft->reset)) {
+    ret = pbl_device_init(&ft->reset.port->dev);
+    if (ret != 0) {
+      return ret;
+    }
 
-  ret = pbl_gpio_configure(&ft->reset, PBL_GPIO_OUTPUT_ACTIVE);
-  if (ret != 0) {
-    return ret;
+    ret = pbl_gpio_configure(&ft->reset, PBL_GPIO_OUTPUT_ACTIVE);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   ret = pbl_pinctrl_select_state(&ft->pinctrl, PBL_PINCTRL_STATE_DEFAULT);

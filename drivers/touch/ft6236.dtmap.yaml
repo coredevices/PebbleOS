@@ -10,6 +10,7 @@ args:
   - reg: 0
   - irq: 0
   - gpio: reset
+    default: PBL_GPIO(nullptr, 0, 0)
   - prop: touchscreen-size-x
   - prop: touchscreen-size-y
   - flag: touchscreen-inverted-x
