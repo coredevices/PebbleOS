@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32-iwdg
+config: WATCHDOG_STM32_IWDG
+class: device
+symbol: pbl_watchdog_stm32_iwdg
+define: PBL_WATCHDOG_STM32_IWDG_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: lsi
