@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: wlf,wm8994
+config: AUDIO_WM8994
+class: codec
+define: PBL_AUDIO_WM8994_DEFINE
+args:
+  - name: true
+  - parent: i2c
+  - reg: 0
