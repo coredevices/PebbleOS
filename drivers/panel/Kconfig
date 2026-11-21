@@ -29,6 +29,17 @@ config PANEL_CO5300
       Support for AMOLED panels on the ChipOne CO5300 driver IC, over quad
       SPI, with their brightness as a backlight.
 
+config PANEL_OTM8009A
+    bool "Orise Tech OTM8009A"
+    default y
+    depends on DT_HAS_ORISETECH_OTM8009A_ENABLED
+    depends on PANEL
+    select GPIO
+    select MIPI_DSI
+    help
+      Support for 480x800 panels on the Orise Tech OTM8009A driver IC,
+      over MIPI DSI.
+
 if PANEL
 
 module = DRIVER_PANEL

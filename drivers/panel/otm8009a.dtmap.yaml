@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: orisetech,otm8009a
+config: PANEL_OTM8009A
+class: panel
+define: PBL_PANEL_OTM8009A_DEFINE
+args:
+  - name: true
+  - parent: mipi_dsi
+  - prop: reg
+  - gpio: reset
