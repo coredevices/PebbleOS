@@ -57,12 +57,13 @@ unevaluatedProperties: false
 
 examples:
   - |
+    #include <dt-bindings/dma/sifli,sf32lb52-dmac.h>
     serial@50084000 {
         compatible = "sifli,sf32lb52-usart";
         reg = <0x50084000 0x1000>;
         interrupts = <59>;
         resets = <&hpsys_rcc 3>;
         current-speed = <1000000>;
-        dmas = <&dmac1 0 5 1>;
+        dmas = <&dmac1 0 SF32LB52_DMAC1_REQ_USART1_RX SF32LB52_DMA_PRIO_MEDIUM>;
         dma-names = "rx";
     };
