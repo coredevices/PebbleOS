@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <pbl/kernel/delay.h>
@@ -12,12 +13,23 @@
 /* The shallowest idle state, which every SoC has. SoCs name theirs in pbl/soc. */
 #define STATE 0
 
+/* Time in every state: the CPU idles in the deepest one worth it, which depends on the SoC. */
+static uint64_t prv_idle_us(void) {
+  uint64_t us = 0U;
+
+  for (size_t i = 0U; i < pbl_soc_num_idle_states; i++) {
+    us += pbl_idle_residency_us((pbl_idle_state_id_t)i);
+  }
+
+  return us;
+}
+
 static uint64_t prv_idle_us_while_sleeping(void) {
-  uint64_t before_us = pbl_idle_residency_us(STATE);
+  uint64_t before_us = prv_idle_us();
 
   pbl_sleep_ms(SLEEP_MS);
 
-  return pbl_idle_residency_us(STATE) - before_us;
+  return prv_idle_us() - before_us;
 }
 
 int main(void) {
