@@ -120,6 +120,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_RTC_CK 13
 /** RTC bus clock. */
 #define STM32H7_CLK_RTCAPB_CK 108
+/** SAI1 kernel clock, from PLL1 Q, PLL2 P or PLL3 P. */
+#define STM32H7_CLK_SAI1_CK 151
 /** @} */
 
 /** @cond INTERNAL_HIDDEN */
