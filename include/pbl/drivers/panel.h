@@ -44,6 +44,12 @@ enum pbl_panel_bus_format {
    * @ref drivers_mipi_dsi host the panel is on, with the sync pulses of its timing.
    */
   PBL_PANEL_BUS_FORMAT_MIPI_DSI_RGB888,
+  /**
+   * MIPI DSI in command mode: RGB888 frames of a display controller into the frame memory of
+   * the panel, each on a refresh of the @ref drivers_mipi_dsi host, written in windows timed by
+   * the tearing effect of the panel.
+   */
+  PBL_PANEL_BUS_FORMAT_MIPI_DSI_CMD_RGB888,
 };
 
 /**
@@ -104,6 +110,17 @@ struct pbl_panel_ops {
    * Returns 0 or a negative errno.
    */
   int (*set_quarter_turn)(const struct pbl_panel *panel, bool turn);
+  /**
+   * Write the next pixels from column @p x0 to @p x1 and row @p y0 to @p y1 of the frame, both
+   * included. Optional. Returns 0 or a negative errno.
+   */
+  int (*set_window)(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                    uint16_t y1);
+  /**
+   * Report, through the tearing effect, the scan reaching where the first half of the frame can
+   * be written without crossing it, or stop. Optional. Returns 0 or a negative errno.
+   */
+  int (*set_tear)(const struct pbl_panel *panel, bool on);
 };
 
 /** @brief A panel. */
@@ -196,5 +213,30 @@ int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip);
  * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
  */
 int pbl_panel_set_quarter_turn(const struct pbl_panel *panel, bool turn);
+
+/**
+ * @brief Write the next pixels of a panel with frame memory to a window of the frame.
+ *
+ * @param panel Panel.
+ * @param x0 First column.
+ * @param y0 First row.
+ * @param x1 Last column.
+ * @param y1 Last row.
+ * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
+ */
+int pbl_panel_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                         uint16_t y1);
+
+/**
+ * @brief Report, through the tearing effect, when the first half of the frame can be written.
+ *
+ * The scan of the panel then crosses neither half of the frame written in turn, the second once
+ * the first is written.
+ *
+ * @param panel Panel.
+ * @param on Report it, or stop.
+ * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
+ */
+int pbl_panel_set_tear(const struct pbl_panel *panel, bool on);
 
 /** @} */

@@ -65,3 +65,20 @@ int pbl_panel_set_quarter_turn(const struct pbl_panel *panel, bool turn) {
 
   return panel->ops->set_quarter_turn(panel, turn);
 }
+
+int pbl_panel_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                         uint16_t y1) {
+  if (panel->ops->set_window == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return panel->ops->set_window(panel, x0, y0, x1, y1);
+}
+
+int pbl_panel_set_tear(const struct pbl_panel *panel, bool on) {
+  if (panel->ops->set_tear == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return panel->ops->set_tear(panel, on);
+}
