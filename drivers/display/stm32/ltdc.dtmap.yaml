@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The framebuffer is the simple-framebuffer naming the LTDC as its display
+compatible: st,stm32-ltdc
+config: DISPLAY_STM32_LTDC
+class: display
+define: PBL_DISPLAY_STM32_LTDC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: lcd
+  - self: panel
+    remote: 0
+    child: panel
+  - prop: width
+    from: display
+  - prop: height
+    from: display
+  - string: format
+    from: display
+    values:
+      r5g6b5: PBL_DISPLAY_FORMAT_RGB565
+  - reg: 0
+    from: display
+    of: memory-region
+  - size: 0
+    from: display
+    of: memory-region
+  - memory: memory-region
+    from: display
+    default: nullptr

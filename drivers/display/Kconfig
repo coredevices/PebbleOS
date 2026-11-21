@@ -67,6 +67,16 @@ config DISPLAY_SF32LB57_LCDC_FORMAT_RGB565
 
 endchoice
 
+config DISPLAY_STM32_LTDC
+    bool "ST STM32 LTDC"
+    default y
+    depends on DT_HAS_ST_STM32_LTDC_ENABLED
+    select CLK
+    select PANEL
+    help
+      Support for the STM32 LCD-TFT display controller, scanning a
+      framebuffer to a panel.
+
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
     default y

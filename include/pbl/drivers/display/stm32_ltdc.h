@@ -1,0 +1,66 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include <pbl/drivers/clk.h>
+#include <pbl/drivers/display.h>
+#include <pbl/drivers/panel.h>
+
+/**
+ * @defgroup drivers_display_stm32_ltdc STM32 LTDC
+ * @ingroup drivers_display
+ * @brief @ref drivers_display driver for the STM32 LTDC, scanning a framebuffer to a panel.
+ *
+ * The LTDC scans the framebuffer the board reserves, with one layer, at the timing of the panel
+ * and the rate of its clock, which the board sets to the panel's. It starts before the panel is
+ * prepared: a panel on a MIPI DSI host needs the video stream running to take its commands.
+ * Updates flush the rows from the data cache, after copying them when they come from another
+ * buffer, and complete at once. The sync signals are those a DSI host takes.
+ * @{
+ */
+
+/** @brief LTDC. */
+struct pbl_display_stm32_ltdc {
+  /** Display. */
+  struct pbl_display disp;
+  /** Registers. */
+  uintptr_t base;
+  /** Pixel clock. */
+  struct pbl_clk clk;
+  /** Panel. */
+  const struct pbl_panel *panel;
+};
+
+/** @cond INTERNAL_HIDDEN */
+extern const struct pbl_display_ops pbl_display_stm32_ltdc_ops;
+/** @endcond */
+
+/**
+ * @brief Define the LTDC.
+ *
+ * @param sym Symbol of the display.
+ * @param _name Name.
+ * @param _base Registers.
+ * @param _clk Pixel clock, from PBL_CLK().
+ * @param _panel Panel.
+ * @param _width Width of the framebuffer, in pixels.
+ * @param _height Height of the framebuffer, in pixels.
+ * @param _format Format of the framebuffer, a @ref pbl_display_format.
+ * @param _fb Address of the framebuffer.
+ * @param _fb_size Its size, in bytes.
+ * @param _fb_ram RAM device the framebuffer is in, or NULL.
+ */
+#define PBL_DISPLAY_STM32_LTDC_DEFINE(sym, _name, _base, _clk, _panel, _width, _height, _format,   \
+                                      _fb, _fb_size, _fb_ram)                                      \
+  PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_display_stm32_ltdc, struct pbl_display, disp) {              \
+    .disp = PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, nullptr, &pbl_display_stm32_ltdc_ops, _width, \
+                                         _height, _format, false, _fb, _fb_size, _fb_ram),         \
+    .base = (_base), .clk = _clk, .panel = (_panel),                                               \
+  }
+
+/** @} */
