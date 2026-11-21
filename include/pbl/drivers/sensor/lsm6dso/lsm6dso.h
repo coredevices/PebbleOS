@@ -82,8 +82,30 @@ struct pbl_lsm6dso_state {
   bool recovery_pending;
   /** Wake-up condition currently asserted, to report a shake once per assertion. */
   bool wu_active;
-  /** The INT1 servicing pass was requeued while the pad stayed high. */
-  bool int1_requeued;
+  /** A FIFO drain is in flight. */
+  bool drain_busy;
+  /** An INT1 edge came during the drain in flight. */
+  bool drain_again;
+  /** Holders blocking FIFO drains while they reconfigure the device. */
+  uint8_t drain_blocked;
+  /** Register address written by the drain. */
+  uint8_t drain_reg;
+  /** FIFO_STATUS1 and FIFO_STATUS2, as read by the drain. */
+  uint8_t drain_status[2];
+  /** FIFO words the drain reads. */
+  uint16_t drain_words;
+  /** Buffer the drain reads into. */
+  uint8_t *drain_buf;
+  /** Time of the INT1 edge that started the drain, 0 if none did. */
+  uint64_t drain_irq_us;
+  /** Time the drain read the FIFO status. */
+  uint64_t drain_status_us;
+  /** Messages of the drain. */
+  struct pbl_i2c_msg drain_msgs[2];
+  /** Transfer of the drain. */
+  struct pbl_i2c_async drain_xfer;
+  /** FIFO overrun recovery, from the drain. */
+  struct pbl_work overrun_work;
 };
 
 /** @brief LSM6DSO accelerometer and gyroscope. */
