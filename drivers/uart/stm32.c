@@ -6,8 +6,10 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/uart/stm32.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/st/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -32,6 +34,19 @@ static inline void prv_putreg(const struct pbl_uart_stm32 *usart, uint32_t offse
   pbl_writel(value, prv_reg(usart, offset));
 }
 
+// A character going out keeps the CPU out of Stop, where the USART clock stops, until the line is
+// idle: the transmission complete interrupt, or a flush, ends it
+static void prv_tx_done(const struct pbl_uart_stm32 *usart) {
+  pbl_irq_lock();
+
+  if (usart->state->tx_pending) {
+    pbl_modifyl(USART_CR1_TCIE, 0U, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
+    usart->state->tx_pending = false;
+    pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+  }
+  pbl_irq_unlock();
+}
+
 static void prv_flush(const struct pbl_uart *uart) {
   const struct pbl_uart_stm32 *usart = prv_stm32(uart);
 
@@ -41,7 +56,7 @@ static void prv_flush(const struct pbl_uart *uart) {
 
   while ((prv_getreg(usart, STM32H7_USART_ISR_OFFSET) & USART_ISR_TC) == 0U) {
   }
-  usart->state->tx_pending = false;
+  prv_tx_done(usart);
 }
 
 static int prv_early_init(const struct pbl_uart *uart) {
@@ -172,7 +187,14 @@ static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
   while ((prv_getreg(usart, STM32H7_USART_ISR_OFFSET) & USART_ISR_TXE) == 0U) {
   }
   prv_putreg(usart, STM32H7_USART_TDR_OFFSET, c);
-  usart->state->tx_pending = true;
+
+  pbl_irq_lock();
+  if (!usart->state->tx_pending) {
+    usart->state->tx_pending = true;
+    pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+    pbl_modifyl(0U, USART_CR1_TCIE, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
+  }
+  pbl_irq_unlock();
 }
 
 // Hands over what the DMA wrote since the last drain
@@ -233,6 +255,9 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
 
   pbl_modifyl(0U, cr1, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
 
+  // The USART does not receive in Stop
+  pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+
   return 0;
 }
 
@@ -245,6 +270,8 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
     (void)pbl_dma_terminate(usart->rx_dma);
     pbl_modifyl(USART_CR3_DMAR, 0U, prv_reg(usart, STM32H7_USART_CR3_OFFSET));
   }
+
+  pbl_idle_state_release(SOC_STM32_IDLE_STOP);
 }
 
 void pbl_uart_stm32_irq_handler(const struct pbl_uart_stm32 *usart) {
@@ -254,6 +281,10 @@ void pbl_uart_stm32_irq_handler(const struct pbl_uart_stm32 *usart) {
   if ((cr1 & USART_CR1_IDLEIE) != 0U && (isr & USART_ISR_IDLE) != 0U) {
     prv_putreg(usart, STM32H7_USART_ICR_OFFSET, ICR_ERRORS | USART_ICR_IDLECF);
     prv_dma_drain(usart);
+  }
+
+  if ((cr1 & USART_CR1_TCIE) != 0U && (isr & USART_ISR_TC) != 0U) {
+    prv_tx_done(usart);
   }
 
   if ((cr1 & USART_CR1_RXNEIE) == 0U) {
