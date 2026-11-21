@@ -56,6 +56,14 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_PLL1_P 32
 #define STM32H7_CLK_PLL1_Q 33
 #define STM32H7_CLK_PLL1_R 34
+/** PLL2 outputs. */
+#define STM32H7_CLK_PLL2_P 35
+#define STM32H7_CLK_PLL2_Q 36
+#define STM32H7_CLK_PLL2_R 37
+/** PLL3 outputs. */
+#define STM32H7_CLK_PLL3_P 38
+#define STM32H7_CLK_PLL3_Q 39
+#define STM32H7_CLK_PLL3_R 40
 /** System clock, sys_ck. */
 #define STM32H7_CLK_SYS_CK 30
 /** Domain 1 core clock, sys_d1cpre_ck: the CPU. */
@@ -66,6 +74,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_PCLK1 2
 /** APB2 clock, rcc_pclk2. */
 #define STM32H7_CLK_PCLK2 3
+/** APB3 clock. */
+#define STM32H7_CLK_PCLK3 4
 /** APB4 clock, rcc_pclk4. */
 #define STM32H7_CLK_PCLK4 5
 /** GPIO port A to K clocks. */
@@ -84,6 +94,10 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_DMA1_CK 65
 /** DMA2 clock. */
 #define STM32H7_CLK_DMA2_CK 64
+/** DSI clock. */
+#define STM32H7_CLK_DSI_CK 129
+/** LTDC clock, the pixel clock. */
+#define STM32H7_CLK_LTDC_CK 130
 /** FMC kernel clock. */
 #define STM32H7_CLK_FMC_CK 122
 /** QUADSPI kernel clock. */
