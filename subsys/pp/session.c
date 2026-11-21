@@ -10,9 +10,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
-
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
+#include <pbl/pp/main.h>
 
 PBL_LOG_MODULE_DEFINE(pp, CONFIG_PP_LOG_LEVEL);
 
@@ -42,7 +40,7 @@ static bool prv_is_system(const struct pbl_pp_session *session) {
   return session->destination != PBL_PP_DESTINATION_APP;
 }
 
-static const struct pbl_pp_transport *prv_get_transport(const struct pbl_pp_session *session) {
+const struct pbl_pp_transport *pbl_pp_session_get_transport(const struct pbl_pp_session *session) {
   const struct pbl_pp_transport *transport = nullptr;
 
   pbl_pp__lock();
@@ -57,23 +55,6 @@ static const struct pbl_pp_transport *prv_get_transport(const struct pbl_pp_sess
 static void prv_notify(struct pbl_pp_session *session, enum pbl_pp_session_event event) {
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_pp_session_listener, pp_listeners, l) {
     l->callback(session, event, l->user_data);
-  }
-}
-
-static void prv_put_event(bool is_open, bool is_system) {
-  PebbleEvent event = {
-    .type = PEBBLE_COMM_SESSION_EVENT,
-    .bluetooth.comm_session_event.is_open = is_open,
-    .bluetooth.comm_session_event.is_system = is_system,
-  };
-
-  event_put(&event);
-}
-
-static void prv_put_events(const struct pbl_pp_session *session, bool is_open) {
-  prv_put_event(is_open, prv_is_system(session));
-  if (session->destination == PBL_PP_DESTINATION_HYBRID) {
-    prv_put_event(is_open, false);
   }
 }
 
@@ -147,7 +128,6 @@ struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transp
   prv_log_event(session, true);
   pbl_pp__version_request(session);
   prv_notify(session, PBL_PP_SESSION_OPENED);
-  prv_put_events(session, true);
 
   return session;
 }
@@ -159,7 +139,6 @@ void pbl_pp_session_close(struct pbl_pp_session *session) {
 
   prv_log_event(session, false);
   prv_notify(session, PBL_PP_SESSION_CLOSED);
-  prv_put_events(session, false);
 
   pbl_pp__receive_drop(session);
 
@@ -228,6 +207,47 @@ bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
   return pbl_pp_session_get_type(session) == PBL_PP_SESSION_SYSTEM;
 }
 
+int pbl_pp_session_get_destination(const struct pbl_pp_session *session,
+                                   enum pbl_pp_destination *destination) {
+  int ret = -ENOTCONN;
+
+  pbl_pp__lock();
+  if (pbl_pp__session_is_open(session)) {
+    *destination = session->destination;
+    ret = 0;
+  }
+  pbl_pp__unlock();
+
+  return ret;
+}
+
+enum pbl_pp_remote_os pbl_pp_session_get_remote_os(const struct pbl_pp_session *session) {
+  enum pbl_pp_remote_os os = PBL_PP_REMOTE_OS_UNKNOWN;
+
+  pbl_pp__lock();
+  if (pbl_pp__session_is_open(session)) {
+    os = session->remote_os;
+  }
+  pbl_pp__unlock();
+
+  return os;
+}
+
+void pbl_pp__session_set_remote_os(struct pbl_pp_session *session, enum pbl_pp_remote_os os) {
+  bool is_open;
+
+  pbl_pp__lock();
+  is_open = pbl_pp__session_is_open(session);
+  if (is_open) {
+    session->remote_os = os;
+  }
+  pbl_pp__unlock();
+
+  if (is_open) {
+    prv_notify(session, PBL_PP_SESSION_REMOTE_INFO);
+  }
+}
+
 uint32_t pbl_pp_session_get_capabilities(const struct pbl_pp_session *session) {
   uint32_t capabilities = 0U;
 
@@ -261,7 +281,7 @@ void pbl_pp_session_set_capabilities(struct pbl_pp_session *session, uint32_t ca
 }
 
 void pbl_pp_session_reset(struct pbl_pp_session *session) {
-  const struct pbl_pp_transport *transport = prv_get_transport(session);
+  const struct pbl_pp_transport *transport = pbl_pp_session_get_transport(session);
 
   if (transport == nullptr) {
     PBL_LOG_WRN("Session already closed");
@@ -286,7 +306,7 @@ void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs,
                                        pbl_bt_responsiveness_granted_cb_t granted) {
-  const struct pbl_pp_transport *transport = prv_get_transport(session);
+  const struct pbl_pp_transport *transport = pbl_pp_session_get_transport(session);
 
   if (transport == nullptr) {
     return;
@@ -295,7 +315,7 @@ void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
   if (transport->set_responsiveness != nullptr) {
     transport->set_responsiveness(session, consumer, state, max_period_secs, granted);
   } else if (granted != nullptr) {
-    launcher_task_add_callback(prv_granted_cb, granted);
+    pbl_pp_main_call(prv_granted_cb, granted);
   }
 }
 
@@ -326,12 +346,12 @@ void pbl_pp_session_send_next(struct pbl_pp_session *session) {
   pbl_pp__unlock();
 
   if (schedule) {
-    launcher_task_add_callback(prv_send_next_cb, session);
+    pbl_pp_main_call(prv_send_next_cb, session);
   }
 }
 
 void pbl_pp__send_next_now(struct pbl_pp_session *session) {
-  const struct pbl_pp_transport *transport = prv_get_transport(session);
+  const struct pbl_pp_transport *transport = pbl_pp_session_get_transport(session);
 
   if (transport != nullptr) {
     transport->send_next(session);
@@ -339,7 +359,7 @@ void pbl_pp__send_next_now(struct pbl_pp_session *session) {
 }
 
 bool pbl_pp__in_send_task(void) {
-  return launcher_task_is_current_task();
+  return pbl_pp_main_is_current();
 }
 
 #if UNITTEST

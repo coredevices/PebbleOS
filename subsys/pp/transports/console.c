@@ -12,8 +12,6 @@
 #include <pbl/pp/transports/console.h>
 #include <pbl/util/math.h>
 
-#include <kernel/events.h>
-
 #define OPCODE_DATA  1U
 #define OPCODE_OPEN  2U
 #define OPCODE_CLOSE 3U
@@ -73,7 +71,7 @@ static void prv_send_next(struct pbl_pp_session *session) {
   pbl_mutex_unlock(&s_lock);
 }
 
-static const struct pbl_pp_transport s_pp_transport = {
+const struct pbl_pp_transport pbl_pp_console_transport = {
   .name = "console",
   .priority = 1U,
   .shared = true,
@@ -91,16 +89,6 @@ void pbl_pp_console_ack(uint8_t seq) {
   pbl_mutex_unlock(&s_lock);
 }
 
-static void prv_put_connection_event(bool connected) {
-  PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
-    .bluetooth.connection.state = connected ? PebbleBluetoothConnectionEventStateConnected
-                                            : PebbleBluetoothConnectionEventStateDisconnected,
-  };
-
-  event_put(&event);
-}
-
 static void prv_set_connected(bool connected) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
@@ -108,20 +96,18 @@ static void prv_set_connected(bool connected) {
     if (connected) {
       s_transport.tx_seq = 0U;
       s_transport.session =
-          pbl_pp_session_open(&s_pp_transport, PBL_PP_DESTINATION_HYBRID, nullptr);
+          pbl_pp_session_open(&pbl_pp_console_transport, PBL_PP_DESTINATION_HYBRID, nullptr);
       if (s_transport.session != nullptr) {
         pbl_pp_session_set_capabilities(
             s_transport.session, PBL_PP_CAP_RUN_STATE | PBL_PP_CAP_INFINITE_LOG_DUMPING |
                                      PBL_PP_CAP_VOICE_API | PBL_PP_CAP_APP_MESSAGE_8K |
                                      PBL_PP_CAP_WEATHER_APP | PBL_PP_CAP_EXTENDED_NOTIFICATIONS);
-        prv_put_connection_event(true);
       }
     } else {
       pbl_delayed_work_cancel(&s_transport.tx_timer);
       s_transport.tx_len = 0U;
       pbl_pp_session_close(s_transport.session);
       s_transport.session = nullptr;
-      prv_put_connection_event(false);
     }
   }
 

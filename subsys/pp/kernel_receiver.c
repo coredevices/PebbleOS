@@ -11,9 +11,8 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/main.h>
 #include <pbl/util/slist.h>
-
-#include <kernel/event_loop.h>
 
 PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
 
@@ -39,15 +38,11 @@ static void prv_bg_add_callback(void (*cb)(void *data), void *data) {
   pbl_sys_work_call(cb, data);
 }
 
-static void prv_main_add_callback(void (*cb)(void *data), void *data) {
-  launcher_task_add_callback(cb, data);
-}
-
 static PBL_MUTEX_DEFINE(s_lock);
 
 static struct pbl_pp__kernel_queue s_queues[] = {
   [PBL_PP_HANDLER_BG] = {.add_callback = prv_bg_add_callback},
-  [PBL_PP_HANDLER_MAIN] = {.add_callback = prv_main_add_callback},
+  [PBL_PP_HANDLER_MAIN] = {.add_callback = pbl_pp_main_call},
 };
 
 static void prv_drain_cb(void *data) {

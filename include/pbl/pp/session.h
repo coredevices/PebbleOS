@@ -53,6 +53,18 @@ enum pbl_pp_session_event : uint8_t {
   PBL_PP_SESSION_CLOSED,
   /** The phone announced the session's capabilities. */
   PBL_PP_SESSION_CAPABILITIES,
+  /** The phone app told what it runs on, see pbl_pp_session_get_remote_os(). */
+  PBL_PP_SESSION_REMOTE_INFO,
+};
+
+/** @brief Whose traffic a session carries. */
+enum pbl_pp_destination : uint8_t {
+  /** Only the system, i.e. the Pebble mobile app. */
+  PBL_PP_DESTINATION_SYSTEM,
+  /** Only one phone app, e.g. a third party app using PebbleKit iOS. */
+  PBL_PP_DESTINATION_APP,
+  /** Both the system and PebbleKit apps, e.g. the Pebble Android app. */
+  PBL_PP_DESTINATION_HYBRID,
 };
 
 /** @brief Session listener. Defined with PBL_PP_SESSION_LISTENER_DEFINE(). */
@@ -117,6 +129,35 @@ enum pbl_pp_session_type pbl_pp_session_get_type(const struct pbl_pp_session *se
  */
 bool pbl_pp_session_is_system(const struct pbl_pp_session *session);
 
+struct pbl_pp_transport;
+
+/**
+ * @brief Get the transport that carries a session.
+ *
+ * @param session Session.
+ * @return The transport, or NULL if @p session is not open.
+ */
+const struct pbl_pp_transport *pbl_pp_session_get_transport(const struct pbl_pp_session *session);
+
+/**
+ * @brief Get whose traffic a session carries.
+ *
+ * @param session Session.
+ * @param[out] destination Destination.
+ * @return 0 on success, -ENOTCONN if @p session is not open.
+ */
+int pbl_pp_session_get_destination(const struct pbl_pp_session *session,
+                                   enum pbl_pp_destination *destination);
+
+/**
+ * @brief Get the operating system the phone app of a session runs on.
+ *
+ * @param session Session.
+ * @return Operating system, @ref PBL_PP_REMOTE_OS_UNKNOWN until the phone app told, or if
+ *         @p session is not open.
+ */
+enum pbl_pp_remote_os pbl_pp_session_get_remote_os(const struct pbl_pp_session *session);
+
 /**
  * @brief Get the capabilities announced on a session.
  *
@@ -153,7 +194,8 @@ void pbl_pp_session_reset(struct pbl_pp_session *session);
  * @param consumer Consumer making the request.
  * @param state Requested response time state.
  * @param max_period_secs Maximum time to stay in @p state.
- * @param granted Called on KernelMain once @p state is in effect. May be NULL.
+ * @param granted Called on the main thread, see pbl_pp_main_call(), once @p state is in effect. May
+ * be NULL.
  */
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,

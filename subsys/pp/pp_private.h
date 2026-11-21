@@ -33,6 +33,7 @@ struct pbl_pp_session {
   Uuid app_uuid;
   uint32_t capabilities;
   enum pbl_pp_destination destination;
+  enum pbl_pp_remote_os remote_os;
   bool send_next_pending;
 };
 
@@ -62,6 +63,8 @@ void pbl_pp__meta_send_error(struct pbl_pp_session *session, enum pbl_pp__meta_e
                              uint16_t endpoint_id);
 
 void pbl_pp__version_request(struct pbl_pp_session *session);
+
+void pbl_pp__session_set_remote_os(struct pbl_pp_session *session, enum pbl_pp_remote_os os);
 
 #if UNITTEST
 bool pbl_pp__send_next_is_pending(const struct pbl_pp_session *session);

@@ -56,7 +56,7 @@ void event_put(PebbleEvent *event) {
 // Listener
 ///////////////////////////////////////////////////////////
 
-static int s_listener_events[3];
+static int s_listener_events[4];
 static bool s_listener_saw_open_session;
 
 static void prv_listener(struct pbl_pp_session *session, enum pbl_pp_session_event event,

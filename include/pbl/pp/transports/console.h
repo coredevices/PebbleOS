@@ -6,12 +6,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/pp/transport.h>
+
 /**
  * @defgroup pp_transport_console Console transport
  * @ingroup pp_transport
  * @brief Pebble protocol over serial console frames, for development tools.
  * @{
  */
+
+/** @brief The transport, to tell its sessions from others, see pbl_pp_session_get_transport(). */
+extern const struct pbl_pp_transport pbl_pp_console_transport;
 
 /**
  * @brief Handle a frame received on @c PBL_CONSOLE_CHANNEL_PP.

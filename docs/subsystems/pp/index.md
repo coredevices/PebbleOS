@@ -15,6 +15,7 @@ handles it, such as Put Bytes or BlobDB.
 | `send.h` | Queueing outbound messages |
 | `endpoint.h` | Handling inbound messages |
 | `transport.h` | Links that carry sessions |
+| `main.h` | The main thread, which the application provides |
 | `transports/*.h` | Entry points of each transport for the code that drives its link |
 
 ```{toctree}
@@ -142,8 +143,16 @@ PBL_PP_SESSION_LISTENER_DEFINE(my_service, prv_session_cb, NULL);
 Data logging, analytics and the cache of the system session's capabilities
 are listeners. Listeners run in the context of the transport,
 which may hold its own lock, so they must not block. Apps learn about
-sessions through `PEBBLE_COMM_SESSION_EVENT`, which the subsystem puts for
-every session that opens or closes.
+sessions through `PEBBLE_COMM_SESSION_EVENT`, which a listener of the firmware
+(`pebble/comm/pp.c`) puts for every session that opens or closes.
+
+## Main thread
+
+The subsystem needs one thread of the application, the main thread: transports
+send from it, and some endpoint handlers run on it. The application implements
+`pbl_pp_main_call()` and `pbl_pp_main_is_current()` (`include/pbl/pp/main.h`)
+for it. In the firmware it is KernelMain. It must not be SysWorkq, where the
+other handlers run and may wait for a transport to make room.
 
 ## Endpoints
 
@@ -162,7 +171,7 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler
 | Macro | Handling |
 |---|---|
 | `PBL_PP_ENDPOINT_DEFINE()` | The default receiver copies the payload to the kernel heap and runs the handler on SysWorkq |
-| `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on KernelMain, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
+| `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on the main thread, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
 | `PBL_PP_ENDPOINT_DEFINE_RECEIVER()` | A receiver of the endpoint's own buffers the message, such as Put Bytes into its download buffer or AppMessage into the app's inbox |
 
 The access level decides who may use the endpoint: `PBL_PP_ACCESS_PRIVATE`
@@ -184,7 +193,7 @@ sequenceDiagram
   participant T as Transport
   participant S as Session
   participant R as Receiver
-  participant H as Handler (SysWorkq or KernelMain)
+  participant H as Handler (SysWorkq or main thread)
   L->>T: bytes
   T->>S: pbl_pp_session_receive()
   Note over S: collect the 4-byte header,<br/>look the endpoint up,<br/>check its access
@@ -226,7 +235,7 @@ Beginning a buffer blocks until there is room or the timeout expires.
 sequenceDiagram
   participant C as Caller
   participant S as Session
-  participant M as KernelMain
+  participant M as Main thread
   participant T as Transport
   participant L as Link
   C->>S: pbl_pp_send_buffer_begin()
@@ -243,7 +252,7 @@ sequenceDiagram
   S->>S: free the buffer, wake waiting senders
 ```
 
-When the caller is KernelMain, which runs `send_next`, waiting would never
+When the caller is the main thread, which runs `send_next`, waiting would never
 end: beginning a buffer then sends the queue right away instead.
 
 Sending may block, so it must not be done while holding a lock the
