@@ -33,7 +33,8 @@ DMA2D work so far.
   800x480 RGB565 frame to the frame memory of the panel in two halves timed
   by its tearing effect, at a 42 MHz pixel clock from PLL3, and the panel
   takes it turned a quarter turn, landscape as the kit is held; it is the
-  `display`
+  `display`, and its controller dims the backlight of the module, the
+  `backlight`
 - **Touch**: the FocalTech FT6206 of the MB1166 module, on I2C4 (PD12 and
   PD13) at 400 kHz, its interrupt on PK7; it is the `touch`
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
