@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/drivers/mipi_dcs.h>
 
 /**
  * @defgroup drivers_mipi_dbi MIPI DBI
@@ -18,27 +19,10 @@
  * its own commands through this interface without knowing which host it is on: those of its power
  * sequence, and settings such as its brightness. The host sends the pixels.
  *
- * Commands are MIPI DCS commands, or the panel's own, with their parameters.
+ * Commands are MIPI DCS commands, from @ref drivers_mipi_dcs, or the panel's own, with their
+ * parameters.
  * @{
  */
-
-/** @name MIPI DCS commands */
-/** @{ */
-#define PBL_MIPI_DCS_SOFT_RESET             0x01U
-#define PBL_MIPI_DCS_GET_DISPLAY_ID         0x04U
-#define PBL_MIPI_DCS_ENTER_SLEEP_MODE       0x10U
-#define PBL_MIPI_DCS_EXIT_SLEEP_MODE        0x11U
-#define PBL_MIPI_DCS_SET_DISPLAY_OFF        0x28U
-#define PBL_MIPI_DCS_SET_DISPLAY_ON         0x29U
-#define PBL_MIPI_DCS_SET_COLUMN_ADDRESS     0x2AU
-#define PBL_MIPI_DCS_SET_PAGE_ADDRESS       0x2BU
-#define PBL_MIPI_DCS_WRITE_MEMORY_START     0x2CU
-#define PBL_MIPI_DCS_SET_TEAR_ON            0x35U
-#define PBL_MIPI_DCS_SET_ADDRESS_MODE       0x36U
-#define PBL_MIPI_DCS_SET_PIXEL_FORMAT       0x3AU
-#define PBL_MIPI_DCS_SET_DISPLAY_BRIGHTNESS 0x51U
-#define PBL_MIPI_DCS_WRITE_CONTROL_DISPLAY  0x53U
-/** @} */
 
 struct pbl_mipi_dbi;
 
