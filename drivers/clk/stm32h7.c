@@ -21,10 +21,12 @@ static_assert(STM32H7_CLK_SYS_D1CPRE == SYS_D1CPRE && STM32H7_CLK_HCLK == HCLK &
               STM32H7_CLK_PCLK4 == PCLK4);
 static_assert(STM32H7_CLK_HSE_CK == HSE_CK && STM32H7_CLK_LSE_CK == LSE_CK &&
               STM32H7_CLK_HSI_CK == HSI_CK && STM32H7_CLK_CSI_CK == CSI_CK &&
-              STM32H7_CLK_SYS_CK == SYS_CK);
+              STM32H7_CLK_SYS_CK == SYS_CK && STM32H7_CLK_RC48_CK == RC48_CK &&
+              STM32H7_CLK_LSI_CK == LSI_CK);
 static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_CK &&
               STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_QUADSPI_CK == QUADSPI_CK &&
-              STM32H7_CLK_SYSCFG_CK == SYSCFG_CK && STM32H7_CLK_USART1_CK == USART1_CK);
+              STM32H7_CLK_RNG_CK == RNG_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
+              STM32H7_CLK_USART1_CK == USART1_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
@@ -42,6 +44,8 @@ static bool s_sys_on_pll1;
 // The HSE crystal starts within a few milliseconds, the PLL within a few hundred microseconds
 #define HSERDY_TIMEOUT_US  100000U
 #define PLL1RDY_TIMEOUT_US 10000U
+// The HSI48 and LSI oscillators start within tens of microseconds
+#define OSCRDY_TIMEOUT_US 1000U
 
 // Maximums at VOS1
 #define CPU_MAX_MHZ  MHZ(400)
@@ -81,6 +85,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOJ_CK] = GATE(AHB4ENR, 9, HCLK),
   [STM32H7_CLK_GPIOK_CK] = GATE(AHB4ENR, 10, HCLK),
   [STM32H7_CLK_QUADSPI_CK] = GATE(AHB3ENR, 14, HCLK),
+  [STM32H7_CLK_RNG_CK] = GATE(AHB2ENR, 6, RC48_CK),
   [STM32H7_CLK_TIM5_CK] = GATE(APB1LENR, 3, PCLK1),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
@@ -157,6 +162,14 @@ static int prv_hse_on(const struct pbl_clk_stm32h7 *rcc) {
                           HSERDY_TIMEOUT_US);
 }
 
+// Turns an oscillator on, at bit on of a register, and waits for its ready bit
+static int prv_osc_on(const struct pbl_clk_stm32h7 *rcc, uint32_t offset, uint32_t on,
+                      uint32_t rdy) {
+  pbl_modifyl(0U, on, rcc->base + offset);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rcc, offset) & rdy) != 0U, 1U, OSCRDY_TIMEOUT_US);
+}
+
 static bool prv_pll1_on(const struct pbl_clk_stm32h7 *rcc) {
   return (prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLL1ON) != 0U;
 }
@@ -172,8 +185,15 @@ static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
 static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
 
-  if (id == STM32H7_CLK_HSE_CK) {
-    return prv_hse_on(rcc);
+  switch (id) {
+    case STM32H7_CLK_HSE_CK:
+      return prv_hse_on(rcc);
+    case STM32H7_CLK_RC48_CK:
+      return prv_osc_on(rcc, STM32H7_RCC_CR_OFFSET, RCC_CR_HSI48ON, RCC_CR_HSI48RDY);
+    case STM32H7_CLK_LSI_CK:
+      return prv_osc_on(rcc, STM32H7_RCC_CSR_OFFSET, RCC_CSR_LSION, RCC_CSR_LSIRDY);
+    default:
+      break;
   }
 
   if (!prv_is_gate(id)) {
@@ -189,6 +209,17 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
 
 static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+
+  switch (id) {
+    case STM32H7_CLK_RC48_CK:
+      pbl_modifyl(RCC_CR_HSI48ON, 0U, rcc->base + STM32H7_RCC_CR_OFFSET);
+      return 0;
+    case STM32H7_CLK_LSI_CK:
+      pbl_modifyl(RCC_CSR_LSION, 0U, rcc->base + STM32H7_RCC_CSR_OFFSET);
+      return 0;
+    default:
+      break;
+  }
 
   if (prv_is_gate(id)) {
     pbl_modifyl(PBL_BIT(s_gates[id].bit), 0U, rcc->base + s_gates[id].reg);
@@ -211,6 +242,8 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
       return 0;
     case STM32H7_CLK_HSI_CK:
     case STM32H7_CLK_CSI_CK:
+    case STM32H7_CLK_RC48_CK:
+    case STM32H7_CLK_LSI_CK:
       return -ENOENT;
     case STM32H7_CLK_PLLSRC:
       switch (
@@ -277,6 +310,22 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
         default:
           return -ENOTSUP;
       }
+    case STM32H7_CLK_RNG_CK:
+      switch (
+          PBL_FIELD_GET(RCC_D2CCIP2R_RNGSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
+        case RCC_D2CCIP2R_RNGSEL_HSI48:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_RC48_CK);
+          return 0;
+        case RCC_D2CCIP2R_RNGSEL_PLL1_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_Q);
+          return 0;
+        case RCC_D2CCIP2R_RNGSEL_LSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        default:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
+          return 0;
+      }
     default:
       if (!prv_is_gate(id)) {
         return -EINVAL;
@@ -309,6 +358,12 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
       return 0;
     case STM32H7_CLK_CSI_CK:
       *rate_mhz = STM32H7_CSI_HZ * MHZ_PER_HZ;
+      return 0;
+    case STM32H7_CLK_RC48_CK:
+      *rate_mhz = STM32H7_HSI48_HZ * MHZ_PER_HZ;
+      return 0;
+    case STM32H7_CLK_LSI_CK:
+      *rate_mhz = STM32H7_LSI_HZ * MHZ_PER_HZ;
       return 0;
     case STM32H7_CLK_PLL1_P:
     case STM32H7_CLK_PLL1_Q:
@@ -614,6 +669,17 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
     default:
       return -EINVAL;
   }
+}
+
+uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_C1_RSR_OFFSET);
+
+  if (clear) {
+    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_C1_RSR_OFFSET);
+  }
+
+  return rsr;
 }
 
 const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops = {

@@ -46,6 +46,10 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_HSI_CK 18
 /** CSI oscillator, 4 MHz. */
 #define STM32H7_CLK_CSI_CK 20
+/** HSI48 oscillator, 48 MHz. */
+#define STM32H7_CLK_RC48_CK 22
+/** LSI oscillator, 32 kHz. */
+#define STM32H7_CLK_LSI_CK 23
 /** PLL source, pllsrc: HSI, CSI or HSE. */
 #define STM32H7_CLK_PLLSRC 29
 /** PLL1 outputs. */
@@ -78,6 +82,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_GPIOK_CK 76
 /** QUADSPI kernel clock. */
 #define STM32H7_CLK_QUADSPI_CK 121
+/** RNG kernel clock. */
+#define STM32H7_CLK_RNG_CK 127
 /** TIM5 kernel clock. */
 #define STM32H7_CLK_TIM5_CK 95
 /** SYSCFG clock. */
@@ -124,6 +130,17 @@ struct pbl_clk_stm32h7 {
   /** Assigned clocks, ending with an empty entry. */
   const struct pbl_clk_assigned *assigned;
 };
+
+/**
+ * @brief Read the reset flags of the Cortex-M7.
+ *
+ * The RCC keeps the causes of the resets since the flags were last cleared.
+ *
+ * @param ctrl The RCC.
+ * @param clear Clear the flags after reading them.
+ * @return The C1_RSR register, @c RCC_RSR_ bits of hardware/stm32h7_rcc.h.
+ */
+uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear);
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops;
