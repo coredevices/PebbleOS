@@ -92,6 +92,21 @@
 	status = "okay";
 };
 
+// The MT25QL512ABB on bank 1 of the dual-flash pair; the one on bank 2 is not described
+&qspi {
+	pinctrl-0 = <&qspi_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";

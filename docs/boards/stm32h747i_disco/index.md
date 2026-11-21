@@ -11,7 +11,7 @@
 
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
 PebbleOS runs the samples on its Cortex-M7: the console, the kernel and its
-system timer, the LEDs and the joystick work so far.
+system timer, the LEDs, the joystick and the quad-SPI NOR flash work so far.
 
 ## Hardware
 
@@ -20,6 +20,9 @@ system timer, the LEDs and the joystick work so far.
   the image in flash bank 2
 - **Memory**: 2 MiB embedded flash in two banks of 1 MiB, the Cortex-M7
   booting from bank 1, and 512 KiB AXI SRAM, which PebbleOS runs from
+- **External flash**: two 64 MiB Micron MT25QL512ABB quad-SPI NOR flashes on
+  the QUADSPI banks; PebbleOS uses the one on bank 1 as its `flash`, with
+  quad I/O at 50 MHz
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit
   ships (`st,supply-config = "direct-smps"`)
 - **Clocks**: 25 MHz HSE and 32.768 kHz LSE crystals; PLL1 runs the
@@ -44,6 +47,8 @@ The board is flashed with the `openocd` runner, through the ST-LINK. Give the
 serial number of the probe when other debug probes are connected, with
 `--probe 0483:374e:<serial>`, as OpenOCD may pick another one otherwise. The
 OpenOCD configuration connects under reset, so the probe reaches the core
-whatever the firmware leaves it doing.
+whatever the firmware leaves it doing. It also keeps OpenOCD from setting up
+the quad-SPI flash, which would leave the flash in a mode PebbleOS does not
+expect.
 
 The console runs at 1 Mbaud, on the ST-LINK virtual COM port.
