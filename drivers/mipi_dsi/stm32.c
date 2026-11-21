@@ -183,6 +183,8 @@ static void prv_command_mode(const struct pbl_mipi_dsi_stm32 *dsi,
   prv_putreg(dsi, STM32_DSI_LCCR_OFFSET,
              PBL_FIELD_PREP(DSI_LCCR_CMDSIZE_MASK, dev->timing->hactive));
   pbl_modifyl(0U, DSI_CMCR_TEARE, dsi->base + STM32_DSI_CMCR_OFFSET);
+  // Between frames every lane rests in the stop state, which holds while Stop stops the clocks
+  pbl_modifyl(0U, DSI_CLCR_ACR, dsi->base + STM32_DSI_CLCR_OFFSET);
   pbl_modifyl(0U, DSI_WPCR1_FLPRXLPM, dsi->base + STM32_DSI_WPCR1_OFFSET);
   prv_putreg(dsi, STM32_DSI_WIFCR_OFFSET, DSI_WIRQ_TE | DSI_WIRQ_ER);
   prv_putreg(dsi, STM32_DSI_WIER_OFFSET, DSI_WIRQ_TE | DSI_WIRQ_ER);
@@ -310,6 +312,12 @@ static ssize_t prv_transfer(const struct pbl_mipi_dsi_host *host,
     return -EINVAL;
   }
 
+  // The PLL locks again after Stop
+  ret = prv_wait(dsi, STM32_DSI_WISR_OFFSET, DSI_WISR_PLLLS, DSI_WISR_PLLLS, PLL_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = prv_wait(dsi, STM32_DSI_GPSR_OFFSET, DSI_GPSR_CMDFE, DSI_GPSR_CMDFE, CMD_TIMEOUT_US);
   if (ret != 0) {
     return ret;
@@ -358,6 +366,11 @@ static ssize_t prv_transfer(const struct pbl_mipi_dsi_host *host,
 static int prv_refresh(const struct pbl_mipi_dsi_host *host) {
   const struct pbl_mipi_dsi_stm32 *dsi = prv_dsi(host);
   int ret;
+
+  ret = prv_wait(dsi, STM32_DSI_WISR_OFFSET, DSI_WISR_PLLLS, DSI_WISR_PLLLS, PLL_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
 
   ret = prv_wait(dsi, STM32_DSI_GPSR_OFFSET, DSI_GPSR_CMDFE, DSI_GPSR_CMDFE, CMD_TIMEOUT_US);
   if (ret != 0) {
