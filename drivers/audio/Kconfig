@@ -138,6 +138,14 @@ config AUDIO_DA7212
     help
       The Dialog DA7212 codec, playing to its line output.
 
+config AUDIO_WM8994
+    bool "Cirrus Logic WM8994 codec"
+    default y
+    depends on DT_HAS_WLF_WM8994_ENABLED
+    select I2C
+    help
+      The WM8994 codec, playing to its headphone output.
+
 config AUDIO_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
