@@ -1539,7 +1539,7 @@ def load_regs(srcdir, appdir=None):
 
 
 def regs_header(tree, regs, config):
-    """PBL_DT_REG_* of the nodes named in the *.regs.yaml of enabled code."""
+    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code."""
     lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
     nodes = {}
     if tree is not None:
@@ -1567,8 +1567,10 @@ def regs_header(tree, regs, config):
                 raise error(f"{node.path} has no reg")
             cells = cells[entry * index :]
             address = translate(node, cells_number(cells[: node.address_cells]))
+            size = cells_number(cells[node.address_cells : entry])
             name = c_ident(label if reg is None else f"{label}_{reg}").upper()
             defines[f"PBL_DT_REG_{name}"] = f"{address:#x}UL"
+            defines[f"PBL_DT_SIZE_{name}"] = f"{size:#x}UL"
     if defines:
         lines.append("")
         lines += [f"#define {name} {value}" for name, value in sorted(defines.items())]
