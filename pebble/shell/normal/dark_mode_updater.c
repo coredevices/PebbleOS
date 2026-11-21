@@ -26,6 +26,28 @@ bool dark_mode_schedule_is_active(const DarkModeSchedule *schedule, int minute_o
   return since_start < length;
 }
 
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+static bool prv_is_dark_after_sunset(int minute_of_day) {
+  // Same sunrise/sunset the night backlight color uses, kept current by the phone
+  const uint16_t sunrise = backlight_get_sunrise_minute();
+  const uint16_t sunset = backlight_get_sunset_minute();
+  if (sunrise >= MINUTES_PER_DAY || sunset >= MINUTES_PER_DAY) {
+    return false;
+  }
+  const DarkModeSchedule schedule = {
+    .from_hour = sunset / 60,
+    .from_minute = sunset % 60,
+    .to_hour = sunrise / 60,
+    .to_minute = sunrise % 60,
+  };
+  return dark_mode_schedule_is_active(&schedule, minute_of_day);
+}
+#endif
+
+static bool prv_follows_clock(DarkMode mode) {
+  return mode == DarkModeScheduled || mode == DarkModeSunset;
+}
+
 static bool prv_is_dark(void) {
   switch (shell_prefs_get_dark_mode()) {
     case DarkModeOn:
@@ -37,6 +59,13 @@ static bool prv_is_dark(void) {
       clock_get_time_tm(&now);
       return dark_mode_schedule_is_active(&schedule, now.tm_hour * 60 + now.tm_min);
     }
+#ifdef CONFIG_BACKLIGHT_HAS_COLOR
+    case DarkModeSunset: {
+      struct pbl_tm now;
+      clock_get_time_tm(&now);
+      return prv_is_dark_after_sunset(now.tm_hour * 60 + now.tm_min);
+    }
+#endif
     default:
       return false;
   }
@@ -62,7 +91,7 @@ static void prv_minute_callback(struct pbl_work *work) {
 void dark_mode_updater_prefs_changed(void) {
   prv_update();
   // The schedule has minute resolution, so follow the wall clock's minute
-  if (shell_prefs_get_dark_mode() == DarkModeScheduled) {
+  if (prv_follows_clock(shell_prefs_get_dark_mode())) {
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_minute_timer, 60, 1);
   } else {
     pbl_wallclock_work_stop(&s_minute_timer);

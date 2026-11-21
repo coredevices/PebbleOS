@@ -42,4 +42,5 @@ pbl_clar_test(test_dark_mode_updater
   SOURCES
     pebble/shell/normal/dark_mode_updater.c
     tests/fakes/fake_rtc.c
+  DEFINES CONFIG_BACKLIGHT_HAS_COLOR
 )
