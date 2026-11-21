@@ -37,7 +37,7 @@ random number generator, the watchdog, DMA, the display and the DMA2D work so fa
   ships (`st,supply-config = "direct-smps"`)
 - **Clocks**: 25 MHz HSE and 32.768 kHz LSE crystals; PLL1 runs the
   Cortex-M7 at 400 MHz from HSE, with the AHB at 200 MHz and the APB buses at
-  100 MHz
+  100 MHz; LPTIM1, the system timer, counts the LSE
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX), received through DMA
 - **Other**: the RNG, from HSI48, and the independent watchdog, from LSI,
