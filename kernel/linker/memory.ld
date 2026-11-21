@@ -2,8 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Core Devices LLC
  * SPDX-License-Identifier: Apache-2.0
  *
- * Memory regions, derived from the Kconfig memory layout symbols
- * (defaulted per SoC/board in the Kconfig.defconfig files).
+ * Memory regions, derived from the Kconfig memory layout symbols, which
+ * default to the devicetree's memory and reserved memory nodes, or are set by
+ * the SoC or board.
  *
  * SRAM is carved up sequentially from CONFIG_SRAM_BASE: the kernel gets
  * whatever is left after the worker and the app take their share at the end.

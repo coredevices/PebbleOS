@@ -14,13 +14,6 @@ config FLASH_BASE
 config FLASH_SIZE
     default 0x100000
 
-# 256 KiB of SRAM, first 256 bytes reserved for the RETAINED region.
-config SRAM_BASE
-    default 0x20000100
-
-config SRAM_SIZE
-    default 0x3ff00
-
 if NIMBLE
 
 # The NimBLE link layer runs on this SoC's radio, so its porting layer drives

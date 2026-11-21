@@ -236,15 +236,19 @@ config WORKER_RAM_RUNTIME_SIZE
 
 config SRAM_BASE
     hex
+    default $(dt_memory_free_addr,sram0) if $(dt_has_nodelabel,sram0)
     help
       Base address of the SRAM available to PebbleOS (kernel + worker +
-      app). Defaulted per SoC in soc/*/Kconfig.defconfig.
+      app). Defaults to the part of the sram0 memory node no reserved
+      memory region takes; boards without one set it.
 
 config SRAM_SIZE
     hex
+    default $(dt_memory_free_size,sram0) if $(dt_has_nodelabel,sram0)
     help
       Size of the SRAM available to PebbleOS (kernel + worker + app).
-      Defaulted per SoC in soc/*/Kconfig.defconfig.
+      Defaults to the part of the sram0 memory node no reserved memory
+      region takes; boards without one set it.
 
 config FLASH_BASE
     hex

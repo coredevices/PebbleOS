@@ -9,8 +9,10 @@
 #include <pbl/kernel/section.h>
 #include <pbl/logging/logging.h>
 #include <pbl/system/rtc_registers.h>
+#include <pbl/util/size.h>
 
-static uint32_t PBL_SECTION(".retained") s_retained[256 / 4];
+static uint32_t PBL_SECTION(".retained") s_retained[CONFIG_SOC_NRF52_RETAINED_RAM_SIZE / 4];
+static_assert(NRF_RETAINED_REGISTER_CRC < PBL_ARRAY_SIZE(s_retained));
 
 static uint32_t prv_crc(void) {
   return pbl_crc32(0, s_retained, NRF_RETAINED_REGISTER_CRC * 4);
