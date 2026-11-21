@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: ["st,stm32-sai-sub-a", "st,stm32-sai-sub-b"]
+config: AUDIO_STM32_SAI
+class: dai
+define: PBL_AUDIO_STM32_SAI_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: sai_ck
+  - dma: tx
+  - pinctrl: default
