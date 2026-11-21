@@ -13,3 +13,5 @@ args:
   - prop: current-speed
     default: 115200
   - pinctrl: default
+  - dma: rx
+    optional: true
