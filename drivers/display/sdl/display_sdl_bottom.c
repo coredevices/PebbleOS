@@ -23,6 +23,7 @@ static uint8_t *s_raw;
 static uint32_t *s_fb;
 static int s_width;
 static int s_height;
+static uint8_t *s_mask;
 static bool s_dirty;
 static bool s_sunlight;
 
@@ -56,23 +57,46 @@ static uint32_t prv_argb2222_to_argb8888(uint8_t c) {
   return 0xff000000u | (r << 16) | (g << 8) | b;
 }
 
+static bool prv_masked(int x, int y) {
+  if (s_mask == nullptr) {
+    return false;
+  }
+  int qx = (x < s_width / 2) ? x : (s_width - 1 - x);
+  int qy = (y < s_height / 2) ? y : (s_height - 1 - y);
+  return qx < s_mask[qy];
+}
+
 // With s_lock held.
 static void prv_convert(void) {
-  for (int i = 0; i < s_width * s_height; i++) {
-    s_fb[i] = prv_argb2222_to_argb8888(s_raw[i]);
+  for (int y = 0; y < s_height; y++) {
+    for (int x = 0; x < s_width; x++) {
+      int i = y * s_width + x;
+      s_fb[i] = prv_masked(x, y) ? 0xff000000u : prv_argb2222_to_argb8888(s_raw[i]);
+    }
   }
   s_dirty = true;
 }
 
-void display_sdl_bottom_update(const uint8_t *fb, int width, int height) {
+void display_sdl_bottom_set_geometry(int width, int height, const uint8_t *mask) {
   pthread_mutex_lock(&s_lock);
-  if (s_fb == nullptr) {
-    s_raw = malloc(width * height);
-    s_fb = malloc(sizeof(uint32_t) * width * height);
-    s_width = width;
-    s_height = height;
+  s_width = width;
+  s_height = height;
+  s_raw = realloc(s_raw, width * height);
+  s_fb = realloc(s_fb, sizeof(uint32_t) * width * height);
+  memset(s_raw, 0, width * height);
+  free(s_mask);
+  s_mask = nullptr;
+  if (mask != nullptr) {
+    s_mask = malloc(height / 2);
+    memcpy(s_mask, mask, height / 2);
   }
-  memcpy(s_raw, fb, width * height);
+  prv_convert();
+  pthread_mutex_unlock(&s_lock);
+}
+
+void display_sdl_bottom_update(const uint8_t *fb) {
+  pthread_mutex_lock(&s_lock);
+  memcpy(s_raw, fb, s_width * s_height);
   prv_convert();
   pthread_mutex_unlock(&s_lock);
   posix_host_wake();

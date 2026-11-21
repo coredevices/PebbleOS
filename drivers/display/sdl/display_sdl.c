@@ -17,15 +17,19 @@ static bool s_enabled;
 
 static void prv_flush(const struct pbl_display *disp) {
   if (s_enabled) {
-    display_sdl_bottom_update(s_fb, disp->props.width, disp->props.height);
+    display_sdl_bottom_update(s_fb);
   }
 }
 
 static int prv_init(const struct pbl_display *disp) {
-  if ((uint32_t)disp->props.width * disp->props.height > sizeof(s_fb)) {
+  const struct pbl_display_props *props = pbl_display_get_props(disp);
+
+  if ((uint32_t)props->width * props->height > sizeof(s_fb)) {
     return -EINVAL;
   }
 
+  // The window shows the display described here, round mask included
+  display_sdl_bottom_set_geometry(props->width, props->height, props->round_mask);
   s_enabled = true;
 
   return 0;
