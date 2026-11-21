@@ -45,6 +45,7 @@ config UART_STM32
     default y
     depends on DT_HAS_ST_STM32H7_UART_ENABLED
     select CLK
+    select DMA
     select PINCTRL
     help
       Support for the ST STM32H7 USART and UART controllers.
