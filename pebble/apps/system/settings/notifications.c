@@ -267,6 +267,8 @@ static const char *s_status_bar_style_labels[] = {
   [NotificationStatusBarStyle_Default] = pbl_i18n_ctx_noop("StatusBar", "Default"),
   [NotificationStatusBarStyle_Bold] = pbl_i18n_noop("Bold"),
   [NotificationStatusBarStyle_LargeBold] = pbl_i18n_noop("Big & Bold"),
+  [NotificationStatusBarStyle_ExtraLargeBold] = pbl_i18n_noop("Bigger & Bolder"),
+  [NotificationStatusBarStyle_Huge] = pbl_i18n_noop("Huge"),
 };
 
 static_assert(PBL_ARRAY_SIZE(s_status_bar_style_labels) == NotificationStatusBarStyleCount, "");

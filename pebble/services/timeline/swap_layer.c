@@ -25,12 +25,6 @@
 #include <kernel/pebble_tasks.h>
 #endif
 
-// Initial pixel scroll amount, paging_height (LAYOUT_HEIGHT) for circular display
-#define INITIAL_SCROLL_PX PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, LAYOUT_HEIGHT)
-
-// Max pixel scroll amount, paging height (LAYOUT_HEIGHT) for circular display
-#define SCROLL_PX PBL_IF_RECT_ELSE(48, LAYOUT_HEIGHT)
-
 // Max pixel scroll for repeating scrolls (button is held)
 #define REPEATING_SCROLL_PX 24
 
@@ -226,9 +220,10 @@ static void prv_update_arrow(SwapLayer *swap_layer) {
     const bool viewing_entire_notif = (cur_frame->size.h == layer_frame->size.h);
 #if PBL_ROUND
     const bool at_bottom = (cur_frame->origin.y < (-cur_frame->size.h + PBL_DISPLAY_HEIGHT));
-    const bool text_visible =
-        PBL_IN_RANGE(cur_frame->origin.y, TEXT_VISIBLE_LOWER_THRESHOLD(cur_frame->size.h),
-                     TEXT_VISIBLE_UPPER_THRESHOLD);
+    const bool text_visible = PBL_IN_RANGE(
+        cur_frame->origin.y,
+        TEXT_VISIBLE_LOWER_THRESHOLD(cur_frame->size.h, swap_layer->layer.frame.size.h),
+        TEXT_VISIBLE_UPPER_THRESHOLD);
     if (!viewing_entire_notif && !at_bottom && text_visible) {
       hide_it = false;
     }
@@ -548,6 +543,24 @@ static bool prv_attempt_swap(SwapLayer *swap_layer, ScrollDirection direction, b
   return true;
 }
 
+#if PBL_ROUND
+//! Height of one page of content: the swap layer minus the arrow at its bottom. A taller status bar
+//! above the swap layer makes the swap layer, and so the page, shorter.
+static int16_t prv_get_page_height(const SwapLayer *swap_layer) {
+  return swap_layer->layer.frame.size.h - LAYOUT_ARROW_HEIGHT;
+}
+#endif
+
+//! Initial pixel scroll amount: past the banner on rect, a page on round.
+static int16_t prv_get_initial_scroll_px(const SwapLayer *swap_layer) {
+  return PBL_IF_RECT_ELSE(LAYOUT_BANNER_HEIGHT_RECT, prv_get_page_height(swap_layer));
+}
+
+//! Max pixel scroll amount: a fixed step on rect, a page on round.
+static int16_t prv_get_scroll_px(const SwapLayer *swap_layer) {
+  return PBL_IF_RECT_ELSE(48, prv_get_page_height(swap_layer));
+}
+
 //! Computes the amount the current layer frame can scroll until a swap is necessary.
 //! Always returns a positive number
 static int16_t prv_get_max_scroll_dy(SwapLayer *swap_layer) {
@@ -559,7 +572,7 @@ static int16_t prv_get_max_scroll_dy(SwapLayer *swap_layer) {
   } else {
 #if PBL_ROUND
     // The last notification has to be able to scroll past content to stay page aligned
-    max_dy = PBL_ROUNDUP(max_dy, LAYOUT_HEIGHT);
+    max_dy = PBL_ROUNDUP(max_dy, prv_get_page_height(swap_layer));
 #endif
   }
 
@@ -599,12 +612,12 @@ PBL_T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection dire
         // we are at the topmost part of the notification, swap up
         prv_handle_swap_attempt(swap_layer, direction, is_repeating);
         return;
-      } else if ((offset - FUDGE_PX) < SCROLL_PX) {
+      } else if ((offset - FUDGE_PX) < prv_get_scroll_px(swap_layer)) {
         // we have a little room between the top of notification and top of frame
         dy = offset;
       } else {
         // so much roooooooooom, scroll up normal amount
-        dy = (is_repeating) ? REPEATING_SCROLL_PX : SCROLL_PX;
+        dy = (is_repeating) ? REPEATING_SCROLL_PX : prv_get_scroll_px(swap_layer);
       }
       break;
     }
@@ -629,7 +642,7 @@ PBL_T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection dire
       }
 
       swap_layer->swap_delay_remaining = MESSAGE_SWAP_DELAY;
-      if ((max_dy - offset - FUDGE_PX) < SCROLL_PX) {
+      if ((max_dy - offset - FUDGE_PX) < prv_get_scroll_px(swap_layer)) {
         // if we can scroll a little more, let's do that instead.
         // negative because we need to scroll down
         dy = -(max_dy - offset);
@@ -639,9 +652,9 @@ PBL_T_STATIC void prv_attempt_scroll(SwapLayer *swap_layer, ScrollDirection dire
 
         // scroll only the banner when it's the first scroll on a notification
         if (cur_frame->origin.y == 0) {
-          dy = -INITIAL_SCROLL_PX;
+          dy = -prv_get_initial_scroll_px(swap_layer);
         } else {
-          dy = (is_repeating) ? -REPEATING_SCROLL_PX : -SCROLL_PX;
+          dy = (is_repeating) ? -REPEATING_SCROLL_PX : -prv_get_scroll_px(swap_layer);
         }
       }
       break;
@@ -939,7 +952,7 @@ static void prv_swap_touch_liftoff(SwapLayer *swap_layer, int16_t base_offset, i
       // prv_walk_lines_down), so a touch settle must land on a page boundary or the line chords
       // no longer match where the content actually sits on the circle. Rect settles freely.
       const int16_t target_offset = swap_layer_touch_settle_offset(
-          base_offset, delta_y, max_dy, PBL_IF_RECT_ELSE(0, LAYOUT_HEIGHT));
+          base_offset, delta_y, max_dy, PBL_IF_RECT_ELSE(0, prv_get_page_height(swap_layer)));
       const int16_t cur = prv_get_current_notification_offset(swap_layer);
       prv_scroll(swap_layer, cur - target_offset, AnimationCurveEaseOut);
       break;
@@ -1027,8 +1040,8 @@ static void prv_swap_ops_pan_cancel(void *w) {
   const int16_t cur = prv_get_current_notification_offset(swap_layer);
   const int16_t max_dy = prv_get_max_scroll_dy(swap_layer);
   // Same page alignment as the liftoff settle: a cancelled pan must not rest off-grid on round.
-  const int16_t target =
-      swap_layer_touch_settle_offset(cur, 0, max_dy, PBL_IF_RECT_ELSE(0, LAYOUT_HEIGHT));
+  const int16_t target = swap_layer_touch_settle_offset(
+      cur, 0, max_dy, PBL_IF_RECT_ELSE(0, prv_get_page_height(swap_layer)));
   prv_scroll(swap_layer, cur - target, AnimationCurveEaseOut);
 }
 

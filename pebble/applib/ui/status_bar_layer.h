@@ -37,6 +37,25 @@
 #define STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT \
   _STATUS_BAR_LAYER_LARGE_BOLD_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
 
+//! The height of the status bar when rendering the "Bigger & Bolder" clock, including separator
+//! height, for all platforms.
+#define _STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT(plat)                                 \
+  PBL_PLATFORM_SWITCH(plat, /*aplite*/ 22, /*basalt*/ 22, /*chalk*/ 28, /*diorite*/ 22, \
+                      /*emery*/ 26, /*flint*/ 22, /*gabbro*/ 32)
+
+//! The "Bigger & Bolder" status bar height for the current platform.
+#define STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT \
+  _STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
+
+//! The height of the status bar when rendering the "Huge" clock, including separator height,
+//! for all platforms. Round displays need more, so that the clock clears the curve of the screen.
+#define _STATUS_BAR_LAYER_HUGE_HEIGHT(plat)                                             \
+  PBL_PLATFORM_SWITCH(plat, /*aplite*/ 25, /*basalt*/ 25, /*chalk*/ 36, /*diorite*/ 25, \
+                      /*emery*/ 29, /*flint*/ 25, /*gabbro*/ 52)
+
+//! The "Huge" status bar height for the current platform.
+#define STATUS_BAR_LAYER_HUGE_HEIGHT _STATUS_BAR_LAYER_HUGE_HEIGHT(PBL_PLATFORM_TYPE_CURRENT)
+
 //! The min width of the status bar
 #define STATUS_BAR_LAYER_MIN_WIDTH 35
 //! The distance from info_text to right edge of the status bar
@@ -70,6 +89,11 @@ typedef enum {
   //! Same as StatusBarLayerModeClockLargeBold but draws a 1px black outline around the glyphs, for
   //! legibility over busy backgrounds such as album art.
   StatusBarLayerModeClockLargeBoldOutlined = 5,
+  //! Same as StatusBarLayerModeClockLargeBold but with a still larger font and taller bar (the
+  //! notification "Bigger & Bolder" style).
+  StatusBarLayerModeClockExtraLargeBold = 6,
+  //! The largest bold clock, in the tallest bar (the notification "Huge" style).
+  StatusBarLayerModeClockHuge = 7,
 } StatusBarLayerMode;
 
 //! Values that are used to indicate the different status bar separator modes.
@@ -247,6 +271,10 @@ StatusBarLayerSeparatorMode status_bar_layer_get_separator_mode(
 //! @internal
 bool layer_is_status_bar_layer(Layer *layer);
 int16_t status_layer_get_title_text_width(StatusBarLayer *status_bar_layer);
+
+//! @internal
+//! @return The height of a status bar in the given mode on the current platform.
+int16_t status_bar_layer_get_height_for_mode(StatusBarLayerMode mode);
 
 //!     @} // end addtogroup StatusBarLayer
 //!   @} // end addtogroup Layer

@@ -112,3 +112,20 @@ void test_status_bar_layer__set_title_utf8_truncated(void) {
   cl_assert_equal_s(title, "ПІДСВІЧЕ…");
   cl_assert(utf8_is_valid_string(title));
 }
+
+//! The larger clock modes size the bar the same way, each to its own per-platform height.
+void test_status_bar_layer__extra_large_bold_and_huge_heights(void) {
+  StatusBarLayer status_bar;
+  status_bar_layer_init(&status_bar);
+
+  status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClockExtraLargeBold);
+  cl_assert(status_bar.layer.frame.size.h == STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT);
+  cl_assert(status_bar.layer.bounds.size.h == STATUS_BAR_LAYER_EXTRA_LARGE_BOLD_HEIGHT);
+
+  status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClockHuge);
+  cl_assert(status_bar.layer.frame.size.h == STATUS_BAR_LAYER_HUGE_HEIGHT);
+  cl_assert(status_bar.layer.bounds.size.h == STATUS_BAR_LAYER_HUGE_HEIGHT);
+
+  status_bar_layer_set_mode(&status_bar, StatusBarLayerModeClock);
+  cl_assert_status_bar_height(status_bar);
+}
