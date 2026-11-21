@@ -54,6 +54,9 @@
 #define STM32H7_EXTI_LINE47_IRQ 93
 #define STM32H7_EXTI_LINE48_IRQ 138
 
+/* Lines 55 to 60, of the PWR wakeup pins, in the second set of registers */
+#define EXTI_LINES2_WKUP PBL_GENMASK(28, 23)
+
 /* SYSCFG register offsets */
 
 #define STM32H7_SYSCFG_EXTICR_OFFSET(line) (0x0008 + ((line) / 4U) * 4U)
