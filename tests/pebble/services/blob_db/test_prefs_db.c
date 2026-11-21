@@ -24,6 +24,8 @@
 ////////////////////////////////////////////////////////////////
 #include <stubs_dark_mode_updater.h>
 
+extern void shell_prefs_init(void);
+
 void prefs_sync_init(void) {
 }
 
@@ -166,4 +168,86 @@ void test_prefs_db__dark_mode_schedule(void) {
     shell_prefs_get_dark_mode_schedule(&read);
     cl_assert_equal_m(&read, &expected, sizeof(expected));
   }
+}
+
+// Button lock
+////////////////////////////////////////////////////////////////
+
+static uint32_t prv_read_u32(const char *key) {
+  uint32_t value;
+  cl_assert_equal_i(prefs_db_read((uint8_t *)key, strlen(key), (uint8_t *)&value, sizeof(value)),
+                    0);
+  return value;
+}
+
+void test_prefs_db__button_lock_hold_rejects_invalid_values(void) {
+  uint32_t hold_ms = 3000;
+  prv_insert_from_phone("buttonLockHoldMs", &hold_ms, sizeof(hold_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_hold_ms(), 3000);
+
+  // 0 used to mean off, 10 s runs into the PMIC back-button reset.
+  const uint32_t invalid[] = {0, 10000, 7};
+  for (size_t i = 0; i < ARRAY_LENGTH(invalid); i++) {
+    hold_ms = invalid[i];
+    prv_insert_from_phone("buttonLockHoldMs", &hold_ms, sizeof(hold_ms));
+    cl_assert_equal_i(shell_prefs_get_button_lock_hold_ms(), 2000);
+    cl_assert_equal_i(prv_read_u32("buttonLockHoldMs"), 2000);
+  }
+}
+
+void test_prefs_db__button_lock_auto_rejects_invalid_values(void) {
+  uint32_t auto_ms = 30000;
+  prv_insert_from_phone("buttonLockAutoMs", &auto_ms, sizeof(auto_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 30000);
+
+  // An unknown duration falls back to off, never to some short timeout.
+  auto_ms = 7;
+  prv_insert_from_phone("buttonLockAutoMs", &auto_ms, sizeof(auto_ms));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 0);
+  cl_assert_equal_i(prv_read_u32("buttonLockAutoMs"), 0);
+
+  ButtonLockAutoScope scope = ButtonLockAutoScopeGeneralUse;
+  prv_insert_from_phone("buttonLockAutoScope", &scope, sizeof(scope));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeGeneralUse);
+  scope = ButtonLockAutoScopeCount;
+  prv_insert_from_phone("buttonLockAutoScope", &scope, sizeof(scope));
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeBoth);
+}
+
+void test_prefs_db__button_lock_auto_getters_guard_the_boot_load(void) {
+  // The boot load bypasses the handlers, so the getters must not trust the stored values.
+  const uint32_t auto_ms = 7;
+  const ButtonLockAutoScope scope = ButtonLockAutoScopeCount;
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockAutoMs", strlen("buttonLockAutoMs"),
+                                        &auto_ms, sizeof(auto_ms)));
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockAutoScope",
+                                        strlen("buttonLockAutoScope"), &scope, sizeof(scope)));
+  shell_prefs_init();
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_ms(), 0);
+  cl_assert_equal_i(shell_prefs_get_button_lock_auto_scope(), ButtonLockAutoScopeBoth);
+}
+
+void test_prefs_db__button_lock_auto_off_clears_the_pause(void) {
+  shell_prefs_set_button_lock_auto_ms(10000);
+  shell_prefs_set_button_lock_auto_paused(true);
+  shell_prefs_set_button_lock_auto_ms(0);
+  cl_assert(!shell_prefs_get_button_lock_auto_paused());
+}
+
+void test_prefs_db__button_lock_combo_rejects_invalid_values(void) {
+  ButtonLockCombo combo = ButtonLockComboUpSelect;
+  prv_insert_from_phone("buttonLockCombo", &combo, sizeof(combo));
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboUpSelect);
+
+  combo = ButtonLockComboCount;
+  prv_insert_from_phone("buttonLockCombo", &combo, sizeof(combo));
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboOff);
+  cl_assert_equal_i(prv_read_u32("buttonLockCombo"), ButtonLockComboOff);
+
+  // The boot load bypasses the handlers.
+  combo = ButtonLockComboCount;
+  cl_assert(prefs_private_write_backing((uint8_t *)"buttonLockCombo", strlen("buttonLockCombo"),
+                                        &combo, sizeof(combo)));
+  shell_prefs_init();
+  cl_assert_equal_i(shell_prefs_get_button_lock_combo(), ButtonLockComboOff);
 }

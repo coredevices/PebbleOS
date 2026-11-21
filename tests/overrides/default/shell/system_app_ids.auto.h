@@ -19,3 +19,4 @@
 #define APP_ID_GOLF               ((AppInstallId) - 52)
 #define APP_ID_SPORTS             ((AppInstallId) - 53)
 #define APP_ID_HEALTH_APP         ((AppInstallId) - 82)
+#define APP_ID_BUTTON_LOCK_TOGGLE ((AppInstallId) - 103)
