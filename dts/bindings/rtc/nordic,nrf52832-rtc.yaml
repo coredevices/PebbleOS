@@ -36,7 +36,9 @@ properties:
   pwm:
     type: object
     additionalProperties: false
-    description: PWM output on a GPIO, toggled by GPIOTE tasks on compare events.
+    description:
+      PWM output on a GPIO, toggled by GPIOTE tasks the compare events trigger
+      through PPI channels the driver allocates.
 
     properties:
       compatible:
@@ -53,12 +55,6 @@ properties:
         $ref: /schemas/types.yaml#/definitions/phandle
         description: GPIOTE whose tasks drive the output, on one of its channels.
 
-      nordic,ppi:
-        $ref: /schemas/types.yaml#/definitions/phandle
-        description:
-          PPI connecting the compare events to the GPIOTE tasks, on two of its
-          channels.
-
       status: true
 
     required:
@@ -66,7 +62,6 @@ properties:
       - "#pwm-cells"
       - gpios
       - nordic,gpiote
-      - nordic,ppi
 
 required:
   - compatible
@@ -89,6 +84,5 @@ examples:
             #pwm-cells = <3>;
             gpios = <&gpio1 15 0>;
             nordic,gpiote = <&gpiote>;
-            nordic,ppi = <&ppi>;
         };
     };

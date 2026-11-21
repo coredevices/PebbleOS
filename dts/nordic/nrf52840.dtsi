@@ -127,7 +127,6 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
 		};
@@ -162,7 +161,6 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
 		};
@@ -248,7 +246,6 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
 		};
