@@ -154,6 +154,14 @@
 			clocks = <&rcc SYSCFG_CK>;
 		};
 
+		iwdg: watchdog@58004800 {
+			compatible = "st,stm32-iwdg";
+			reg = <0x58004800 0x400>;
+			clocks = <&rcc LSI_CK>;
+			clock-names = "lsi";
+			status = "disabled";
+		};
+
 		pinctrl: pinctrl@58020000 {
 			compatible = "st,stm32h743-pinctrl";
 			#address-cells = <1>;
