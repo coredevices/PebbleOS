@@ -102,6 +102,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_HSEM_CK 73
 /** WWDG2 clock, the window watchdog of the Cortex-M4. */
 #define STM32H7_CLK_WWDG2_CK 89
+/** FMC kernel clock. */
+#define STM32H7_CLK_FMC_CK 122
 /** LPTIM1 kernel clock. */
 #define STM32H7_CLK_LPTIM1_CK 144
 /** LPTIM2 kernel clock. */
