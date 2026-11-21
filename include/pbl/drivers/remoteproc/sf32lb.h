@@ -10,6 +10,7 @@
 #include <pbl/device.h>
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/mbox.h>
+#include <pbl/drivers/nvmem.h>
 #include <pbl/drivers/remoteproc.h>
 
 /**
@@ -79,6 +80,8 @@ struct pbl_rproc_sf32lb {
     uintptr_t hpsys_cfg;
     /** Power management unit (@c sifli,pmuc). */
     uintptr_t pmuc;
+    /** Factory calibration record (@c nvmem-cells). */
+    struct pbl_nvmem_cell cal;
   } rf;
 };
 
@@ -162,7 +165,7 @@ void pbl_rproc_sf32lb_coredump_prepare(void);
 #define PBL_RPROC_SF32LB_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base, _mem_size, \
                                 _sram_base, _sram_size, _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa,  \
                                 _r1_size, _hclk, _pclk, _pclk2, _lpclk, _rfc, _phy, _capture,      \
-                                _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc)                \
+                                _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc, _cal)          \
   PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                   \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb, struct pbl_rproc, rproc) {                     \
@@ -180,7 +183,8 @@ void pbl_rproc_sf32lb_coredump_prepare(void);
       .dmac = _dmac,                                                                               \
       .lpsys_rcc = _lpsys_rcc,                                                                     \
       .hpsys_cfg = _hpsys_cfg,                                                                     \
-      .pmuc = _pmuc                                                                                \
+      .pmuc = _pmuc,                                                                               \
+      .cal = _cal,                                                                                 \
     },                                                                                             \
   }
 

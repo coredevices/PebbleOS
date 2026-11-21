@@ -52,3 +52,4 @@ args:
     of: sifli,hpsys-cfg
   - reg: 0
     of: sifli,pmuc
+  - nvmem-cell: calibration
