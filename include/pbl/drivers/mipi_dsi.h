@@ -20,9 +20,12 @@
  *
  * A host is the controller a panel is wired to over MIPI DSI. The driver of the panel, a child
  * of the host, attaches to it with what the panel takes: its lanes, its pixel format, video or
- * command mode, and in video mode its timing. It then sends its own commands through the host,
+ * command mode, and its timing. It then sends its own commands through the host,
  * those of its power sequence and its settings, as DCS or generic packets on its virtual
- * channel. In video mode, the host streams the pixels a display controller feeds it.
+ * channel. In video mode, the host streams the pixels a display controller feeds it. In command
+ * mode, the panel keeps the image in its frame memory, and the host sends it a frame from the
+ * display controller on each refresh, telling when the panel reports its tearing effect and when
+ * the frame is out.
  *
  * @code{.c}
  * ret = pbl_mipi_dsi_attach(&s_dsi);
@@ -76,6 +79,22 @@ enum pbl_mipi_dsi_pixel_format {
 
 struct pbl_mipi_dsi_host;
 
+/** @brief Events of a host in command mode. */
+enum pbl_mipi_dsi_event {
+  /** The panel reported its tearing effect: its scan reached the line it was given. */
+  PBL_MIPI_DSI_EVENT_TEAR,
+  /** The frame of a refresh is out. */
+  PBL_MIPI_DSI_EVENT_REFRESH_DONE,
+};
+
+/**
+ * @brief Called on an event of a host in command mode, from its interrupt.
+ *
+ * @param event Event.
+ * @param arg Argument given with the callback.
+ */
+typedef void (*pbl_mipi_dsi_event_cb_t)(enum pbl_mipi_dsi_event event, void *arg);
+
 /** @brief A panel on a host. */
 struct pbl_mipi_dsi_device {
   /** Host. */
@@ -88,7 +107,7 @@ struct pbl_mipi_dsi_device {
   enum pbl_mipi_dsi_pixel_format format;
   /** Mode flags, @c PBL_MIPI_DSI_MODE_*. */
   uint32_t mode_flags;
-  /** Timing in video mode, the clock being the pixel clock. */
+  /** Timing, the clock being the pixel clock. */
   const struct pbl_panel_timing *timing;
 };
 
@@ -118,6 +137,12 @@ struct pbl_mipi_dsi_host_ops {
   int (*detach)(const struct pbl_mipi_dsi_host *host, const struct pbl_mipi_dsi_device *dsi);
   /** Send a packet and read the response. Returns the bytes read or sent, or a negative errno. */
   ssize_t (*transfer)(const struct pbl_mipi_dsi_host *host, const struct pbl_mipi_dsi_msg *msg);
+  /** Optional. In command mode, send a frame from the display controller. Returns 0 or errno. */
+  int (*refresh)(const struct pbl_mipi_dsi_host *host);
+  /** Optional, with @c refresh. Stop taking from the display controller, for it to be set up. */
+  void (*hold)(const struct pbl_mipi_dsi_host *host, bool hold);
+  /** Optional, with @c refresh. Set the callback of the events in command mode. */
+  void (*set_event_cb)(const struct pbl_mipi_dsi_host *host, pbl_mipi_dsi_event_cb_t cb, void *arg);
 };
 
 /** @brief Host. */
@@ -197,5 +222,35 @@ int pbl_mipi_dsi_dcs_read(const struct pbl_mipi_dsi_device *dsi, uint8_t cmd, ui
  */
 int pbl_mipi_dsi_generic_write(const struct pbl_mipi_dsi_device *dsi, const uint8_t *data,
                                size_t len);
+
+/**
+ * @brief In command mode, send a frame from the display controller to the panel.
+ *
+ * @param host Host.
+ * @return 0, @c -ENOTSUP for a host without command mode, or another negative errno.
+ */
+int pbl_mipi_dsi_refresh(const struct pbl_mipi_dsi_host *host);
+
+/**
+ * @brief In command mode, stop taking from the display controller while it is set up, or go on.
+ *
+ * Callable from an interrupt, as the event callback.
+ *
+ * @param host Host.
+ * @param hold Stop, or go on.
+ * @return 0, @c -ENOTSUP for a host without command mode, or another negative errno.
+ */
+int pbl_mipi_dsi_hold(const struct pbl_mipi_dsi_host *host, bool hold);
+
+/**
+ * @brief Set the callback of the events of a host in command mode.
+ *
+ * @param host Host.
+ * @param cb Callback, or NULL.
+ * @param arg Passed to @p cb.
+ * @return 0, @c -ENOTSUP for a host without command mode, or another negative errno.
+ */
+int pbl_mipi_dsi_set_event_cb(const struct pbl_mipi_dsi_host *host, pbl_mipi_dsi_event_cb_t cb,
+                              void *arg);
 
 /** @} */

@@ -123,3 +123,40 @@ int pbl_mipi_dsi_dcs_read(const struct pbl_mipi_dsi_device *dsi, uint8_t cmd, ui
 
   return (size_t)ret == len ? 0 : -EIO;
 }
+
+int pbl_mipi_dsi_refresh(const struct pbl_mipi_dsi_host *host) {
+  if (!pbl_device_is_ready(&host->dev)) {
+    return -ENODEV;
+  }
+
+  if (host->ops->refresh == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return host->ops->refresh(host);
+}
+
+int pbl_mipi_dsi_set_event_cb(const struct pbl_mipi_dsi_host *host, pbl_mipi_dsi_event_cb_t cb,
+                              void *arg) {
+  if (!pbl_device_is_ready(&host->dev)) {
+    return -ENODEV;
+  }
+
+  if (host->ops->set_event_cb == nullptr) {
+    return -ENOTSUP;
+  }
+
+  host->ops->set_event_cb(host, cb, arg);
+
+  return 0;
+}
+
+int pbl_mipi_dsi_hold(const struct pbl_mipi_dsi_host *host, bool hold) {
+  if (host->ops->hold == nullptr) {
+    return -ENOTSUP;
+  }
+
+  host->ops->hold(host, hold);
+
+  return 0;
+}
