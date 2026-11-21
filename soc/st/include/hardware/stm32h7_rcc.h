@@ -118,8 +118,14 @@
 #define RCC_LPTIMSEL_LSE    3U
 #define RCC_LPTIMSEL_LSI    4U
 
-#define RCC_BDCR_LSEON  PBL_BIT(0)
-#define RCC_BDCR_LSERDY PBL_BIT(1)
+#define RCC_BDCR_LSEON       PBL_BIT(0)
+#define RCC_BDCR_LSERDY      PBL_BIT(1)
+#define RCC_BDCR_RTCSEL_MASK PBL_GENMASK(9, 8)
+#define RCC_BDCR_RTCSEL_NONE 0U
+#define RCC_BDCR_RTCSEL_LSE  1U
+#define RCC_BDCR_RTCSEL_LSI  2U
+#define RCC_BDCR_RTCSEL_HSE  3U
+#define RCC_BDCR_RTCEN       PBL_BIT(15)
 
 /* Bus prescaler fields: 0xxx is 1, 1000 to 1111 are 2 to 512 without 32 (HPRE, D1CPRE) */
 #define RCC_AHB_PRE_DIVIDED PBL_BIT(3)
