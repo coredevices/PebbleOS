@@ -110,6 +110,10 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_QUADSPI_CK 121
 /** USART1 kernel clock. */
 #define STM32H7_CLK_USART1_CK 156
+/** RTC kernel clock, from the LSE, the LSI or the HSE. */
+#define STM32H7_CLK_RTC_CK 13
+/** RTC bus clock. */
+#define STM32H7_CLK_RTCAPB_CK 108
 /** UART8 kernel clock. */
 #define STM32H7_CLK_UART8_CK 131
 /** @} */
