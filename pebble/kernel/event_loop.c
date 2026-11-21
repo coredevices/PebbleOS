@@ -17,7 +17,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/mcu/fpu.h>
-#include <pbl/pp/transports/qemu.h>
 #include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
@@ -38,6 +37,7 @@
 #include <applib/graphics/graphics.h>
 #include <applib/ui/ui.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
+#include <comm/qemu/pp_transport.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/low_power.h>
@@ -646,8 +646,8 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   }
 #endif
 
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-  pbl_pp_qemu_notify_ready();
+#ifdef CONFIG_QEMU_SERIAL
+  qemu_pp_notify_ready();
 #endif
 #ifdef CONFIG_CONSOLE
   pbl_console_enable_prompt();

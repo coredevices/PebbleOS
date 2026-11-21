@@ -89,10 +89,6 @@ config PP_TRANSPORT_GATT_SYSTEM_ONLY
     default y if RECOVERY_FW
     depends on PP_TRANSPORT_GATT
 
-config PP_TRANSPORT_QEMU
-    default y
-    depends on PP && QEMU_SERIAL
-
 config SHELL
     default y
     depends on CONSOLE

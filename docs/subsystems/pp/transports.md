@@ -8,7 +8,6 @@ A transport carries sessions over a link. It implements
 |---|---|---|---|---|---|
 | GATT (PPoGATT) | `PP_TRANSPORT_GATT` | The phone's PPoGATT service over BLE | The kernel LE client | 2 | no |
 | Console | `PP_TRANSPORT_CONSOLE` | Frames on the serial console | The console | 1 | yes |
-| QEMU | `PP_TRANSPORT_QEMU` | The emulator's serial link | The QEMU serial protocol | 0 | no |
 
 An application enables the ones it uses; the firmware enables each with the
 link it uses. The code that drives the link calls the transport through its
@@ -269,8 +268,11 @@ does not have, after a restart for instance, gets a close back.
 
 ## QEMU
 
-The QEMU transport carries the Pebble protocol over the emulator's serial
-link, in the QEMU serial protocol's frames:
+The firmware has a transport of its own, outside the subsystem
+(`pebble/comm/qemu/pp_transport.c`, with `QEMU_SERIAL`, priority 0, not
+shared): it is built on the firmware's QEMU serial protocol, and shows how a
+link the subsystem does not know is added. It carries the Pebble protocol
+over the emulator's serial link, in the QEMU serial protocol's frames:
 
 | Offset | Size | Field |
 |---|---|---|

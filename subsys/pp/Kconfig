@@ -33,10 +33,4 @@ config PP_TRANSPORT_CONSOLE
     help
       Pebble protocol over serial console frames, for development tools.
 
-config PP_TRANSPORT_QEMU
-    bool "Emulator serial link"
-    depends on QEMU_SERIAL
-    help
-      Pebble protocol over the emulator's serial link.
-
 endif

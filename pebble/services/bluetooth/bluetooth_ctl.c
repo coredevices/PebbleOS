@@ -10,7 +10,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/pp/transports/qemu.h>
 #include <pbl/services/bluetooth/battery_level.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
@@ -20,6 +19,7 @@
 #include <pbl/services/bluetooth/pairability.h>
 
 #include <comm/ble/gap_le.h>
+#include <comm/qemu/pp_transport.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -82,8 +82,8 @@ static void prv_comm_start(void) {
     bt_battery_level_start();
 #endif
     bt_pairability_init();
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-    pbl_pp_qemu_start();
+#ifdef CONFIG_QEMU_SERIAL
+    qemu_pp_start();
 #endif
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
@@ -98,8 +98,8 @@ static void prv_comm_stop(void) {
   bt_battery_level_stop();
 #endif
   gap_le_deinit();
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-  pbl_pp_qemu_stop();
+#ifdef CONFIG_QEMU_SERIAL
+  qemu_pp_stop();
 #endif
 
   // Should be the last thing to happen that touches the Bluetooth controller directly

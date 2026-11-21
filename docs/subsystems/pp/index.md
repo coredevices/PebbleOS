@@ -51,10 +51,11 @@ flowchart TB
     direction LR
     gatt["GATT<br/>(PPoGATT)"]
     console["Console"]
-    qemu["QEMU"]
   end
+  qemu["QEMU<br/>(firmware)"]
   users --> core
   core --> transports
+  core --> qemu
   gatt --- ble["Kernel LE client"]
   console --- cons["Console frames"]
   qemu --- qser["QEMU serial"]
@@ -71,8 +72,9 @@ flowchart TB
 - Sessions parse, dispatch and queue messages, and know nothing about the
   links.
 - Transports move bytes over a link and open and close sessions. The code
-  that drives each link (the kernel LE client, the console, the QEMU serial
-  protocol) calls its transport through the transport's header.
+  that drives each link (the kernel LE client, the console) calls its
+  transport through the transport's header. The firmware adds a transport of
+  its own for the emulator's serial link.
 
 ## Sessions
 
