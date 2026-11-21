@@ -10,3 +10,10 @@ config FUEL_GAUGE_THEVENIN_RC_TAU_MS
     default 64900
 
 endif
+
+if FLASH_SPI_NOR
+
+config FLASH_SPI_NOR_GD25Q256E
+    default y
+
+endif

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if FLASH_SPI_NOR
+
+config FLASH_SPI_NOR_GD25LQ255E
+    default y
+
+endif

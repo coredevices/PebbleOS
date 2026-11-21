@@ -8,11 +8,6 @@ define: PBL_FLASH_SPI_NOR_DEFINE
 args:
   - name: true
   - parent: spi_mem
-  - compatible: true
-    values:
-      gigadevice,gd25lq255e: "&pbl_flash_nor_gd25lq255e"
-      gigadevice,gd25q256e: "&pbl_flash_nor_gd25q256e"
-      puya,py25q128ha: "&pbl_flash_nor_py25q128ha"
   - supply: vcc
     default: nullptr
   - list: [user-otp, fixed-layout]

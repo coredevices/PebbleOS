@@ -430,7 +430,7 @@ static uint8_t prv_part_qer(const struct pbl_flash_nor_part *part) {
 }
 
 static int prv_unprotect(const struct pbl_flash_spi_nor *nor) {
-  const uint8_t mask = nor->part->sr1_bp_mask;
+  const uint8_t mask = nor->data->part->sr1_bp_mask;
   uint8_t sr;
   int ret;
 
@@ -490,7 +490,7 @@ static uint8_t prv_opcode_4b(const struct pbl_flash_spi_nor *nor, const struct s
       return ((sfdp->fbait[0] & s_4b_opcodes[i].fbait) != 0U) ? s_4b_opcodes[i].op4 : 0U;
     }
 
-    return ((nor->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) != 0U) ? s_4b_opcodes[i].op4 : 0U;
+    return ((nor->data->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) != 0U) ? s_4b_opcodes[i].op4 : 0U;
   }
 
   return 0U;
@@ -506,7 +506,7 @@ static uint8_t prv_erase_opcode_4b(const struct pbl_flash_spi_nor *nor, const st
     return (uint8_t)(sfdp->fbait[1] >> (8U * type->idx));
   }
 
-  if ((nor->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) == 0U) {
+  if ((nor->data->part->flags & PBL_FLASH_NOR_F_4B_OPCODES) == 0U) {
     return 0U;
   }
 
@@ -635,7 +635,7 @@ static int prv_set_addr_mode(const struct pbl_flash_spi_nor *nor, uint8_t opcode
 }
 
 static int prv_probe(const struct pbl_flash_spi_nor *nor) {
-  const struct pbl_flash_nor_part *part = nor->part;
+  const struct pbl_flash_nor_part *part = nor->data->part;
   struct pbl_flash_spi_nor_data *data = nor->data;
   struct erase_type small = {
     .size = part->geometry.subsector_size,
@@ -758,6 +758,37 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
   return 0;
 }
 
+// The part is not known until its ID is read, so waits before that cover every part
+static uint32_t prv_max_power_up_us(void) {
+  uint32_t us = 0U;
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_flash_nor_part, flash_nor_part, part) {
+    us = PBL_MAX(us, part->power_up_us);
+  }
+
+  return us;
+}
+
+static uint32_t prv_max_reset_ms(void) {
+  uint32_t ms = 0U;
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_flash_nor_part, flash_nor_part, part) {
+    ms = PBL_MAX(ms, part->reset_ms);
+  }
+
+  return ms;
+}
+
+static const struct pbl_flash_nor_part *prv_find_part(uint32_t jedec_id) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_flash_nor_part, flash_nor_part, part) {
+    if (part->id == jedec_id) {
+      return part;
+    }
+  }
+
+  return nullptr;
+}
+
 static int prv_init(const struct pbl_flash *flash) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
   uint8_t id[ID_LEN];
@@ -779,7 +810,7 @@ static int prv_init(const struct pbl_flash *flash) {
     if (ret != 0) {
       return ret;
     }
-    pbl_sleep_us(nor->part->power_up_us);
+    pbl_sleep_us(prv_max_power_up_us());
   }
 
   // Abort any program or erase left over from before the reset, unless the CPU runs from the part
@@ -795,9 +826,9 @@ static int prv_init(const struct pbl_flash *flash) {
     }
 
     if (pbl_flash_in_coredump(flash)) {
-      pbl_busy_wait_us(nor->part->reset_ms * PBL_USEC_PER_MSEC);
+      pbl_busy_wait_us(prv_max_reset_ms() * PBL_USEC_PER_MSEC);
     } else {
-      pbl_sleep_ms(nor->part->reset_ms);
+      pbl_sleep_ms(prv_max_reset_ms());
     }
   }
 
@@ -807,13 +838,14 @@ static int prv_init(const struct pbl_flash *flash) {
   }
 
   jedec_id = pbl_get_le24(id);
-  if (jedec_id != nor->part->id) {
-    PBL_LOG_ERR("Flash id 0x%06" PRIx32 ", expected 0x%06" PRIx32, jedec_id, nor->part->id);
+  nor->data->part = prv_find_part(jedec_id);
+  if (nor->data->part == nullptr) {
+    PBL_LOG_ERR("Unsupported flash id 0x%06" PRIx32, jedec_id);
     return -ENODEV;
   }
 
-  nor->data->otp = nor->part->otp.info;
-  PBL_LOG_DBG("Flash %s", nor->part->name);
+  nor->data->otp = nor->data->part->otp.info;
+  PBL_LOG_DBG("Flash %s", nor->data->part->name);
 
   ret = prv_probe(nor);
   if (ret != 0) {
@@ -994,7 +1026,7 @@ static int prv_erase_suspend(const struct pbl_flash *flash) {
     return ret;
   }
 
-  pbl_busy_wait_us(nor->part->suspend_us);
+  pbl_busy_wait_us(nor->data->part->suspend_us);
 
   return 0;
 }
@@ -1040,7 +1072,7 @@ static void prv_stop(const struct pbl_flash *flash) {
 }
 
 static uint32_t prv_otp_addr(const struct pbl_flash_spi_nor *nor, uint8_t region, uint32_t offs) {
-  const struct pbl_flash_nor_otp *otp = &nor->part->otp;
+  const struct pbl_flash_nor_otp *otp = &nor->data->part->otp;
 
   return otp->base + ((uint32_t)region * otp->offset) + offs;
 }
@@ -1098,7 +1130,7 @@ static int prv_otp_write(const struct pbl_flash *flash, uint8_t region, uint32_t
 }
 
 static uint8_t prv_otp_lb(const struct pbl_flash_spi_nor *nor, uint8_t region) {
-  return (uint8_t)PBL_BIT(nor->part->otp.lb_bit + region);
+  return (uint8_t)PBL_BIT(nor->data->part->otp.lb_bit + region);
 }
 
 static int prv_otp_is_locked(const struct pbl_flash *flash, uint8_t region, bool *locked) {
