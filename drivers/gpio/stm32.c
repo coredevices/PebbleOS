@@ -8,6 +8,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/st/pwr.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -141,10 +142,16 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
+// Only the lines on a wakeup pin wake the SoC from Standby
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+  return pbl_soc_stm32h7_wakeup_pin_set(prv_intc_port(intc)->base, hwirq, on);
+}
+
 const struct pbl_intc_ops pbl_gpio_stm32_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
+  .set_wake = prv_intc_set_wake,
 };
 
 static void prv_exti_isr(uint32_t lines) {
