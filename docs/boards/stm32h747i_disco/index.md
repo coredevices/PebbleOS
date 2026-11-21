@@ -60,10 +60,10 @@ DMA2D work so far.
 | Device | Pins | PebbleOS |
 | --- | --- | --- |
 | Joystick left, up, center, down | PK4, PK6, PK2, PK3, active low | Back, Up, Select and Down buttons (`gpio-keys`) |
+| Wakeup button | PC13, active high, wakeup pin | Wakeup key (`gpio-keys`), which starts the kit again from power-off |
 | LD1 to LD4, green, orange, red, blue | PI12 to PI15, active low | LEDs (`gpio-leds`), LD1 being the status LED |
 
-Joystick right (PK5) and the User button (PC13) are not described: a watch
-has four buttons.
+Joystick right (PK5) is not described: a watch has four buttons.
 
 (stm32h747i-disco-flashing)=
 

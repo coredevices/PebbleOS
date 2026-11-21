@@ -64,6 +64,14 @@
 			gpios = <&gpiok 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 			linux,code = <KEY_DOWN>;
 		};
+
+		// On a wakeup pin, it starts the kit again from power-off
+		button-wakeup {
+			label = "Wakeup";
+			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_WAKEUP>;
+			wakeup-source;
+		};
 	};
 
 	leds {
