@@ -1402,7 +1402,7 @@ class Generator:
 PARTITIONS = "fixed-partitions"
 PARTITIONS_HEADER = "devicetree/partitions.h"
 REGS_HEADER = "devicetree/regs.h"
-REGS_KEYS = {"config", "labels", "props"}
+REGS_KEYS = {"config", "labels", "props", "compatible"}
 REGS_PROP_KEYS = {"label", "prop"}
 KIB = 1024
 MIB = 1024 * KIB
@@ -1547,26 +1547,67 @@ def load_regs(srcdir, appdir=None):
             return DtError(f"{path}: {message}")
 
         check_keys(error, data, REGS_KEYS, "regs", ("config",))
-        if "labels" not in data and "props" not in data:
-            raise error("neither 'labels' nor 'props'")
+        if not REGS_KEYS.intersection(data) - {"config"}:
+            raise error("neither 'labels', 'props' nor 'compatible'")
         props = as_list(data.get("props", []))
         for prop in props:
             check_keys(error, prop, REGS_PROP_KEYS, "props", ("label", "prop"))
-        regs.append((data["config"], as_list(data.get("labels", [])), props, error))
+        labels = as_list(data.get("labels", []))
+        regs.append((data["config"], labels, props, data.get("compatible"), error))
     return regs
 
 
+def _reg_defines(node, name, index, error):
+    cells = node.u32s("reg") if node.has("reg") else []
+    entry = node.address_cells + node.size_cells
+    if len(cells) < entry * (index + 1):
+        raise error(f"{node.path} has no reg")
+    cells = cells[entry * index :]
+    address = translate(node, cells_number(cells[: node.address_cells]))
+    size = cells_number(cells[node.address_cells : entry])
+    return {
+        f"PBL_DT_REG_{name}": f"{address:#x}UL",
+        f"PBL_DT_SIZE_{name}": f"{size:#x}UL",
+    }
+
+
+def _compatible_defines(tree, compatible, error):
+    found = (
+        [] if tree is None else [n for n in tree.nodes() if compatible in n.compatibles]
+    )
+    found = [node for node in found if enabled(node)]
+    if len(found) != 1:
+        raise error(f"{len(found)} enabled '{compatible}' nodes, not one")
+    node = found[0]
+    # A function of a multi-function device has the resources of its parent
+    if not node.has("reg"):
+        node = node.parent
+    name = c_ident(compatible).upper()
+    defines = _reg_defines(node, name, 0, error)
+    if node.has("interrupts"):
+        defines[f"PBL_DT_IRQ_{name}"] = str(node.u32s("interrupts")[0])
+    if node.has("clocks"):
+        clocks = node.u32s("clocks")
+        if len(clocks) < 2:
+            raise error(f"{node.path} has a clock without a specifier")
+        defines[f"PBL_DT_CLK_{name}"] = f"{clocks[1]}U"
+    return defines
+
+
 def regs_header(tree, regs, config):
-    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code, and
-    PBL_DT_PROP_* of the properties they name."""
+    """PBL_DT_REG_* and PBL_DT_SIZE_* of the nodes named in the *.regs.yaml of enabled code,
+    PBL_DT_PROP_* of the properties they name, and the registers, interrupt and clock of the one
+    enabled node of the compatible they name."""
     lines = ["/* Generated from the board devicetree. */", "", "#pragma once"]
     nodes = {}
     if tree is not None:
         nodes = {label: node for node in tree.nodes() for label in node.labels}
     defines = {}
-    for symbol, labels, props, error in regs:
+    for symbol, labels, props, compatible, error in regs:
         if symbol not in config:
             continue
+        if compatible is not None:
+            defines.update(_compatible_defines(tree, compatible, error))
         for item in props:
             node = nodes.get(item["label"])
             if node is None:
@@ -1588,16 +1629,8 @@ def regs_header(tree, regs, config):
                 if reg not in names:
                     raise error(f"{node.path} has no reg named '{reg}'")
                 index = names.index(reg)
-            cells = node.u32s("reg") if node.has("reg") else []
-            entry = node.address_cells + node.size_cells
-            if len(cells) < entry * (index + 1):
-                raise error(f"{node.path} has no reg")
-            cells = cells[entry * index :]
-            address = translate(node, cells_number(cells[: node.address_cells]))
-            size = cells_number(cells[node.address_cells : entry])
             name = c_ident(label if reg is None else f"{label}_{reg}").upper()
-            defines[f"PBL_DT_REG_{name}"] = f"{address:#x}UL"
-            defines[f"PBL_DT_SIZE_{name}"] = f"{size:#x}UL"
+            defines.update(_reg_defines(node, name, index, error))
     if defines:
         lines.append("")
         lines += [f"#define {name} {value}" for name, value in sorted(defines.items())]
