@@ -39,6 +39,11 @@ enum pbl_panel_bus_format {
    * middle byte of a 24-bit address, and reads with opcode 0x03.
    */
   PBL_PANEL_BUS_FORMAT_QSPI_RGB565,
+  /**
+   * MIPI DSI in video mode: the RGB888 stream of a display controller, through the
+   * @ref drivers_mipi_dsi host the panel is on, with the sync pulses of its timing.
+   */
+  PBL_PANEL_BUS_FORMAT_MIPI_DSI_RGB888,
 };
 
 /**
@@ -49,7 +54,7 @@ enum pbl_panel_bus_format {
  * memory.
  */
 struct pbl_panel_timing {
-  /** Horizontal clock frequency (HCK), in Hz. */
+  /** Horizontal clock frequency (HCK), or the pixel clock of a video stream, in Hz. */
   uint32_t clock_hz;
   /** Visible columns. */
   uint16_t hactive;
@@ -63,6 +68,10 @@ struct pbl_panel_timing {
   uint16_t vback_porch;
   /** Lines after the visible ones. */
   uint16_t vfront_porch;
+  /** Columns of the horizontal sync pulse of a video stream. */
+  uint16_t hsync_len;
+  /** Lines of the vertical sync pulse of a video stream. */
+  uint16_t vsync_len;
   /** First column of the write enable (ENB) pulse. */
   uint16_t enable_start;
   /** Last column of the write enable (ENB) pulse. */
