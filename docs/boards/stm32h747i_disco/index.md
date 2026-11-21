@@ -29,10 +29,11 @@ DMA2D work so far.
   the QUADSPI banks; PebbleOS uses the one on bank 1 as its `flash`, with
   quad I/O at 50 MHz
 - **Display**: the MB1166 module, a 4" 480x800 Orise Tech OTM8009A panel on
-  two MIPI DSI lanes at 500 Mbit/s, in video mode; the LTDC scans an 800x480
-  RGB565 framebuffer at the start of the SDRAM, which the panel takes turned
-  a quarter turn, landscape as the kit is held, at a 27.5 MHz pixel clock
-  from PLL3; it is the `display`
+  two MIPI DSI lanes at 500 Mbit/s, in command mode; the LTDC sends an
+  800x480 RGB565 frame to the frame memory of the panel in two halves timed
+  by its tearing effect, at a 42 MHz pixel clock from PLL3, and the panel
+  takes it turned a quarter turn, landscape as the kit is held; it is the
+  `display`
 - **Touch**: the FocalTech FT6206 of the MB1166 module, on I2C4 (PD12 and
   PD13) at 400 kHz, its interrupt on PK7; it is the `touch`
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
