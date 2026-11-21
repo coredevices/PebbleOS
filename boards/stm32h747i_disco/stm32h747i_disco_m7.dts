@@ -62,9 +62,23 @@
 			       <100000000>, <100000000>, <0>;
 };
 
+&dma1 {
+	status = "okay";
+};
+
+&dma2 {
+	status = "okay";
+};
+
+&dmamux1 {
+	status = "okay";
+};
+
 &usart1 {
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
+	dmas = <&dmamux1 41 0x400 0x10>;
+	dma-names = "rx";
 	status = "okay";
 };
 
