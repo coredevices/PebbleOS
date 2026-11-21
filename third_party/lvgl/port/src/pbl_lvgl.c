@@ -52,6 +52,8 @@ static int32_t s_dirty_y1;
 /* The frame being sent while the next one is rendered in the other, with two of them. */
 static struct pbl_display_buffer s_sending;
 static bool s_two_frames;
+/* Until the display says it does not flip */
+static bool s_flip = true;
 static PBL_SEM_DEFINE(s_sent, 0, 1);
 
 static uint32_t prv_tick(void) {
@@ -96,6 +98,12 @@ static void prv_sent(int status, void *arg) {
   pbl_sem_give(&s_sent);
 }
 
+/* Runs from the display's interrupt, once the frame flipped to is shown: LVGL may then draw in
+ * the other one. */
+static void prv_flipped(int status, void *arg) {
+  lv_display_flush_ready(arg);
+}
+
 static void prv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
   int32_t w = lv_area_get_width(area);
   uint32_t stride = lv_draw_buf_width_to_stride((uint32_t)w, lv_display_get_color_format(disp));
@@ -130,6 +138,17 @@ static void prv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map
 
     s_dirty_y0 = INT32_MAX;
     s_dirty_y1 = 0;
+
+    /* A display that scans the frame out shows it whole, at its next refresh. */
+    if (s_two_frames && s_flip) {
+      s_sending = (struct pbl_display_buffer){.data = px_map, .pitch = s_fb.pitch};
+      ret = pbl_display_flip(DISPLAY, &s_sending, prv_flipped, disp);
+      if (ret == 0) {
+        return;
+      }
+      s_sending.data = nullptr;
+      s_flip = false;
+    }
 
     if (s_two_frames) {
       /*
