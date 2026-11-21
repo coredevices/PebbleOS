@@ -561,7 +561,7 @@ with these options:
 | `all` | Every entry of a `gpio` list |
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery`. With `self`, the cells after the phandle, as many as the target's `#<property>-cells`, are the specifier of its `provides` template, e.g. the DAI of a codec in `sound-dai` |
 | `entry` | Which phandle of an `of` property listing several, 0 by default, e.g. the DMA controllers of `dma-masters` |
-| `child: <unit address or name>` | Read from a child, e.g. the memory on a controller, or from a descendant by a path of names, e.g. `panel/panel-timing` |
+| `child: <unit address or name>` | Read from a child, e.g. the memory on a controller, or from a descendant by a path of names, e.g. `panel/panel-timing`; a name without a unit address also finds a child that has one, e.g. `sdram` for `sdram@70000000` |
 | `remote: <port>` | Read from the device connected to a port |
 | `up: true` | Read from the parent, for a function of a block, or from the device a child of `children` is part of |
 | `wrap`, `field`, `as`, `item` | Wrap the value in a macro, make it a designated initializer, take another kind from a provider, format list items |
