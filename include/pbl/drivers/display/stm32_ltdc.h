@@ -37,12 +37,16 @@ struct pbl_display_stm32_ltdc_state {
   bool enabled;
   uint8_t *scanout;
   uint8_t *next;
-  // Command mode: the frame being sent, how far, and whether an update waits for it
+  // Command mode: the frame and rows being sent, how far, and whether an update waits for them
   uint8_t *frame;
+  uint16_t y0;
+  uint16_t y1;
   enum pbl_display_stm32_ltdc_stage stage;
   bool notify;
-  // A frame asked for meanwhile
+  // An update asked for meanwhile
   uint8_t *queued;
+  uint16_t queued_y0;
+  uint16_t queued_y1;
   bool queued_notify;
 };
 /** @endcond */
