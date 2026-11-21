@@ -61,9 +61,11 @@ def our_compatibles(ours):
 
 def upstream_copy(upstream, ours, tmp):
     """Upstream, without the trivial devices we have a binding for, as upstream does when one
-    gains properties."""
+    gains properties, and without the bindings ours replace, at the same path."""
     tree = tmp / "upstream"
     shutil.copytree(upstream, tree, symlinks=True)
+    for path in ours.rglob("*.yaml"):
+        (tree / path.relative_to(ours)).unlink(missing_ok=True)
     trivial = tree / "trivial-devices.yaml"
     compatibles = our_compatibles(ours)
     lines = trivial.read_text().splitlines(keepends=True)
