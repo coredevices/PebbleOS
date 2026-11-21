@@ -807,6 +807,21 @@ props:
     prop: arm,num-irq-priority-bits
 ```
 
+Code driving whichever of several instances the board enables, as the
+system timer on the LPTIM each core of the STM32H747 leaves to the other,
+names its compatible instead:
+
+```yaml
+config: TIMER_STM32_LPTIM
+compatible: st,stm32-lptimer-timer
+```
+
+The tree must enable exactly one node of it. `PBL_DT_REG_<COMPATIBLE>` and
+`PBL_DT_SIZE_<COMPATIBLE>` are its first `reg` entry, `PBL_DT_IRQ_<COMPATIBLE>`
+its first interrupt, a bare number for `PBL_IRQ_CONNECT_NUM()`, and `PBL_DT_CLK_<COMPATIBLE>` the specifier cell of its
+first clock, each when it has them. A function of a multi-function device,
+as the `timer` child of an LPTIM, has those of its parent.
+
 ## Tests
 
 The generator has unit tests, run on the host:

@@ -2403,6 +2403,28 @@ REGS_DTS = """/dts-v1/;
         rcc: clock-controller@1000 {
             reg = <0x1000 0x400>;
             acme,num-gates = <12>;
+            #clock-cells = <1>;
+        };
+
+        timer@3000 {
+            compatible = "acme,lptimer";
+            reg = <0x3000 0x400>;
+            interrupts = <7>;
+            clocks = <&rcc 5>;
+
+            timer {
+                compatible = "acme,lptimer-timer";
+            };
+        };
+
+        timer@4000 {
+            compatible = "acme,lptimer";
+            reg = <0x4000 0x400>;
+            status = "disabled";
+
+            timer {
+                compatible = "acme,lptimer-timer";
+            };
         };
 
         flash: flash@2000 {
@@ -2417,18 +2439,18 @@ REGS_DTS = """/dts-v1/;
 """
 
 
-def regs(tmp_path, labels, config="SOC_ACME", props=()):
+def regs(tmp_path, labels, config="SOC_ACME", props=(), compatible=None, dts=REGS_DTS):
     def error(message):
         return DtError(f"acme.regs.yaml: {message}")
 
     path, dtb = tmp_path / "r.dts", tmp_path / "r.dtb"
-    path.write_text(REGS_DTS)
+    path.write_text(dts)
     subprocess.run(
         [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
         check=True,
     )
     return dtmap.regs_header(
-        fdt.load(dtb), [("SOC_ACME", labels, list(props), error)], {config}
+        fdt.load(dtb), [("SOC_ACME", labels, list(props), compatible, error)], {config}
     )
 
 
@@ -2451,6 +2473,22 @@ def test_regs_props(tmp_path):
     assert "#define PBL_DT_PROP_RCC_ACME_NUM_GATES 12U" in text
     with pytest.raises(DtError, match="has no 'acme,missing'"):
         regs(tmp_path, [], props=[{"label": "rcc", "prop": "acme,missing"}])
+
+
+def test_regs_of_the_enabled_node_of_a_compatible(tmp_path):
+    text = regs(tmp_path, [], compatible="acme,lptimer-timer")
+    assert "#define PBL_DT_REG_ACME_LPTIMER_TIMER 0x40003000UL" in text
+    assert "#define PBL_DT_SIZE_ACME_LPTIMER_TIMER 0x400UL" in text
+    assert "#define PBL_DT_IRQ_ACME_LPTIMER_TIMER 7\n" in text
+    assert "#define PBL_DT_CLK_ACME_LPTIMER_TIMER 5U" in text
+
+
+def test_regs_of_a_compatible_need_one_enabled_node(tmp_path):
+    with pytest.raises(DtError, match="0 enabled 'acme,missing' nodes"):
+        regs(tmp_path, [], compatible="acme,missing")
+    both = REGS_DTS.replace('status = "disabled";', "")
+    with pytest.raises(DtError, match="2 enabled 'acme,lptimer' nodes"):
+        regs(tmp_path, [], compatible="acme,lptimer", dts=both)
 
 
 def test_regs_of_disabled_code_are_left_out(tmp_path):
