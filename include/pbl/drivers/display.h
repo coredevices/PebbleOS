@@ -38,7 +38,11 @@
  *
  * An update runs in the background and reports its outcome to a callback run from the display's
  * interrupt, or before pbl_display_update() returns for displays that update synchronously. The
- * display may modify the updated rows while it runs, but restores them before the callback. Calls
+ * display may modify the updated rows while it runs, but restores them before the callback.
+ *
+ * A controller that scans the frame out of memory can also flip: show a whole frame of the caller
+ * from the next refresh of the panel, with no copy and no tearing, for the caller to draw the next
+ * one in the frame shown before once the callback says it is not shown anymore. Calls
  * are made from task context and return 0 or a negative errno: @c -EBUSY while an update is in
  * progress, @c -EINVAL for an invalid row range and @c -ENODEV if the display is not ready.
  * @{
@@ -128,6 +132,11 @@ struct pbl_display_ops {
                 uint16_t y1);
   /** Clear the image held by the panel. Optional. Returns 0 or a negative errno. */
   int (*clear)(const struct pbl_display *disp);
+  /**
+   * Optional. Start showing all of @p buf from the next refresh of the panel. Returns 0 if
+   * pbl_display_complete() will be called once it is shown, or a negative errno.
+   */
+  int (*flip)(const struct pbl_display *disp, const struct pbl_display_buffer *buf);
 };
 
 /** @brief A display. */
@@ -287,6 +296,22 @@ int pbl_display_set_rotated(const struct pbl_display *disp, bool rotated);
  * @return 0, @c -ENOTSUP if the display cannot, or another negative errno.
  */
 int pbl_display_clear(const struct pbl_display *disp);
+
+/**
+ * @brief Show a whole frame from the next refresh of the panel.
+ *
+ * The frame has the display's size, format and the pitch of @p buf, and must stay as it is while
+ * shown. The callback runs from the display's interrupt once it is shown: the frame shown before
+ * may then be drawn in.
+ *
+ * @param disp Display.
+ * @param buf Frame.
+ * @param cb Callback, called once the frame is shown.
+ * @param arg Callback argument.
+ * @return 0, @c -ENOTSUP for a display that does not flip, or another negative errno.
+ */
+int pbl_display_flip(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
+                     pbl_display_callback_t cb, void *arg);
 
 /**
  * @brief Send rows of a framebuffer to the panel, returning once the update has started.

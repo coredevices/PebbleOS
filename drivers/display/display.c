@@ -201,6 +201,38 @@ int pbl_display_update(const struct pbl_display *disp, const struct pbl_display_
   return ret;
 }
 
+int pbl_display_flip(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
+                     pbl_display_callback_t cb, void *arg) {
+  struct pbl_display_state *state = disp->state;
+  int ret;
+
+  if (!pbl_device_is_ready(&disp->dev)) {
+    return -ENODEV;
+  }
+
+  if (disp->ops->flip == nullptr) {
+    return -ENOTSUP;
+  }
+
+  pbl_irq_lock();
+  if (state->busy) {
+    pbl_irq_unlock();
+    return -EBUSY;
+  }
+  state->busy = true;
+  pbl_irq_unlock();
+
+  state->cb = cb;
+  state->arg = arg;
+
+  ret = disp->ops->flip(disp, buf);
+  if (ret != 0) {
+    state->busy = false;
+  }
+
+  return ret;
+}
+
 static void prv_sync_complete(int status, void *arg) {
   struct prv_sync *sync = arg;
 
