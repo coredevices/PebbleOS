@@ -9,6 +9,7 @@
 #include <pbl/pp/transport.h>
 #include <pbl/util/math.h>
 
+#include <comm/qemu/pp_transport.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <comm/qemu/settings.h>
@@ -75,7 +76,7 @@ static void prv_put_comm_session_event(bool is_open, bool is_system) {
   event_put(&event);
 }
 
-void pbl_pp_qemu_set_connected(bool is_connected) {
+void qemu_pp_set_connected(bool is_connected) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   if (is_connected && s_session == nullptr) {
@@ -102,7 +103,7 @@ void pbl_pp_qemu_set_connected(bool is_connected) {
   pbl_mutex_unlock(&s_lock);
 }
 
-bool pbl_pp_qemu_is_connected(void) {
+bool qemu_pp_is_connected(void) {
   bool connected;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -112,7 +113,7 @@ bool pbl_pp_qemu_is_connected(void) {
   return connected;
 }
 
-void pbl_pp_qemu_receive(const uint8_t *data, uint32_t length) {
+void qemu_pp_receive(const uint8_t *data, uint32_t length) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_session != nullptr) {
     pbl_pp_session_receive(s_session, data, length);
@@ -135,12 +136,12 @@ static bool prv_default_connected(void) {
 }
 #endif
 
-void pbl_pp_qemu_start(void) {
+void qemu_pp_start(void) {
 #ifndef CONFIG_NIMBLE_HCI_UART
   // Open the session synchronously: the host may send a WatchVersionRequest
   // as soon as it sees "Ready for communication".
   if (prv_default_connected()) {
-    pbl_pp_qemu_set_connected(true);
+    qemu_pp_set_connected(true);
   }
 #endif
 }
@@ -151,13 +152,13 @@ static void prv_log_ready(struct pbl_work *work) {
 
 static PBL_DELAYED_WORK_DEFINE(s_ready_log_work, prv_log_ready);
 
-void pbl_pp_qemu_notify_ready(void) {
+void qemu_pp_notify_ready(void) {
   // Host tools install on seeing this line, so give the first app time to push its window.
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_ready_log_work, PBL_MSEC(READY_LOG_DELAY_MS));
 }
 
-void pbl_pp_qemu_stop(void) {
-  pbl_pp_qemu_set_connected(false);
+void qemu_pp_stop(void) {
+  qemu_pp_set_connected(false);
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_session != nullptr) {
