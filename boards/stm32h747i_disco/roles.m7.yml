@@ -7,3 +7,4 @@ flash: flash0
 die_temp: adc3
 rtc: rtc
 udc: usbotg_hs
+extram: fmc
