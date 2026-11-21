@@ -5,7 +5,7 @@ A platform is what apps are built against. It is a name and a description:
 | Part | Values |
 | --- | --- |
 | Display | width and height; rectangular or round; colour (8-bit) or black and white (1-bit) |
-| Features | `microphone`, `smartstrap`, `smartstrap_power`, `health`, `compass`, `touch`, `rgb_backlight`, `speaker` |
+| Features | `microphone`, `smartstrap`, `smartstrap_power`, `health`, `compass`, `touch`, `rgb_backlight`, `speaker`, `barometer` |
 | Limits | what an app may take: code and memory, worker memory, resources, the largest font glyph |
 | ABI | what app binaries are compiled for; `armv7m` is Cortex-M3 Thumb code with soft float |
 
@@ -205,7 +205,7 @@ binary to a watch without knowing the platform's name:
   "name": "flint",
   "abi": "armv7m",
   "display": { "width": 144, "height": 168, "shape": "rect", "color": false },
-  "features": ["microphone", "health", "compass", "speaker"],
+  "features": ["microphone", "health", "compass", "speaker", "barometer"],
   "limits": { "app_memory": 65536 }
 }
 ```

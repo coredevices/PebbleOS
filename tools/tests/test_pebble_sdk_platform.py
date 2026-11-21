@@ -79,6 +79,7 @@ class TestPlatformTable(unittest.TestCase):
                 "health",
                 "compass",
                 "speaker",
+                "barometer",
                 "144w",
                 "168h",
             },

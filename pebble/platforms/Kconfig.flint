@@ -24,6 +24,9 @@ config PLATFORM_COMPASS
 config PLATFORM_SPEAKER
     default y
 
+config PLATFORM_BAROMETER
+    default y
+
 # RAM of an app and of its runtime.
 
 config APP_RAM_4X_SEGMENT_SIZE
