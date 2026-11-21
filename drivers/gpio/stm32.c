@@ -8,11 +8,13 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
 #include <hardware/stm32_gpio.h>
 #include <hardware/stm32h7_exti.h>
+#include <hardware/stm32h7_pwr.h>
 
 // The ports follow each other at 1 KiB steps from port A
 #define PORT_INDEX(base) (((base) / STM32_GPIO_PORT_SIZE) % 16U)
@@ -20,6 +22,15 @@
 // Port holding each EXTI line, NULL when free
 static const struct pbl_gpio_stm32 *s_owners[STM32_GPIO_NUM_PINS];
 static uintptr_t s_exti;
+
+// The wakeup pins of the PWR, WKUP1 to WKUP6, as port and pin
+static const struct {
+  uint8_t port;
+  uint8_t pin;
+} s_wkup_pins[PWR_WKUP_PINS] = {{0U, 0U}, {0U, 2U}, {8U, 8U}, {2U, 13U}, {8U, 11U}, {2U, 1U}};
+
+// Port of each wakeup pin armed, NULL when not
+static const struct pbl_gpio_stm32 *s_wake[PWR_WKUP_PINS];
 
 static const struct pbl_gpio_stm32 *prv_port(const struct pbl_gpio_port *port) {
   return PBL_CONTAINER_OF(port, const struct pbl_gpio_stm32, port);
@@ -141,11 +152,65 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
+// Only the lines on a wakeup pin wake the SoC from Standby
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+  const struct pbl_gpio_stm32 *gpio = prv_intc_port(intc);
+
+  if (gpio->pwr == 0U) {
+    return -ENOTSUP;
+  }
+
+  for (uint32_t n = 0U; n < PWR_WKUP_PINS; n++) {
+    if (s_wkup_pins[n].port == PORT_INDEX(gpio->base) && s_wkup_pins[n].pin == hwirq) {
+      s_wake[n] = on ? gpio : nullptr;
+      return 0;
+    }
+  }
+
+  return -ENOTSUP;
+}
+
 const struct pbl_intc_ops pbl_gpio_stm32_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
+  .set_wake = prv_intc_set_wake,
 };
+
+// A wakeup pin wakes on the edge away from the level it is at, with the pull of its line
+static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
+  uintptr_t pwr = 0U;
+  uint32_t epr = 0U;
+
+  for (uint32_t n = 0U; n < PWR_WKUP_PINS; n++) {
+    const struct pbl_gpio_stm32 *gpio = s_wake[n];
+    uint32_t pin = s_wkup_pins[n].pin;
+
+    if (gpio == nullptr) {
+      continue;
+    }
+
+    pwr = gpio->pwr;
+    epr |= PWR_WKUPEPR_EN(n) |
+           PBL_FIELD_PREP(PWR_WKUPEPR_PUPD_MASK(n),
+                          PBL_FIELD_GET(GPIO_PUPDR_MASK(pin),
+                                        pbl_readl(gpio->base + STM32_GPIO_PUPDR_OFFSET)));
+    if ((pbl_readl(gpio->base + STM32_GPIO_IDR_OFFSET) & PBL_BIT(pin)) != 0U) {
+      epr |= PWR_WKUPEPR_FALLING(n);
+    }
+  }
+
+  if (pwr == 0U) {
+    return;
+  }
+
+  pbl_writel(epr, pwr + STM32H7_PWR_WKUPEPR_OFFSET);
+  pbl_writel(PWR_WKUPCR_ALL, pwr + STM32H7_PWR_WKUPCR_OFFSET);
+}
+
+// Last, so that power-off handlers that end the system run first
+PBL_SYS_OFF_HANDLER_DEFINE(gpio_stm32_wake, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW,
+                           prv_arm_wake, nullptr);
 
 static void prv_exti_isr(uint32_t lines) {
   uint32_t pending = pbl_readl(s_exti + STM32H7_EXTI_C1PR1_OFFSET) &

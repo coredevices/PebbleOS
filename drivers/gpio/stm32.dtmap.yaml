@@ -23,3 +23,7 @@ args:
   - clock: 0
     of: st,syscfg
     up: true
+  - reg: 0
+    of: st,pwr
+    up: true
+    default: 0
