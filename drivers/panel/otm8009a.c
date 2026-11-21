@@ -433,32 +433,24 @@ static const uint8_t s_setup[] = {
   0x01,
 };
 
-// Leaving sleep: portrait over the whole panel, 24-bit pixels, full brightness, and no adaptive
-// backlight, which would change the brightness with the image
+// Address mode of a frame turned a quarter turn clockwise: rows and columns exchanged, columns
+// right to left
+#define MADCTL_QUARTER_TURN 0x60U
+
+// Leaving sleep: 24-bit pixels, full brightness, and no adaptive backlight, which would change
+// the brightness with the image
 static const uint8_t s_wake[] = {
   0U,
   PBL_MIPI_DCS_EXIT_SLEEP_MODE,
   WAIT(120U),
-  W1(PBL_MIPI_DCS_SET_ADDRESS_MODE, 0x00),
-  4U,
-  PBL_MIPI_DCS_SET_COLUMN_ADDRESS,
-  0x00,
-  0x00,
-  0x01,
-  0xdf,
-  4U,
-  PBL_MIPI_DCS_SET_PAGE_ADDRESS,
-  0x00,
-  0x00,
-  0x03,
-  0x1f,
   W1(PBL_MIPI_DCS_SET_PIXEL_FORMAT, COLMOD_RGB888),
   W1(CMD_WRITE_CABC, 0x00),
   W1(PBL_MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0xff),
   W1(PBL_MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 };
 
-const struct pbl_panel_timing pbl_panel_otm8009a_timing = {
+// Portrait; a frame turned a quarter turn has the active width and height exchanged
+static const struct pbl_panel_timing s_timing = {
   .clock_hz = 27500000U,
   .hactive = 480U,
   .hsync_len = 2U,
@@ -497,6 +489,44 @@ static int prv_run(const struct pbl_panel_otm8009a *otm, const uint8_t *seq, siz
   return 0;
 }
 
+// The whole panel, in the orientation of the frame
+static int prv_address(const struct pbl_panel_otm8009a *otm) {
+  const struct pbl_panel_timing *t = &otm->state->timing;
+  const uint8_t mode = otm->state->turned ? MADCTL_QUARTER_TURN : 0x00U;
+  const uint8_t cols[] = {
+    0x00, 0x00, (uint8_t)((t->hactive - 1U) >> 8), (uint8_t)(t->hactive - 1U)
+  };
+  const uint8_t rows[] = {
+    0x00, 0x00, (uint8_t)((t->vactive - 1U) >> 8), (uint8_t)(t->vactive - 1U)
+  };
+  int ret;
+
+  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_ADDRESS_MODE, &mode, 1U);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_COLUMN_ADDRESS, cols, sizeof(cols));
+  if (ret != 0) {
+    return ret;
+  }
+
+  return pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows, sizeof(rows));
+}
+
+static int prv_set_quarter_turn(const struct pbl_panel *panel, bool turn) {
+  struct pbl_panel_otm8009a_state *st = prv_otm(panel)->state;
+
+  st->turned = turn;
+  st->timing = s_timing;
+  if (turn) {
+    st->timing.hactive = s_timing.vactive;
+    st->timing.vactive = s_timing.hactive;
+  }
+
+  return 0;
+}
+
 static int prv_prepare(const struct pbl_panel *panel) {
   const struct pbl_panel_otm8009a *otm = prv_otm(panel);
   int ret;
@@ -522,7 +552,12 @@ static int prv_prepare(const struct pbl_panel *panel) {
     return ret;
   }
 
-  return prv_run(otm, s_wake, sizeof(s_wake));
+  ret = prv_run(otm, s_wake, sizeof(s_wake));
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_address(otm);
 }
 
 static int prv_enable(const struct pbl_panel *panel) {
@@ -565,12 +600,15 @@ const struct pbl_panel_ops pbl_panel_otm8009a_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .unprepare = prv_unprepare,
+  .set_quarter_turn = prv_set_quarter_turn,
 };
 
 int pbl_panel_otm8009a_init(const struct pbl_device *dev) {
   const struct pbl_panel_otm8009a *otm =
       PBL_CONTAINER_OF(dev, const struct pbl_panel_otm8009a, panel.dev);
   int ret;
+
+  otm->state->timing = s_timing;
 
   ret = pbl_device_init(&otm->reset.port->dev);
   if (ret != 0) {
