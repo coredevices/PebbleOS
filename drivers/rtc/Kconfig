@@ -32,6 +32,15 @@ config RTC_SF32LB
     help
       SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate.
 
+config RTC_STM32
+    bool "STM32 RTC"
+    default y
+    depends on DT_HAS_ST_STM32H7_RTC_ENABLED
+    select CLK
+    help
+      STM32H7 calendar RTC in the backup domain, counting the LSE across
+      resets and in Standby.
+
 config RTC_QEMU
     bool "QEMU RTC"
     default y
