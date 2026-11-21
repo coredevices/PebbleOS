@@ -55,6 +55,12 @@ module = LVGL
 module-str = LVGL
 source "subsys/logging/Kconfig.template.log_level"
 
+# The GPU draws in the background into buffers that start on a cache line; strides stay those of
+# the display, and a buffer whose rows share cache lines is drawn while the CPU waits
+config LV_DRAW_BUF_ALIGN
+    int
+    default DCACHE_LINE_SIZE if LVGL_DRAW_GPU && CPU_HAS_DCACHE
+
 orsource "lvgl/Kconfig"
 
 endif # LVGL
