@@ -92,7 +92,7 @@
 
 /** @brief Quad enable bit location, as in JESD216 BFPT DWORD 15. */
 enum pbl_flash_nor_qe {
-  /** No quad enable bit. */
+  /** No quad enable bit: the quad commands work as they are. */
   PBL_FLASH_NOR_QE_NONE,
   /** Status register 2 bit 1, written together with status register 1. */
   PBL_FLASH_NOR_QE_SR2_BIT1_WR_SR1,
