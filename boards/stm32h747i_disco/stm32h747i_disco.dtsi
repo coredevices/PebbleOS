@@ -13,6 +13,15 @@
 	model = "STMicroelectronics STM32H747I-DISCO";
 	compatible = "st,stm32h747i-disco", "st,stm32h747";
 
+	// The kit's 1.8 V regulator, which supplies the audio codec
+	v1v8: regulator-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "v1v8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+
 	v3v3: regulator-3v3 {
 		compatible = "regulator-fixed";
 		regulator-name = "v3v3";
