@@ -14,6 +14,29 @@
 	model = "STMicroelectronics STM32H747I-DISCO";
 	compatible = "st,stm32h747i-disco", "st,stm32h747";
 
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		// The framebuffer, at the start of the SDRAM
+		fb_mem: framebuffer@70000000 {
+			reg = <0x70000000 0xbb800>;
+			no-map;
+		};
+	};
+
+	// What the LTDC scans to the panel
+	framebuffer {
+		compatible = "simple-framebuffer";
+		memory-region = <&fb_mem>;
+		width = <480>;
+		height = <800>;
+		stride = <960>;
+		format = "r5g6b5";
+		display = <&ltdc>;
+	};
+
 	// The joystick, as the four buttons of a watch
 	buttons: gpio-keys {
 		compatible = "gpio-keys";
@@ -75,10 +98,12 @@
 // The CPU at 400 MHz from PLL1 on HSE, AHB at 200 MHz and APB at 100 MHz
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
-			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK4>;
-	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>;
+			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>;
+	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
+				 <0>;
+	// PLL3 R is the pixel clock of the panel
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>;
+			       <100000000>, <100000000>, <27500000>;
 };
 
 // The SMPS supplies VCORE, as the kit ships
@@ -104,6 +129,55 @@
 	dmas = <&dmamux1 41 0x400 0x10>;
 	dma-names = "rx";
 	status = "okay";
+};
+
+&ltdc {
+	status = "okay";
+
+	port {
+		ltdc_out_dsi: endpoint {
+			remote-endpoint = <&dsi_in>;
+		};
+	};
+};
+
+// The 4" 480x800 panel of the MB1166 daughterboard
+&dsi {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			dsi_in: endpoint {
+				remote-endpoint = <&ltdc_out_dsi>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			dsi_out: endpoint {
+				remote-endpoint = <&panel_in>;
+				data-lanes = <1 2>;
+			};
+		};
+	};
+
+	panel: panel@0 {
+		compatible = "orisetech,otm8009a";
+		reg = <0>;
+		reset-gpios = <&gpiog 3 GPIO_ACTIVE_LOW>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+	};
 };
 
 // The IS42S32800J on SDRAM bank 2, swapped to where the CPU caches it
