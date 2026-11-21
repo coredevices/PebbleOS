@@ -47,6 +47,10 @@ it like any other frame.
 
 ## Streaming
 
+A sensor has a single listener. Firmware services share sensors through the
+[sensing subsystem](../../subsystems/sensing.md), which is that listener and
+arbitrates the attributes below between its clients.
+
 A consumer registers a listener with `pbl_sensor_set_listener()` and sets
 the sampling interval and the batch size with `pbl_sensor_attr_set()`:
 

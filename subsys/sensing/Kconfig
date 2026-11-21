@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SENSING
+    bool "Sensing"
+    depends on SENSOR
+    help
+      Shares sensors between clients: arbitrates the sampling interval,
+      batch size and events, and buffers frames for each client at its
+      own rate.
+
+if SENSING
+
+config SENSING_SENSORS
+    int "Maximum number of sensors"
+    default 4
+    help
+      Number of sensors with clients at the same time.
+
+config SENSING_BUFFER_FRAMES
+    int "Frames buffered per sensor type"
+    default 200
+    help
+      Minimum number of frames buffered for the clients of a sensor type,
+      raised to twice the sensor's FIFO depth. The buffer is allocated
+      while a client reads the type.
+
+module = SENSING
+module-str = Sensing
+source "subsys/logging/Kconfig.template.log_level"
+
+endif
