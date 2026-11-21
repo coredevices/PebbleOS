@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32f469-qspi
+config: SPI_MEM_STM32_QSPI
+class: spi_mem
+define: PBL_SPI_MEM_STM32_QSPI_DEFINE
+args:
+  - name: true
+  - reg: qspi
+  - clock: 0
+  - pinctrl: default
+  - prop: spi-max-frequency
+    child: 0
