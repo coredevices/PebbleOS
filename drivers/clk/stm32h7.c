@@ -25,9 +25,9 @@ static_assert(STM32H7_CLK_HSE_CK == HSE_CK && STM32H7_CLK_LSE_CK == LSE_CK &&
               STM32H7_CLK_LSI_CK == LSI_CK);
 static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_CK &&
               STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_QUADSPI_CK == QUADSPI_CK &&
-              STM32H7_CLK_RNG_CK == RNG_CK && STM32H7_CLK_DMA1_CK == DMA1_CK &&
-              STM32H7_CLK_DMA2_CK == DMA2_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
-              STM32H7_CLK_USART1_CK == USART1_CK);
+              STM32H7_CLK_FMC_CK == FMC_CK && STM32H7_CLK_RNG_CK == RNG_CK &&
+              STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK &&
+              STM32H7_CLK_SYSCFG_CK == SYSCFG_CK && STM32H7_CLK_USART1_CK == USART1_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
@@ -87,6 +87,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOK_CK] = GATE(AHB4ENR, 10, HCLK),
   [STM32H7_CLK_DMA1_CK] = GATE(AHB1ENR, 0, HCLK),
   [STM32H7_CLK_DMA2_CK] = GATE(AHB1ENR, 1, HCLK),
+  [STM32H7_CLK_FMC_CK] = GATE(AHB3ENR, 12, HCLK),
   [STM32H7_CLK_QUADSPI_CK] = GATE(AHB3ENR, 14, HCLK),
   [STM32H7_CLK_RNG_CK] = GATE(AHB2ENR, 6, RC48_CK),
   [STM32H7_CLK_TIM5_CK] = GATE(APB1LENR, 3, PCLK1),
@@ -309,6 +310,17 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           return 0;
         case RCC_D2CCIP2R_USARTSEL_LSE:
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        default:
+          return -ENOTSUP;
+      }
+    case STM32H7_CLK_FMC_CK:
+      switch (PBL_FIELD_GET(RCC_D1CCIPR_FMCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D1CCIPR_OFFSET))) {
+        case RCC_D1CCIPR_FMCSEL_HCLK:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HCLK);
+          return 0;
+        case RCC_D1CCIPR_FMCSEL_PLL1_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_Q);
           return 0;
         default:
           return -ENOTSUP;

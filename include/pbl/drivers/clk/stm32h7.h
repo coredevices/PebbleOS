@@ -84,6 +84,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_DMA1_CK 65
 /** DMA2 clock. */
 #define STM32H7_CLK_DMA2_CK 64
+/** FMC kernel clock. */
+#define STM32H7_CLK_FMC_CK 122
 /** QUADSPI kernel clock. */
 #define STM32H7_CLK_QUADSPI_CK 121
 /** RNG kernel clock. */
