@@ -52,6 +52,39 @@
 			clocks = <&rcc TIM5_CK>;
 		};
 
+		lptimer1: timer@40002400 {
+			compatible = "st,stm32-lptimer";
+			reg = <0x40002400 0x400>;
+			interrupts = <93>;
+			clocks = <&rcc LPTIM1_CK>;
+			clock-names = "mux";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+
+			pwm {
+				compatible = "st,stm32-pwm-lp";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
+
+			trigger@0 {
+				compatible = "st,stm32-lptimer-trigger";
+				reg = <0>;
+				status = "disabled";
+			};
+
+			counter {
+				compatible = "st,stm32-lptimer-counter";
+				status = "disabled";
+			};
+
+			timer {
+				compatible = "st,stm32-lptimer-timer";
+				status = "disabled";
+			};
+		};
+
 		usart2: serial@40004400 {
 			compatible = "st,stm32h7-uart";
 			reg = <0x40004400 0x400>;
