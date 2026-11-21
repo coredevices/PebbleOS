@@ -15,6 +15,7 @@ i18n/catalog.md
 input/events.md
 loader/image.md
 logging/levels.md
+pp/gatt.md
 profiler/nodes.md
 shell/commands.md
 task_wdt/stall.md
