@@ -4,6 +4,7 @@
 config SERVICE_ECOMPASS
     bool "E-compass"
     default y if MAG
+    select SENSING
     help
       Electronic compass service. Requires a magnetometer driver (CONFIG_MAG).
 

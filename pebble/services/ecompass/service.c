@@ -6,11 +6,12 @@
 #include <pbl/kernel/syscall.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/sensing/sensing.h>
+#include <pbl/services/accel_manager_types.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
 #include <pbl/util/trig.h>
 
-#include <applib/accel_service.h>
 #include <applib/compass_service.h>
 #include <syscall/syscall.h>
 
@@ -26,6 +27,10 @@ PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 
 #define ECOMPASS_SAMPLING_INTERVAL_US       200000U
 #define ECOMPASS_CALIB_SAMPLING_INTERVAL_US 50000U
+
+// Tilt compensation input: accelerometer at 25 Hz, filtered 5 samples at a time
+#define ECOMPASS_ACCEL_INTERVAL_US 40000U
+#define ECOMPASS_ACCEL_BATCH       5U
 
 #define VALID_CORR_MARKER       0x5644
 #define BITS_PER_CORRECTION_VAL 16
@@ -63,9 +68,11 @@ static uint8_t s_compass_subscribers_count = 0;
 static bool s_compass_subscribers[NumPebbleTask] = {};
 
 //////////////////////////////////////////////////////////////////////////////////
-// Accel service state variables
+// Sensor clients
 
-static AccelServiceState *s_accel_session = nullptr;
+static struct pbl_sensing_client s_mag_client;
+static struct pbl_sensing_client s_accel_client;
+
 static bool s_charger_plugged = false;
 static AccelRawData s_accel_data = {};
 
@@ -141,17 +148,13 @@ static void prv_calibration_time_expired_cb(struct pbl_work *work) {
       "Calibration time expired, complete, or app exit, "
       "dropping back to low frequency");
 
-  if (pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
-                          &(int32_t){ECOMPASS_SAMPLING_INTERVAL_US}) != 0) {
-    PBL_LOG_WRN("Could not drop back to low frequency");
-  }
+  pbl_sensing_client_set_interval(&s_mag_client, ECOMPASS_SAMPLING_INTERVAL_US);
 
   s_high_freq_calib_active = false;
   pbl_wallclock_work_stop(&s_cb_info);
 }
 
-static void prv_accel_for_compass_handler(AccelRawData *d, uint32_t num_samples,
-                                          uint64_t timestamp) {
+static void prv_accel_for_compass_handler(const AccelRawData *d, uint32_t num_samples) {
   int32_t x = 0, y = 0, z = 0;
 
   // 1st order butterworth filter with a cutoff freq of 0.02Fs
@@ -192,10 +195,8 @@ static void prv_compass_data_service_stop(PebbleTask task) {
         prv_calibration_time_expired_cb(nullptr);
         s_calib_run = false;
       }
-      accel_session_data_unsubscribe(s_accel_session);
-      accel_session_delete(s_accel_session);
-      s_accel_session = nullptr;
-      (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){0});
+      pbl_sensing_client_remove(&s_accel_client);
+      pbl_sensing_client_remove(&s_mag_client);
     }
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
@@ -206,14 +207,13 @@ static void prv_compass_data_service_start(PebbleTask task) {
   s_compass_subscribers[task] = true;
   if (++s_compass_subscribers_count == 1) {
     // If this is the first subscriber to the compass service, start sampling
-    PBL_ASSERTN(s_accel_session == nullptr);
-
-    s_accel_session = accel_session_create();
-    accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
-                                     prv_accel_for_compass_handler);
-
-    (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
-                              &(int32_t){ECOMPASS_SAMPLING_INTERVAL_US});
+    s_mag_client.interval_us = ECOMPASS_SAMPLING_INTERVAL_US;
+    if (pbl_sensing_client_add(&s_mag_client) == 0) {
+      pbl_sensing_arm(&s_mag_client, 1U);
+    }
+    if (pbl_sensing_client_add(&s_accel_client) == 0) {
+      pbl_sensing_arm(&s_accel_client, ECOMPASS_ACCEL_BATCH);
+    }
   }
   PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
@@ -225,27 +225,50 @@ static void prv_post_event_work(void *data) {
   event_put(&e);
 }
 
-static void prv_mag_batch_cb(const struct pbl_sensor *sensor, const struct pbl_sensor_batch *batch,
-                             void *user_data) {
+static bool prv_mag_notify(struct pbl_sensing_client *client) {
   int32_t nt[3];
+  bool got = false;
 
-  if (pbl_sensor_decode(sensor, batch, PBL_SENSOR_MAGN, batch->num_frames - 1U, 1U, nt) < 0) {
-    return;
+  while (pbl_sensing_read(client, nt, 1U, nullptr) == 1U) {
+    got = true;
   }
 
-  s_mag_sample = (MagData){
-    .x = (int16_t)(nt[0] / 100),
-    .y = (int16_t)(nt[1] / 100),
-    .z = (int16_t)(nt[2] / 100),
-  };
+  if (got) {
+    s_mag_sample = (MagData){
+      .x = (int16_t)(nt[0] / 100),
+      .y = (int16_t)(nt[1] / 100),
+      .z = (int16_t)(nt[2] / 100),
+    };
 
-  // event_put() may block on KernelMain, which takes the device lock: post outside of it
-  pbl_sys_work_call_high(prv_post_event_work, nullptr);
+    // event_put() may block on KernelMain, which takes the device lock: post outside of it
+    pbl_sys_work_call_high(prv_post_event_work, nullptr);
+  }
+
+  pbl_sensing_arm(client, 1U);
+
+  return true;
 }
 
-static const struct pbl_sensor_listener s_mag_listener = {
-  .batch = prv_mag_batch_cb,
-};
+static bool prv_accel_notify(struct pbl_sensing_client *client) {
+  int32_t ug[ECOMPASS_ACCEL_BATCH][3];
+  AccelRawData d[ECOMPASS_ACCEL_BATCH];
+  uint16_t n;
+
+  while ((n = pbl_sensing_read(client, &ug[0][0], ECOMPASS_ACCEL_BATCH, nullptr)) > 0U) {
+    for (uint16_t i = 0U; i < n; i++) {
+      d[i] = (AccelRawData){
+        .x = (int16_t)(ug[i][0] / 1000),
+        .y = (int16_t)(ug[i][1] / 1000),
+        .z = (int16_t)(ug[i][2] / 1000),
+      };
+    }
+    prv_accel_for_compass_handler(d, n);
+  }
+
+  pbl_sensing_arm(client, ECOMPASS_ACCEL_BATCH);
+
+  return true;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -268,7 +291,19 @@ void ecompass_service_init(void) {
   s_service_init = true;
   pbl_wallclock_work_init(&s_cb_info, prv_calibration_time_expired_cb);
 
-  pbl_sensor_set_listener(MAG, &s_mag_listener);
+  s_mag_client = (struct pbl_sensing_client){
+    .sensor = MAG,
+    .type = PBL_SENSOR_MAGN,
+    .batch = 1U,
+    .notify = prv_mag_notify,
+  };
+  s_accel_client = (struct pbl_sensing_client){
+    .sensor = ACCEL,
+    .type = PBL_SENSOR_ACCEL,
+    .interval_us = ECOMPASS_ACCEL_INTERVAL_US,
+    .batch = ECOMPASS_ACCEL_BATCH,
+    .notify = prv_accel_notify,
+  };
 
   event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
                      &prv_compass_data_service_stop);
@@ -303,8 +338,7 @@ void ecompass_service_handle(void) {
     // for a short duration in order to finish calibration more quickly
     if (!s_calib_run) {
       ecomp_corr_reset();
-      (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL,
-                                &(int32_t){ECOMPASS_CALIB_SAMPLING_INTERVAL_US});
+      pbl_sensing_client_set_interval(&s_mag_client, ECOMPASS_CALIB_SAMPLING_INTERVAL_US);
       pbl_wallclock_work_start(&pbl_sys_workq_high, &s_cb_info, 60,
                                ECOMPASS_CALIBRATION_FAST_MINUTES);
       s_calib_run = true;

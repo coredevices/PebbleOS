@@ -98,3 +98,6 @@ pbl_sensing_arm(&s_client, 5U);
   callback to the subscriber's task, and one for shake and double tap
   events. The subscriber formats, the vibe flag and the sensitivity
   preference stay there.
+- The e-compass (`pebble/services/ecompass/`) has a magnetometer client,
+  whose rate rises during calibration, and an accelerometer client for tilt
+  compensation.
