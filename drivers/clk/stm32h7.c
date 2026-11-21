@@ -40,6 +40,7 @@ static_assert(STM32H7_CLK_ADC3_CK == ADC3_CK);
 static_assert(STM32H7_CLK_RTC_CK == RTC_CK && STM32H7_CLK_RTCAPB_CK == RTCAPB_CK);
 static_assert(STM32H7_CLK_USB1OTG_CK == USB1OTG_CK && STM32H7_CLK_USB1ULPI_CK == USB1ULPI_CK);
 static_assert(STM32H7_CLK_HSEM_CK == HSEM_CK && STM32H7_CLK_WWDG2_CK == WWDG2_CK);
+static_assert(STM32H7_CLK_FMC_CK == FMC_CK);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
 
 // The system clock goes to PLL1 P once PLL1 starts
@@ -112,6 +113,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_USB1ULPI_CK] = GATE(AHB1ENR, 26, HCLK),
   [STM32H7_CLK_HSEM_CK] = GATE(AHB4ENR, 25, HCLK),
   [STM32H7_CLK_WWDG2_CK] = GATE(APB1LENR, 11, PCLK1),
+  [STM32H7_CLK_FMC_CK] = GATE(AHB3ENR, 12, HCLK),
   [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
   [STM32H7_CLK_LPTIM2_CK] = GATE_AUTONOMOUS(APB4ENR, 9, PCLK4, 9),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
@@ -420,6 +422,17 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           return 0;
         case RCC_D2CCIP2R_USARTSEL_LSE:
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        default:
+          return -ENOTSUP;
+      }
+    case STM32H7_CLK_FMC_CK:
+      switch (PBL_FIELD_GET(RCC_D1CCIPR_FMCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D1CCIPR_OFFSET))) {
+        case RCC_D1CCIPR_FMCSEL_HCLK:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HCLK);
+          return 0;
+        case RCC_D1CCIPR_FMCSEL_PLL1_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_Q);
           return 0;
         default:
           return -ENOTSUP;
