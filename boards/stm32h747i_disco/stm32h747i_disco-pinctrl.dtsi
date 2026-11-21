@@ -17,6 +17,71 @@
 		};
 	};
 
+	// The SDRAM on bank 2 of the FMC
+	fmc_default: fmc-0 {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 0, AF12)>, /* FMC_A0 */
+				 <STM32_PINMUX('F', 1, AF12)>, /* FMC_A1 */
+				 <STM32_PINMUX('F', 2, AF12)>, /* FMC_A2 */
+				 <STM32_PINMUX('F', 3, AF12)>, /* FMC_A3 */
+				 <STM32_PINMUX('F', 4, AF12)>, /* FMC_A4 */
+				 <STM32_PINMUX('F', 5, AF12)>, /* FMC_A5 */
+				 <STM32_PINMUX('F', 12, AF12)>, /* FMC_A6 */
+				 <STM32_PINMUX('F', 13, AF12)>, /* FMC_A7 */
+				 <STM32_PINMUX('F', 14, AF12)>, /* FMC_A8 */
+				 <STM32_PINMUX('F', 15, AF12)>, /* FMC_A9 */
+				 <STM32_PINMUX('G', 0, AF12)>, /* FMC_A10 */
+				 <STM32_PINMUX('G', 1, AF12)>, /* FMC_A11 */
+				 <STM32_PINMUX('G', 4, AF12)>, /* FMC_BA0 */
+				 <STM32_PINMUX('G', 5, AF12)>, /* FMC_BA1 */
+				 <STM32_PINMUX('D', 14, AF12)>, /* FMC_D0 */
+				 <STM32_PINMUX('D', 15, AF12)>, /* FMC_D1 */
+				 <STM32_PINMUX('D', 0, AF12)>, /* FMC_D2 */
+				 <STM32_PINMUX('D', 1, AF12)>, /* FMC_D3 */
+				 <STM32_PINMUX('E', 7, AF12)>, /* FMC_D4 */
+				 <STM32_PINMUX('E', 8, AF12)>, /* FMC_D5 */
+				 <STM32_PINMUX('E', 9, AF12)>, /* FMC_D6 */
+				 <STM32_PINMUX('E', 10, AF12)>, /* FMC_D7 */
+				 <STM32_PINMUX('E', 11, AF12)>, /* FMC_D8 */
+				 <STM32_PINMUX('E', 12, AF12)>, /* FMC_D9 */
+				 <STM32_PINMUX('E', 13, AF12)>, /* FMC_D10 */
+				 <STM32_PINMUX('E', 14, AF12)>, /* FMC_D11 */
+				 <STM32_PINMUX('E', 15, AF12)>, /* FMC_D12 */
+				 <STM32_PINMUX('D', 8, AF12)>, /* FMC_D13 */
+				 <STM32_PINMUX('D', 9, AF12)>, /* FMC_D14 */
+				 <STM32_PINMUX('D', 10, AF12)>, /* FMC_D15 */
+				 <STM32_PINMUX('H', 8, AF12)>, /* FMC_D16 */
+				 <STM32_PINMUX('H', 9, AF12)>, /* FMC_D17 */
+				 <STM32_PINMUX('H', 10, AF12)>, /* FMC_D18 */
+				 <STM32_PINMUX('H', 11, AF12)>, /* FMC_D19 */
+				 <STM32_PINMUX('H', 12, AF12)>, /* FMC_D20 */
+				 <STM32_PINMUX('H', 13, AF12)>, /* FMC_D21 */
+				 <STM32_PINMUX('H', 14, AF12)>, /* FMC_D22 */
+				 <STM32_PINMUX('H', 15, AF12)>, /* FMC_D23 */
+				 <STM32_PINMUX('I', 0, AF12)>, /* FMC_D24 */
+				 <STM32_PINMUX('I', 1, AF12)>, /* FMC_D25 */
+				 <STM32_PINMUX('I', 2, AF12)>, /* FMC_D26 */
+				 <STM32_PINMUX('I', 3, AF12)>, /* FMC_D27 */
+				 <STM32_PINMUX('I', 6, AF12)>, /* FMC_D28 */
+				 <STM32_PINMUX('I', 7, AF12)>, /* FMC_D29 */
+				 <STM32_PINMUX('I', 9, AF12)>, /* FMC_D30 */
+				 <STM32_PINMUX('I', 10, AF12)>, /* FMC_D31 */
+				 <STM32_PINMUX('E', 0, AF12)>, /* FMC_NBL0 */
+				 <STM32_PINMUX('E', 1, AF12)>, /* FMC_NBL1 */
+				 <STM32_PINMUX('I', 4, AF12)>, /* FMC_NBL2 */
+				 <STM32_PINMUX('I', 5, AF12)>, /* FMC_NBL3 */
+				 <STM32_PINMUX('G', 8, AF12)>, /* FMC_SDCLK */
+				 <STM32_PINMUX('H', 5, AF12)>, /* FMC_SDNWE */
+				 <STM32_PINMUX('F', 11, AF12)>, /* FMC_SDNRAS */
+				 <STM32_PINMUX('G', 15, AF12)>, /* FMC_SDNCAS */
+				 <STM32_PINMUX('H', 7, AF12)>, /* FMC_SDCKE1 */
+				 <STM32_PINMUX('H', 6, AF12)>; /* FMC_SDNE1 */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+	};
+
 	// Bank 1 of the dual quad-SPI NOR flash
 	qspi_default: qspi-0 {
 		pins1 {

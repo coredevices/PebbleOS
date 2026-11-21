@@ -11,7 +11,8 @@
 
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
 PebbleOS runs the samples on its Cortex-M7: the console, the kernel and its
-system timer, the LEDs, the joystick and the quad-SPI NOR flash work so far.
+system timer, the LEDs, the joystick, the quad-SPI NOR flash, the SDRAM, the
+random number generator, the watchdog and DMA work so far.
 
 ## Hardware
 
@@ -20,6 +21,9 @@ system timer, the LEDs, the joystick and the quad-SPI NOR flash work so far.
   the image in flash bank 2
 - **Memory**: 2 MiB embedded flash in two banks of 1 MiB, the Cortex-M7
   booting from bank 1, and 512 KiB AXI SRAM, which PebbleOS runs from
+- **External RAM**: 32 MiB ISSI IS42S32800J SDRAM, 32 bits wide, on FMC SDRAM
+  bank 2 at 100 MHz, swapped to 0x70000000, where the CPU caches it; it is
+  the `extram`
 - **External flash**: two 64 MiB Micron MT25QL512ABB quad-SPI NOR flashes on
   the QUADSPI banks; PebbleOS uses the one on bank 1 as its `flash`, with
   quad I/O at 50 MHz
@@ -29,7 +33,9 @@ system timer, the LEDs, the joystick and the quad-SPI NOR flash work so far.
   Cortex-M7 at 400 MHz from HSE, with the AHB at 200 MHz and the APB buses at
   100 MHz
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
-  COM port on USART1, PA9 (TX) and PA10 (RX)
+  COM port on USART1, PA9 (TX) and PA10 (RX), received through DMA
+- **Other**: the RNG, from HSI48, and the independent watchdog, from LSI,
+  which firmware with `CONFIG_WATCHDOG` starts
 
 ## Buttons and LEDs
 
