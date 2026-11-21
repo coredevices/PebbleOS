@@ -553,6 +553,7 @@ with these options:
 | `cells` | The width of the rows of a `prop` table, 1 by default |
 | `all` | Every entry of a `gpio` list |
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
+| `from: <property>` | Read from the enabled node that points at this one with this phandle property, e.g. the `simple-framebuffer` that names a display controller as its `display` |
 | `entry` | Which phandle of an `of` property listing several, 0 by default, e.g. the DMA controllers of `dma-masters` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller, or from a descendant by a path of names, e.g. `panel/panel-timing`; a name without a unit address also finds a child that has one, e.g. `sdram` for `sdram@70000000` |
 | `remote: <port>` | Read from the device connected to a port |
@@ -756,8 +757,8 @@ framebuffer of a display too large for the heap:
 
 The driver takes its base and size with `reg` and `size` read `of:
 memory-region`, and with `memory: memory-region` the RAM the region is in,
-when that is a device, as a PSRAM in the window of its controller, so that it
-can keep it powered. A region in a RAM whose driver is not enabled fails the
+when that is a device, as a PSRAM in the window of its controller or an SDRAM
+under its controller, so that it can keep it powered. A region in a RAM whose driver is not enabled fails the
 build. Every region also becomes `devicetree/reserved_memory.h`,
 whose `PBL_DT_RESERVED_MEMORY_FOREACH(fn)` calls `fn(base, size)` for each:
 the scratch heap leaves those in the external RAM out.

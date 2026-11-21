@@ -2538,6 +2538,83 @@ def test_entry_of_a_phandle_list(tmp_path):
         dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
 
 
+def test_from_the_node_pointing_here(tmp_path):
+    classes = {
+        **CLASSES,
+        "ram": {
+            "class": "ram",
+            "type": "struct ram",
+            "include": "ram.h",
+            "provides": {"ram": "&{sym}"},
+        },
+        "disp": {"class": "disp", "type": "struct disp", "include": "disp.h"},
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        fb_mem: framebuffer@70000000 {
+            reg = <0x70000000 0x1000>;
+        };
+    };
+    framebuffer {
+        compatible = "simple-framebuffer";
+        memory-region = <&fb_mem>;
+        width = <32>;
+        display = <&lcd>;
+    };
+    fmc: memc@1000 {
+        compatible = "acme,memc";
+        reg = <0x1000 0x100>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        sdram@70000000 {
+            reg = <0x70000000 0x100000>;
+        };
+    };
+    lcd: lcd@2000 {
+        compatible = "acme,lcd";
+        reg = <0x2000 0x100>;
+    };
+};
+"""
+    specs = {
+        "acme,memc": {
+            "compatible": "acme,memc",
+            "config": "MEMC",
+            "class": "ram",
+            "define": "MEMC",
+        },
+        "acme,lcd": {
+            "compatible": "acme,lcd",
+            "config": "LCD",
+            "class": "disp",
+            "define": "LCD",
+            "args": [
+                {"prop": "width", "from": "display"},
+                {"reg": 0, "from": "display", "of": "memory-region"},
+                {"memory": "memory-region", "from": "display"},
+                {"prop": "height", "from": "display", "default": 0},
+            ],
+        },
+    }
+    path, dtb = tmp_path / "fb.dts", tmp_path / "fb.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {"MEMC", "LCD"})
+    gen.run()
+    assert "LCD(dt_lcd, 32, 0x70000000, &dt_fmc, 0);" in body(gen)
+
+
 REGS_DTS = """/dts-v1/;
 / {
     #address-cells = <1>;
