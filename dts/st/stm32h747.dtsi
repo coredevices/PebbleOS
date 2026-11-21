@@ -40,3 +40,7 @@
 &rcc {
 	st,syscfg = <&pwr>;
 };
+
+&rtc {
+	st,syscfg = <&pwr 0x00 0x100>;
+};
