@@ -45,7 +45,8 @@ random number generator, the watchdog, DMA, the display and the DMA2D work so fa
 - **Low power**: with `CONFIG_CPU_IDLE`, the Cortex-M7 idles in Stop mode,
   its D1 domain stopped and the SDRAM in self-refresh, unless the console
   receives, the display is on or the DMA2D draws; the whole system only
-  stops, the HSE and the PLLs with it, when the Cortex-M4 is stopped too
+  stops, the HSE and the PLLs with it, when the Cortex-M4 is gated too, see
+  [](#stm32h747i-disco-flashing)
 
 ## Buttons and LEDs
 
@@ -57,6 +58,8 @@ random number generator, the watchdog, DMA, the display and the DMA2D work so fa
 Joystick right (PK5) and the User button (PC13) are not described: a watch
 has four buttons.
 
+(stm32h747i-disco-flashing)=
+
 ## Flashing
 
 The board is flashed with the `openocd` runner, through the ST-LINK. Give the
@@ -66,5 +69,13 @@ OpenOCD configuration connects under reset, so the probe reaches the core
 whatever the firmware leaves it doing. It also keeps OpenOCD from setting up
 the quad-SPI flash, which would leave the flash in a mode PebbleOS does not
 expect.
+
+PebbleOS does not use the Cortex-M4, which keeps the whole system out of Stop
+mode while it runs. Clear its boot option bit, BCM4, once:
+
+```shell
+openocd -s boards/stm32h747i_disco/support -f openocd.cfg \
+  -c "init; reset halt; stm32h7x option_write 0 0x20 0 0x00400000; shutdown"
+```
 
 The console runs at 1 Mbaud, on the ST-LINK virtual COM port.
