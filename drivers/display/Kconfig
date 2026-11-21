@@ -77,6 +77,13 @@ config DISPLAY_STM32_LTDC
       Support for the STM32 LCD-TFT display controller, scanning a
       framebuffer to a panel.
 
+config DISPLAY_STM32_LTDC_IRQ_PRIO
+    int "Interrupt priority"
+    default 12
+    depends on DISPLAY_STM32_LTDC
+    help
+      Priority of the controller interrupt.
+
 config DISPLAY_SHARP_LS013B7DH01
     bool "Sharp LS013B7DH01"
     default y

@@ -21,6 +21,10 @@ static const struct pbl_display_stm32_ltdc *prv_ltdc(const struct pbl_display *d
   return PBL_CONTAINER_OF(disp, const struct pbl_display_stm32_ltdc, disp);
 }
 
+static inline uint32_t prv_getreg(const struct pbl_display_stm32_ltdc *ltdc, uint32_t offset) {
+  return pbl_readl(ltdc->base + offset);
+}
+
 static inline void prv_putreg(const struct pbl_display_stm32_ltdc *ltdc, uint32_t offset,
                               uint32_t value) {
   pbl_writel(value, ltdc->base + offset);
@@ -99,12 +103,14 @@ static int prv_init(const struct pbl_display *disp) {
     return ret;
   }
 
+  ltdc->state->scanout = disp->framebuffer;
   prv_timing(ltdc, t);
   prv_layer(ltdc, t);
   prv_putreg(ltdc, STM32_LTDC_SRCR_OFFSET, LTDC_SRCR_IMR);
 
   // The DSI host takes the data enable inverted, and active high syncs
   prv_putreg(ltdc, STM32_LTDC_GCR_OFFSET, LTDC_GCR_HSPOL | LTDC_GCR_VSPOL | LTDC_GCR_LTDCEN);
+  pbl_irq_enable(ltdc->irq);
 
   ret = pbl_device_init(&panel->dev);
   if (ret != 0) {
@@ -162,22 +168,53 @@ static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
   return rotated ? -ENOTSUP : 0;
 }
 
+// Rows of another buffer are copied into the frame scanned out
 static int prv_update(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
                       uint16_t y0, uint16_t y1) {
+  uint8_t *scanout = prv_ltdc(disp)->state->scanout;
   uint32_t pitch = (uint32_t)disp->props.width * BYTES_PER_PIXEL;
-  uint8_t *rows = disp->framebuffer + (size_t)y0 * pitch;
-  size_t len = (size_t)(y1 - y0 + 1U) * pitch;
 
-  if (buf->data != disp->framebuffer) {
+  if (buf->data != scanout) {
     for (uint32_t y = y0; y <= y1; y++) {
-      memcpy(disp->framebuffer + (size_t)y * pitch, buf->data + (size_t)y * buf->pitch, pitch);
+      memcpy(scanout + (size_t)y * pitch, buf->data + (size_t)y * buf->pitch, pitch);
     }
   }
 
-  pbl_dcache_flush_range(rows, len);
+  pbl_dcache_flush_range(scanout + (size_t)y0 * pitch, (size_t)(y1 - y0 + 1U) * pitch);
   pbl_display_complete(disp, 0);
 
   return 0;
+}
+
+// The new address is taken in the vertical blanking, where the reload interrupt says it is shown
+static int prv_flip(const struct pbl_display *disp, const struct pbl_display_buffer *buf) {
+  const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
+
+  if (buf->pitch != (uint32_t)disp->props.width * BYTES_PER_PIXEL) {
+    return -EINVAL;
+  }
+
+  // A whole frame is more than the data cache holds
+  pbl_dcache_flush_all();
+
+  ltdc->state->next = buf->data;
+  prv_putreg(ltdc, STM32_LTDC_L1CFBAR_OFFSET, (uint32_t)(uintptr_t)buf->data);
+  prv_putreg(ltdc, STM32_LTDC_ICR_OFFSET, LTDC_IRQ_RR);
+  prv_putreg(ltdc, STM32_LTDC_IER_OFFSET, LTDC_IRQ_RR);
+  prv_putreg(ltdc, STM32_LTDC_SRCR_OFFSET, LTDC_SRCR_VBR);
+
+  return 0;
+}
+
+void pbl_display_stm32_ltdc_irq_handler(const struct pbl_display_stm32_ltdc *ltdc) {
+  if ((prv_getreg(ltdc, STM32_LTDC_ISR_OFFSET) & LTDC_IRQ_RR) == 0U) {
+    return;
+  }
+
+  prv_putreg(ltdc, STM32_LTDC_ICR_OFFSET, LTDC_IRQ_RR);
+  prv_putreg(ltdc, STM32_LTDC_IER_OFFSET, 0U);
+  ltdc->state->scanout = ltdc->state->next;
+  pbl_display_complete(&ltdc->disp, 0);
 }
 
 const struct pbl_display_ops pbl_display_stm32_ltdc_ops = {
@@ -186,6 +223,7 @@ const struct pbl_display_ops pbl_display_stm32_ltdc_ops = {
   .disable = prv_disable,
   .set_rotated = prv_set_rotated,
   .update = prv_update,
+  .flip = prv_flip,
 };
 
 #include PBL_DT_INSTANCES(st_stm32_ltdc)

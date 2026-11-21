@@ -9,6 +9,7 @@
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/display.h>
 #include <pbl/drivers/panel.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_display_stm32_ltdc STM32 LTDC
@@ -26,6 +27,8 @@
 /** @cond INTERNAL_HIDDEN */
 struct pbl_display_stm32_ltdc_state {
   bool enabled;
+  uint8_t *scanout;
+  uint8_t *next;
 };
 /** @endcond */
 
@@ -37,6 +40,8 @@ struct pbl_display_stm32_ltdc {
   struct pbl_display_stm32_ltdc_state *state;
   /** Registers. */
   uintptr_t base;
+  /** Interrupt. */
+  pbl_irq_t irq;
   /** Pixel clock. */
   struct pbl_clk clk;
   /** Panel. */
@@ -45,6 +50,7 @@ struct pbl_display_stm32_ltdc {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_display_ops pbl_display_stm32_ltdc_ops;
+void pbl_display_stm32_ltdc_irq_handler(const struct pbl_display_stm32_ltdc *ltdc);
 /** @endcond */
 
 /**
@@ -53,6 +59,7 @@ extern const struct pbl_display_ops pbl_display_stm32_ltdc_ops;
  * @param sym Symbol of the display.
  * @param _name Name.
  * @param _base Registers.
+ * @param _irq Interrupt.
  * @param _clk Pixel clock, from PBL_CLK().
  * @param _panel Panel.
  * @param _width Width of the framebuffer, in pixels.
@@ -62,14 +69,20 @@ extern const struct pbl_display_ops pbl_display_stm32_ltdc_ops;
  * @param _fb_size Its size, in bytes.
  * @param _fb_ram RAM device the framebuffer is in, or NULL.
  */
-#define PBL_DISPLAY_STM32_LTDC_DEFINE(sym, _name, _base, _clk, _panel, _width, _height, _format,   \
-                                      _fb, _fb_size, _fb_ram)                                      \
+#define PBL_DISPLAY_STM32_LTDC_DEFINE(sym, _name, _base, _irq, _clk, _panel, _width, _height,      \
+                                      _format, _fb, _fb_size, _fb_ram)                             \
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
   static struct pbl_display_stm32_ltdc_state sym##_ltdc_state;                                     \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_display_stm32_ltdc, struct pbl_display, disp) {              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_display_stm32_ltdc, struct pbl_display, disp){               \
     .disp = PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, nullptr, &pbl_display_stm32_ltdc_ops, _width, \
                                          _height, _format, false, _fb, _fb_size, _fb_ram),         \
-    .state = &sym##_ltdc_state, .base = (_base), .clk = _clk, .panel = (_panel),                   \
-  }
+    .state = &sym##_ltdc_state,                                                                    \
+    .base = (_base),                                                                               \
+    .irq = (_irq),                                                                                 \
+    .clk = _clk,                                                                                   \
+    .panel = (_panel),                                                                             \
+  };                                                                                               \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_DISPLAY_STM32_LTDC_IRQ_PRIO,                                    \
+                      pbl_display_stm32_ltdc_irq_handler, &sym##_inst, 0)
 
 /** @} */
