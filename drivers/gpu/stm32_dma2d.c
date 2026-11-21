@@ -6,9 +6,11 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/gpu/stm32_dma2d.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
+#include <pbl/soc/st/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
@@ -162,6 +164,8 @@ static int prv_run(const struct pbl_gpu_stm32_dma2d *dma2d, uint32_t mode) {
 static int prv_begin(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_gpu_buffer *dst,
                      const struct pbl_gpu_rect *rect, const struct pbl_gpu_buffer *src,
                      const struct pbl_gpu_rect *src_rect) {
+  int ret;
+
   if (!prv_aligned(dst) || (src != nullptr && !prv_aligned(src)) || rect->width > DMA2D_PL_MAX) {
     return -ENOTSUP;
   }
@@ -171,12 +175,21 @@ static int prv_begin(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_g
     prv_cache(src, src_rect, false);
   }
 
-  return pbl_clk_enable(&dma2d->clk);
+  // The job may be waited for in idle, where Stop would stop it
+  pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+
+  ret = pbl_clk_enable(&dma2d->clk);
+  if (ret != 0) {
+    pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+  }
+
+  return ret;
 }
 
 static void prv_end(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_gpu_buffer *dst,
                     const struct pbl_gpu_rect *rect) {
   (void)pbl_clk_disable(&dma2d->clk);
+  pbl_idle_state_release(SOC_STM32_IDLE_STOP);
   prv_cache(dst, rect, true);
 }
 
