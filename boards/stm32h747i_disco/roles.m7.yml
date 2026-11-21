@@ -3,3 +3,4 @@
 
 console_uart: usart1
 status_led: led_green
+flash: flash0
