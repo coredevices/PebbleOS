@@ -25,6 +25,7 @@
 #define USART_CR1_TE     PBL_BIT(3)
 #define USART_CR1_IDLEIE PBL_BIT(4)
 #define USART_CR1_RXNEIE PBL_BIT(5)
+#define USART_CR1_TCIE   PBL_BIT(6)
 #define USART_CR1_PS     PBL_BIT(9)
 #define USART_CR1_PCE    PBL_BIT(10)
 #define USART_CR1_M0     PBL_BIT(12)
