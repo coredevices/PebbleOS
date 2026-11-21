@@ -1,0 +1,41 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+#define STM32_RTC_TR_OFFSET   0x0000
+#define STM32_RTC_DR_OFFSET   0x0004
+#define STM32_RTC_CR_OFFSET   0x0008
+#define STM32_RTC_ISR_OFFSET  0x000c
+#define STM32_RTC_PRER_OFFSET 0x0010
+#define STM32_RTC_WPR_OFFSET  0x0024
+
+#define RTC_TR_SU_MASK  PBL_GENMASK(3, 0)
+#define RTC_TR_ST_MASK  PBL_GENMASK(6, 4)
+#define RTC_TR_MNU_MASK PBL_GENMASK(11, 8)
+#define RTC_TR_MNT_MASK PBL_GENMASK(14, 12)
+#define RTC_TR_HU_MASK  PBL_GENMASK(19, 16)
+#define RTC_TR_HT_MASK  PBL_GENMASK(21, 20)
+
+#define RTC_DR_DU_MASK  PBL_GENMASK(3, 0)
+#define RTC_DR_DT_MASK  PBL_GENMASK(5, 4)
+#define RTC_DR_MU_MASK  PBL_GENMASK(11, 8)
+#define RTC_DR_MT       PBL_BIT(12)
+#define RTC_DR_WDU_MASK PBL_GENMASK(15, 13)
+#define RTC_DR_YU_MASK  PBL_GENMASK(19, 16)
+#define RTC_DR_YT_MASK  PBL_GENMASK(23, 20)
+
+#define RTC_CR_BYPSHAD PBL_BIT(5)
+#define RTC_CR_FMT     PBL_BIT(6)
+
+#define RTC_ISR_INITF PBL_BIT(6)
+#define RTC_ISR_INIT  PBL_BIT(7)
+
+#define RTC_PRER_PREDIV_S_MASK PBL_GENMASK(14, 0)
+#define RTC_PRER_PREDIV_A_MASK PBL_GENMASK(22, 16)
+
+#define RTC_WPR_KEY1 0xcaU
+#define RTC_WPR_KEY2 0x53U
+#define RTC_WPR_LOCK 0xffU

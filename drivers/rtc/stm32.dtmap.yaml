@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-rtc
+config: RTC_STM32
+class: rtc
+symbol: pbl_rtc_stm32
+define: PBL_RTC_STM32_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: pclk
+  - clock: rtc_ck
