@@ -5,6 +5,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/uart/stm32.h>
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
@@ -13,6 +14,7 @@
 #include <hardware/stm32h7_usart.h>
 
 #define ICR_ERRORS (USART_ICR_PECF | USART_ICR_FECF | USART_ICR_NECF | USART_ICR_ORECF)
+#define ISR_ERRORS (USART_ISR_PE | USART_ISR_FE | USART_ISR_NE | USART_ISR_ORE)
 
 static const struct pbl_uart_stm32 *prv_stm32(const struct pbl_uart *uart) {
   return PBL_CONTAINER_OF(uart, const struct pbl_uart_stm32, uart);
@@ -75,9 +77,30 @@ static int prv_init(const struct pbl_uart *uart) {
   const struct pbl_uart_stm32 *usart = prv_stm32(uart);
   int ret;
 
+  if ((usart->rx_dma != nullptr) != (usart->rx_buf != nullptr)) {
+    return -EINVAL;
+  }
+
   ret = prv_early_init(uart);
   if (ret != 0) {
     return ret;
+  }
+
+  if (usart->rx_dma != nullptr) {
+    const struct pbl_dma_slave_config cfg = {
+      .src_addr = prv_reg(usart, STM32H7_USART_RDR_OFFSET),
+      .src_addr_width = PBL_DMA_SLAVE_BUSWIDTH_1_BYTE,
+    };
+
+    ret = pbl_device_init(&usart->rx_dma->ctrl->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_dma_slave_config(usart->rx_dma, &cfg);
+    if (ret != 0) {
+      return ret;
+    }
   }
 
   pbl_irq_enable(usart->irq);
@@ -152,12 +175,63 @@ static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
   usart->state->tx_pending = true;
 }
 
+// Hands over what the DMA wrote since the last drain
+static void prv_dma_drain(const struct pbl_uart_stm32 *usart) {
+  struct pbl_uart_stm32_state *state = usart->state;
+  size_t residue;
+  uint32_t head;
+
+  pbl_irq_lock();
+
+  if (!usart->uart.state->rx_enabled || pbl_dma_tx_status(usart->rx_dma, &residue) != 0) {
+    pbl_irq_unlock();
+    return;
+  }
+
+  head = (PBL_UART_STM32_RX_BUF_SIZE - residue) % PBL_UART_STM32_RX_BUF_SIZE;
+  pbl_dcache_invalidate_range(usart->rx_buf, PBL_UART_STM32_RX_BUF_SIZE);
+
+  while (state->rx_pos != head) {
+    uint8_t c = usart->rx_buf[state->rx_pos];
+
+    state->rx_pos = (state->rx_pos + 1U) % PBL_UART_STM32_RX_BUF_SIZE;
+    if (!pbl_uart_receive(&usart->uart, c)) {
+      break;
+    }
+  }
+
+  pbl_irq_unlock();
+}
+
+static void prv_dma_callback(void *arg, int status) {
+  prv_dma_drain(arg);
+}
+
 static int prv_rx_enable(const struct pbl_uart *uart) {
   const struct pbl_uart_stm32 *usart = prv_stm32(uart);
+  uint32_t cr1 = USART_CR1_RXNEIE;
+  int ret;
 
   prv_putreg(usart, STM32H7_USART_RQR_OFFSET, USART_RQR_RXFRQ);
-  prv_putreg(usart, STM32H7_USART_ICR_OFFSET, ICR_ERRORS);
-  pbl_modifyl(0U, USART_CR1_RXNEIE, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
+  prv_putreg(usart, STM32H7_USART_ICR_OFFSET, ICR_ERRORS | USART_ICR_IDLECF);
+
+  if (usart->rx_dma != nullptr) {
+    // The buffer is invalidated whole, so it must not share cache lines with anything else
+    pbl_dcache_flush_invalidate_range(usart->rx_buf, PBL_UART_STM32_RX_BUF_SIZE);
+    usart->state->rx_pos = 0U;
+
+    ret = pbl_dma_prep_dma_cyclic(usart->rx_dma, usart->rx_buf, PBL_UART_STM32_RX_BUF_SIZE,
+                                  PBL_UART_STM32_RX_BUF_SIZE / 2U, PBL_DMA_DEV_TO_MEM,
+                                  prv_dma_callback, (void *)usart);
+    if (ret != 0) {
+      return ret;
+    }
+
+    pbl_modifyl(0U, USART_CR3_DMAR, prv_reg(usart, STM32H7_USART_CR3_OFFSET));
+    cr1 = USART_CR1_IDLEIE;
+  }
+
+  pbl_modifyl(0U, cr1, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
 
   return 0;
 }
@@ -165,18 +239,29 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
 static void prv_rx_disable(const struct pbl_uart *uart) {
   const struct pbl_uart_stm32 *usart = prv_stm32(uart);
 
-  pbl_modifyl(USART_CR1_RXNEIE, 0U, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
+  pbl_modifyl(USART_CR1_RXNEIE | USART_CR1_IDLEIE, 0U, prv_reg(usart, STM32H7_USART_CR1_OFFSET));
+
+  if (usart->rx_dma != nullptr) {
+    (void)pbl_dma_terminate(usart->rx_dma);
+    pbl_modifyl(USART_CR3_DMAR, 0U, prv_reg(usart, STM32H7_USART_CR3_OFFSET));
+  }
 }
 
 void pbl_uart_stm32_irq_handler(const struct pbl_uart_stm32 *usart) {
   uint32_t isr = prv_getreg(usart, STM32H7_USART_ISR_OFFSET);
+  uint32_t cr1 = prv_getreg(usart, STM32H7_USART_CR1_OFFSET);
 
-  if ((prv_getreg(usart, STM32H7_USART_CR1_OFFSET) & USART_CR1_RXNEIE) == 0U) {
+  if ((cr1 & USART_CR1_IDLEIE) != 0U && (isr & USART_ISR_IDLE) != 0U) {
+    prv_putreg(usart, STM32H7_USART_ICR_OFFSET, ICR_ERRORS | USART_ICR_IDLECF);
+    prv_dma_drain(usart);
+  }
+
+  if ((cr1 & USART_CR1_RXNEIE) == 0U) {
     return;
   }
 
   // An overrun keeps the interrupt pending until cleared
-  if ((isr & (USART_ISR_PE | USART_ISR_FE | USART_ISR_NE | USART_ISR_ORE)) != 0U) {
+  if ((isr & ISR_ERRORS) != 0U) {
     prv_putreg(usart, STM32H7_USART_ICR_OFFSET, ICR_ERRORS);
   }
 
