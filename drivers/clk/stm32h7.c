@@ -29,7 +29,8 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
               STM32H7_CLK_LTDC_CK == LTDC_CK && STM32H7_CLK_RNG_CK == RNG_CK &&
               STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK &&
               STM32H7_CLK_DMA2D_CK == DMA2D_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
-              STM32H7_CLK_USART1_CK == USART1_CK && STM32H7_CLK_LPTIM1_CK == LPTIM1_CK);
+              STM32H7_CLK_USART1_CK == USART1_CK && STM32H7_CLK_LPTIM1_CK == LPTIM1_CK &&
+              STM32H7_CLK_I2C4_CK == I2C4_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -100,6 +101,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_TIM5_CK] = GATE(APB1LENR, 3, PCLK1),
   [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
+  [STM32H7_CLK_I2C4_CK] = GATE(APB4ENR, 7, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
 };
 
@@ -350,6 +352,22 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           return 0;
         default:
           return -ENOTSUP;
+      }
+    case STM32H7_CLK_I2C4_CK:
+      switch (
+          PBL_FIELD_GET(RCC_D3CCIPR_I2C4SEL_MASK, prv_getreg(rcc, STM32H7_RCC_D3CCIPR_OFFSET))) {
+        case RCC_D3CCIPR_I2C4SEL_PCLK:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PCLK4);
+          return 0;
+        case RCC_D3CCIPR_I2C4SEL_PLL3R:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL3_R);
+          return 0;
+        case RCC_D3CCIPR_I2C4SEL_HSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HSI_CK);
+          return 0;
+        default:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_CSI_CK);
+          return 0;
       }
     case STM32H7_CLK_LPTIM1_CK:
       switch (PBL_FIELD_GET(RCC_D2CCIP2R_LPTIM1SEL_MASK,
