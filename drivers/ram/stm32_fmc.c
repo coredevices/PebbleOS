@@ -55,6 +55,36 @@ static int prv_cmd(const struct pbl_ram_stm32_fmc *fmc, uint32_t ctb, uint32_t m
   return 0;
 }
 
+// SDRAM bank 1 or 2, from where the CPU sees it
+static uint32_t prv_bank(const struct pbl_ram_stm32_fmc *fmc) {
+  uint32_t region = (uint32_t)(fmc->addr >> 28);
+
+  return (region == 0x7U || region == 0xdU) ? 1U : 0U;
+}
+
+// Issues a mode command to the bank and waits for the bank to be in that mode
+static void prv_set_mode(const struct pbl_ram_stm32_fmc *fmc, uint32_t cmd, uint32_t modes) {
+  uint32_t bank = prv_bank(fmc);
+  uint32_t mask = bank == 0U ? FMC_SDSR_MODES1_MASK : FMC_SDSR_MODES2_MASK;
+
+  if (prv_cmd(fmc, bank == 0U ? FMC_SDCMR_CTB1 : FMC_SDCMR_CTB2, cmd, 0U, 0U) != 0) {
+    return;
+  }
+
+  (void)PBL_POLL_BUSY_US(
+      PBL_FIELD_GET(mask, pbl_readl(fmc->base + STM32H7_FMC_SDSR_OFFSET)) == modes, 1U,
+      CMD_TIMEOUT_US);
+}
+
+// The SDRAM refreshes itself while the FMC clock is stopped
+static void prv_retain(const struct pbl_ram *ram) {
+  prv_set_mode(prv_fmc(ram), FMC_SDCMR_MODE_SELF_REF, FMC_SDSR_MODES_SELF_REF);
+}
+
+static void prv_resume(const struct pbl_ram *ram) {
+  prv_set_mode(prv_fmc(ram), FMC_SDCMR_MODE_NORMAL, FMC_SDSR_MODES_NORMAL);
+}
+
 // The FMC fields of a timing hold one less than the cycles, from 1 to 16
 static uint32_t prv_timing(uint32_t cycles, uint32_t mask) {
   return PBL_FIELD_PREP(mask, PBL_MAX(cycles, 1U) - 1U);
@@ -121,7 +151,7 @@ static int prv_init(const struct pbl_ram *ram) {
   const struct pbl_ram_sdram_part *part = fmc->part;
   uint32_t region = (uint32_t)(fmc->addr >> 28);
   bool swap = region == 0x6U || region == 0x7U;
-  uint32_t bank = (region == 0x7U || region == 0xdU) ? 1U : 0U;
+  uint32_t bank = prv_bank(fmc);
   uint64_t rate_mhz;
   uint32_t ker_hz;
   uint32_t sd_hz;
@@ -210,6 +240,8 @@ static int prv_init(const struct pbl_ram *ram) {
 
 const struct pbl_ram_ops pbl_ram_stm32_fmc_ops = {
   .init = prv_init,
+  .retain = prv_retain,
+  .resume = prv_resume,
 };
 
 #include PBL_DT_INSTANCES(st_stm32h7_fmc)
