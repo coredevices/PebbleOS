@@ -3,6 +3,19 @@
 
 #include "pebble.dtsi"
 
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m4";
+			device_type = "cpu";
+			reg = <0>;
+		};
+	};
+};
+
 &nvic {
 	compatible = "arm,v7m-nvic";
 };
