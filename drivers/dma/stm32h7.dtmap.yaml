@@ -1,0 +1,64 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-dmamux
+config: DMA_STM32H7
+class: dma
+define: PBL_DMA_STM32H7_DEFINE
+# The request line is the channel; bit 4 of the features, the alternative acknowledge of the
+# USARTs, is the bufferable transfer bit of the stream configuration, bit 20
+provides:
+  dma: "PBL_DMA_CHAN(&{sym}, {0}, {0}, ({1}) | ((({2}) & 0x10U) << 16))"
+args:
+  - name: true
+  - reg: 0
+  - reg: 0
+    of: dma-masters
+  - reg: 0
+    of: dma-masters
+    entry: 1
+  - clock: 0
+    of: dma-masters
+  - clock: 0
+    of: dma-masters
+    entry: 1
+  - irq: 0
+    of: dma-masters
+  - irq: 1
+    of: dma-masters
+  - irq: 2
+    of: dma-masters
+  - irq: 3
+    of: dma-masters
+  - irq: 4
+    of: dma-masters
+  - irq: 5
+    of: dma-masters
+  - irq: 6
+    of: dma-masters
+  - irq: 7
+    of: dma-masters
+  - irq: 0
+    of: dma-masters
+    entry: 1
+  - irq: 1
+    of: dma-masters
+    entry: 1
+  - irq: 2
+    of: dma-masters
+    entry: 1
+  - irq: 3
+    of: dma-masters
+    entry: 1
+  - irq: 4
+    of: dma-masters
+    entry: 1
+  - irq: 5
+    of: dma-masters
+    entry: 1
+  - irq: 6
+    of: dma-masters
+    entry: 1
+  - irq: 7
+    of: dma-masters
+    entry: 1
