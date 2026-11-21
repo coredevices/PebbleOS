@@ -1176,6 +1176,16 @@ def test_reg_sizes_and_child_properties(tmp_path):
     assert "MEM_DEFINE(dt_mem, 0x2000, 0x80000000, 0x2000000, 8000000);" in body(gen)
 
 
+def test_child_by_its_name_without_unit_address(tmp_path):
+    arg = LIST_SPECS["acme,mem"]["args"][3]
+    arg["child"] = "flash"
+    try:
+        gen = list_generate(tmp_path)
+    finally:
+        arg["child"] = 0
+    assert "MEM_DEFINE(dt_mem, 0x2000, 0x80000000, 0x2000000, 8000000);" in body(gen)
+
+
 def test_children_become_a_list(tmp_path):
     gen = list_generate(tmp_path)
     assert (
