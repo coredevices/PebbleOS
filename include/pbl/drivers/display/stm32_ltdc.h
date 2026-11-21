@@ -23,10 +23,18 @@
  * @{
  */
 
+/** @cond INTERNAL_HIDDEN */
+struct pbl_display_stm32_ltdc_state {
+  bool enabled;
+};
+/** @endcond */
+
 /** @brief LTDC. */
 struct pbl_display_stm32_ltdc {
   /** Display. */
   struct pbl_display disp;
+  /** Driver runtime state. */
+  struct pbl_display_stm32_ltdc_state *state;
   /** Registers. */
   uintptr_t base;
   /** Pixel clock. */
@@ -57,10 +65,11 @@ extern const struct pbl_display_ops pbl_display_stm32_ltdc_ops;
 #define PBL_DISPLAY_STM32_LTDC_DEFINE(sym, _name, _base, _clk, _panel, _width, _height, _format,   \
                                       _fb, _fb_size, _fb_ram)                                      \
   PBL_DISPLAY_STATE_DEFINE(sym);                                                                   \
+  static struct pbl_display_stm32_ltdc_state sym##_ltdc_state;                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_stm32_ltdc, struct pbl_display, disp) {              \
     .disp = PBL_DISPLAY_INIT_FRAMEBUFFER(sym, _name, nullptr, &pbl_display_stm32_ltdc_ops, _width, \
                                          _height, _format, false, _fb, _fb_size, _fb_ram),         \
-    .base = (_base), .clk = _clk, .panel = (_panel),                                               \
+    .state = &sym##_ltdc_state, .base = (_base), .clk = _clk, .panel = (_panel),                   \
   }
 
 /** @} */

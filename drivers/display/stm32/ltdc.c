@@ -7,7 +7,9 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/display/stm32_ltdc.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/st/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -73,6 +75,8 @@ static void prv_layer(const struct pbl_display_stm32_ltdc *ltdc, const struct pb
   prv_putreg(ltdc, STM32_LTDC_L1CR_OFFSET, LTDC_LCR_LEN);
 }
 
+static int prv_enable(const struct pbl_display *disp);
+
 static int prv_init(const struct pbl_display *disp) {
   const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
   const struct pbl_panel *panel = ltdc->panel;
@@ -112,15 +116,46 @@ static int prv_init(const struct pbl_display *disp) {
     return ret;
   }
 
-  return pbl_panel_enable(panel);
+  return prv_enable(disp);
 }
 
+// The controller scans the frame while the panel shows it, which Stop would stop
 static int prv_enable(const struct pbl_display *disp) {
-  return pbl_panel_enable(prv_ltdc(disp)->panel);
+  const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
+  int ret;
+
+  if (ltdc->state->enabled) {
+    return 0;
+  }
+
+  ret = pbl_panel_enable(ltdc->panel);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+  ltdc->state->enabled = true;
+
+  return 0;
 }
 
 static int prv_disable(const struct pbl_display *disp) {
-  return pbl_panel_disable(prv_ltdc(disp)->panel);
+  const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
+  int ret;
+
+  if (!ltdc->state->enabled) {
+    return 0;
+  }
+
+  ret = pbl_panel_disable(ltdc->panel);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+  ltdc->state->enabled = false;
+
+  return 0;
 }
 
 static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
