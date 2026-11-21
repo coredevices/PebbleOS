@@ -107,6 +107,7 @@ ARG_OPTIONS = {
     "field",
     "of",
     "entry",
+    "from",
     "child",
     "index",
     "item",
@@ -920,9 +921,10 @@ class Generator:
         return f"{self._translate(dev, self._reg_entry(dev, key)[0]):#x}"
 
     def _memory(self, dev, region):
-        """The RAM a memory region is in: the node, or a child of the node, one of whose reg
-        entries holds the region, as the PSRAM in the window of its controller. None when the
-        region is in memory that is no device, as the RAM of the SoC."""
+        """The RAM a memory region is in: the node, a child of the node, or the controller of the
+        node, one of whose reg entries holds the region, as the PSRAM in the window of its
+        controller, or the SDRAM at its address under its controller. None when the region is in
+        memory that is no device, as the RAM of the SoC."""
         src = Device(region, [])
         base, size = self._reg_entry(src, 0)
         base = self._translate(src, base)
@@ -941,7 +943,8 @@ class Generator:
                     continue
                 if not (start <= base and base + size <= start + length):
                     continue
-                for ram in (node, *node.children):
+                parent = (node.parent,) if node.parent is not None else ()
+                for ram in (node, *node.children, *parent):
                     if enabled(ram) and any(
                         "ram" in spec.classes for spec in self._device(ram).specs
                     ):
@@ -1122,6 +1125,22 @@ class Generator:
             )
         return target
 
+    def _referrer(self, dev, prop):
+        """The enabled node whose phandle property points at this one, as the simple-framebuffer
+        naming a display controller as its display."""
+        phandle = dev.node.u32("phandle") if dev.node.has("phandle") else None
+        found = [
+            n
+            for n in self.tree.nodes()
+            if phandle is not None
+            and n.has(prop)
+            and enabled(n)
+            and n.u32s(prop)[0] == phandle
+        ]
+        if len(found) > 1:
+            raise dev.error(f"several nodes refer to it with '{prop}'")
+        return found[0] if found else None
+
     def _consumers(self, dev, prop, cell):
         """One more than the highest specifier cell that enabled nodes give this one in prop."""
         cells_prop = CONSUMER_CELLS[prop]
@@ -1143,6 +1162,11 @@ class Generator:
             # from the device it is part of, as the regulator of a PMIC
             dev = Device(dev.owner.node if dev.owner else dev.node.parent, [])
         node = dev.node
+        if "from" in arg:
+            # The node pointing at this one, as the simple-framebuffer of a display controller
+            node = self._referrer(dev, arg["from"])
+            if node is None:
+                return None
         if "remote" in arg:
             node = self._remote(dev, arg["remote"])
             if node is None:
