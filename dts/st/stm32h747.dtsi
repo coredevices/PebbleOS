@@ -5,6 +5,28 @@
 #include "stm32h7.dtsi"
 
 / {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m7";
+			device_type = "cpu";
+			reg = <0>;
+			cpu-idle-states = <&stop>;
+		};
+
+		idle-states {
+			// Stop, the time back mostly the HSE crystal starting
+			stop: cpu-sleep-0 {
+				compatible = "arm,idle-state";
+				entry-latency-us = <50>;
+				exit-latency-us = <2000>;
+				min-residency-us = <10000>;
+			};
+		};
+	};
+
 	soc {
 		pwr: power-config@58024800 {
 			compatible = "st,stm32h747-pwr";
