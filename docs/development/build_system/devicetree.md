@@ -688,6 +688,22 @@ layout has every partition. The image is linked at `CONFIG_FLASH_OFFSET`,
 for `CONFIG_FW_FLASH_SIZE` bytes, which default to the `code` partition. An
 application that runs from another partition sets them from its label.
 
+Kconfig reads other nodes by label the same way, so that the common symbols
+code can also set by hand default to the tree when it has the node:
+
+- `$(dt_has_nodelabel,LABEL)`: `y` if a node has the label;
+- `$(dt_nodelabel_reg_addr,LABEL[,INDEX])` and
+  `$(dt_nodelabel_reg_size,LABEL[,INDEX])`: address and size of its `reg`
+  entry, the first one by default, the address translated through the `ranges`
+  above;
+- `$(dt_memory_free_addr,LABEL)` and `$(dt_memory_free_size,LABEL)`: the
+  largest span of a memory node no enabled `/reserved-memory` region covers.
+
+`CONFIG_SRAM_BASE` and `CONFIG_SRAM_SIZE`, the RAM the firmware lays out,
+default to the free part of the `sram0` memory node. RAM set aside for
+another use, as retained RAM or memory shared with another core, is a
+`/reserved-memory` region, which its users name by label.
+
 (devicetree-regs)=
 
 (devicetree-idle-states)=
@@ -771,10 +787,11 @@ config: SOC_SF32LB52
 labels: [hpsys_rcc, pmuc]
 ```
 
-When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` for the
-first `reg` entry of each, translated through the `ranges` above as for
-instances. A label may also name another entry, as `{label: flash0, reg: mem}`,
-which gives `PBL_DT_REG_FLASH0_MEM` for the entry of that name in `reg-names`.
+When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` and
+`PBL_DT_SIZE_<LABEL>` for the first `reg` entry of each, translated through the
+`ranges` above as for instances. A label may also name another entry, as
+`{label: flash0, reg: mem}`, which gives `PBL_DT_REG_FLASH0_MEM` and
+`PBL_DT_SIZE_FLASH0_MEM` for the entry of that name in `reg-names`.
 The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
