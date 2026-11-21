@@ -42,6 +42,10 @@ random number generator, the watchdog, DMA, the display and the DMA2D work so fa
   COM port on USART1, PA9 (TX) and PA10 (RX), received through DMA
 - **Other**: the RNG, from HSI48, and the independent watchdog, from LSI,
   which firmware with `CONFIG_WATCHDOG` starts
+- **Low power**: with `CONFIG_CPU_IDLE`, the Cortex-M7 idles in Stop mode,
+  its D1 domain stopped and the SDRAM in self-refresh, unless the console
+  receives, the display is on or the DMA2D draws; the whole system only
+  stops, the HSE and the PLLs with it, when the Cortex-M4 is stopped too
 
 ## Buttons and LEDs
 
