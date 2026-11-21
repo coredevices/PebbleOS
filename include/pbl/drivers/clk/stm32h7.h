@@ -100,6 +100,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_SYSCFG_CK 111
 /** RNG kernel clock. */
 #define STM32H7_CLK_RNG_CK 127
+/** QUADSPI kernel clock. */
+#define STM32H7_CLK_QUADSPI_CK 121
 /** USART1 kernel clock. */
 #define STM32H7_CLK_USART1_CK 156
 /** UART8 kernel clock. */
