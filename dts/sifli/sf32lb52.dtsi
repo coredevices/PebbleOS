@@ -34,6 +34,11 @@
 		};
 	};
 
+	sram0: memory@20000000 {
+		device_type = "memory";
+		reg = <0x20000000 0x80000>;
+	};
+
 	nvic: interrupt-controller@e000e100 {
 		compatible = "arm,v8m-nvic";
 		reg = <0xe000e100 0xc00>;
@@ -47,6 +52,13 @@
 		#size-cells = <1>;
 		ranges;
 
+		/* Buffer of HCPU to LCPU mailbox channel 2 */
+		lcpu_ipc_ch2: memory@2007fc00 {
+			reg = <0x2007fc00 0x200>;
+			no-map;
+		};
+
+		/* Buffer of HCPU to LCPU mailbox channel 1, the HCI ring */
 		lcpu_ipc: memory@2007fe00 {
 			reg = <0x2007fe00 0x200>;
 			no-map;
