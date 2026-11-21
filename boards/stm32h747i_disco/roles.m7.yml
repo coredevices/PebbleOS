@@ -11,3 +11,4 @@ extram: fmc
 display: ltdc
 touch: touchscreen
 backlight: panel
+speaker: speaker
