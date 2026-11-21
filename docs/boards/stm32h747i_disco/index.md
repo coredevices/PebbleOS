@@ -12,7 +12,7 @@
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
 PebbleOS runs the samples on its Cortex-M7: the console, the kernel and its
 system timer, the LEDs, the joystick, the quad-SPI NOR flash, the SDRAM, the
-random number generator, the watchdog, DMA and the display work so far.
+random number generator, the watchdog, DMA, the display and the DMA2D work so far.
 
 ## Hardware
 
@@ -31,6 +31,8 @@ random number generator, the watchdog, DMA and the display work so far.
   two MIPI DSI lanes at 500 Mbit/s, in video mode; the LTDC scans an RGB565
   framebuffer at the start of the SDRAM, at a 27.5 MHz pixel clock from PLL3;
   it is the `display`
+- **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
+  conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit
   ships (`st,supply-config = "direct-smps"`)
 - **Clocks**: 25 MHz HSE and 32.768 kHz LSE crystals; PLL1 runs the

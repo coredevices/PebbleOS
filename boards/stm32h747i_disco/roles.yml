@@ -6,3 +6,4 @@ status_led: led_green
 flash: flash0
 extram: fmc
 display: ltdc
+gpu: dma2d
