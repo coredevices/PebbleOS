@@ -55,6 +55,7 @@ static bool s_two_frames;
 /* Until the display says it does not flip */
 static bool s_flip = true;
 static PBL_SEM_DEFINE(s_sent, 0, 1);
+static PBL_SEM_DEFINE(s_shown, 0, 1);
 
 static uint32_t prv_tick(void) {
   return (uint32_t)pbl_uptime_ms();
@@ -102,6 +103,12 @@ static void prv_sent(int status, void *arg) {
  * the other one. */
 static void prv_flipped(int status, void *arg) {
   lv_display_flush_ready(arg);
+  pbl_sem_give(&s_shown);
+}
+
+/* LVGL sleeps until the frame flipped to is shown, instead of spinning. */
+static void prv_flush_wait(lv_display_t *disp) {
+  (void)pbl_sem_take(&s_shown, PBL_MSEC(FLUSH_WAIT_MS));
 }
 
 static void prv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
@@ -142,6 +149,7 @@ static void prv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map
     /* A display that scans the frame out shows it whole, at its next refresh. */
     if (s_two_frames && s_flip) {
       s_sending = (struct pbl_display_buffer){.data = px_map, .pitch = s_fb.pitch};
+      pbl_sem_reset(&s_shown);
       ret = pbl_display_flip(DISPLAY, &s_sending, prv_flipped, disp);
       if (ret == 0) {
         return;
@@ -248,6 +256,7 @@ static int prv_display_init(void) {
                            LV_DISPLAY_RENDER_MODE_DIRECT);
   }
   lv_display_set_flush_cb(s_disp, prv_flush);
+  lv_display_set_flush_wait_cb(s_disp, prv_flush_wait);
 
 #if LV_USE_THEME_MONO
   if (s_format == PBL_DISPLAY_FORMAT_MONO) {
