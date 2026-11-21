@@ -11,7 +11,8 @@ maintainers:
 
 description:
   Display of the QEMU Pebble machines, shown from a memory-mapped framebuffer,
-  with the backlight in the same registers.
+  with the backlight in the same registers. It emulates the display described
+  here, as the firmware gives the peripheral its size, format and round mask.
 
 properties:
   compatible:
@@ -44,8 +45,14 @@ properties:
     enum: [1, 8]
 
   qemu,round-mask:
-    type: boolean
-    description: The display is round, its corners hidden.
+    $ref: /schemas/types.yaml#/definitions/uint32-array
+    description:
+      The display is round, and these are the pixels hidden at each end of
+      every row of its top half, mirrored in the bottom half. The peripheral
+      is given them, and shows them black.
+    maxItems: 512
+    items:
+      maximum: 255
 
 required:
   - compatible
