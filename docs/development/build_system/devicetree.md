@@ -553,6 +553,7 @@ with these options:
 | `cells` | The width of the rows of a `prop` table, 1 by default |
 | `all` | Every entry of a `gpio` list |
 | `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
+| `entry` | Which phandle of an `of` property listing several, 0 by default, e.g. the DMA controllers of `dma-masters` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller, or from a descendant by a path of names, e.g. `panel/panel-timing` |
 | `remote: <port>` | Read from the device connected to a port |
 | `up: true` | Read from the parent, for a function of a block, or from the device a child of `children` is part of |
