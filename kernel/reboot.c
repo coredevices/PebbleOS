@@ -121,6 +121,7 @@ int pbl_power_cut(void) {
 
   prv_prepare(PBL_SYS_OFF_POWER_OFF_PREPARE);
   prv_run(PBL_SYS_OFF_POWER_CUT);
+  PBL_LOG_ERR("Still powered after the power cut, resetting");
   prv_reset();
 }
 

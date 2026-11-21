@@ -10,7 +10,6 @@
 #include <pbl/drivers/charger.h>
 #include <pbl/drivers/intc.h>
 #include <pbl/drivers/mfd/npm1300.h>
-#include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
 
 /**
@@ -34,8 +33,6 @@ struct pbl_charger_npm1300_config {
   uint8_t ntc_kohm;
   // Charging stops above it
   uint8_t ntc_hot_celsius;
-  // Ship mode cuts the power of the system
-  bool system_power_controller;
 };
 
 struct pbl_charger_npm1300_data {
@@ -55,8 +52,6 @@ struct pbl_charger_npm1300 {
 };
 
 extern const struct pbl_charger_ops pbl_charger_npm1300_ops;
-int pbl_charger_npm1300_power_cut_check(void *user_data);
-void pbl_charger_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data);
 /** @endcond */
 
 /**
@@ -73,14 +68,12 @@ void pbl_charger_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data);
  * @param _dischg_ua Discharge current limit, in uA: 200000 or 1000000.
  * @param _vbus_ua VBUS current limit with USB connected, in uA, 0 for the default.
  * @param _vbus_startup_ua VBUS current limit at startup, in uA, 0 for the default.
- * @param _system_power_controller Whether ship mode cuts the power of the system.
  */
 #define PBL_CHARGER_NPM1300_DEFINE(sym, _pmic, _irq, _battery, _vterm_reduced_uv, _ntc_ohms,      \
-                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua,   \
-                                   _system_power_controller)                                      \
+                                   _beta, _hot_celsius, _dischg_ua, _vbus_ua, _vbus_startup_ua)   \
   PBL_CHARGER_STATE_DEFINE(sym);                                                                  \
   static struct pbl_charger_npm1300_data sym##_data;                                              \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_charger_npm1300, struct pbl_charger, charger){              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_charger_npm1300, struct pbl_charger, charger) {             \
     .charger = PBL_CHARGER_INIT(sym, "npm1300_charger", &(_pmic)->dev, &pbl_charger_npm1300_ops), \
     .cfg =                                                                                        \
         {                                                                                         \
@@ -91,14 +84,8 @@ void pbl_charger_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data);
           .vbus_current_startup = (_vbus_startup_ua) / 1000,                                      \
           .ntc_kohm = (_ntc_ohms) / 1000,                                                         \
           .ntc_hot_celsius = (_hot_celsius),                                                      \
-          .system_power_controller = (_system_power_controller),                                  \
         },                                                                                        \
-    .battery = (_battery),                                                                        \
-    .irq = _irq,                                                                                  \
-    .data = &sym##_data,                                                                          \
-  };                                                                                              \
-  PBL_SYS_OFF_POWER_CUT_HANDLER_DEFINE(sym##_power_cut, PBL_SYS_OFF_PRIO_DEFAULT,                 \
-                                       pbl_charger_npm1300_power_cut_check,                       \
-                                       pbl_charger_npm1300_power_cut, (void *)&sym##_inst)
+    .battery = (_battery), .irq = _irq, .data = &sym##_data,                                      \
+  }
 
 /** @} */

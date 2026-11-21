@@ -8,3 +8,4 @@ define: PBL_NPM1300_DEFINE
 args:
   - parent: i2c
   - reg: 0
+  - flag: system-power-controller
