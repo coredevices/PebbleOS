@@ -53,3 +53,15 @@ int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip) {
 
   return panel->ops->set_h_flip(panel, flip);
 }
+
+int pbl_panel_set_quarter_turn(const struct pbl_panel *panel, bool turn) {
+  if (!pbl_device_is_ready(&panel->dev)) {
+    return -ENODEV;
+  }
+
+  if (panel->ops->set_quarter_turn == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return panel->ops->set_quarter_turn(panel, turn);
+}

@@ -98,6 +98,12 @@ struct pbl_panel_ops {
    * cycles. Optional. Returns 0 or a negative errno.
    */
   int (*set_h_flip)(const struct pbl_panel *panel, bool flip);
+  /**
+   * Take the frame turned a quarter turn clockwise, its rows down the columns of the panel, from
+   * the next prepare: the timing then has the active width and height of the frame. Optional.
+   * Returns 0 or a negative errno.
+   */
+  int (*set_quarter_turn)(const struct pbl_panel *panel, bool turn);
 };
 
 /** @brief A panel. */
@@ -178,5 +184,17 @@ int pbl_panel_unprepare(const struct pbl_panel *panel);
  * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
  */
 int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip);
+
+/**
+ * @brief Take the frame turned a quarter turn clockwise, from the next prepare.
+ *
+ * For a frame wider than tall on a panel taller than wide, or the other way around. The timing of
+ * the panel then has the active width and height of the frame.
+ *
+ * @param panel Panel.
+ * @param turn Turn the frame.
+ * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
+ */
+int pbl_panel_set_quarter_turn(const struct pbl_panel *panel, bool turn);
 
 /** @} */
