@@ -10,8 +10,14 @@ A transport carries sessions over a link. It implements
 | Console | `PP_TRANSPORT_CONSOLE` | Frames on the serial console | The console | 1 | yes |
 | QEMU | `PP_TRANSPORT_QEMU` | The emulator's serial link | The QEMU serial protocol | 0 | no |
 
-Each is enabled with the link it uses. The code that drives the link calls
-the transport through its header in `include/pbl/pp/transports/`.
+An application enables the ones it uses; the firmware enables each with the
+link it uses. The code that drives the link calls the transport through its
+header in `include/pbl/pp/transports/`.
+
+PPoGATT builds on the Bluetooth stack and the GATT service clients alone. The
+application tells it when the phone connects and goes, and implements two
+callbacks: the serial number sent to the phone, and the connection response
+time a session asks for. In the firmware, `pebble/comm/ble/pp_gatt.c` does.
 
 ## Contract
 

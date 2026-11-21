@@ -256,7 +256,7 @@ When the caller is the main thread, which runs `send_next`, waiting would never
 end: beginning a buffer then sends the queue right away instead.
 
 Sending may block, so it must not be done while holding a lock the
-transports take, such as `bt_lock()`.
+transports take.
 
 ## Locking
 
@@ -264,8 +264,7 @@ The session layer has one lock. It protects the session list and each
 session's send queue, flags and capabilities, and is never held while calling
 a transport, a receiver's handler or a listener.
 
-Each transport protects its own state with its own lock: `bt_lock()` for
-PPoGATT, a mutex each for the console and QEMU. It may hold that lock while
+Each transport protects its own state with its own lock, a mutex each. It may hold that lock while
 calling into the session, so the lock order is always transport, then
 session.
 

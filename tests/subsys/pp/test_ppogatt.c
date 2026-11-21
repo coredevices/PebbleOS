@@ -9,7 +9,7 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_connection.h>
+#include <host/ble_gap.h>
 #include <pp/transports/gatt/ppogatt_internal.h>
 
 // Stubs
@@ -32,26 +32,35 @@
 
 uint16_t s_mtu_size;
 
-int pbl_bt_gap_le_disconnect(const struct pbl_bt_device_internal *peer_address) {
-  return 0;
-}
+#define SERIAL_NUMBER "XXXXXXXXXXXX"
 
-uint16_t gap_le_connection_get_gatt_mtu(const struct pbl_bt_device_internal *device) {
+uint16_t ble_att_mtu(uint16_t conn_handle) {
   return s_mtu_size;
 }
 
-static GAPLEConnection s_connection;
-
-GAPLEConnection *gap_le_connection_by_device(const struct pbl_bt_device_internal *device) {
-  return nullptr;
+int ble_gap_terminate(uint16_t conn_handle, uint8_t hci_reason) {
+  return 0;
 }
 
-GAPLEConnection *gap_le_connection_by_conn_handle(uint16_t conn_handle) {
-  return &s_connection;
+int ble_gap_conn_find(uint16_t handle, struct ble_gap_conn_desc *out_desc) {
+  if (out_desc != nullptr) {
+    *out_desc = (struct ble_gap_conn_desc){.sec_state.encrypted = 1};
+  }
+  return 0;
 }
 
-bool gap_le_connection_is_valid(const GAPLEConnection *conn) {
-  return conn == &s_connection;
+const char *pbl_pp_gatt_cb_get_serial_number(void) {
+  return SERIAL_NUMBER;
+}
+
+void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted) {
+}
+
+bool pbl_pp_main_is_current(void) {
+  return true;
 }
 
 // Reversed PPoG only fires from a reversed-role client, which this test never creates.
@@ -61,7 +70,7 @@ enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_
   return PBL_BT_ERRNO_OK;
 }
 
-void launcher_task_add_callback(void (*callback)(void *data), void *data) {
+void pbl_pp_main_call(void (*callback)(void *data), void *data) {
   callback(data);
 }
 
@@ -256,7 +265,7 @@ static void prv_create_expected_reset_request(void) {
   *client_id_payload = (const PPoGATTResetRequestClientIDPayload){
     .ppogatt_version = s_ppogatt_version,
   };
-  memcpy(client_id_payload->serial_number, mfg_get_serial_number(), MFG_SERIAL_NUMBER_SIZE);
+  memcpy(client_id_payload->serial_number, SERIAL_NUMBER, PBL_PP_GATT_SERIAL_NUMBER_SIZE);
 }
 
 static void prv_create_expected_reset_complete(void) {
@@ -544,7 +553,7 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
 }
 
 static void prv_discover_system_service(void) {
-  pbl_pp_gatt_discover(s_connection.conn_handle);
+  pbl_pp_gatt_discover(0);
   prv_service_discovered(0, 0);
   prv_service_discovered(1, -ENOENT);
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
@@ -1287,7 +1296,7 @@ void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
   fake_gatt_client_subscriptions_assert_subscribe(
       s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
 
-  // The connection may be gone, which makes the gap_le_connection_get_gatt_mtu call return 0.
+  // The connection may be gone, which makes the ble_att_mtu call return 0.
   s_mtu_size = 0;
 
   // Simulate getting the subscription confirmation, this will normally trigger PPoGATT to try to

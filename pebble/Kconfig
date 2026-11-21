@@ -77,9 +77,21 @@ config LOG_HASHED
     default y
     depends on LOG && !QEMU
 
+config PP_TRANSPORT_CONSOLE
+    default y
+    depends on PP && CONSOLE
+
+config PP_TRANSPORT_GATT
+    default y
+    depends on PP && BT
+
 config PP_TRANSPORT_GATT_SYSTEM_ONLY
     default y if RECOVERY_FW
     depends on PP_TRANSPORT_GATT
+
+config PP_TRANSPORT_QEMU
+    default y
+    depends on PP && QEMU_SERIAL
 
 config SHELL
     default y
