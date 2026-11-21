@@ -4,3 +4,4 @@
 pbl_library()
 pbl_library_sources(gpu.c)
 pbl_library_sources_ifdef(CONFIG_GPU_SF32LB57_EPIC sf32lb57_epic.c)
+pbl_library_sources_ifdef(CONFIG_GPU_STM32_DMA2D stm32_dma2d.c)

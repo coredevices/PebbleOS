@@ -1,0 +1,56 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+#define STM32_DMA2D_CR_OFFSET      0x0000
+#define STM32_DMA2D_ISR_OFFSET     0x0004
+#define STM32_DMA2D_IFCR_OFFSET    0x0008
+#define STM32_DMA2D_FGMAR_OFFSET   0x000c
+#define STM32_DMA2D_FGOR_OFFSET    0x0010
+#define STM32_DMA2D_BGMAR_OFFSET   0x0014
+#define STM32_DMA2D_BGOR_OFFSET    0x0018
+#define STM32_DMA2D_FGPFCCR_OFFSET 0x001c
+#define STM32_DMA2D_FGCOLR_OFFSET  0x0020
+#define STM32_DMA2D_BGPFCCR_OFFSET 0x0024
+#define STM32_DMA2D_OPFCCR_OFFSET  0x0034
+#define STM32_DMA2D_OCOLR_OFFSET   0x0038
+#define STM32_DMA2D_OMAR_OFFSET    0x003c
+#define STM32_DMA2D_OOR_OFFSET     0x0040
+#define STM32_DMA2D_NLR_OFFSET     0x0044
+
+#define DMA2D_CR_START          PBL_BIT(0)
+#define DMA2D_CR_ABORT          PBL_BIT(2)
+#define DMA2D_CR_LOM            PBL_BIT(6)
+#define DMA2D_CR_TEIE           PBL_BIT(8)
+#define DMA2D_CR_TCIE           PBL_BIT(9)
+#define DMA2D_CR_CEIE           PBL_BIT(13)
+#define DMA2D_CR_MODE_MASK      PBL_GENMASK(18, 16)
+#define DMA2D_CR_MODE_M2M       0U
+#define DMA2D_CR_MODE_M2M_PFC   1U
+#define DMA2D_CR_MODE_M2M_BLEND 2U
+#define DMA2D_CR_MODE_R2M       3U
+#define DMA2D_CR_MODE_BLEND_FG  4U
+
+#define DMA2D_ISR_TEIF PBL_BIT(0)
+#define DMA2D_ISR_TCIF PBL_BIT(1)
+#define DMA2D_ISR_CEIF PBL_BIT(5)
+#define DMA2D_ISR_ALL  PBL_GENMASK(5, 0)
+
+// Foreground, background and output pixel format control
+#define DMA2D_PFCCR_CM_MASK     PBL_GENMASK(3, 0)
+#define DMA2D_PFCCR_AM_MASK     PBL_GENMASK(17, 16)
+#define DMA2D_PFCCR_AM_PIXEL    0U
+#define DMA2D_PFCCR_AM_REPLACE  1U
+#define DMA2D_PFCCR_AM_MULTIPLY 2U
+#define DMA2D_PFCCR_ALPHA_MASK  PBL_GENMASK(31, 24)
+
+#define DMA2D_CM_ARGB8888 0U
+#define DMA2D_CM_RGB888   1U
+#define DMA2D_CM_RGB565   2U
+#define DMA2D_CM_A8       9U
+
+#define DMA2D_NLR_NL_MASK PBL_GENMASK(15, 0)
+#define DMA2D_NLR_PL_MASK PBL_GENMASK(29, 16)
