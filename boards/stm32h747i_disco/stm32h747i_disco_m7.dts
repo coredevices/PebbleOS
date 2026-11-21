@@ -82,6 +82,10 @@
 	status = "okay";
 };
 
+&iwdg {
+	status = "okay";
+};
+
 &rng {
 	status = "okay";
 };
