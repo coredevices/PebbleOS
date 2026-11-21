@@ -21,10 +21,12 @@ allOf:
 
 properties:
   compatible:
-    enum:
-      - sifli,sf32lb52-dmac
-      - sifli,sf32lb57-dmac
-      - sifli,sf32lb57-gpdma
+    oneOf:
+      - const: sifli,sf32lb52-dmac
+      - items:
+          - const: sifli,sf32lb57-dmac
+          - const: sifli,sf32lb52-dmac
+      - const: sifli,sf32lb57-gpdma
 
   reg:
     maxItems: 1
