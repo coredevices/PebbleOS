@@ -37,6 +37,10 @@ DMA2D work so far.
   `backlight`
 - **Touch**: the FocalTech FT6206 of the MB1166 module, on I2C4 (PD12 and
   PD13) at 400 kHz, its interrupt on PK7; it is the `touch`
+- **Audio**: the Cirrus Logic WM8994 codec, on I2C4, plays to the headphone
+  jack from SAI1 block A, the master of their I2S link, with its master
+  clock at 256 times the rate from PLL2 at 73.75 MHz; it is the `speaker`.
+  The digital microphone, on SAI4 as PDM, is not supported yet
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
   conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit

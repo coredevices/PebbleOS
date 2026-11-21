@@ -74,6 +74,38 @@
 		};
 	};
 
+	// The supplies of the audio codec, from the kit's regulators
+	v1v8: regulator-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "v1v8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+
+	v3v3: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "v3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	// The headphone output of the codec, on the audio jack
+	speaker: sound-speaker {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "speaker";
+		simple-audio-card,format = "i2s";
+
+		simple-audio-card,cpu {
+			sound-dai = <&sai1a>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&codec>;
+		};
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -107,13 +139,13 @@
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>,
-			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc PLL2_P>, <&rcc SAI1_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>;
+				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>;
 	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 and the RTC count the LSE
-	// crystal
+	// crystal, and SAI1 divides PLL2 P to 256 times the audio rates within 0.03%
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <42000000>, <0>, <0>;
+			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>;
 };
 
 // The SMPS supplies VCORE, as the kit ships
@@ -203,7 +235,7 @@
 	};
 };
 
-// The capacitive touch controller of the MB1166 module
+// The capacitive touch controller of the MB1166 module, and the audio codec
 &i2c4 {
 	pinctrl-0 = <&i2c4_default>;
 	pinctrl-names = "default";
@@ -222,6 +254,17 @@
 		// Portrait, its axes turned with the frame
 		touchscreen-inverted-x;
 		touchscreen-swapped-x-y;
+	};
+
+	codec: audio-codec@1a {
+		compatible = "wlf,wm8994";
+		reg = <0x1a>;
+		#sound-dai-cells = <0>;
+		AVDD2-supply = <&v1v8>;
+		CPVDD-supply = <&v1v8>;
+		DBVDD-supply = <&v3v3>;
+		SPKVDD1-supply = <&v3v3>;
+		SPKVDD2-supply = <&v3v3>;
 	};
 };
 
@@ -261,6 +304,18 @@
 };
 
 &rtc {
+	status = "okay";
+};
+
+&sai1 {
+	status = "okay";
+};
+
+// The master of the link to the codec
+&sai1a {
+	pinctrl-0 = <&sai1a_default>;
+	pinctrl-names = "default";
+	dma-names = "tx";
 	status = "okay";
 };
 
