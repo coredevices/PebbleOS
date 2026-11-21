@@ -82,6 +82,10 @@
 	status = "okay";
 };
 
+&rng {
+	status = "okay";
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";
