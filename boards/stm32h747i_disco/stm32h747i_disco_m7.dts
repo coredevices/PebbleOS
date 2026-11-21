@@ -167,6 +167,31 @@
 	status = "okay";
 };
 
+// The IS42S32800G-6 on SDRAM bank 2, swapped to where the CPU caches it
+&fmc {
+	pinctrl-0 = <&fmc_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	sdram: sdram@70000000 {
+		compatible = "issi,is42s32800g", "jedec,sdr-sdram";
+		reg = <0x70000000 0x2000000>;
+		io-width = <32>;
+		banks = <4>;
+		row-bits = <12>;
+		col-bits = <9>;
+		tRC = <60000>;
+		tRAS-min = <42000>;
+		tRP = <18000>;
+		tRCD = <18000>;
+		tWR = <12000>;
+		tMRD = <12000>;
+		tXSR = <70000>;
+		tREF-ms = <64>;
+		cas-latency-freqs = <2 100000000>, <3 166000000>;
+	};
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";
