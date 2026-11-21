@@ -28,7 +28,7 @@ sequenceDiagram
   loop while the link is up
     D->>T: received bytes
     T->>S: pbl_pp_session_receive()
-    S-->>T: send_next(session), on KernelMain
+    S-->>T: send_next(session), on the main thread
     T->>S: pbl_pp_session_send_queue_length() / _copy() / _peek()
     T->>D: send
     D->>T: delivered

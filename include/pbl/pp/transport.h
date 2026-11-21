@@ -27,16 +27,6 @@
  * @{
  */
 
-/** @brief Whose traffic a session carries. */
-enum pbl_pp_destination : uint8_t {
-  /** Only the system, i.e. the Pebble mobile app. */
-  PBL_PP_DESTINATION_SYSTEM,
-  /** Only one phone app, e.g. a third party app using PebbleKit iOS. */
-  PBL_PP_DESTINATION_APP,
-  /** Both the system and PebbleKit apps, e.g. the Pebble Android app. */
-  PBL_PP_DESTINATION_HYBRID,
-};
-
 /** @brief A transport. Statically allocated by each transport. */
 struct pbl_pp_transport {
   /** Name, for logs. */
@@ -57,8 +47,8 @@ struct pbl_pp_transport {
   /**
    * @brief Send queued data. Mandatory.
    *
-   * Called on KernelMain after pbl_pp_session_send_next(), or on the task blocked in
-   * pbl_pp_send_buffer_begin() if that is KernelMain. Must cope with an empty send queue.
+   * Called on the main thread after pbl_pp_session_send_next(), or on the thread blocked in
+   * pbl_pp_send_buffer_begin() if that is the main thread. Must cope with an empty send queue.
    *
    * @param session Session with data to send.
    */

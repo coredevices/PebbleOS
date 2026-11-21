@@ -3,6 +3,7 @@
 
 pbl_clar_test(test_session
   SOURCES
+    pebble/comm/pp.c
     subsys/pp/session.c
     subsys/pp/send_queue.c
   INCLUDES subsys/pp
@@ -41,7 +42,6 @@ pbl_clar_test(test_send_buffer
 pbl_clar_test(test_version
   SOURCES
     subsys/pp/version.c
-    tests/fakes/fake_events.c
   INCLUDES subsys/pp
   DEFINES
     CONFIG_PP_LOG_LEVEL=0

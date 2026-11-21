@@ -28,8 +28,8 @@
  * @endcode
  *
  * The handler runs on SysWorkq once the whole message has arrived, with a copy of the payload on
- * the kernel heap. PBL_PP_ENDPOINT_DEFINE_MAIN() runs it on KernelMain instead, for handlers whose
- * events must stay ordered with the session events. Endpoints that need their own buffering
+ * the kernel heap. PBL_PP_ENDPOINT_DEFINE_MAIN() runs it on the main thread instead, for handlers
+ * whose events must stay ordered with the session events. Endpoints that need their own buffering
  * provide a @ref pbl_pp_receiver_api with PBL_PP_ENDPOINT_DEFINE_RECEIVER().
  * @{
  */
@@ -53,7 +53,7 @@ enum pbl_pp_access : uint8_t {
 enum pbl_pp_handler_task : uint8_t {
   /** SysWorkq. */
   PBL_PP_HANDLER_BG,
-  /** KernelMain. */
+  /** The main thread, see pbl_pp_main_call(). */
   PBL_PP_HANDLER_MAIN,
 };
 
@@ -169,7 +169,7 @@ struct pbl_pp_endpoint {
   PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, NULL, PBL_PP_HANDLER_BG)
 
 /**
- * @brief Define an endpoint whose handler runs on KernelMain.
+ * @brief Define an endpoint whose handler runs on the main thread, see pbl_pp_main_call().
  *
  * @param _id Endpoint ID, one of the PBL_PP_ENDPOINT_ macros.
  * @param _access Senders allowed to use the endpoint, a @ref pbl_pp_access.
