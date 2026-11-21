@@ -1,0 +1,3 @@
+description: A peripheral that opens a Pebble protocol session with a phone app over PPoGATT and answers its pings
+expect:
+  - 'pp_gatt: advertising as PebbleOS'
