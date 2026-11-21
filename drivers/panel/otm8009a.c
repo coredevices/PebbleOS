@@ -449,18 +449,22 @@ static const uint8_t s_wake[] = {
   W1(PBL_MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 };
 
-// Portrait; a frame turned a quarter turn has the active width and height exchanged
+// Portrait; a frame turned a quarter turn has the active width and height exchanged. The
+// controller only writes frames to the frame memory, with the shortest blanking
 static const struct pbl_panel_timing s_timing = {
-  .clock_hz = 27500000U,
+  .clock_hz = 42000000U,
   .hactive = 480U,
-  .hsync_len = 2U,
-  .hback_porch = 34U,
-  .hfront_porch = 34U,
+  .hsync_len = 1U,
+  .hback_porch = 1U,
+  .hfront_porch = 1U,
   .vactive = 800U,
   .vsync_len = 1U,
-  .vback_porch = 15U,
-  .vfront_porch = 16U,
+  .vback_porch = 1U,
+  .vfront_porch = 1U,
 };
+
+// Where the scan is far enough for the left half of a turned frame to be written ahead of it
+#define TEAR_SCANLINE ((s_timing.vactive * 2U) / 3U)
 
 static const struct pbl_panel_otm8009a *prv_otm(const struct pbl_panel *panel) {
   return PBL_CONTAINER_OF(panel, const struct pbl_panel_otm8009a, panel);
@@ -479,7 +483,7 @@ static int prv_run(const struct pbl_panel_otm8009a *otm, const uint8_t *seq, siz
       continue;
     }
 
-    ret = pbl_mipi_dsi_dcs_write(&otm->dsi, seq[i + 1U], &seq[i + 2U], n);
+    ret = pbl_mipi_dsi_dcs_write(&otm->state->dsi, seq[i + 1U], &seq[i + 2U], n);
     if (ret != 0) {
       return ret;
     }
@@ -501,17 +505,48 @@ static int prv_address(const struct pbl_panel_otm8009a *otm) {
   };
   int ret;
 
-  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_ADDRESS_MODE, &mode, 1U);
+  ret = pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_ADDRESS_MODE, &mode, 1U);
   if (ret != 0) {
     return ret;
   }
 
-  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_COLUMN_ADDRESS, cols, sizeof(cols));
+  ret =
+      pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_COLUMN_ADDRESS, cols, sizeof(cols));
   if (ret != 0) {
     return ret;
   }
 
-  return pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows, sizeof(rows));
+  return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows,
+                                sizeof(rows));
+}
+
+static int prv_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                          uint16_t y1) {
+  const struct pbl_panel_otm8009a *otm = prv_otm(panel);
+  const uint8_t cols[] = {(uint8_t)(x0 >> 8), (uint8_t)x0, (uint8_t)(x1 >> 8), (uint8_t)x1};
+  const uint8_t rows[] = {(uint8_t)(y0 >> 8), (uint8_t)y0, (uint8_t)(y1 >> 8), (uint8_t)y1};
+  int ret;
+
+  ret =
+      pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_COLUMN_ADDRESS, cols, sizeof(cols));
+  if (ret != 0) {
+    return ret;
+  }
+
+  return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows,
+                                sizeof(rows));
+}
+
+static int prv_set_tear(const struct pbl_panel *panel, bool on) {
+  const struct pbl_panel_otm8009a *otm = prv_otm(panel);
+  const uint8_t line[] = {(uint8_t)(TEAR_SCANLINE >> 8), (uint8_t)TEAR_SCANLINE};
+
+  if (!on) {
+    return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_TEAR_OFF, nullptr, 0U);
+  }
+
+  return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_TEAR_SCANLINE, line,
+                                sizeof(line));
 }
 
 static int prv_set_quarter_turn(const struct pbl_panel *panel, bool turn) {
@@ -542,7 +577,8 @@ static int prv_prepare(const struct pbl_panel *panel) {
   }
   pbl_sleep_ms(20U);
 
-  ret = pbl_mipi_dsi_attach(&otm->dsi);
+  otm->state->dsi.mode_flags = PBL_MIPI_DSI_MODE_LPM;
+  ret = pbl_mipi_dsi_attach(&otm->state->dsi);
   if (ret != 0) {
     return ret;
   }
@@ -557,37 +593,46 @@ static int prv_prepare(const struct pbl_panel *panel) {
     return ret;
   }
 
-  return prv_address(otm);
+  ret = prv_address(otm);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // The window and the tearing effect then go between frames, in high speed
+  otm->state->dsi.mode_flags &= ~PBL_MIPI_DSI_MODE_LPM;
+
+  return 0;
 }
 
 static int prv_enable(const struct pbl_panel *panel) {
   const struct pbl_panel_otm8009a *otm = prv_otm(panel);
   int ret;
 
-  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_SET_DISPLAY_ON, nullptr, 0U);
+  ret = pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_DISPLAY_ON, nullptr, 0U);
   if (ret != 0) {
     return ret;
   }
 
-  // The video stream goes to the frame memory
-  return pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_WRITE_MEMORY_START, nullptr, 0U);
+  // Frames go to the frame memory
+  return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_WRITE_MEMORY_START, nullptr, 0U);
 }
 
 static int prv_disable(const struct pbl_panel *panel) {
-  return pbl_mipi_dsi_dcs_write(&prv_otm(panel)->dsi, PBL_MIPI_DCS_SET_DISPLAY_OFF, nullptr, 0U);
+  return pbl_mipi_dsi_dcs_write(&prv_otm(panel)->state->dsi, PBL_MIPI_DCS_SET_DISPLAY_OFF, nullptr,
+                                0U);
 }
 
 static int prv_unprepare(const struct pbl_panel *panel) {
   const struct pbl_panel_otm8009a *otm = prv_otm(panel);
   int ret;
 
-  ret = pbl_mipi_dsi_dcs_write(&otm->dsi, PBL_MIPI_DCS_ENTER_SLEEP_MODE, nullptr, 0U);
+  ret = pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_ENTER_SLEEP_MODE, nullptr, 0U);
   if (ret != 0) {
     return ret;
   }
   pbl_sleep_ms(120U);
 
-  ret = pbl_mipi_dsi_detach(&otm->dsi);
+  ret = pbl_mipi_dsi_detach(&otm->state->dsi);
   if (ret != 0) {
     return ret;
   }
@@ -601,6 +646,8 @@ const struct pbl_panel_ops pbl_panel_otm8009a_ops = {
   .disable = prv_disable,
   .unprepare = prv_unprepare,
   .set_quarter_turn = prv_set_quarter_turn,
+  .set_window = prv_set_window,
+  .set_tear = prv_set_tear,
 };
 
 int pbl_panel_otm8009a_init(const struct pbl_device *dev) {
@@ -615,7 +662,7 @@ int pbl_panel_otm8009a_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  ret = pbl_device_init(&otm->dsi.host->dev);
+  ret = pbl_device_init(&otm->state->dsi.host->dev);
   if (ret != 0) {
     return ret;
   }
