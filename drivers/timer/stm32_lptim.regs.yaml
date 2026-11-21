@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The system timer, up before there are devices
+config: TIMER_STM32_LPTIM
+labels:
+  - lptimer1
+compatible: st,stm32-lptimer-timer

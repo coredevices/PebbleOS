@@ -15,6 +15,7 @@ config SOC_STM32H7
     select CPU_HAS_ICACHE
     select CPU_HAS_DCACHE
     select PINCTRL
-    select TIMER_STM32_TIM
+    select TIMER_STM32_TIM if !DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
+    select TIMER_STM32_LPTIM if DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
     help
       ST STM32H7 series, selected by its lines.
