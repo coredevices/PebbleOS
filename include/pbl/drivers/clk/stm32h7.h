@@ -94,6 +94,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_DMA1_CK 65
 /** DMA2 clock. */
 #define STM32H7_CLK_DMA2_CK 64
+/** DMA2D clock. */
+#define STM32H7_CLK_DMA2D_CK 56
 /** DSI clock. */
 #define STM32H7_CLK_DSI_CK 129
 /** LTDC clock, the pixel clock. */
