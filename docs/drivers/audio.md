@@ -25,6 +25,7 @@ devicetree.
 | SiFli SF32LB57 audio codec | `sifli,sf32lb57-audcodec` | `CONFIG_AUDIO_SF32LB_AUDCODEC` |
 | SiFli SF32LB52 PDM | `sifli,sf32lb52-pdm` | `CONFIG_AUDIO_SF32LB52_PDM` |
 | SiFli SF32LB57 PDM | `sifli,sf32lb57-pdm` | `CONFIG_AUDIO_SF32LB52_PDM` |
+| ST STM32 SAI | `st,stm32-sai-sub-a`, `st,stm32-sai-sub-b` | `CONFIG_AUDIO_STM32_SAI` |
 | QEMU audio device | `qemu,pebble-audio` | `CONFIG_AUDIO_QEMU` |
 | Simulated microphone | — | `CONFIG_AUDIO_SIM_MIC` |
 | Nordic nRF5 PDM | `nordic,nrf52832-pdm` | `CONFIG_AUDIO_NRF5_PDM` |
