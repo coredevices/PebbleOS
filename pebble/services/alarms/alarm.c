@@ -102,6 +102,8 @@ typedef struct PBL_PACKED {
     };
     uint8_t flags;
   };
+  //! Local day index (time_util_get_day()) of the skipped occurrence, 0 if none.
+  uint16_t skipped_day;
 } AlarmConfig;
 
 typedef struct Alarm {
@@ -250,6 +252,28 @@ static time_t prv_get_alarm_time(const Alarm *alarm, time_t cron_time) {
 }
 
 // ----------------------------------------------------------------------------------------------
+static bool prv_is_skipped_alarm_time(const AlarmConfig *config, time_t alarm_time) {
+  return config->skipped_day != 0 && time_util_get_day(alarm_time) == config->skipped_day;
+}
+
+// ----------------------------------------------------------------------------------------------
+//! Gets the next cron time of an alarm, passing over its skipped occurrence.
+//! @param[out] skipped_out Whether the next occurrence was passed over, may be NULL.
+static time_t prv_get_unskipped_execute_time(const Alarm *alarm, const struct pbl_cron_job *cron,
+                                             bool *skipped_out) {
+  time_t execute_time = pbl_cron_job_get_execute_time(cron);
+  const bool skipped =
+      prv_is_skipped_alarm_time(&alarm->config, prv_get_alarm_time(alarm, execute_time));
+  if (skipped) {
+    execute_time = pbl_cron_job_get_execute_time_from_epoch(cron, execute_time);
+  }
+  if (skipped_out) {
+    *skipped_out = skipped;
+  }
+  return execute_time;
+}
+
+// ----------------------------------------------------------------------------------------------
 //! Pin add helper
 static int prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time, Uuid *uuid_out) {
   const AlarmType type = config->is_smart ? AlarmType_Smart : AlarmType_Basic;
@@ -280,7 +304,8 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
     if (last_alarm != alarm_time) {
       last_alarm = alarm_time;
       pbl_localtime_r(&alarm_time, local_alarm_time);
-      if (alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
+      if (alarm->config.scheduled_days[local_alarm_time->tm_wday] &&
+          !prv_is_skipped_alarm_time(&alarm->config, alarm_time)) {
         Uuid *pinid = (Uuid *)&settings_file_buffer[num_pin_adds * UUID_SIZE];
         int rv = prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
         if (rv == 0) {
@@ -311,7 +336,7 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
-static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
+static time_t prv_build_cron(const AlarmConfig *config, struct pbl_cron_job *cron) {
   *cron = (struct pbl_cron_job){
     .cb = prv_cron_callback,
     .cb_data = (void *)0,
@@ -333,15 +358,21 @@ static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron) {
+static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron, bool skipped,
+                             time_t execute_time) {
   pbl_cron_job_unschedule(&s_next_alarm_cron);
   s_next_alarm_cron = *cron;
   s_next_alarm_cron.cb_data = (void *)(intptr_t)alarm->id;
   s_next_alarm = *alarm;
-  s_next_alarm_time = pbl_cron_job_schedule(&s_next_alarm_cron);
-  PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
+  if (skipped) {
+    pbl_cron_job_schedule_at(&s_next_alarm_cron, execute_time);
+    s_next_alarm_time = execute_time;
+  } else {
+    s_next_alarm_time = pbl_cron_job_schedule(&s_next_alarm_cron);
+  }
+  PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d, skipped:%d)", alarm->id,
                alarm->config.hour, alarm->config.minute, (long)s_next_alarm_time,
-               alarm->config.is_smart);
+               alarm->config.is_smart, skipped);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -357,12 +388,14 @@ static void prv_check_and_schedule_alarm(struct pbl_settings_file *fd, Alarm *al
   }
 
   struct pbl_cron_job cron;
-  time_t execute_time = prv_build_cron(&alarm->config, &cron);
+  prv_build_cron(&alarm->config, &cron);
+  bool skipped;
+  const time_t execute_time = prv_get_unskipped_execute_time(alarm, &cron, &skipped);
   prv_timeline_add_alarm(fd, alarm, &cron, pbl_realtime());
 
   if (s_next_alarm_time == 0 || execute_time < s_next_alarm_time) {
     // This alarm is sooner than the previous one!
-    prv_assign_alarm(alarm, &cron);
+    prv_assign_alarm(alarm, &cron, skipped, execute_time);
   }
   if (refresh) {
     timeline_event_refresh();
@@ -588,6 +621,7 @@ static void prv_persist_alarm(struct pbl_settings_file *fd, Alarm *alarm) {
     .sound_enabled = alarm->config.sound_enabled,
     .vibrate_disabled = alarm->config.vibrate_disabled,
     .tone = alarm->config.tone,
+    .skipped_day = alarm->config.skipped_day,
   };
   memcpy(&config.scheduled_days, alarm->config.scheduled_days, sizeof(config.scheduled_days));
   pbl_settings_set(fd, &key, sizeof(key), &config, sizeof(config));
@@ -630,6 +664,7 @@ static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
       .sound_enabled = config.sound_enabled,
       .vibrate_disabled = config.vibrate_disabled,
       .tone = config.tone,
+      .skipped_day = config.skipped_day,
     };
     memcpy(&config_out->scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
     return true;
@@ -721,6 +756,9 @@ static void prv_assert_alarm_params(int hour, int minute) {
 // ----------------------------------------------------------------------------------------------
 static void prv_enable_alarm_config(AlarmConfig *config, bool enable) {
   config->is_disabled = !enable;
+  if (!enable) {
+    config->skipped_day = 0;
+  }
   if (enable && config->kind == ALARM_KIND_JUST_ONCE) {
     // Update the day required for the alarm
     prv_set_day_for_just_once_alarm(config, config->hour, config->minute);
@@ -775,6 +813,10 @@ static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, voi
   bool rv = prv_alarm_get_config(&file, id, &config);
   if (!rv) {
     goto cleanup;
+  }
+
+  if (schedule_changed) {
+    config.skipped_day = 0;
   }
 
   if (!callback(id, &config, context)) {
@@ -855,6 +897,36 @@ static bool prv_set_tone_op(AlarmId id, AlarmConfig *config, void *context) {
 
 void alarm_set_tone(AlarmId id, AlarmTone tone) {
   prv_alarm_operation(id, prv_set_tone_op, (void *)(uintptr_t)tone, false);
+}
+
+// ----------------------------------------------------------------------------------------------
+static time_t prv_get_next_alarm_time(AlarmId id, const AlarmConfig *config) {
+  struct pbl_cron_job cron;
+  const Alarm alarm = {.id = id, .config = *config};
+  return prv_get_alarm_time(&alarm, prv_build_cron(config, &cron));
+}
+
+static bool prv_is_next_alarm_skipped(AlarmId id, const AlarmConfig *config) {
+  return !config->is_disabled && config->skipped_day != 0 &&
+         prv_is_skipped_alarm_time(config, prv_get_next_alarm_time(id, config));
+}
+
+static bool prv_set_skip_next_op(AlarmId id, AlarmConfig *config, void *context) {
+  if (config->is_disabled || config->kind == ALARM_KIND_JUST_ONCE) {
+    return false;
+  }
+  const bool skip = (uintptr_t)context;
+  const uint16_t skipped_day = skip ? time_util_get_day(prv_get_next_alarm_time(id, config)) : 0;
+  if (skipped_day == config->skipped_day) {
+    return false;
+  }
+  config->skipped_day = skipped_day;
+  PBL_LOG_DBG("Alarm %u skipped day set to %u", id, skipped_day);
+  return true;
+}
+
+void alarm_set_skip_next(AlarmId id, bool skip) {
+  prv_alarm_operation(id, prv_set_skip_next_op, (void *)(uintptr_t)skip, false);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1066,7 +1138,9 @@ bool alarm_get_time_until(AlarmId id, time_t *time_out) {
 
   if (time_out) {
     struct pbl_cron_job cron;
-    *time_out = prv_build_cron(&config, &cron) - pbl_realtime();
+    prv_build_cron(&config, &cron);
+    const Alarm alarm = {.id = id, .config = config};
+    *time_out = prv_get_unskipped_execute_time(&alarm, &cron, nullptr) - pbl_realtime();
   }
   alarm_is_scheduled = true;
 
@@ -1128,6 +1202,7 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
     .sound_enabled = config.sound_enabled,
     .vibrate_enabled = !config.vibrate_disabled,
     .tone = config.tone,
+    .skip_next = prv_is_next_alarm_skipped(id, &config),
     .scheduled_days = nullptr,
   };
 
@@ -1211,6 +1286,7 @@ static bool alarm_for_each_itr(struct pbl_settings_file *file, struct pbl_settin
     .sound_enabled = config.sound_enabled,
     .vibrate_enabled = !config.vibrate_disabled,
     .tone = config.tone,
+    .skip_next = prv_is_next_alarm_skipped(key.id, &config),
     .scheduled_days = &config.scheduled_days,
   };
   itr_data->cb(key.id, &alarm_info, itr_data->cb_data);
