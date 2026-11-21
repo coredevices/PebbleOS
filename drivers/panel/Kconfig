@@ -34,6 +34,7 @@ config PANEL_OTM8009A
     default y
     depends on DT_HAS_ORISETECH_OTM8009A_ENABLED
     depends on PANEL
+    select BACKLIGHT
     select GPIO
     select MIPI_DSI
     help

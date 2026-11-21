@@ -9,3 +9,4 @@ display: ltdc
 gpu: dma2d
 touch: touchscreen
 rtc: rtc
+backlight: panel

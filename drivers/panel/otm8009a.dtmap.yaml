@@ -3,8 +3,11 @@
 
 compatible: orisetech,otm8009a
 config: PANEL_OTM8009A
-class: panel
+class: [panel, backlight]
 define: PBL_PANEL_OTM8009A_DEFINE
+symbol:
+  panel: "{sym}"
+  backlight: "{sym}_backlight"
 args:
   - name: true
   - parent: mipi_dsi

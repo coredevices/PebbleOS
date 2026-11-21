@@ -437,15 +437,14 @@ static const uint8_t s_setup[] = {
 // right to left
 #define MADCTL_QUARTER_TURN 0x60U
 
-// Leaving sleep: 24-bit pixels, full brightness, and no adaptive backlight, which would change
-// the brightness with the image
+// Leaving sleep: 24-bit pixels, and no adaptive backlight, which would change the brightness with
+// the image
 static const uint8_t s_wake[] = {
   0U,
   PBL_MIPI_DCS_EXIT_SLEEP_MODE,
   WAIT(120U),
   W1(PBL_MIPI_DCS_SET_PIXEL_FORMAT, COLMOD_RGB888),
   W1(CMD_WRITE_CABC, 0x00),
-  W1(PBL_MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0xff),
   W1(PBL_MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 };
 
@@ -518,6 +517,13 @@ static int prv_address(const struct pbl_panel_otm8009a *otm) {
 
   return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_PAGE_ADDRESS, rows,
                                 sizeof(rows));
+}
+
+// The controller dims the backlight of the module with its PWM output
+static int prv_brightness(const struct pbl_panel_otm8009a *otm, uint8_t brightness) {
+  const uint8_t level = (uint8_t)((brightness * UINT8_MAX) / PBL_BACKLIGHT_BRIGHTNESS_MAX);
+
+  return pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_SET_DISPLAY_BRIGHTNESS, &level, 1U);
 }
 
 static int prv_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
@@ -593,6 +599,11 @@ static int prv_prepare(const struct pbl_panel *panel) {
     return ret;
   }
 
+  ret = prv_brightness(otm, otm->state->brightness);
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = prv_address(otm);
   if (ret != 0) {
     return ret;
@@ -600,6 +611,7 @@ static int prv_prepare(const struct pbl_panel *panel) {
 
   // The window and the tearing effect then go between frames, in high speed
   otm->state->dsi.mode_flags &= ~PBL_MIPI_DSI_MODE_LPM;
+  otm->state->on = true;
 
   return 0;
 }
@@ -626,6 +638,7 @@ static int prv_unprepare(const struct pbl_panel *panel) {
   const struct pbl_panel_otm8009a *otm = prv_otm(panel);
   int ret;
 
+  otm->state->on = false;
   ret = pbl_mipi_dsi_dcs_write(&otm->state->dsi, PBL_MIPI_DCS_ENTER_SLEEP_MODE, nullptr, 0U);
   if (ret != 0) {
     return ret;
@@ -669,5 +682,30 @@ int pbl_panel_otm8009a_init(const struct pbl_device *dev) {
 
   return pbl_gpio_configure(&otm->reset, PBL_GPIO_OUTPUT_ACTIVE);
 }
+
+static const struct pbl_panel_otm8009a *prv_bl_otm(const struct pbl_backlight *bl) {
+  return PBL_CONTAINER_OF(bl, const struct pbl_panel_otm8009a_backlight, backlight)->otm;
+}
+
+static int prv_bl_init(const struct pbl_backlight *bl) {
+  return 0;
+}
+
+// Kept for the next time the panel is set up when it is not
+static int prv_bl_set_brightness(const struct pbl_backlight *bl, uint8_t brightness) {
+  const struct pbl_panel_otm8009a *otm = prv_bl_otm(bl);
+
+  otm->state->brightness = brightness;
+  if (!otm->state->on) {
+    return 0;
+  }
+
+  return prv_brightness(otm, brightness);
+}
+
+const struct pbl_backlight_ops pbl_panel_otm8009a_backlight_ops = {
+  .init = prv_bl_init,
+  .set_brightness = prv_bl_set_brightness,
+};
 
 #include PBL_DT_INSTANCES(orisetech_otm8009a)
