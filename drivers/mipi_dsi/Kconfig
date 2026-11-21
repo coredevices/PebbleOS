@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MIPI_DSI
+    bool
+    help
+      MIPI DSI host class (pbl/drivers/mipi_dsi.h), selected by the
+      controllers that drive panels over MIPI DSI and by the panel
+      drivers using them.
