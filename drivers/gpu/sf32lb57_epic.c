@@ -572,10 +572,32 @@ static int prv_init(const struct pbl_gpu *gpu) {
   return 0;
 }
 
+// Jobs run to their end before the operations return: what the hardware did completes them, and
+// anything else kept them from starting
+static int prv_complete(const struct pbl_gpu *gpu, int ret) {
+  if (ret != 0 && ret != -ETIMEDOUT && ret != -EIO) {
+    return ret;
+  }
+
+  pbl_gpu_complete(gpu, ret);
+
+  return 0;
+}
+
+static int prv_fill_op(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *rect, uint32_t argb) {
+  return prv_complete(gpu, prv_fill(gpu, dst, rect, argb));
+}
+
+static int prv_blit_op(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit) {
+  return prv_complete(gpu, prv_blit(gpu, dst, clip, blit));
+}
+
 const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops = {
   .init = prv_init,
-  .fill = prv_fill,
-  .blit = prv_blit,
+  .fill = prv_fill_op,
+  .blit = prv_blit_op,
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_epic)
