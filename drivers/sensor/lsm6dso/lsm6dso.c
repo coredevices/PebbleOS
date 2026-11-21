@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <string.h>
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/devicetree.h>
@@ -27,16 +28,17 @@ static const struct pbl_lsm6dso *s_dev;
 
 // Implementation notes:
 //
-// - Gyroscope is unused; only the accelerometer is configured.
 // - Frames are reported in the sensor axes; the class applies the mount matrix
 //   and the rotation.
-// - Peeking returns the last FIFO sample when sampling is active, otherwise a
+// - Accelerometer and gyroscope words share the FIFO, each tagged with its
+//   sensor. A FIFO read is split by tag into one batch per sensor; frame times
+//   assume the words of both sensors come in evenly spaced.
+// - Reads return the output registers of a running sensor, otherwise a
 //   single-shot measurement is performed.
-// - Ultra-low-power mode (XL_ULP_EN) is always used (minimum power). It is
-//   enabled once at init while the accelerometer is powered down (as required
-//   by the datasheet) and never toggled afterwards. The gyroscope is never
-//   enabled, so ULP is allowed.
-// - ODR is limited to the [12.5, 208] Hz range (the ULP ODR range).
+// - The accelerometer uses ultra-low-power mode (XL_ULP_EN) while the
+//   gyroscope is off and its ODR is 208 Hz or less, as ULP requires. XL_ULP_EN
+//   is only changed with the accelerometer powered down.
+// - ODRs range from 12.5 to 833 Hz.
 // - Shake detection uses 12.5Hz when no active sampling is ongoing.
 // - Wake-up duration absolute time depends on the ODR, a parameter that can
 //   be changed depending on the sampling interval configuration. Value is NOT
@@ -72,11 +74,16 @@ static const struct pbl_lsm6dso *s_dev;
 // Scale range for 16-bit two's complement samples
 #define LSM6DSO_S16_SCALE_RANGE 32768
 
-// FIFO tag identifying an accelerometer (XL) sample
-#define LSM6DSO_FIFO_TAG_XL_NC 0x02U
+// FIFO word tags (TAG_SENSOR, the 5 MSBs of the tag byte)
+#define LSM6DSO_FIFO_TAG_SHIFT   3U
+#define LSM6DSO_FIFO_TAG_GYRO_NC 0x01U
+#define LSM6DSO_FIFO_TAG_XL_NC   0x02U
 
-// Maximum FIFO watermark (WTM[8:0] is 9 bits)
-#define LSM6DSO_FIFO_WTM_MAX PBL_BIT_MASK(9)
+// Highest ODR code allowed in ultra-low-power mode (208 Hz)
+#define LSM6DSO_ODR_ULP_MAX 5U
+
+// Gyroscope turn-on time before the first valid sample of a single-shot read
+#define LSM6DSO_GYRO_TURN_ON_MS 80U
 
 // Registers
 #define LSM6DSO_FIFO_CTRL1        0x07U
@@ -86,12 +93,14 @@ static const struct pbl_lsm6dso *s_dev;
 #define LSM6DSO_INT1_CTRL         0x0DU
 #define LSM6DSO_WHO_AM_I          0x0FU
 #define LSM6DSO_CTRL1_XL          0x10U
+#define LSM6DSO_CTRL2_G           0x11U
 #define LSM6DSO_CTRL3_C           0x12U
 #define LSM6DSO_CTRL5_C           0x14U
 #define LSM6DSO_CTRL9_XL          0x18U
 #define LSM6DSO_ALL_INT_SRC       0x1AU
 #define LSM6DSO_WAKE_UP_SRC       0x1BU
 #define LSM6DSO_STATUS_REG        0x1EU
+#define LSM6DSO_OUTX_L_G          0x22U
 #define LSM6DSO_OUTX_L_A          0x28U
 #define LSM6DSO_FIFO_STATUS1      0x3AU
 #define LSM6DSO_FIFO_STATUS2      0x3BU
@@ -106,18 +115,19 @@ static const struct pbl_lsm6dso *s_dev;
 #define LSM6DSO_WHO_AM_I_VAL 0x6CU
 
 // CTRL1_XL fields
-#define LSM6DSO_CTRL1_XL_ODR_MASK  PBL_GENMASK(7, 4)
-#define LSM6DSO_CTRL1_XL_ODR_OFF   0x0U
-#define LSM6DSO_CTRL1_XL_ODR_12HZ5 0x1U
-#define LSM6DSO_CTRL1_XL_ODR_26HZ  0x2U
-#define LSM6DSO_CTRL1_XL_ODR_52HZ  0x3U
-#define LSM6DSO_CTRL1_XL_ODR_104HZ 0x4U
-#define LSM6DSO_CTRL1_XL_ODR_208HZ 0x5U
-#define LSM6DSO_CTRL1_XL_FS_MASK   PBL_GENMASK(3, 2)
-#define LSM6DSO_CTRL1_XL_FS_2G     0x0U
-#define LSM6DSO_CTRL1_XL_FS_16G    0x1U
-#define LSM6DSO_CTRL1_XL_FS_4G     0x2U
-#define LSM6DSO_CTRL1_XL_FS_8G     0x3U
+#define LSM6DSO_CTRL1_XL_ODR_MASK PBL_GENMASK(7, 4)
+#define LSM6DSO_CTRL1_XL_ODR_OFF  0x0U
+#define LSM6DSO_CTRL1_XL_ODR_52HZ 0x3U
+#define LSM6DSO_CTRL1_XL_FS_MASK  PBL_GENMASK(3, 2)
+#define LSM6DSO_CTRL1_XL_FS_2G    0x0U
+#define LSM6DSO_CTRL1_XL_FS_16G   0x1U
+#define LSM6DSO_CTRL1_XL_FS_4G    0x2U
+#define LSM6DSO_CTRL1_XL_FS_8G    0x3U
+
+// CTRL2_G fields
+#define LSM6DSO_CTRL2_G_ODR_MASK PBL_GENMASK(7, 4)
+#define LSM6DSO_CTRL2_G_FS_MASK  PBL_GENMASK(3, 2)
+#define LSM6DSO_CTRL2_G_FS_125   PBL_BIT(1)
 
 // CTRL3_C fields
 #define LSM6DSO_CTRL3_C_SW_RESET PBL_BIT(0)
@@ -141,17 +151,14 @@ static const struct pbl_lsm6dso *s_dev;
 
 // STATUS_REG fields
 #define LSM6DSO_STATUS_REG_XLDA PBL_BIT(0)
+#define LSM6DSO_STATUS_REG_GDA  PBL_BIT(1)
 
 // FIFO_CTRL2 fields
 #define LSM6DSO_FIFO_CTRL2_WTM8 PBL_BIT(0)
 
 // FIFO_CTRL3 fields
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_MASK  PBL_GENMASK(3, 0)
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_12HZ5 0x1U
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_26HZ  0x2U
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_52HZ  0x3U
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_104HZ 0x4U
-#define LSM6DSO_FIFO_CTRL3_BDR_XL_208HZ 0x5U
+#define LSM6DSO_FIFO_CTRL3_BDR_XL_MASK PBL_GENMASK(3, 0)
+#define LSM6DSO_FIFO_CTRL3_BDR_GY_MASK PBL_GENMASK(7, 4)
 
 // FIFO_CTRL4 fields
 #define LSM6DSO_FIFO_CTRL4_MODE_MASK   PBL_GENMASK(2, 0)
@@ -182,8 +189,26 @@ static const struct pbl_lsm6dso *s_dev;
 // Raw counts to micro-g
 #define LSM6DSO_UG_NUM (CONFIG_ACCEL_LSM6DSO_SCALE_MG * 1000)
 
+// Gyroscope sensitivity, in micro-dps per LSB
+#if CONFIG_ACCEL_LSM6DSO_GYRO_SCALE_DPS == 125
+#define LSM6DSO_GYRO_UDPS 4375
+#define LSM6DSO_GYRO_FS   LSM6DSO_CTRL2_G_FS_125
+#elif CONFIG_ACCEL_LSM6DSO_GYRO_SCALE_DPS == 250
+#define LSM6DSO_GYRO_UDPS 8750
+#define LSM6DSO_GYRO_FS   PBL_FIELD_PREP(LSM6DSO_CTRL2_G_FS_MASK, 0U)
+#elif CONFIG_ACCEL_LSM6DSO_GYRO_SCALE_DPS == 500
+#define LSM6DSO_GYRO_UDPS 17500
+#define LSM6DSO_GYRO_FS   PBL_FIELD_PREP(LSM6DSO_CTRL2_G_FS_MASK, 1U)
+#elif CONFIG_ACCEL_LSM6DSO_GYRO_SCALE_DPS == 1000
+#define LSM6DSO_GYRO_UDPS 35000
+#define LSM6DSO_GYRO_FS   PBL_FIELD_PREP(LSM6DSO_CTRL2_G_FS_MASK, 2U)
+#else
+#define LSM6DSO_GYRO_UDPS 70000
+#define LSM6DSO_GYRO_FS   PBL_FIELD_PREP(LSM6DSO_CTRL2_G_FS_MASK, 3U)
+#endif
+
 // Channels of a sample, both in the output registers and past the tag of a FIFO word
-static const struct pbl_sensor_chan s_chans[] = {
+static const struct pbl_sensor_chan s_xl_chans[] = {
   PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
                   LSM6DSO_S16_SCALE_RANGE, 0),
   PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
@@ -191,6 +216,18 @@ static const struct pbl_sensor_chan s_chans[] = {
   PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, LSM6DSO_UG_NUM,
                   LSM6DSO_S16_SCALE_RANGE, 0),
 };
+
+static const struct pbl_sensor_chan s_gyro_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_GYRO, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, LSM6DSO_GYRO_UDPS,
+                  1000, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_GYRO, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, LSM6DSO_GYRO_UDPS,
+                  1000, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_GYRO, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, LSM6DSO_GYRO_UDPS,
+                  1000, 0),
+};
+
+// Interval of each ODR and batch data rate code from 1 (12.5 Hz) up
+static const uint32_t s_odr_us[] = {80000U, 38461U, 19230U, 9615U, 4807U, 2403U, 1200U};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Private
@@ -231,20 +268,86 @@ static uint8_t prv_fs_bits(void) {
   }
 }
 
-// Report the samples read into buf, a buffer from pbl_sensor_buf_alloc(). Kept free of device
-// I/O so it can run after the I2C reads instead of in between them.
-static void prv_lsm6dso_process_samples(uint8_t *buf, uint16_t num_samples, uint64_t timestamp_us) {
-  // Each FIFO word is a tag byte followed by 6 data bytes; point the batch at the
-  // first data byte and step over the tags with the stride.
-  pbl_sensor_report(&s_dev->sensor, &(const struct pbl_sensor_batch){
-                                      .data = &buf[1],
-                                      .chans = s_chans,
-                                      .num_chans = PBL_ARRAY_SIZE(s_chans),
-                                      .stride = LSM6DSO_FIFO_WORD_SIZE_BYTES,
-                                      .num_frames = num_samples,
-                                      .timestamp_us = timestamp_us,
-                                      .interval_us = s_dev->state->sampling_interval_us,
-                                    });
+//! Split the words read into buf, a buffer from pbl_sensor_buf_alloc(), by sensor and submit
+//! one batch per sensor. The last word was queued at t_last_us.
+static void prv_lsm6dso_process_samples(uint8_t *buf, uint16_t num_words, uint64_t t_last_us) {
+  const struct pbl_lsm6dso_state *state = s_dev->state;
+  uint16_t num_xl = 0U;
+  uint16_t num_gyro = 0U;
+  uint16_t last_xl = 0U;
+  uint16_t last_gyro = 0U;
+  uint8_t *gyro = nullptr;
+  bool split = false;
+
+  for (uint16_t i = 0U; i < num_words; i++) {
+    uint8_t tag = buf[i * LSM6DSO_FIFO_WORD_SIZE_BYTES] >> LSM6DSO_FIFO_TAG_SHIFT;
+
+    if (tag == LSM6DSO_FIFO_TAG_XL_NC) {
+      num_xl++;
+      last_xl = i;
+      continue;
+    }
+
+    split = true;
+    if (tag == LSM6DSO_FIFO_TAG_GYRO_NC) {
+      num_gyro++;
+      last_gyro = i;
+    }
+  }
+
+  if (num_gyro > 0U) {
+    gyro = pbl_sensor_buf_alloc(&s_dev->sensor, nullptr);
+    if (gyro == nullptr) {
+      num_gyro = 0U;
+    }
+  }
+
+  // Pack the accelerometer samples in place, behind the words still to be read
+  if (split) {
+    uint16_t xl = 0U;
+    uint16_t g = 0U;
+
+    for (uint16_t i = 0U; i < num_words; i++) {
+      const uint8_t *word = &buf[i * LSM6DSO_FIFO_WORD_SIZE_BYTES];
+      uint8_t tag = word[0] >> LSM6DSO_FIFO_TAG_SHIFT;
+
+      if (tag == LSM6DSO_FIFO_TAG_XL_NC) {
+        memmove(&buf[xl++ * LSM6DSO_SAMPLE_SIZE_BYTES], &word[1], LSM6DSO_SAMPLE_SIZE_BYTES);
+      } else if (tag == LSM6DSO_FIFO_TAG_GYRO_NC && gyro != nullptr) {
+        memcpy(&gyro[g++ * LSM6DSO_SAMPLE_SIZE_BYTES], &word[1], LSM6DSO_SAMPLE_SIZE_BYTES);
+      }
+    }
+  }
+
+  if (num_xl > 0U) {
+    pbl_sensor_submit(&s_dev->sensor,
+                      &(const struct pbl_sensor_batch){
+                        .data = split ? buf : &buf[1],
+                        .chans = s_xl_chans,
+                        .num_chans = PBL_ARRAY_SIZE(s_xl_chans),
+                        .stride = split ? LSM6DSO_SAMPLE_SIZE_BYTES : LSM6DSO_FIFO_WORD_SIZE_BYTES,
+                        .num_frames = num_xl,
+                        .timestamp_us = t_last_us - (uint64_t)(num_words - 1U - last_xl) *
+                                                        state->word_interval_us,
+                        .interval_us = state->fifo_xl_us,
+                      });
+  } else {
+    pbl_sensor_buf_free(&s_dev->sensor, buf);
+  }
+
+  if (num_gyro > 0U) {
+    pbl_sensor_submit(&s_dev->sensor,
+                      &(const struct pbl_sensor_batch){
+                        .data = gyro,
+                        .chans = s_gyro_chans,
+                        .num_chans = PBL_ARRAY_SIZE(s_gyro_chans),
+                        .stride = LSM6DSO_SAMPLE_SIZE_BYTES,
+                        .num_frames = num_gyro,
+                        .timestamp_us = t_last_us - (uint64_t)(num_words - 1U - last_gyro) *
+                                                        state->word_interval_us,
+                        .interval_us = state->fifo_gyro_us,
+                      });
+  }
 }
 
 //! Buffer for a FIFO read, or NULL if the listener still holds all of them
@@ -258,21 +361,53 @@ static uint8_t *prv_alloc_buf(void) {
   return buf;
 }
 
-static uint8_t prv_get_bdr(uint32_t sampling_interval_us) {
-  if (sampling_interval_us >= 80000UL) {
-    return LSM6DSO_FIFO_CTRL3_BDR_XL_12HZ5;
-  } else if (sampling_interval_us >= 38461UL) {
-    return LSM6DSO_FIFO_CTRL3_BDR_XL_26HZ;
-  } else if (sampling_interval_us >= 19230UL) {
-    return LSM6DSO_FIFO_CTRL3_BDR_XL_52HZ;
-  } else if (sampling_interval_us >= 9615UL) {
-    return LSM6DSO_FIFO_CTRL3_BDR_XL_104HZ;
-  } else {
-    return LSM6DSO_FIFO_CTRL3_BDR_XL_208HZ;
+//! ODR or batch data rate code of the longest interval not above *interval_us, saturating at the
+//! shortest, which it writes back; 0 (off) for 0.
+static uint8_t prv_odr(uint32_t *interval_us) {
+  uint8_t i;
+
+  if (*interval_us == 0U) {
+    return 0U;
   }
+
+  for (i = 0U; i < PBL_ARRAY_SIZE(s_odr_us) - 1U; i++) {
+    if (*interval_us >= s_odr_us[i]) {
+      break;
+    }
+  }
+
+  *interval_us = s_odr_us[i];
+
+  return i + 1U;
+}
+
+//! FIFO words queued while the faster batched sensor queues num_frames
+static uint32_t prv_frames_to_words(uint32_t num_frames, uint32_t xl_us, uint32_t gyro_us) {
+  if (xl_us == 0U || gyro_us == 0U) {
+    return num_frames;
+  }
+
+  return num_frames + (num_frames * PBL_MIN(xl_us, gyro_us)) / PBL_MAX(xl_us, gyro_us);
+}
+
+//! Largest batch, in frames of the faster batched sensor, that fits the FIFO reads
+static uint16_t prv_batch_max(void) {
+  const uint32_t xl_us = s_dev->state->xl_req_us != 0U ? s_dev->state->sampling_interval_us : 0U;
+  const uint32_t gyro_us = s_dev->state->gyro_interval_us;
+
+  if (xl_us == 0U || gyro_us == 0U) {
+    return LSM6DSO_FIFO_SIZE;
+  }
+
+  return (LSM6DSO_FIFO_SIZE * PBL_MAX(xl_us, gyro_us)) / (xl_us + gyro_us);
 }
 
 static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
+  struct pbl_lsm6dso_state *state = s_dev->state;
+  uint32_t xl_us = state->xl_req_us != 0U ? state->sampling_interval_us : 0U;
+  uint32_t gyro_us = state->gyro_interval_us;
+  uint8_t bdr_xl = prv_odr(&xl_us);
+  uint8_t bdr_gy = prv_odr(&gyro_us);
   bool ret;
   uint8_t val;
   uint16_t wtm;
@@ -286,7 +421,7 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
   }
 
   // Watermark threshold WTM[8:0]: low 8 bits in FIFO_CTRL1, MSB in FIFO_CTRL2
-  wtm = PBL_MIN(num_samples, LSM6DSO_FIFO_WTM_MAX);
+  wtm = PBL_MIN(prv_frames_to_words(num_samples, xl_us, gyro_us), LSM6DSO_FIFO_SIZE);
 
   val = PBL_FIELD_GET(PBL_GENMASK(7, 0), wtm);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL1, &val, 1);
@@ -302,9 +437,8 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
     return ret;
   }
 
-  // Accelerometer batch data rate (gyro left not batched)
-  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL3_BDR_XL_MASK,
-                       prv_get_bdr(s_dev->state->sampling_interval_us));
+  val = PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL3_BDR_XL_MASK, bdr_xl) |
+        PBL_FIELD_PREP(LSM6DSO_FIFO_CTRL3_BDR_GY_MASK, bdr_gy);
   ret = prv_lsm6dso_write(LSM6DSO_FIFO_CTRL3, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write FIFO_CTRL3 register");
@@ -318,6 +452,13 @@ static bool prv_lsm6dso_enable_fifo(uint16_t num_samples) {
     PBL_LOG_ERR("Could not write FIFO_CTRL4 register");
     return ret;
   }
+
+  state->fifo_xl_us = xl_us;
+  state->fifo_gyro_us = gyro_us;
+  state->word_interval_us = (xl_us != 0U && gyro_us != 0U)
+                                ? (uint32_t)(((uint64_t)xl_us * gyro_us) / (xl_us + gyro_us))
+                                : xl_us + gyro_us;
+  state->wtm = wtm;
 
   PBL_LOG_DBG("FIFO enabled with threshold %" PRIu16, wtm);
 
@@ -567,52 +708,52 @@ static void prv_lsm6dso_int1_irq_handler(void *arg) {
   prv_queue_work_from_isr(prv_lsm6dso_int1_work_handler);
 }
 
-static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
-  uint8_t odr;
+//! Apply the accelerometer interval requested, forced to 12.5 Hz for shake detection, and the
+//! gyroscope interval
+static bool prv_configure_rates(uint32_t xl_req_us, uint32_t gyro_us,
+                                bool shake_detection_enabled) {
+  struct pbl_lsm6dso_state *state = s_dev->state;
+  uint32_t xl_us = (xl_req_us == 0U && shake_detection_enabled) ? 80000UL : xl_req_us;
+  uint8_t xl_odr = prv_odr(&xl_us);
+  uint8_t gyro_odr = prv_odr(&gyro_us);
+  bool ulp = gyro_odr == 0U && xl_odr <= LSM6DSO_ODR_ULP_MAX;
   uint8_t val;
-  bool ret;
 
-  // If shake detection is enabled, ensure a minimum ODR of 12.5Hz (80ms)
-  if (shake_detection_enabled && (sampling_interval_us == 0UL)) {
-    sampling_interval_us = 80000UL;
+  PBL_LOG_DBG("Configuring intervals to %" PRIu32 " us (accel) %" PRIu32 " us (gyro)", xl_us,
+              gyro_us);
+
+  if (ulp != state->ulp) {
+    val = prv_fs_bits();
+    if (!prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &val, 1)) {
+      return false;
+    }
+
+    val = ulp ? LSM6DSO_CTRL5_C_XL_ULP_EN : 0U;
+    if (!prv_lsm6dso_write(LSM6DSO_CTRL5_C, &val, 1)) {
+      return false;
+    }
+
+    state->ulp = ulp;
   }
 
-  if (sampling_interval_us == 0U) {
-    odr = LSM6DSO_CTRL1_XL_ODR_OFF;
-    sampling_interval_us = 0UL;
-  } else if (sampling_interval_us >= 80000UL) {
-    odr = LSM6DSO_CTRL1_XL_ODR_12HZ5;
-    sampling_interval_us = 80000UL;
-  } else if (sampling_interval_us >= 38461UL) {
-    odr = LSM6DSO_CTRL1_XL_ODR_26HZ;
-    sampling_interval_us = 38461UL;
-  } else if (sampling_interval_us >= 19230UL) {
-    odr = LSM6DSO_CTRL1_XL_ODR_52HZ;
-    sampling_interval_us = 19230UL;
-  } else if (sampling_interval_us >= 9615UL) {
-    odr = LSM6DSO_CTRL1_XL_ODR_104HZ;
-    sampling_interval_us = 9615UL;
-  } else {
-    odr = LSM6DSO_CTRL1_XL_ODR_208HZ;
-    sampling_interval_us = 4807UL;
+  val = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, xl_odr) | prv_fs_bits();
+  if (!prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &val, 1)) {
+    return false;
   }
 
-  val = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, odr) | prv_fs_bits();
-
-  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)", sampling_interval_us / 1000UL,
-              sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
-
-  ret = prv_lsm6dso_write(LSM6DSO_CTRL1_XL, &val, 1);
-  if (!ret) {
-    return ret;
+  val = PBL_FIELD_PREP(LSM6DSO_CTRL2_G_ODR_MASK, gyro_odr) | LSM6DSO_GYRO_FS;
+  if (!prv_lsm6dso_write(LSM6DSO_CTRL2_G, &val, 1)) {
+    return false;
   }
 
-  // Allow the accelerometer to stabilize after an ODR/power-mode change
-  if (odr != LSM6DSO_CTRL1_XL_ODR_OFF) {
+  // Allow the sensors to stabilize after an ODR/power-mode change
+  if (xl_odr != 0U || gyro_odr != 0U) {
     pbl_sleep_ms(10);
   }
 
-  s_dev->state->sampling_interval_us = sampling_interval_us;
+  state->xl_req_us = xl_req_us;
+  state->sampling_interval_us = xl_us;
+  state->gyro_interval_us = gyro_us;
 
   return true;
 }
@@ -689,8 +830,8 @@ static void prv_lsm6dso_recover(void) {
     PBL_LOG_WRN("Discarded latched INT sources during recovery (ALL_INT_SRC 0x%02" PRIx8 ")", val);
   }
 
-  if (!prv_configure_odr(s_dev->state->sampling_interval_us,
-                         s_dev->state->shake_detection_enabled)) {
+  if (!prv_configure_rates(s_dev->state->xl_req_us, s_dev->state->gyro_interval_us,
+                           s_dev->state->shake_detection_enabled)) {
     PBL_LOG_ERR("Could not configure ODR");
     return;
   }
@@ -726,8 +867,7 @@ static void prv_update_int1_watchdog(void) {
 
   if (s_dev->state->num_samples > 0U) {
     s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
-    s_dev->state->int1_period_ms =
-        (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
+    s_dev->state->int1_period_ms = (s_dev->state->word_interval_us * s_dev->state->wtm) / 1000U;
     pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
                              PBL_MAX(PBL_DIV_ROUND_UP(s_dev->state->int1_period_ms, 1000UL), 1U));
   } else if (s_dev->state->shake_detection_enabled) {
@@ -845,13 +985,15 @@ static int prv_init(const struct pbl_sensor *sensor) {
   }
 
   // Ultra-low-power mode (accelerometer still powered down here, as required to
-  // toggle XL_ULP_EN). Gyroscope stays in power-down, so ULP is allowed.
+  // toggle XL_ULP_EN); the gyroscope is powered down after the reset
   val = LSM6DSO_CTRL5_C_XL_ULP_EN;
   ret = prv_lsm6dso_write(LSM6DSO_CTRL5_C, &val, 1);
   if (!ret) {
     PBL_LOG_ERR("Could not write CTRL5_C register");
     return -EIO;
   }
+
+  s_dev->state->ulp = true;
 
   // Configure scale (ODR off until sampling is requested)
   val = PBL_FIELD_PREP(LSM6DSO_CTRL1_XL_ODR_MASK, LSM6DSO_CTRL1_XL_ODR_OFF) | prv_fs_bits();
@@ -915,25 +1057,47 @@ static int prv_init(const struct pbl_sensor *sensor) {
   return 0;
 }
 
-static int prv_set_sampling_interval(uint32_t interval_us, uint32_t *actual_us) {
-  // FIXME: we should technically stop and drain the FIFO here, otherwise
-  // we may report existing samples in the FIFO buffer with an incorrect timestamp
+static int prv_set_sampling_interval(enum pbl_sensor_type type, uint32_t interval_us,
+                                     uint32_t *actual_us) {
+  struct pbl_lsm6dso_state *state = s_dev->state;
+  const uint32_t prev_interval_us = state->sampling_interval_us;
+  uint32_t xl_req_us = state->xl_req_us;
+  uint32_t gyro_us = state->gyro_interval_us;
+  const bool streaming = state->num_samples > 0U;
 
-  const uint32_t prev_interval_us = s_dev->state->sampling_interval_us;
-  if (!prv_configure_odr(interval_us, s_dev->state->shake_detection_enabled)) {
+  if (type == PBL_SENSOR_GYRO) {
+    gyro_us = interval_us;
+  } else {
+    xl_req_us = interval_us;
+  }
+
+  // Report the queued frames with the intervals they were sampled at
+  if (streaming) {
+    (void)prv_configure_int1(false, false);
+    state->recovery_pending = false;
+    prv_lsm6dso_drain_fifo();
+  }
+
+  if (!prv_configure_rates(xl_req_us, gyro_us, state->shake_detection_enabled)) {
     PBL_LOG_ERR("Could not configure ODR");
     return -EIO;
   }
 
+  if (streaming) {
+    if (!prv_lsm6dso_enable_fifo(state->num_samples) ||
+        !prv_configure_int1(state->shake_detection_enabled, true)) {
+      PBL_LOG_ERR("Could not enable FIFO");
+      return -EIO;
+    }
+  }
+
   // Re-arm the watchdog only on an actual ODR change (a re-arm resets the
   // stall tracking, so repeat calls must not defer it)
-  if (s_dev->state->sampling_interval_us != prev_interval_us) {
+  if (streaming || state->sampling_interval_us != prev_interval_us) {
     prv_update_int1_watchdog();
   }
 
-  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", s_dev->state->sampling_interval_us);
-
-  *actual_us = s_dev->state->sampling_interval_us;
+  *actual_us = (type == PBL_SENSOR_GYRO) ? state->gyro_interval_us : state->sampling_interval_us;
 
   return 0;
 }
@@ -942,10 +1106,7 @@ static int prv_set_num_samples(uint32_t num_samples) {
   bool ret;
   uint8_t val;
 
-  // Limit to FIFO threshold
-  if (num_samples > LSM6DSO_FIFO_THRESHOLD) {
-    num_samples = LSM6DSO_FIFO_THRESHOLD;
-  }
+  num_samples = PBL_MIN(num_samples, prv_batch_max());
 
   // Disable all INT1 before changing FIFO threshold
   prv_configure_int1(false, false);
@@ -996,6 +1157,54 @@ static bool prv_data_ready(bool *read_ok) {
   return !*read_ok || (status & LSM6DSO_STATUS_REG_XLDA) != 0U;
 }
 
+static bool prv_gyro_ready(bool *read_ok) {
+  uint8_t status;
+  *read_ok = prv_lsm6dso_read(LSM6DSO_STATUS_REG, &status, 1);
+  return !*read_ok || (status & LSM6DSO_STATUS_REG_GDA) != 0U;
+}
+
+static int prv_read_gyro(struct pbl_sensor_frame *frame) {
+  struct pbl_lsm6dso_state *state = s_dev->state;
+  bool read_ok;
+  int err = 0;
+  int rc;
+
+  frame->chans = s_gyro_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_gyro_chans);
+
+  if (state->gyro_interval_us != 0U) {
+    if (!prv_lsm6dso_read(LSM6DSO_OUTX_L_G, frame->data, LSM6DSO_SAMPLE_SIZE_BYTES)) {
+      return -EIO;
+    }
+
+    frame->timestamp_us = pbl_uptime_us();
+
+    return 0;
+  }
+
+  // Run the gyroscope at 104 Hz, unbatched, for one sample past its turn-on time
+  if (!prv_configure_rates(state->xl_req_us, 9615U, state->shake_detection_enabled)) {
+    return -EIO;
+  }
+
+  pbl_sleep_ms(LSM6DSO_GYRO_TURN_ON_MS);
+
+  rc = PBL_POLL_SLEEP_MS(prv_gyro_ready(&read_ok), LSM6DSO_DRDY_POLL_DELAY_MS,
+                         LSM6DSO_DRDY_POLL_TIMEOUT_MS);
+  if (!read_ok || rc < 0 ||
+      !prv_lsm6dso_read(LSM6DSO_OUTX_L_G, frame->data, LSM6DSO_SAMPLE_SIZE_BYTES)) {
+    err = -EIO;
+  }
+
+  frame->timestamp_us = pbl_uptime_us();
+
+  if (!prv_configure_rates(state->xl_req_us, 0U, state->shake_detection_enabled)) {
+    err = -EIO;
+  }
+
+  return err;
+}
+
 static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
                     struct pbl_sensor_frame *frame) {
   int err = 0;
@@ -1004,15 +1213,18 @@ static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
   uint8_t ctrl1_bck;
   uint8_t *raw = frame->data;
 
-  frame->chans = s_chans;
-  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+  if (type == PBL_SENSOR_GYRO) {
+    return prv_read_gyro(frame);
+  }
 
-  // If sampling is active, the FIFO batches samples for subscribers, so the
-  // cached sample can be a full watermark period old. Read the output
-  // registers instead: they update at ODR independently of the FIFO.
-  if (s_dev->state->num_samples > 0U) {
+  frame->chans = s_xl_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_xl_chans);
+
+  // A running accelerometer updates its output registers at ODR, independently
+  // of the FIFO, which may hold samples a full watermark period old
+  if (s_dev->state->sampling_interval_us != 0U) {
     // Self-heal: a stalled stream would otherwise freeze peek data forever
-    if (!s_dev->state->recovery_pending &&
+    if (s_dev->state->num_samples > 0U && !s_dev->state->recovery_pending &&
         (prv_ms_since_last_fifo_read() >= prv_stall_threshold_ms())) {
       s_dev->state->recovery_pending = true;
       prv_queue_work(prv_stall_check_work_cb);
@@ -1079,8 +1291,7 @@ end:
 static int prv_set_shake_detection(bool on) {
   bool ret;
 
-  // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
-  ret = prv_configure_odr(s_dev->state->sampling_interval_us, on);
+  ret = prv_configure_rates(s_dev->state->xl_req_us, s_dev->state->gyro_interval_us, on);
   if (!ret) {
     PBL_LOG_ERR("Could not configure ODR");
     return -EIO;
@@ -1147,15 +1358,18 @@ static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type ty
       if (*val < 0) {
         return -EINVAL;
       }
-      ret = prv_set_sampling_interval((uint32_t)*val, &actual_us);
+      ret = prv_set_sampling_interval(type, (uint32_t)*val, &actual_us);
       if (ret == 0) {
         *val = (int32_t)actual_us;
       }
       return ret;
     case PBL_SENSOR_ATTR_BATCH:
-      *val = PBL_CLAMP(*val, 0, LSM6DSO_FIFO_THRESHOLD);
+      *val = PBL_CLAMP(*val, 0, (int32_t)prv_batch_max());
       return prv_set_num_samples((uint32_t)*val);
     case PBL_SENSOR_ATTR_SHAKE_SENSITIVITY:
+      if (type != PBL_SENSOR_ACCEL) {
+        return -ENOTSUP;
+      }
       *val = PBL_CLAMP(*val, 0, 100);
       return prv_set_shake_sensitivity_percent((uint8_t)*val);
     default:
@@ -1167,13 +1381,14 @@ static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type ty
                         enum pbl_sensor_attr attr, int32_t *val) {
   switch (attr) {
     case PBL_SENSOR_ATTR_INTERVAL:
-      *val = (int32_t)s_dev->state->sampling_interval_us;
+      *val = (int32_t)(type == PBL_SENSOR_GYRO ? s_dev->state->gyro_interval_us
+                                               : s_dev->state->sampling_interval_us);
       return 0;
     case PBL_SENSOR_ATTR_BATCH:
       *val = s_dev->state->num_samples;
       return 0;
     case PBL_SENSOR_ATTR_BATCH_MAX:
-      *val = LSM6DSO_FIFO_THRESHOLD;
+      *val = prv_batch_max();
       return 0;
     default:
       return -ENOTSUP;

@@ -14,7 +14,10 @@
 /**
  * @defgroup drivers_sensor_lsm6dso LSM6DSO
  * @ingroup drivers_sensor
- * @brief ST LSM6DSO accelerometer and gyroscope; only the accelerometer is used.
+ * @brief ST LSM6DSO accelerometer and gyroscope.
+ *
+ * Both share one FIFO and the batch size, counted in frames of the faster of the two, but sample
+ * at their own intervals. Accelerometer and gyroscope frames come in separate batches.
  *
  * @code{.c}
  * PBL_LSM6DSO_DEFINE(s_lsm6dso, &s_i2c2, 0x6A,
@@ -27,16 +30,15 @@
  * @{
  */
 
-/** @brief Accelerometer sample size in bytes (X, Y, Z, 16 bits each). */
+/** @brief Sample size in bytes (X, Y, Z, 16 bits each). */
 #define LSM6DSO_SAMPLE_SIZE_BYTES 6
 /** @brief FIFO word size in bytes as read from FIFO_DATA_OUT (tag byte plus sample). */
 #define LSM6DSO_FIFO_WORD_SIZE_BYTES 7
-/** @brief FIFO watermark in samples (the FIFO holds up to 512). */
-#define LSM6DSO_FIFO_THRESHOLD 128
-/** @brief Read buffer capacity in samples, sized to the watermark. */
-#define LSM6DSO_FIFO_SIZE LSM6DSO_FIFO_THRESHOLD
-/** @brief Number of FIFO read buffers. */
-#define LSM6DSO_NUM_BUFS 2
+/** @brief Largest FIFO watermark and read, in FIFO words of either sensor. */
+#define LSM6DSO_FIFO_SIZE 128
+/** @brief Number of batch buffers: a FIFO read and the gyroscope frames split out of it, plus
+ * one the listener may hold. */
+#define LSM6DSO_NUM_BUFS 3
 
 /** @brief LSM6DSO driver state, owned by the driver. */
 struct pbl_lsm6dso_state {
@@ -44,9 +46,23 @@ struct pbl_lsm6dso_state {
   bool shake_detection_enabled;
   /** Double tap detection requested. */
   bool double_tap_detection_enabled;
-  /** Sampling interval in microseconds, 0 when not sampling. */
+  /** Accelerometer sampling interval requested, in microseconds, 0 when not sampling. */
+  uint32_t xl_req_us;
+  /** Accelerometer sampling interval applied, which shake detection may force, 0 when off. */
   uint32_t sampling_interval_us;
-  /** Samples per FIFO batch requested by the subscribers, 0 when not streaming. */
+  /** Gyroscope sampling interval in microseconds, 0 when off. */
+  uint32_t gyro_interval_us;
+  /** Accelerometer in ultra-low-power mode. */
+  bool ulp;
+  /** Accelerometer batching interval in microseconds, 0 when not batched. */
+  uint32_t fifo_xl_us;
+  /** Gyroscope batching interval in microseconds, 0 when not batched. */
+  uint32_t fifo_gyro_us;
+  /** Interval between FIFO words of either sensor, in microseconds. */
+  uint32_t word_interval_us;
+  /** FIFO watermark in words. */
+  uint16_t wtm;
+  /** Frames per batch requested by the listener, 0 when not streaming. */
   uint16_t num_samples;
   /** Watchdog timer detecting a stalled INT1 stream. */
   struct pbl_wallclock_work int1_wdt_timer;
@@ -70,7 +86,7 @@ struct pbl_lsm6dso_state {
   bool int1_requeued;
 };
 
-/** @brief LSM6DSO accelerometer. */
+/** @brief LSM6DSO accelerometer and gyroscope. */
 struct pbl_lsm6dso {
   /** Sensor, child of the I2C bus. */
   struct pbl_sensor sensor;
@@ -99,14 +115,15 @@ extern const struct pbl_sensor_ops pbl_lsm6dso_ops;
  * @param _mount Mounting, from PBL_SENSOR_MOUNT_MATRIX().
  * @param ... Designated initializers of the remaining fields: @c int1 and @c int1_in.
  */
-#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, _mount, ...)                                          \
-  PBL_SENSOR_STREAM_STATE_DEFINE(sym, LSM6DSO_NUM_BUFS,                                            \
-                                 LSM6DSO_FIFO_SIZE *LSM6DSO_FIFO_WORD_SIZE_BYTES);                 \
-  static struct pbl_lsm6dso_state sym##_lsm6dso_state;                                             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_sensor, sensor) {                        \
-    .sensor = PBL_SENSOR_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops,                      \
-                              PBL_BIT(PBL_SENSOR_ACCEL), PBL_BIT(PBL_SENSOR_EVENT_SHAKE), _mount), \
-    .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__,                   \
+#define PBL_LSM6DSO_DEFINE(sym, _bus, _addr, _mount, ...)                           \
+  PBL_SENSOR_STREAM_STATE_DEFINE(sym, LSM6DSO_NUM_BUFS,                             \
+                                 LSM6DSO_FIFO_SIZE *LSM6DSO_FIFO_WORD_SIZE_BYTES);  \
+  static struct pbl_lsm6dso_state sym##_lsm6dso_state;                              \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_lsm6dso, struct pbl_sensor, sensor) {         \
+    .sensor = PBL_SENSOR_INIT(sym, "lsm6dso", &(_bus)->dev, &pbl_lsm6dso_ops,       \
+                              PBL_BIT(PBL_SENSOR_ACCEL) | PBL_BIT(PBL_SENSOR_GYRO), \
+                              PBL_BIT(PBL_SENSOR_EVENT_SHAKE), _mount),             \
+    .state = &sym##_lsm6dso_state, .i2c = PBL_I2C_DEV(_bus, _addr), __VA_ARGS__,    \
   }
 
 /** @} */

@@ -49,7 +49,7 @@ config ACCEL_LSM6DSO
     depends on DT_HAS_ST_LSM6DSO_ENABLED
     select I2C
     help
-      Support for the ST LSM6DSO accelerometer/gyroscope.
+      Support for the ST LSM6DSO accelerometer and gyroscope.
 
 config ACCEL_SIM
     bool "Simulator"
@@ -133,6 +133,13 @@ config ACCEL_LSM6DSO_SCALE_MG
     default 2000
     help
       Acceleration full-scale range in mg (2000, 4000, 8000 or 16000).
+
+config ACCEL_LSM6DSO_GYRO_SCALE_DPS
+    int "Gyroscope full-scale range (dps)"
+    default 2000
+    help
+      Angular rate full-scale range in degrees per second (125, 250, 500,
+      1000 or 2000).
 
 endif # ACCEL_LSM6DSO
 
