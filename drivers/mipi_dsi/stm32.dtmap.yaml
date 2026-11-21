@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32-dsi
+config: MIPI_DSI_STM32
+class: mipi_dsi
+define: PBL_MIPI_DSI_STM32_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: pclk
+  - clock: ref
+  - clock: px_clk
