@@ -55,11 +55,11 @@
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>,
-			  <&rcc LPTIM1_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <&rcc LSE_CK>;
+				 <&rcc LSE_CK>, <&rcc LSE_CK>;
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <0>;
+			       <100000000>, <100000000>, <0>, <0>;
 };
 
 &dma1 {
@@ -133,6 +133,10 @@
 };
 
 &adc3 {
+	status = "okay";
+};
+
+&rtc {
 	status = "okay";
 };
 
