@@ -90,3 +90,11 @@ static struct pbl_sensing_client s_client = {
 pbl_sensing_client_add(&s_client);
 pbl_sensing_arm(&s_client, 5U);
 ```
+
+## Users
+
+- The accelerometer manager (`pebble/services/accel_manager/`) has a client
+  per data subscriber, filling the subscriber's buffer and posting its
+  callback to the subscriber's task, and one for shake and double tap
+  events. The subscriber formats, the vibe flag and the sensitivity
+  preference stay there.

@@ -14,10 +14,11 @@
  * @ingroup services
  * @brief Shares the accelerometer between subscribers.
  *
- * Samples from the accelerometer driver are queued in a shared buffer and copied, subsampled to
- * each subscriber's rate, into a buffer the subscriber provides. Once a subscriber's buffer holds
- * the requested number of samples, its callback runs on the task chosen at subscription. The
- * manager also arms shake and double tap detection while event service subscribers exist.
+ * Each subscriber is a client of the sensing subsystem, which samples the accelerometer for all of
+ * them and decimates the samples to each subscriber's rate. They are copied into a buffer the
+ * subscriber provides, and once it holds the requested number of samples, the subscriber's
+ * callback runs on the task chosen at subscription. The manager also enables shake and double tap
+ * detection while event service subscribers exist.
  *
  * The @c sys_ functions are syscalls usable from unprivileged code; subscription handles passed in
  * from userspace are validated against the subscriber list.
