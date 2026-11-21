@@ -162,6 +162,16 @@
 			#size-cells = <1>;
 		};
 
+		fmc: memory-controller@52004000 {
+			compatible = "st,stm32h7-fmc";
+			reg = <0x52004000 0x1000>;
+			clocks = <&rcc FMC_CK>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			status = "disabled";
+		};
+
 		qspi: spi@52005000 {
 			compatible = "st,stm32f469-qspi";
 			reg = <0x52005000 0x1000>, <0x90000000 0x10000000>;
