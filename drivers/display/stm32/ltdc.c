@@ -105,6 +105,7 @@ static void prv_start(const struct pbl_display_stm32_ltdc *ltdc, uint8_t *frame,
   st->frame = frame;
   st->notify = notify;
   st->stage = PBL_DISPLAY_STM32_LTDC_TEAR;
+  pbl_idle_state_block(SOC_STM32_IDLE_STOP);
   prv_source(ltdc, frame);
   (void)pbl_panel_set_tear(ltdc->panel, true);
 }
@@ -132,6 +133,7 @@ static void prv_dsi_event(enum pbl_mipi_dsi_event event, void *arg) {
     prv_source(ltdc, st->frame);
     (void)pbl_panel_set_window(ltdc->panel, 0U, 0U, w / 2U - 1U, h - 1U);
     st->stage = PBL_DISPLAY_STM32_LTDC_IDLE;
+    pbl_idle_state_release(SOC_STM32_IDLE_STOP);
     if (st->notify) {
       pbl_display_complete(&ltdc->disp, 0);
     }
@@ -242,7 +244,8 @@ static int prv_init(const struct pbl_display *disp) {
   return prv_command_mode(ltdc) ? prv_refresh(ltdc, disp->framebuffer, false) : 0;
 }
 
-// The controller scans the frame while the panel shows it, which Stop would stop
+// The controller scans the frame while the panel shows it, which Stop would stop; a panel in
+// command mode keeps it, so Stop only waits for frames being sent
 static int prv_enable(const struct pbl_display *disp) {
   const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
   int ret;
@@ -256,7 +259,9 @@ static int prv_enable(const struct pbl_display *disp) {
     return ret;
   }
 
-  pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+  if (!prv_command_mode(ltdc)) {
+    pbl_idle_state_block(SOC_STM32_IDLE_STOP);
+  }
   ltdc->state->enabled = true;
 
   return 0;
@@ -275,7 +280,9 @@ static int prv_disable(const struct pbl_display *disp) {
     return ret;
   }
 
-  pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+  if (!prv_command_mode(ltdc)) {
+    pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+  }
   ltdc->state->enabled = false;
 
   return 0;
