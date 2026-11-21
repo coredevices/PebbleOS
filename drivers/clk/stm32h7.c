@@ -30,7 +30,8 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
               STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK &&
               STM32H7_CLK_DMA2D_CK == DMA2D_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
               STM32H7_CLK_USART1_CK == USART1_CK && STM32H7_CLK_LPTIM1_CK == LPTIM1_CK &&
-              STM32H7_CLK_I2C4_CK == I2C4_CK);
+              STM32H7_CLK_I2C4_CK == I2C4_CK && STM32H7_CLK_RTC_CK == RTC_CK &&
+              STM32H7_CLK_RTCAPB_CK == RTCAPB_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -102,6 +103,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_I2C4_CK] = GATE(APB4ENR, 7, PCLK4),
+  [STM32H7_CLK_RTCAPB_CK] = GATE(APB4ENR, 16, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
 };
 
@@ -193,6 +195,15 @@ static int prv_lse_on(const struct pbl_clk_stm32h7 *rcc) {
                           LSERDY_TIMEOUT_US);
 }
 
+// The RTC clock is in the backup domain too
+static int prv_rtc_on(const struct pbl_clk_stm32h7 *rcc, bool on) {
+  pbl_modifyl(0U, PWR_CR1_DBP, rcc->pwr + STM32H7_PWR_CR1_OFFSET);
+  pbl_modifyl(on ? 0U : RCC_BDCR_RTCEN, on ? RCC_BDCR_RTCEN : 0U,
+              rcc->base + STM32H7_RCC_BDCR_OFFSET);
+
+  return 0;
+}
+
 // PLL outputs follow each other, P, Q and R of PLL1, then of PLL2 and PLL3
 static bool prv_is_pll(uint32_t id) {
   return id >= STM32H7_CLK_PLL1_P && id <= STM32H7_CLK_PLL3_R;
@@ -236,6 +247,8 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
       return prv_osc_on(rcc, STM32H7_RCC_CSR_OFFSET, RCC_CSR_LSION, RCC_CSR_LSIRDY);
     case STM32H7_CLK_LSE_CK:
       return prv_lse_on(rcc);
+    case STM32H7_CLK_RTC_CK:
+      return prv_rtc_on(rcc, true);
     default:
       break;
   }
@@ -261,6 +274,8 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
     case STM32H7_CLK_LSI_CK:
       pbl_modifyl(RCC_CSR_LSION, 0U, rcc->base + STM32H7_RCC_CSR_OFFSET);
       return 0;
+    case STM32H7_CLK_RTC_CK:
+      return prv_rtc_on(rcc, false);
     default:
       break;
   }
@@ -368,6 +383,17 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
         default:
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_CSI_CK);
           return 0;
+      }
+    case STM32H7_CLK_RTC_CK:
+      switch (PBL_FIELD_GET(RCC_BDCR_RTCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_BDCR_OFFSET))) {
+        case RCC_BDCR_RTCSEL_LSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        case RCC_BDCR_RTCSEL_LSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
+          return 0;
+        default:
+          return -ENOENT;
       }
     case STM32H7_CLK_LPTIM1_CK:
       switch (PBL_FIELD_GET(RCC_D2CCIP2R_LPTIM1SEL_MASK,
@@ -660,9 +686,47 @@ static int prv_set_lptim1_parent(const struct pbl_clk_controller *ctrl,
   return 0;
 }
 
+// The selection only changes after a reset of the backup domain, which would stop the LSE and
+// lose the time: it is set once, from the first boot
+static int prv_set_rtc_parent(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t cur = PBL_FIELD_GET(RCC_BDCR_RTCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_BDCR_OFFSET));
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_LSE_CK:
+      sel = RCC_BDCR_RTCSEL_LSE;
+      break;
+    case STM32H7_CLK_LSI_CK:
+      sel = RCC_BDCR_RTCSEL_LSI;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  if (cur == sel) {
+    return 0;
+  }
+
+  if (cur != RCC_BDCR_RTCSEL_NONE) {
+    return -EBUSY;
+  }
+
+  pbl_modifyl(0U, PWR_CR1_DBP, rcc->pwr + STM32H7_PWR_CR1_OFFSET);
+  prv_modify(rcc, STM32H7_RCC_BDCR_OFFSET, RCC_BDCR_RTCSEL_MASK, sel);
+
+  return 0;
+}
+
 static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                           const struct pbl_clk *parent) {
   switch (id) {
+    case STM32H7_CLK_RTC_CK:
+      return prv_set_rtc_parent(ctrl, parent);
     case STM32H7_CLK_LPTIM1_CK:
       return prv_set_lptim1_parent(ctrl, parent);
     case STM32H7_CLK_PLLSRC:
