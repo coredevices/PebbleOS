@@ -7,11 +7,14 @@
 
 /* Register offsets */
 
+#define STM32H7_PWR_CR1_OFFSET  0x0000
 #define STM32H7_PWR_CSR1_OFFSET 0x0004
 #define STM32H7_PWR_CR3_OFFSET  0x000c
 #define STM32H7_PWR_D3CR_OFFSET 0x0018
 
 /* Register bit definitions */
+
+#define PWR_CR1_DBP PBL_BIT(8)
 
 #define PWR_CSR1_ACTVOSRDY PBL_BIT(13)
 

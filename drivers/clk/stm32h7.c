@@ -29,7 +29,7 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
               STM32H7_CLK_LTDC_CK == LTDC_CK && STM32H7_CLK_RNG_CK == RNG_CK &&
               STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK &&
               STM32H7_CLK_DMA2D_CK == DMA2D_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
-              STM32H7_CLK_USART1_CK == USART1_CK);
+              STM32H7_CLK_USART1_CK == USART1_CK && STM32H7_CLK_LPTIM1_CK == LPTIM1_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -48,8 +48,9 @@ static bool s_sys_on_pll1;
 // The HSE crystal starts within a few milliseconds, the PLL within a few hundred microseconds
 #define HSERDY_TIMEOUT_US 100000U
 #define PLLRDY_TIMEOUT_US 10000U
-// The HSI48 and LSI oscillators start within tens of microseconds
+// The HSI48 and LSI oscillators start within tens of microseconds, the LSE crystal within 2 s
 #define OSCRDY_TIMEOUT_US 1000U
+#define LSERDY_TIMEOUT_US 2000000U
 
 // Maximums at VOS1
 #define CPU_MAX_MHZ  MHZ(400)
@@ -97,6 +98,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_LTDC_CK] = GATE(APB3ENR, 3, PLL3_R),
   [STM32H7_CLK_DSI_CK] = GATE(APB3ENR, 4, PCLK3),
   [STM32H7_CLK_TIM5_CK] = GATE(APB1LENR, 3, PCLK1),
+  [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
 };
@@ -180,6 +182,15 @@ static int prv_osc_on(const struct pbl_clk_stm32h7 *rcc, uint32_t offset, uint32
   return PBL_POLL_BUSY_US((prv_getreg(rcc, offset) & rdy) != 0U, 1U, OSCRDY_TIMEOUT_US);
 }
 
+// The LSE is in the backup domain, written with its protection lifted. It stays on.
+static int prv_lse_on(const struct pbl_clk_stm32h7 *rcc) {
+  pbl_modifyl(0U, PWR_CR1_DBP, rcc->pwr + STM32H7_PWR_CR1_OFFSET);
+  pbl_modifyl(0U, RCC_BDCR_LSEON, rcc->base + STM32H7_RCC_BDCR_OFFSET);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rcc, STM32H7_RCC_BDCR_OFFSET) & RCC_BDCR_LSERDY) != 0U, 100U,
+                          LSERDY_TIMEOUT_US);
+}
+
 // PLL outputs follow each other, P, Q and R of PLL1, then of PLL2 and PLL3
 static bool prv_is_pll(uint32_t id) {
   return id >= STM32H7_CLK_PLL1_P && id <= STM32H7_CLK_PLL3_R;
@@ -221,6 +232,8 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
       return prv_osc_on(rcc, STM32H7_RCC_CR_OFFSET, RCC_CR_HSI48ON, RCC_CR_HSI48RDY);
     case STM32H7_CLK_LSI_CK:
       return prv_osc_on(rcc, STM32H7_RCC_CSR_OFFSET, RCC_CSR_LSION, RCC_CSR_LSIRDY);
+    case STM32H7_CLK_LSE_CK:
+      return prv_lse_on(rcc);
     default:
       break;
   }
@@ -334,6 +347,27 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           return 0;
         case RCC_D2CCIP2R_USARTSEL_LSE:
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        default:
+          return -ENOTSUP;
+      }
+    case STM32H7_CLK_LPTIM1_CK:
+      switch (PBL_FIELD_GET(RCC_D2CCIP2R_LPTIM1SEL_MASK,
+                            prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
+        case RCC_D2CCIP2R_LPTIM1SEL_PCLK:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PCLK1);
+          return 0;
+        case RCC_D2CCIP2R_LPTIM1SEL_PLL2_P:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL2_P);
+          return 0;
+        case RCC_D2CCIP2R_LPTIM1SEL_PLL3_R:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL3_R);
+          return 0;
+        case RCC_D2CCIP2R_LPTIM1SEL_LSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        case RCC_D2CCIP2R_LPTIM1SEL_LSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
           return 0;
         default:
           return -ENOTSUP;
@@ -575,9 +609,44 @@ static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struc
   return 0;
 }
 
+static int prv_set_lptim1_parent(const struct pbl_clk_controller *ctrl,
+                                 const struct pbl_clk *parent) {
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_PCLK1:
+      sel = RCC_D2CCIP2R_LPTIM1SEL_PCLK;
+      break;
+    case STM32H7_CLK_PLL2_P:
+      sel = RCC_D2CCIP2R_LPTIM1SEL_PLL2_P;
+      break;
+    case STM32H7_CLK_PLL3_R:
+      sel = RCC_D2CCIP2R_LPTIM1SEL_PLL3_R;
+      break;
+    case STM32H7_CLK_LSE_CK:
+      sel = RCC_D2CCIP2R_LPTIM1SEL_LSE;
+      break;
+    case STM32H7_CLK_LSI_CK:
+      sel = RCC_D2CCIP2R_LPTIM1SEL_LSI;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  prv_modify(prv_rcc(ctrl), STM32H7_RCC_D2CCIP2R_OFFSET, RCC_D2CCIP2R_LPTIM1SEL_MASK, sel);
+
+  return 0;
+}
+
 static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                           const struct pbl_clk *parent) {
   switch (id) {
+    case STM32H7_CLK_LPTIM1_CK:
+      return prv_set_lptim1_parent(ctrl, parent);
     case STM32H7_CLK_PLLSRC:
       return prv_set_pllsrc(ctrl, parent);
     case STM32H7_CLK_SYS_CK:

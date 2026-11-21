@@ -110,6 +110,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_TIM5_CK 95
 /** SYSCFG clock. */
 #define STM32H7_CLK_SYSCFG_CK 111
+/** LPTIM1 kernel clock. */
+#define STM32H7_CLK_LPTIM1_CK 144
 /** USART1 kernel clock. */
 #define STM32H7_CLK_USART1_CK 156
 /** @} */
