@@ -269,6 +269,15 @@
 			clocks = <&rcc SYSCFG_CK>;
 		};
 
+		rtc: rtc@58004000 {
+			compatible = "st,stm32h7-rtc";
+			reg = <0x58004000 0x400>;
+			clocks = <&rcc RTCAPB_CK>, <&rcc RTC_CK>;
+			clock-names = "pclk", "rtc_ck";
+			interrupts = <41>;
+			status = "disabled";
+		};
+
 		iwdg: watchdog@58004800 {
 			compatible = "st,stm32-iwdg";
 			reg = <0x58004800 0x400>;
