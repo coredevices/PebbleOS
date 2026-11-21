@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/flash.h>
+#include <pbl/kernel/section.h>
 #include <pbl/util/bits.h>
 
 /**
@@ -13,7 +14,9 @@
  * @ingroup drivers_flash
  * @brief Description of the SPI NOR parts boards are fitted with.
  *
- * Parts share the command set below; a part only describes what differs between them.
+ * Parts share the command set below; a part only describes what differs between them. Each part
+ * is defined with PBL_FLASH_NOR_PART_DEFINE() in its own file, and linking that file adds it to
+ * the parts drivers identify at runtime by their JEDEC ID.
  * @{
  */
 
@@ -165,6 +168,19 @@ struct pbl_flash_nor_part {
   /** Time to leave deep power-down, in microseconds. */
   uint16_t dpd_exit_us;
 };
+
+/**
+ * @brief Define a NOR part, one of those drivers identify at runtime.
+ *
+ * @param sym Symbol of the part.
+ */
+#define PBL_FLASH_NOR_PART_DEFINE(sym)                                                      \
+  const struct pbl_flash_nor_part sym PBL_ITERABLE_SECTION(const struct pbl_flash_nor_part, \
+                                                           flash_nor_part, #sym)
+
+/** @cond INTERNAL_HIDDEN */
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_flash_nor_part, flash_nor_part);
+/** @endcond */
 
 /** @brief GigaDevice GD25LQ255E. */
 extern const struct pbl_flash_nor_part pbl_flash_nor_gd25lq255e;

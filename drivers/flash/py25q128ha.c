@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/flash/nor.h>
 
-const struct pbl_flash_nor_part pbl_flash_nor_py25q128ha = {
+PBL_FLASH_NOR_PART_DEFINE(pbl_flash_nor_py25q128ha) = {
   .name = "PY25Q128HA",
   .id = 0x182085U,
   .geometry =

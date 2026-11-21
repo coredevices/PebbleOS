@@ -2,5 +2,4 @@
 # are processed. Remove an entry once upstream has it.
 # <prefix>	<description>
 coredevices	Core Devices LLC
-gigadevice	GigaDevice Semiconductor Inc.
 sifli	SiFli Technologies (Nanjing) Co., Ltd.

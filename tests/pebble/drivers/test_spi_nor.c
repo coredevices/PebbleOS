@@ -468,10 +468,9 @@ PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
       PBL_FLASH_OTP_CELL("soc-config-user", 0x0800U, 256U),                                      \
       PBL_FLASH_OTP_CELL("soc-config-cust", 0x1000U, 256U)
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, &pbl_flash_nor_gd25lq255e, nullptr, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, &pbl_flash_nor_gd25q256e, nullptr, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, &pbl_flash_nor_gd25q256e, nullptr,
-                         OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, nullptr, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, nullptr, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, nullptr, OTP_CELLS);
 
 const struct pbl_flash *const FLASH = &s_nor_q;
 
@@ -1023,7 +1022,7 @@ void test_spi_nor__quad_enable_checked(void) {
   cl_assert(pbl_device_init(&s_nor_q.dev) != 0);
 }
 
-// A part other than the one the board names is not driven
+// A part none of the linked parts describes is not driven
 void test_spi_nor__unsupported_part(void) {
   prv_reset(CHIP_GD25Q256E);
   s_model = CHIP_UNKNOWN;
@@ -1031,10 +1030,17 @@ void test_spi_nor__unsupported_part(void) {
   cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), -ENODEV);
 }
 
-void test_spi_nor__other_part(void) {
+// The part is the one the JEDEC ID names
+void test_spi_nor__part_by_id(void) {
   prv_reset(CHIP_GD25LQ255E);
   prv_build_sfdp();
-  cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), -ENODEV);
+  cl_assert_equal_i(pbl_device_init(&s_nor_q.dev), 0);
+  cl_assert(s_nor_q_data.part == &pbl_flash_nor_gd25lq255e);
+
+  prv_reset(CHIP_GD25Q256E);
+  prv_build_sfdp();
+  cl_assert_equal_i(pbl_device_init(&s_nor_lq.dev), 0);
+  cl_assert(s_nor_lq_data.part == &pbl_flash_nor_gd25q256e);
 }
 
 void test_spi_nor__otp_cells(void) {
