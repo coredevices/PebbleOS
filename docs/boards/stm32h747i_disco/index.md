@@ -28,9 +28,10 @@ random number generator, the watchdog, DMA, the display and the DMA2D work so fa
   the QUADSPI banks; PebbleOS uses the one on bank 1 as its `flash`, with
   quad I/O at 50 MHz
 - **Display**: the MB1166 module, a 4" 480x800 Orise Tech OTM8009A panel on
-  two MIPI DSI lanes at 500 Mbit/s, in video mode; the LTDC scans an RGB565
-  framebuffer at the start of the SDRAM, at a 27.5 MHz pixel clock from PLL3;
-  it is the `display`
+  two MIPI DSI lanes at 500 Mbit/s, in video mode; the LTDC scans an 800x480
+  RGB565 framebuffer at the start of the SDRAM, which the panel takes turned
+  a quarter turn, landscape as the kit is held, at a 27.5 MHz pixel clock
+  from PLL3; it is the `display`
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
   conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit

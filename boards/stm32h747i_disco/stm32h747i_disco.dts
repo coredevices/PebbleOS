@@ -26,13 +26,13 @@
 		};
 	};
 
-	// What the LTDC scans to the panel
+	// What the LTDC scans to the panel, landscape, which the panel takes turned a quarter turn
 	framebuffer {
 		compatible = "simple-framebuffer";
 		memory-region = <&fb_mem>;
-		width = <480>;
-		height = <800>;
-		stride = <960>;
+		width = <800>;
+		height = <480>;
+		stride = <1600>;
 		format = "r5g6b5";
 		display = <&ltdc>;
 	};
