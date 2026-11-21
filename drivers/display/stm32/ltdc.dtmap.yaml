@@ -14,6 +14,9 @@ args:
   - self: panel
     remote: 0
     child: panel
+  - self: mipi_dsi
+    remote: 0
+    default: nullptr
   - prop: width
     from: display
   - prop: height

@@ -51,15 +51,17 @@ static void prv_timing(const struct pbl_display_stm32_ltdc *ltdc,
   prv_putreg(ltdc, STM32_LTDC_BCCR_OFFSET, 0U);
 }
 
+// The layer covers the active area of the timing, out of a frame as wide as the display
 static void prv_layer(const struct pbl_display_stm32_ltdc *ltdc, const struct pbl_panel_timing *t) {
   const struct pbl_display *disp = &ltdc->disp;
   uint32_t hstart = (uint32_t)t->hsync_len + t->hback_porch;
   uint32_t vstart = (uint32_t)t->vsync_len + t->vback_porch;
   uint32_t pitch = (uint32_t)disp->props.width * BYTES_PER_PIXEL;
+  uint32_t len = (uint32_t)t->hactive * BYTES_PER_PIXEL;
 
   prv_putreg(ltdc, STM32_LTDC_L1WHPCR_OFFSET,
              PBL_FIELD_PREP(LTDC_LWHPCR_WHSTPOS_MASK, hstart) |
-                 PBL_FIELD_PREP(LTDC_LWHPCR_WHSPPOS_MASK, hstart + disp->props.width - 1U));
+                 PBL_FIELD_PREP(LTDC_LWHPCR_WHSPPOS_MASK, hstart + t->hactive - 1U));
   prv_putreg(ltdc, STM32_LTDC_L1WVPCR_OFFSET,
              PBL_FIELD_PREP(LTDC_LWVPCR_WVSTPOS_MASK, vstart) |
                  PBL_FIELD_PREP(LTDC_LWVPCR_WVSPPOS_MASK, vstart + disp->props.height - 1U));
@@ -73,13 +75,93 @@ static void prv_layer(const struct pbl_display_stm32_ltdc *ltdc, const struct pb
   prv_putreg(ltdc, STM32_LTDC_L1CFBAR_OFFSET, (uint32_t)(uintptr_t)disp->framebuffer);
   prv_putreg(ltdc, STM32_LTDC_L1CFBLR_OFFSET,
              PBL_FIELD_PREP(LTDC_LCFBLR_CFBP_MASK, pitch) |
-                 PBL_FIELD_PREP(LTDC_LCFBLR_CFBLL_MASK, pitch + LTDC_LCFBLR_CFBLL_EXTRA));
+                 PBL_FIELD_PREP(LTDC_LCFBLR_CFBLL_MASK, len + LTDC_LCFBLR_CFBLL_EXTRA));
   prv_putreg(ltdc, STM32_LTDC_L1CFBLNR_OFFSET,
              PBL_FIELD_PREP(LTDC_LCFBLNR_CFBLNBR_MASK, disp->props.height));
   prv_putreg(ltdc, STM32_LTDC_L1CR_OFFSET, LTDC_LCR_LEN);
 }
 
 static int prv_enable(const struct pbl_display *disp);
+
+static bool prv_command_mode(const struct pbl_display_stm32_ltdc *ltdc) {
+  return ltdc->host != nullptr &&
+         ltdc->panel->bus_format == PBL_PANEL_BUS_FORMAT_MIPI_DSI_CMD_RGB888;
+}
+
+// The DSI host holds the controller while its source changes
+static void prv_source(const struct pbl_display_stm32_ltdc *ltdc, const uint8_t *first) {
+  (void)pbl_mipi_dsi_hold(ltdc->host, true);
+  prv_putreg(ltdc, STM32_LTDC_L1CFBAR_OFFSET, (uint32_t)(uintptr_t)first);
+  prv_putreg(ltdc, STM32_LTDC_SRCR_OFFSET, LTDC_SRCR_IMR);
+  (void)pbl_mipi_dsi_hold(ltdc->host, false);
+}
+
+static void prv_start(const struct pbl_display_stm32_ltdc *ltdc, uint8_t *frame, bool notify) {
+  struct pbl_display_stm32_ltdc_state *st = ltdc->state;
+
+  // A whole frame is more than the data cache holds
+  pbl_dcache_flush_all();
+
+  st->frame = frame;
+  st->notify = notify;
+  st->stage = PBL_DISPLAY_STM32_LTDC_TEAR;
+  prv_source(ltdc, frame);
+  (void)pbl_panel_set_tear(ltdc->panel, true);
+}
+
+// In command mode a frame goes to the frame memory of the panel in two halves, left then right,
+// each written while the scan of the panel is in the other: the first from the tearing effect,
+// the second once the first is out
+static void prv_dsi_event(enum pbl_mipi_dsi_event event, void *arg) {
+  const struct pbl_display_stm32_ltdc *ltdc = arg;
+  struct pbl_display_stm32_ltdc_state *st = ltdc->state;
+  const uint16_t w = ltdc->disp.props.width;
+  const uint16_t h = ltdc->disp.props.height;
+
+  if (event == PBL_MIPI_DSI_EVENT_TEAR && st->stage == PBL_DISPLAY_STM32_LTDC_TEAR) {
+    (void)pbl_panel_set_tear(ltdc->panel, false);
+    st->stage = PBL_DISPLAY_STM32_LTDC_LEFT;
+    (void)pbl_mipi_dsi_refresh(ltdc->host);
+  } else if (event == PBL_MIPI_DSI_EVENT_REFRESH_DONE && st->stage == PBL_DISPLAY_STM32_LTDC_LEFT) {
+    prv_source(ltdc, st->frame + (size_t)(w / 2U) * BYTES_PER_PIXEL);
+    (void)pbl_panel_set_window(ltdc->panel, w / 2U, 0U, w - 1U, h - 1U);
+    st->stage = PBL_DISPLAY_STM32_LTDC_RIGHT;
+    (void)pbl_mipi_dsi_refresh(ltdc->host);
+  } else if (event == PBL_MIPI_DSI_EVENT_REFRESH_DONE &&
+             st->stage == PBL_DISPLAY_STM32_LTDC_RIGHT) {
+    prv_source(ltdc, st->frame);
+    (void)pbl_panel_set_window(ltdc->panel, 0U, 0U, w / 2U - 1U, h - 1U);
+    st->stage = PBL_DISPLAY_STM32_LTDC_IDLE;
+    if (st->notify) {
+      pbl_display_complete(&ltdc->disp, 0);
+    }
+    if (st->queued != nullptr) {
+      uint8_t *frame = st->queued;
+
+      st->queued = nullptr;
+      prv_start(ltdc, frame, st->queued_notify);
+    }
+  }
+}
+
+// A frame asked for while another is being sent follows it
+static int prv_refresh(const struct pbl_display_stm32_ltdc *ltdc, uint8_t *frame, bool notify) {
+  struct pbl_display_stm32_ltdc_state *st = ltdc->state;
+
+  pbl_irq_lock();
+  if (st->stage != PBL_DISPLAY_STM32_LTDC_IDLE) {
+    st->queued = frame;
+    st->queued_notify = notify;
+    pbl_irq_unlock();
+    return 0;
+  }
+  st->stage = PBL_DISPLAY_STM32_LTDC_TEAR;
+  pbl_irq_unlock();
+
+  prv_start(ltdc, frame, notify);
+
+  return 0;
+}
 
 static int prv_init(const struct pbl_display *disp) {
   const struct pbl_display_stm32_ltdc *ltdc = prv_ltdc(disp);
@@ -101,9 +183,16 @@ static int prv_init(const struct pbl_display *disp) {
   }
 
   if (disp->framebuffer == nullptr || disp->props.format != PBL_DISPLAY_FORMAT_RGB565 ||
-      panel->bus_format != PBL_PANEL_BUS_FORMAT_MIPI_DSI_RGB888 || disp->props.width > t->hactive ||
-      disp->props.height > t->vactive) {
+      (panel->bus_format != PBL_PANEL_BUS_FORMAT_MIPI_DSI_RGB888 && !prv_command_mode(ltdc)) ||
+      disp->props.width > t->hactive || disp->props.height > t->vactive) {
     return -ENOTSUP;
+  }
+
+  // In command mode the controller sends half of the frame on each refresh
+  struct pbl_panel_timing lt = *t;
+
+  if (prv_command_mode(ltdc)) {
+    lt.hactive = t->hactive / 2U;
   }
 
   ret = pbl_device_init(&ltdc->clk.ctrl->dev);
@@ -117,12 +206,14 @@ static int prv_init(const struct pbl_display *disp) {
   }
 
   ltdc->state->scanout = disp->framebuffer;
-  prv_timing(ltdc, t);
-  prv_layer(ltdc, t);
+  prv_timing(ltdc, &lt);
+  prv_layer(ltdc, &lt);
   prv_putreg(ltdc, STM32_LTDC_SRCR_OFFSET, LTDC_SRCR_IMR);
 
-  // The DSI host takes the data enable inverted, and active high syncs
-  prv_putreg(ltdc, STM32_LTDC_GCR_OFFSET, LTDC_GCR_HSPOL | LTDC_GCR_VSPOL | LTDC_GCR_LTDCEN);
+  // The DSI host takes the data enable inverted and active high syncs in video mode, all active
+  // low in command mode
+  prv_putreg(ltdc, STM32_LTDC_GCR_OFFSET,
+             (prv_command_mode(ltdc) ? 0U : LTDC_GCR_HSPOL | LTDC_GCR_VSPOL) | LTDC_GCR_LTDCEN);
   pbl_irq_enable(ltdc->irq);
 
   ret = pbl_panel_prepare(panel);
@@ -130,7 +221,25 @@ static int prv_init(const struct pbl_display *disp) {
     return ret;
   }
 
-  return prv_enable(disp);
+  if (prv_command_mode(ltdc)) {
+    ret = pbl_mipi_dsi_set_event_cb(ltdc->host, prv_dsi_event, (void *)ltdc);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_panel_set_window(panel, 0U, 0U, disp->props.width / 2U - 1U, disp->props.height - 1U);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_enable(disp);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // The panel gets the frame before the first update
+  return prv_command_mode(ltdc) ? prv_refresh(ltdc, disp->framebuffer, false) : 0;
 }
 
 // The controller scans the frame while the panel shows it, which Stop would stop
@@ -176,11 +285,19 @@ static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
   return rotated ? -ENOTSUP : 0;
 }
 
-// Rows of another buffer are copied into the frame scanned out
+// Rows of another buffer are copied into the frame scanned out; in command mode, the panel is
+// sent the whole frame of the buffer
 static int prv_update(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
                       uint16_t y0, uint16_t y1) {
   uint8_t *scanout = prv_ltdc(disp)->state->scanout;
   uint32_t pitch = (uint32_t)disp->props.width * BYTES_PER_PIXEL;
+
+  if (prv_command_mode(prv_ltdc(disp))) {
+    if (buf->pitch != pitch) {
+      return -EINVAL;
+    }
+    return prv_refresh(prv_ltdc(disp), buf->data, true);
+  }
 
   if (buf->data != scanout) {
     for (uint32_t y = y0; y <= y1; y++) {
@@ -200,6 +317,10 @@ static int prv_flip(const struct pbl_display *disp, const struct pbl_display_buf
 
   if (buf->pitch != (uint32_t)disp->props.width * BYTES_PER_PIXEL) {
     return -EINVAL;
+  }
+
+  if (prv_command_mode(ltdc)) {
+    return prv_refresh(ltdc, buf->data, true);
   }
 
   // A whole frame is more than the data cache holds
