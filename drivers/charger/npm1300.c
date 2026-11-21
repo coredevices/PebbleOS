@@ -12,8 +12,6 @@
 #include <pbl/drivers/mfd/npm1300.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/reboot.h>
-#include <pbl/kernel/sched.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
@@ -119,7 +117,6 @@ PBL_LOG_MODULE_DECLARE(driver_charger, CONFIG_DRIVER_CHARGER_LOG_LEVEL);
 
 // SHIP
 #define NPM1300_TASKSHPHLDCFGSTROBE 0x0B01U
-#define NPM1300_TASKENTERSHIPMODE   0x0B02U
 #define NPM1300_SHPHLDCONFIG        0x0B04U
 #define NPM1300_SHPHLDCONFIG_96MS   3U
 
@@ -454,51 +451,6 @@ static int prv_init(const struct pbl_charger *charger) {
   }
 
   return 0;
-}
-
-int pbl_charger_npm1300_power_cut_check(void *user_data) {
-  const struct pbl_charger_npm1300 *chg = user_data;
-  bool present;
-  int ret;
-
-  if (!chg->cfg.system_power_controller) {
-    return -ENOTSUP;
-  }
-
-  // Ship mode exits as soon as VBUS is present
-  ret = prv_vbus_present(chg, &present);
-  if (ret != 0) {
-    return ret;
-  }
-
-  return present ? -EBUSY : 0;
-}
-
-// Ship mode: everything but the RTC loses power until a button press
-void pbl_charger_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data) {
-  int ret;
-
-  // I2C transfers need the scheduler
-  if (pbl_in_isr() || pbl_irq_is_locked() || !pbl_kernel_is_running()) {
-    return;
-  }
-
-  ret = pbl_charger_npm1300_power_cut_check(user_data);
-  if (ret != 0) {
-    PBL_LOG_ERR("Cannot enter ship mode (%d)", ret);
-    return;
-  }
-
-  ret = prv_write_register(user_data, NPM1300_TASKENTERSHIPMODE, 1);
-  if (ret != 0) {
-    PBL_LOG_ERR("Failed to enter ship mode (%d)", ret);
-    return;
-  }
-
-  // tPWRDN is 100 ms
-  pbl_busy_wait_us(100000);
-
-  PBL_LOG_ERR("Still powered after entering ship mode");
 }
 
 static int prv_get_measurements(const struct pbl_charger *charger,
