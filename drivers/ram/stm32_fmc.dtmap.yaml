@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-fmc
+config: RAM_STM32_FMC
+class: ram
+define: PBL_RAM_STM32_FMC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - pinctrl: default
+  - reg: 0
+    child: sdram
+  - size: 0
+    child: sdram
+  - prop: io-width
+    child: sdram
+  - prop: banks
+    child: sdram
+  - prop: row-bits
+    child: sdram
+  - prop: col-bits
+    child: sdram
+  - prop: tRC
+    child: sdram
+  - prop: tRAS-min
+    child: sdram
+  - prop: tRP
+    child: sdram
+  - prop: tRCD
+    child: sdram
+  - prop: tWR
+    child: sdram
+  - prop: tMRD
+    child: sdram
+  - prop: tXSR
+    child: sdram
+  - prop: tREF-ms
+    child: sdram
+  - prop: cas-latency-freqs
+    child: sdram
+    cells: 2
+    item: "{{{0}, {1}}}"
