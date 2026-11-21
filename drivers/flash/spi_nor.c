@@ -555,7 +555,6 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
                             const struct erase_type *small, const struct erase_type *large,
                             bool four_byte, struct modes *out) {
   const uint8_t addr_nbytes = nor->data->addr_nbytes;
-  const bool quad = nor->data->qer != QER_NONE;
   struct read_mode modes[5];
   size_t n = 0U;
   bool found = false;
@@ -564,10 +563,10 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
   if (sfdp->have_bfpt) {
     const uint32_t *dw = sfdp->bfpt;
 
-    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_4_4) != 0U && quad) {
+    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_4_4) != 0U) {
       modes[n++] = prv_bfpt_read_mode((uint16_t)dw[BFPT_DW3], 4U, 4U);
     }
-    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_1_4) != 0U && quad) {
+    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_1_4) != 0U) {
       modes[n++] = prv_bfpt_read_mode((uint16_t)(dw[BFPT_DW3] >> 16), 1U, 4U);
     }
     if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_2_2) != 0U) {
@@ -599,7 +598,7 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
 
   op =
       four_byte ? prv_opcode_4b(nor, sfdp, PBL_FLASH_NOR_CMD_PP_1_1_4) : PBL_FLASH_NOR_CMD_PP_1_1_4;
-  if (quad && prv_can_program(nor, op, 4U, addr_nbytes)) {
+  if (prv_can_program(nor, op, 4U, addr_nbytes)) {
     out->pp_opcode = op;
     out->pp_data_width = 4U;
   } else {
@@ -695,7 +694,7 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
   data->en4b = data->addr_nbytes == ADDR_4BYTE && !four_byte;
   data->reg_addr_nbytes = data->en4b ? ADDR_4BYTE : ADDR_3BYTE;
 
-  if (modes.read.data_width == 4U || data->pp_data_width == 4U) {
+  if (data->qer != QER_NONE && (modes.read.data_width == 4U || data->pp_data_width == 4U)) {
     ret = prv_set_quad_enable(nor);
     if (ret != 0) {
       return ret;
