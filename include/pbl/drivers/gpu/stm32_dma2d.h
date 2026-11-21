@@ -8,7 +8,6 @@
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpu.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/sem.h>
 
 /**
  * @defgroup drivers_gpu_stm32_dma2d STM32 DMA2D
@@ -20,7 +19,9 @@
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_gpu_stm32_dma2d_state {
-  struct pbl_sem done;
+  bool active;
+  struct pbl_gpu_buffer dst;
+  struct pbl_gpu_rect rect;
 };
 /** @endcond */
 
@@ -54,9 +55,7 @@ void pbl_gpu_stm32_dma2d_irq_handler(const struct pbl_gpu_stm32_dma2d *dma2d);
  */
 #define PBL_GPU_STM32_DMA2D_DEFINE(sym, _name, _base, _irq, _clk)                             \
   PBL_GPU_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_gpu_stm32_dma2d_state sym##_dma2d_state = {                               \
-    .done = PBL_SEM_INITIALIZER(0, 1),                                                        \
-  };                                                                                          \
+  static struct pbl_gpu_stm32_dma2d_state sym##_dma2d_state;                                  \
   PBL_DEVICE_INSTANCE(sym, struct pbl_gpu_stm32_dma2d, struct pbl_gpu, gpu){                  \
     .gpu = PBL_GPU_INIT(                                                                      \
         sym, _name, nullptr, &pbl_gpu_stm32_dma2d_ops,                                        \

@@ -6,9 +6,9 @@
 #include <pbl/devicetree.h>
 #include <pbl/drivers/gpu/stm32_dma2d.h>
 #include <pbl/kernel/cache.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/soc/st/idle.h>
 #include <pbl/util/bits.h>
@@ -17,9 +17,8 @@
 
 #include <hardware/stm32_dma2d.h>
 
-// Short jobs are waited for spinning, longer ones on the interrupt
-#define DMA2D_SPIN_US    50U
-#define DMA2D_TIMEOUT_MS 500U
+// An aborted job stops at the end of a burst
+#define DMA2D_ABORT_TIMEOUT_US 1000U
 
 #define DMA2D_PL_MAX 16383U
 
@@ -122,41 +121,13 @@ static void prv_background(const struct pbl_gpu_stm32_dma2d *dma2d,
                 PBL_FIELD_PREP(DMA2D_PFCCR_AM_MASK, DMA2D_PFCCR_AM_PIXEL));
 }
 
-// Runs the job the registers hold
-static int prv_run(const struct pbl_gpu_stm32_dma2d *dma2d, uint32_t mode) {
-  const uint32_t spin = (uint32_t)((uint64_t)pbl_cycles_per_sec() * DMA2D_SPIN_US / 1000000U);
-  uint32_t start;
-  uint32_t isr;
-
+// Starts the job the registers hold: its interrupt ends it
+static void prv_start(const struct pbl_gpu_stm32_dma2d *dma2d, uint32_t mode) {
+  dma2d->state->active = true;
   prv_write(dma2d, STM32_DMA2D_IFCR_OFFSET, DMA2D_ISR_ALL);
-  prv_write(dma2d, STM32_DMA2D_CR_OFFSET,
-            PBL_FIELD_PREP(DMA2D_CR_MODE_MASK, mode) | DMA2D_CR_LOM | DMA2D_CR_START);
-
-  start = pbl_cycle_get_32();
-  while ((prv_read(dma2d, STM32_DMA2D_CR_OFFSET) & DMA2D_CR_START) != 0U &&
-         (pbl_cycle_get_32() - start) < spin) {
-  }
-
-  if ((prv_read(dma2d, STM32_DMA2D_CR_OFFSET) & DMA2D_CR_START) != 0U) {
-    pbl_sem_reset(&dma2d->state->done);
-    // Writing START as 0 leaves the job running, and does not restart it if it just ended
-    pbl_modifyl(DMA2D_CR_START, DMA2D_CR_IRQS, dma2d->base + STM32_DMA2D_CR_OFFSET);
-    (void)pbl_sem_take(&dma2d->state->done, PBL_MSEC(DMA2D_TIMEOUT_MS));
-  }
-
-  isr = prv_read(dma2d, STM32_DMA2D_ISR_OFFSET);
-  prv_write(dma2d, STM32_DMA2D_IFCR_OFFSET, DMA2D_ISR_ALL);
-
-  if ((isr & (DMA2D_ISR_TEIF | DMA2D_ISR_CEIF)) != 0U) {
-    return -EIO;
-  }
-
-  if ((isr & DMA2D_ISR_TCIF) == 0U) {
-    pbl_modifyl(DMA2D_CR_START, DMA2D_CR_ABORT, dma2d->base + STM32_DMA2D_CR_OFFSET);
-    return -ETIMEDOUT;
-  }
-
-  return 0;
+  prv_write(
+      dma2d, STM32_DMA2D_CR_OFFSET,
+      PBL_FIELD_PREP(DMA2D_CR_MODE_MASK, mode) | DMA2D_CR_LOM | DMA2D_CR_IRQS | DMA2D_CR_START);
 }
 
 // The accelerator reads and writes memory behind the cache: what the CPU wrote goes out before
@@ -164,6 +135,7 @@ static int prv_run(const struct pbl_gpu_stm32_dma2d *dma2d, uint32_t mode) {
 static int prv_begin(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_gpu_buffer *dst,
                      const struct pbl_gpu_rect *rect, const struct pbl_gpu_buffer *src,
                      const struct pbl_gpu_rect *src_rect) {
+  struct pbl_gpu_stm32_dma2d_state *st = dma2d->state;
   int ret;
 
   if (!prv_aligned(dst) || (src != nullptr && !prv_aligned(src)) || rect->width > DMA2D_PL_MAX) {
@@ -181,16 +153,34 @@ static int prv_begin(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_g
   ret = pbl_clk_enable(&dma2d->clk);
   if (ret != 0) {
     pbl_idle_state_release(SOC_STM32_IDLE_STOP);
+    return ret;
   }
 
-  return ret;
+  st->dst = *dst;
+  st->rect = *rect;
+
+  return 0;
 }
 
-static void prv_end(const struct pbl_gpu_stm32_dma2d *dma2d, const struct pbl_gpu_buffer *dst,
-                    const struct pbl_gpu_rect *rect) {
+// Ends the job running, once, from its interrupt or from an abort
+static void prv_end(const struct pbl_gpu_stm32_dma2d *dma2d, int status) {
+  struct pbl_gpu_stm32_dma2d_state *st = dma2d->state;
+
+  pbl_irq_lock();
+  if (!st->active) {
+    pbl_irq_unlock();
+    return;
+  }
+  st->active = false;
+  pbl_irq_unlock();
+
+  pbl_modifyl(DMA2D_CR_START | DMA2D_CR_IRQS, 0U, dma2d->base + STM32_DMA2D_CR_OFFSET);
+  prv_write(dma2d, STM32_DMA2D_IFCR_OFFSET, DMA2D_ISR_ALL);
   (void)pbl_clk_disable(&dma2d->clk);
   pbl_idle_state_release(SOC_STM32_IDLE_STOP);
-  prv_cache(dst, rect, true);
+  prv_cache(&st->dst, &st->rect, true);
+
+  pbl_gpu_complete(&dma2d->gpu, status);
 }
 
 // A color in the format of the target, as the register-to-memory mode writes it
@@ -233,11 +223,9 @@ static int prv_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
     mode = DMA2D_CR_MODE_BLEND_FG;
   }
 
-  ret = prv_run(dma2d, mode);
+  prv_start(dma2d, mode);
 
-  prv_end(dma2d, dst, rect);
-
-  return ret;
+  return 0;
 }
 
 static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
@@ -260,6 +248,7 @@ static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
   }
 
   if (x0 >= x1 || y0 >= y1) {
+    pbl_gpu_complete(gpu, 0);
     return 0;
   }
 
@@ -304,17 +293,24 @@ static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
     mode = DMA2D_CR_MODE_M2M_PFC;
   }
 
-  ret = prv_run(dma2d, mode);
+  prv_start(dma2d, mode);
 
-  prv_end(dma2d, dst, &rect);
-
-  return ret;
+  return 0;
 }
 
 void pbl_gpu_stm32_dma2d_irq_handler(const struct pbl_gpu_stm32_dma2d *dma2d) {
-  // The flags stay for the job to read: only the interrupts are masked
-  pbl_modifyl(DMA2D_CR_START | DMA2D_CR_IRQS, 0U, dma2d->base + STM32_DMA2D_CR_OFFSET);
-  pbl_sem_give(&dma2d->state->done);
+  uint32_t isr = prv_read(dma2d, STM32_DMA2D_ISR_OFFSET);
+
+  prv_end(dma2d, (isr & (DMA2D_ISR_TEIF | DMA2D_ISR_CEIF)) != 0U ? -EIO : 0);
+}
+
+static void prv_abort(const struct pbl_gpu *gpu) {
+  const struct pbl_gpu_stm32_dma2d *dma2d = prv_dma2d(gpu);
+
+  pbl_modifyl(DMA2D_CR_START, DMA2D_CR_ABORT, dma2d->base + STM32_DMA2D_CR_OFFSET);
+  (void)PBL_POLL_BUSY_US((prv_read(dma2d, STM32_DMA2D_CR_OFFSET) & DMA2D_CR_START) == 0U, 1U,
+                         DMA2D_ABORT_TIMEOUT_US);
+  prv_end(dma2d, -ETIMEDOUT);
 }
 
 static int prv_init(const struct pbl_gpu *gpu) {
@@ -335,6 +331,7 @@ const struct pbl_gpu_ops pbl_gpu_stm32_dma2d_ops = {
   .init = prv_init,
   .fill = prv_fill,
   .blit = prv_blit,
+  .abort = prv_abort,
 };
 
 #include PBL_DT_INSTANCES(st_stm32_dma2d)

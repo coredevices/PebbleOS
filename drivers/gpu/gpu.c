@@ -4,11 +4,15 @@
 #include <errno.h>
 
 #include <pbl/drivers/gpu.h>
+#include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
 PBL_DEVICE_CLASS_DEFINE(pbl_gpu_class, "gpu");
+
+// Longest job a synchronous call waits for
+#define GPU_TIMEOUT_MS 500
 
 static const uint8_t s_bytes_per_pixel[PBL_GPU_FORMAT_COUNT] = {
   [PBL_GPU_FORMAT_RGB565] = 2U,
@@ -65,8 +69,63 @@ int pbl_gpu_dev_init(const struct pbl_device *dev) {
   return gpu->ops->init(gpu);
 }
 
-int pbl_gpu_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
-                 const struct pbl_gpu_rect *rect, uint32_t argb) {
+// Every job holds the token from the start until pbl_gpu_complete(), the only one to give it back
+// once a driver started the job
+static int prv_start(const struct pbl_gpu *gpu, pbl_timeout_t timeout, pbl_gpu_done_t done,
+                     void *arg) {
+  if (pbl_sem_take(&gpu->state->free, timeout) != 0) {
+    return -EBUSY;
+  }
+
+  gpu->state->done = done;
+  gpu->state->arg = arg;
+
+  return 0;
+}
+
+// A job with nothing to draw, or one the driver did not start
+static int prv_end_now(const struct pbl_gpu *gpu, int ret) {
+  if (ret == 0) {
+    pbl_gpu_complete(gpu, 0);
+    return 0;
+  }
+
+  pbl_sem_give(&gpu->state->free);
+
+  return ret;
+}
+
+void pbl_gpu_complete(const struct pbl_gpu *gpu, int status) {
+  struct pbl_gpu_state *st = gpu->state;
+  pbl_gpu_done_t done = st->done;
+
+  st->status = status;
+  pbl_sem_give(&st->free);
+
+  if (done != nullptr) {
+    done(status, st->arg);
+  }
+}
+
+int pbl_gpu_wait(const struct pbl_gpu *gpu, pbl_timeout_t timeout) {
+  struct pbl_gpu_state *st = gpu->state;
+
+  if (pbl_sem_take(&st->free, timeout) != 0) {
+    if (gpu->ops->abort == nullptr) {
+      return -ETIMEDOUT;
+    }
+    gpu->ops->abort(gpu);
+    (void)pbl_sem_take(&st->free, PBL_FOREVER);
+    st->status = -ETIMEDOUT;
+  }
+  pbl_sem_give(&st->free);
+
+  return st->status;
+}
+
+static int prv_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                    const struct pbl_gpu_rect *rect, uint32_t argb, pbl_timeout_t timeout,
+                    pbl_gpu_done_t done, void *arg) {
   struct pbl_gpu_rect clipped;
   int ret;
 
@@ -82,19 +141,26 @@ int pbl_gpu_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
     return -ENOTSUP;
   }
 
-  if (!prv_clip(dst, rect, &clipped) || (argb >> 24) == 0U) {
-    return 0;
+  ret = prv_start(gpu, timeout, done, arg);
+  if (ret != 0) {
+    return ret;
   }
 
-  (void)pbl_mutex_lock(&gpu->state->lock, PBL_FOREVER);
-  ret = gpu->ops->fill(gpu, dst, &clipped, argb);
-  pbl_mutex_unlock(&gpu->state->lock);
+  if (!prv_clip(dst, rect, &clipped) || (argb >> 24) == 0U) {
+    return prv_end_now(gpu, 0);
+  }
 
-  return ret;
+  ret = gpu->ops->fill(gpu, dst, &clipped, argb);
+  if (ret != 0) {
+    return prv_end_now(gpu, ret);
+  }
+
+  return 0;
 }
 
-int pbl_gpu_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
-                 const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit) {
+static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                    const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit,
+                    pbl_timeout_t timeout, pbl_gpu_done_t done, void *arg) {
   const struct pbl_gpu_transform *tf;
   struct pbl_gpu_rect clipped;
   int ret;
@@ -128,13 +194,77 @@ int pbl_gpu_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
     }
   }
 
-  if (!prv_clip(dst, clip, &clipped) || blit->alpha == 0U) {
-    return 0;
+  ret = prv_start(gpu, timeout, done, arg);
+  if (ret != 0) {
+    return ret;
   }
 
-  (void)pbl_mutex_lock(&gpu->state->lock, PBL_FOREVER);
-  ret = gpu->ops->blit(gpu, dst, &clipped, blit);
-  pbl_mutex_unlock(&gpu->state->lock);
+  if (!prv_clip(dst, clip, &clipped) || blit->alpha == 0U) {
+    return prv_end_now(gpu, 0);
+  }
 
-  return ret;
+  ret = gpu->ops->blit(gpu, dst, &clipped, blit);
+  if (ret != 0) {
+    return prv_end_now(gpu, ret);
+  }
+
+  return 0;
+}
+
+int pbl_gpu_fill_async(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *rect, uint32_t argb, pbl_gpu_done_t done,
+                       void *arg) {
+  return prv_fill(gpu, dst, rect, argb, PBL_NO_WAIT, done, arg);
+}
+
+int pbl_gpu_blit_async(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit,
+                       pbl_gpu_done_t done, void *arg) {
+  return prv_blit(gpu, dst, clip, blit, PBL_NO_WAIT, done, arg);
+}
+
+// A synchronous call waits for its own job, and stops it if it hangs
+struct prv_sync {
+  struct pbl_sem done;
+  int status;
+};
+
+static void prv_sync_done(int status, void *arg) {
+  struct prv_sync *sync = arg;
+
+  sync->status = status;
+  pbl_sem_give(&sync->done);
+}
+
+static int prv_sync_wait(const struct pbl_gpu *gpu, struct prv_sync *sync, int ret) {
+  if (ret == 0 && pbl_sem_take(&sync->done, PBL_MSEC(GPU_TIMEOUT_MS)) != 0) {
+    if (gpu->ops->abort != nullptr) {
+      gpu->ops->abort(gpu);
+    }
+    (void)pbl_sem_take(&sync->done, PBL_FOREVER);
+    sync->status = -ETIMEDOUT;
+  }
+  pbl_sem_deinit(&sync->done);
+
+  return ret != 0 ? ret : sync->status;
+}
+
+int pbl_gpu_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                 const struct pbl_gpu_rect *rect, uint32_t argb) {
+  struct prv_sync sync;
+
+  pbl_sem_init(&sync.done, 0, 1);
+
+  return prv_sync_wait(gpu, &sync,
+                       prv_fill(gpu, dst, rect, argb, PBL_FOREVER, prv_sync_done, &sync));
+}
+
+int pbl_gpu_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                 const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit) {
+  struct prv_sync sync;
+
+  pbl_sem_init(&sync.done, 0, 1);
+
+  return prv_sync_wait(gpu, &sync,
+                       prv_blit(gpu, dst, clip, blit, PBL_FOREVER, prv_sync_done, &sync));
 }
