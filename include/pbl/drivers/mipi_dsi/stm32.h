@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/mipi_dsi.h>
+#include <pbl/kernel/irq.h>
 
 /**
  * @defgroup drivers_mipi_dsi_stm32 STM32 DSI host
@@ -21,9 +22,20 @@
  */
 
 /** @brief Host. */
+/** @cond INTERNAL_HIDDEN */
+struct pbl_mipi_dsi_stm32_state {
+  pbl_mipi_dsi_event_cb_t cb;
+  void *arg;
+};
+/** @endcond */
+
 struct pbl_mipi_dsi_stm32 {
   /** Host. */
   struct pbl_mipi_dsi_host host;
+  /** Driver runtime state. */
+  struct pbl_mipi_dsi_stm32_state *state;
+  /** Wrapper interrupt. */
+  pbl_irq_t irq;
   /** Registers. */
   uintptr_t base;
   /** Bus clock. */
@@ -37,6 +49,7 @@ struct pbl_mipi_dsi_stm32 {
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_mipi_dsi_host_ops pbl_mipi_dsi_stm32_ops;
 int pbl_mipi_dsi_stm32_init(const struct pbl_device *dev);
+void pbl_mipi_dsi_stm32_irq_handler(const struct pbl_mipi_dsi_stm32 *dsi);
 /** @endcond */
 
 /**
@@ -45,16 +58,25 @@ int pbl_mipi_dsi_stm32_init(const struct pbl_device *dev);
  * @param sym Symbol of the host.
  * @param _name Name.
  * @param _base Registers.
+ * @param _irq Wrapper interrupt.
  * @param _pclk Bus clock, from PBL_CLK().
  * @param _ref Reference clock, from PBL_CLK().
  * @param _px_clk Pixel clock, from PBL_CLK().
  */
-#define PBL_MIPI_DSI_STM32_DEFINE(sym, _name, _base, _pclk, _ref, _px_clk)              \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                         \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_mipi_dsi_stm32, struct pbl_mipi_dsi_host, host) { \
-    .host = PBL_MIPI_DSI_HOST_INIT(sym, _name, pbl_mipi_dsi_stm32_init, nullptr,        \
-                                   &pbl_mipi_dsi_stm32_ops),                            \
-    .base = (_base), .pclk = _pclk, .ref = _ref, .px_clk = _px_clk,                     \
-  }
+#define PBL_MIPI_DSI_STM32_DEFINE(sym, _name, _base, _irq, _pclk, _ref, _px_clk)            \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                             \
+  static struct pbl_mipi_dsi_stm32_state sym##_dsi_state;                                   \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_mipi_dsi_stm32, struct pbl_mipi_dsi_host, host){      \
+    .host = PBL_MIPI_DSI_HOST_INIT(sym, _name, pbl_mipi_dsi_stm32_init, nullptr,            \
+                                   &pbl_mipi_dsi_stm32_ops),                                \
+    .state = &sym##_dsi_state,                                                              \
+    .irq = (_irq),                                                                          \
+    .base = (_base),                                                                        \
+    .pclk = _pclk,                                                                          \
+    .ref = _ref,                                                                            \
+    .px_clk = _px_clk,                                                                      \
+  };                                                                                        \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_MIPI_DSI_STM32_IRQ_PRIO, pbl_mipi_dsi_stm32_irq_handler, \
+                      &sym##_inst, 0)
 
 /** @} */

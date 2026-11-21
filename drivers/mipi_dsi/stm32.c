@@ -168,14 +168,35 @@ static void prv_video_mode(const struct pbl_mipi_dsi_stm32 *dsi,
   prv_putreg(dsi, STM32_DSI_VVACR_OFFSET, PBL_FIELD_PREP(DSI_VVACR_VA_MASK, t->vactive));
 }
 
+// Adapted command mode: the wrapper sends a frame of the display controller on each refresh, the
+// panel reporting its tearing effect over the link
+static void prv_command_mode(const struct pbl_mipi_dsi_stm32 *dsi,
+                             const struct pbl_mipi_dsi_device *dev) {
+  uint32_t color = prv_color(dev->format);
+
+  pbl_modifyl(0U, DSI_MCR_CMDM, dsi->base + STM32_DSI_MCR_OFFSET);
+  prv_putreg(dsi, STM32_DSI_WCFGR_OFFSET,
+             DSI_WCFGR_DSIM | PBL_FIELD_PREP(DSI_WCFGR_COLMUX_MASK, color));
+  prv_putreg(dsi, STM32_DSI_LCOLCR_OFFSET, PBL_FIELD_PREP(DSI_LCOLCR_COLC_MASK, color));
+  prv_putreg(dsi, STM32_DSI_LPCR_OFFSET, 0U);
+  prv_putreg(dsi, STM32_DSI_LVCIDR_OFFSET, dev->channel);
+  prv_putreg(dsi, STM32_DSI_LCCR_OFFSET,
+             PBL_FIELD_PREP(DSI_LCCR_CMDSIZE_MASK, dev->timing->hactive));
+  pbl_modifyl(0U, DSI_CMCR_TEARE, dsi->base + STM32_DSI_CMCR_OFFSET);
+  pbl_modifyl(0U, DSI_WPCR1_FLPRXLPM, dsi->base + STM32_DSI_WPCR1_OFFSET);
+  prv_putreg(dsi, STM32_DSI_WIFCR_OFFSET, DSI_WIRQ_TE | DSI_WIRQ_ER);
+  prv_putreg(dsi, STM32_DSI_WIER_OFFSET, DSI_WIRQ_TE | DSI_WIRQ_ER);
+}
+
 static int prv_attach(const struct pbl_mipi_dsi_host *host, const struct pbl_mipi_dsi_device *dev) {
   const struct pbl_mipi_dsi_stm32 *dsi = prv_dsi(host);
+  const bool video = (dev->mode_flags & PBL_MIPI_DSI_MODE_VIDEO) != 0U;
   uint32_t ref_hz;
-  uint32_t px_hz;
+  uint32_t px_hz = 0U;
   uint32_t lbc_hz;
   int ret;
 
-  if (dev->lanes > 2U || (dev->mode_flags & PBL_MIPI_DSI_MODE_VIDEO) == 0U) {
+  if (dev->lanes > 2U || dev->timing == nullptr) {
     return -ENOTSUP;
   }
 
@@ -184,14 +205,16 @@ static int prv_attach(const struct pbl_mipi_dsi_host *host, const struct pbl_mip
     return ret;
   }
 
-  ret = prv_rate_hz(&dsi->px_clk, &px_hz);
-  if (ret != 0) {
-    return ret;
-  }
+  if (video) {
+    ret = prv_rate_hz(&dsi->px_clk, &px_hz);
+    if (ret != 0) {
+      return ret;
+    }
 
-  // The link must carry the pixels of a line within the line
-  if ((uint64_t)px_hz * prv_bpp(dev->format) > (uint64_t)LANE_BIT_RATE_HZ * dev->lanes) {
-    return -ENOTSUP;
+    // The link must carry the pixels of a line within the line
+    if ((uint64_t)px_hz * prv_bpp(dev->format) > (uint64_t)LANE_BIT_RATE_HZ * dev->lanes) {
+      return -ENOTSUP;
+    }
   }
 
   lbc_hz = LANE_BIT_RATE_HZ / 8U;
@@ -227,7 +250,11 @@ static int prv_attach(const struct pbl_mipi_dsi_host *host, const struct pbl_mip
                  PBL_FIELD_PREP(DSI_DLTCR_HS2LP_TIME_MASK, LANE_SWITCH_TIME));
   prv_putreg(dsi, STM32_DSI_PCR_OFFSET, DSI_PCR_BTAE);
 
-  prv_video_mode(dsi, dev, lbc_hz, px_hz);
+  if (video) {
+    prv_video_mode(dsi, dev, lbc_hz, px_hz);
+  } else {
+    prv_command_mode(dsi, dev);
+  }
 
   pbl_modifyl(0U, DSI_CR_EN, dsi->base + STM32_DSI_CR_OFFSET);
   pbl_modifyl(0U, DSI_WCR_DSIEN, dsi->base + STM32_DSI_WCR_OFFSET);
@@ -238,6 +265,7 @@ static int prv_attach(const struct pbl_mipi_dsi_host *host, const struct pbl_mip
 static int prv_detach(const struct pbl_mipi_dsi_host *host, const struct pbl_mipi_dsi_device *dev) {
   const struct pbl_mipi_dsi_stm32 *dsi = prv_dsi(host);
 
+  prv_putreg(dsi, STM32_DSI_WIER_OFFSET, 0U);
   pbl_modifyl(DSI_WCR_DSIEN, 0U, dsi->base + STM32_DSI_WCR_OFFSET);
   pbl_modifyl(DSI_CR_EN, 0U, dsi->base + STM32_DSI_CR_OFFSET);
   prv_putreg(dsi, STM32_DSI_PCTLR_OFFSET, 0U);
@@ -326,6 +354,58 @@ static ssize_t prv_transfer(const struct pbl_mipi_dsi_host *host,
   return (ssize_t)msg->tx_len;
 }
 
+// The commands before a refresh, as the window of the frame, must be out before its pixels
+static int prv_refresh(const struct pbl_mipi_dsi_host *host) {
+  const struct pbl_mipi_dsi_stm32 *dsi = prv_dsi(host);
+  int ret;
+
+  ret = prv_wait(dsi, STM32_DSI_GPSR_OFFSET, DSI_GPSR_CMDFE, DSI_GPSR_CMDFE, CMD_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_modifyl(0U, DSI_WCR_LTDCEN, dsi->base + STM32_DSI_WCR_OFFSET);
+
+  return 0;
+}
+
+// The wrapper lets the LTDC be set up while it is disabled
+static void prv_hold(const struct pbl_mipi_dsi_host *host, bool hold) {
+  const struct pbl_mipi_dsi_stm32 *dsi = prv_dsi(host);
+
+  pbl_modifyl(hold ? DSI_WCR_DSIEN : 0U, hold ? 0U : DSI_WCR_DSIEN,
+              dsi->base + STM32_DSI_WCR_OFFSET);
+}
+
+static void prv_set_event_cb(const struct pbl_mipi_dsi_host *host, pbl_mipi_dsi_event_cb_t cb,
+                             void *arg) {
+  struct pbl_mipi_dsi_stm32_state *st = prv_dsi(host)->state;
+
+  pbl_irq_lock();
+  st->cb = cb;
+  st->arg = arg;
+  pbl_irq_unlock();
+}
+
+void pbl_mipi_dsi_stm32_irq_handler(const struct pbl_mipi_dsi_stm32 *dsi) {
+  struct pbl_mipi_dsi_stm32_state *st = dsi->state;
+  uint32_t wisr = prv_getreg(dsi, STM32_DSI_WISR_OFFSET) & prv_getreg(dsi, STM32_DSI_WIER_OFFSET);
+
+  prv_putreg(dsi, STM32_DSI_WIFCR_OFFSET, wisr);
+
+  if (st->cb == nullptr) {
+    return;
+  }
+
+  if ((wisr & DSI_WIRQ_TE) != 0U) {
+    st->cb(PBL_MIPI_DSI_EVENT_TEAR, st->arg);
+  }
+
+  if ((wisr & DSI_WIRQ_ER) != 0U) {
+    st->cb(PBL_MIPI_DSI_EVENT_REFRESH_DONE, st->arg);
+  }
+}
+
 int pbl_mipi_dsi_stm32_init(const struct pbl_device *dev) {
   const struct pbl_mipi_dsi_stm32 *dsi =
       PBL_CONTAINER_OF(dev, const struct pbl_mipi_dsi_stm32, host.dev);
@@ -341,13 +421,23 @@ int pbl_mipi_dsi_stm32_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  return pbl_clk_enable(&dsi->ref);
+  ret = pbl_clk_enable(&dsi->ref);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_irq_enable(dsi->irq);
+
+  return 0;
 }
 
 const struct pbl_mipi_dsi_host_ops pbl_mipi_dsi_stm32_ops = {
   .attach = prv_attach,
   .detach = prv_detach,
   .transfer = prv_transfer,
+  .refresh = prv_refresh,
+  .hold = prv_hold,
+  .set_event_cb = prv_set_event_cb,
 };
 
 #include PBL_DT_INSTANCES(st_stm32_dsi)

@@ -17,6 +17,13 @@ config MIPI_DSI_STM32
     select CLK
     help
       Support for the DSI host of the STM32H7 and its D-PHY, in video
-      mode.
+      mode or in adapted command mode with the tearing effect.
+
+config MIPI_DSI_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 12
+    depends on MIPI_DSI_STM32
+    help
+      Priority of the wrapper interrupt.
 
 endif # MIPI_DSI
