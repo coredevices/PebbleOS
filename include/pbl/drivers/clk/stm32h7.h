@@ -96,6 +96,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_DMA2_CK 64
 /** BDMA clock, with DMAMUX2. */
 #define STM32H7_CLK_BDMA_CK 74
+/** CRC unit clock. */
+#define STM32H7_CLK_CRC_CK 75
 /** DMA2D clock. */
 #define STM32H7_CLK_DMA2D_CK 56
 /** DSI clock. */
