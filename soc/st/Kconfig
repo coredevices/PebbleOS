@@ -24,6 +24,7 @@ config SOC_STM32H7_CM7
     select CPU_HAS_FPU_DOUBLE
     select CPU_HAS_ICACHE
     select CPU_HAS_DCACHE
+    select REMOTEPROC if DT_HAS_ST_STM32H747_M4_ENABLED
     help
       The Cortex-M7 of an STM32H7, the core of the single-core parts and
       CPU1 of the dual-core ones, which sets up the clocks and powers the
@@ -37,13 +38,13 @@ config SOC_STM32H7_CM4
       The Cortex-M4 of a dual-core STM32H7, CPU2, which runs once the
       Cortex-M7 has set up the clocks and starts it, and leaves the clock
       tree and the supply to it. It powers off when the Cortex-M7 does,
-      which tells it through a hardware semaphore.
+      which tells it through a hardware semaphore doorbell.
 
-config SOC_STM32H7_CM4_OFFSET
-    hex
-    default $(dt_partition_offset,m4)
-    depends on SOC_STM32H7_CM7 && $(dt_has_partition,m4)
+config SOC_STM32H7_CM4_SHUTDOWN
+    bool "Power-off requests of the Cortex-M7"
+    default y
+    depends on SOC_STM32H7_CM4 && DT_HAS_ST_STM32H747_M4_ENABLED
+    select MBOX
     help
-      Where in the flash the Cortex-M4 of a dual-core part boots from, the
-      m4 partition of the Cortex-M7's devicetree: the Cortex-M7 starts it
-      once the clocks are set up, when an image is there.
+      Power this core off when the Cortex-M7 asks, before it powers the
+      system off: Standby needs both cores stopped.

@@ -37,7 +37,6 @@
 #define RCC_GCR_BOOT_C2 PBL_BIT(3)
 
 #define RCC_AHB3ENR_FLASHEN PBL_BIT(8)
-#define RCC_AHB4ENR_HSEMEN  PBL_BIT(25)
 
 #define RCC_CR_HSION       PBL_BIT(0)
 #define RCC_CR_HSIRDY      PBL_BIT(2)

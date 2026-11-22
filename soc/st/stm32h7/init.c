@@ -33,6 +33,10 @@ void pbl_soc_early_init(void) {
   // to set up the clock tree and start it; its clock driver reads the rate it then runs at
   while ((pbl_readl(RCC(GCR)) & RCC_GCR_BOOT_C2) == 0U) {
   }
+
+  // The flash, in the domain of the Cortex-M7, has to stay up while this core runs from it: so does
+  // that domain, until this core stops too
+  pbl_modifyl(0U, RCC_AHB3ENR_FLASHEN, RCC(AHB3ENR));
 #else
   // HSI runs the CPU and the buses until the clock tree takes over
   pbl_modifyl(0U, RCC_CR_HSION, RCC(CR));

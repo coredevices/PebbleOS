@@ -108,10 +108,11 @@ pbl -b build/m7 run
 pbl -b build/m4 run
 ```
 
-The Cortex-M7 sets up the supply and the clocks, then starts the Cortex-M4 if
-bank 2 holds an image; the Cortex-M4 waits for it at boot, whether its boot
-option bit, BCM4, starts it at reset or not, so the option bytes can stay as
-they ship. The Cortex-M4 runs from SRAM1 to SRAM3, 288 KiB, counts time on
+The Cortex-M7 sees the Cortex-M4 as a remote processor, the `m4` node: once
+the clocks are set up, it starts the Cortex-M4 if its boot address, from the
+option bytes (bank 2 as the kit ships), holds an image. The Cortex-M4 waits
+for it at boot, whether its boot option bit, BCM4, starts it at reset or not,
+so the option bytes can stay as they ship. The Cortex-M4 runs from SRAM1 to SRAM3, 288 KiB, counts time on
 LPTIM2 and has LD2, the orange LED. Its console is UART8, at 1 Mbaud, on D1
 (TX) and D0 (RX) of the Arduino connector, for a USB serial adapter.
 
@@ -120,10 +121,13 @@ bank 2 with BCM4 set leaves it locked up. With nothing else to do, flash it an
 application that idles, as `samples/kernel/idle`: its idle thread keeps it in
 Stop.
 
-Power-off is the Cortex-M7's, and takes the Cortex-M4 with it: the Cortex-M7
-releases hardware semaphore 0, on which the Cortex-M4 runs its own power-off,
-and waits until the Cortex-M4 takes semaphore 1 before entering Standby. The
-whole system then reaches Standby, every domain with it.
+The cores ring each other through the hardware semaphores, a mailbox whose
+channels are the semaphores. Power-off is the Cortex-M7's, and takes the
+Cortex-M4 with it: the Cortex-M7 rings the `shutdown` channel of the `m4` node,
+on which the Cortex-M4 runs its own power-off, and waits for it to take the
+doorbell. The Cortex-M4 holds the flash, so the domain of the Cortex-M7 stays
+up until the Cortex-M4 stops too, and the whole system then reaches Standby,
+every domain with it.
 
 Debuggers turn on low-power debug in DBGMCU_CR when they attach, which keeps
 the domains powered in Standby until the next power-on reset: power the kit

@@ -1033,21 +1033,6 @@ const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops = {
   .set_rate = prv_set_rate,
 };
 
-#ifdef CONFIG_SOC_STM32H7_CM4_OFFSET
-// The Cortex-M4 waits for the clock tree: start it once set up, if its flash holds an image, as a
-// reset vector there tells, or it would lock up and keep the system out of Stop mode
-static void prv_start_cm4(const struct pbl_clk_stm32h7 *rcc) {
-  const uintptr_t image = CONFIG_FLASH_BASE + CONFIG_SOC_STM32H7_CM4_OFFSET;
-  const uint32_t reset = pbl_readl(image + sizeof(uint32_t));
-
-  if ((reset & 1U) == 0U || reset < image || reset >= CONFIG_FLASH_BASE + CONFIG_FLASH_SIZE) {
-    return;
-  }
-
-  pbl_modifyl(0U, RCC_GCR_BOOT_C2, rcc->base + STM32H7_RCC_GCR_OFFSET);
-}
-#endif
-
 #ifdef CONFIG_SOC_STM32H7_CM4
 // The Cortex-M7 set up the supply and the clock tree before starting this core
 int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
@@ -1084,16 +1069,7 @@ int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  ret = pbl_clk_assign(rcc->assigned);
-  if (ret != 0) {
-    return ret;
-  }
-
-#ifdef CONFIG_SOC_STM32H7_CM4_OFFSET
-  prv_start_cm4(rcc);
-#endif
-
-  return 0;
+  return pbl_clk_assign(rcc->assigned);
 }
 #endif
 

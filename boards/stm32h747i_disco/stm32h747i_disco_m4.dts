@@ -41,6 +41,11 @@
 	status = "okay";
 };
 
+// Powers off when the Cortex-M7 asks
+&m4 {
+	status = "okay";
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";

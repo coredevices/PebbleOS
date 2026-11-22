@@ -352,6 +352,12 @@
 	status = "okay";
 };
 
+// Started once the clocks are set up, when bank 2 holds an image
+&m4 {
+	st,auto-boot;
+	status = "okay";
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";
