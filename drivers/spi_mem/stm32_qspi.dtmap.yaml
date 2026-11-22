@@ -12,3 +12,5 @@ args:
   - pinctrl: default
   - prop: spi-max-frequency
     child: 0
+  - flag: parallel-memories
+    child: 0

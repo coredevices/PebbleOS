@@ -172,9 +172,10 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   prv_putreg(qspi, STM32H7_QUADSPI_DCR_OFFSET,
              PBL_FIELD_PREP(QUADSPI_DCR_FSIZE_MASK, FSIZE_MAX) |
                  PBL_FIELD_PREP(QUADSPI_DCR_CSHT_MASK, CSHT));
+  // In dual-flash mode, each memory takes every other byte, at half the address
   prv_putreg(qspi, STM32H7_QUADSPI_CR_OFFSET,
              PBL_FIELD_PREP(QUADSPI_CR_PRESCALER_MASK, prescaler - 1U) | QUADSPI_CR_SSHIFT |
-                 QUADSPI_CR_EN);
+                 (qspi->dual_flash ? QUADSPI_CR_DFM : 0U) | QUADSPI_CR_EN);
 
   return 0;
 }
