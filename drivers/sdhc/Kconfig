@@ -9,4 +9,21 @@ menuconfig SDHC
 
 if SDHC
 
+config SDHC_STM32_SDMMC
+    bool "STM32 SDMMC"
+    default y
+    depends on DT_HAS_ARM_PL18X_ENABLED
+    select CLK
+    select PINCTRL
+    select GPIO
+    help
+      The SDMMC of the STM32H7, an ARM PL18x variant, moving the data with
+      its internal DMA, or through its FIFO by the CPU for the buffers the
+      DMA does not take.
+
+config SDHC_STM32_SDMMC_IRQ_PRIO
+    int "Interrupt priority"
+    default 12
+    depends on SDHC_STM32_SDMMC
+
 endif # SDHC

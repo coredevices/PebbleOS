@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: arm,pl18x
+config: SDHC_STM32_SDMMC
+class: sdhc
+define: PBL_SDHC_STM32_SDMMC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - pinctrl: default
+  - prop: bus-width
+    default: "1"
+  - prop: max-frequency
+    default: "25000000"
+  - prop: arm,primecell-periphid
+    default: "0"
+  - flag: st,neg-edge
+  - gpio: cd
+    default: "{}"

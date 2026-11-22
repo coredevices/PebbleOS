@@ -41,3 +41,7 @@ that moves fewer blocks in one command says so in `max_blocks`, and the stack
 splits the transfers in as many commands. One that only moves several blocks
 from buffers aligned to `multi_block_align` gets the others one block at a
 time.
+
+| Driver | Controllers |
+| --- | --- |
+| `drivers/sdhc/stm32_sdmmc.c` | The SDMMC of the STM32H7, an ARM PL18x variant, its data moved by its internal DMA, the interrupt waking the thread at the end; buffers that are not word aligned, or for reads not in whole cache lines, go through the FIFO by the CPU, the bus clock stopped by the flow control while the FIFO waits |
