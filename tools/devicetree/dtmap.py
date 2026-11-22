@@ -1166,16 +1166,25 @@ class Generator:
                 )
                 if node is None:
                     return None
+        of_cells = []
         if "of" in arg:
             if not node.has(arg["of"]):
                 return None
             # The first phandle, as all cells of nvmem-cells are in the same device, unless
             # another entry of a list of phandles is asked for, as a DMA controller of a router
             entry = arg.get("entry", 0)
-            phandles = node.u32s(arg["of"])
-            if entry >= len(phandles):
-                raise dev.error(f"'{arg['of']}' has no entry {entry}")
-            node = self.tree.phandle(phandles[entry], f"{dev.node.path}: '{arg['of']}'")
+            values = node.u32s(arg["of"])
+            pos = 0
+            for _ in range(entry + 1):
+                if pos >= len(values):
+                    raise dev.error(f"'{arg['of']}' has no entry {entry}")
+                node = self.tree.phandle(values[pos], f"{dev.node.path}: '{arg['of']}'")
+                # Its specifier, for a target that takes one, as the DAI of a codec in sound-dai
+                count = node.cells_of(f"#{arg['of']}-cells", 0)
+                of_cells = values[pos + 1 : pos + 1 + count]
+                if len(of_cells) != count:
+                    raise dev.error(f"'{arg['of']}': {node.path} takes {count} cells")
+                pos += 1 + count
         if kind == "name":
             return f'"{dev.name}"'
         # The node read, as the memory a device is given with memory-region
@@ -1202,7 +1211,7 @@ class Generator:
             # A node inside a device, as an nvmem cell of a flash, refers to that device
             while node.parent is not None and not self._device(node).specs:
                 node = node.parent
-            return self._provided(dev, node, key, [])
+            return self._provided(dev, node, key, of_cells)
         if kind == "id":
             if dev.child_id is None:
                 raise dev.error("'id' is for children")
