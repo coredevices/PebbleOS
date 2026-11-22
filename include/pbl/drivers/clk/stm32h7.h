@@ -126,6 +126,10 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_USART1_CK 156
 /** UART8 kernel clock. */
 #define STM32H7_CLK_UART8_CK 131
+/** USB OTG HS clock, its 48 MHz kernel clock selected among PLL1 Q, PLL3 Q and HSI48. */
+#define STM32H7_CLK_USB1OTG_CK 124
+/** ULPI clock of the USB OTG HS, for an external PHY. */
+#define STM32H7_CLK_USB1ULPI_CK 59
 /** RTC kernel clock, from the LSE, the LSI or the HSE. */
 #define STM32H7_CLK_RTC_CK 13
 /** RTC bus clock. */
