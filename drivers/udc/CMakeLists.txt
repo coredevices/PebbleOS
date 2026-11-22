@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(udc.c)
+pbl_library_sources_ifdef(CONFIG_UDC_MUSB musb.c)
