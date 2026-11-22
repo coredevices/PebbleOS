@@ -102,6 +102,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_HSEM_CK 73
 /** WWDG2 clock, the window watchdog of the Cortex-M4. */
 #define STM32H7_CLK_WWDG2_CK 89
+/** BDMA clock, with DMAMUX2. */
+#define STM32H7_CLK_BDMA_CK 74
 /** DSI clock. */
 #define STM32H7_CLK_DSI_CK 129
 /** LTDC clock, the pixel clock. */
@@ -128,6 +130,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_RTCAPB_CK 108
 /** SAI1 kernel clock, from PLL1 Q, PLL2 P or PLL3 P. */
 #define STM32H7_CLK_SAI1_CK 151
+/** SAI4 sub-block A kernel clock, from PLL1 Q, PLL2 P or PLL3 P. */
+#define STM32H7_CLK_SAI4A_CK 158
 /** UART8 kernel clock. */
 #define STM32H7_CLK_UART8_CK 131
 /** USB OTG HS clock, its 48 MHz kernel clock selected among PLL1 Q, PLL3 Q and HSI48. */
