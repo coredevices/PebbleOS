@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig USB_DEVICE
+    bool "USB device"
+    select UDC
+    help
+      The device side of USB (pbl/usb/usbd.h), on the board's USB device
+      controller, its udc role.
+
+if USB_DEVICE
+
+config USB_DEVICE_VID
+    hex "Vendor ID"
+    default 0x1209
+    help
+      The vendor ID of the device. The default, that of pid.codes, is for
+      tests.
+
+config USB_DEVICE_PID
+    hex "Product ID"
+    default 0x0001
+    help
+      The product ID of the device. The default is the test product ID of
+      pid.codes.
+
+config USB_DEVICE_MANUFACTURER
+    string "Manufacturer"
+    default "PebbleOS"
+
+config USB_DEVICE_PRODUCT
+    string "Product"
+    default "PebbleOS device"
+
+endif # USB_DEVICE
