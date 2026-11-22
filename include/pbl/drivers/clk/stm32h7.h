@@ -90,6 +90,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_GPIOI_CK 78
 #define STM32H7_CLK_GPIOJ_CK 77
 #define STM32H7_CLK_GPIOK_CK 76
+/** CRC unit clock. */
+#define STM32H7_CLK_CRC_CK 75
 /** LPTIM1 kernel clock. */
 #define STM32H7_CLK_LPTIM1_CK 144
 /** LPTIM2 kernel clock. */
