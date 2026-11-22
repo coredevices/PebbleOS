@@ -1013,9 +1013,10 @@ class Generator:
         return ", ".join(items)
 
     def _dma(self, dev, src, name):
+        """A channel by name, absent when the node does not list it, as an optional one."""
         names = src.node.strings("dma-names")
         if name not in names:
-            raise src.error(f"no '{name}' in 'dma-names'")
+            return None
         entries = self._phandles(src, "dmas", "#dma-cells")
         if names.index(name) >= len(entries):
             raise src.error(f"no dma '{name}'")

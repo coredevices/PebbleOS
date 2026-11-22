@@ -1983,6 +1983,16 @@ def test_dma_without_names_fails(tmp_path):
         generate(tmp_path, specs=specs, bus="dmas = <&ctrl 1>;")
 
 
+def test_dma_missing_from_names_is_absent(tmp_path):
+    bus = 'dmas = <&ctrl 1>;\n            dma-names = "tx";'
+    data = {**SPECS["acme,bus"], "args": [{"dma": "rx", "default": "nullptr"}]}
+    gen = generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)}, bus=bus)
+    assert re.search(r"BUS_DT_DEFINE\(dt_bus, nullptr\);", body(gen))
+    data = {**SPECS["acme,bus"], "args": [{"dma": "rx"}]}
+    with pytest.raises(DtError, match="/bus@2000: missing what"):
+        generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)}, bus=bus)
+
+
 def test_boolean_defaults_and_values_are_c(tmp_path):
     args = [
         {"prop": "absent", "default": False},
