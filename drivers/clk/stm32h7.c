@@ -236,10 +236,17 @@ static bool prv_any_pll_on(const struct pbl_clk_stm32h7 *rcc) {
   return prv_pll_on(rcc, 0U) || prv_pll_on(rcc, 1U) || prv_pll_on(rcc, 2U);
 }
 
+// The Cortex-M7 runs on the D1 clock, the Cortex-M4 on HCLK
+#ifdef CONFIG_SOC_STM32H7_CM4
+#define CORE_CLK STM32H7_CLK_HCLK
+#else
+#define CORE_CLK STM32H7_CLK_SYS_D1CPRE
+#endif
+
 static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
   uint64_t rate_mhz;
 
-  if (pbl_clk_get_rate(&(struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_SYS_D1CPRE), &rate_mhz) == 0) {
+  if (pbl_clk_get_rate(&(struct pbl_clk)PBL_CLK(ctrl, CORE_CLK), &rate_mhz) == 0) {
     SystemCoreClock = (uint32_t)(rate_mhz / MHZ_PER_HZ);
   }
 }
@@ -955,10 +962,10 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
 
 uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
-  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_C1_RSR_OFFSET);
+  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_RSR_OFFSET);
 
   if (clear) {
-    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_C1_RSR_OFFSET);
+    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_RSR_OFFSET);
   }
 
   return rsr;
@@ -973,6 +980,31 @@ const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops = {
   .set_rate = prv_set_rate,
 };
 
+#ifdef CONFIG_SOC_STM32H7_CM4_OFFSET
+// The Cortex-M4 waits for the clock tree: start it once set up, if its flash holds an image, as a
+// reset vector there tells, or it would lock up and keep the system out of Stop mode
+static void prv_start_cm4(const struct pbl_clk_stm32h7 *rcc) {
+  const uintptr_t image = CONFIG_FLASH_BASE + CONFIG_SOC_STM32H7_CM4_OFFSET;
+  const uint32_t reset = pbl_readl(image + sizeof(uint32_t));
+
+  if ((reset & 1U) == 0U || reset < image || reset >= CONFIG_FLASH_BASE + CONFIG_FLASH_SIZE) {
+    return;
+  }
+
+  pbl_modifyl(0U, RCC_GCR_BOOT_C2, rcc->base + STM32H7_RCC_GCR_OFFSET);
+}
+#endif
+
+#ifdef CONFIG_SOC_STM32H7_CM4
+// The Cortex-M7 set up the supply and the clock tree before starting this core
+int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
+  const struct pbl_clk_stm32h7 *rcc = PBL_CONTAINER_OF(dev, const struct pbl_clk_stm32h7, ctrl.dev);
+
+  prv_update_core_clock(&rcc->ctrl);
+
+  return pbl_clk_assign(rcc->assigned);
+}
+#else
 // The supply configuration takes once per power-on: a different one written before stays
 int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
   const struct pbl_clk_stm32h7 *rcc = PBL_CONTAINER_OF(dev, const struct pbl_clk_stm32h7, ctrl.dev);
@@ -999,7 +1031,17 @@ int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
     return ret;
   }
 
-  return pbl_clk_assign(rcc->assigned);
+  ret = pbl_clk_assign(rcc->assigned);
+  if (ret != 0) {
+    return ret;
+  }
+
+#ifdef CONFIG_SOC_STM32H7_CM4_OFFSET
+  prv_start_cm4(rcc);
+#endif
+
+  return 0;
 }
+#endif
 
 #include PBL_DT_INSTANCES(st_stm32h743_rcc)

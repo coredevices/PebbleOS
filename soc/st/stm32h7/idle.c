@@ -68,9 +68,16 @@ static void prv_enter_stop(void) {
   pbl_ram_suspend(EXTRAM);
 #endif
 
-  // Stop, not Standby, for every domain, with the regulator and the flash in low power
+  // A domain goes to Standby only when every core asks for it: the Cortex-M7 asks for Stop, but
+  // when powering off, and the Cortex-M4 leaves the choice to it. The regulator and the flash go
+  // to low power.
+#ifdef CONFIG_SOC_STM32H7_CM4
+  pbl_modifyl(PWR_CPUCR_RUN_D3, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3,
+              PWR(CORECR));
+#else
   pbl_modifyl(PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3 | PWR_CPUCR_RUN_D3, 0U,
-              PWR(CPUCR));
+              PWR(CORECR));
+#endif
   pbl_modifyl(0U, PWR_CR1_LPDS | PWR_CR1_FLPS, PWR(CR1));
 
   pbl_cpu_idle_deep();

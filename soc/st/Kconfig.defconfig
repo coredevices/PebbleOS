@@ -7,11 +7,15 @@ if SOC_STM32H7
 config FLASH_BASE
     default 0x08000000
 
-# 512 KiB of AXI SRAM, which every bus master reaches.
+# 512 KiB of AXI SRAM, which every bus master reaches, for the Cortex-M7, and
+# the 288 KiB of SRAM1 to SRAM3 of the D2 domain for the Cortex-M4, at their
+# alias on its code bus.
 config SRAM_BASE
+    default 0x10000000 if SOC_STM32H7_CM4
     default 0x24000000
 
 config SRAM_SIZE
+    default 0x48000 if SOC_STM32H7_CM4
     default 0x80000
 
 config NUM_IRQS

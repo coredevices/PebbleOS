@@ -5,7 +5,7 @@
 
 #include <pbl/util/bits.h>
 
-/* Register offsets, the C1 ones being those of the Cortex-M7 */
+/* Register offsets, the C1 ones being those of the Cortex-M7, the C2 ones those of the Cortex-M4 */
 
 #define STM32H7_EXTI_RTSR1_OFFSET  0x0000
 #define STM32H7_EXTI_FTSR1_OFFSET  0x0004
@@ -18,6 +18,17 @@
 #define STM32H7_EXTI_C1IMR3_OFFSET 0x00a0
 #define STM32H7_EXTI_C1EMR3_OFFSET 0x00a4
 #define STM32H7_EXTI_C1PR3_OFFSET  0x00a8
+#define STM32H7_EXTI_C2IMR1_OFFSET 0x00c0
+#define STM32H7_EXTI_C2PR1_OFFSET  0x00c8
+
+/* Those of the core running the code */
+#ifdef CONFIG_SOC_STM32H7_CM4
+#define STM32H7_EXTI_CORE_IMR1_OFFSET STM32H7_EXTI_C2IMR1_OFFSET
+#define STM32H7_EXTI_CORE_PR1_OFFSET  STM32H7_EXTI_C2PR1_OFFSET
+#else
+#define STM32H7_EXTI_CORE_IMR1_OFFSET STM32H7_EXTI_C1IMR1_OFFSET
+#define STM32H7_EXTI_CORE_PR1_OFFSET  STM32H7_EXTI_C1PR1_OFFSET
+#endif
 
 /* Lines 55 to 60, of the PWR wakeup pins, in the second set of registers */
 #define EXTI_LINES2_WKUP PBL_GENMASK(28, 23)

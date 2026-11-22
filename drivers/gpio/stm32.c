@@ -131,8 +131,8 @@ static int prv_intc_enable(const struct pbl_intc *intc, uint32_t hwirq) {
     ret = -EBUSY;
   } else {
     s_owners[hwirq] = gpio;
-    pbl_writel(PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_C1PR1_OFFSET);
-    pbl_modifyl(0U, PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_C1IMR1_OFFSET);
+    pbl_writel(PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_CORE_PR1_OFFSET);
+    pbl_modifyl(0U, PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_CORE_IMR1_OFFSET);
   }
   pbl_irq_unlock();
 
@@ -144,7 +144,7 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
 
   pbl_irq_lock();
   if (s_owners[hwirq] == gpio) {
-    pbl_modifyl(PBL_BIT(hwirq), 0U, gpio->exti + STM32H7_EXTI_C1IMR1_OFFSET);
+    pbl_modifyl(PBL_BIT(hwirq), 0U, gpio->exti + STM32H7_EXTI_CORE_IMR1_OFFSET);
     s_owners[hwirq] = nullptr;
   }
   pbl_irq_unlock();
@@ -213,10 +213,10 @@ PBL_SYS_OFF_HANDLER_DEFINE(gpio_stm32_wake, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_P
                            prv_arm_wake, nullptr);
 
 static void prv_exti_isr(uint32_t lines) {
-  uint32_t pending = pbl_readl(s_exti + STM32H7_EXTI_C1PR1_OFFSET) &
-                     pbl_readl(s_exti + STM32H7_EXTI_C1IMR1_OFFSET) & lines;
+  uint32_t pending = pbl_readl(s_exti + STM32H7_EXTI_CORE_PR1_OFFSET) &
+                     pbl_readl(s_exti + STM32H7_EXTI_CORE_IMR1_OFFSET) & lines;
 
-  pbl_writel(pending, s_exti + STM32H7_EXTI_C1PR1_OFFSET);
+  pbl_writel(pending, s_exti + STM32H7_EXTI_CORE_PR1_OFFSET);
 
   while (pending != 0U) {
     uint32_t line = (uint32_t)PBL_CTZ(pending);

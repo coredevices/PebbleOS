@@ -30,9 +30,9 @@
   pbl_writel(UINT32_MAX, EXTI(C1PR2));
   pbl_writel(UINT32_MAX, EXTI(C1PR3));
 
+  // A running Cortex-M4 asks for Standby itself, as it idles in Stop
   pbl_modifyl(0U, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3 | PWR_CPUCR_CSSF,
               PWR(CPUCR));
-  pbl_modifyl(0U, PWR_CPU2CR_PDDS_D1 | PWR_CPU2CR_PDDS_D2 | PWR_CPU2CR_PDDS_D3, PWR(CPU2CR));
 
   while (true) {
     pbl_cpu_idle_deep();

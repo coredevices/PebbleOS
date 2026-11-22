@@ -14,6 +14,7 @@
 
 uint32_t SystemCoreClock = STM32H7_HSI_HZ;
 
+#ifndef CONFIG_SOC_STM32H7_CM4
 // HPRE and D1CPRE: 0xxx divides by 1, 1000 to 1111 by 2 to 512, skipping 32
 static uint32_t prv_ahb_div(uint32_t pre) {
   if ((pre & RCC_AHB_PRE_DIVIDED) == 0U) {
@@ -24,8 +25,15 @@ static uint32_t prv_ahb_div(uint32_t pre) {
 
   return 1U << (pre + (pre >= 4U ? 2U : 1U));
 }
+#endif
 
 void pbl_soc_early_init(void) {
+#ifdef CONFIG_SOC_STM32H7_CM4
+  // Started at reset by its option bit, or by the Cortex-M7, the Cortex-M4 waits for the Cortex-M7
+  // to set up the clock tree and start it; its clock driver reads the rate it then runs at
+  while ((pbl_readl(RCC(GCR)) & RCC_GCR_BOOT_C2) == 0U) {
+  }
+#else
   // HSI runs the CPU and the buses until the clock tree takes over
   pbl_modifyl(0U, RCC_CR_HSION, RCC(CR));
   while ((pbl_readl(RCC(CR)) & RCC_CR_HSIRDY) == 0U) {
@@ -37,4 +45,5 @@ void pbl_soc_early_init(void) {
   // Busy waits count CPU cycles
   SystemCoreClock = (STM32H7_HSI_HZ >> PBL_FIELD_GET(RCC_CR_HSIDIV_MASK, pbl_readl(RCC(CR)))) /
                     prv_ahb_div(PBL_FIELD_GET(RCC_D1CFGR_D1CPRE_MASK, pbl_readl(RCC(D1CFGR))));
+#endif
 }

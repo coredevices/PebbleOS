@@ -2,5 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 config SOC_STM32H747
-    bool "ST STM32H747, Cortex-M7"
+    bool "ST STM32H747"
     select SOC_STM32H7
+
+choice SOC_STM32H747_CORE
+    prompt "STM32H747 core"
+    depends on SOC_STM32H747
+    default SOC_STM32H747_M7
+
+config SOC_STM32H747_M7
+    bool "Cortex-M7"
+    select SOC_STM32H7_CM7
+
+config SOC_STM32H747_M4
+    bool "Cortex-M4"
+    select SOC_STM32H7_CM4
+
+endchoice

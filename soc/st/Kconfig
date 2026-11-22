@@ -9,15 +9,39 @@ config SOC_FAMILY_STM32
 config SOC_STM32H7
     bool
     select SOC_FAMILY_STM32
-    select CPU_CORTEX_M7
     select CPU_HAS_FPU
-    select CPU_HAS_FPU_DOUBLE
-    select CPU_HAS_ICACHE
-    select CPU_HAS_DCACHE
     select PINCTRL
     select SOC_HAS_IDLE_STATES
-    select SOC_HAS_POWER_OFF
     select TIMER_STM32_TIM if !DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
     select TIMER_STM32_LPTIM if DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
     help
       ST STM32H7 series, selected by its lines.
+
+config SOC_STM32H7_CM7
+    bool
+    select CPU_CORTEX_M7
+    select CPU_HAS_FPU_DOUBLE
+    select CPU_HAS_ICACHE
+    select CPU_HAS_DCACHE
+    select SOC_HAS_POWER_OFF
+    help
+      The Cortex-M7 of an STM32H7, the core of the single-core parts and
+      CPU1 of the dual-core ones, which sets up the clocks and powers the
+      system off.
+
+config SOC_STM32H7_CM4
+    bool
+    select CPU_CORTEX_M4
+    help
+      The Cortex-M4 of a dual-core STM32H7, CPU2, which runs once the
+      Cortex-M7 has set up the clocks and starts it, and leaves the clock
+      tree and the supply to it.
+
+config SOC_STM32H7_CM4_OFFSET
+    hex
+    default $(dt_partition_offset,m4)
+    depends on SOC_STM32H7_CM7 && $(dt_has_partition,m4)
+    help
+      Where in the flash the Cortex-M4 of a dual-core part boots from, the
+      m4 partition of the Cortex-M7's devicetree: the Cortex-M7 starts it
+      once the clocks are set up, when an image is there.
