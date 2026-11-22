@@ -1,0 +1,8 @@
+description: The SD card as a disk, its size, its first sector, and its last one written and put back
+expect:
+  - 'sd: \d+ MiB, \d+ sectors'
+  - 'sd: sector 0 (has|has no) a boot signature'
+  - 'sd: last sector written and read back: yes'
+  - 'sd: read 1 MiB in \d+ ms'
+  - 'Sample done'
+roles: [sdhc]

@@ -16,6 +16,7 @@ input/events.md
 loader/image.md
 logging/levels.md
 profiler/nodes.md
+sd/disk.md
 shell/commands.md
 task_wdt/stall.md
 usb/cdc_acm.md
