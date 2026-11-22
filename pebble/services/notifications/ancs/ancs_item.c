@@ -305,6 +305,18 @@ static bool prv_should_hide_reply_because_group_sms(const TimelineItemAction *ac
   return ancs_notifications_util_is_group_sms(app_id, subtitle);
 }
 
+static int prv_num_pebble_actions(const TimelineItemActionGroup *pebble_actions,
+                                  const struct pbl_bt_ancs_attr *app_id,
+                                  const struct pbl_bt_ancs_attr *subtitle) {
+  int n = 0;
+  for (int i = 0; pebble_actions && i < pebble_actions->num_actions; i++) {
+    if (!prv_should_hide_reply_because_group_sms(&pebble_actions->actions[i], app_id, subtitle)) {
+      n++;
+    }
+  }
+  return n;
+}
+
 static void prv_populate_actions(TimelineItem *item, uint8_t **buffer, uint8_t *buf_end,
                                  const struct pbl_bt_ancs_attr *positive_action,
                                  const struct pbl_bt_ancs_attr *negative_action,
@@ -315,6 +327,15 @@ static void prv_populate_actions(TimelineItem *item, uint8_t **buffer, uint8_t *
   TimelineItemAction *action = item->action_group.actions;
 
   // The order the actions get filled is important. See comment in ancs_item_create_and_populate
+  // ancs_item_create_and_populate only made room for it when it fits
+  const int num_other_actions = (positive_action ? 1 : 0) + (negative_action ? 1 : 0) +
+                                prv_num_pebble_actions(pebble_actions, app_id, subtitle);
+  if (item->action_group.num_actions > num_other_actions) {
+    action->type = TimelineItemActionTypeOpenChat;
+    action->attr_list.attributes[0].id = AttributeIdTitle;
+    action->attr_list.attributes[0].cstring = (char *)pbl_i18n_get("Open chat", __FILE__);
+    action++;
+  }
   if (positive_action) {
     *buffer = prv_fill_native_ancs_action(buffer, action, PBL_BT_ANCS_ACTION_POSITIVE,
                                           positive_action, app_id, is_voice_mail);
@@ -423,15 +444,21 @@ TimelineItem *ancs_item_create_and_populate(const struct pbl_bt_ancs_attr *const
     }
   }
 
-  int num_native_actions = (positive_action ? 1 : 0) + (negative_action ? 1 : 0);
-  int num_actions = num_native_actions + num_pebble_actions;
-
   const int max_num_actions = 8; // Arbitrarily chosen
+  int num_native_actions = (positive_action ? 1 : 0) + (negative_action ? 1 : 0);
+  // Only when there's room: it must not push the phone's actions past max_num_actions
+  const bool open_chat = ancs_attr_equal_cstring(app_id, IOS_BEEPER_APP_ID) &&
+                         num_native_actions + num_pebble_actions < max_num_actions;
+  int num_actions = (open_chat ? 1 : 0) + num_native_actions + num_pebble_actions;
+
   uint8_t attributes_per_action[max_num_actions];
   int action_idx = 0;
 
-  // Order of actions: ANCS positive, ANCS negative, Custom Pebble Actions
+  // Order of actions: Open chat, ANCS positive, ANCS negative, Custom Pebble Actions
   // The order the actions get populated in prv_populate_actions must be the same
+  if (open_chat) {
+    attributes_per_action[action_idx++] = 1; // title, a static i18n string
+  }
   if (positive_action) {
     attributes_per_action[action_idx++] = NUM_NATIVE_ANCS_ACTION_ATTRS;
   }

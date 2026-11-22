@@ -19,6 +19,8 @@ pbl_add_subdirectory_ifdef(CONFIG_SERVICE_BATTERY battery)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_BLOB_DB blob_db)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_BLUETOOTH bluetooth)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_BOOT_SPLASH boot_splash)
+# The Chat app's link to the phone; chats themselves are in the blob db
+pbl_add_subdirectory_ifdef(CONFIG_SERVICE_BLOB_DB chat)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_CLOCK clock)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_COMPOSITOR compositor)
 pbl_add_subdirectory_ifdef(CONFIG_SERVICE_CONTACTS contacts)

@@ -147,6 +147,8 @@ typedef enum {
   TimelineItemActionTypeAncsGeneric = 0x13,
   /** Stop sharing heart rate with BLE HRM clients. */
   TimelineItemActionTypeBLEHRMStopSharing = 0x14,
+  /** Open the Chat app on the chat of the item's title, handled locally. */
+  TimelineItemActionTypeOpenChat = 0x15,
 } TimelineItemActionType;
 
 /** @brief Identifiers of icons in the resource pack. */

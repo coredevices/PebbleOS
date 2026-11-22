@@ -7,6 +7,8 @@
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
+#include <pbl/services/timeline/attribute.h>
+#include <pbl/services/timeline/item.h>
 
 #include <string.h>
 
@@ -188,11 +190,18 @@ void test_ancs_notifications__handle_phone_call_message(void) {
 
 static bool s_recovered;
 
+static const uint8_t s_fake_app_id[] = {
+  0x00, 17,  0x00, 'c', 'o', 'm', '.', 't', 'e', 's',
+  't',  's', '.',  'F', 'a', 'k', 'e', 'A', 'p', 'p',
+};
+static const uint8_t s_beeper_app_id[] = {
+  0x00, 21,  0x00, 'c', 'o', 'm', '.', 'a', 'u', 't', 'o', 'm',
+  'a',  't', 't',  'i', 'c', '.', 'b', 'e', 'e', 'p', 'e', 'r',
+};
+static const uint8_t *s_app_id = s_fake_app_id;
+
 static void prv_send_social_message(uint32_t uid, uint8_t flags) {
-  static const uint8_t app_id[] = {
-    0x00, 17,  0x00, 'c', 'o', 'm', '.', 't', 'e', 's',
-    't',  's', '.',  'F', 'a', 'k', 'e', 'A', 'p', 'p',
-  };
+  const uint8_t *app_id = s_app_id;
   static const uint8_t title[] = {
     0x01, 5, 0x00, 'T', 'i', 't', 'l', 'e',
   };
@@ -221,7 +230,7 @@ static void prv_send_social_message(uint32_t uid, uint8_t flags) {
   };
 
   const struct pbl_bt_ancs_attr *notif_attributes[] = {
-    [ANCS_NOTIF_ATTR_APP_ID] = (struct pbl_bt_ancs_attr *)&app_id,
+    [ANCS_NOTIF_ATTR_APP_ID] = (struct pbl_bt_ancs_attr *)app_id,
     [ANCS_NOTIF_ATTR_TITLE] = (struct pbl_bt_ancs_attr *)&title,
     [ANCS_NOTIF_ATTR_SUBTITLE] = (struct pbl_bt_ancs_attr *)&subtitle,
     [ANCS_NOTIF_ATTR_MESSAGE] = (struct pbl_bt_ancs_attr *)&message,
@@ -282,6 +291,33 @@ void test_ancs_notifications__silent_property_sets_silent_header(void) {
   cl_assert_equal_i(fake_notification_storage_get_store_count(), 2);
   cl_assert_equal_i(fake_notification_storage_get_last_notification()->header.silent, 1);
   cl_assert_equal_i(fake_notification_storage_get_last_notification()->header.ancs_notif, 1);
+}
+
+static int prv_count_open_chat_actions(const TimelineItem *item) {
+  int n = 0;
+  for (int i = 0; i < item->action_group.num_actions; i++) {
+    const TimelineItemAction *action = &item->action_group.actions[i];
+    if (action->type == TimelineItemActionTypeOpenChat) {
+      cl_assert_equal_s(attribute_get_string(&action->attr_list, AttributeIdTitle, ""),
+                        "Open chat");
+      n++;
+    }
+  }
+  return n;
+}
+
+void test_ancs_notifications__beeper_notifications_open_chat(void) {
+  fake_notification_storage_set_existing_ancs_notification(&(Uuid)UUID_SYSTEM, UINT32_MAX);
+
+  s_app_id = s_beeper_app_id;
+  prv_send_social_message(50, 0);
+  s_app_id = s_fake_app_id;
+  cl_assert_equal_i(prv_count_open_chat_actions(fake_notification_storage_get_last_notification()),
+                    1);
+
+  prv_send_social_message(51, 0);
+  cl_assert_equal_i(prv_count_open_chat_actions(fake_notification_storage_get_last_notification()),
+                    0);
 }
 
 void test_ancs_notifications__handle_phone_call_removed(void) {

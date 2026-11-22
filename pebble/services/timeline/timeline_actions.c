@@ -598,6 +598,7 @@ static ActionResultData *prv_invoke_remote_action(ActionMenu *action_menu,
     }
     case TimelineItemActionTypeOpenPin:
     case TimelineItemActionTypeOpenWatchApp:
+    case TimelineItemActionTypeOpenChat:
       pbl_panic();
     case TimelineItemActionTypeAncsNegative:
     case TimelineItemActionTypeAncsDelete:
@@ -641,6 +642,7 @@ PBL_T_STATIC ActionResultData *prv_invoke_action(ActionMenu *action_menu,
   switch (action->type) {
     case TimelineItemActionTypeOpenPin:
     case TimelineItemActionTypeOpenWatchApp:
+    case TimelineItemActionTypeOpenChat:
       prv_invoke_local_action(action, pin);
       return nullptr;
     case TimelineItemActionTypeAncsResponse:

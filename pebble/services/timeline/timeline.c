@@ -13,6 +13,7 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
+#include <pbl/services/chat/chat_service.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/phone_call_util.h>
@@ -34,6 +35,7 @@
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
+#include <shell/system_app_ids.auto.h>
 
 PBL_LOG_MODULE_DEFINE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
@@ -808,6 +810,28 @@ static void prv_app_render_ready(PebbleEvent *e, void *context) {
   pbl_free(ctx);
 }
 
+static void prv_open_app(AppInstallId install_id, uint32_t launch_code) {
+  app_manager_put_launch_app_event(&(AppLaunchEventConfig){
+    .id = install_id,
+    .common.args = (void *)(uintptr_t)launch_code,
+    .common.reason = APP_LAUNCH_TIMELINE_ACTION,
+  });
+
+  // Wait for the app we just launched to have something to render before hiding all modals.
+  // If we don't we'll end up with flashing in a blank framebuffer.
+  OpenAppContext *ctx = pbl_malloc_check(sizeof(OpenAppContext));
+  *ctx = (OpenAppContext){
+    .event_info =
+        {
+          .type = PEBBLE_RENDER_READY_EVENT,
+          .handler = prv_app_render_ready,
+          .context = ctx,
+        },
+    .install_id = install_id,
+  };
+  event_service_client_subscribe(&ctx->event_info);
+}
+
 void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *action,
                             const AttributeList *attributes) {
   char uuid_buffer[UUID_STRING_BUFFER_LENGTH];
@@ -825,26 +849,18 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
       // fetch the relevant attribute
       const uint32_t launch_code =
           attribute_get_uint32(&action->attr_list, AttributeIdLaunchCode, 0);
-      app_manager_put_launch_app_event(&(AppLaunchEventConfig){
-        .id = install_id,
-        .common.args = (void *)(uintptr_t)launch_code,
-        .common.reason = APP_LAUNCH_TIMELINE_ACTION,
-      });
       PBL_LOG_INFO("Opening watch app %s", uuid_buffer);
-
-      // Wait for the app we just launched to have something to render before hiding all modals.
-      // If we don't we'll end up with flashing in a blank framebuffer.
-      OpenAppContext *ctx = pbl_malloc_check(sizeof(OpenAppContext));
-      *ctx = (OpenAppContext){
-        .event_info =
-            {
-              .type = PEBBLE_RENDER_READY_EVENT,
-              .handler = prv_app_render_ready,
-              .context = ctx,
-            },
-        .install_id = install_id,
-      };
-      event_service_client_subscribe(&ctx->event_info);
+      prv_open_app(install_id, launch_code);
+      break;
+    }
+    case TimelineItemActionTypeOpenChat: {
+#if defined(APP_ID_CHAT)
+      if (APP_ID_CHAT != INSTALL_ID_INVALID) {
+        // The Chat app opens the chat whose name matches the notification's title
+        chat_service_set_launch_hint(attribute_get_string(&item->attr_list, AttributeIdTitle, ""));
+        prv_open_app(APP_ID_CHAT, 0);
+      }
+#endif
       break;
     }
     case TimelineItemActionTypeOpenPin: {

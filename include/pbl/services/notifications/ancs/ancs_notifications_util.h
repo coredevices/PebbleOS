@@ -29,6 +29,8 @@
 #define IOS_SMS_APP_ID "com.apple.MobileSMS"
 /** @brief Bundle identifier of the iOS FaceTime app. */
 #define IOS_FACETIME_APP_ID "com.apple.facetime"
+/** @brief Bundle identifier of the iOS Beeper app, whose chats the Chat app shows. */
+#define IOS_BEEPER_APP_ID "com.automattic.beeper"
 
 /** @brief Presentation of a known iOS app. */
 typedef struct ANCSAppMetadata {
