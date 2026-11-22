@@ -27,3 +27,17 @@ PBL_WEAK int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, c
 PBL_WEAK uint32_t pbl_pp_session_get_capabilities(const struct pbl_pp_session *session) {
   return 0U;
 }
+
+PBL_WEAK struct pbl_pp_send_buffer *pbl_pp_send_buffer_begin(struct pbl_pp_session *session,
+                                                              uint16_t endpoint_id,
+                                                              size_t required_free_length,
+                                                              uint32_t timeout_ms) {
+  return NULL;
+}
+
+PBL_WEAK bool pbl_pp_send_buffer_write(struct pbl_pp_send_buffer *sb, const uint8_t *data,
+                                       size_t length) {
+  return false;
+}
+
+PBL_WEAK void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {}
