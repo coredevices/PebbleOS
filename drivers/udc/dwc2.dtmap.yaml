@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32f7-hsotg
+config: UDC_DWC2
+class: udc
+define: PBL_UDC_DWC2_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - compatible: true
+    values:
+      st,stm32f7-hsotg: DWC2_STM32
+  - clock: otg
+  - clock: main_clk
+    of: phys
+    default: "{}"
+  - flag: phys
+  - supply: usb33d
+    default: nullptr
+  - pinctrl: default
+  - prop: g-rx-fifo-size
+    default: 256
+  - prop: g-np-tx-fifo-size
+    default: 32
+  - prop: g-tx-fifo-size
+    item: "{0}"

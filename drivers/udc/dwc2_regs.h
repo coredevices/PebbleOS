@@ -1,0 +1,124 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Core registers */
+
+#define DWC2_GOTGCTL    0x0000
+#define DWC2_GAHBCFG    0x0008
+#define DWC2_GUSBCFG    0x000c
+#define DWC2_GRSTCTL    0x0010
+#define DWC2_GINTSTS    0x0014
+#define DWC2_GINTMSK    0x0018
+#define DWC2_GRXSTSP    0x0020
+#define DWC2_GRXFSIZ    0x0024
+#define DWC2_DIEPTXF0   0x0028
+#define DWC2_GGPIO      0x0038
+#define DWC2_DIEPTXF(n) (0x0104 + 4U * ((n) - 1U))
+
+#define GOTGCTL_BVALOEN  PBL_BIT(6)
+#define GOTGCTL_BVALOVAL PBL_BIT(7)
+
+#define GAHBCFG_GINTMSK PBL_BIT(0)
+
+#define GUSBCFG_PHYSEL     PBL_BIT(6)
+#define GUSBCFG_TRDT_MASK  PBL_GENMASK(13, 10)
+#define GUSBCFG_ULPIFSLS   PBL_BIT(17)
+#define GUSBCFG_ULPIEVBUSD PBL_BIT(20)
+#define GUSBCFG_ULPIEVBUSI PBL_BIT(21)
+#define GUSBCFG_TSDPS      PBL_BIT(22)
+#define GUSBCFG_FHMOD      PBL_BIT(29)
+#define GUSBCFG_FDMOD      PBL_BIT(30)
+
+#define GRSTCTL_CSRST       PBL_BIT(0)
+#define GRSTCTL_RXFFLSH     PBL_BIT(4)
+#define GRSTCTL_TXFFLSH     PBL_BIT(5)
+#define GRSTCTL_TXFNUM_MASK PBL_GENMASK(10, 6)
+#define GRSTCTL_TXFNUM_ALL  0x10U
+#define GRSTCTL_AHBIDL      PBL_BIT(31)
+
+#define GINT_CMOD     PBL_BIT(0)
+#define GINT_RXFLVL   PBL_BIT(4)
+#define GINT_GONAKEFF PBL_BIT(7)
+#define GINT_USBSUSP  PBL_BIT(11)
+#define GINT_USBRST   PBL_BIT(12)
+#define GINT_ENUMDNE  PBL_BIT(13)
+#define GINT_IEPINT   PBL_BIT(18)
+#define GINT_OEPINT   PBL_BIT(19)
+#define GINT_WKUINT   PBL_BIT(31)
+
+#define GRXSTSP_EPNUM_MASK   PBL_GENMASK(3, 0)
+#define GRXSTSP_BCNT_MASK    PBL_GENMASK(14, 4)
+#define GRXSTSP_PKTSTS_MASK  PBL_GENMASK(20, 17)
+#define GRXSTSP_PKTSTS_OUT   2U
+#define GRXSTSP_PKTSTS_SETUP 6U
+
+/* The vendor register of the STM32 cores: the transceiver power and the VBUS detection */
+#define STM32_GCCFG_PWRDWN PBL_BIT(16)
+#define STM32_GCCFG_VBDEN  PBL_BIT(21)
+
+/* Device registers */
+
+#define DWC2_DCFG       0x0800
+#define DWC2_DCTL       0x0804
+#define DWC2_DSTS       0x0808
+#define DWC2_DIEPMSK    0x0810
+#define DWC2_DOEPMSK    0x0814
+#define DWC2_DAINT      0x0818
+#define DWC2_DAINTMSK   0x081c
+#define DWC2_DIEPEMPMSK 0x0834
+#define DWC2_PCGCCTL    0x0e00
+
+#define DCFG_DSPD_MASK PBL_GENMASK(1, 0)
+#define DCFG_DSPD_HS   0U
+#define DCFG_DSPD_FS   3U
+#define DCFG_DAD_MASK  PBL_GENMASK(10, 4)
+
+#define DCTL_SDIS   PBL_BIT(1)
+#define DCTL_CGINAK PBL_BIT(8)
+#define DCTL_SGONAK PBL_BIT(9)
+#define DCTL_CGONAK PBL_BIT(10)
+
+#define DSTS_ENUMSPD_MASK PBL_GENMASK(2, 1)
+#define DSTS_ENUMSPD_HS   0U
+
+#define DAINT_OUT(n) PBL_BIT(16U + (n))
+#define DAINT_IN(n)  PBL_BIT(n)
+
+/* Endpoint registers */
+
+#define DWC2_DIEPCTL(n)  (0x0900 + 0x20U * (n))
+#define DWC2_DIEPINT(n)  (0x0908 + 0x20U * (n))
+#define DWC2_DIEPTSIZ(n) (0x0910 + 0x20U * (n))
+#define DWC2_DTXFSTS(n)  (0x0918 + 0x20U * (n))
+#define DWC2_DOEPCTL(n)  (0x0b00 + 0x20U * (n))
+#define DWC2_DOEPINT(n)  (0x0b08 + 0x20U * (n))
+#define DWC2_DOEPTSIZ(n) (0x0b10 + 0x20U * (n))
+#define DWC2_FIFO(n)     (0x1000 + 0x1000U * (n))
+
+#define DEPCTL_MPSIZ_MASK  PBL_GENMASK(10, 0)
+#define DEPCTL_EP0_MPS_64  0U
+#define DEPCTL_USBAEP      PBL_BIT(15)
+#define DEPCTL_EPTYP_MASK  PBL_GENMASK(19, 18)
+#define DEPCTL_STALL       PBL_BIT(21)
+#define DEPCTL_TXFNUM_MASK PBL_GENMASK(25, 22)
+#define DEPCTL_CNAK        PBL_BIT(26)
+#define DEPCTL_SNAK        PBL_BIT(27)
+#define DEPCTL_SD0PID      PBL_BIT(28)
+#define DEPCTL_EPDIS       PBL_BIT(30)
+#define DEPCTL_EPENA       PBL_BIT(31)
+
+#define DEPINT_XFRC    PBL_BIT(0)
+#define DEPINT_EPDIS   PBL_BIT(1)
+#define DOEPINT_STUP   PBL_BIT(3)
+#define DIEPINT_INEPNE PBL_BIT(6)
+#define DIEPINT_TXFE   PBL_BIT(7)
+
+#define DEPTSIZ_XFRSIZ_MASK   PBL_GENMASK(18, 0)
+#define DEPTSIZ_PKTCNT_MASK   PBL_GENMASK(28, 19)
+#define DOEPTSIZ_STUPCNT_MASK PBL_GENMASK(30, 29)
+
+#define DTXFSTS_INEPTFSAV_MASK PBL_GENMASK(15, 0)
