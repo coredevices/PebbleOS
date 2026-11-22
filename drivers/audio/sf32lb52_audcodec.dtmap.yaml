@@ -5,10 +5,19 @@ compatible: sifli,sf32lb52-audcodec
 config: AUDIO_SF32LB_AUDCODEC
 class: dai
 define: PBL_AUDIO_SF32LB_AUDCODEC_DEFINE
+header: pbl/drivers/audio/sf32lb.h
+provides:
+  dai: "PBL_AUDIO_SF32LB_AUDCODEC_DAI(&{sym}, {0})"
 args:
   - name: true
   - reg: 0
   - clock: 0
   - dma: tx
+  - dma: rx1
+    default: nullptr
+  - dma: rx2
+    default: nullptr
+  - pinctrl: default
+    default: nullptr
   - reg: 0
     of: sifli,pmuc

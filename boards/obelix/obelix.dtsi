@@ -129,7 +129,7 @@
 		simple-audio-card,aux-devs = <&speaker_amp>;
 
 		simple-audio-card,cpu {
-			sound-dai = <&audcodec>;
+			sound-dai = <&audcodec 0>;
 		};
 	};
 };

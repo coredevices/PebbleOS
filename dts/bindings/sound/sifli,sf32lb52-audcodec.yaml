@@ -9,9 +9,14 @@ title: SiFli SF32LB52 audio codec
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
-description:
-  The audio codec of the SF32LB52, here its DAC, with its analog bias, PLL and
-  output stage, fed through a DMA channel.
+description: |
+  The audio codec of the SF32LB52: a DAC, with its analog bias, PLL and output
+  stage, and ADCs for analog microphones, powered from its microphone bias.
+  Each channel streams through a DMA channel of its own: the DAC through tx,
+  the first and second ADC through rx1 and rx2.
+
+  It has two DAIs, selected by the cell of sound-dai: 0 for the DAC, 1 for
+  the ADCs.
 
 allOf:
   - $ref: dai-common.yaml#
@@ -27,13 +32,18 @@ properties:
     maxItems: 1
 
   dmas:
-    maxItems: 1
+    minItems: 1
+    maxItems: 3
 
   dma-names:
-    const: tx
+    minItems: 1
+    items:
+      - const: tx
+      - const: rx1
+      - const: rx2
 
   "#sound-dai-cells":
-    const: 0
+    const: 1
 
   sifli,pmuc:
     $ref: /schemas/types.yaml#/definitions/phandle
@@ -57,6 +67,6 @@ examples:
         clocks = <&hpsys_rcc 33>;
         dmas = <&dmac1 3 SF32LB52_DMAC1_REQ_AUDCODEC_DAC0 SF32LB52_DMA_PRIO_HIGH>;
         dma-names = "tx";
-        #sound-dai-cells = <0>;
+        #sound-dai-cells = <1>;
         sifli,pmuc = <&pmuc>;
     };
