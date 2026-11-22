@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-compatible: sifli,sf32lb52-rtc
+compatible:
+  - sifli,sf32lb52-rtc
+  - sifli,sf32lb57-rtc
 config: RTC_SF32LB
 class: rtc
 symbol: pbl_rtc_sf32lb

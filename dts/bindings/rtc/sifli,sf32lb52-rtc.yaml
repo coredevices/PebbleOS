@@ -4,21 +4,50 @@
 $id: http://devicetree.org/schemas/rtc/sifli,sf32lb52-rtc.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
-title: SiFli SF32LB52 real-time clock
+title: SiFli SF32LB52 and SF32LB57 real-time clock
 
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Calendar RTC of the SF32LB52. It selects clk_rtc, LRC10 or LXT32, which it
-  counts and provides to the low-power timers and the Bluetooth sleep timer.
+  Calendar RTC with an alarm, which wakes the system from hibernate. On the
+  SF32LB52 it selects clk_rtc, LRC10 or LXT32, which it counts and provides
+  to the low-power timers and the Bluetooth sleep timer; on the SF32LB57 the
+  PMU provides clk_rtc.
 
 allOf:
   - $ref: rtc.yaml#
+  - if:
+      properties:
+        compatible:
+          const: sifli,sf32lb57-rtc
+    then:
+      properties:
+        "#clock-cells": false
+        clocks:
+          items:
+            - description: clk_rtc, from the PMU
+        clock-names:
+          items:
+            - const: rtc
+    else:
+      properties:
+        clocks:
+          items:
+            - description: LRC10 oscillator
+            - description: LXT32 oscillator
+        clock-names:
+          items:
+            - const: lrc10
+            - const: lxt32
+      required:
+        - "#clock-cells"
 
 properties:
   compatible:
-    const: sifli,sf32lb52-rtc
+    enum:
+      - sifli,sf32lb52-rtc
+      - sifli,sf32lb57-rtc
 
   reg:
     maxItems: 1
@@ -30,14 +59,12 @@ properties:
     const: 0
 
   clocks:
-    items:
-      - description: LRC10 oscillator
-      - description: LXT32 oscillator
+    minItems: 1
+    maxItems: 2
 
   clock-names:
-    items:
-      - const: lrc10
-      - const: lxt32
+    minItems: 1
+    maxItems: 2
 
   sifli,hpsys-cfg:
     $ref: /schemas/types.yaml#/definitions/phandle
@@ -47,7 +74,6 @@ required:
   - compatible
   - reg
   - interrupts
-  - "#clock-cells"
   - clocks
   - clock-names
   - sifli,hpsys-cfg
