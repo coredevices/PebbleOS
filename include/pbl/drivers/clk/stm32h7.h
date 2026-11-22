@@ -94,6 +94,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_DMA1_CK 65
 /** DMA2 clock. */
 #define STM32H7_CLK_DMA2_CK 64
+/** BDMA clock, with DMAMUX2. */
+#define STM32H7_CLK_BDMA_CK 74
 /** DMA2D clock. */
 #define STM32H7_CLK_DMA2D_CK 56
 /** DSI clock. */
@@ -122,6 +124,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_RTCAPB_CK 108
 /** SAI1 kernel clock, from PLL1 Q, PLL2 P or PLL3 P. */
 #define STM32H7_CLK_SAI1_CK 151
+/** SAI4 sub-block A kernel clock, from PLL1 Q, PLL2 P or PLL3 P. */
+#define STM32H7_CLK_SAI4A_CK 158
 /** @} */
 
 /** @cond INTERNAL_HIDDEN */
