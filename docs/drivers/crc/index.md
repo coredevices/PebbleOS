@@ -23,6 +23,7 @@ reason, so callers never see a failure.
 :maxdepth: 1
 
 sf32lb.md
+stm32.md
 ```
 
 The {apidoc}`API reference <drivers_crc>` documents the interface.
