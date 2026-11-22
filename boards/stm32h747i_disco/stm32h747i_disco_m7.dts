@@ -90,6 +90,10 @@
 	status = "okay";
 };
 
+&crc {
+	status = "okay";
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";

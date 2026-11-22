@@ -36,6 +36,9 @@ and blue LEDs, the Cortex-M4 the orange one.
   Cortex-M4, count the LSE
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX), the console of the Cortex-M7
+- **Other**: the RNG, from HSI48, the CRC unit, used with `CONFIG_CRC_HW`,
+  and the independent watchdog, from LSI, which firmware with
+  `CONFIG_WATCHDOG` starts, all on the Cortex-M7
 
 ## Buttons and LEDs
 
