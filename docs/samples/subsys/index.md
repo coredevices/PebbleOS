@@ -19,4 +19,5 @@ pp/gatt.md
 profiler/nodes.md
 shell/commands.md
 task_wdt/stall.md
+usb/cdc_acm.md
 ```

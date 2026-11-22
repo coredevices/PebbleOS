@@ -1,0 +1,4 @@
+description: A serial port over USB that echoes what the host sends, for a minute
+expect:
+  - 'usb: serial port up'
+roles: [udc]
