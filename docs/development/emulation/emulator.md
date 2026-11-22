@@ -113,8 +113,9 @@ pbl emulator screenshot   # writes build/screenshot.png
 ### Phone data
 
 There is no phone attached, but {doc}`pbl emulator feed <../../pbl/emulator>`
-writes what the phone app would, such as weather, music, notifications and calendar events, over
-the Pebble protocol port:
+writes what the phone app would, such as weather, music, notifications and calendar events, in a
+Pebble protocol session on the console port. The port serves one client, so it needs
+{doc}`../../pbl/console` detached:
 
 ```shell
 pbl emulator feed weather
@@ -122,11 +123,12 @@ pbl emulator feed weather
 
 ### Apps
 
-Install an app with the [`pebble` tool](https://github.com/coredevices/pebble-tool),
-which finds the running emulator on its own:
+Install an app with the [`pebble` tool](https://github.com/coredevices/pebble-tool)
+and its phone simulator, which talks to the firmware on the console port, with
+{doc}`../../pbl/console` detached:
 
 ```shell
-pebble install /path/to/app.pbw --qemu
+pebble install /path/to/app.pbw --qemu --qemu-console localhost:12345 --pypkjs --platform emery
 ```
 
 Launch with `--keep-flash-image` to keep installed apps across launches.
@@ -161,8 +163,8 @@ session.
 | --- | --- |
 | The launching terminal | Interactive QEMU monitor |
 | `build/qemu-mon.sock` | Socket monitor, used by `pbl emulator screenshot` and scripts |
-| `localhost:12345` | Serial console, used by `pbl console` |
-| `localhost:12344` | Pebble protocol, used by the `pebble` tool and `pbl emulator feed` |
+| `localhost:12345` | Serial console, used by `pbl console`, and by `pbl emulator feed` and the `pebble` tool for the Pebble protocol; one client at a time |
+| `localhost:12344` | QEMU serial protocol, which drives the emulated hardware, used by `pbl emulator mic` and the `pebble` tool |
 | `localhost:1234` | GDB server |
 | `uart1.log` | The first UART's output, in the repository root |
 

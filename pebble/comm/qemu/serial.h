@@ -200,4 +200,11 @@ void qemu_serial_init(void);
  */
 void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len);
 
+/**
+ * @brief Log that the firmware is ready, once the first app has had time to show.
+ *
+ * Host tools wait for the line before they install.
+ */
+void qemu_serial_notify_ready(void);
+
 /** @} */

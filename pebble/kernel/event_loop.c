@@ -37,7 +37,7 @@
 #include <applib/app_launch_reason.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/ui.h>
-#include <comm/qemu/pp_transport.h>
+#include <comm/qemu/serial.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/low_power.h>
@@ -647,7 +647,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
 #endif
 
 #ifdef CONFIG_QEMU_SERIAL
-  qemu_pp_notify_ready();
+  qemu_serial_notify_ready();
 #endif
 #ifdef CONFIG_CONSOLE
   pbl_console_enable_prompt();

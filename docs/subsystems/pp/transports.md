@@ -265,29 +265,3 @@ Frames from the watch carry a sequence number and are sent one at a time:
 the watch sends a frame again every 200 ms until the host acknowledges it,
 and closes the session after 25 tries. A data frame for a session the watch
 does not have, after a restart for instance, gets a close back.
-
-## QEMU
-
-The firmware has a transport of its own, outside the subsystem
-(`pebble/comm/qemu/pp_transport.c`, with `QEMU_SERIAL`, priority 0, not
-shared): it is built on the firmware's QEMU serial protocol, and shows how a
-link the subsystem does not know is added. It carries the Pebble protocol
-over the emulator's serial link, in the QEMU serial protocol's frames:
-
-| Offset | Size | Field |
-|---|---|---|
-| 0 | 2 | Signature, `0xFEED` |
-| 2 | 2 | Protocol: 1 for the Pebble protocol |
-| 4 | 2 | Payload length, up to 2048 |
-| 6 | length | Payload |
-| 6 + length | 2 | Signature, `0xBEEF` |
-
-All fields are big endian. The link is reliable, so the transport sends the
-whole send queue at once and consumes it.
-
-The transport emulates a phone connection. It opens a hybrid session when
-Bluetooth starts, if the emulator is set to start connected, and closes it
-when Bluetooth stops. The emulator's Bluetooth connection messages only tell
-apps that the phone connected or disconnected; the session stays open. Once
-the first app has started, the transport logs `Ready for communication.`,
-which host tools wait for before installing.
