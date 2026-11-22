@@ -30,8 +30,8 @@ config AUDIO_AMP_GPIO
       Amplifier switched by an enable GPIO, with an optional supply and
       enable mode pulses.
 
-config AUDIO_SF32LB52_AUDCODEC
-    bool "SiFli SF32LB52 audio codec"
+config AUDIO_SF32LB_AUDCODEC
+    bool "SiFli SF32LB audio codec"
     default y
     depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED
     select CLK
@@ -39,7 +39,7 @@ config AUDIO_SF32LB52_AUDCODEC
     select PINCTRL
     select RESET
     help
-      Playback through the DAC of the SF32LB52 audio codec.
+      Playback through the DAC of the SF32LB audio codec.
 
 config AUDIO_SF32LB52_PDM
     bool "SiFli SF32LB52 PDM"
