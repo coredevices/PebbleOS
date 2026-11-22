@@ -57,6 +57,7 @@ SPEC_KEYS = {
     "children",
     "header",
     "drives",
+    "masters",
 }
 CHILDREN_KEYS = {"node", "names", "property"}
 # A GPIO list entry with a 0 phandle
@@ -176,6 +177,8 @@ class Spec:
         self.pinctrl = data.get("pinctrl")
         # The compatibles of the child a node must have for the driver to bind to it
         self.drives = as_list(data.get("drives", []))
+        # The compatibles of the controller behind a router, in dma-masters, it must have
+        self.masters = as_list(data.get("masters", []))
         self.children = data.get("children")
         if self.children is not None:
             check_keys(self._error, self.children, CHILDREN_KEYS, "children")
@@ -358,7 +361,8 @@ def load_specs(srcdir, appdir=None):
             specs.setdefault(compatible, []).append(spec)
     files = {}
     for compatible, found in specs.items():
-        names = [name for spec in found for name in spec.classes]
+        # Drivers of the same class bind to different nodes, told apart by their masters
+        names = [name for spec in found if not spec.masters for name in spec.classes]
         if len(names) != len(set(names)):
             raise DtError(f"several specs of '{compatible}' implement the same class")
         if len(found) > 1:
@@ -368,6 +372,8 @@ def load_specs(srcdir, appdir=None):
                     raise DtError(f"{spec.path}: sharing '{compatible}' needs a class")
                 first = c_ident(spec.compatibles[0])
                 spec.file = f"{first}_{c_ident(spec.classes[0])}"
+                if spec.masters:
+                    spec.file += f"_{c_ident(spec.masters[0])}"
     for spec in {id(s): s for found in specs.values() for s in found}.values():
         other = files.setdefault(spec.file, spec)
         if other is not spec:
@@ -622,12 +628,21 @@ class Generator:
             if spec.config in self.config and self._drives(dev, spec)
         ]
 
-    @staticmethod
-    def _drives(dev, spec):
-        return not spec.drives or any(
+    def _drives(self, dev, spec):
+        if spec.drives and not any(
             enabled(child) and set(child.compatibles) & set(spec.drives)
             for child in dev.node.children
-        )
+        ):
+            return False
+        if spec.masters:
+            node = dev.node
+            phandles = node.u32s("dma-masters") if node.has("dma-masters") else []
+            return any(
+                set(self.tree.phandle(value, f"{node.path}: 'dma-masters'").compatibles)
+                & set(spec.masters)
+                for value in phandles
+            )
+        return True
 
     def run(self):
         if self.tree is None:
@@ -2008,7 +2023,10 @@ def kconfig_compatibles(specs):
     models = {
         model for group in specs.values() for spec in group for model in spec.models
     }
-    return sorted({*specs, *models, PARTITIONS})
+    masters = {
+        master for group in specs.values() for spec in group for master in spec.masters
+    }
+    return sorted({*specs, *models, *masters, PARTITIONS})
 
 
 def kconfig_text(tree, compatibles):
