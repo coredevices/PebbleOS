@@ -77,6 +77,12 @@
 			linux,code = <KEY_DOWN>;
 		};
 
+		button-right {
+			label = "JoyRight";
+			gpios = <&gpiok 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_RIGHT>;
+		};
+
 		// On a wakeup pin, it starts the kit again from power-off
 		button-wakeup {
 			label = "Wakeup";
