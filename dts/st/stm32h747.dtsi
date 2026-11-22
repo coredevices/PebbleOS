@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
-// The STM32H747, from its Cortex-M7
+// The STM32H747, with its Cortex-M7 and its Cortex-M4
 #include "stm32h7.dtsi"
 
 / {
@@ -13,6 +13,13 @@
 			compatible = "arm,cortex-m7";
 			device_type = "cpu";
 			reg = <0>;
+			cpu-idle-states = <&stop>;
+		};
+
+		cpu1: cpu@1 {
+			compatible = "arm,cortex-m4";
+			device_type = "cpu";
+			reg = <1>;
 			cpu-idle-states = <&stop>;
 		};
 
