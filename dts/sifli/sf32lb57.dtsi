@@ -434,6 +434,19 @@
 			#interrupt-cells = <2>;
 		};
 
+		usbc: usb@50047000 {
+			compatible = "sifli,sf32lb57-usb";
+			reg = <0x50047000 0x1000>;
+			interrupts = <92>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USBC>;
+			/* 60 MHz from clk_hpsys, the controller's own 60 MHz mode */
+			assigned-clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USBC_K>;
+			assigned-clock-parents = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SYS>;
+			assigned-clock-rates = <60000000>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			status = "disabled";
+		};
+
 		gpadc: adc@500b2000 {
 			compatible = "sifli,sf32lb57-gpadc";
 			reg = <0x500b2000 0x1000>;
