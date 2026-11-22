@@ -36,6 +36,11 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev) {
 static int prv_power_up(const struct pbl_audio_amp_gpio *amp) {
   int ret = 0;
 
+  // A rising edge alone has no timing: the line may be behind a bus
+  if (amp->mode_pulses == 0U) {
+    return pbl_gpio_set(&amp->enable, true);
+  }
+
   // An interrupt would stretch a pulse past what the amplifier takes as one
   pbl_irq_lock();
 
@@ -104,3 +109,4 @@ const struct pbl_audio_amp_ops pbl_audio_amp_gpio_ops = {
 };
 
 #include PBL_DT_INSTANCES(awinic_aw8155)
+#include PBL_DT_INSTANCES(simple_audio_amplifier)
