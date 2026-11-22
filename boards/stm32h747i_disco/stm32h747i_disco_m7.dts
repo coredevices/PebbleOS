@@ -30,6 +30,14 @@
 		};
 	};
 
+	// The USB3320 on the ULPI of the USB OTG HS, clocked by its own 24 MHz crystal
+	usbotg_hs_phy: usb-phy {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
+		clocks = <&rcc USB1ULPI_CK>;
+		clock-names = "main_clk";
+	};
+
 	// What the LTDC scans to the panel, landscape, which the panel takes turned a quarter turn
 	framebuffer {
 		compatible = "simple-framebuffer";
@@ -119,13 +127,16 @@
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>,
 			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc PLL2_P>, <&rcc SAI1_CK>,
-			  <&rcc SAI4A_CK>;
+			  <&rcc SAI4A_CK>, <&rcc USB1OTG_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>, <&rcc PLL2_P>;
+				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>, <&rcc PLL2_P>,
+				 <&rcc RC48_CK>;
 	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 and the RTC count the LSE
-	// crystal, and SAI1 and SAI4 divide PLL2 P to 256 and 128 times the audio rates within 0.03%
+	// crystal, SAI1 and SAI4 divide PLL2 P to 256 and 128 times the audio rates within 0.03%, and
+	// the USB OTG HS takes its 48 MHz from HSI48
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>, <0>;
+			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>, <0>,
+			       <0>;
 };
 
 &dma1 {
@@ -178,6 +189,17 @@
 	timer {
 		status = "okay";
 	};
+};
+
+// The USB OTG HS, on its micro-AB connector, as a device
+&usbotg_hs {
+	dr_mode = "peripheral";
+	phys = <&usbotg_hs_phy>;
+	phy-names = "usb2-phy";
+	usb33d-supply = <&usb33>;
+	pinctrl-0 = <&usbotg_hs_ulpi>;
+	pinctrl-names = "default";
+	status = "okay";
 };
 
 &dma2d {

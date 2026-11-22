@@ -13,3 +13,4 @@ die_temp: adc3
 backlight: panel
 speaker: speaker
 mic: mic
+udc: usbotg_hs

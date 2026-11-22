@@ -45,6 +45,10 @@ timer.
   data PC1), clocked at 64 times the rate from PLL2, 128 times at 8 kHz, and
   decimated in software; the BDMA moves its raw samples, through the first
   4 KiB of the SRAM4, the only RAM it reaches; it is the `mic`
+- **USB**: the USB OTG HS, a DesignWare USB 2.0 OTG, on its micro-AB
+  connector through the Microchip USB3320 ULPI PHY, as a high-speed device
+  with `CONFIG_USB_DEVICE`; VDD33USB comes from the USB voltage detector of
+  the PWR
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
   conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit
