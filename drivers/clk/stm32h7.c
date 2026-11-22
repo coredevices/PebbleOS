@@ -25,18 +25,18 @@ static_assert(STM32H7_CLK_HSE_CK == HSE_CK && STM32H7_CLK_LSE_CK == LSE_CK &&
               STM32H7_CLK_LSI_CK == LSI_CK);
 static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_CK &&
               STM32H7_CLK_TIM5_CK == TIM5_CK && STM32H7_CLK_QUADSPI_CK == QUADSPI_CK &&
-              STM32H7_CLK_FMC_CK == FMC_CK && STM32H7_CLK_DSI_CK == DSI_CK &&
-              STM32H7_CLK_LTDC_CK == LTDC_CK && STM32H7_CLK_RNG_CK == RNG_CK &&
-              STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK &&
-              STM32H7_CLK_DMA2D_CK == DMA2D_CK && STM32H7_CLK_SYSCFG_CK == SYSCFG_CK &&
-              STM32H7_CLK_USART1_CK == USART1_CK && STM32H7_CLK_LPTIM1_CK == LPTIM1_CK &&
-              STM32H7_CLK_I2C4_CK == I2C4_CK && STM32H7_CLK_RTC_CK == RTC_CK &&
-              STM32H7_CLK_RTCAPB_CK == RTCAPB_CK && STM32H7_CLK_SAI1_CK == SAI1_CK &&
-              STM32H7_CLK_BDMA_CK == BDMA_CK && STM32H7_CLK_SAI4A_CK == SAI4A_CK &&
-              STM32H7_CLK_CRC_CK == CRC_CK && STM32H7_CLK_HSEM_CK == HSEM_CK &&
-              STM32H7_CLK_ADC3_CK == ADC3_CK && STM32H7_CLK_LPTIM2_CK == LPTIM2_CK &&
-              STM32H7_CLK_UART8_CK == UART8_CK && STM32H7_CLK_USB1OTG_CK == USB1OTG_CK &&
-              STM32H7_CLK_USB1ULPI_CK == USB1ULPI_CK);
+              STM32H7_CLK_SDMMC1_CK == SDMMC1_CK && STM32H7_CLK_FMC_CK == FMC_CK &&
+              STM32H7_CLK_DSI_CK == DSI_CK && STM32H7_CLK_LTDC_CK == LTDC_CK &&
+              STM32H7_CLK_RNG_CK == RNG_CK && STM32H7_CLK_DMA1_CK == DMA1_CK &&
+              STM32H7_CLK_DMA2_CK == DMA2_CK && STM32H7_CLK_DMA2D_CK == DMA2D_CK &&
+              STM32H7_CLK_SYSCFG_CK == SYSCFG_CK && STM32H7_CLK_USART1_CK == USART1_CK &&
+              STM32H7_CLK_LPTIM1_CK == LPTIM1_CK && STM32H7_CLK_I2C4_CK == I2C4_CK &&
+              STM32H7_CLK_RTC_CK == RTC_CK && STM32H7_CLK_RTCAPB_CK == RTCAPB_CK &&
+              STM32H7_CLK_SAI1_CK == SAI1_CK && STM32H7_CLK_BDMA_CK == BDMA_CK &&
+              STM32H7_CLK_SAI4A_CK == SAI4A_CK && STM32H7_CLK_CRC_CK == CRC_CK &&
+              STM32H7_CLK_HSEM_CK == HSEM_CK && STM32H7_CLK_ADC3_CK == ADC3_CK &&
+              STM32H7_CLK_LPTIM2_CK == LPTIM2_CK && STM32H7_CLK_UART8_CK == UART8_CK &&
+              STM32H7_CLK_USB1OTG_CK == USB1OTG_CK && STM32H7_CLK_USB1ULPI_CK == USB1ULPI_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -107,6 +107,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_DMA2D_CK] = GATE(AHB3ENR, 4, HCLK),
   [STM32H7_CLK_FMC_CK] = GATE(AHB3ENR, 12, HCLK),
   [STM32H7_CLK_QUADSPI_CK] = GATE(AHB3ENR, 14, HCLK),
+  [STM32H7_CLK_SDMMC1_CK] = GATE(AHB3ENR, 16, PLL1_Q),
   [STM32H7_CLK_RNG_CK] = GATE(AHB2ENR, 6, RC48_CK),
   [STM32H7_CLK_LTDC_CK] = GATE(APB3ENR, 3, PLL3_R),
   [STM32H7_CLK_DSI_CK] = GATE(APB3ENR, 4, PCLK3),
@@ -509,6 +510,12 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
           return 0;
       }
+    case STM32H7_CLK_SDMMC1_CK:
+      *parent = (struct pbl_clk)PBL_CLK(
+          ctrl, (prv_getreg(rcc, STM32H7_RCC_D1CCIPR_OFFSET) & RCC_D1CCIPR_SDMMCSEL) != 0U
+                    ? STM32H7_CLK_PLL2_R
+                    : STM32H7_CLK_PLL1_Q);
+      return 0;
     case STM32H7_CLK_USB1OTG_CK:
       switch (
           PBL_FIELD_GET(RCC_D2CCIP2R_USBSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
@@ -769,6 +776,19 @@ static int prv_set_lptim_parent(const struct pbl_clk_controller *ctrl, uint32_t 
   return 0;
 }
 
+static int prv_set_sdmmc_parent(const struct pbl_clk_controller *ctrl,
+                                const struct pbl_clk *parent) {
+  if (parent->ctrl != ctrl ||
+      (parent->id != STM32H7_CLK_PLL1_Q && parent->id != STM32H7_CLK_PLL2_R)) {
+    return -EINVAL;
+  }
+
+  prv_modify(prv_rcc(ctrl), STM32H7_RCC_D1CCIPR_OFFSET, RCC_D1CCIPR_SDMMCSEL,
+             parent->id == STM32H7_CLK_PLL2_R ? 1U : 0U);
+
+  return 0;
+}
+
 static int prv_set_usb_parent(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
   uint32_t sel;
 
@@ -875,6 +895,8 @@ static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
     case STM32H7_CLK_LPTIM2_CK:
       return prv_set_lptim_parent(ctrl, STM32H7_RCC_D3CCIPR_OFFSET, RCC_D3CCIPR_LPTIM2SEL_MASK,
                                   STM32H7_CLK_PCLK4, parent);
+    case STM32H7_CLK_SDMMC1_CK:
+      return prv_set_sdmmc_parent(ctrl, parent);
     case STM32H7_CLK_USB1OTG_CK:
       return prv_set_usb_parent(ctrl, parent);
     case STM32H7_CLK_PLLSRC:
