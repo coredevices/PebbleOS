@@ -9,6 +9,7 @@ display: ltdc
 gpu: dma2d
 touch: touchscreen
 rtc: rtc
+die_temp: adc3
 backlight: panel
 speaker: speaker
 mic: mic

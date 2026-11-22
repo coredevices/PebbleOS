@@ -56,7 +56,8 @@ DMA2D work so far.
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX), received through DMA
 - **Other**: the RNG, from HSI48, the CRC unit, used with `CONFIG_CRC_HW`,
-  and the independent watchdog, from LSI, which firmware with
+  the die temperature, from the sensor on ADC3 with its factory
+  calibration, and the independent watchdog, from LSI, which firmware with
   `CONFIG_WATCHDOG` starts
 - **Low power**: with `CONFIG_CPU_IDLE`, the Cortex-M7 idles in Stop mode,
   its D1 domain stopped and the SDRAM in self-refresh, unless the console

@@ -192,6 +192,17 @@
 	status = "okay";
 };
 
+// VREF+ is tied to the 3.3 V of VDDA
+&adc_3 {
+	vdda-supply = <&v3v3>;
+	vref-supply = <&v3v3>;
+	status = "okay";
+};
+
+&adc3 {
+	status = "okay";
+};
+
 &bdma {
 	status = "okay";
 };
