@@ -63,7 +63,7 @@ in `endpoint2.c`.
 | `0x03` | Reminders    | `0x0A` | Health        |
 | `0x04` | Notifs       | `0x0B` | AppGlance     |
 | `0x05` | Weather      | `0x0C` | Settings      |
-| `0x06` | iOSNotifPref |        |               |
+| `0x06` | iOSNotifPref | `0x0D` | Chat          |
 
 New databases register a `BlobDBId` and an entry in `s_blob_dbs` in
 `pebble/services/blob_db/api.c`.

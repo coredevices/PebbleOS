@@ -10,6 +10,7 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/blob_db/app_glance_db.h>
+#include <pbl/services/blob_db/chat_db.h>
 #include <pbl/services/blob_db/contacts_db.h>
 #include <pbl/services/blob_db/health_db.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
@@ -89,6 +90,17 @@ static const BlobDB s_blob_dbs[NumBlobDBs] = {
         .del = notif_db_delete,
         .flush = notif_db_flush,
         .name = "notif_db",
+      },
+  [BlobDBIdChat] =
+      {
+        .init = chat_db_init,
+        .insert = chat_db_insert,
+        .get_len = chat_db_get_len,
+        .read = chat_db_read,
+        .del = chat_db_delete,
+        .flush = chat_db_flush,
+        .compact = chat_db_compact,
+        .name = "chat_db",
       },
   [BlobDBIdWeather] =
       {

@@ -5,6 +5,7 @@ set(sources
   api.c
   app_db.c
   app_glance_db.c
+  chat_db.c
   contacts_db.c
   endpoint.c
   endpoint2.c

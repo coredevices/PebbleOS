@@ -74,6 +74,8 @@ typedef enum PBL_PACKED {
   BlobDBIdAppGlance = 0x0B,
   /** Synced settings (see @ref services_blob_db_settings_blob_db). */
   BlobDBIdSettings = 0x0C,
+  /** Recent chats, chat_db. */
+  BlobDBIdChat = 0x0D,
   /** Number of database ids. */
   NumBlobDBs,
 } BlobDBId;

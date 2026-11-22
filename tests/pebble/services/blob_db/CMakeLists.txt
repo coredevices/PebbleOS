@@ -80,6 +80,14 @@ pbl_clar_test(test_contacts_db
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_chat_db
+  MODULES settings rand
+  SOURCES
+    tests/fakes/fake_rtc.c
+    pebble/services/blob_db/chat_db.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_watch_app_prefs_db
   MODULES settings rand
   SOURCES

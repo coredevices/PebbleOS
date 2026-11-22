@@ -148,6 +148,8 @@ struct PBL_PACKED pbl_pp_capabilities {
       uint8_t even_more_padded_bits : 1;
       /** A description of the watch's platform ends the version response. */
       bool platform_info_appended : 1;
+      /** The watch keeps recent chats in ::BlobDBIdChat. */
+      bool chat_db_support : 1;
     };
     /** All capability bits. */
     uint64_t flags;
