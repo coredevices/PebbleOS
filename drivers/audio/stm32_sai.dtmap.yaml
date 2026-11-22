@@ -8,6 +8,21 @@ define: PBL_AUDIO_STM32_SAI_DEFINE
 args:
   - name: true
   - reg: 0
+  - reg: 0
+    up: true
   - clock: sai_ck
   - dma: tx
+    default: nullptr
+  - dma: rx
+    default: nullptr
+  - string: dma-names
+    values:
+      tx: PBL_AUDIO_PLAYBACK
+      rx: PBL_AUDIO_CAPTURE
   - pinctrl: default
+  - reg: 0
+    of: memory-region
+    default: 0
+  - size: 0
+    of: memory-region
+    default: 0

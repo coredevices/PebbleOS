@@ -65,10 +65,12 @@ config AUDIO_STM32_SAI
     depends on DT_HAS_ST_STM32_SAI_SUB_A_ENABLED || DT_HAS_ST_STM32_SAI_SUB_B_ENABLED
     select CLK
     select DMA
+    select PDM
     select PINCTRL
     help
       Playback through a sub-block of an STM32 serial audio interface,
-      the master of an I2S link to a codec.
+      the master of an I2S link to a codec, and capture of PDM
+      microphones on its PDM interface.
 
 config AUDIO_QEMU
     bool "QEMU audio device"
