@@ -12,7 +12,8 @@
 /**
  * @defgroup drivers_regulator_fixed Fixed regulators
  * @ingroup drivers_regulator
- * @brief @ref drivers_regulator driver for a rail switched by a GPIO, as a load switch.
+ * @brief @ref drivers_regulator driver for a rail switched by a GPIO, as a load switch, or always
+ * on without one.
  *
  * The enable level is set by @c _active_high, whatever the GPIO flags say, as the Linux
  * regulator-fixed binding does with enable-active-high.
@@ -27,7 +28,7 @@
 struct pbl_regulator_fixed {
   /** Regulator. */
   struct pbl_regulator reg;
-  /** Enable GPIO. */
+  /** Enable GPIO, without a port for a rail that is always on. */
   struct pbl_gpio enable;
   /** Enabled at a high level. */
   bool active_high;
@@ -42,7 +43,7 @@ extern const struct pbl_regulator_ops pbl_regulator_fixed_ops;
  *
  * @param sym Symbol of the regulator.
  * @param _name Name.
- * @param _enable Enable GPIO, from PBL_GPIO().
+ * @param _enable Enable GPIO, from PBL_GPIO(), or PBL_GPIO(nullptr, 0, 0) for none.
  * @param _active_high Enabled at a high level.
  * @param _startup_delay_us Time from enabling until the rail is up, in microseconds.
  * @param _always_on Switched on at init and never off.

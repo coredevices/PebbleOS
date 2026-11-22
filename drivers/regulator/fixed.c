@@ -11,13 +11,22 @@ static const struct pbl_regulator_fixed *prv_fixed(const struct pbl_regulator *r
   return PBL_CONTAINER_OF(reg, const struct pbl_regulator_fixed, reg);
 }
 
+// A rail without an enable GPIO is always on
 static int prv_set(const struct pbl_regulator_fixed *fixed, bool on) {
+  if (fixed->enable.port == nullptr) {
+    return 0;
+  }
+
   return pbl_gpio_set_raw(&fixed->enable, fixed->active_high == on);
 }
 
 static int prv_init(const struct pbl_regulator *reg) {
   const struct pbl_regulator_fixed *fixed = prv_fixed(reg);
   int ret;
+
+  if (fixed->enable.port == nullptr) {
+    return 0;
+  }
 
   if (pbl_device_init(&fixed->enable.port->dev) != 0) {
     return -ENODEV;
