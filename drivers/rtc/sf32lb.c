@@ -22,6 +22,9 @@
 
 #define TIMEOUT_US 1000000U
 
+// The alarm matches the month, day and time, the same in each of the next 364 days at most
+#define ALARM_MAX_S (364 * 24 * 60 * 60)
+
 // The clock notifier has no context, and the SoC has one RTC
 static const struct pbl_rtc_sf32lb *s_rtc;
 
@@ -121,6 +124,24 @@ static int prv_get_time(const struct pbl_rtc *dev, time_t *t) {
   return 0;
 }
 
+// The time fields, laid out the same in the time and alarm registers
+static uint32_t prv_time_fields(const struct pbl_tm *tm) {
+  return PBL_FIELD_PREP(RTC_TR_ST_MASK, tm->tm_sec / 10) |
+         PBL_FIELD_PREP(RTC_TR_SU_MASK, tm->tm_sec % 10) |
+         PBL_FIELD_PREP(RTC_TR_MNT_MASK, tm->tm_min / 10) |
+         PBL_FIELD_PREP(RTC_TR_MNU_MASK, tm->tm_min % 10) |
+         PBL_FIELD_PREP(RTC_TR_HT_MASK, tm->tm_hour / 10) |
+         PBL_FIELD_PREP(RTC_TR_HU_MASK, tm->tm_hour % 10);
+}
+
+// The month and day fields, laid out the same in the date and alarm registers
+static uint32_t prv_day_fields(const struct pbl_tm *tm) {
+  return PBL_FIELD_PREP(RTC_DR_DT_MASK, tm->tm_mday / 10) |
+         PBL_FIELD_PREP(RTC_DR_DU_MASK, tm->tm_mday % 10) |
+         PBL_FIELD_PREP(RTC_DR_MT, (tm->tm_mon + 1) / 10) |
+         PBL_FIELD_PREP(RTC_DR_MU_MASK, (tm->tm_mon + 1) % 10);
+}
+
 static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
   const struct pbl_rtc_sf32lb *rtc = prv_rtc(dev);
   struct pbl_tm tm;
@@ -134,17 +155,8 @@ static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
     return -EINVAL;
   }
 
-  tr = PBL_FIELD_PREP(RTC_TR_ST_MASK, tm.tm_sec / 10) |
-       PBL_FIELD_PREP(RTC_TR_SU_MASK, tm.tm_sec % 10) |
-       PBL_FIELD_PREP(RTC_TR_MNT_MASK, tm.tm_min / 10) |
-       PBL_FIELD_PREP(RTC_TR_MNU_MASK, tm.tm_min % 10) |
-       PBL_FIELD_PREP(RTC_TR_HT_MASK, tm.tm_hour / 10) |
-       PBL_FIELD_PREP(RTC_TR_HU_MASK, tm.tm_hour % 10);
-  dr = PBL_FIELD_PREP(RTC_DR_DT_MASK, tm.tm_mday / 10) |
-       PBL_FIELD_PREP(RTC_DR_DU_MASK, tm.tm_mday % 10) |
-       PBL_FIELD_PREP(RTC_DR_MT, (tm.tm_mon + 1) / 10) |
-       PBL_FIELD_PREP(RTC_DR_MU_MASK, (tm.tm_mon + 1) % 10) |
-       PBL_FIELD_PREP(RTC_DR_WD_MASK, (tm.tm_wday == 0) ? 7 : tm.tm_wday) |
+  tr = prv_time_fields(&tm);
+  dr = prv_day_fields(&tm) | PBL_FIELD_PREP(RTC_DR_WD_MASK, (tm.tm_wday == 0) ? 7 : tm.tm_wday) |
        PBL_FIELD_PREP(RTC_DR_YT_MASK, (tm.tm_year % 100) / 10) |
        PBL_FIELD_PREP(RTC_DR_YU_MASK, tm.tm_year % 10) | RTC_DR_CB;
 
@@ -157,6 +169,69 @@ static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
   prv_putreg(rtc, SF32LB52_RTC_DR_OFFSET, dr);
 
   return prv_exit_init(rtc);
+}
+
+static int prv_alarm_disable(const struct pbl_rtc_sf32lb *rtc) {
+  prv_modreg(rtc, SF32LB52_RTC_CR_OFFSET, RTC_CR_ALRME | RTC_CR_ALRMIE, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_ALRMF, 0U);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rtc, SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_ALRMWF) != 0U, 0U,
+                          TIMEOUT_US);
+}
+
+// On the month, day and time, to the second, whatever the day of the week
+static int prv_set_alarm(const struct pbl_rtc *dev, time_t t, pbl_rtc_alarm_callback_t cb,
+                         void *user_data) {
+  const struct pbl_rtc_sf32lb *rtc = prv_rtc(dev);
+  struct pbl_tm tm;
+  time_t now;
+  int ret;
+
+  ret = prv_get_time(dev, &now);
+  if (ret != 0) {
+    return ret;
+  }
+  if (t <= now) {
+    return -EINVAL;
+  }
+  if (t - now > ALARM_MAX_S) {
+    return -ERANGE;
+  }
+
+  pbl_gmtime_r(&t, &tm);
+
+  ret = prv_alarm_disable(rtc);
+  if (ret != 0) {
+    return ret;
+  }
+
+  rtc->state->alarm_cb = cb;
+  rtc->state->alarm_user_data = user_data;
+  prv_putreg(rtc, SF32LB52_RTC_ALRMTR_OFFSET, prv_time_fields(&tm));
+  prv_putreg(rtc, SF32LB52_RTC_ALRMDR_OFFSET, prv_day_fields(&tm) | RTC_ALRMDR_MSKWD);
+  prv_modreg(rtc, SF32LB52_RTC_CR_OFFSET, 0U, RTC_CR_ALRME | RTC_CR_ALRMIE);
+
+  return 0;
+}
+
+static int prv_cancel_alarm(const struct pbl_rtc *dev) {
+  return prv_alarm_disable(prv_rtc(dev));
+}
+
+// The alarm fires once
+void pbl_rtc_sf32lb_isr(const struct pbl_rtc_sf32lb *rtc) {
+  struct pbl_rtc_sf32lb_state *st = rtc->state;
+
+  if ((prv_getreg(rtc, SF32LB52_RTC_ISR_OFFSET) & RTC_ISR_ALRMF) == 0U) {
+    return;
+  }
+
+  prv_modreg(rtc, SF32LB52_RTC_CR_OFFSET, RTC_CR_ALRME | RTC_CR_ALRMIE, 0U);
+  prv_modreg(rtc, SF32LB52_RTC_ISR_OFFSET, RTC_ISR_ALRMF, 0U);
+
+  if (st->alarm_cb != nullptr) {
+    st->alarm_cb(&rtc->rtc, st->alarm_user_data);
+  }
 }
 
 int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
@@ -185,6 +260,7 @@ int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
   prv_set_prescaler(rtc, rate_mhz);
   s_rtc = rtc;
   pbl_clk_notifier_register(&s_clk_nb);
+  pbl_irq_enable(rtc->irq);
 
   return prv_exit_init(rtc);
 }
@@ -192,6 +268,8 @@ int pbl_rtc_sf32lb_init(const struct pbl_device *dev) {
 const struct pbl_rtc_ops pbl_rtc_sf32lb_ops = {
   .get_time = prv_get_time,
   .set_time = prv_set_time,
+  .set_alarm = prv_set_alarm,
+  .cancel_alarm = prv_cancel_alarm,
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_rtc_rtc)

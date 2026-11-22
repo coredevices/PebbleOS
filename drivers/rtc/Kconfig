@@ -30,7 +30,13 @@ config RTC_SF32LB
     depends on DT_HAS_SIFLI_SF32LB52_RTC_ENABLED
     select CLK
     help
-      SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate.
+      SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate,
+      with an alarm, which wakes the system from hibernate.
+
+config RTC_SF32LB_IRQ_PRIO
+    int "Alarm interrupt priority"
+    default 6
+    depends on RTC_SF32LB
 
 config RTC_STM32
     bool "STM32 RTC"

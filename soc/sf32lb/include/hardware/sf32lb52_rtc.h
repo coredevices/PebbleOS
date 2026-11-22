@@ -12,6 +12,8 @@
 #define SF32LB52_RTC_CR_OFFSET     0x0008
 #define SF32LB52_RTC_ISR_OFFSET    0x000c
 #define SF32LB52_RTC_PSCLR_OFFSET  0x0010
+#define SF32LB52_RTC_ALRMTR_OFFSET 0x0018
+#define SF32LB52_RTC_ALRMDR_OFFSET 0x001c
 #define SF32LB52_RTC_BKP_OFFSET(n) (0x0030 + ((n) * 4))
 #define SF32LB52_RTC_PBR_OFFSET(n) (0x005c + ((n) * 4))
 #define SF32LB52_RTC_PAWK1R_OFFSET 0x006c
@@ -40,13 +42,20 @@
 
 #define RTC_CR_LPCKSEL   PBL_BIT(0)
 #define RTC_CR_FMT       PBL_BIT(6)
+#define RTC_CR_ALRME     PBL_BIT(8)
+#define RTC_CR_ALRMIE    PBL_BIT(11)
 #define RTC_CR_POL       PBL_BIT(18)
 #define RTC_CR_OSEL_MASK PBL_GENMASK(20, 19)
 
-#define RTC_ISR_TSOVF PBL_BIT(5)
-#define RTC_ISR_RSF   PBL_BIT(7)
-#define RTC_ISR_INITF PBL_BIT(9)
-#define RTC_ISR_INIT  PBL_BIT(10)
+#define RTC_ISR_ALRMWF PBL_BIT(0)
+#define RTC_ISR_ALRMF  PBL_BIT(1)
+#define RTC_ISR_TSOVF  PBL_BIT(5)
+#define RTC_ISR_RSF    PBL_BIT(7)
+#define RTC_ISR_INITF  PBL_BIT(9)
+#define RTC_ISR_INIT   PBL_BIT(10)
+
+/* The alarm time is laid out as TR, its date as the low half of DR, with the fields it ignores */
+#define RTC_ALRMDR_MSKWD PBL_BIT(29)
 
 #define RTC_PSCLR_DIVB_MASK      PBL_GENMASK(9, 0)
 #define RTC_PSCLR_DIVA_FRAC_MASK PBL_GENMASK(23, 10)
