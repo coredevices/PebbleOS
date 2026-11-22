@@ -34,7 +34,7 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
               STM32H7_CLK_RTCAPB_CK == RTCAPB_CK && STM32H7_CLK_SAI1_CK == SAI1_CK &&
               STM32H7_CLK_BDMA_CK == BDMA_CK && STM32H7_CLK_SAI4A_CK == SAI4A_CK &&
               STM32H7_CLK_CRC_CK == CRC_CK && STM32H7_CLK_ADC3_CK == ADC3_CK &&
-              STM32H7_CLK_LPTIM2_CK == LPTIM2_CK);
+              STM32H7_CLK_LPTIM2_CK == LPTIM2_CK && STM32H7_CLK_UART8_CK == UART8_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -112,6 +112,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_RTCAPB_CK] = GATE(APB4ENR, 16, PCLK4),
   [STM32H7_CLK_LPTIM2_CK] = GATE(APB4ENR, 9, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
+  [STM32H7_CLK_UART8_CK] = GATE(APB1LENR, 31, PCLK1),
   [STM32H7_CLK_SAI1_CK] = GATE(APB2ENR, 22, PLL1_Q),
   [STM32H7_CLK_SAI4A_CK] = GATE(APB4ENR, 21, PLL1_Q),
 };
@@ -407,11 +408,15 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
       *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HCLK);
       return 0;
     case STM32H7_CLK_USART1_CK:
-      sel =
-          PBL_FIELD_GET(RCC_D2CCIP2R_USART16SEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET));
+    case STM32H7_CLK_UART8_CK:
+      // USART1 and USART6 on PCLK2, the others on PCLK1
+      sel = prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET);
+      sel = (id == STM32H7_CLK_USART1_CK) ? PBL_FIELD_GET(RCC_D2CCIP2R_USART16SEL_MASK, sel)
+                                          : PBL_FIELD_GET(RCC_D2CCIP2R_USART234578SEL_MASK, sel);
       switch (sel) {
         case RCC_D2CCIP2R_USARTSEL_PCLK:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PCLK2);
+          *parent = (struct pbl_clk)PBL_CLK(
+              ctrl, (id == STM32H7_CLK_USART1_CK) ? STM32H7_CLK_PCLK2 : STM32H7_CLK_PCLK1);
           return 0;
         case RCC_D2CCIP2R_USARTSEL_HSI_KER:
           *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_HSI_CK);
