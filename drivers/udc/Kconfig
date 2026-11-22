@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig UDC
+    bool "USB device controllers"
+    help
+      USB device controller class (pbl/drivers/udc.h), selected by the USB
+      device stack.
+
+if UDC
+
+module = DRIVER_UDC
+module-str = USB device controller
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # UDC

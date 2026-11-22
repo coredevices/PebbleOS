@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: udc
+type: struct pbl_udc
+include: pbl/drivers/udc.h
+roles:
+  udc: USB_DEVICE
