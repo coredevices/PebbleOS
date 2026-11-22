@@ -112,7 +112,7 @@ class Emulator(PblCommand):
         microphone.add_argument(
             "--host",
             default=f"127.0.0.1:{emulator.PEBBLE_TOOL_PORT}",
-            help="host:port of the emulator's Pebble protocol serial port "
+            help="host:port of the emulator's serial protocol port "
             "(default: %(default)s)",
         )
 
@@ -124,9 +124,8 @@ class Emulator(PblCommand):
         )
         feed.add_argument(
             "--host",
-            default=f"127.0.0.1:{emulator.PEBBLE_TOOL_PORT}",
-            help="host:port of the emulator's Pebble protocol serial port "
-            "(default: %(default)s)",
+            default=f"127.0.0.1:{emulator.CONSOLE_PORT}",
+            help="host:port of the emulator's console (default: %(default)s)",
         )
         feeds = feed.add_subparsers(dest="feed", metavar="FEED", required=True)
         for f in self.feeds.values():
@@ -185,10 +184,10 @@ class Emulator(PblCommand):
             return
 
         host, _, port = args.host.rpartition(":")
-        pebble = emulator.connect_watch(host or "127.0.0.1", int(port))
+        transport = emulator.connect_emulator(host or "127.0.0.1", int(port))
         self.inf(f"playing {what} into the emulator's microphone; Ctrl-C stops")
         try:
-            mic.stream(pebble, source, paced=not args.live)
+            mic.stream(transport, source, paced=not args.live)
         except KeyboardInterrupt:
             pass
 
