@@ -72,3 +72,25 @@ void test_chat_warp__fits_the_circle(void) {
     cl_assert((half_q8 / 128) * (half_q8 / 128) <= chord_sq + 4 * 130);
   }
 }
+
+void test_chat_warp__every_row_of_a_bubble_matches_it(void) {
+  // Small bubbles all over, as in a chat of one-line messages: no row showing a bubble may use
+  // another scale than the bubble's (a row at the wrong scale shows as a notch in its edge)
+  ChatWarpItem items[9];
+  for (int i = 0; i < 9; i++) {
+    items[i] = (ChatWarpItem){(int16_t)(-40 + i * 34), (int16_t)(-40 + i * 34 + 24)};
+  }
+  chat_warp_build(&s_map, 230, 100, 130, 124, items, 9);
+  for (int i = 0; i < 9; i++) {
+    int inv = -1;
+    for (int y = 0; y < 230; y++) {
+      const int row = s_map.src_y[y] >> 8;
+      if (row >= items[i].top && row < items[i].bottom) {
+        if (inv < 0) {
+          inv = s_map.inv_scale[y];
+        }
+        cl_assert_equal_i(s_map.inv_scale[y], inv);
+      }
+    }
+  }
+}

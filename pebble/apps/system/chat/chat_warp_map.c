@@ -69,24 +69,42 @@ static int prv_item_inv(const Geometry *g, int y_q8, int rest, int dir) {
   return inv;
 }
 
+#define MAX_ITEMS 16
+
+typedef struct {
+  const ChatWarpItem *items;
+  int n;
+  int inv[MAX_ITEMS];  // each item's 1 / scale, once worked out; 0 until then
+} Items;
+
+// An item's 1 / scale, worked out where it is first met: at screen row y_q8, at content row
+// src_q8, walking dir.
+static int prv_item_scale(Items *it, int i, const Geometry *g, int y_q8, int src_q8, int dir) {
+  if (i >= MAX_ITEMS) {
+    return prv_fit_inv(g, y_q8 - g->center_q8);
+  }
+  if (!it->inv[i]) {
+    const int row = src_q8 >> 8;
+    const int rest = dir > 0 ? it->items[i].bottom - row : row - it->items[i].top;
+    it->inv[i] = prv_item_inv(g, y_q8, rest, dir);
+  }
+  return it->inv[i];
+}
+
 // Walk from the centre row outwards (dir +1 or -1), stepping the content by each row's 1 / scale.
-static void prv_walk(ChatWarpMap *map, const Geometry *g, int c, int dir, int centre_inv,
-                     const ChatWarpItem *items, int n) {
-  int item = prv_item_at(items, n, map->src_y[c]);
-  int item_inv = centre_inv;
+// A row shows its content at the scale of the item it lands in, so every row of an item matches.
+static void prv_walk(ChatWarpMap *map, const Geometry *g, int c, int dir, Items *it) {
   for (int y = c + dir; y >= 0 && y < map->rows; y += dir) {
-    const int src = map->src_y[y - dir];
-    // The item this row lands in (one content row on)
-    const int at = prv_item_at(items, n, src + dir * 256);
-    if (at >= 0 && at != item) {
-      const int near = (src >> 8) + dir;
-      const int rest = dir > 0 ? items[at].bottom - near : near - items[at].top;
-      item_inv = prv_item_inv(g, y * 256 + 128, rest, dir);
-    }
-    item = at;
-    const int inv = at >= 0 ? item_inv : prv_fit_inv(g, y * 256 + 128 - g->center_q8);
-    map->inv_scale[y] = inv;
-    map->src_y[y] = src + dir * inv;
+    const int y_q8 = y * 256 + 128;
+    const int prev = map->src_y[y - dir];
+    // Step at the scale of what the next content row belongs to
+    const int next = prv_item_at(it->items, it->n, prev + dir * 256);
+    const int step = next >= 0 ? prv_item_scale(it, next, g, y_q8, prev + dir * 256, dir)
+                               : prv_fit_inv(g, y_q8 - g->center_q8);
+    const int src = prev + dir * step;
+    map->src_y[y] = src;
+    const int at = prv_item_at(it->items, it->n, src);
+    map->inv_scale[y] = at >= 0 ? prv_item_scale(it, at, g, y_q8, src, dir) : step;
   }
 }
 
@@ -100,6 +118,7 @@ void chat_warp_build(ChatWarpMap *map, int rows, int center_y, int radius, int h
   const int c = center_y < 0 ? 0 : (center_y >= rows ? rows - 1 : center_y);
   map->src_y[c] = c * 256 + 128;
 
+  Items it = {items, num_items, {0}};
   // An item across the centre row: one scale for both halves, fitting its farther edge
   int centre_inv = prv_fit_inv(&g, map->src_y[c] - g.center_q8);
   const int at = prv_item_at(items, num_items, map->src_y[c]);
@@ -108,8 +127,11 @@ void chat_warp_build(ChatWarpMap *map, int rows, int center_y, int radius, int h
     const int down = items[at].bottom - c;
     // Whichever half reaches further, up to the same fit limit
     centre_inv = prv_item_inv(&g, map->src_y[c], (up > down ? up : down) / 2, 1);
+    if (at < MAX_ITEMS) {
+      it.inv[at] = centre_inv;
+    }
   }
   map->inv_scale[c] = centre_inv;
-  prv_walk(map, &g, c, 1, centre_inv, items, num_items);
-  prv_walk(map, &g, c, -1, centre_inv, items, num_items);
+  prv_walk(map, &g, c, 1, &it);
+  prv_walk(map, &g, c, -1, &it);
 }
