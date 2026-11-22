@@ -699,6 +699,10 @@ layout has every partition. The image is linked at `CONFIG_FLASH_OFFSET`,
 for `CONFIG_FW_FLASH_SIZE` bytes, which default to the `code` partition. An
 application that runs from another partition sets them from its label.
 
+`$(dt_nodelabel_enabled,LABEL)` tells whether the node with that label is
+enabled, for code using the one of several instances a board enables, as the
+LPTIM the kernel times with on each core of the STM32H747.
+
 (devicetree-regs)=
 
 (devicetree-idle-states)=

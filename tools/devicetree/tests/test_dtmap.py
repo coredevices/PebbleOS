@@ -991,6 +991,25 @@ def test_kconfig_functions_read_the_partitions(tmp_path, monkeypatch):
     assert kconfigfunctions.dt_has_partition(None, None, "code") == "n"
 
 
+def test_kconfig_functions_read_the_enabled_labels(tmp_path, monkeypatch):
+    import kconfigfunctions
+
+    path = tmp_path / "board.dts"
+    path.write_text(
+        "/dts-v1/;\n/ {\n\ton: a { };\n\toff: b { status = \"disabled\"; };\n"
+        "\tc { status = \"disabled\"; under: d { }; };\n};\n"
+    )
+    subprocess.run(
+        [dtc(), "-q", "-@", "-I", "dts", "-O", "dtb", "-o", str(tmp_path / "board.dtb"), str(path)],
+        check=True,
+    )
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path))
+    assert kconfigfunctions.dt_nodelabel_enabled(None, None, "on") == "y"
+    assert kconfigfunctions.dt_nodelabel_enabled(None, None, "off") == "n"
+    assert kconfigfunctions.dt_nodelabel_enabled(None, None, "under") == "n"
+    assert kconfigfunctions.dt_nodelabel_enabled(None, None, "missing") == "n"
+
+
 IDLE_STATES_DTS = """/dts-v1/;
 / {
     cpus {
