@@ -262,8 +262,9 @@ static const uint8_t TG_NAME_COLORS[7] = {
 #define CHAT_FLAG_GROUP 0x01
 #define CHAT_FLAG_MUTED 0x02
 #define CHAT_FLAG_PINNED 0x04
-#define CHAT_SCROLL_STEPS 5
-#define CHAT_SCROLL_FRAME_MS 20
+// Scrolls ease out over CHAT_SCROLL_MS, however long a frame takes to draw.
+#define CHAT_SCROLL_MS 220
+#define CHAT_SCROLL_FRAME_MS 16
 #define CHAT_SCROLL_DELTA 30
 #define REPEAT_SCROLL_MS 140
 #define MESSAGE_MODE_INITIAL 0
@@ -570,7 +571,10 @@ static int s_message_stage_count;
 static int s_chat_scroll_offset;
 static int s_chat_scroll_start;
 static int s_chat_scroll_target;
-static int s_chat_scroll_step;
+static uint32_t s_chat_scroll_started_ms;
+// Where a scroll that was cut short had got to, so the next one carries on from there.
+static int s_chat_scroll_resume;
+static bool s_chat_scroll_resuming;
 static int s_chat_content_height;
 static int s_message_scroll_direction;
 static ViewState s_view_state;
@@ -3302,17 +3306,24 @@ static void go_to_bottom(void) {
   }
 }
 
+static uint32_t chat_now_ms(void) {
+  time_t seconds;
+  uint16_t millis;
+  time_ms(&seconds, &millis);
+  return (uint32_t)seconds * 1000 + millis;
+}
+
 static void chat_scroll_timer_callback(void *data) {
   s_chat_scroll_timer = NULL;
-  s_chat_scroll_step++;
-
-  if (s_chat_scroll_step >= CHAT_SCROLL_STEPS) {
+  uint32_t elapsed = chat_now_ms() - s_chat_scroll_started_ms;
+  if (elapsed >= CHAT_SCROLL_MS) {
     s_chat_scroll_offset = s_chat_scroll_target;
   } else {
+    // Ease out (cubic): fast at first, settling gently, in 1/1024ths.
+    int remaining = 1024 - (int)(elapsed * 1024 / CHAT_SCROLL_MS);
+    int eased = 1024 - (remaining * remaining / 1024) * remaining / 1024;
     int delta = s_chat_scroll_target - s_chat_scroll_start;
-    int progress = s_chat_scroll_step * CHAT_SCROLL_STEPS;
-    int eased = (progress * 2) - (s_chat_scroll_step * s_chat_scroll_step);
-    s_chat_scroll_offset = s_chat_scroll_start + ((delta * eased) / (CHAT_SCROLL_STEPS * CHAT_SCROLL_STEPS));
+    s_chat_scroll_offset = s_chat_scroll_start + (delta * eased) / 1024;
     s_chat_scroll_timer = app_timer_register(CHAT_SCROLL_FRAME_MS, chat_scroll_timer_callback, NULL);
   }
 
@@ -3331,6 +3342,9 @@ static void finish_pending_chat_scroll(void) {
   }
   app_timer_cancel(s_chat_scroll_timer);
   s_chat_scroll_timer = NULL;
+  // The next scroll animates from what is on screen, not from the jump to this one's end.
+  s_chat_scroll_resume = s_chat_scroll_offset;
+  s_chat_scroll_resuming = true;
   s_chat_scroll_offset = clamp_scroll_offset(s_chat_scroll_target);
 }
 
@@ -3338,6 +3352,8 @@ static void set_chat_scroll_offset(int target, bool animated) {
   target = clamp_scroll_offset(target);
   cancel_timer(&s_chat_scroll_timer);
 
+  bool resuming = s_chat_scroll_resuming;
+  s_chat_scroll_resuming = false;
   if (!animated) {
     s_chat_scroll_offset = target;
     mark_messages_dirty();
@@ -3345,6 +3361,9 @@ static void set_chat_scroll_offset(int target, bool animated) {
     return;
   }
 
+  if (resuming) {
+    s_chat_scroll_offset = s_chat_scroll_resume;
+  }
   s_chat_scroll_start = s_chat_scroll_offset;
   s_chat_scroll_target = target;
   if (s_chat_scroll_start == s_chat_scroll_target) {
@@ -3352,7 +3371,7 @@ static void set_chat_scroll_offset(int target, bool animated) {
     request_next_image();
     return;
   }
-  s_chat_scroll_step = 0;
+  s_chat_scroll_started_ms = chat_now_ms();
   s_chat_scroll_timer = app_timer_register(CHAT_SCROLL_FRAME_MS, chat_scroll_timer_callback, NULL);
 }
 
