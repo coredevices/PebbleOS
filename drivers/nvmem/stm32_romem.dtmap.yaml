@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32f4-otp
+config: NVMEM_STM32_ROMEM
+class: nvmem
+define: PBL_NVMEM_STM32_ROMEM_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - size: 0
