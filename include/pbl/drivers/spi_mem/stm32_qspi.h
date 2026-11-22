@@ -38,6 +38,8 @@ struct pbl_spi_mem_stm32_qspi {
   struct pbl_pinctrl pinctrl;
   /** Highest frequency of the memory, in Hz. */
   uint32_t max_freq_hz;
+  /** Whether two memories, one on each bank, take every other byte. */
+  bool dual_flash;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -53,13 +55,15 @@ extern const struct pbl_spi_mem_ops pbl_spi_mem_stm32_qspi_ops;
  * @param _clk Kernel clock, from PBL_CLK().
  * @param _pinctrl Default pin control state.
  * @param _max_freq_hz Highest frequency of the memory, in Hz.
+ * @param _dual_flash Whether two memories, one on each bank, take every other byte.
  */
-#define PBL_SPI_MEM_STM32_QSPI_DEFINE(sym, _name, _base, _clk, _pinctrl, _max_freq_hz) \
+#define PBL_SPI_MEM_STM32_QSPI_DEFINE(sym, _name, _base, _clk, _pinctrl, _max_freq_hz, \
+                                      _dual_flash)                                     \
   PBL_SPI_MEM_STATE_DEFINE(sym);                                                       \
   PBL_DEVICE_INSTANCE(sym, struct pbl_spi_mem_stm32_qspi, struct pbl_spi_mem, mem) {   \
     .mem = PBL_SPI_MEM_INIT(sym, _name, nullptr, &pbl_spi_mem_stm32_qspi_ops, 0U),     \
     .base = (_base), .clk = _clk, .pinctrl = PBL_PINCTRL(_pinctrl, nullptr, 0),        \
-    .max_freq_hz = (_max_freq_hz),                                                     \
+    .max_freq_hz = (_max_freq_hz), .dual_flash = (_dual_flash),                        \
   }
 
 /** @} */
