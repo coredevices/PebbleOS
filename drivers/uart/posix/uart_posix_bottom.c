@@ -48,6 +48,9 @@ static struct channel s_channels[UART_POSIX_NUM_CHANNELS] = {
   [UART_POSIX_BT_HCI] = {.connect = true, .flow_control = true, .listen_fd = -1, .client_fd = -1},
 };
 
+// The console keeps the terminal when it is also served on a TCP port.
+static bool s_console_terminal;
+
 static struct termios s_saved_termios;
 static bool s_raw;
 
@@ -215,52 +218,67 @@ void uart_posix_bottom_start(enum uart_posix_channel id) {
   } else if (channel->port != 0) {
     prv_tcp_listen(id);
     prv_start_thread(prv_tcp_thread, (void *)(intptr_t)id);
-  } else if (id == UART_POSIX_CONSOLE) {
-#ifdef __EMSCRIPTEN__
-    // A page has no terminal to read.
-    return;
-#endif
+  }
+#ifndef __EMSCRIPTEN__
+  // A page has no terminal to read.
+  if (id == UART_POSIX_CONSOLE && (channel->port == 0 || s_console_terminal)) {
     prv_terminal_raw();
     prv_start_thread(prv_terminal_thread, nullptr);
   }
+#endif
 }
 
 #ifdef __EMSCRIPTEN__
-// A browser has no socket for the QEMU serial protocol, so the page is its
-// other end: the firmware's bytes go to Module.onQemuSerial, and the page's
-// come in through uart_posix_qemu_rx_from_page, fed to the UART on the main
-// loop, as an installed .pbw is. They wait there while the UART cannot take
-// them, as a TCP peer's wait in the socket.
+// A browser has no sockets, so the page is the other end of the console and
+// of the QEMU serial protocol: the firmware's bytes go to Module.onUartTx,
+// and the page's come in through uart_posix_rx_from_page, fed to the UART on
+// the main loop, as an installed .pbw is. They wait there while the UART
+// cannot take them, as a TCP peer's wait in the socket.
 #define PAGE_RX_MAX (64 * 1024)
 
-EM_JS(void, prv_qemu_tx_to_page, (int c), {
-  if (Module.onQemuSerial)
-    Module.onQemuSerial(c);
+EM_JS(void, prv_tx_to_page, (int id, int c), {
+  if (Module.onUartTx)
+    Module.onUartTx(id, c);
 });
 
-EM_JS(void, prv_qemu_rx_copy_from_page, (void *dst), { HEAPU8.set(Module.qemuSerialRx, dst); });
+EM_JS(void, prv_rx_copy_from_page, (void *dst), { HEAPU8.set(Module.uartRx, dst); });
 
-static uint8_t s_page_rx[PAGE_RX_MAX];
-static size_t s_page_rx_head;
-static size_t s_page_rx_len;
+struct page_rx {
+  uint8_t data[PAGE_RX_MAX];
+  size_t head;
+  size_t len;
+};
 
-//! The page puts its bytes in Module.qemuSerialRx and hands them over; past
-//! what can wait, they are dropped.
-EMSCRIPTEN_KEEPALIVE void uart_posix_qemu_rx_from_page(size_t len) {
-  if (len > PAGE_RX_MAX - s_page_rx_len) {
-    fprintf(stderr, "uart: %zu bytes from the page dropped, %zu waiting\n", len, s_page_rx_len);
+static struct page_rx s_page_rx[UART_POSIX_NUM_CHANNELS];
+
+static bool prv_page_channel(int id) {
+  return id == UART_POSIX_CONSOLE || id == UART_POSIX_QEMU;
+}
+
+//! The page puts its bytes in Module.uartRx and hands them over; past what
+//! can wait, they are dropped.
+EMSCRIPTEN_KEEPALIVE void uart_posix_rx_from_page(int id, size_t len) {
+  if (!prv_page_channel(id)) {
     return;
   }
-  memmove(s_page_rx, s_page_rx + s_page_rx_head, s_page_rx_len);
-  s_page_rx_head = 0;
-  prv_qemu_rx_copy_from_page(s_page_rx + s_page_rx_len);
-  s_page_rx_len += len;
+  struct page_rx *rx = &s_page_rx[id];
+  if (len > PAGE_RX_MAX - rx->len) {
+    fprintf(stderr, "uart: %zu bytes from the page dropped, %zu waiting\n", len, rx->len);
+    return;
+  }
+  memmove(rx->data, rx->data + rx->head, rx->len);
+  rx->head = 0;
+  prv_rx_copy_from_page(rx->data + rx->len);
+  rx->len += len;
 }
 
 static void prv_page_rx_poll(void) {
-  while (s_page_rx_len && uart_posix_rx_enabled(UART_POSIX_QEMU)) {
-    uart_posix_rx(UART_POSIX_QEMU, s_page_rx[s_page_rx_head++]);
-    s_page_rx_len--;
+  for (int id = 0; id < UART_POSIX_NUM_CHANNELS; id++) {
+    struct page_rx *rx = &s_page_rx[id];
+    while (rx->len && uart_posix_rx_enabled(id)) {
+      uart_posix_rx(id, rx->data[rx->head++]);
+      rx->len--;
+    }
   }
 }
 
@@ -274,8 +292,8 @@ void uart_posix_bottom_write(enum uart_posix_channel id, uint8_t c) {
     (void)write(STDOUT_FILENO, &c, 1);
   }
 #ifdef __EMSCRIPTEN__
-  if (id == UART_POSIX_QEMU) {
-    prv_qemu_tx_to_page(c);
+  if (prv_page_channel(id)) {
+    prv_tx_to_page(id, c);
     return;
   }
 #endif
@@ -294,6 +312,11 @@ static void prv_set_console_port(const char *value) {
   s_channels[UART_POSIX_CONSOLE].port = atoi(value);
 }
 
+static void prv_set_console_shared_port(const char *value) {
+  prv_set_console_port(value);
+  s_console_terminal = true;
+}
+
 static void prv_set_qemu_port(const char *value) {
   s_channels[UART_POSIX_QEMU].port = atoi(value);
 }
@@ -308,6 +331,9 @@ static void prv_set_bt_hci(const char *value) {
 
 POSIX_HOST_OPTION(.flag = 'c', .arg = "port", .help = "serve the console on this TCP port",
                   .set = prv_set_console_port)
+POSIX_HOST_OPTION(.flag = 'C', .arg = "port",
+                  .help = "serve the console on this TCP port and on the terminal",
+                  .set = prv_set_console_shared_port)
 POSIX_HOST_OPTION(.flag = 'p', .arg = "port",
                   .help = "serve the QEMU serial protocol on this TCP port",
                   .set = prv_set_qemu_port)
