@@ -2661,6 +2661,46 @@
       "type": "pdc",
       "name": "WEATHER_REPORT_PAPER",
       "file": "normal/base/images/Pebble_80x80_Weather_report.svg"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_MENU_ICON",
+      "file": "normal/base/images/chat_menu_icon.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER",
+      "file": "normal/base/images/chat_wallpaper.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER_SPACE",
+      "file": "normal/base/images/chat_doodles_space.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER_PETS",
+      "file": "normal/base/images/chat_doodles_pets.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER_FOOD",
+      "file": "normal/base/images/chat_doodles_food.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER_TRAVEL",
+      "file": "normal/base/images/chat_doodles_travel.png"
+    },
+    {
+      "type": "png",
+      "name": "CHAT_WALLPAPER_PARTY",
+      "file": "normal/base/images/chat_doodles_party.png"
+    },
+    {
+      "type": "raw",
+      "name": "CHAT_KB_WORDS",
+      "file": "normal/base/raw/chat_kb_words.raw"
     }
   ],
   "timeline": [

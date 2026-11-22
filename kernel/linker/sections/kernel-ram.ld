@@ -6,6 +6,11 @@
     .kernel_data : ALIGN(32) {
         __data_start = .; /* This is used by the startup in order to initialize the .data section */
 
+        /* The Chat app's UI was an SDK app; it resets these on every launch (chat_app.c). */
+        __chat_ui_data_start = .;
+        *chat_ui.c.obj(.data .data.*)
+        __chat_ui_data_end = .;
+
         *(.data)
         *(.data.*)
 
@@ -13,6 +18,7 @@
         __data_end = .;
     } >RAM AT>FLASH
     __data_load_start = LOADADDR(.kernel_data);
+    __chat_ui_data_load = __data_load_start + (__chat_ui_data_start - __data_start);
 
     .kernel_ro_bss (NOLOAD) : {
         __bss_start = .; /* This is used by the startup in order to initialize the .bss section */
@@ -30,6 +36,10 @@
 
     .kernel_bss (NOLOAD) : {
         *(.freertos_privileged_data)
+
+        __chat_ui_bss_start = .;
+        *chat_ui.c.obj(.bss .bss.* COMMON)
+        __chat_ui_bss_end = .;
 
         *(.bss)
         *(.bss.*)

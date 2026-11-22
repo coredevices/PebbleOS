@@ -150,7 +150,9 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
   versions_msg.capabilities.custom_vibe_pattern_support = 1;
   versions_msg.capabilities.blob_db_version_support = 1;
   versions_msg.capabilities.weather_db_v4_support = 1;
-  versions_msg.capabilities.chat_db_support = 1;
+#ifdef APP_ID_CHAT
+  versions_msg.capabilities.chat_db_support = (APP_ID_CHAT != INSTALL_ID_INVALID) ? 1 : 0;
+#endif
   versions_msg.capabilities.unknown_attributes_support = 1;
   versions_msg.capabilities.notification_image_support = NOTIFICATION_IMAGE_SUPPORTED;
   versions_msg.capabilities.notification_window_state_support = 1;

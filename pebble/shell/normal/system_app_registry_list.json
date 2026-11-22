@@ -391,6 +391,15 @@
       "color_argb8": "GColorBlueMoonARGB8"
     },
     {
+      "id": -195,
+      "enum": "CHAT",
+      "md_fn": "chat_app_get_info",
+      "color_argb8": "GColorPurpleARGB8",
+      "ifdefs": [
+        "CONFIG_PLATFORM_TOUCH"
+      ]
+    },
+    {
       "id": -95,
       "enum": "WORKOUT",
       "md_fn": "workout_app_get_info",
