@@ -52,9 +52,11 @@ typedef struct {
  * @brief Magnetometer-based compass heading.
  *
  * While a process subscribes to @c PEBBLE_COMPASS_DATA_EVENT, the magnetometer and accelerometer
- * are sampled and a tilt-compensated magnetic heading is published with each event. Hard iron
- * correction is calibrated on the fly, first at a higher sampling rate for a few minutes;
- * calibration is suspended while the charger is plugged in and restarted once unplugged.
+ * are sampled and a tilt-compensated magnetic heading is published with each event. The
+ * magnetometer is calibrated on the fly: hard iron offset, then axis gains and full soft iron
+ * correction as samples cover more orientations, fit to the latest sample of each direction and
+ * kept across reboots. Sampling is faster for a few minutes while uncalibrated, and calibration
+ * pauses while the charger is plugged in.
  * The heading types shared with the app SDK (CompassHeading, CompassStatus,
  * CompassHeadingData) are documented in the SDK.
  * @{
@@ -66,7 +68,7 @@ extern void ecompass_service_init(void);
 /**
  * @brief Process a new magnetometer sample.
  *
- * Called from KernelMain when the magnetometer has data. Updates the calibration and posts a
+ * Called from KernelMain when the magnetometer has data. Feeds the calibration and posts a
  * @c PEBBLE_COMPASS_DATA_EVENT with the new heading.
  */
 extern void ecompass_service_handle(void);
@@ -74,43 +76,12 @@ extern void ecompass_service_handle(void);
 /**
  * @brief Handle a battery state change.
  *
- * Plugging the charger invalidates the calibration; unplugging it restarts calibration.
+ * Calibration pauses while the charger is plugged, and starts collecting samples afresh once it
+ * is unplugged, keeping the calibration until a better one is found.
  *
  * @param new_state New battery state.
  */
 extern void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_state);
-
-/** @brief Result of feeding a sample to the hard iron calibration. */
-typedef enum {
-  /** No new correction estimate available. */
-  MagCalStatusNoSolution,
-  /** Several fits close to the saved correction were found. */
-  MagCalStatusSavedSampleMatch,
-  /** A new correction estimate is available. */
-  MagCalStatusNewSolutionAvail,
-  /** Several fits close to one another were found; the correction is their average. */
-  MagCalStatusNewLockedSolutionAvail
-} MagCalStatus;
-
-/**
- * @brief Feed a raw magnetometer sample to the hard iron calibration.
- *
- * Selects well-spread points among the samples and fits a sphere to them; its origin is the hard
- * iron correction.
- *
- * @param sample Raw sample, 3 axes.
- * @param saved_corr Previously saved correction, 3 axes, or NULL if none.
- * @param[out] new_corr Correction found, 3 axes; valid unless @ref MagCalStatusNoSolution is
- *                      returned.
- * @return Calibration status.
- */
-extern MagCalStatus ecomp_corr_add_raw_mag_sample(int16_t *sample, int16_t *saved_corr,
-                                                  int16_t *new_corr);
-
-/**
- * @brief Drop the samples collected by ecomp_corr_add_raw_mag_sample() and reset its state.
- */
-extern void ecomp_corr_reset(void);
 
 /**
  * @brief Check whether the current task is subscribed to the compass.

@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_MAG
-#error "Use pebble/applib/compass_service.c instead if we don't have a magnetometer"
+#ifdef CONFIG_SERVICE_ECOMPASS
+#error "Use pebble/applib/compass_service.c instead if we have a compass"
 #endif
 
 //! @file compass_service_stub.c
 //!
-//! Implements the compass_service for devices that don't actually have a compass. See
+//! Implements the compass_service for builds without a compass. See
 //! pebble/applib/compass_service.c for the real implementation for boards that do have a compass.
 
 #include "compass_service.h"

@@ -135,7 +135,7 @@ pbl_clar_test(test_notification_image
 
 pbl_clar_test(test_compass_cal
   SOURCES
-    pebble/services/ecompass/correction.c
+    pebble/services/ecompass/calibration.c
 )
 
 pbl_clar_test(test_light

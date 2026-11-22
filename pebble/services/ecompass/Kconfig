@@ -3,10 +3,12 @@
 
 config SERVICE_ECOMPASS
     bool "E-compass"
-    default y if MAG
+    default y
+    depends on MAG && SETTINGS
     select SENSING
     help
-      Electronic compass service. Requires a magnetometer driver (CONFIG_MAG).
+      Electronic compass service, on the board's magnetometer. The
+      magnetometer calibration is kept in a settings file.
 
 if SERVICE_ECOMPASS
 
