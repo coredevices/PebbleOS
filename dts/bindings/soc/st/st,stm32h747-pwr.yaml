@@ -46,6 +46,14 @@ properties:
       - smps-2v5-ext-bypass
       - bypass
 
+  usb33:
+    type: object
+    $ref: /schemas/regulator/regulator.yaml#
+    unevaluatedProperties: false
+    description:
+      VDD33USB, the supply of the USB transceivers, which the USB voltage
+      detector lets through once at level.
+
 required:
   - compatible
   - reg
@@ -59,4 +67,8 @@ examples:
         compatible = "st,stm32h747-pwr";
         reg = <0x58024800 0x400>;
         st,supply-config = "direct-smps";
+
+        usb33 {
+            regulator-name = "usb33";
+        };
     };
