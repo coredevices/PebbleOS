@@ -3,11 +3,14 @@
 
 """Talking to a running emulator: QEMU, or the firmware as a native program.
 
-Both serve the firmware's Pebble protocol over a TCP port, reached with
-:func:`connect_watch`. The qemu runner (``pbl run``) also exposes two unix
-sockets in the build directory: the human monitor, used for screendumps, and
-QMP, used to inject input events. A native program has neither: its screen
-and its touch input go through the Pebble protocol instead.
+Both serve the firmware's console over a TCP port, where it takes the Pebble
+protocol in frames, reached with :func:`connect_watch`, and the serial
+protocol that drives the emulated hardware over another, reached with
+:func:`connect_emulator`. The qemu runner (``pbl run``) also exposes two
+unix sockets in the build directory: the human monitor, used for
+screendumps, and QMP, used to inject input events. A native program has
+neither: its screen and its touch input go through the Pebble protocol
+instead.
 """
 
 import json
@@ -279,33 +282,58 @@ def remote_input_touch(pebble, x1, y1, x2, y2, duration, timeout=5):
         )
 
 
-def connect_watch(host="127.0.0.1", port=PEBBLE_TOOL_PORT):
-    """A libpebble2 connection to the firmware, as the phone app would have."""
+def connect_watch(host="127.0.0.1", port=CONSOLE_PORT):
+    """A libpebble2 connection to the firmware, as the phone app would have,
+    in a session on its console."""
     try:
         from libpebble2.communication import PebbleConnection
-        from libpebble2.communication.transports.qemu import QemuTransport
         from libpebble2.exceptions import ConnectionError as PebbleConnectionError
         from libpebble2.exceptions import TimeoutError as PebbleTimeoutError
+        from pblconsole.protocol import ConsoleTransport
     except ImportError as e:
-        raise CommandContextError(f"libpebble2 is not installed ({e})") from e
-
-    pebble = PebbleConnection(QemuTransport(host, port))
-    try:
-        pebble.connect()
-    except PebbleConnectionError as e:
         raise CommandContextError(
-            f"cannot reach the emulator's Pebble protocol port at {host}:{port} "
+            f"libpebble2 or pbl-console is not installed ({e})"
+        ) from e
+
+    try:
+        transport = ConsoleTransport(f"socket://{host}:{port}")
+    except OSError as e:
+        raise CommandContextError(
+            f"cannot reach the emulator's console at {host}:{port} "
             f"-- is 'pbl run' running the emulator? ({e})"
         ) from e
+    pebble = PebbleConnection(transport)
     try:
+        pebble.connect()
         pebble.run_async()
-    except PebbleTimeoutError:
+    except (PebbleConnectionError, PebbleTimeoutError):
         raise CommandContextError(
-            f"the firmware is not answering on {host}:{port} -- the port serves "
-            "one client at a time; is another feed or pebble tool connected?"
+            f"the firmware is not answering on {host}:{port} -- the console "
+            "serves one client at a time; is 'pbl console' or another feed "
+            "connected?"
         ) from None
     identify_as_phone(pebble)
     return pebble
+
+
+def connect_emulator(host="127.0.0.1", port=PEBBLE_TOOL_PORT):
+    """A libpebble2 transport for the serial protocol that drives the
+    emulated hardware."""
+    try:
+        from libpebble2.communication.transports.qemu import QemuTransport
+        from libpebble2.exceptions import ConnectionError as PebbleConnectionError
+    except ImportError as e:
+        raise CommandContextError(f"libpebble2 is not installed ({e})") from e
+
+    transport = QemuTransport(host, port)
+    try:
+        transport.connect()
+    except PebbleConnectionError as e:
+        raise CommandContextError(
+            f"cannot reach the emulator's serial protocol port at {host}:{port} "
+            f"-- is 'pbl run' running the emulator? ({e})"
+        ) from e
+    return transport
 
 
 # What the version response tells the firmware: an Android phone app, with

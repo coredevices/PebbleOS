@@ -54,11 +54,16 @@ class NativeRunner(Runner):
             argv += ["-b", self.bt_hci]
         if self.bt_addr:
             if not build.config.CONFIG_NIMBLE_ID_ADDR_POSIX:
-                raise RunnerError("--bt-addr needs a build with CONFIG_NIMBLE_ID_ADDR_POSIX=y")
+                raise RunnerError(
+                    "--bt-addr needs a build with CONFIG_NIMBLE_ID_ADDR_POSIX=y"
+                )
             argv += ["-a", bt_address(self.bt_addr)]
         if command == "debug":
             # The terminal belongs to the debugger: Ctrl-C has to reach it.
             argv = self._debugger() + argv + ["-c", str(emulator.CONSOLE_PORT)]
+        else:
+            # The terminal stays the console; the port is for 'pbl emulator'.
+            argv += ["-C", str(emulator.CONSOLE_PORT)]
         argv += list(self.cfg.extra_args)
         return self.run_program(argv)
 
@@ -81,7 +86,12 @@ class NativeRunner(Runner):
         # directory, from paths relative to the top directory.
         debuggers = [
             ["gdb", "-ex", f"set substitute-path {build} {build.topdir}", "--args"],
-            ["lldb", "-o", f"settings set target.source-map {build} {build.topdir}", "--"],
+            [
+                "lldb",
+                "-o",
+                f"settings set target.source-map {build} {build.topdir}",
+                "--",
+            ],
         ]
         if platform.system() == "Darwin":
             debuggers.reverse()
