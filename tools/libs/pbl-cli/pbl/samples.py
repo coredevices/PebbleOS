@@ -30,6 +30,8 @@ board, from ``boards/addons``, and give it roles too. ``integration`` names
 the boards it covers enough to check on, with their revision for boards that
 have revisions: with ``--integration`` it is built and run on each of those,
 and a sample naming none is an error. With ``build_only`` it is only built.
+``boards``, ``skip`` and ``integration`` name a board, its core or variant as
+``board/core`` or ``board/variant``, or both as ``board/core/variant``.
 """
 
 import os
@@ -79,26 +81,46 @@ class Sample:
     integration: tuple = ()
     build_only: bool = False
 
+    @staticmethod
+    def _names(board):
+        """The names a sample lists ``board``, given as ``name[@revision][/core][/variant]``, by:
+        the name, then with its core or variant, then with both."""
+        target, *qualifiers = board.split("/")
+        name = target.partition("@")[0]
+        return tuple(
+            "/".join([name, *qualifiers[:n]]) for n in range(len(qualifiers) + 1)
+        )
+
     def supports(self, board):
-        """Whether the sample is for ``board``, given as ``name[@revision]``."""
-        name = board.partition("@")[0]
-        return name not in self.skip and (not self.boards or name in self.boards)
+        """Whether the sample is for ``board``, given as ``name[@revision][/core][/variant]``."""
+        names = self._names(board)
+        if any(name in self.skip for name in names):
+            return False
+        return not self.boards or any(name in self.boards for name in names)
 
     def integrates(self, board):
         """Whether ``board`` is one to check the sample on in integration mode."""
         return any(_names_board(entry, board) for entry in self.integration)
 
-
     def missing_roles(self, srcdir, board):
         """The roles the sample uses that ``board`` gives no device."""
         if not self.roles:
             return []
+        from tools import boards
         from tools.devicetree import dtmap
 
-        name, _, revision = board.partition("/")[0].partition("@")
         try:
-            files = dtmap.role_files(srcdir, name, revision or None, self.path, self.addons)
-        except dtmap.DtError as e:
+            spec = boards.parse_board(srcdir, board)
+            files = dtmap.role_files(
+                srcdir,
+                spec.name,
+                spec.revision,
+                self.path,
+                self.addons,
+                spec.core,
+                spec.variant,
+            )
+        except (ValueError, dtmap.DtError) as e:
             raise SampleError(str(e)) from e
         try:
             have = dtmap.merge_roles(files)
@@ -108,18 +130,33 @@ class Sample:
 
 
 def _names_board(entry, board):
-    """Whether an entry of a board list, ``name[@revision]``, names ``board``: a revision
-    of a board matches the entry naming the board alone too."""
-    name, _, revision = entry.partition("@")
-    board_name, _, board_revision = board.partition("/")[0].partition("@")
-    return name == board_name and (not revision or revision == board_revision)
+    """Whether an entry of a board list, ``name[@revision][/core][/variant]``, names ``board``:
+    an entry naming a board alone, or without its revision, core or variant, names them all."""
+    target, *qualifiers = entry.split("/")
+    name, _, revision = target.partition("@")
+    board_target, *board_qualifiers = board.split("/")
+    board_name, _, board_revision = board_target.partition("@")
+    return (
+        name == board_name
+        and (not revision or revision == board_revision)
+        and board_qualifiers[: len(qualifiers)] == qualifiers
+    )
 
 
-def plan(found, board=None, integration=False):
+def _targets(entry, cores):
+    """The boards an integration entry stands for: each core of a board with cores named
+    without one."""
+    target, *qualifiers = entry.split("/")
+    names = cores(target.partition("@")[0]) if not qualifiers else []
+    return [f"{entry}/{core}" for core in names] or [entry]
+
+
+def plan(found, board=None, integration=False, cores=lambda name: []):
     """The (board, sample) pairs to build, by board, in sample order within a board.
 
     Without ``integration`` every sample is for ``board``. With it, each sample is for each of
-    its integration boards, and ``board``, if given, keeps only those naming it.
+    its integration boards, an entry naming a board with cores, ``cores(name)``, standing for
+    each of them, and ``board``, if given, keeps only those naming it.
     """
     if not integration:
         return [(board, sample) for sample in found]
@@ -132,7 +169,8 @@ def plan(found, board=None, integration=False):
             if sample.integrates(board):
                 pairs.append((board, sample))
         else:
-            pairs += [(entry, sample) for entry in sample.integration]
+            for entry in sample.integration:
+                pairs += [(target, sample) for target in _targets(entry, cores)]
     return sorted(pairs, key=lambda pair: pair[0])
 
 

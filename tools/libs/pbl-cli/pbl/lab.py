@@ -25,10 +25,13 @@ class LabError(Exception):
 
 def board_matches(board, board_target):
     """Whether a lab's ``board`` covers ``board_target``: the board with its
-    revision, or any revision when the lab gives none."""
+    revision, or any revision when the lab gives none, for any of its cores."""
+    if board == board_target:
+        return True
+    target = board_target.partition("/")[0]
     if "@" in board:
-        return board == board_target
-    return board == board_target.partition("@")[0]
+        return board == target
+    return board == target.partition("@")[0]
 
 
 @dataclasses.dataclass
