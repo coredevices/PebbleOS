@@ -50,6 +50,7 @@ rsource "temp/Kconfig"
 rsource "timer/Kconfig"
 rsource "touch/Kconfig"
 rsource "uart/Kconfig"
+rsource "udc/Kconfig"
 rsource "vibe/Kconfig"
 rsource "watchdog/Kconfig"
 
