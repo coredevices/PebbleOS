@@ -26,6 +26,21 @@ config UDC_DWC2_IRQ_PRIO
     default 12
     depends on UDC_DWC2
 
+config UDC_MUSB
+    bool "Mentor Graphics MUSB"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_USB_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Device mode of the Mentor Graphics MUSB controller, as the USB
+      controller of the SiFli SF32LB57, at full speed, through its FIFOs.
+
+config UDC_MUSB_IRQ_PRIO
+    int "Interrupt priority"
+    default 6
+    depends on UDC_MUSB
+
 module = DRIVER_UDC
 module-str = USB device controller
 source "subsys/logging/Kconfig.template.log_level"

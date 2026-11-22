@@ -9,7 +9,7 @@ flowchart TD
   fn["Functions<br/>CDC ACM, ..."]
   usbd["Device stack<br/>subsys/usb/usbd.c"]
   udc["USB device controller<br/>pbl/drivers/udc.h"]
-  drv["Controller driver<br/>DWC2, ..."]
+  drv["Controller driver<br/>DWC2, MUSB"]
   fn -- "descriptors, class requests, transfers" --> usbd
   usbd -- "endpoints, transfers" --> udc
   udc --> drv
@@ -61,3 +61,4 @@ setup packets among them, and the end of transfers from its interrupt.
 | Driver | Controllers |
 | --- | --- |
 | `drivers/udc/dwc2.c` | Synopsys DesignWare USB 2.0 OTG, as the USB OTG HS of the STM32H7, with an external ULPI PHY or its internal full-speed PHY |
+| `drivers/udc/musb.c` | Mentor Graphics MUSB, as the full-speed USB controller of the SF32LB57, with its internal PHY; each endpoint number serves one direction at a time |
