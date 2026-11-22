@@ -22,6 +22,7 @@ profiler.md
 shell.md
 console.md
 task_watchdog.md
+usb.md
 ```
 
 The {apidoc}`API reference <subsys>` documents every subsystem's interface.
