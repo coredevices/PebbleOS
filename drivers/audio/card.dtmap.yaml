@@ -20,7 +20,7 @@ args:
   - string: simple-audio-card,format
     values:
       i2s: PBL_AUDIO_FMT_I2S
-      pdm: 0
+      pdm: PBL_AUDIO_FMT_PDM
     default: 0
   - flags:
       simple-audio-card,bitclock-master: PBL_AUDIO_FMT_CODEC_MASTER

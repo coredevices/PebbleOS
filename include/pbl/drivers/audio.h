@@ -126,6 +126,8 @@ enum pbl_audio_dir {
 #define PBL_AUDIO_FMT_I2S PBL_BIT(0)
 /** The codec drives the bit and frame clocks. */
 #define PBL_AUDIO_FMT_CODEC_MASTER PBL_BIT(1)
+/** PDM: the 1-bit stream of digital microphones. */
+#define PBL_AUDIO_FMT_PDM PBL_BIT(2)
 /** @} */
 
 /** @brief Stream position at a period boundary. */
@@ -421,7 +423,7 @@ extern const struct pbl_audio *const MIC;
  * @param _dai DAI.
  * @param _codec Codec on the link, or NULL.
  * @param _amp Amplifier, or NULL.
- * @param _fmt Link framing, @ref PBL_AUDIO_FMT_I2S or 0.
+ * @param _fmt Link framing, @ref PBL_AUDIO_FMT_I2S, @ref PBL_AUDIO_FMT_PDM or 0.
  * @param _clocks Who drives the clocks, @ref PBL_AUDIO_FMT_CODEC_MASTER or 0.
  */
 #define PBL_AUDIO_CARD_DEFINE(sym, _name, _dai, _codec, _amp, _fmt, _clocks)                      \
