@@ -1641,17 +1641,33 @@ ROLES_SOURCE = "devicetree/roles.c"
 ROLES_FILE = "roles.yml"
 
 
-def role_files(srcdir, board, revision, appdir=None, addons=()):
-    """The roles files of the board, its revision, its add-ons and the application, in the order
-    they apply."""
+def qualifiers(core=None, variant=None):
+    """The suffixes of the files of a board's core and variant, in the order they apply: the
+    core's, the variant's, then those of the core with the variant, as ``<core>_<variant>``."""
+    names = [name for name in (core, variant) if name]
+    if core and variant:
+        names.append(f"{core}_{variant}")
+    return names
+
+
+def role_files(
+    srcdir, board, revision, appdir=None, addons=(), core=None, variant=None
+):
+    """The roles files of the board, its revision, its core and variant, its add-ons and the
+    application, in the order they apply."""
+    suffixes = qualifiers(core, variant)
     paths = [Path(srcdir) / "boards" / board / ROLES_FILE]
     if revision:
         paths.append(Path(srcdir) / "boards" / board / f"roles.{revision}.yml")
+    paths += [Path(srcdir) / "boards" / board / f"roles.{q}.yml" for q in suffixes]
     paths += [addon_dir(srcdir, addon) / ROLES_FILE for addon in addons]
     if appdir is not None:
         paths += [
             Path(appdir) / ROLES_FILE,
             Path(appdir) / "boards" / f"{board}.{ROLES_FILE}",
+        ]
+        paths += [
+            Path(appdir) / "boards" / f"{board}_{q}.{ROLES_FILE}" for q in suffixes
         ]
     return paths
 
@@ -1741,9 +1757,23 @@ def write_if_changed(path, content):
     path.write_bytes(content)
 
 
-def find_dts(srcdir, board, revision):
+def find_dts(srcdir, board, revision, core=None, variant=None):
+    """The tree of the board: the most specific of its core with its variant, its core, or its
+    variant on a board without cores, each of its revision first, then of the revision, then the
+    board's."""
     directory = Path(srcdir) / "boards" / board
-    names = ([f"{board}_{revision}.dts"] if revision else []) + [f"{board}.dts"]
+    if core:
+        suffixes = [f"{core}_{variant}", core] if variant else [core]
+    else:
+        suffixes = [variant] if variant else []
+    names = []
+    for suffix in suffixes:
+        if revision:
+            names.append(f"{board}_{revision}_{suffix}.dts")
+        names.append(f"{board}_{suffix}.dts")
+    if revision:
+        names.append(f"{board}_{revision}.dts")
+    names.append(f"{board}.dts")
     return next(
         (directory / name for name in names if (directory / name).exists()), None
     )
@@ -1792,14 +1822,19 @@ def addon_connectors(srcdir, addon):
     return connectors
 
 
-def addon_overlays(srcdir, board, addons):
-    """The devicetree overlays of the add-ons, each followed by the one for the board."""
+def addon_overlays(srcdir, board, addons, core=None, variant=None):
+    """The devicetree overlays of the add-ons, each followed by those for the board and its core
+    and variant."""
     paths = []
     for addon in addons:
         directory = addon_dir(srcdir, addon)
         paths += [
             directory / f"{addon}.overlay",
             directory / "boards" / f"{board}.overlay",
+        ]
+        paths += [
+            directory / "boards" / f"{board}_{q}.overlay"
+            for q in qualifiers(core, variant)
         ]
     return paths
 
@@ -1815,11 +1850,16 @@ def missing_connectors(tree, srcdir, addons):
     return missing
 
 
-def overlay_files(board, appdir):
+def overlay_files(board, appdir, core=None, variant=None):
     """The devicetree overlays of the application, in the order they apply."""
     if appdir is None:
         return []
-    return [Path(appdir) / "app.overlay", Path(appdir) / "boards" / f"{board}.overlay"]
+    paths = [Path(appdir) / "app.overlay", Path(appdir) / "boards" / f"{board}.overlay"]
+    paths += [
+        Path(appdir) / "boards" / f"{board}_{q}.overlay"
+        for q in qualifiers(core, variant)
+    ]
+    return paths
 
 
 def compile_dts(dts, cc, include_dirs, outdir, overlays=()):
@@ -1915,7 +1955,17 @@ def kconfig_text(tree, compatibles):
     return "\n".join(lines) + "\n"
 
 
-def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
+def configure(
+    srcdir,
+    builddir,
+    board,
+    revision,
+    cc,
+    appdir=None,
+    addons=(),
+    core=None,
+    variant=None,
+):
     """Prepare what Kconfig needs.
 
     Writes Kconfig.dt. Returns the dtb or None, the files generated from it, and what it all depends on.
@@ -1929,13 +1979,13 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
         {src for group in specs.values() for spec in group for src in spec.sources}
     )
     tree, dtb = None, None
-    dts = find_dts(srcdir, board, revision)
+    dts = find_dts(srcdir, board, revision, core, variant)
     deps += [str(addon_dir(srcdir, addon) / ADDON_FILE) for addon in addons]
     overlays = [
         path
         for path in [
-            *addon_overlays(srcdir, board, addons),
-            *overlay_files(board, appdir),
+            *addon_overlays(srcdir, board, addons, core, variant),
+            *overlay_files(board, appdir, core, variant),
         ]
         if path.exists()
     ]
@@ -1961,7 +2011,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
         (outdir / "board.dtb").unlink(missing_ok=True)
     kconfig = outdir / "Kconfig.dt"
     write_if_changed(kconfig, kconfig_text(tree, kconfig_compatibles(specs)).encode())
-    paths = role_files(srcdir, board, revision, appdir, addons)
+    paths = role_files(srcdir, board, revision, appdir, addons, core, variant)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
     write_if_changed(

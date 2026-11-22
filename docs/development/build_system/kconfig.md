@@ -16,9 +16,10 @@ source `Kconfig.pebbleos`, which sources the rest of the tree:
   first, so their defaults win over the ones given with the definitions;
 - `soc/Kconfig`, with the SoC and CPU symbols, from the vendor directories
   (see [](#kconfig-socs));
-- the board's files, only for the selected board and revision:
-  `boards/<board>/Kconfig`, `Kconfig.<revision>`, `Kconfig.defconfig` and
-  `Kconfig.defconfig.<revision>`;
+- the board's files, only for the selected board, revision, core and board
+  variant: `boards/<board>/Kconfig`, `Kconfig.<revision>`, `Kconfig.<core>`,
+  `Kconfig.<board variant>`, `Kconfig.<core>_<board variant>`, then the same
+  `Kconfig.defconfig` files;
 - `lib/c`, `kernel`, `subsys`, `drivers` and `third_party`, each with
   a `Kconfig` that sources its own subdirectories.
 
@@ -55,7 +56,9 @@ A build's configuration is resolved from these fragments, in this order:
 | --- | --- |
 | `boards/<board>/defconfig` | What the board is: SoC, boot chain and console |
 | `boards/<board>/defconfig.<revision>` | What a revision changes |
+| `boards/<board>/defconfig.<core>` | What a core (`stm32h747i_disco/m4`) changes |
 | `boards/<board>/defconfig.<board variant>` | What a board variant (`native_emery/wasm`) changes |
+| `boards/<board>/defconfig.<core>_<board variant>` | What a board variant changes on one core (`<board>/<core>/<board variant>`) |
 | `pebble/prj.conf` | Driver classes, subsystems, services and features every firmware enables |
 | `pebble/prj_<variant>.conf` | What the `normal` or `prf` variant adds or removes |
 | `pebble/boards/<board>.conf` | What the firmware enables or tunes on one board, and the SDK platform it offers there |

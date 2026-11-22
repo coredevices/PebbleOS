@@ -29,6 +29,7 @@ for the machine, a board tree for each.
 | `boards/<board>/<board>.dtsi` | What the revisions of a board share |
 | `boards/<board>/<board>-pinctrl.dtsi` | The pin control states of the board, on SoCs with a pin controller |
 | `boards/<board>/<board>_<revision>.dts` | A revision, e.g. `obelix_pvt.dts`, or `<board>.dts` for boards with one |
+| `boards/<board>/<board>_<core>.dts` | A core of a board with several, e.g. `stm32h747i_disco_m4.dts`, or `<board>_<revision>_<core>.dts` for one of a revision; a board variant of a core may have `<board>_<core>_<variant>.dts`, and one of a board without cores `<board>_<variant>.dts` |
 | `include/dt-bindings/` | Constants the trees use, such as clock IDs and GPIO flags |
 | `dts/bindings/` | Bindings that upstream does not have |
 
@@ -336,7 +337,9 @@ class header, as `SPEAKER`:
 | `charger` | `charger` | `CHARGER` |
 
 A board gives each role it has a device in `boards/<board>/roles.yml`, and
-a revision changes them in `roles.<revision>.yml`. A device is the label of
+a revision changes them in `roles.<revision>.yml`, then a core in
+`roles.<core>.yml`, a board variant in `roles.<variant>.yml` and a board
+variant of a core in `roles.<core>_<variant>.yml`. A device is the label of
 a node, or a symbol for a device defined in C, with the header declaring it:
 
 ```yaml
@@ -349,8 +352,10 @@ accel:
 
 The add-ons of the board add theirs in their `roles.yml`; see
 [](#devicetree-addons). An application changes them in its `roles.yml`, then in
-`boards/<board>.roles.yml`: a role there replaces the board's, and `null`
-removes it. A class object of the node is taken, so a node implementing
+`boards/<board>.roles.yml`, then `boards/<board>_<core>.roles.yml`,
+`boards/<board>_<variant>.roles.yml` and
+`boards/<board>_<core>_<variant>.roles.yml`: a role
+there replaces the board's, and `null` removes it. A class object of the node is taken, so a node implementing
 several classes, as a display with its backlight, can have several roles.
 
 `dtmap.py` writes `devicetree/roles.c`, defining each role whose symbol is
