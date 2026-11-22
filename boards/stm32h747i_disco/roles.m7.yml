@@ -14,3 +14,4 @@ backlight: panel
 speaker: speaker
 mic: mic
 udc: usbotg_hs
+sdhc: sdmmc1

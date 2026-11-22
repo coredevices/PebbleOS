@@ -133,16 +133,17 @@
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>,
 			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc PLL2_P>, <&rcc SAI1_CK>,
-			  <&rcc SAI4A_CK>, <&rcc USB1OTG_CK>;
+			  <&rcc SAI4A_CK>, <&rcc USB1OTG_CK>, <&rcc SDMMC1_CK>, <&rcc PLL2_R>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
 				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>, <&rcc PLL2_P>,
-				 <&rcc RC48_CK>;
+				 <&rcc RC48_CK>, <&rcc PLL2_R>, <0>;
 	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 and the RTC count the LSE
 	// crystal, SAI1 and SAI4 divide PLL2 P to 256 and 128 times the audio rates within 0.03%, and
-	// the USB OTG HS takes its 48 MHz from HSI48
+	// the USB OTG HS takes its 48 MHz from HSI48 and the SDMMC1 halves PLL2 R, the 295 MHz VCO
+	// divided by 3, to 49.2 MHz in high speed
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
 			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>, <0>,
-			       <0>;
+			       <0>, <0>, <100000000>;
 };
 
 &dma1 {
@@ -198,6 +199,16 @@
 };
 
 // The USB OTG HS, on its micro-AB connector, as a device
+// The microSD slot, its card detect switch closed to ground with a card in
+&sdmmc1 {
+	pinctrl-0 = <&sdmmc1_b4>;
+	pinctrl-names = "default";
+	cd-gpios = <&gpioi 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	bus-width = <4>;
+	st,neg-edge;
+	status = "okay";
+};
+
 &usbotg_hs {
 	dr_mode = "peripheral";
 	phys = <&usbotg_hs_phy>;

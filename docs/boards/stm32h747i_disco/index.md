@@ -50,6 +50,10 @@ timer.
   connector through the Microchip USB3320 ULPI PHY, as a high-speed device
   with `CONFIG_USB_DEVICE`; VDD33USB comes from the USB voltage detector of
   the PWR
+- **microSD**: the slot on SDMMC1, four data lines, its card detect switch on
+  PI8; the card stack brings the card up as a disk with `CONFIG_SD`, the
+  SDMMC1 halving PLL2 R at 98.3 MHz to 49.2 MHz for high-speed cards, its
+  internal DMA moving the blocks; it is the `sdhc`
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
   conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit
