@@ -19,6 +19,15 @@ config CRC_SF32LB
     help
       Computes CRC-32 and the legacy checksum on the SF32LB CRC unit.
 
+config CRC_STM32
+    bool "STM32 CRC unit"
+    default y
+    depends on DT_HAS_ST_STM32F7_CRC_ENABLED
+    select CLK
+    select CRC_HW_ACCEL
+    help
+      Computes CRC-32 and the legacy checksum on the STM32 CRC unit.
+
 config CRC_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
@@ -27,7 +36,7 @@ config CRC_SHELL
       The crc shell command, to check the CRC unit against the software
       implementation and time both.
 
-if CRC_SF32LB
+if CRC_SF32LB || CRC_STM32
 
 module = DRIVER_CRC
 module-str = CRC
