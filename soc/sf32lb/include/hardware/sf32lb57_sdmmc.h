@@ -1,0 +1,63 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define SF32LB57_SDMMC_SR_OFFSET     0x0000
+#define SF32LB57_SDMMC_CCR_OFFSET    0x0004
+#define SF32LB57_SDMMC_CAR_OFFSET    0x0008
+#define SF32LB57_SDMMC_RAR_OFFSET(n) (0x0010 + 4U * (n))
+#define SF32LB57_SDMMC_TOR_OFFSET    0x0020
+#define SF32LB57_SDMMC_DCR_OFFSET    0x0024
+#define SF32LB57_SDMMC_DLR_OFFSET    0x0028
+#define SF32LB57_SDMMC_IER_OFFSET    0x002c
+#define SF32LB57_SDMMC_CLKCR_OFFSET  0x0030
+#define SF32LB57_SDMMC_CDR_OFFSET    0x003c
+#define SF32LB57_SDMMC_DSR_OFFSET    0x0054
+#define SF32LB57_SDMMC_CASR_OFFSET   0x005c
+#define SF32LB57_SDMMC_FIFO_OFFSET   0x0200
+
+/* Register bit definitions */
+
+#define SDMMC_SR_CMD_DONE     PBL_BIT(1)
+#define SDMMC_SR_CMD_RSP_CRC  PBL_BIT(2)
+#define SDMMC_SR_CMD_TIMEOUT  PBL_BIT(3)
+#define SDMMC_SR_DATA_DONE    PBL_BIT(5)
+#define SDMMC_SR_DATA_CRC     PBL_BIT(6)
+#define SDMMC_SR_DATA_TIMEOUT PBL_BIT(7)
+#define SDMMC_SR_ALL          PBL_GENMASK(17, 0)
+
+#define SDMMC_CCR_CMD_START      PBL_BIT(0)
+#define SDMMC_CCR_CMD_TX_EN      PBL_BIT(8)
+#define SDMMC_CCR_CMD_HAS_RSP    PBL_BIT(16)
+#define SDMMC_CCR_CMD_LONG_RSP   PBL_BIT(17)
+#define SDMMC_CCR_CMD_INDEX_MASK PBL_GENMASK(23, 18)
+
+#define SDMMC_DCR_DATA_START      PBL_BIT(0)
+#define SDMMC_DCR_TRAN_DATA_EN    PBL_BIT(8)
+#define SDMMC_DCR_R_WN            PBL_BIT(9)
+#define SDMMC_DCR_WIRE_MODE_MASK  PBL_GENMASK(12, 11)
+#define SDMMC_DCR_WIRE_MODE_4     1U
+#define SDMMC_DCR_BLOCK_SIZE_MASK PBL_GENMASK(26, 16)
+
+#define SDMMC_DLR_DATA_LEN_MASK PBL_GENMASK(15, 0)
+
+/* The interrupt enables take the flags' positions */
+#define SDMMC_IER_DATA_DONE    SDMMC_SR_DATA_DONE
+#define SDMMC_IER_DATA_CRC     SDMMC_SR_DATA_CRC
+#define SDMMC_IER_DATA_TIMEOUT SDMMC_SR_DATA_TIMEOUT
+
+#define SDMMC_CLKCR_STOP_CLK        PBL_BIT(0)
+#define SDMMC_CLKCR_VOID_FIFO_ERROR PBL_BIT(1)
+#define SDMMC_CLKCR_DIV_MASK        PBL_GENMASK(20, 8)
+#define SDMMC_CLKCR_DIV_MAX         0x1fffU
+
+/* The level of DAT0, low while the card is busy */
+#define SDMMC_DSR_DAT0 PBL_BIT(0)
+
+#define SDMMC_CASR_SD_REQ  PBL_BIT(0)
+#define SDMMC_CASR_SD_BUSY PBL_BIT(1)

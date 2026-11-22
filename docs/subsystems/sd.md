@@ -45,3 +45,4 @@ time.
 | Driver | Controllers |
 | --- | --- |
 | `drivers/sdhc/stm32_sdmmc.c` | The SDMMC of the STM32H7, an ARM PL18x variant, its data moved by its internal DMA, the interrupt waking the thread at the end; buffers that are not word aligned, or for reads not in whole cache lines, go through the FIFO by the CPU, the bus clock stopped by the flow control while the FIFO waits |
+| `drivers/sdhc/sf32lb_sdmmc.c` | The SDMMC of the SF32LB57, its data moved through its FIFO of one block by a DMA channel when the devicetree gives one, up to 128 blocks in a command, the interrupt waking the thread at the end; buffers the DMA does not take go through the FIFO by the CPU, a block at a time |

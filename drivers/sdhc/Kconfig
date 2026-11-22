@@ -26,4 +26,23 @@ config SDHC_STM32_SDMMC_IRQ_PRIO
     default 12
     depends on SDHC_STM32_SDMMC
 
+config SDHC_SF32LB_SDMMC
+    bool "SiFli SF32LB57 SDMMC"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_SDMMC_ENABLED
+    select CLK
+    select DMA
+    select PINCTRL
+    select GPIO
+    help
+      The SDMMC of the SF32LB57, its data moved through its FIFO of one
+      block by a DMA channel when the devicetree gives one, many blocks in
+      a command, or by the CPU, a block at a time, for the buffers the DMA
+      does not take.
+
+config SDHC_SF32LB_SDMMC_IRQ_PRIO
+    int "Interrupt priority"
+    default 6
+    depends on SDHC_SF32LB_SDMMC
+
 endif # SDHC
