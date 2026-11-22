@@ -1,0 +1,8 @@
+description: The RTC alarm armed a few seconds ahead, and its callback
+expect:
+  - 'rtc: alarm armed for 3 s from now'
+  - 'rtc: alarm fired after 3 s'
+  - 'Sample done'
+roles: [rtc]
+boards: [stm32h747i_disco/m7]
+integration: [stm32h747i_disco/m7]

@@ -19,6 +19,7 @@ pressure.md
 ram.md
 rng.md
 rtc.md
+rtc_alarm.md
 speaker.md
 temp.md
 touch.md
