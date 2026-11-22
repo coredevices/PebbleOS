@@ -67,6 +67,7 @@ class Menuconfig(PblCommand):
             srctree=self.topdir,
             BOARD=spec.name,
             BOARD_REVISION=spec.revision or boards.NO_REVISION,
+            BOARD_VARIANT=spec.variant or boards.NO_REVISION,
             KCONFIG_CONFIG=dotconfig,
             DT_BUILD_DIR=build.join("devicetree"),
             PYTHONPATH=os.pathsep.join(

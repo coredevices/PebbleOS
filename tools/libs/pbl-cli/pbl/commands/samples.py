@@ -84,7 +84,9 @@ class Samples(PblCommand):
                 outcome = "skipped"
             else:
                 build_dir = os.path.join(
-                    base, args.board.replace("@", "_"), *sample.name.split(os.sep)
+                    base,
+                    args.board.replace("@", "_").replace("/", "_"),
+                    *sample.name.split(os.sep),
                 )
                 start = time.monotonic()
                 outcome = self._one(sample, build_dir, args)

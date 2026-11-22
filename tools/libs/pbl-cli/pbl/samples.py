@@ -26,7 +26,8 @@ what it needs (default: all of them), and ``skip`` names those that lack it.
 the sample's roles files, are skipped too. ``addons`` are plugged into the
 board, from ``boards/addons``, and give it roles too: a list for every board,
 or a mapping of board names to lists, as ``{sf32lb57_dpi_hdk: [sifli_lcm_1p85]}``,
-for boards that take different ones.
+for boards that take different ones. ``boards``, ``skip`` and ``addons`` name a
+board, or a core or variant of it as ``board/core``.
 """
 
 import os
@@ -64,15 +65,28 @@ class Sample:
     roles: tuple = ()
     addons: tuple | dict = ()
 
+    @staticmethod
+    def _names(board):
+        """The names a sample lists ``board``, given as ``name[@revision][/core]``, by: the name,
+        then the name with its core or variant."""
+        target, _, qualifier = board.partition("/")
+        name = target.partition("@")[0]
+        return (name, f"{name}/{qualifier}") if qualifier else (name,)
+
     def supports(self, board):
-        """Whether the sample is for ``board``, given as ``name[@revision]``."""
-        name = board.partition("@")[0]
-        return name not in self.skip and (not self.boards or name in self.boards)
+        """Whether the sample is for ``board``, given as ``name[@revision][/core]``."""
+        names = self._names(board)
+        if any(name in self.skip for name in names):
+            return False
+        return not self.boards or any(name in self.boards for name in names)
 
     def addons_for(self, board):
-        """The add-ons plugged into ``board``, given as ``name[@revision]``."""
+        """The add-ons plugged into ``board``, given as ``name[@revision][/core]``."""
         if isinstance(self.addons, dict):
-            return tuple(self.addons.get(board.partition("@")[0], ()))
+            found = [
+                self.addons[name] for name in self._names(board) if name in self.addons
+            ]
+            return tuple(found[-1]) if found else ()
         return self.addons
 
     def missing_roles(self, srcdir, board):
@@ -81,10 +95,16 @@ class Sample:
             return []
         from tools.devicetree import dtmap
 
-        name, _, revision = board.partition("/")[0].partition("@")
+        target, _, variant = board.partition("/")
+        name, _, revision = target.partition("@")
         try:
             files = dtmap.role_files(
-                srcdir, name, revision or None, self.path, self.addons_for(name)
+                srcdir,
+                name,
+                revision or None,
+                self.path,
+                self.addons_for(board),
+                variant or None,
             )
         except dtmap.DtError as e:
             raise SampleError(str(e)) from e
