@@ -120,7 +120,9 @@ class Samples(PblCommand):
 
         build = BuildDir(build_dir, self.topdir)
         if self.dry_run:
-            self.cmake_configure(build, args.board, app=sample.path, addons=sample.addons)
+            self.cmake_configure(
+                build, args.board, app=sample.path, addons=sample.addons_for(args.board)
+            )
             self.cmake_build(build)
             return "built"
 
@@ -129,7 +131,11 @@ class Samples(PblCommand):
         with open(log_path, "w") as log:
             quiet = {"stdout": log, "stderr": log}
             rc = self.cmake_configure(
-                build, args.board, app=sample.path, addons=sample.addons, **quiet
+                build,
+                args.board,
+                app=sample.path,
+                addons=sample.addons_for(args.board),
+                **quiet,
             )
             rc = rc or self.run_cmd(["cmake", "--build", str(build)], **quiet)
         if rc:

@@ -24,7 +24,9 @@ seconds it gets (default 10). ``boards`` limits it to the boards that have
 what it needs (default: all of them), and ``skip`` names those that lack it.
 ``roles`` names the roles it uses: boards without them, after the board's and
 the sample's roles files, are skipped too. ``addons`` are plugged into the
-board, from ``boards/addons``, and give it roles too.
+board, from ``boards/addons``, and give it roles too: a list for every board,
+or a mapping of board names to lists, as ``{sf32lb57_dpi_hdk: [sifli_lcm_1p85]}``,
+for boards that take different ones.
 """
 
 import os
@@ -60,12 +62,18 @@ class Sample:
     boards: tuple = ()
     skip: tuple = ()
     roles: tuple = ()
-    addons: tuple = ()
+    addons: tuple | dict = ()
 
     def supports(self, board):
         """Whether the sample is for ``board``, given as ``name[@revision]``."""
         name = board.partition("@")[0]
         return name not in self.skip and (not self.boards or name in self.boards)
+
+    def addons_for(self, board):
+        """The add-ons plugged into ``board``, given as ``name[@revision]``."""
+        if isinstance(self.addons, dict):
+            return tuple(self.addons.get(board.partition("@")[0], ()))
+        return self.addons
 
     def missing_roles(self, srcdir, board):
         """The roles the sample uses that ``board`` gives no device."""
@@ -75,7 +83,9 @@ class Sample:
 
         name, _, revision = board.partition("/")[0].partition("@")
         try:
-            files = dtmap.role_files(srcdir, name, revision or None, self.path, self.addons)
+            files = dtmap.role_files(
+                srcdir, name, revision or None, self.path, self.addons_for(name)
+            )
         except dtmap.DtError as e:
             raise SampleError(str(e)) from e
         try:
@@ -136,7 +146,6 @@ def load(path, name=None):
         ("boards", "board"),
         ("skip", "board"),
         ("roles", "role"),
-        ("addons", "add-on"),
     ):
         lists[key] = data.get(key, [])
         if not isinstance(lists[key], list) or not all(
@@ -145,6 +154,19 @@ def load(path, name=None):
             raise SampleError(
                 f"invalid {manifest}: {key} must be a list of {what} names"
             )
+
+    addons = data.get("addons", [])
+    per_board = isinstance(addons, dict)
+    if not all(
+        isinstance(k, str)
+        and isinstance(v, list)
+        and all(isinstance(a, str) for a in v)
+        for k, v in (addons.items() if per_board else [("", addons)])
+    ):
+        raise SampleError(
+            f"invalid {manifest}: addons must be a list of add-on names, or a mapping "
+            "of board names to such lists"
+        )
 
     return Sample(
         name=name or os.path.basename(os.path.abspath(path)),
@@ -155,7 +177,7 @@ def load(path, name=None):
         boards=tuple(lists["boards"]),
         skip=tuple(lists["skip"]),
         roles=tuple(lists["roles"]),
-        addons=tuple(lists["addons"]),
+        addons={k: tuple(v) for k, v in addons.items()} if per_board else tuple(addons),
     )
 
 
