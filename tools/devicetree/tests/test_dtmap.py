@@ -1957,6 +1957,55 @@ def test_dma_without_names_fails(tmp_path):
         generate(tmp_path, specs=specs, bus="dmas = <&ctrl 1>;")
 
 
+def test_dma_missing_from_the_names_is_absent(tmp_path):
+    classes = {
+        "dma": {
+            "class": "dma",
+            "type": "struct dma",
+            "include": "dma.h",
+            "provides": {"dma": "CHAN(&{sym}, {0})"},
+        },
+        "sensor": CLASSES["sensor"],
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    dma: dma@1000 {
+        compatible = "acme,dma";
+        reg = <0x1000 0x100>;
+        #dma-cells = <1>;
+    };
+    dev: dev@2000 {
+        compatible = "acme,dev";
+        reg = <0x2000 0x100>;
+        dmas = <&dma 5>;
+        dma-names = "rx";
+    };
+};
+"""
+    specs = {
+        "acme,dma": {
+            "compatible": "acme,dma",
+            "config": "DMA",
+            "class": "dma",
+            "define": "DMA",
+        },
+        "acme,dev": {
+            "compatible": "acme,dev",
+            "config": "DEV",
+            "class": "sensor",
+            "define": "DEV",
+            "args": [
+                {"dma": "tx", "default": "nullptr"},
+                {"dma": "rx", "default": "nullptr"},
+            ],
+        },
+    }
+    gen = generate_with(tmp_path, dts, specs, classes)
+    assert "DEV(dt_dev, nullptr, &dt_dev_dma_rx);" in body(gen)
+
+
 def test_boolean_defaults_and_values_are_c(tmp_path):
     args = [
         {"prop": "absent", "default": False},

@@ -1024,9 +1024,12 @@ class Generator:
         return ", ".join(items)
 
     def _dma(self, dev, src, name):
+        if not src.node.has("dma-names"):
+            raise src.error("no 'dma-names'")
         names = src.node.strings("dma-names")
         if name not in names:
-            raise src.error(f"no '{name}' in 'dma-names'")
+            # A channel of the other direction, or none
+            return None
         entries = self._phandles(src, "dmas", "#dma-cells")
         if names.index(name) >= len(entries):
             raise src.error(f"no dma '{name}'")

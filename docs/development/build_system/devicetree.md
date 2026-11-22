@@ -532,7 +532,7 @@ An argument takes its value from one place:
 | `irq: <index or name>` | An interrupt, from `interrupts` or `interrupts-extended` |
 | `clock`, `reset`, `mbox`, `pwm`, `power-domain` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, `power-domains`, by index or by name; a `clock` name missing from `clock-names` is absent, for an input a node may lack |
 | `assigned-clocks: <macro>` | The macro of each clock of `assigned-clocks`, with its parent from `assigned-clock-parents`, `{}` for none, and its rate in Hz from `assigned-clock-rates`, 0 for none |
-| `dma: <name>` | A specifier of `dmas`, by name |
+| `dma: <name>` | A specifier of `dmas`, by name, absent when `dma-names` lacks it, as the channel of the direction a device does not use |
 | `gpio: <name>` | `<name>-gpios`, or `gpios` for an empty name |
 | `supply: <name>` | The regulator of `<name>-supply` |
 | `pinctrl: <state>` | A pin control state, by name |
