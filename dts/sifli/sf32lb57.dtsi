@@ -397,6 +397,15 @@
 			#interrupt-cells = <2>;
 		};
 
+		usbc: usb@50047000 {
+			compatible = "sifli,sf32lb57-usb";
+			reg = <0x50047000 0x1000>;
+			interrupts = <92>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_USBC>;
+			sifli,hpsys-cfg = <&hpsys_cfg>;
+			status = "disabled";
+		};
+
 		gpadc: adc@500b2000 {
 			compatible = "sifli,sf32lb57-gpadc";
 			reg = <0x500b2000 0x1000>;
