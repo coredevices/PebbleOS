@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "kb_words.h"
+#include "chat_warp.h"
 
 #define MAX_CHATS 20
 #define MAX_MESSAGES 9
@@ -926,8 +927,16 @@ static int round_isqrt(int value) {
 // Callers set s_round_org to that layer's screen position first, so what is
 // drawn follows the curve as the layer scrolls or slides.
 static GPoint s_round_org;
+// While the messages are drawn for chat_warp (round), they are a flat column: the warp, not
+// each bubble, keeps them inside the circle.
+static bool s_round_flat;
 
 static void round_span(int y0, int y1, int inset, int *left, int *right) {
+  if (s_round_flat) {
+    *left = inset - s_round_org.x;
+    *right = PBL_DISPLAY_WIDTH - inset - s_round_org.x;
+    return;
+  }
   int r = PBL_DISPLAY_WIDTH / 2 - inset;
   int mid = PBL_DISPLAY_HEIGHT / 2 - s_round_org.y;
   int dy = PG_MAX(PG_MAX(y0, y1) - mid, mid - PG_MIN(y0, y1));
@@ -2805,7 +2814,8 @@ static bool group_avatars_enabled(void) {
 }
 
 static int message_side_inset(GRect bounds) {
-  return ROUND_UI ? PG_MAX(28, bounds.size.w / 7) : 6;
+  // Round: nearly the full width; chat_warp squeezes rows near the bezel into the circle
+  return ROUND_UI ? CHAT_WARP_SIDE_INSET : 6;
 }
 
 // Widest a bubble may be (images are sized against this too).
@@ -5342,6 +5352,18 @@ static void draw_chat_background(GContext *ctx, GRect bounds) {
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 }
 
+static void draw_messages(GContext *ctx, GRect bounds, int visible_h);
+static void draw_messages_overlay(GContext *ctx, GRect bounds);
+
+// chat_warp's strip renderer: the messages from region row y0 on.
+static void draw_warp_strip(GContext *ctx, int y0, void *data) {
+  GRect *bounds = data;
+  int saved = s_chat_scroll_offset;
+  s_chat_scroll_offset = saved + y0;
+  draw_messages(ctx, *bounds, CHAT_WARP_MAX_ROWS);
+  s_chat_scroll_offset = saved;
+}
+
 static void messages_root_update_proc(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   if (ROUND_UI) {
@@ -5360,6 +5382,30 @@ static void messages_root_update_proc(Layer *layer, GContext *ctx) {
   // The keyboard covers the rest, so only the visible part is painted.
   draw_chat_background(ctx, GRect(0, 0, bounds.size.w, visible_h));
 
+  if (ROUND_UI) {
+    static ChatWarpMap s_warp;
+    GRect frame = layer_get_frame(layer);
+    // Each bubble scales as one, so its text keeps its shape
+    ChatWarpItem items[MAX_MESSAGES];
+    for (int i = 0; i < s_message_count; i++) {
+      items[i].top = s_message_y[i] - s_chat_scroll_offset;
+      items[i].bottom = items[i].top + s_message_h[i];
+    }
+    chat_warp_build(&s_warp, visible_h, PBL_DISPLAY_HEIGHT / 2 - frame.origin.y,
+                    PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_WIDTH / 2 - CHAT_WARP_SIDE_INSET + 6 + CHAT_WARP_BEZEL_GAP,
+                    items, s_message_count);
+    s_round_flat = true;
+    chat_warp_draw(ctx, &s_warp, GRect(frame.origin.x, frame.origin.y, bounds.size.w, visible_h),
+                   PBL_DISPLAY_WIDTH / 2, TG_CHAT_BG, draw_warp_strip, &bounds);
+    s_round_flat = false;
+  } else {
+    draw_messages(ctx, bounds, visible_h);
+  }
+  draw_messages_overlay(ctx, bounds);
+}
+
+// The message bubbles (not the background, composer or keyboard), down to visible_h.
+static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
   if (s_message_count == 0) {
     draw_service_pill(ctx, bounds, bounds.size.h / 2 - 20,
                       s_loading_messages ? "Loading messages..." : "No messages here yet");
@@ -5459,6 +5505,10 @@ static void messages_root_update_proc(Layer *layer, GContext *ctx) {
     }
   }
 
+}
+
+// What stays put over the messages: the composer and the keyboard.
+static void draw_messages_overlay(GContext *ctx, GRect bounds) {
   GRect compose_rect = compose_rect_for_bounds(bounds);
   if (s_at_newest && !s_touch_keyboard_open &&
       compose_rect.origin.y < bounds.size.h && compose_rect.origin.y + COMPOSE_BAR_H > 0 &&
