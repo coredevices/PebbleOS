@@ -484,6 +484,13 @@
 			clocks = <&clk_hse>, <&clk_lse>, <&clk_i2s>;
 		};
 
+		crc: crc@58024c00 {
+			compatible = "st,stm32f7-crc";
+			reg = <0x58024c00 0x400>;
+			clocks = <&rcc CRC_CK>;
+			status = "disabled";
+		};
+
 		bdma: dma-controller@58025400 {
 			compatible = "st,stm32h7-bdma";
 			reg = <0x58025400 0x400>;
