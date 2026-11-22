@@ -18,6 +18,7 @@ config CRC_HW_ACCEL
 config CRC_HW_MIN_LEN
     int "Minimum length to compute in hardware"
     depends on CRC_HW_ACCEL
+    default 128 if CRC_STM32
     default 32
     help
       Buffers shorter than this are computed in software, where
