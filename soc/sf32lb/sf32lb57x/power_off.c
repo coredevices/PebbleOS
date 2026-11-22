@@ -17,14 +17,15 @@
 
 #define PULSE_US 100000U
 
-// Hibernate keeps the RTC running; only the PMU wake pins drivers armed wake it
+// Hibernate keeps the RTC running; only the PMU wake pins drivers armed and an armed RTC alarm
+// wake it
 [[noreturn]] void pbl_soc_power_off(void) {
   (void)pbl_irq_disable_all();
 
   soc_sf32lb_lpsys_wake();
   soc_sf32lb_lpsys_halt(true);
 
-  pbl_modifyl(~PMUC_WER_PIN_MASK, 0U, PMUC(WER));
+  pbl_modifyl(~(PMUC_WER_PIN_MASK | PMUC_WER_RTC), PMUC_WER_RTC, PMUC(WER));
   pbl_writel(pbl_readl(PMUC(WSR)), PMUC(WCR));
 
   // The PMU acts on the rising edge
