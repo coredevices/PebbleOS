@@ -21,7 +21,30 @@
 #include <pbl/util/size.h>
 
 #include <hardware/sf32lb52_audcodec.h>
+
+#ifdef CONFIG_SOC_SF32LB57
+#include <hardware/sf32lb57_audcodec.h>
+#include <hardware/sf32lb57_pmuc.h>
+
+#define ANA(name)           SF32LB57_AUDCODEC_##name##_OFFSET
+#define PMUC_HXT_CR1_OFFSET SF32LB57_PMUC_HXT_CR1_OFFSET
+#define PLL_CFG4_EN_CLK_DIG SF32LB57_AUDCODEC_PLL_CFG4_EN_CLK_DIG
+#define PLL_CFG4_CLK_DIG \
+  (PLL_CFG4_EN_CLK_DIG | PBL_FIELD_PREP(SF32LB57_AUDCODEC_PLL_CFG4_DIVB_CLK_DIG_MASK, 2U))
+#define ADCN_CFG1_VCMST SF32LB57_AUDCODEC_ADCN_CFG1_VCMST
+#define PLL_ICP_SEL     3U
+#define HAS_DAC2        false
+#else
 #include <hardware/sf32lb52_pmuc.h>
+
+#define ANA(name)           SF32LB52_AUDCODEC_##name##_OFFSET
+#define PMUC_HXT_CR1_OFFSET SF32LB52_PMUC_HXT_CR1_OFFSET
+#define PLL_CFG4_EN_CLK_DIG AUDCODEC_PLL_CFG4_EN_CLK_DIG
+#define PLL_CFG4_CLK_DIG    PLL_CFG4_EN_CLK_DIG
+#define ADCN_CFG1_VCMST     AUDCODEC_ADCN_CFG1_VCMST
+#define PLL_ICP_SEL         8U
+#define HAS_DAC2            true
+#endif
 
 PBL_LOG_MODULE_DECLARE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 
@@ -29,6 +52,8 @@ static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
               "ring buffers must own their cache lines");
 
 #define REG(name) (dev->base + SF32LB52_AUDCODEC_##name##_OFFSET)
+// Analog registers, at offsets of the series
+#define AREG(name) (dev->base + ANA(name))
 
 #define GAIN_MIN_MDB  (-36000)
 #define GAIN_MAX_MDB  0
@@ -68,13 +93,16 @@ static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
 #define ADC_VCM_SETTLE_MS 20U
 
 // The second ADC of the SF32LB52 sets its gain in a layout of its own, not handled yet
+#ifdef CONFIG_SOC_SF32LB57
+#define ADC_CHANNELS_MAX 2U
+#else
 #define ADC_CHANNELS_MAX 1U
+#endif
 
-#define PLL_ICP_SEL 8U
-#define PLL_R3_SEL  3U
-#define PLL_RZ_SEL  1U
-#define PLL_C2_SEL  3U
-#define PLL_CZ_SEL  6U
+#define PLL_R3_SEL 3U
+#define PLL_RZ_SEL 1U
+#define PLL_C2_SEL 3U
+#define PLL_CZ_SEL 6U
 // 44.1 MHz: (FCW + 3 + SDIN / 2^20) * 6 MHz
 #define PLL_44M1_SDIN 0x5999aU
 #define PLL_44M1_FCW  4U
@@ -207,7 +235,7 @@ static void prv_bias_on(const struct pbl_audio_sf32lb_audcodec *dev) {
   prv_field(REG(PLL_CFG0), AUDCODEC_PLL_CFG0_ICP_SEL_MASK, PLL_ICP_SEL);
   prv_set(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_DIG);
   prv_set(REG(PLL_CFG3), AUDCODEC_PLL_CFG3_EN_SDM);
-  prv_set(REG(PLL_CFG4), AUDCODEC_PLL_CFG4_EN_CLK_DIG);
+  prv_set(REG(PLL_CFG4), PLL_CFG4_CLK_DIG);
   prv_write(REG(PLL_CFG1), PBL_FIELD_PREP(AUDCODEC_PLL_CFG1_R3_SEL_MASK, PLL_R3_SEL) |
                                PBL_FIELD_PREP(AUDCODEC_PLL_CFG1_RZ_SEL_MASK, PLL_RZ_SEL) |
                                PBL_FIELD_PREP(AUDCODEC_PLL_CFG1_C2_SEL_MASK, PLL_C2_SEL) |
@@ -222,7 +250,7 @@ static void prv_bias_off(const struct pbl_audio_sf32lb_audcodec *dev) {
             AUDCODEC_PLL_CFG0_EN_IARY | AUDCODEC_PLL_CFG0_EN_VCO | AUDCODEC_PLL_CFG0_EN_ANA);
   prv_clear(REG(PLL_CFG2), AUDCODEC_PLL_CFG2_EN_DIG);
   prv_clear(REG(PLL_CFG3), AUDCODEC_PLL_CFG3_EN_SDM);
-  prv_clear(REG(PLL_CFG4), AUDCODEC_PLL_CFG4_EN_CLK_DIG);
+  prv_clear(REG(PLL_CFG4), PLL_CFG4_EN_CLK_DIG);
   prv_clear(REG(REFGEN_CFG), AUDCODEC_REFGEN_CFG_EN);
   prv_write(REG(BG_CFG1), 0U);
   prv_write(REG(BG_CFG2), 0U);
@@ -452,13 +480,17 @@ static void prv_bypass(const struct pbl_audio_sf32lb_audcodec *dev, bool bypass)
   if (bypass) {
     prv_set(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
     prv_write(REG(DAC_CH0_DEBUG), debug);
-    prv_set(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
-    prv_write(REG(DAC_CH1_DEBUG), debug);
+    if (HAS_DAC2) {
+      prv_set(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
+      prv_write(REG(DAC_CH1_DEBUG), debug);
+    }
   } else {
     prv_clear(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
     prv_write(REG(DAC_CH0_DEBUG), debug);
-    prv_clear(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
-    prv_write(REG(DAC_CH1_DEBUG), debug);
+    if (HAS_DAC2) {
+      prv_clear(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_DOUT_MUTE);
+      prv_write(REG(DAC_CH1_DEBUG), debug);
+    }
   }
 }
 
@@ -470,14 +502,18 @@ static void prv_set_volume(const struct pbl_audio_sf32lb_audcodec *dev, int32_t 
                    PBL_FIELD_PREP(AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, steps % FINE_STEPS);
 
   pbl_writel((prv_read(REG(DAC_CH0_CFG)) & ~mask) | value, REG(DAC_CH0_CFG));
-  pbl_writel((prv_read(REG(DAC_CH1_CFG)) & ~mask) | value, REG(DAC_CH1_CFG));
+  if (HAS_DAC2) {
+    pbl_writel((prv_read(REG(DAC_CH1_CFG)) & ~mask) | value, REG(DAC_CH1_CFG));
+  }
 }
 
 static void prv_apply(const struct pbl_audio_sf32lb_audcodec *dev, int32_t gain_mdb, bool mute) {
   if (mute) {
     prv_bypass(dev, true);
     prv_field(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, FINE_VOL_MUTE);
-    prv_field(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, FINE_VOL_MUTE);
+    if (HAS_DAC2) {
+      prv_field(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_FINE_VOL_MASK, FINE_VOL_MUTE);
+    }
     return;
   }
 
@@ -491,42 +527,48 @@ static void prv_dac_analog_on(const struct pbl_audio_sf32lb_audcodec *dev,
   prv_set(REG(PLL_CFG4), AUDCODEC_PLL_CFG4_EN_CLK_CHOP_DAC | AUDCODEC_PLL_CFG4_EN_CLK_DAC |
                              (rate->pll ? AUDCODEC_PLL_CFG4_SEL_CLK_DAC_SOURCE : 0U) |
                              (rate->sel_clk_dac ? AUDCODEC_PLL_CFG4_SEL_CLK_DAC : 0U) |
-                             AUDCODEC_PLL_CFG4_EN_CLK_DIG);
+                             PLL_CFG4_CLK_DIG);
   prv_set(REG(PLL_CFG5), AUDCODEC_PLL_CFG5_EN_CLK_CHOP_BG | AUDCODEC_PLL_CFG5_EN_CLK_CHOP_REFGEN);
 
   prv_clock_reset(dev, PBL_AUDIO_PLAYBACK, PLL_RESET_US);
 
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_LP_MODE);
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
-  prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_VCM);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_VCM);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_LP_MODE);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
+  // The second output stays off, its offset DAC on
+  if (HAS_DAC2) {
+    prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC | AUDCODEC_DACN_CFG_EN_VCM |
+                                 AUDCODEC_DACN_CFG_EN_AMP | AUDCODEC_DACN_CFG_EN_DAC);
+  }
+  prv_set(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_VCM);
   pbl_busy_wait_us(DAC_VCM_US);
-  prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_AMP);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_AMP);
+  prv_set(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_AMP);
   pbl_busy_wait_us(DAC_AMP_US);
-  prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
-  prv_set(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
+  prv_set(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
+  if (HAS_DAC2) {
+    prv_set(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_OS_DAC);
+  }
   pbl_busy_wait_us(DAC_STEP_US);
-  prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_DAC);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_DAC);
+  prv_set(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_DAC);
   pbl_busy_wait_us(DAC_STEP_US);
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_SR);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_SR);
+  if (HAS_DAC2) {
+    prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
+  }
 }
 
 static void prv_dac_analog_off(const struct pbl_audio_sf32lb_audcodec *dev) {
-  prv_set(REG(DAC1_CFG), AUDCODEC_DACN_CFG_SR);
-  prv_set(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
+  prv_set(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_SR);
   pbl_busy_wait_us(DAC_STEP_US);
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_DAC);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_DAC);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_DAC);
   pbl_busy_wait_us(DAC_STEP_US);
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_VCM);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_VCM);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_VCM);
   pbl_busy_wait_us(DAC_STEP_US);
-  prv_clear(REG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_AMP | AUDCODEC_DACN_CFG_EN_OS_DAC);
-  prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_AMP | AUDCODEC_DACN_CFG_EN_OS_DAC);
+  prv_clear(AREG(DAC1_CFG), AUDCODEC_DACN_CFG_EN_AMP | AUDCODEC_DACN_CFG_EN_OS_DAC);
+  if (HAS_DAC2) {
+    prv_set(REG(DAC2_CFG), AUDCODEC_DACN_CFG_SR);
+    prv_clear(REG(DAC2_CFG), AUDCODEC_DACN_CFG_EN_DAC | AUDCODEC_DACN_CFG_EN_VCM |
+                                 AUDCODEC_DACN_CFG_EN_AMP | AUDCODEC_DACN_CFG_EN_OS_DAC);
+  }
 }
 
 static void prv_dac_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
@@ -577,7 +619,9 @@ static void prv_dac_off(const struct pbl_audio_sf32lb_audcodec *dev) {
   prv_clear(REG(CFG), AUDCODEC_CFG_DAC_ENABLE);
 
   prv_clear(REG(DAC_CH0_CFG), AUDCODEC_DAC_CH_CFG_ENABLE);
-  prv_clear(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_ENABLE);
+  if (HAS_DAC2) {
+    prv_clear(REG(DAC_CH1_CFG), AUDCODEC_DAC_CH_CFG_ENABLE);
+  }
   prv_set(REG(DAC_CFG), AUDCODEC_DAC_CFG_PATH_RESET);
   prv_clear(REG(DAC_CFG), AUDCODEC_DAC_CFG_PATH_RESET);
 }
@@ -612,7 +656,9 @@ static int prv_dac_powered_start(const struct pbl_audio_sf32lb_audcodec *dev,
 
   // The gain ramp keeps volume writes from latching
   prv_clear(REG(DAC_CH0_CFG_EXT), AUDCODEC_DAC_CH_CFG_EXT_RAMP_EN);
-  prv_clear(REG(DAC_CH1_CFG_EXT), AUDCODEC_DAC_CH_CFG_EXT_RAMP_EN);
+  if (HAS_DAC2) {
+    prv_clear(REG(DAC_CH1_CFG_EXT), AUDCODEC_DAC_CH_CFG_EXT_RAMP_EN);
+  }
 
   return 0;
 }
@@ -719,7 +765,7 @@ static int prv_init(const struct pbl_audio_dai *dai) {
     goto out;
   }
 
-  pbl_modifyl(0U, PMUC_HXT_CR1_BUF_AUD_EN, dev->pmuc + SF32LB52_PMUC_HXT_CR1_OFFSET);
+  pbl_modifyl(0U, PMUC_HXT_CR1_BUF_AUD_EN, dev->pmuc + PMUC_HXT_CR1_OFFSET);
 
   prv_dac_config(dev, prv_find_rate(INIT_RATE));
 
@@ -751,11 +797,11 @@ const struct pbl_audio_dai_ops pbl_audio_sf32lb_audcodec_dac_ops = {
 /* ADC */
 
 static uintptr_t prv_adc_cfg1(const struct pbl_audio_sf32lb_audcodec *dev, uint8_t adc) {
-  return adc == 0U ? REG(ADC1_CFG1) : REG(ADC2_CFG1);
+  return adc == 0U ? AREG(ADC1_CFG1) : AREG(ADC2_CFG1);
 }
 
 static uintptr_t prv_adc_cfg2(const struct pbl_audio_sf32lb_audcodec *dev, uint8_t adc) {
-  return adc == 0U ? REG(ADC1_CFG2) : REG(ADC2_CFG2);
+  return adc == 0U ? AREG(ADC1_CFG2) : AREG(ADC2_CFG2);
 }
 
 static uintptr_t prv_adc_ch_cfg(const struct pbl_audio_sf32lb_audcodec *dev, uint8_t ch) {
@@ -800,9 +846,14 @@ static void prv_adc_analog_on(const struct pbl_audio_sf32lb_audcodec *dev,
                               const struct prv_rate *rate) {
   uint8_t adcs = dev->state->adc_channels;
 
+#ifdef CONFIG_SOC_SF32LB57
+  prv_set(AREG(ADC_ANA_CFG), SF32LB57_AUDCODEC_ADC_ANA_CFG_PSW_EN);
+#endif
   prv_clear(REG(BG_CFG0), AUDCODEC_BG_CFG0_EN_SMPL);
-  prv_set(REG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_EN);
-  prv_clear(REG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_CHOP_EN);
+  prv_set(AREG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_EN);
+#ifndef CONFIG_SOC_SF32LB57
+  prv_clear(AREG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_CHOP_EN);
+#endif
   pbl_sleep_ms(MICBIAS_SETTLE_MS);
 
   prv_write(REG(PLL_CFG6),
@@ -821,15 +872,21 @@ static void prv_adc_analog_on(const struct pbl_audio_sf32lb_audcodec *dev,
 
   prv_clock_reset(dev, PBL_AUDIO_CAPTURE, ADC_RESET_MS * 1000U);
 
-  prv_clear(REG(ADC1_CFG1), AUDCODEC_ADCN_CFG1_DIFF_EN | AUDCODEC_ADCN_CFG1_DACN_EN);
+#ifndef CONFIG_SOC_SF32LB57
+  prv_clear(AREG(ADC1_CFG1), AUDCODEC_ADCN_CFG1_DACN_EN);
+#endif
   for (uint8_t adc = 0U; adc < adcs; adc++) {
+    // Single-ended inputs
+    prv_clear(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_DIFF_EN);
     prv_field(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_FSP_MASK, rate->adc_fsp);
-    prv_set(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_VCMST);
+    prv_set(prv_adc_cfg1(dev, adc), ADCN_CFG1_VCMST);
     prv_set(prv_adc_cfg2(dev, adc), AUDCODEC_ADCN_CFG2_CLEAR);
     prv_field(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_GC_MASK, ADC_GC);
     prv_set(prv_adc_cfg2(dev, adc), AUDCODEC_ADCN_CFG2_EN);
     prv_clear(prv_adc_cfg2(dev, adc), AUDCODEC_ADCN_CFG2_RSTB);
+#ifndef CONFIG_SOC_SF32LB57
     prv_field(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_VREF_SEL_MASK, ADC_VREF);
+#endif
   }
 
   // The input common mode settles before the modulators leave reset
@@ -837,15 +894,18 @@ static void prv_adc_analog_on(const struct pbl_audio_sf32lb_audcodec *dev,
 
   for (uint8_t adc = 0U; adc < adcs; adc++) {
     prv_set(prv_adc_cfg2(dev, adc), AUDCODEC_ADCN_CFG2_RSTB);
-    prv_clear(prv_adc_cfg1(dev, adc), AUDCODEC_ADCN_CFG1_VCMST);
+    prv_clear(prv_adc_cfg1(dev, adc), ADCN_CFG1_VCMST);
     prv_clear(prv_adc_cfg2(dev, adc), AUDCODEC_ADCN_CFG2_CLEAR);
   }
 }
 
 static void prv_adc_analog_off(const struct pbl_audio_sf32lb_audcodec *dev) {
-  prv_clear(REG(ADC1_CFG2), AUDCODEC_ADCN_CFG2_EN);
-  prv_clear(REG(ADC2_CFG2), AUDCODEC_ADCN_CFG2_EN);
-  prv_clear(REG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_EN);
+  prv_clear(AREG(ADC1_CFG2), AUDCODEC_ADCN_CFG2_EN);
+  prv_clear(AREG(ADC2_CFG2), AUDCODEC_ADCN_CFG2_EN);
+  prv_clear(AREG(ADC_ANA_CFG), AUDCODEC_ADC_ANA_CFG_MICBIAS_EN);
+#ifdef CONFIG_SOC_SF32LB57
+  prv_clear(AREG(ADC_ANA_CFG), SF32LB57_AUDCODEC_ADC_ANA_CFG_PSW_EN);
+#endif
 }
 
 static void prv_adc_copy(const struct pbl_audio_sf32lb_audcodec *dev, uint32_t period) {
@@ -1093,3 +1153,4 @@ const struct pbl_audio_dai_ops pbl_audio_sf32lb_audcodec_adc_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_audcodec)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_audcodec)

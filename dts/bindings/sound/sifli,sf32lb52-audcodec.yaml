@@ -4,16 +4,16 @@
 $id: http://devicetree.org/schemas/sound/sifli,sf32lb52-audcodec.yaml#
 $schema: http://devicetree.org/meta-schemas/core.yaml#
 
-title: SiFli SF32LB52 audio codec
+title: SiFli SF32LB52 and SF32LB57 audio codec
 
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description: |
-  The audio codec of the SF32LB52: a DAC, with its analog bias, PLL and output
-  stage, and ADCs for analog microphones, powered from its microphone bias.
-  Each channel streams through a DMA channel of its own: the DAC through tx,
-  the first and second ADC through rx1 and rx2.
+  The audio codec of the SF32LB52 and SF32LB57: a DAC, with its analog bias,
+  PLL and output stage, and ADCs for analog microphones, powered from its
+  microphone bias. Each channel streams through a DMA channel of its own: the
+  DAC through tx, the first and second ADC through rx1 and rx2.
 
   It has two DAIs, selected by the cell of sound-dai: 0 for the DAC, 1 for
   the ADCs.
@@ -23,7 +23,9 @@ allOf:
 
 properties:
   compatible:
-    const: sifli,sf32lb52-audcodec
+    enum:
+      - sifli,sf32lb52-audcodec
+      - sifli,sf32lb57-audcodec
 
   reg:
     maxItems: 1

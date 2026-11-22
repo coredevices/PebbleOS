@@ -369,6 +369,15 @@
 			status = "disabled";
 		};
 
+		audcodec: audio-codec@50088000 {
+			compatible = "sifli,sf32lb57-audcodec";
+			reg = <0x50088000 0x1000>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_AUDCODEC>;
+			#sound-dai-cells = <1>;
+			sifli,pmuc = <&pmuc>;
+			status = "disabled";
+		};
+
 		gptim1: timer@50090000 {
 			compatible = "sifli,sf32lb57-gptim", "sifli,sf32lb52-gptim";
 			reg = <0x50090000 0x1000>;

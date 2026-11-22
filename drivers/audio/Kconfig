@@ -33,7 +33,7 @@ config AUDIO_AMP_GPIO
 config AUDIO_SF32LB_AUDCODEC
     bool "SiFli SF32LB audio codec"
     default y
-    depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED
+    depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED || DT_HAS_SIFLI_SF32LB57_AUDCODEC_ENABLED
     select CLK
     select DMA
     select PINCTRL
