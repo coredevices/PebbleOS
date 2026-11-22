@@ -2,4 +2,4 @@ description: A serial port over USB that echoes what the host sends, for a minut
 expect:
   - 'usb: serial port up'
 roles: [udc]
-integration: [sf32lb57_dpi_hdk]
+integration: [sf32lb57_dpi_hdk, stm32h747i_disco/m7]
