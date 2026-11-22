@@ -29,6 +29,11 @@ console, the kernel and its system timer work so far.
 - **PSRAM**: 16 MiB HyperRAM in the SoC package, on MPI1, supplied by LDO18
 - **Clocks**: 48 MHz crystal; the 32.768 kHz crystal is not fitted
 - **Debug UART**: PA18 (RX) and PA19 (TX), to a WCH CH343P USB to UART bridge
+- **microSD**: J4, four data lines on SDMMC2 (PA00 to PA05), the card stack
+  bringing the card up as a disk with `CONFIG_SD`; it is the `sdhc`. J5, one
+  data line on SDMMC1 (PA08 to PA10), is not described. The card detect switch
+  of both slots reaches PA11 with H17 on 1-2. J4 shares its pins with the WiFi
+  module and the camera connector
 - **RTC**: the calendar RTC counts LRC10, and its alarm wakes the HDK from
   hibernate; it is the `rtc`
 - **USB**: the SoC's USB controller, a Mentor Graphics MUSB, on PA35 (D+) and

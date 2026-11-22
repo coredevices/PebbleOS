@@ -158,4 +158,60 @@
 			bias-pull-up;
 		};
 	};
+
+	// The J4 microSD slot, and the card detect switch of both slots, through H17
+	sdmmc2_default: sdmmc2-default-state {
+		clk-pins {
+			pins = "PA02";
+			function = "sd2_clk";
+			drive-strength = <8>;
+		};
+
+		cmd-pins {
+			pins = "PA03";
+			function = "sd2_cmd";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		dio0-pins {
+			pins = "PA04";
+			function = "sd2_dio0";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		dio1-pins {
+			pins = "PA05";
+			function = "sd2_dio1";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		dio2-pins {
+			pins = "PA00";
+			function = "sd2_dio2";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		dio3-pins {
+			pins = "PA01";
+			function = "sd2_dio3";
+			input-enable;
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		cd-pins {
+			pins = "PA11";
+			function = "gpio";
+			input-enable;
+			bias-pull-up;
+		};
+	};
 };

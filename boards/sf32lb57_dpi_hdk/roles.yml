@@ -7,3 +7,4 @@ gpu: epic
 extram: psram
 udc: usbc
 rtc: rtc
+sdhc: sdmmc2

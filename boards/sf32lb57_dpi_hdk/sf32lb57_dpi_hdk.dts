@@ -97,6 +97,19 @@ lcd_qspi_i2c: &i2c1 {
 	status = "okay";
 };
 
+// J4, the four-bit microSD slot, which the WiFi module would take; the card detect switch of J4
+// and J5 reaches PA11 with H17 on 1-2
+&sdmmc2 {
+	pinctrl-0 = <&sdmmc2_default>;
+	pinctrl-names = "default";
+	cd-gpios = <&gpio1 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	bus-width = <4>;
+	max-frequency = <25000000>;
+	dmas = <&gpdma1 0 SF32LB57_GPDMA1_REQ_SDMMC2 SF32LB57_DMA_PRIO_MEDIUM>;
+	dma-names = "rx-tx";
+	status = "okay";
+};
+
 &rtc {
 	status = "okay";
 };
