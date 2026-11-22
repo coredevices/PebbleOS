@@ -1,8 +1,8 @@
+#include "pebble_compat.h"
 #include "kb_words.h"
 
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 
-#include "pebble_compat.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

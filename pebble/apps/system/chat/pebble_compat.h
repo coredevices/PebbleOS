@@ -94,6 +94,8 @@
 #define resource_get_handle(id)         applib_resource_get_handle(id)
 #define resource_size(handle)           applib_resource_size(handle)
 #define resource_load(handle, buf, max) applib_resource_load((handle), (buf), (max))
+#define resource_load_byte_range(handle, start, buf, n) \
+  applib_resource_load_byte_range((handle), (start), (buf), (n))
 
 // App-task heap (the ported code uses the libc names). NOTE: the *_check variants
 // Panic (kill the app) on OOM and never return NULL — any `if (!p)` after these is
@@ -113,6 +115,7 @@
 #define localtime(t) pbl_override_localtime(t)
 
 #include <applib/app_light.h>
+#include <applib/app_watch_info.h>
 #include <applib/ui/action_menu_window.h>
 
 #define light_enable(on)          app_light_enable(on)
@@ -122,7 +125,15 @@
 // The SDK marks which APIs the firmware has; this firmware has the touch service (touch scrolling
 // and Pebblegram's touch keyboard).
 #define _PBL_API_EXISTS_touch_service_subscribe 1
+// and the SDK's platform names, which the firmware calls CONFIG_PLATFORM_*.
+#if defined(CONFIG_PLATFORM_EMERY) && !defined(PBL_PLATFORM_EMERY)
+#define PBL_PLATFORM_EMERY 1
+#endif
+#if defined(CONFIG_PLATFORM_GABBRO) && !defined(PBL_PLATFORM_GABBRO)
+#define PBL_PLATFORM_GABBRO 1
+#endif
 
+#include <pbl/logging/logging.h>
 #include "chat_keys.h"
 #include "resource_ids.pin.h"
 #include "chat_ds.h"
