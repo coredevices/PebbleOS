@@ -26,6 +26,15 @@ config ADC_SF32LB57_GPADC
       General purpose ADC of the SiFli SF32LB57, read one channel at a
       time, with the factory calibration in its eFuse.
 
+config ADC_STM32H7
+    bool "STM32H7 ADC"
+    default y
+    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
+    select CLK
+    help
+      ADCs of the STM32H7, converting one channel at a time at 16 bits,
+      clocked from the bus in synchronous mode.
+
 module = DRIVER_ADC
 module-str = ADC
 source "subsys/logging/Kconfig.template.log_level"

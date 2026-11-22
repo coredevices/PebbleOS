@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-adc
+config: ADC_STM32H7
+class: adc
+define: PBL_ADC_STM32H7_DEFINE
+provides:
+  io-channel: "PBL_ADC_CHANNEL(&{sym}, {0})"
+  adc: "&{sym}"
+args:
+  - name: true
+  - reg: 0
+    up: true
+  - prop: reg
+  - clock: bus
+    up: true
+  - prop: regulator-min-microvolt
+    of: vref-supply
+    up: true
