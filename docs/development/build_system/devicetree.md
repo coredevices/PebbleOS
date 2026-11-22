@@ -559,7 +559,7 @@ with these options:
 | `index` | Which cell of a `prop`, or which entry of a `gpio` list |
 | `cells` | The width of the rows of a `prop` table, 1 by default |
 | `all` | Every entry of a `gpio` list |
-| `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery` |
+| `of: <property>` | Read from the node this phandle property points to, e.g. `monitored-battery`. With `self`, the cells after the phandle, as many as the target's `#<property>-cells`, are the specifier of its `provides` template, e.g. the DAI of a codec in `sound-dai` |
 | `entry` | Which phandle of an `of` property listing several, 0 by default, e.g. the DMA controllers of `dma-masters` |
 | `child: <unit address or name>` | Read from a child, e.g. the memory on a controller, or from a descendant by a path of names, e.g. `panel/panel-timing` |
 | `remote: <port>` | Read from the device connected to a port |

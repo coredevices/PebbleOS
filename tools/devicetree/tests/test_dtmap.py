@@ -1911,6 +1911,34 @@ def test_self_does_not_climb_past_a_disabled_driver(tmp_path):
     assert "SENSOR_DT_DEFINE(dt_sensor, &dt_other);" in body(gen)
 
 
+def test_self_of_passes_the_specifier(tmp_path):
+    other = {
+        "compatible": "acme,other",
+        "config": "OTHER",
+        "class": "sensor",
+        "define": "OTHER_DEFINE",
+        "provides": {"bus": "PORT(&{sym}, {0})"},
+        "args": [],
+    }
+    sensor = (
+        "link = <&other 1>;\n};\n"
+        'other: other@40 { compatible = "acme,other"; reg = <0x40>; #link-cells = <1>;'
+    )
+    extra = {"acme,other": spec("acme,other", other)}
+    args = [{"self": "bus", "of": "link"}]
+    config = (*ALL, "OTHER")
+    gen = sensor_generate(tmp_path, args, sensor, extra=extra, config=config)
+    assert "SENSOR_DT_DEFINE(dt_sensor, PORT(&dt_other, 1));" in body(gen)
+    with pytest.raises(DtError, match="'link': .*/other@40 takes 1 cells"):
+        sensor_generate(
+            tmp_path,
+            args,
+            sensor.replace("<&other 1>", "<&other>"),
+            extra=extra,
+            config=config,
+        )
+
+
 def test_disabled_partitions_are_left_out(tmp_path):
     text = PARTITIONS_DTS.replace(
         'label = "firmware-slot-1";', 'label = "firmware-slot-1"; status = "disabled";'
@@ -2545,6 +2573,61 @@ def test_entry_of_a_phandle_list(tmp_path):
     assert "MUX(dt_mux, 0x3000, 0x1000, 0x2000);" in body(gen)
 
     specs["acme,mux"]["args"][2]["entry"] = 2
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    with pytest.raises(DtError, match="'dma-masters' has no entry 2"):
+        dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
+
+
+def test_entry_steps_over_the_cells_of_each_target(tmp_path):
+    classes = {
+        **CLASSES,
+        "dma": {"class": "dma", "type": "struct dma", "include": "dma.h"},
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    dma1: dma@1000 {
+        compatible = "acme,dma";
+        reg = <0x1000 0x100>;
+        #dma-masters-cells = <1>;
+    };
+    dma2: dma@2000 {
+        compatible = "acme,dma";
+        reg = <0x2000 0x100>;
+        #dma-masters-cells = <1>;
+    };
+    mux: mux@3000 {
+        compatible = "acme,mux";
+        reg = <0x3000 0x100>;
+        dma-masters = <&dma1 1>, <&dma2 0>;
+    };
+};
+"""
+    specs = {
+        "acme,mux": {
+            "compatible": "acme,mux",
+            "config": "MUX",
+            "class": "dma",
+            "define": "MUX",
+            "args": [
+                {"reg": 0},
+                {"reg": 0, "of": "dma-masters", "entry": 1},
+            ],
+        },
+    }
+    path, dtb = tmp_path / "mux.dts", tmp_path / "mux.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {"MUX"})
+    gen.run()
+    assert "MUX(dt_mux, 0x3000, 0x2000);" in body(gen)
+
+    specs["acme,mux"]["args"][1]["entry"] = 2
     loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
     with pytest.raises(DtError, match="'dma-masters' has no entry 2"):
         dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
