@@ -97,6 +97,10 @@ lcd_qspi_i2c: &i2c1 {
 	status = "okay";
 };
 
+&rtc {
+	status = "okay";
+};
+
 &lptim1 {
 	status = "okay";
 };

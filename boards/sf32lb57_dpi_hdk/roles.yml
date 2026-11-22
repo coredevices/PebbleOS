@@ -6,3 +6,4 @@ flash: sip_flash
 gpu: epic
 extram: psram
 udc: usbc
+rtc: rtc

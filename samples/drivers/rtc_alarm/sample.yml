@@ -4,4 +4,4 @@ expect:
   - 'rtc: alarm fired after 3 s'
   - 'Sample done'
 roles: [rtc]
-boards: [stm32h747i_disco/m7]
+boards: [sf32lb57_dpi_hdk, stm32h747i_disco/m7]
