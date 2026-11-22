@@ -5,12 +5,14 @@
 
 #include <pbl/util/bits.h>
 
-#define STM32_RTC_TR_OFFSET   0x0000
-#define STM32_RTC_DR_OFFSET   0x0004
-#define STM32_RTC_CR_OFFSET   0x0008
-#define STM32_RTC_ISR_OFFSET  0x000c
-#define STM32_RTC_PRER_OFFSET 0x0010
-#define STM32_RTC_WPR_OFFSET  0x0024
+#define STM32_RTC_TR_OFFSET       0x0000
+#define STM32_RTC_DR_OFFSET       0x0004
+#define STM32_RTC_CR_OFFSET       0x0008
+#define STM32_RTC_ISR_OFFSET      0x000c
+#define STM32_RTC_PRER_OFFSET     0x0010
+#define STM32_RTC_ALRMAR_OFFSET   0x001c
+#define STM32_RTC_WPR_OFFSET      0x0024
+#define STM32_RTC_ALRMASSR_OFFSET 0x0044
 
 #define RTC_TR_SU_MASK  PBL_GENMASK(3, 0)
 #define RTC_TR_ST_MASK  PBL_GENMASK(6, 4)
@@ -29,9 +31,17 @@
 
 #define RTC_CR_BYPSHAD PBL_BIT(5)
 #define RTC_CR_FMT     PBL_BIT(6)
+#define RTC_CR_ALRAE   PBL_BIT(8)
+#define RTC_CR_ALRAIE  PBL_BIT(12)
 
-#define RTC_ISR_INITF PBL_BIT(6)
-#define RTC_ISR_INIT  PBL_BIT(7)
+#define RTC_ISR_ALRAWF PBL_BIT(0)
+#define RTC_ISR_INITF  PBL_BIT(6)
+#define RTC_ISR_INIT   PBL_BIT(7)
+#define RTC_ISR_ALRAF  PBL_BIT(8)
+
+/* The alarm time and date fields are those of TR and DR, the date shifted up by 24 */
+#define RTC_ALRMAR_DU_MASK PBL_GENMASK(27, 24)
+#define RTC_ALRMAR_DT_MASK PBL_GENMASK(29, 28)
 
 #define RTC_PRER_PREDIV_S_MASK PBL_GENMASK(14, 0)
 #define RTC_PRER_PREDIV_A_MASK PBL_GENMASK(22, 16)

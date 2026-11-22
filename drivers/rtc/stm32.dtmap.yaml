@@ -11,3 +11,8 @@ args:
   - reg: 0
   - clock: pclk
   - clock: rtc_ck
+  - reg: 0
+    of: interrupt-parent
+  - prop: interrupts
+    index: 0
+  - irq: 0

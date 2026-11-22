@@ -57,7 +57,8 @@ timer.
   Cortex-M7 at 400 MHz from HSE, with the AHB at 200 MHz and the APB buses at
   100 MHz; LPTIM1, the system timer, counts the LSE
 - **RTC**: the calendar RTC counts the LSE in the backup domain, keeping the
-  time across resets; it is the `rtc`
+  time across resets, and its alarm wakes the kit from power-off; it is the
+  `rtc`
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX), received through DMA
 - **Other**: the RNG, from HSI48, the CRC unit, used with `CONFIG_CRC_HW`,

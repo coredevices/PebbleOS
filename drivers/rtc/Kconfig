@@ -39,7 +39,13 @@ config RTC_STM32
     select CLK
     help
       STM32H7 calendar RTC in the backup domain, counting the LSE across
-      resets and in Standby.
+      resets and in Standby, with alarm A, which wakes the system from
+      Standby.
+
+config RTC_STM32_IRQ_PRIO
+    int "Alarm interrupt priority"
+    default 12
+    depends on RTC_STM32
 
 config RTC_QEMU
     bool "QEMU RTC"

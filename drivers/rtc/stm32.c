@@ -12,6 +12,7 @@
 #include <pbl/util/time.h>
 
 #include <hardware/stm32_rtc.h>
+#include <hardware/stm32h7_exti.h>
 
 // The asynchronous prescaler at its largest, for the least power
 #define PREDIV_A 127U
@@ -20,6 +21,9 @@
 
 // Clock rates are in mHz
 #define MHZ_PER_HZ 1000ULL
+
+// The alarm matches the day of the month, the same in each of the next 28 days at most
+#define ALARM_MAX_S (28 * 24 * 60 * 60)
 
 static const struct pbl_rtc_stm32 *prv_rtc(const struct pbl_rtc *rtc) {
   return PBL_CONTAINER_OF(rtc, const struct pbl_rtc_stm32, rtc);
@@ -93,6 +97,16 @@ static int prv_get_time(const struct pbl_rtc *dev, time_t *t) {
   return 0;
 }
 
+// The time fields, laid out the same in the time and alarm registers
+static uint32_t prv_time_fields(const struct pbl_tm *tm) {
+  return PBL_FIELD_PREP(RTC_TR_ST_MASK, tm->tm_sec / 10) |
+         PBL_FIELD_PREP(RTC_TR_SU_MASK, tm->tm_sec % 10) |
+         PBL_FIELD_PREP(RTC_TR_MNT_MASK, tm->tm_min / 10) |
+         PBL_FIELD_PREP(RTC_TR_MNU_MASK, tm->tm_min % 10) |
+         PBL_FIELD_PREP(RTC_TR_HT_MASK, tm->tm_hour / 10) |
+         PBL_FIELD_PREP(RTC_TR_HU_MASK, tm->tm_hour % 10);
+}
+
 static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
   const struct pbl_rtc_stm32 *rtc = prv_rtc(dev);
   struct pbl_tm tm;
@@ -109,13 +123,7 @@ static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
     return ret;
   }
 
-  prv_putreg(rtc, STM32_RTC_TR_OFFSET,
-             PBL_FIELD_PREP(RTC_TR_ST_MASK, tm.tm_sec / 10) |
-                 PBL_FIELD_PREP(RTC_TR_SU_MASK, tm.tm_sec % 10) |
-                 PBL_FIELD_PREP(RTC_TR_MNT_MASK, tm.tm_min / 10) |
-                 PBL_FIELD_PREP(RTC_TR_MNU_MASK, tm.tm_min % 10) |
-                 PBL_FIELD_PREP(RTC_TR_HT_MASK, tm.tm_hour / 10) |
-                 PBL_FIELD_PREP(RTC_TR_HU_MASK, tm.tm_hour % 10));
+  prv_putreg(rtc, STM32_RTC_TR_OFFSET, prv_time_fields(&tm));
   prv_putreg(rtc, STM32_RTC_DR_OFFSET,
              PBL_FIELD_PREP(RTC_DR_DT_MASK, tm.tm_mday / 10) |
                  PBL_FIELD_PREP(RTC_DR_DU_MASK, tm.tm_mday % 10) |
@@ -127,6 +135,86 @@ static int prv_set_time(const struct pbl_rtc *dev, time_t t) {
   prv_exit_init(rtc);
 
   return 0;
+}
+
+// With the write protection lifted
+static int prv_alarm_disable(const struct pbl_rtc_stm32 *rtc) {
+  pbl_modifyl(RTC_CR_ALRAE | RTC_CR_ALRAIE, 0U, rtc->base + STM32_RTC_CR_OFFSET);
+  pbl_modifyl(RTC_ISR_ALRAF, 0U, rtc->base + STM32_RTC_ISR_OFFSET);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rtc, STM32_RTC_ISR_OFFSET) & RTC_ISR_ALRAWF) != 0U, 10U,
+                          INIT_TIMEOUT_US);
+}
+
+// Alarm A, on the date and time, to the second
+static int prv_set_alarm(const struct pbl_rtc *dev, time_t t, pbl_rtc_alarm_callback_t cb,
+                         void *user_data) {
+  const struct pbl_rtc_stm32 *rtc = prv_rtc(dev);
+  struct pbl_tm tm;
+  time_t now;
+  int ret;
+
+  (void)prv_get_time(dev, &now);
+  if (t <= now) {
+    return -EINVAL;
+  }
+  if (t - now > ALARM_MAX_S) {
+    return -ERANGE;
+  }
+
+  pbl_gmtime_r(&t, &tm);
+
+  prv_unlock(rtc);
+  ret = prv_alarm_disable(rtc);
+  if (ret == 0) {
+    rtc->state->alarm_cb = cb;
+    rtc->state->alarm_user_data = user_data;
+    prv_putreg(rtc, STM32_RTC_ALRMAR_OFFSET,
+               prv_time_fields(&tm) | PBL_FIELD_PREP(RTC_ALRMAR_DT_MASK, tm.tm_mday / 10) |
+                   PBL_FIELD_PREP(RTC_ALRMAR_DU_MASK, tm.tm_mday % 10));
+    prv_putreg(rtc, STM32_RTC_ALRMASSR_OFFSET, 0U);
+    pbl_modifyl(0U, RTC_CR_ALRAE | RTC_CR_ALRAIE, rtc->base + STM32_RTC_CR_OFFSET);
+  }
+  prv_lock(rtc);
+
+  return ret;
+}
+
+static int prv_cancel_alarm(const struct pbl_rtc *dev) {
+  const struct pbl_rtc_stm32 *rtc = prv_rtc(dev);
+  int ret;
+
+  prv_unlock(rtc);
+  ret = prv_alarm_disable(rtc);
+  prv_lock(rtc);
+
+  return ret;
+}
+
+// The alarm fires once
+void pbl_rtc_stm32_isr(const struct pbl_rtc_stm32 *rtc) {
+  struct pbl_rtc_stm32_state *st = rtc->state;
+
+  pbl_writel(PBL_BIT(rtc->exti_line), rtc->exti + STM32H7_EXTI_CORE_PR1_OFFSET);
+  if ((prv_getreg(rtc, STM32_RTC_ISR_OFFSET) & RTC_ISR_ALRAF) == 0U) {
+    return;
+  }
+
+  prv_unlock(rtc);
+  pbl_modifyl(RTC_CR_ALRAE | RTC_CR_ALRAIE, 0U, rtc->base + STM32_RTC_CR_OFFSET);
+  pbl_modifyl(RTC_ISR_ALRAF, 0U, rtc->base + STM32_RTC_ISR_OFFSET);
+  prv_lock(rtc);
+
+  if (st->alarm_cb != nullptr) {
+    st->alarm_cb(&rtc->rtc, st->alarm_user_data);
+  }
+}
+
+// The alarms interrupt through their EXTI line, on the rising edge of the alarm flag
+static void prv_alarm_irq_init(const struct pbl_rtc_stm32 *rtc) {
+  pbl_modifyl(0U, PBL_BIT(rtc->exti_line), rtc->exti + STM32H7_EXTI_RTSR1_OFFSET);
+  pbl_modifyl(0U, PBL_BIT(rtc->exti_line), rtc->exti + STM32H7_EXTI_CORE_IMR1_OFFSET);
+  pbl_irq_enable(rtc->irq);
 }
 
 // The calendar keeps counting across resets: it is only set up when its prescaler does not match
@@ -160,6 +248,8 @@ int pbl_rtc_stm32_init(const struct pbl_device *dev) {
   prer = PBL_FIELD_PREP(RTC_PRER_PREDIV_A_MASK, PREDIV_A) |
          PBL_FIELD_PREP(RTC_PRER_PREDIV_S_MASK,
                         (uint32_t)(rate_mhz / MHZ_PER_HZ / (PREDIV_A + 1U)) - 1U);
+  prv_alarm_irq_init(rtc);
+
   if (prv_getreg(rtc, STM32_RTC_PRER_OFFSET) == prer &&
       (prv_getreg(rtc, STM32_RTC_CR_OFFSET) & RTC_CR_BYPSHAD) != 0U) {
     return 0;
@@ -180,6 +270,8 @@ int pbl_rtc_stm32_init(const struct pbl_device *dev) {
 const struct pbl_rtc_ops pbl_rtc_stm32_ops = {
   .get_time = prv_get_time,
   .set_time = prv_set_time,
+  .set_alarm = prv_set_alarm,
+  .cancel_alarm = prv_cancel_alarm,
 };
 
 #include PBL_DT_INSTANCES(st_stm32h7_rtc)

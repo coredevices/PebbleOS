@@ -379,7 +379,8 @@
 			reg = <0x58004000 0x400>;
 			clocks = <&rcc RTCAPB_CK>, <&rcc RTC_CK>;
 			clock-names = "pclk", "rtc_ck";
-			interrupts = <41>;
+			interrupt-parent = <&exti>;
+			interrupts = <17 IRQ_TYPE_EDGE_RISING>;
 			status = "disabled";
 		};
 

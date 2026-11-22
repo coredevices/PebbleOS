@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h7-exti
+config: SOC_STM32H7
+header: hardware/stm32h7_exti.h
+provides:
+  irq: "STM32H7_EXTI_IRQ({0})"

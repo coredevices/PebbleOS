@@ -44,6 +44,11 @@
 #define STM32H7_EXTI_CORE_EMR3_OFFSET (STM32H7_EXTI_C1EMR3_OFFSET + STM32H7_EXTI_CORE_OFFSET)
 #define STM32H7_EXTI_CORE_PR3_OFFSET  (STM32H7_EXTI_C1PR3_OFFSET + STM32H7_EXTI_CORE_OFFSET)
 
+/* The NVIC interrupt of the configurable lines a device interrupts through */
+#define STM32H7_EXTI_IRQ(line)  STM32H7_EXTI_IRQ_(line)
+#define STM32H7_EXTI_IRQ_(line) STM32H7_EXTI_LINE##line##_IRQ
+#define STM32H7_EXTI_LINE17_IRQ 41
+
 /* Lines 55 to 60, of the PWR wakeup pins, in the second set of registers */
 #define EXTI_LINES2_WKUP PBL_GENMASK(28, 23)
 
