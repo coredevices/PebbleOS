@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h747-m4
+config: REMOTEPROC_STM32H7_CM4
+class: rproc
+define: PBL_RPROC_STM32H7_CM4_DEFINE
+args:
+  - name: true
+  - reg: 0
+    of: st,syscfg-holdboot
+  - prop: st,syscfg-holdboot
+    index: 1
+  - prop: st,syscfg-holdboot
+    index: 2
+  - reg: 0
+    of: st,syscfg-boot-address
+  - prop: st,syscfg-boot-address
+    index: 1
+  - prop: st,syscfg-boot-address
+    index: 2
+  - mbox: shutdown
+    default: "{}"
+  - flag: st,auto-boot
