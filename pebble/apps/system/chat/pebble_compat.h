@@ -119,6 +119,10 @@
 #define action_menu_open(config)  app_action_menu_open(config)
 #define APP_LOG(level, fmt, ...)  ((void)0)
 
+// The SDK marks which APIs the firmware has; this firmware has the touch service (touch scrolling
+// and Pebblegram's touch keyboard).
+#define _PBL_API_EXISTS_touch_service_subscribe 1
+
 #include "chat_keys.h"
 #include "resource_ids.pin.h"
 #include "chat_ds.h"
