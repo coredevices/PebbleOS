@@ -13,6 +13,14 @@
 	model = "STMicroelectronics STM32H747I-DISCO";
 	compatible = "st,stm32h747i-disco", "st,stm32h747";
 
+	v3v3: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "v3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
