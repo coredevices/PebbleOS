@@ -10,6 +10,11 @@ args:
   - parent: spi_mem
   - supply: vcc
     default: nullptr
+  - prop: parallel-memories
+    item: "1"
+    cells: 2
+    wrap: PBL_FLASH_SPI_NOR_PARALLEL
+    default: "1"
   - list: [user-otp, fixed-layout]
     item: 'PBL_FLASH_OTP_CELL("{name}", {0:#x}, {1})'
     default: []

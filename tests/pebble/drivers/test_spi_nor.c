@@ -457,6 +457,98 @@ PBL_SPI_MEM_STATE_DEFINE(s_bus);
 static const struct pbl_spi_mem s_bus = PBL_SPI_MEM_INIT(s_bus, "bus", nullptr, &s_bus_ops, 0U);
 PBL_DEVICE_REGISTER(s_bus, &s_bus.dev);
 
+// A dual-flash controller in front of two identical parts, each taking every other byte at half
+// the address: register bytes come from both parts, the same in both unless an ID differs, and
+// array operations address the pair, which the fake memory holds as it is
+static bool s_dual_id_mismatch;
+
+static uint32_t prv_erase_size(uint8_t opcode) {
+  switch (opcode) {
+    case PBL_FLASH_NOR_CMD_SE:
+    case PBL_FLASH_NOR_CMD_SE_4B:
+      return 4U * 1024U;
+    case 0x52U:
+    case 0x5CU:
+      return 32U * 1024U;
+    case PBL_FLASH_NOR_CMD_BE:
+    case PBL_FLASH_NOR_CMD_BE_4B:
+      return 64U * 1024U;
+    default:
+      return 0U;
+  }
+}
+
+static int prv_dual_exec_op(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_op *op) {
+  struct pbl_spi_mem_op half = *op;
+  uint8_t raw[MAX_RUN];
+  uint32_t erase = prv_erase_size(op->cmd.opcode);
+  size_t n = op->data.nbytes;
+  int ret;
+
+  if (erase != 0U) {
+    // A unit of the pair is a unit of each part
+    ret = prv_exec_op(mem, op);
+    if (ret == 0) {
+      s_wel = true;
+      half.addr.val += erase;
+      ret = prv_exec_op(mem, &half);
+    }
+    return ret;
+  }
+
+  if (op->data.dir == PBL_SPI_MEM_NO_DATA) {
+    return prv_exec_op(mem, op);
+  }
+
+  cl_assert_equal_i(n % 2U, 0);
+
+  if (op->addr.nbytes > 0U && op->cmd.opcode != PBL_FLASH_NOR_CMD_RDSFDP) {
+    cl_assert_equal_i(op->addr.val % 2U, 0);
+    return prv_exec_op(mem, op);
+  }
+
+  cl_assert(n / 2U <= sizeof(raw));
+  half.data.nbytes = n / 2U;
+  if (op->addr.nbytes > 0U) {
+    cl_assert_equal_i(op->addr.val % 2U, 0);
+    half.addr.val = op->addr.val / 2U;
+  }
+
+  if (op->data.dir == PBL_SPI_MEM_DATA_OUT) {
+    const uint8_t *out = op->data.buf.out;
+
+    for (size_t i = 0U; i < n / 2U; i++) {
+      cl_assert_equal_i(out[2U * i], out[(2U * i) + 1U]);
+      raw[i] = out[2U * i];
+    }
+    half.data.buf.out = raw;
+
+    return prv_exec_op(mem, &half);
+  }
+
+  half.data.buf.in = raw;
+  ret = prv_exec_op(mem, &half);
+  for (size_t i = 0U; i < n / 2U; i++) {
+    ((uint8_t *)op->data.buf.in)[2U * i] = raw[i];
+    ((uint8_t *)op->data.buf.in)[(2U * i) + 1U] =
+        (s_dual_id_mismatch && op->cmd.opcode == PBL_FLASH_NOR_CMD_RDID) ? (uint8_t)~raw[i]
+                                                                         : raw[i];
+  }
+
+  return ret;
+}
+
+static const struct pbl_spi_mem_ops s_dual_bus_ops = {
+  .supports_op = prv_supports_op,
+  .adjust_op_size = prv_adjust_op_size,
+  .exec_op = prv_dual_exec_op,
+};
+
+PBL_SPI_MEM_STATE_DEFINE(s_dual_bus);
+static const struct pbl_spi_mem s_dual_bus =
+    PBL_SPI_MEM_INIT(s_dual_bus, "dual_bus", nullptr, &s_dual_bus_ops, 0U);
+PBL_DEVICE_REGISTER(s_dual_bus, &s_dual_bus.dev);
+
 PBL_SPI_MEM_STATE_DEFINE(s_xip_bus);
 static const struct pbl_spi_mem s_xip_bus =
     PBL_SPI_MEM_INIT(s_xip_bus, "xip_bus", nullptr, &s_bus_ops, PBL_SPI_MEM_XIP);
@@ -468,9 +560,11 @@ PBL_DEVICE_REGISTER(s_xip_bus, &s_xip_bus.dev);
       PBL_FLASH_OTP_CELL("soc-config-user", 0x0800U, 256U),                                      \
       PBL_FLASH_OTP_CELL("soc-config-cust", 0x1000U, 256U)
 
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, nullptr, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, nullptr, OTP_CELLS);
-PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, nullptr, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_lq, "nor_lq", &s_bus, nullptr, 1, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_q, "nor_q", &s_bus, nullptr, 1, OTP_CELLS);
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_xip, "nor_xip", &s_xip_bus, nullptr, 1, OTP_CELLS);
+
+PBL_FLASH_SPI_NOR_DEFINE(s_nor_dual, "nor_dual", &s_dual_bus, nullptr, 2);
 
 const struct pbl_flash *const FLASH = &s_nor_q;
 
@@ -545,6 +639,10 @@ static void prv_reset(enum chip_model model) {
   prv_reset_instance(&s_nor_lq_device_state, &s_nor_lq_flash_state, &s_nor_lq_data);
   prv_reset_instance(&s_nor_q_device_state, &s_nor_q_flash_state, &s_nor_q_data);
   prv_reset_instance(&s_nor_xip_device_state, &s_nor_xip_flash_state, &s_nor_xip_data);
+  s_dual_bus_device_state = (struct pbl_device_state){};
+  s_dual_bus_spi_mem_state = (struct pbl_spi_mem_state){};
+  prv_reset_instance(&s_nor_dual_device_state, &s_nor_dual_flash_state, &s_nor_dual_data);
+  s_dual_id_mismatch = false;
 
   s_model = model;
   memset(s_mem, 0xFF, CHIP_SIZE);
@@ -1144,4 +1242,62 @@ void test_spi_nor__otp_slots(void) {
   s_sr2 |= PBL_BIT(3);
   cl_assert(otp_is_locked(OTP_SERIAL));
   cl_assert(otp_is_locked(OTP_PCBA_SERIAL));
+}
+
+// Two parts in parallel: each unit spans both, and their OTP areas are not one
+void test_spi_nor__dual_geometry(void) {
+  const struct pbl_flash_geometry *geo;
+  struct pbl_flash_otp_info info;
+
+  prv_reset(CHIP_GD25Q256E);
+  geo = pbl_flash_get_geometry(prv_init(&s_nor_dual));
+
+  cl_assert_equal_i(geo->size, 2U * CHIP_SIZE);
+  cl_assert_equal_i(geo->page_size, 512);
+  cl_assert_equal_i(geo->subsector_size, 8U * 1024U);
+  cl_assert_equal_i(geo->sector_size, 128U * 1024U);
+  cl_assert(pbl_flash_otp_get_info(&s_nor_dual, &info) != 0 || info.n_regions == 0U);
+}
+
+void test_spi_nor__dual_id_mismatch(void) {
+  prv_reset(CHIP_GD25Q256E);
+  s_dual_id_mismatch = true;
+  prv_build_sfdp();
+
+  cl_assert_equal_i(pbl_device_init(&s_nor_dual.dev), -ENODEV);
+}
+
+// The bytes a write leaves out of its first and last pair stay erased
+void test_spi_nor__dual_unaligned(void) {
+  static const uint8_t data[] = {0xA1, 0xB2, 0xC3, 0xD4, 0xE5};
+  static const uint8_t expected[] = {0xFF, 0xFF, 0xFF, 0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xFF, 0xFF};
+  uint8_t buf[sizeof(expected)];
+  const struct pbl_flash *flash;
+
+  prv_reset(CHIP_GD25Q256E);
+  flash = prv_init(&s_nor_dual);
+
+  cl_assert_equal_i(pbl_flash_write(flash, 3U, data, sizeof(data)), 0);
+  cl_assert_equal_i(pbl_flash_read(flash, 0U, buf, sizeof(buf)), 0);
+  cl_assert_equal_i(memcmp(buf, expected, sizeof(buf)), 0);
+
+  cl_assert_equal_i(pbl_flash_read(flash, 4U, buf, 3U), 0);
+  cl_assert_equal_i(memcmp(buf, &expected[4], 3U), 0);
+}
+
+void test_spi_nor__dual_erase(void) {
+  const uint8_t data[2] = {0x12, 0x34};
+  const struct pbl_flash *flash;
+  uint32_t unit;
+
+  prv_reset(CHIP_GD25Q256E);
+  flash = prv_init(&s_nor_dual);
+  unit = pbl_flash_get_geometry(flash)->subsector_size;
+
+  cl_assert_equal_i(pbl_flash_write(flash, unit - 2U, data, sizeof(data)), 0);
+  cl_assert_equal_i(pbl_flash_write(flash, unit, data, sizeof(data)), 0);
+  cl_assert_equal_i(pbl_flash_erase(flash, 0U, unit), 0);
+
+  cl_assert(pbl_flash_is_erased(flash, 0U, unit));
+  cl_assert(!pbl_flash_is_erased(flash, unit, sizeof(data)));
 }
