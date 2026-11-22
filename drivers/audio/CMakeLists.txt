@@ -4,7 +4,7 @@
 pbl_library()
 pbl_library_sources(audio.c)
 pbl_library_sources_ifdef(CONFIG_AUDIO_AMP_GPIO amp_gpio.c)
-pbl_library_sources_ifdef(CONFIG_AUDIO_SF32LB52_AUDCODEC sf32lb52_audcodec.c)
+pbl_library_sources_ifdef(CONFIG_AUDIO_SF32LB_AUDCODEC sf32lb_audcodec.c)
 pbl_library_sources_ifdef(CONFIG_AUDIO_SF32LB52_PDM sf32lb52_pdm.c)
 pbl_library_sources_ifdef(CONFIG_AUDIO_QEMU qemu.c)
 pbl_library_sources_ifdef(CONFIG_AUDIO_SIM_MIC sim_mic.c)

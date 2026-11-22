@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: sifli,sf32lb52-audcodec
-config: AUDIO_SF32LB52_AUDCODEC
+config: AUDIO_SF32LB_AUDCODEC
 class: dai
-define: PBL_AUDIO_SF32LB52_AUDCODEC_DEFINE
+define: PBL_AUDIO_SF32LB_AUDCODEC_DEFINE
 args:
   - name: true
   - reg: 0
