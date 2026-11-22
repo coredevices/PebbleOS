@@ -1654,18 +1654,22 @@ ROLES_SOURCE = "devicetree/roles.c"
 ROLES_FILE = "roles.yml"
 
 
-def role_files(srcdir, board, revision, appdir=None, addons=()):
-    """The roles files of the board, its revision, its add-ons and the application, in the order
-    they apply."""
+def role_files(srcdir, board, revision, appdir=None, addons=(), variant=None):
+    """The roles files of the board, its revision, its core or variant, its add-ons and the
+    application, in the order they apply."""
     paths = [Path(srcdir) / "boards" / board / ROLES_FILE]
     if revision:
         paths.append(Path(srcdir) / "boards" / board / f"roles.{revision}.yml")
+    if variant:
+        paths.append(Path(srcdir) / "boards" / board / f"roles.{variant}.yml")
     paths += [addon_dir(srcdir, addon) / ROLES_FILE for addon in addons]
     if appdir is not None:
         paths += [
             Path(appdir) / ROLES_FILE,
             Path(appdir) / "boards" / f"{board}.{ROLES_FILE}",
         ]
+        if variant:
+            paths.append(Path(appdir) / "boards" / f"{board}_{variant}.{ROLES_FILE}")
     return paths
 
 
@@ -1754,9 +1758,17 @@ def write_if_changed(path, content):
     path.write_bytes(content)
 
 
-def find_dts(srcdir, board, revision):
+def find_dts(srcdir, board, revision, variant=None):
+    """The tree of the board: of its revision and core or variant, of either, or the board's."""
     directory = Path(srcdir) / "boards" / board
-    names = ([f"{board}_{revision}.dts"] if revision else []) + [f"{board}.dts"]
+    names = []
+    if revision and variant:
+        names.append(f"{board}_{revision}_{variant}.dts")
+    if variant:
+        names.append(f"{board}_{variant}.dts")
+    if revision:
+        names.append(f"{board}_{revision}.dts")
+    names.append(f"{board}.dts")
     return next(
         (directory / name for name in names if (directory / name).exists()), None
     )
@@ -1805,8 +1817,9 @@ def addon_connectors(srcdir, addon):
     return connectors
 
 
-def addon_overlays(srcdir, board, addons):
-    """The devicetree overlays of the add-ons, each followed by the one for the board."""
+def addon_overlays(srcdir, board, addons, variant=None):
+    """The devicetree overlays of the add-ons, each followed by those for the board and its core
+    or variant."""
     paths = []
     for addon in addons:
         directory = addon_dir(srcdir, addon)
@@ -1814,6 +1827,8 @@ def addon_overlays(srcdir, board, addons):
             directory / f"{addon}.overlay",
             directory / "boards" / f"{board}.overlay",
         ]
+        if variant:
+            paths.append(directory / "boards" / f"{board}_{variant}.overlay")
     return paths
 
 
@@ -1828,11 +1843,14 @@ def missing_connectors(tree, srcdir, addons):
     return missing
 
 
-def overlay_files(board, appdir):
+def overlay_files(board, appdir, variant=None):
     """The devicetree overlays of the application, in the order they apply."""
     if appdir is None:
         return []
-    return [Path(appdir) / "app.overlay", Path(appdir) / "boards" / f"{board}.overlay"]
+    paths = [Path(appdir) / "app.overlay", Path(appdir) / "boards" / f"{board}.overlay"]
+    if variant:
+        paths.append(Path(appdir) / "boards" / f"{board}_{variant}.overlay")
+    return paths
 
 
 def compile_dts(dts, cc, include_dirs, outdir, overlays=()):
@@ -1932,7 +1950,9 @@ def kconfig_text(tree, compatibles):
     return "\n".join(lines) + "\n"
 
 
-def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
+def configure(
+    srcdir, builddir, board, revision, cc, appdir=None, addons=(), variant=None
+):
     """Prepare what Kconfig needs.
 
     Writes Kconfig.dt. Returns the dtb or None, the files generated from it, and what it all depends on.
@@ -1946,13 +1966,13 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
         {src for group in specs.values() for spec in group for src in spec.sources}
     )
     tree, dtb = None, None
-    dts = find_dts(srcdir, board, revision)
+    dts = find_dts(srcdir, board, revision, variant)
     deps += [str(addon_dir(srcdir, addon) / ADDON_FILE) for addon in addons]
     overlays = [
         path
         for path in [
-            *addon_overlays(srcdir, board, addons),
-            *overlay_files(board, appdir),
+            *addon_overlays(srcdir, board, addons, variant),
+            *overlay_files(board, appdir, variant),
         ]
         if path.exists()
     ]
@@ -1979,7 +1999,7 @@ def configure(srcdir, builddir, board, revision, cc, appdir=None, addons=()):
     kconfig = outdir / "Kconfig.dt"
     compatibles = kconfig_compatibles(specs, regs_compatibles(srcdir, appdir))
     write_if_changed(kconfig, kconfig_text(tree, compatibles).encode())
-    paths = role_files(srcdir, board, revision, appdir, addons)
+    paths = role_files(srcdir, board, revision, appdir, addons, variant)
     deps += [str(path) for path in paths if path.exists()]
     roles = merge_roles(paths)
     write_if_changed(

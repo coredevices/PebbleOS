@@ -103,11 +103,14 @@ on top of the board's defconfig (see {doc}`kconfig`):
 | `prj_<variant>.conf` | What a variant (`--variant`) adds |
 | `boards/<board>.conf` | What it enables or tunes on one board |
 | `boards/<board>_<variant>.conf` | The same, for one variant only |
+| `boards/<board>_<core>.conf` | The same, for one core of the board, or one board variant |
 | `Kconfig` | The application's own options |
 | `roles.yml` | The device of each role, over the board's; see {ref}`devicetree-roles` |
 | `boards/<board>.roles.yml` | The same, on one board |
+| `boards/<board>_<core>.roles.yml` | The same, on one core of the board |
 | `app.overlay` | Changes to the board's devicetree; see {ref}`devicetree-overlays` |
 | `boards/<board>.overlay` | The same, on one board |
+| `boards/<board>_<core>.overlay` | The same, on one core of the board |
 
 An application with a `Kconfig` makes it the root of the configuration
 tree: it defines its options and sources PebbleOS's with

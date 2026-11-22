@@ -105,6 +105,15 @@ def load_variants(board_dir, board):
     return _validate_string_list(manifest, data, "variants")
 
 
+def load_cores(board_dir, board):
+    """The cores of a multi-core board, each built for on its own as ``board/core``."""
+    manifest, data = _load_manifest(board_dir, board)
+    if manifest is None:
+        return []
+
+    return _validate_string_list(manifest, data, "cores")
+
+
 def load_runners(board_dir, board):
     manifest, data = _load_manifest(board_dir, board)
     if manifest is None:
@@ -139,8 +148,12 @@ def available_boards(srcdir):
             continue
 
         revisions = load_revisions(board_dir, board)
+        cores = load_cores(board_dir, board)
         targets = [f"{board}@{revision}" for revision in revisions] or [board]
         for target in targets:
+            if cores:
+                choices.extend(f"{target}/{core}" for core in cores)
+                continue
             choices.append(target)
             choices.extend(
                 f"{target}/{variant}" for variant in load_variants(board_dir, board)
@@ -185,7 +198,18 @@ def parse_board(srcdir, target):
     elif revision is not None:
         raise ValueError(f"Board '{board}' does not define revisions")
 
-    if variant is not None:
+    cores = load_cores(board_dir, board)
+    if cores:
+        if variant is None:
+            raise ValueError(
+                f"Board '{board}' requires a core: "
+                f"{', '.join(f'{board}/{c}' for c in cores)}"
+            )
+        if variant not in cores:
+            raise ValueError(
+                f"Unknown core '{variant}' for board '{board}': {', '.join(cores)}"
+            )
+    elif variant is not None:
         variants = load_variants(board_dir, board)
         if variant not in variants:
             raise ValueError(

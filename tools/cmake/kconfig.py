@@ -136,10 +136,18 @@ def main():
     # only the active board's Kconfig via `rsource "boards/$(BOARD)/..."`.
     os.environ["BOARD"] = board.name
     os.environ["BOARD_REVISION"] = board.revision or boards.NO_REVISION
+    os.environ["BOARD_VARIANT"] = board.variant or boards.NO_REVISION
 
     try:
         dtb, dt_outputs, dt_deps = dtmap.configure(
-            srcdir, builddir, board.name, board.revision, args.cc, appdir, args.addon
+            srcdir,
+            builddir,
+            board.name,
+            board.revision,
+            args.cc,
+            appdir,
+            args.addon,
+            variant=board.variant,
         )
     except DtError as e:
         sys.exit(f"devicetree: {e}")
@@ -173,14 +181,17 @@ def main():
             kconf.load_config(board_variant_defconfig, replace=False)
             sources.append(board_variant_defconfig)
 
-    # The application's settings: for every board, then for this one, each
-    # followed by what the variant being built adds.
-    for name in (
+    # The application's settings: for every board, then for this one and its
+    # core or variant, each followed by what the variant being built adds.
+    names = [
         "prj.conf",
         f"prj_{args.variant}.conf",
         os.path.join("boards", f"{board.name}.conf"),
         os.path.join("boards", f"{board.name}_{args.variant}.conf"),
-    ):
+    ]
+    if board.variant:
+        names.append(os.path.join("boards", f"{board.name}_{board.variant}.conf"))
+    for name in names:
         app_conf = os.path.join(appdir, name)
         if os.path.exists(app_conf):
             kconf.load_config(app_conf, replace=False)

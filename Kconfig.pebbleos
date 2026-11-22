@@ -156,11 +156,14 @@ config BOARD_PARTITIONS_SINGLE_SLOT
       The board uses the flash partitions of include/pbl/board/partitions_single_slot.h.
 
 # Source the active board's Kconfig and its per-board defaults; kconfig.py
-# exports $(BOARD) and $(BOARD_REVISION) from the --board argument.
+# exports $(BOARD), $(BOARD_REVISION) and $(BOARD_VARIANT), the core or
+# variant, from the --board argument.
 rsource "boards/$(BOARD)/Kconfig"
 osource "boards/$(BOARD)/Kconfig.$(BOARD_REVISION)"
+osource "boards/$(BOARD)/Kconfig.$(BOARD_VARIANT)"
 osource "boards/$(BOARD)/Kconfig.defconfig"
 osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_REVISION)"
+osource "boards/$(BOARD)/Kconfig.defconfig.$(BOARD_VARIANT)"
 
 config BOARD
     string
