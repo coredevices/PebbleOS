@@ -34,6 +34,15 @@
 		};
 	};
 
+	m4: remoteproc {
+		compatible = "st,stm32h747-m4";
+		st,syscfg-holdboot = <&rcc 0xa0 0x8>;
+		st,syscfg-boot-address = <&flash 0x48 0xffff>;
+		mboxes = <&hsem 0>;
+		mbox-names = "shutdown";
+		status = "disabled";
+	};
+
 	soc {
 		pwr: power-config@58024800 {
 			compatible = "st,stm32h747-pwr";

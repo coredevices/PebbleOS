@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/remoteproc/st,stm32h747-m4.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: STMicroelectronics STM32H747 Cortex-M4
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  The Cortex-M4 of a dual-core STM32H7, which runs its own firmware from the
+  flash. It waits until the Cortex-M7 lets it boot, and the Cortex-M7 tells
+  it before powering the system off.
+
+properties:
+  compatible:
+    const: st,stm32h747-m4
+
+  st,syscfg-holdboot:
+    description: Lets the Cortex-M4 boot once set.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    items:
+      - items:
+          - description: Phandle of syscon block
+          - description: The offset of the hold boot setting register
+          - description: The field mask of the hold boot
+
+  st,syscfg-boot-address:
+    description:
+      Option bytes holding bits 31:16 of the address the Cortex-M4 boots from.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    items:
+      - items:
+          - description: Phandle of the flash controller
+          - description: The offset of the boot address register
+          - description: The field mask of the boot address
+
+  mboxes:
+    items:
+      - description:
+          Tells the Cortex-M4 that the system is about to be powered off;
+          its acknowledgement means it is powering off.
+
+  mbox-names:
+    items:
+      - const: shutdown
+
+  st,auto-boot:
+    $ref: /schemas/types.yaml#/definitions/flag
+    description: Boot the Cortex-M4 at startup, when its flash holds an image.
+
+required:
+  - compatible
+  - st,syscfg-holdboot
+  - st,syscfg-boot-address
+
+additionalProperties: false
+
+examples:
+  - |
+    remoteproc {
+        compatible = "st,stm32h747-m4";
+        st,syscfg-holdboot = <&rcc 0xa0 0x8>;
+        st,syscfg-boot-address = <&flash 0x48 0xffff>;
+        mboxes = <&hsem 0>;
+        mbox-names = "shutdown";
+        st,auto-boot;
+    };
