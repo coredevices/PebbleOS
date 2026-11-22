@@ -512,10 +512,13 @@ args:
 | `pinctrl` | For pin controllers: how pins and their configuration become C. `pin` formats each of `pins` with `{pin}` and `{function}`, `pinmux` each cell of `pinmux` with `{value}`; `flags` and `values` add the C of the configuration properties |
 | `children` | For devices made of children, each an instance: those named in `names`, such as the regulators of a PMIC, or those with the property `property`, such as the ports of a pin controller, under the node or under its child `node` |
 | `drives` | Compatibles of the child a node must have for the driver to bind to it, for a controller with a driver per kind of memory it can drive |
+| `masters` | Compatibles of the controller in `dma-masters` a node must have for the driver to bind to it, for a DMA request router with a driver per kind of controller behind it |
 
 Several drivers may bind to one compatible, each with its own spec, class and
 instance file `<compatible>_<class>.inc`, as the clock and the reset drivers
-of a clock controller that also resets. The instance file of a spec with
+of a clock controller that also resets. Drivers of the same class may share a
+compatible when their `masters` tell the nodes apart, each with the instance
+file `<compatible>_<class>_<master>.inc`. The instance file of a spec with
 several compatibles is named after the first.
 
 An argument takes its value from one place:
