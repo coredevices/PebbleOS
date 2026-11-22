@@ -26,9 +26,10 @@ timer.
 - **External RAM**: 32 MiB ISSI IS42S32800J SDRAM, 32 bits wide, on FMC SDRAM
   bank 2 at 100 MHz, swapped to 0x70000000, where the CPU caches it; it is
   the `extram`
-- **External flash**: two 64 MiB Micron MT25QL512ABB quad-SPI NOR flashes on
-  the QUADSPI banks; PebbleOS uses the one on bank 1 as its `flash`, with
-  quad I/O at 50 MHz
+- **External flash**: two 64 MiB Micron MT25QL512ABB quad-SPI NOR flashes,
+  one on each QUADSPI bank, which share the chip select: they work as one
+  128 MiB flash in dual-flash mode, each holding every other byte, with quad
+  I/O at 50 MHz; it is the `flash`
 - **Display**: the MB1166 module, a 4" 480x800 Orise Tech OTM8009A panel on
   two MIPI DSI lanes at 500 Mbit/s, in command mode; the LTDC sends an
   800x480 RGB565 frame to the frame memory of the panel in two halves timed

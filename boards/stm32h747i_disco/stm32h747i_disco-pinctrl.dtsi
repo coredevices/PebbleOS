@@ -124,7 +124,11 @@
 				 <STM32_PINMUX('D', 11, AF9)>, /* QUADSPI_BK1_IO0 */
 				 <STM32_PINMUX('F', 9, AF10)>, /* QUADSPI_BK1_IO1 */
 				 <STM32_PINMUX('F', 7, AF9)>, /* QUADSPI_BK1_IO2 */
-				 <STM32_PINMUX('F', 6, AF9)>; /* QUADSPI_BK1_IO3 */
+				 <STM32_PINMUX('F', 6, AF9)>, /* QUADSPI_BK1_IO3 */
+				 <STM32_PINMUX('H', 2, AF9)>, /* QUADSPI_BK2_IO0 */
+				 <STM32_PINMUX('H', 3, AF9)>, /* QUADSPI_BK2_IO1 */
+				 <STM32_PINMUX('G', 9, AF9)>, /* QUADSPI_BK2_IO2 */
+				 <STM32_PINMUX('G', 14, AF9)>; /* QUADSPI_BK2_IO3 */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <3>;
