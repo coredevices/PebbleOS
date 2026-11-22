@@ -124,7 +124,6 @@ may be repeated:
 | `serial:TTY[@BAUD]`         | yes    | yes      | yes (in frames) |
 | `ble:WATCH[@CONTROLLER]`    | no     | no       | yes             |
 | `devconn:HOST[:PORT]`       | no     | app only | yes             |
-| `qemu:HOST:PORT`            | no     | no       | yes             |
 
 For example, a watch over Bluetooth through the phone app's developer
 connection, with logs and the prompt over serial:

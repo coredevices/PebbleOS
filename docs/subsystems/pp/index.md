@@ -52,20 +52,17 @@ flowchart TB
     gatt["GATT<br/>(PPoGATT)"]
     console["Console"]
   end
-  qemu["QEMU<br/>(firmware)"]
   users --> core
   core --> transports
-  core --> qemu
   gatt --- ble["Kernel LE client"]
   console --- cons["Console frames"]
-  qemu --- qser["QEMU serial"]
 
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
   classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
   classDef base fill:#525252,stroke:#525252,color:#ffffff
   class pb,blob,music,more app
   class rx,tx,sess system
-  class gatt,console,qemu,ble,cons,qser base
+  class gatt,console,ble,cons base
 ```
 
 - Endpoints and senders use sessions and know nothing about transports.

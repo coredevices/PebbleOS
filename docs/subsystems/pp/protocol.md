@@ -93,8 +93,8 @@ the kernel heap is short, are dropped without a response.
 As soon as a session opens, the watch asks the phone for its version on the
 remote version endpoint, `0x0011`. The phone's answer sets the session's
 capabilities, which code checks before using features the phone may lack.
-Transports that know their peer up front, the console and QEMU, set
-capabilities when they open the session, and the answer replaces them.
+A transport that knows its peer up front, the console, sets capabilities
+when it opens the session, and the answer replaces them.
 
 ```{mermaid}
 sequenceDiagram

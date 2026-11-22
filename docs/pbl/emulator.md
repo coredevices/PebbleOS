@@ -6,9 +6,12 @@ on a `native_*` one. Each action is a subcommand.
 
 On QEMU, screenshots go through the socket monitor and touches through the
 QMP socket, on the emulated touch controller's input path. The native
-simulator has neither: both go over its Pebble protocol port, to the
-firmware's screenshot and remote input endpoints. That port serves one
-client at a time, so they fail there while a feed holds it.
+simulator has neither: both go over the Pebble protocol, in a session on its
+console port, to the firmware's screenshot and remote input endpoints. That
+port serves one client at a time, so they fail there while a feed holds it.
+
+Feeds open their session on the console port too, on both. On QEMU that is
+the port {doc}`console` attaches to, so a feed needs it detached.
 
 ## Screenshots
 
@@ -53,8 +56,9 @@ pbl emulator mic --file speech.wav --loop
 pbl emulator mic --live                       # needs the sounddevice package
 ```
 
-The audio goes over the Pebble protocol port, which serves one host client
-at a time: it cannot play while a feed or the `pebble` tool is connected.
+The audio goes over the port of the serial protocol that drives the emulated
+hardware, which serves one host client at a time: it cannot play while the
+`pebble` tool is connected.
 
 ```{pbl-command} emulator mic
 ```

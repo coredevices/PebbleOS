@@ -248,14 +248,7 @@ class QemuAdapter(DeviceAdapter):
         )
         from libpebble2.communication.transports.qemu.protocol import QemuBattery
 
-        from harness.connections.qemu import QemuProtocolConnection
-
         packet = QemuBattery(percent=percent, charging=charging)
-        for connection in self.connections:
-            if isinstance(connection, QemuProtocolConnection):
-                connection.send_to_qemu(packet)
-                return
-        # The port serves one client at a time; nothing holds it.
         transport = QemuTransport("127.0.0.1", self.pebble_port)
         transport.connect()
         try:
