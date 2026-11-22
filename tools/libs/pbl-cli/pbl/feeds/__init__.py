@@ -35,6 +35,7 @@ class BlobDb(IntEnum):
     HEALTH = 0x0A
     APP_GLANCE = 0x0B
     SETTINGS = 0x0C
+    CHAT = 0x0D
 
 
 class _RawKey:
