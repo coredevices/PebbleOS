@@ -23,7 +23,7 @@ if AUDIO
 config AUDIO_AMP_GPIO
     bool "GPIO amplifier"
     default y
-    depends on DT_HAS_AWINIC_AW8155_ENABLED
+    depends on DT_HAS_AWINIC_AW8155_ENABLED || DT_HAS_SIMPLE_AUDIO_AMPLIFIER_ENABLED
     select GPIO
     select REGULATOR
     help

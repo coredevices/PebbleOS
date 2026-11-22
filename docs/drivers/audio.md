@@ -20,6 +20,7 @@ devicetree.
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
 | GPIO amplifier | `awinic,aw8155` | `CONFIG_AUDIO_AMP_GPIO` |
+| GPIO amplifier | `simple-audio-amplifier` | `CONFIG_AUDIO_AMP_GPIO` |
 | SiFli SF32LB52 audio codec | `sifli,sf32lb52-audcodec` | `CONFIG_AUDIO_SF32LB_AUDCODEC` |
 | SiFli SF32LB57 audio codec | `sifli,sf32lb57-audcodec` | `CONFIG_AUDIO_SF32LB_AUDCODEC` |
 | SiFli SF32LB52 PDM | `sifli,sf32lb52-pdm` | `CONFIG_AUDIO_SF32LB52_PDM` |

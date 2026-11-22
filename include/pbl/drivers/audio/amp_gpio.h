@@ -16,7 +16,8 @@
  *
  * Some class-D amplifiers select their mode from the number of pulses on the enable line before
  * it stays active: the driver sends @c mode_pulses pulses of @c pulse_us high and low first, with
- * interrupts locked, so the line has to be a GPIO of the SoC, not one behind a bus.
+ * interrupts locked, so the line has to be a GPIO of the SoC, not one behind a bus, unless there
+ * are no mode pulses.
  *
  * @code{.c}
  * PBL_AUDIO_AMP_GPIO_DEFINE(s_amp, "amp", PBL_GPIO(&dt_gpio1, 0, 0), nullptr,
@@ -61,6 +62,22 @@ int pbl_audio_amp_gpio_init(const struct pbl_device *dev);
     .amp =                                                                                         \
         PBL_AUDIO_AMP_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, &pbl_audio_amp_gpio_ops), \
     .enable = _enable, .supply = (_supply), __VA_ARGS__                                            \
+  }
+
+/**
+ * @brief Define an amplifier switched by its enable line alone.
+ *
+ * @param sym Symbol of the amplifier.
+ * @param _name Device name.
+ * @param _enable Enable line, from PBL_GPIO().
+ * @param _supply Supply, or NULL.
+ */
+#define PBL_AUDIO_SIMPLE_AMP_DEFINE(sym, _name, _enable, _supply)                                  \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                                    \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_amp_gpio, struct pbl_audio_amp, amp) {                 \
+    .amp =                                                                                         \
+        PBL_AUDIO_AMP_INIT(sym, _name, pbl_audio_amp_gpio_init, nullptr, &pbl_audio_amp_gpio_ops), \
+    .enable = _enable, .supply = (_supply),                                                        \
   }
 
 /**
