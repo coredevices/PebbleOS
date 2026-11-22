@@ -22,3 +22,28 @@ int pbl_rtc_set_time(const struct pbl_rtc *rtc, time_t t) {
 
   return rtc->ops->set_time(rtc, t);
 }
+
+int pbl_rtc_set_alarm(const struct pbl_rtc *rtc, time_t t, pbl_rtc_alarm_callback_t cb,
+                      void *user_data) {
+  if (!pbl_device_is_ready(&rtc->dev)) {
+    return -ENODEV;
+  }
+
+  if (rtc->ops->set_alarm == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return rtc->ops->set_alarm(rtc, t, cb, user_data);
+}
+
+int pbl_rtc_cancel_alarm(const struct pbl_rtc *rtc) {
+  if (!pbl_device_is_ready(&rtc->dev)) {
+    return -ENODEV;
+  }
+
+  if (rtc->ops->cancel_alarm == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return rtc->ops->cancel_alarm(rtc);
+}
