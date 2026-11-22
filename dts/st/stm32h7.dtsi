@@ -567,6 +567,14 @@
 			status = "disabled";
 		};
 
+		hsem: hwspinlock@58026400 {
+			compatible = "st,stm32-hwspinlock";
+			reg = <0x58026400 0x400>;
+			#hwlock-cells = <1>;
+			clocks = <&rcc HSEM_CK>;
+			clock-names = "hsem";
+		};
+
 		adc_3: adc@58026000 {
 			compatible = "st,stm32h7-adc-core";
 			reg = <0x58026000 0x400>;
