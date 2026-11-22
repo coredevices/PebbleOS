@@ -52,6 +52,26 @@ def test_entry_without_revision_names_every_revision():
     assert not sample("a", ["obelix@pvt"]).integrates("obelix@dvt")
 
 
+def test_integration_entry_without_core_stands_for_each_core():
+    found = [sample("a", ["disco", "qemu_emery"]), sample("b", ["disco/m7"])]
+    pairs = samples.plan(
+        found, integration=True, cores=lambda n: ["m4", "m7"] if n == "disco" else []
+    )
+    assert [(board, s.name) for board, s in pairs] == [
+        ("disco/m4", "a"),
+        ("disco/m7", "a"),
+        ("disco/m7", "b"),
+        ("qemu_emery", "a"),
+    ]
+
+
+def test_entry_without_core_names_every_core():
+    assert sample("a", ["disco"]).integrates("disco/m4")
+    assert sample("a", ["disco/m7"]).integrates("disco/m7")
+    assert not sample("a", ["disco/m7"]).integrates("disco/m4")
+    assert not sample("a", ["disco/m7"]).integrates("disco")
+
+
 def test_without_integration_every_sample_is_for_the_board(found):
     pairs = samples.plan(found, "asterix")
     assert [(board, s.name) for board, s in pairs] == [

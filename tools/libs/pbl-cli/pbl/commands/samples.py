@@ -86,7 +86,7 @@ class Samples(PblCommand):
         if board is None and not args.integration:
             board = DEFAULT_BOARD
         try:
-            pairs = samples.plan(found, board, args.integration)
+            pairs = samples.plan(found, board, args.integration, self._cores)
         except samples.SampleError as e:
             self.die(str(e))
 
@@ -118,7 +118,9 @@ class Samples(PblCommand):
                 outcome = "skipped"
             else:
                 build_dir = os.path.join(
-                    base, target.replace("@", "_"), *sample.name.split(os.sep)
+                    base,
+                    target.replace("@", "_").replace("/", "_"),
+                    *sample.name.split(os.sep),
                 )
                 start = time.monotonic()
                 outcome = self._one(sample, target, build_dir, args)
@@ -142,6 +144,11 @@ class Samples(PblCommand):
         if failed:
             self.inf(f"failed: {', '.join(failed)}", color="red")
         return 1 if failed else 0
+
+    def _cores(self, name):
+        from tools import boards
+
+        return boards.load_cores(os.path.join(self.topdir, "boards", name), name)
 
     def _skip_reason(self, sample, board):
         if not sample.supports(board):
