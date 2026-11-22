@@ -114,4 +114,13 @@ LPTIM2 and has LD2, the orange LED. Its console is UART8, at 1 Mbaud, on D1
 A Cortex-M4 that runs keeps the whole system out of Stop mode, and an erased
 bank 2 with BCM4 set leaves it locked up. With nothing else to do, flash it an
 application that idles, as `samples/kernel/idle`: its idle thread keeps it in
-Stop, as power-off needs for its domain, D2, to reach Standby.
+Stop.
+
+Power-off is the Cortex-M7's, and takes the Cortex-M4 with it: the Cortex-M7
+releases hardware semaphore 0, on which the Cortex-M4 runs its own power-off,
+and waits until the Cortex-M4 takes semaphore 1 before entering Standby. The
+whole system then reaches Standby, every domain with it.
+
+Debuggers turn on low-power debug in DBGMCU_CR when they attach, which keeps
+the domains powered in Standby until the next power-on reset: power the kit
+off and on after flashing to measure power-off.

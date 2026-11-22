@@ -12,6 +12,7 @@ config SOC_STM32H7
     select CPU_HAS_FPU
     select PINCTRL
     select SOC_HAS_IDLE_STATES
+    select SOC_HAS_POWER_OFF
     select TIMER_STM32_TIM if !DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
     select TIMER_STM32_LPTIM if DT_HAS_ST_STM32_LPTIMER_TIMER_ENABLED
     help
@@ -23,7 +24,6 @@ config SOC_STM32H7_CM7
     select CPU_HAS_FPU_DOUBLE
     select CPU_HAS_ICACHE
     select CPU_HAS_DCACHE
-    select SOC_HAS_POWER_OFF
     help
       The Cortex-M7 of an STM32H7, the core of the single-core parts and
       CPU1 of the dual-core ones, which sets up the clocks and powers the
@@ -32,10 +32,12 @@ config SOC_STM32H7_CM7
 config SOC_STM32H7_CM4
     bool
     select CPU_CORTEX_M4
+    select RAMFUNC
     help
       The Cortex-M4 of a dual-core STM32H7, CPU2, which runs once the
       Cortex-M7 has set up the clocks and starts it, and leaves the clock
-      tree and the supply to it.
+      tree and the supply to it. It powers off when the Cortex-M7 does,
+      which tells it through a hardware semaphore.
 
 config SOC_STM32H7_CM4_OFFSET
     hex
