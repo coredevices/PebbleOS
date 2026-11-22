@@ -21,6 +21,7 @@
 #define QUADSPI_CR_EN             PBL_BIT(0)
 #define QUADSPI_CR_ABORT          PBL_BIT(1)
 #define QUADSPI_CR_SSHIFT         PBL_BIT(4)
+#define QUADSPI_CR_DFM            PBL_BIT(6)
 #define QUADSPI_CR_FTHRES_MASK    PBL_GENMASK(12, 8)
 #define QUADSPI_CR_PRESCALER_MASK PBL_GENMASK(31, 24)
 
