@@ -30,6 +30,16 @@ config TEMP_SF32LB
     help
       Support for the SiFli SF32LB temperature sensor.
 
+config TEMP_STM32H7_ADC
+    bool "STM32H7 temperature sensor"
+    default y
+    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
+    select ADC
+    select NVMEM
+    help
+      The temperature sensor on ADC3 of the STM32H7, read against VREFINT
+      with its factory calibration.
+
 config TEMP_SIM
     bool "Simulator"
     default y
