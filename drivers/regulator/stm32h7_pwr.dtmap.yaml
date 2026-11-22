@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h747-pwr
+config: REGULATOR_STM32H7_PWR
+class: regulator
+define: PBL_REGULATOR_STM32H7_PWR_DEFINE
+children:
+  names:
+    usb33: 0
+args:
+  - string: regulator-name
+  - reg: 0
+    up: true
+  - id: true
+  - flag: regulator-always-on

@@ -38,6 +38,10 @@
 		pwr: power-config@58024800 {
 			compatible = "st,stm32h747-pwr";
 			reg = <0x58024800 0x400>;
+
+			usb33: usb33 {
+				regulator-name = "usb33";
+			};
 		};
 	};
 };
