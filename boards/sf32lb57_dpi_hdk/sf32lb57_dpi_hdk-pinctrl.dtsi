@@ -2,6 +2,18 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
 &pinctrl {
+	usbc_default: usbc-default-state {
+		dp-pins {
+			pins = "PA35";
+			function = "usb_dp";
+		};
+
+		dm-pins {
+			pins = "PA36";
+			function = "usb_dm";
+		};
+	};
+
 	usart1_default: usart1-default-state {
 		tx-pins {
 			pins = "PA19";

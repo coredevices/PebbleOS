@@ -90,6 +90,13 @@ lcd_qspi_i2c: &i2c1 {
 	pinctrl-names = "default";
 };
 
+&usbc {
+	pinctrl-0 = <&usbc_default>;
+	pinctrl-names = "default";
+	dr_mode = "peripheral";
+	status = "okay";
+};
+
 &lptim1 {
 	status = "okay";
 };
