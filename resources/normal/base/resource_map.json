@@ -2664,11 +2664,6 @@
     },
     {
       "type": "png",
-      "name": "CHAT_MENU_ICON",
-      "file": "normal/base/images/chat_menu_icon.png"
-    },
-    {
-      "type": "png",
       "name": "CHAT_WALLPAPER",
       "file": "normal/base/images/chat_wallpaper.png"
     },

@@ -20,6 +20,16 @@ void chat_ds_deinit(void);
 //! chat list is in. Implemented by chat_ui.c.
 void chat_ui_open_chat(const char *chat_id);
 
+//! Whether the app was opened for a chat; the UI then keeps the chat list hidden until it opens.
+bool chat_ds_has_launch_hint(void);
+
+//! The chat picture size the UI draws (square, in pixels), or 0 when pictures are off.
+//! Implemented by chat_ui.c.
+int chat_ui_avatar_size(void);
+
+//! Whether the UI already holds chat_id's picture. Implemented by chat_ui.c.
+bool chat_ui_has_avatar(const char *chat_id);
+
 AppMessageResult chat_am_open(uint32_t size_inbound, uint32_t size_outbound);
 AppMessageResult chat_am_outbox_begin(DictionaryIterator **iterator);
 AppMessageResult chat_am_outbox_send(void);

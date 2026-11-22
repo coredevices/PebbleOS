@@ -633,6 +633,7 @@ static void mask_avatar_corners(GContext *ctx, GPoint center, int radius, GColor
 static void render_messages(void);
 static void preserve_stream_anchor(const char *anchor_id, int anchor_y, bool dirty);
 static void show_chat_view_timer(void *data);
+static bool s_open_chat_instantly;
 static void message_timeout_timer_callback(void *data);
 static void cancel_message_timeout(void);
 static void cancel_message_retry(void);
@@ -958,19 +959,30 @@ static GRect round_clamp(GRect r, int inset) {
   return GRect(x, r.origin.y, PG_MAX(0, PG_MIN(r.origin.x + r.size.w, right) - x), r.size.h);
 }
 
-// graphics_fill_rect with rounded corners, kept inside the circle: drawn in 2px
-// bands that follow the bezel, so a bubble shortens smoothly as it scrolls past.
-static void round_fill(GContext *ctx, GRect r, int radius, int inset, GColor color) {
+// graphics_fill_rect with rounded corners, kept inside the circle: drawn a row at a
+// time, following the bezel, so a bubble shortens smoothly as it scrolls past. Row by row
+// also keeps the corners round when the chat warp renders a bubble across two strips (the
+// system's rounded rect squares off corners a clip edge cuts through).
+static void round_fill(GContext *ctx, GRect r, int radius, GCornerMask corners, int inset, GColor color) {
   graphics_context_set_fill_color(ctx, color);
-  for (int y = 0; y < r.size.h; y += 2) {
-    int h = PG_MIN(2, r.size.h - y);
+  for (int y = 0; y < r.size.h; y++) {
+    const int h = 1;
     int left;
     int right;
     round_span(r.origin.y + y, r.origin.y + y + h, inset, &left, &right);
+    const bool top = y < r.size.h - y - h;
     int edge = PG_MIN(y, r.size.h - y - h);
     int cut = edge < radius ? radius - round_isqrt(radius * radius - (radius - edge - 1) * (radius - edge - 1)) : 0;
-    left = PG_MAX(left, r.origin.x + cut);
-    right = PG_MIN(right, r.origin.x + r.size.w - cut);
+    if (corners & (top ? GCornerTopLeft : GCornerBottomLeft)) {
+      left = PG_MAX(left, r.origin.x + cut);
+    } else {
+      left = PG_MAX(left, r.origin.x);
+    }
+    if (corners & (top ? GCornerTopRight : GCornerBottomRight)) {
+      right = PG_MIN(right, r.origin.x + r.size.w - cut);
+    } else {
+      right = PG_MIN(right, r.origin.x + r.size.w);
+    }
     if (right > left) {
       graphics_fill_rect(ctx, GRect(left, r.origin.y + y, right - left, h), 0, GCornerNone);
     }
@@ -1814,6 +1826,11 @@ static void draw_beeper_mark(GContext *ctx, GPoint origin, int scale, GColor col
   #undef PB
 }
 
+// The mark is 127 x 160 units of scale / 40 px; centred on c.
+static void draw_beeper_mark_centered(GContext *ctx, GPoint c, int scale, GColor color, GColor fold) {
+  draw_beeper_mark(ctx, GPoint(c.x - (127 * scale) / 80, c.y - (160 * scale) / 80), scale, color, fold);
+}
+
 static void draw_back_chevron(GContext *ctx, GPoint center, GColor color) {
   graphics_context_set_stroke_color(ctx, color);
   graphics_context_set_stroke_width(ctx, 3);
@@ -2011,7 +2028,7 @@ static void header_update_proc(Layer *layer, GContext *ctx) {
     int tw = PG_MIN(avail, text_width(title, font));
     int x = (b.size.w - (tw + icon_w)) / 2;
     if (!chat) {
-      draw_beeper_mark(ctx, GPoint(x, title_y + 6), 4, on_header, TG_HEADER);
+      draw_beeper_mark_centered(ctx, GPoint(x + 6, title_y + (big ? 12 : 9)), big ? 4 : 3, on_header, TG_HEADER);
     }
     graphics_draw_text(ctx, title, font, GRect(x + icon_w, title_y, tw + 2, 22),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
@@ -2038,7 +2055,7 @@ static void header_update_proc(Layer *layer, GContext *ctx) {
       x += (r * 2) + 7;
     }
   } else {
-    draw_beeper_mark(ctx, GPoint(x, mid - 7), 4, on_header, TG_HEADER);
+    draw_beeper_mark_centered(ctx, GPoint(x + 6, subtitle ? mid - 5 : mid - 1), 4, on_header, TG_HEADER);
     x += 24;
   }
   int w = b.size.w - x - 4;
@@ -2162,8 +2179,7 @@ static void chat_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, 
                          GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     } else {
       int scale = (logo_r * 4) / 15;
-      draw_beeper_mark(ctx, GPoint(logo_c.x - (8 * scale) / 4 - 1, logo_c.y - (8 * scale) / 4 + 1),
-                       scale, GColorWhite, PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack));
+      draw_beeper_mark_centered(ctx, logo_c, scale, GColorWhite, PBL_IF_COLOR_ELSE(GColorVividCerulean, GColorBlack));
     }
     int text_y = top + logo_r * 2 + 4;
     const char *headline = s_loading_error ? "Login needs attention" :
@@ -2208,7 +2224,7 @@ static void chat_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, 
   if (selected) {
     graphics_context_set_fill_color(ctx, row_bg);
     if (ROUND_UI) {
-      round_fill(ctx, GRect(0, 1, bounds.size.w, bounds.size.h - 2), 6, 2, row_bg);
+      round_fill(ctx, GRect(0, 1, bounds.size.w, bounds.size.h - 2), 6, GCornersAll, 2, row_bg);
     } else {
       // Leave a 1px gap above the highlight and above the separator line.
       graphics_fill_rect(ctx, GRect(0, 1, bounds.size.w, bounds.size.h - 3), 0, GCornerNone);
@@ -5111,12 +5127,16 @@ static void draw_bubble_shape(GContext *ctx, GRect r, bool outgoing, bool tail, 
   if (tail) {
     corners &= outgoing ? ~GCornerBottomRight : ~GCornerBottomLeft;
   }
-  if (ROUND_UI && round_clamp(r, BUBBLE_INSET).size.w < r.size.w) {
-    round_fill(ctx, r, BUBBLE_R, BUBBLE_INSET, fill);  // at the bezel: follows the curve, no tail
-    return;
+  if (ROUND_UI) {
+    if (round_clamp(r, BUBBLE_INSET).size.w < r.size.w) {
+      round_fill(ctx, r, BUBBLE_R, GCornersAll, BUBBLE_INSET, fill);  // at the bezel: follows the curve, no tail
+      return;
+    }
+    round_fill(ctx, r, BUBBLE_R, corners, BUBBLE_INSET, fill);
+  } else {
+    graphics_context_set_fill_color(ctx, fill);
+    graphics_fill_rect(ctx, r, BUBBLE_R, corners);
   }
-  graphics_context_set_fill_color(ctx, fill);
-  graphics_fill_rect(ctx, r, BUBBLE_R, corners);
   if (tail) {
     int b = r.origin.y + r.size.h - 1;
     if (outgoing) {
@@ -5611,6 +5631,8 @@ static void animate_layer_frame(PropertyAnimation **animation_ref, Layer *layer,
 }
 
 static void show_chat_view(void) {
+  const bool instant = s_open_chat_instantly;
+  s_open_chat_instantly = false;
   s_chat_view_pending = false;
   s_view_state = ViewStateChat;
   window_set_click_config_provider(s_main_window, click_config_provider);
@@ -5622,7 +5644,7 @@ static void show_chat_view(void) {
   int content_y = chat_content_y();
   GRect messages_to = GRect(0, content_y, bounds.size.w, bounds.size.h - content_y);
   GRect messages_from = messages_to;
-  messages_from.origin.x = bounds.size.w;
+  messages_from.origin.x = instant ? 0 : bounds.size.w;
   s_messages_root = layer_create(messages_from);
   layer_set_update_proc(s_messages_root, messages_root_update_proc);
   layer_add_child(window_layer, s_messages_root);
@@ -5633,6 +5655,12 @@ static void show_chat_view(void) {
     s_chat_scroll_offset = clamp_scroll_offset(s_chat_content_height);
   }
   render_messages();
+  if (instant) {
+    if (s_chat_menu) {
+      layer_set_hidden(menu_layer_get_layer(s_chat_menu), true);
+    }
+    return;
+  }
   animate_layer_frame(&s_messages_animation, s_messages_root, messages_from, messages_to, NULL);
   if (s_chat_menu) {
     Layer *menu_layer = menu_layer_get_layer(s_chat_menu);
@@ -5819,6 +5847,18 @@ static bool send_pending_message_request(void) {
   return false;
 }
 
+// Opened from a notification, the list is hidden until the chat shows; if the chat can't load,
+// show the list after all instead of leaving the screen blank.
+static void reveal_hidden_chat_list(void) {
+  if (!s_open_chat_instantly) {
+    return;
+  }
+  s_open_chat_instantly = false;
+  if (s_chat_menu && s_view_state != ViewStateChat) {
+    layer_set_hidden(menu_layer_get_layer(s_chat_menu), false);
+  }
+}
+
 static void message_retry_timer_callback(void *data) {
   s_message_retry_timer = NULL;
   if (!s_loading_messages && !s_loading_older_messages && !s_loading_newer_messages) {
@@ -5836,6 +5876,7 @@ static void message_retry_timer_callback(void *data) {
     reset_message_stream_state();
     show_status(had_rows ? s_current_chat_title : "Messages failed");
     mark_messages_dirty();
+    reveal_hidden_chat_list();
     return;
   }
   s_message_request_attempts++;
@@ -5862,11 +5903,13 @@ static void message_timeout_timer_callback(void *data) {
     if (s_chat_menu) {
       menu_layer_reload_data(s_chat_menu);
     }
+    reveal_hidden_chat_list();
     return;
   }
   if (!s_loading_messages && !s_loading_older_messages && !s_loading_newer_messages) {
     return;
   }
+  reveal_hidden_chat_list();
   bool had_rows = s_message_count > 0;
   s_loading_messages = false;
   s_loading_older_messages = false;
@@ -6460,6 +6503,7 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
       s_chats_loading = true;
       show_loading_text(error ? error : "Login failed", true);
       show_status("Chat");
+      reveal_hidden_chat_list();
     } else {
       s_loading_messages = false;
       s_loading_older_messages = false;
@@ -8945,6 +8989,11 @@ static void main_window_load(Window *window) {
     .get_cell_height = chat_menu_get_cell_height_callback,
     .select_click = chat_menu_select_callback
   });
+  if (chat_ds_has_launch_hint()) {
+    // Opened for a chat: the list stays hidden until the chat shows, so it doesn't flash first
+    s_open_chat_instantly = true;
+    layer_set_hidden(menu_layer_get_layer(s_chat_menu), true);
+  }
   menu_layer_set_normal_colors(s_chat_menu, TG_LIST_BG, TG_TEXT);
   layer_add_child(window_layer, menu_layer_get_layer(s_chat_menu));
 }
@@ -9044,11 +9093,27 @@ static void deinit(void) {
 #endif
 }
 
+bool chat_ui_has_avatar(const char *chat_id) {
+  const int index = find_chat_index_by_id(chat_id);
+  return index >= 0 && s_chats[index].avatar_bitmap;
+}
+
+int chat_ui_avatar_size(void) {
+  return s_appearance.photos ? CHAT_AVATAR_R * 2 : 0;
+}
+
 void chat_ui_open_chat(const char *chat_id) {
   const int index = find_chat_index_by_id(chat_id);
   if (index < 0 || !s_chat_menu) {
+    // No such chat: show the list, kept hidden since launch
+    s_open_chat_instantly = false;
+    if (s_chat_menu) {
+      layer_set_hidden(menu_layer_get_layer(s_chat_menu), false);
+    }
     return;
   }
+  // Opened from a notification: show the chat straight away, not the list sliding to it
+  s_open_chat_instantly = true;
   MenuIndex cell = {.section = 0, .row = index};
   select_chat_row(index, false);
   chat_menu_select_callback(s_chat_menu, &cell, NULL);

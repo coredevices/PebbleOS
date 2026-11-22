@@ -27,6 +27,9 @@
 #include "chat_keys.h"
 
 #define MAX_CHATS 20
+#define AVATAR_REQUESTS MAX_CHATS  // every listed chat, as the watchapp got
+#define AVATAR_FIRST_DELAY_MS 500  // after the chat a notification opened has been asked for
+#define AVATAR_GAP_MS 250
 #define MAX_ROWS 32
 #define WINDOW_ROWS 9
 #define OUT_SIZE 700
@@ -78,6 +81,14 @@ static struct {
   int transfer_seq;
 
   char launch_hint[64];
+
+  // Chat pictures: asked for one at a time, each chat once per launch
+  AppTimer *avatar_timer;
+  uint8_t avatar_queue[AVATAR_REQUESTS][CHAT_DB_CHAT_KEY_LEN];
+  int avatar_queue_len;
+  int avatar_queue_next;
+  uint8_t avatar_asked[AVATAR_REQUESTS][CHAT_DB_CHAT_KEY_LEN];
+  int avatar_asked_count;
 } s_ds;
 
 ////////////////////////////
@@ -340,7 +351,8 @@ static void prv_deliver_settings(void) {
   prv_deliver(iter);
 }
 
-// Answers get_chats. Returns the id of the chat whose title is the launch hint, if any.
+// Answers get_chats. Returns the id of the newest chat whose title is the launch hint, if any
+// (two chats can share a name, e.g. the same person on two networks).
 static void prv_deliver_chats(char *hint_chat_id) {
   RowRef rows[MAX_CHATS];
   const int count = prv_rows(CHAT_DB_KIND_CHAT, nullptr, rows, MAX_CHATS);
@@ -361,7 +373,7 @@ static void prv_deliver_chats(char *hint_chat_id) {
     prv_chat_time(when, sizeof(when), chat.last_activity);
     snprintf(meta, sizeof(meta), "%s|%s%s", when, (chat.flags & ChatDbChatFlagGroup) ? "g" : "",
              (chat.flags & ChatDbChatFlagMuted) ? "m" : "");
-    if (hint_chat_id && s_ds.launch_hint[0] && prv_str_eq(chat.title, s_ds.launch_hint)) {
+    if (hint_chat_id && !hint_chat_id[0] && s_ds.launch_hint[0] && prv_str_eq(chat.title, s_ds.launch_hint)) {
       strcpy(hint_chat_id, id);
     }
     if (chat.synced < oldest_sync) {
@@ -557,6 +569,68 @@ static bool prv_forward(const uint8_t *dict, size_t len) {
   return chat_service_send(dict, len);
 }
 
+static bool prv_avatar_asked(const uint8_t *key) {
+  for (int i = 0; i < s_ds.avatar_asked_count; i++) {
+    if (memcmp(s_ds.avatar_asked[i], key, CHAT_DB_CHAT_KEY_LEN) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Asks for the next queued picture, then schedules the one after. A send that fails (phone gone
+// or the link backed up) drops the rest of the queue rather than blocking on each in turn.
+static void prv_send_next_avatar(void *data) {
+  s_ds.avatar_timer = nullptr;
+  const int size = chat_ui_avatar_size();
+  while (s_ds.avatar_queue_next < s_ds.avatar_queue_len) {
+    const uint8_t *key = s_ds.avatar_queue[s_ds.avatar_queue_next++];
+    char id[CHAT_KEY_HEX_LEN + 1];
+    prv_hex(id, key, CHAT_DB_CHAT_KEY_LEN);
+    if (size <= 0 || prv_avatar_asked(key) || chat_ui_has_avatar(id)) {
+      continue;
+    }
+    char size_text[8];
+    snprintf(size_text, sizeof(size_text), "%u", (uint8_t)size);
+    uint8_t buf[96];
+    DictionaryIterator iter;
+    dict_write_begin(&iter, buf, sizeof(buf));
+    dict_write_cstring(&iter, MESSAGE_KEY_Command, "get_avatar");
+    dict_write_cstring(&iter, MESSAGE_KEY_ChatId, id);
+    dict_write_cstring(&iter, MESSAGE_KEY_Text, size_text);
+    if (!prv_forward(buf, dict_write_end(&iter))) {
+      s_ds.avatar_queue_len = 0;
+      return;
+    }
+    if (s_ds.avatar_asked_count < AVATAR_REQUESTS) {
+      memcpy(s_ds.avatar_asked[s_ds.avatar_asked_count++], key, CHAT_DB_CHAT_KEY_LEN);
+    }
+    s_ds.avatar_timer = app_timer_register(AVATAR_GAP_MS, prv_send_next_avatar, nullptr);
+    return;
+  }
+  s_ds.avatar_queue_len = 0;
+}
+
+// Chat pictures aren't kept in the chat db: the phone sends the newest chats' pictures on request,
+// as the watchapp's phone side did (avatar_start / avatar / avatar_done).
+static void prv_request_avatars(void) {
+  if (chat_ui_avatar_size() <= 0 || !pbl_pp_session_get_system()) {
+    return;
+  }
+  RowRef rows[MAX_CHATS];
+  const int count = prv_rows(CHAT_DB_KIND_CHAT, nullptr, rows, MAX_CHATS);
+  s_ds.avatar_queue_len = 0;
+  s_ds.avatar_queue_next = 0;
+  for (int i = count - 1; i >= 0 && s_ds.avatar_queue_len < AVATAR_REQUESTS; i--) {  // newest first
+    if (!prv_avatar_asked(rows[i].key + 1)) {
+      memcpy(s_ds.avatar_queue[s_ds.avatar_queue_len++], rows[i].key + 1, CHAT_DB_CHAT_KEY_LEN);
+    }
+  }
+  if (s_ds.avatar_queue_len && !s_ds.avatar_timer) {
+    s_ds.avatar_timer = app_timer_register(AVATAR_FIRST_DELAY_MS, prv_send_next_avatar, nullptr);
+  }
+}
+
 static void prv_handle_command(const uint8_t *dict, size_t len) {
   DictionaryIterator iter;
   dict_read_begin_from_buffer(&iter, dict, len);
@@ -576,10 +650,11 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     prv_deliver_settings();
     char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
     prv_deliver_chats(hint_chat);
-    s_ds.launch_hint[0] = '\0';
-    if (hint_chat[0]) {
-      chat_ui_open_chat(hint_chat);
+    if (s_ds.launch_hint[0]) {
+      s_ds.launch_hint[0] = '\0';
+      chat_ui_open_chat(hint_chat);  // "" when no chat has that name: the UI shows the list
     }
+    prv_request_avatars();
   } else if (strcmp(cmd, "get_messages") == 0 && has_chat) {
     s_ds.chat_open = true;
     memcpy(s_ds.open_chat, chat_key, sizeof(chat_key));
@@ -730,6 +805,10 @@ static void prv_blob_db_event(PebbleEvent *e, void *context) {
   }
 }
 
+bool chat_ds_has_launch_hint(void) {
+  return s_ds.launch_hint[0] != '\0';
+}
+
 void chat_ds_init(void) {
   memset(&s_ds, 0, sizeof(s_ds));
   chat_service_take_launch_hint(s_ds.launch_hint, sizeof(s_ds.launch_hint));
@@ -748,4 +827,8 @@ void chat_ds_deinit(void) {
     app_timer_cancel(s_ds.change_timer);
   }
   s_ds.change_timer = nullptr;
+  if (s_ds.avatar_timer) {
+    app_timer_cancel(s_ds.avatar_timer);
+  }
+  s_ds.avatar_timer = nullptr;
 }

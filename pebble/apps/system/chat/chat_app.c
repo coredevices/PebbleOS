@@ -39,7 +39,7 @@ const PebbleProcessMd *chat_app_get_info(void) {
           .uuid = UUID_CHAT,
         },
     .name = pbl_i18n_noop("Chat"),
-    .icon_resource_id = RESOURCE_ID_CHAT_MENU_ICON,
+    .icon_resource_id = RESOURCE_ID_NOTIFICATION_BEEPER_TINY,
   };
   return (const PebbleProcessMd *)&s_chat_app_info;
 }
