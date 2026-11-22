@@ -2260,7 +2260,9 @@ def test_board_trees_generate_with_every_driver(tmp_path, dts):
     gen.run()
     assert "_DEFINE(" in "".join(gen.instances().values())
     assert "extern const" in gen.header()
-    roles = yaml.safe_load(((REPO / dts).parent / "roles.yml").read_text())
+    board = Path(dts).parent.name
+    qualifier = Path(dts).stem[len(board) + 1 :] or None
+    roles = dtmap.merge_roles(dtmap.role_files(REPO, board, None, variant=qualifier))
     if "flash" in roles:
         dtmap.partitions_header(tree, roles["flash"])
 
@@ -2573,6 +2575,80 @@ def test_roles_follow_other_labels(tmp_path):
     chosen = {"sensor": "sensor", "aux_bus": "abus"}
     source = roles_c(tmp_path, chosen, dts=DTS + "abus: &bus { };\n")
     assert "const struct bus *const AUX_BUS = &dt_abus;" in source
+
+
+def test_roles_files_of_a_core(tmp_path):
+    paths = dtmap.role_files(tmp_path, "kit", "b", tmp_path / "app", core="m4")
+    names = [path.relative_to(tmp_path).as_posix() for path in paths]
+    assert names == [
+        "boards/kit/roles.yml",
+        "boards/kit/roles.b.yml",
+        "boards/kit/roles.m4.yml",
+        "app/roles.yml",
+        "app/boards/kit.roles.yml",
+        "app/boards/kit_m4.roles.yml",
+    ]
+
+
+def test_roles_files_of_a_core_and_variant(tmp_path):
+    paths = dtmap.role_files(
+        tmp_path, "kit", None, tmp_path / "app", core="m4", variant="r2"
+    )
+    names = [path.relative_to(tmp_path).as_posix() for path in paths]
+    assert names == [
+        "boards/kit/roles.yml",
+        "boards/kit/roles.m4.yml",
+        "boards/kit/roles.r2.yml",
+        "boards/kit/roles.m4_r2.yml",
+        "app/roles.yml",
+        "app/boards/kit.roles.yml",
+        "app/boards/kit_m4.roles.yml",
+        "app/boards/kit_r2.roles.yml",
+        "app/boards/kit_m4_r2.roles.yml",
+    ]
+
+
+@pytest.mark.parametrize(
+    "files, revision, core, variant, found",
+    [
+        (["kit.dts", "kit_m4.dts"], None, "m4", None, "kit_m4.dts"),
+        (["kit.dts", "kit_m4.dts"], None, None, None, "kit.dts"),
+        (["kit_b.dts", "kit_m4.dts", "kit_b_m4.dts"], "b", "m4", None, "kit_b_m4.dts"),
+        (["kit_b.dts", "kit_m4.dts"], "b", "m4", None, "kit_m4.dts"),
+        (["kit_m7.dts"], None, "m4", None, None),
+        (["kit_m4.dts", "kit_m4_r2.dts"], None, "m4", "r2", "kit_m4_r2.dts"),
+        (["kit_m4.dts", "kit_r2.dts"], None, "m4", "r2", "kit_m4.dts"),
+        (["kit_b_m4.dts", "kit_m4_r2.dts"], "b", "m4", "r2", "kit_m4_r2.dts"),
+        (["kit.dts", "kit_wasm.dts"], None, None, "wasm", "kit_wasm.dts"),
+    ],
+)
+def test_tree_of_a_core(tmp_path, files, revision, core, variant, found):
+    board = tmp_path / "boards" / "kit"
+    board.mkdir(parents=True)
+    for name in files:
+        (board / name).write_text("/dts-v1/;\n/ { };\n")
+    dts = dtmap.find_dts(tmp_path, "kit", revision, core, variant)
+    assert (dts.name if dts else None) == found
+
+
+def test_overlays_of_a_core(tmp_path):
+    paths = dtmap.overlay_files("kit", tmp_path, "m4")
+    assert [path.name for path in paths] == [
+        "app.overlay",
+        "kit.overlay",
+        "kit_m4.overlay",
+    ]
+
+
+def test_overlays_of_a_core_and_variant(tmp_path):
+    paths = dtmap.overlay_files("kit", tmp_path, "m4", "r2")
+    assert [path.name for path in paths] == [
+        "app.overlay",
+        "kit.overlay",
+        "kit_m4.overlay",
+        "kit_r2.overlay",
+        "kit_m4_r2.overlay",
+    ]
 
 
 def test_later_roles_files_override(tmp_path):
