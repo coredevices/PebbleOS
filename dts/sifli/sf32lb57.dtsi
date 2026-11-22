@@ -397,6 +397,22 @@
 			#interrupt-cells = <2>;
 		};
 
+		sdmmc1: mmc@50045000 {
+			compatible = "sifli,sf32lb57-sdmmc";
+			reg = <0x50045000 0x1000>;
+			interrupts = <79>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SDMMC1>;
+			status = "disabled";
+		};
+
+		sdmmc2: mmc@50046000 {
+			compatible = "sifli,sf32lb57-sdmmc";
+			reg = <0x50046000 0x1000>;
+			interrupts = <81>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SDMMC2>;
+			status = "disabled";
+		};
+
 		usbc: usb@50047000 {
 			compatible = "sifli,sf32lb57-usb";
 			reg = <0x50047000 0x1000>;

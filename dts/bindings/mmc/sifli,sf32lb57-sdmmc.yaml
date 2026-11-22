@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mmc/sifli,sf32lb57-sdmmc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB57 SD/MMC controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  SD/MMC controller with a FIFO of one block, which also maps the card into
+  memory through a cache. A DMA channel on its request line can move the
+  data through the FIFO, in both directions.
+
+allOf:
+  - $ref: mmc-controller.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb57-sdmmc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  dmas:
+    maxItems: 1
+
+  dma-names:
+    const: rx-tx
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    mmc@50046000 {
+        compatible = "sifli,sf32lb57-sdmmc";
+        reg = <0x50046000 0x1000>;
+        interrupts = <81>;
+        clocks = <&hpsys_rcc 32>;
+        bus-width = <4>;
+    };
