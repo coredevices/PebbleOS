@@ -4,7 +4,11 @@
 #include <pbl/kernel/time.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/notifications/alerts_preferences.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
+
+#include <string.h>
 
 #include <clar.h>
 
@@ -37,6 +41,39 @@ bool ancs_filtering_matches_rules(const iOSNotifPrefs *app_notif_prefs,
   return false;
 }
 
+// What the phone was told, see prv_announce_to_phone()
+static struct pbl_pp_session *s_system_session = (struct pbl_pp_session *)1;
+static struct pbl_pp_send_buffer *s_send_buffer = (struct pbl_pp_send_buffer *)2;
+static uint16_t s_sent_endpoint;
+static uint8_t s_sent[300];
+static size_t s_sent_len;
+static int s_sent_count;
+
+struct pbl_pp_session *pbl_pp_session_get_system(void) {
+  return s_system_session;
+}
+
+struct pbl_pp_send_buffer *pbl_pp_send_buffer_begin(struct pbl_pp_session *session,
+                                                    uint16_t endpoint_id, size_t length,
+                                                    uint32_t timeout_ms) {
+  if (!session) {
+    return nullptr;
+  }
+  s_sent_endpoint = endpoint_id;
+  s_sent_len = 0;
+  return s_send_buffer;
+}
+
+bool pbl_pp_send_buffer_write(struct pbl_pp_send_buffer *sb, const uint8_t *data, size_t length) {
+  memcpy(&s_sent[s_sent_len], data, length);
+  s_sent_len += length;
+  return true;
+}
+
+void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {
+  s_sent_count++;
+}
+
 // Fakes
 ////////////////////////////////////////////////////////////////
 #include <fake_events.h>
@@ -55,6 +92,9 @@ void test_ancs_notifications__initialize(void) {
   s_now = 1;
   fake_notification_storage_reset();
   fake_event_init();
+  s_system_session = (struct pbl_pp_session *)1;
+  s_sent_count = 0;
+  s_sent_len = 0;
 }
 
 void test_ancs_notifications__cleanup(void) {
@@ -146,6 +186,8 @@ void test_ancs_notifications__handle_phone_call_message(void) {
   cl_assert_equal_i(event.phone.source, PhoneCallSource_ANCS_Legacy);
 }
 
+static bool s_recovered;
+
 static void prv_send_social_message(uint32_t uid, uint8_t flags) {
   static const uint8_t app_id[] = {
     0x00, 17,  0x00, 'c', 'o', 'm', '.', 't', 'e', 's',
@@ -202,7 +244,28 @@ static void prv_send_social_message(uint32_t uid, uint8_t flags) {
     .category = PBL_BT_ANCS_CATEGORY_SOCIAL,
   };
 
-  ancs_notifications_handle_message(&notif, false, false, notif_attributes, app_attributes);
+  ancs_notifications_handle_message(&notif, s_recovered, false, notif_attributes, app_attributes);
+}
+
+void test_ancs_notifications__tells_phone_app_id_of_new_notifications(void) {
+  prv_send_social_message(40, 0);
+  cl_assert_equal_i(s_sent_count, 1);
+  cl_assert_equal_i(s_sent_endpoint, PBL_PP_ENDPOINT_ANCS_EVENT);
+  const uint8_t expected[] = {0x01, 17, 'c', 'o', 'm', '.', 't', 'e', 's', 't', 's',
+                              '.',  'F', 'a', 'k', 'e', 'A', 'p', 'p'};
+  cl_assert_equal_i(s_sent_len, sizeof(expected));
+  cl_assert_equal_m(s_sent, expected, sizeof(expected));
+
+  // Not for notifications recovered after a reconnection: the phone app is catching up anyway
+  s_recovered = true;
+  prv_send_social_message(41, 0);
+  s_recovered = false;
+  cl_assert_equal_i(s_sent_count, 1);
+
+  // Nor without a phone app connected
+  s_system_session = nullptr;
+  prv_send_social_message(42, 0);
+  cl_assert_equal_i(s_sent_count, 1);
 }
 
 void test_ancs_notifications__silent_property_sets_silent_header(void) {

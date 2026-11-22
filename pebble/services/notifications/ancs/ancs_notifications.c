@@ -7,6 +7,9 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/protocol.h>
+#include <pbl/pp/send.h>
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
@@ -22,6 +25,7 @@
 #include <pbl/services/timeline/attribute.h>
 #include <pbl/services/timeline/timeline.h>
 #include <pbl/services/timeline/timeline_resources.h>
+#include <pbl/util/math.h>
 #include <pbl/util/pstring.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
@@ -36,6 +40,24 @@ static const Uuid uuid_calendar_data_source = UUID_CALENDAR_DATA_SOURCE;
 #define RECOVERED_ALERT_MAX_AGE_S (5 * 60)
 
 static time_t s_session_lost_time;
+
+// Tells the phone app which iOS app just posted a notification, so it can fetch that app's new
+// data in the background (an iOS app can't see other apps' notifications). Only the app ID is
+// sent, never the content.
+#define ANCS_EVENT_NEW_NOTIFICATION 0x01
+
+static void prv_announce_to_phone(const struct pbl_bt_ancs_attr *app_id) {
+  const uint8_t header[] = {ANCS_EVENT_NEW_NOTIFICATION, PBL_MIN(app_id->len, UINT8_MAX)};
+  // Never wait for buffer space: the notification matters more than the phone hearing of it.
+  struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin(
+      pbl_pp_session_get_system(), PBL_PP_ENDPOINT_ANCS_EVENT, sizeof(header) + header[1], 0);
+  if (!sb) {
+    return; // no phone app connected, or no room
+  }
+  pbl_pp_send_buffer_write(sb, header, sizeof(header));
+  pbl_pp_send_buffer_write(sb, app_id->value, header[1]);
+  pbl_pp_send_buffer_end(sb);
+}
 
 static void prv_dismiss_notification(const TimelineItem *notification) {
   const TimelineItemAction *action = timeline_item_find_dismiss_action(notification);
@@ -317,6 +339,12 @@ void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bo
   const struct pbl_bt_ancs_attr *display_name = app_attributes[ANCS_APP_ATTR_DISPLAY_NAME];
   const struct pbl_bt_ancs_attr *date = notif_attributes[ANCS_NOTIF_ATTR_DATE];
   const struct pbl_bt_ancs_attr *message = notif_attributes[ANCS_NOTIF_ATTR_MESSAGE];
+
+  if (!is_recovered) {
+    // Before the watch's own filters: muting an app on the watch shouldn't stop its phone app
+    // from syncing.
+    prv_announce_to_phone(app_id);
+  }
 
   iOSNotifPrefs *app_notif_prefs = ios_notif_pref_db_get_prefs(app_id->value, app_id->len);
   ancs_filtering_record_app(&app_notif_prefs, app_id, display_name, title);

@@ -50,6 +50,7 @@ struct PBL_PACKED pbl_pp_header {
 #define PBL_PP_ENDPOINT_BLE_CONTROL          0x0033
 #define PBL_PP_ENDPOINT_APP_RUN_STATE        0x0034
 #define PBL_PP_ENDPOINT_IMAGING              0x0035
+#define PBL_PP_ENDPOINT_ANCS_EVENT           0x0036
 #define PBL_PP_ENDPOINT_HEALTH_SYNC          0x038f
 #define PBL_PP_ENDPOINT_PING                 0x07d1
 #define PBL_PP_ENDPOINT_LOG_DUMP             0x07d2
