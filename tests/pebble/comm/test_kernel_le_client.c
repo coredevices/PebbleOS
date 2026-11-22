@@ -27,9 +27,6 @@ void ancs_create(void) {
 void ancs_destroy(void) {
 }
 
-void app_launch_handle_disconnection(void) {
-}
-
 static bool s_has_gateway_bonding;
 
 size_t pbl_bt_bond_count(void) {

@@ -3,8 +3,7 @@
 
 """The GATT services an iPhone hosts for the watch: the Apple Notification
 Center Service (:class:`ANCS`), the Apple Media Service (:class:`AMS`) and
-Device Information (:class:`DeviceInformation`, which tells the watch it is
-iOS 9 or newer).
+Device Information (:class:`DeviceInformation`).
 
 Each is handed to :class:`~harness.ble.BleLink` as one of its ``services``.
 Their methods are called from the test's thread; what the watch writes is

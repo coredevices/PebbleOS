@@ -16,12 +16,12 @@
 static struct pbl_wallclock_work s_missed_call_work;
 
 static void prv_put_call_event(PhoneEventType type, uint32_t call_identifier,
-                               PebblePhoneCaller *caller, bool ios_9) {
+                               PebblePhoneCaller *caller) {
   PebbleEvent event = {
     .type = PEBBLE_PHONE_EVENT,
     .phone = {
       .type = type,
-      .source = ios_9 ? PhoneCallSource_ANCS : PhoneCallSource_ANCS_Legacy,
+      .source = PhoneCallSource_ANCS,
       .call_identifier = call_identifier,
       .caller = caller,
     }
@@ -53,7 +53,7 @@ static void prv_strip_formatting_chars(char *text) {
   *w_cursor = '\0';
 }
 
-void ancs_phone_call_handle_incoming(uint32_t uid, bool ios_9,
+void ancs_phone_call_handle_incoming(uint32_t uid,
                                      const struct pbl_bt_ancs_attr *const *notif_attributes) {
   // This field holds the caller's name if the phone number belongs to a contact,
   // or the actual phone number if it does not belong to a contact
@@ -64,11 +64,11 @@ void ancs_phone_call_handle_incoming(uint32_t uid, bool ios_9,
   prv_strip_formatting_chars(caller_id_str);
   PebblePhoneCaller *caller = phone_call_util_create_caller(caller_id_str, nullptr);
 
-  prv_put_call_event(PhoneEventType_Incoming, uid, caller, ios_9);
+  prv_put_call_event(PhoneEventType_Incoming, uid, caller);
 }
 
-void ancs_phone_call_handle_removed(uint32_t uid, bool ios_9) {
-  prv_put_call_event(PhoneEventType_Hide, uid, nullptr, ios_9);
+void ancs_phone_call_handle_removed(uint32_t uid) {
+  prv_put_call_event(PhoneEventType_Hide, uid, nullptr);
 }
 
 bool ancs_phone_call_should_ignore_missed_calls(void) {

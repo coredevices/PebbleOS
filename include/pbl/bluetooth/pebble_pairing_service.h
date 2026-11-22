@@ -270,13 +270,6 @@ typedef struct GAPLEConnection GAPLEConnection;
 void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection);
 
 /**
- * @brief Called when the Connectivity Status characteristic is unsubscribed from.
- *
- * Used to detect that the Pebble iOS app was terminated. Not invoked by the NimBLE backend.
- */
-extern void pbl_bt_cb_pps_handle_ios_app_termination_detected(void);
-
-/**
  * @brief Called when the Connection Parameters characteristic was written.
  *
  * Not invoked by the NimBLE backend.

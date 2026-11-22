@@ -16,19 +16,17 @@
  * @brief Post an incoming call event.
  *
  * @param uid ANCS UID of the incoming call notification.
- * @param ios_9 Whether the notification came from an iOS 9 or later device.
  * @param notif_attributes Notification attributes; the title holds the caller name or number.
  */
-void ancs_phone_call_handle_incoming(uint32_t uid, bool ios_9,
+void ancs_phone_call_handle_incoming(uint32_t uid,
                                      const struct pbl_bt_ancs_attr *const *notif_attributes);
 
 /**
  * @brief Post a hide call event, in response to an ANCS removal.
  *
  * @param uid ANCS UID of the removed incoming call notification.
- * @param ios_9 Whether the notification came from an iOS 9 or later device.
  */
-void ancs_phone_call_handle_removed(uint32_t uid, bool ios_9);
+void ancs_phone_call_handle_removed(uint32_t uid);
 
 /**
  * @brief Check whether missed call notifications are being ignored.

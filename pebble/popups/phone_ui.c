@@ -29,6 +29,7 @@
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 #include <pbl/util/trig.h>
 #include <pbl/util/units.h>
 
@@ -74,14 +75,10 @@
 #define TEXT_RIGHTSIDE_PADDING \
   PBL_IF_RECT_ELSE(ACTION_BAR_WIDTH, ACTION_BAR_WIDTH + RIGHTSIDE_PADDING - TEXT_MARGIN_WIDTH)
 #define ICON_WIDTH 80
-// Center icon horizontally in content area (display width minus action bar)
-#define ICON_POSITION_X                                                       \
-  PBL_IF_RECT_ELSE(((PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), \
-                   PBL_DISPLAY_HEIGHT - (ACTION_BAR_WIDTH + RIGHTSIDE_PADDING) - ICON_WIDTH)
-
-#if PBL_ROUND
-#define ICON_POSITION_CENTERED_X (PBL_DISPLAY_HEIGHT / 2 - ICON_WIDTH / 2)
-#endif
+// Center icon horizontally in content area (display width minus action bar).
+// Round layouts center it at runtime instead, as the action bar side can change.
+#define ICON_POSITION_X \
+  PBL_IF_RECT_ELSE(((PBL_DISPLAY_WIDTH - ACTION_BAR_WIDTH - ICON_WIDTH) / 2), 0)
 
 static const int16_t DOT_SIZE = 8;
 static const uint32_t UNFOLD_DURATION = 300;
@@ -756,19 +753,20 @@ static void prv_hide_action_bar(void) {
   s_phone_ui_data->action_bar_animation = combined;
   animation_schedule(combined);
 #if PBL_ROUND
-  // Restore the full text frame when the action bar is removed.
-  s_phone_ui_data->caller_id_text_layer.layer.frame.origin.x = TEXT_MARGIN_WIDTH;
-  s_phone_ui_data->call_status_text_layer.layer.frame.origin.x = TEXT_MARGIN_WIDTH;
-  s_phone_ui_data->caller_id_text_layer.layer.frame.size.w =
-      window_bounds.size.w - 2 * TEXT_MARGIN_WIDTH;
-  s_phone_ui_data->call_status_text_layer.layer.frame.size.w =
-      window_bounds.size.w - 2 * TEXT_MARGIN_WIDTH;
-  s_phone_ui_data->caller_id_text_layer.layer.bounds.size.w += TEXT_RIGHTSIDE_PADDING;
-  text_layer_set_text_alignment(&s_phone_ui_data->caller_id_text_layer, GTextAlignmentCenter);
-  s_phone_ui_data->call_status_text_layer.layer.bounds.size.w += TEXT_RIGHTSIDE_PADDING;
-  text_layer_set_text_alignment(&s_phone_ui_data->call_status_text_layer, GTextAlignmentCenter);
-  // Center the kino icon
-  s_phone_ui_data->icon_layer.layer.frame.origin.x = ICON_POSITION_CENTERED_X;
+  // Restore the full-width, centred text when the action bar is removed.
+  const uint16_t text_width = window_bounds.size.w - 2 * TEXT_MARGIN_WIDTH;
+  TextLayer *text_layers[] = {
+    &s_phone_ui_data->caller_id_text_layer,
+    &s_phone_ui_data->call_status_text_layer,
+  };
+  for (unsigned i = 0; i < PBL_ARRAY_SIZE(text_layers); ++i) {
+    TextLayer *text_layer = text_layers[i];
+    text_layer->layer.frame.origin.x = TEXT_MARGIN_WIDTH;
+    text_layer->layer.frame.size.w = text_width;
+    text_layer->layer.bounds.size.w = text_width;
+    text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
+  }
+  s_phone_ui_data->icon_layer.layer.frame.origin.x = action_bar_layer_centered_origin_x(ICON_WIDTH);
 #endif
 }
 
@@ -1026,7 +1024,9 @@ static void prv_phone_ui_init(void) {
   s_phone_ui_data->bg_color.right = DEFAULT_COLOR;
   s_phone_ui_data->bg_color.boundary = 0;
 
+#if PBL_RECT
   const int16_t width = window->layer.bounds.size.w - (TEXT_MARGIN_WIDTH * 2);
+#endif
 
   // Container layer
   layer_init(&s_phone_ui_data->core_ui_container, &window->layer.bounds);
@@ -1049,25 +1049,28 @@ static void prv_phone_ui_init(void) {
     icon_pos.x += ACTION_BAR_WIDTH;
   }
 #else
-  if (!action_bar_layer_is_on_right()) {
-    icon_pos.x = ACTION_BAR_WIDTH + RIGHTSIDE_PADDING;
-  }
+  icon_pos.x = action_bar_layer_centered_origin_x(ICON_WIDTH);
 #endif
   kino_layer_init(&s_phone_ui_data->icon_layer, &(GRect){icon_pos, {ICON_WIDTH, ICON_WIDTH}});
   kino_layer_set_alignment(&s_phone_ui_data->icon_layer, GAlignCenter);
   layer_add_child(&s_phone_ui_data->core_ui_container, &s_phone_ui_data->icon_layer.layer);
 
+#if PBL_RECT
   const bool action_bar_on_right = action_bar_layer_is_on_right();
-  [[maybe_unused]] const int16_t content_x = action_bar_layer_get_content_origin_x();
-  const GTextAlignment phone_text_alignment = PBL_IF_RECT_ELSE(
-      GTextAlignmentCenter, action_bar_on_right ? GTextAlignmentRight : GTextAlignmentLeft);
-  [[maybe_unused]] const int16_t round_text_inset =
-      PBL_IF_ROUND_ELSE(action_bar_on_right ? 0 : TEXT_RIGHTSIDE_PADDING, 0);
-  const int16_t text_frame_x = TEXT_MARGIN_WIDTH + PBL_IF_RECT_ELSE(content_x, round_text_inset);
-  const int16_t text_frame_w = width - PBL_IF_RECT_ELSE(content_x, round_text_inset);
+  const int16_t content_x = action_bar_layer_get_content_origin_x();
+  const int16_t text_frame_x = TEXT_MARGIN_WIDTH + content_x;
+  const int16_t text_frame_w = width - content_x;
   const int16_t text_bounds_w =
-      PBL_IF_RECT_ELSE(width - content_x - (action_bar_on_right ? TEXT_RIGHTSIDE_PADDING : 0),
-                       width - TEXT_RIGHTSIDE_PADDING);
+      width - content_x - (action_bar_on_right ? TEXT_RIGHTSIDE_PADDING : 0);
+#else
+  // Centre the caller and status text on the round display, clear of the
+  // action bar that overlays its edge.
+  const GRect content_bounds = action_bar_layer_centered_content_bounds(window->layer.bounds);
+  const int16_t text_frame_x = content_bounds.origin.x;
+  const int16_t text_frame_w = content_bounds.size.w;
+  const int16_t text_bounds_w = content_bounds.size.w;
+#endif
+  const GTextAlignment phone_text_alignment = GTextAlignmentCenter;
 
   // Caller ID text
   const GRect caller_id_text_rect =
