@@ -4,24 +4,25 @@
 
 :::{div} board-card
 
-:Board: `stm32h747i_disco`
+:Board: `stm32h747i_disco/m7`, `stm32h747i_disco/m4`
 :SoC: ST STM32H747
 :Platform: none, samples only
 :::
 
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
-PebbleOS runs the samples on its Cortex-M7: the console, the kernel and its
-system timer, the LEDs, the joystick, the quad-SPI NOR flash, the SDRAM, the
-random number generator, the watchdog, DMA, the display, the touchscreen and the
-DMA2D work so far.
+PebbleOS is built for each core on its own: `stm32h747i_disco/m7` runs on the
+Cortex-M7, with all of the kit described here, and `stm32h747i_disco/m4` on
+the Cortex-M4, with LD2, a console on the Arduino connector and its own system
+timer.
 
 ## Hardware
 
 - **SoC**: ST STM32H747XIH6, with an Arm Cortex-M7 with double-precision FPU
-  and 16 KiB L1 caches, which PebbleOS runs on, and an Arm Cortex-M4, left to
-  the image in flash bank 2
+  and 16 KiB L1 caches, and an Arm Cortex-M4 with a single-precision FPU
 - **Memory**: 2 MiB embedded flash in two banks of 1 MiB, the Cortex-M7
-  booting from bank 1, and 512 KiB AXI SRAM, which PebbleOS runs from
+  booting from bank 1 and the Cortex-M4 from bank 2, 512 KiB AXI SRAM, which
+  the Cortex-M7 runs from, and 288 KiB SRAM1 to SRAM3, which the Cortex-M4
+  runs from
 - **External RAM**: 32 MiB ISSI IS42S32800J SDRAM, 32 bits wide, on FMC SDRAM
   bank 2 at 100 MHz, swapped to 0x70000000, where the CPU caches it; it is
   the `extram`
@@ -62,8 +63,8 @@ DMA2D work so far.
 - **Low power**: with `CONFIG_CPU_IDLE`, the Cortex-M7 idles in Stop mode,
   its D1 domain stopped and the SDRAM in self-refresh, unless the console
   receives, the display is on or the DMA2D draws; the whole system only
-  stops, the HSE and the PLLs with it, when the Cortex-M4 is gated too, see
-  [](#stm32h747i-disco-flashing)
+  stops, the HSE and the PLLs with it, when the Cortex-M4 idles in Stop too,
+  see [](#stm32h747i-disco-cores)
 
 ## Buttons and LEDs
 
@@ -87,12 +88,30 @@ whatever the firmware leaves it doing. It also keeps OpenOCD from setting up
 the quad-SPI flash, which would leave the flash in a mode PebbleOS does not
 expect.
 
-PebbleOS does not use the Cortex-M4, which keeps the whole system out of Stop
-mode while it runs. Clear its boot option bit, BCM4, once:
+The console of the Cortex-M7 runs at 1 Mbaud, on the ST-LINK virtual COM port.
+
+(stm32h747i-disco-cores)=
+
+## The two cores
+
+Each core is a build of its own, flashed on its own: the Cortex-M7 from bank 1
+of the embedded flash, the Cortex-M4 from bank 2.
 
 ```shell
-openocd -s boards/stm32h747i_disco/support -f openocd.cfg \
-  -c "init; reset halt; stm32h7x option_write 0 0x20 0 0x00400000; shutdown"
+pbl configure --board stm32h747i_disco/m7 -b build/m7 samples/drivers/display
+pbl configure --board stm32h747i_disco/m4 -b build/m4 samples/drivers/led
+pbl -b build/m7 run
+pbl -b build/m4 run
 ```
 
-The console runs at 1 Mbaud, on the ST-LINK virtual COM port.
+The Cortex-M7 sets up the supply and the clocks, then starts the Cortex-M4 if
+bank 2 holds an image; the Cortex-M4 waits for it at boot, whether its boot
+option bit, BCM4, starts it at reset or not, so the option bytes can stay as
+they ship. The Cortex-M4 runs from SRAM1 to SRAM3, 288 KiB, counts time on
+LPTIM2 and has LD2, the orange LED. Its console is UART8, at 1 Mbaud, on D1
+(TX) and D0 (RX) of the Arduino connector, for a USB serial adapter.
+
+A Cortex-M4 that runs keeps the whole system out of Stop mode, and an erased
+bank 2 with BCM4 set leaves it locked up. With nothing else to do, flash it an
+application that idles, as `samples/kernel/idle`: its idle thread keeps it in
+Stop, as power-off needs for its domain, D2, to reach Standby.

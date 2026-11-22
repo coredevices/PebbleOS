@@ -3,6 +3,20 @@
 
 &pinctrl {
 	// ST-LINK virtual COM port
+	uart8_default: uart8-0 {
+		pins1 {
+			pinmux = <STM32_PINMUX('J', 8, AF8)>; /* UART8_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('J', 9, AF8)>; /* UART8_RX */
+			bias-pull-up;
+		};
+	};
+
 	usart1_default: usart1-0 {
 		pins1 {
 			pinmux = <STM32_PINMUX('A', 9, AF7)>; /* USART1_TX */

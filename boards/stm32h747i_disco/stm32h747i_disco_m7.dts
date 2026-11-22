@@ -3,17 +3,15 @@
 
 /dts-v1/;
 
-#include "st/stm32h747xi.dtsi"
-#include "stm32h747i_disco-pinctrl.dtsi"
+// The kit as the Cortex-M7 runs it: everything but the LED the Cortex-M4 has, and UART8
 
-#include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/input/input.h>
-#include <dt-bindings/leds/common.h>
+#include "stm32h747i_disco.dtsi"
+
+&led_orange {
+	status = "disabled";
+};
 
 / {
-	model = "STMicroelectronics STM32H747I-DISCO";
-	compatible = "st,stm32h747i-disco", "st,stm32h747";
-
 	reserved-memory {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -80,23 +78,6 @@
 		};
 	};
 
-	// The supplies of the audio codec, from the kit's regulators
-	v1v8: regulator-1v8 {
-		compatible = "regulator-fixed";
-		regulator-name = "v1v8";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		regulator-always-on;
-	};
-
-	v3v3: regulator-3v3 {
-		compatible = "regulator-fixed";
-		regulator-name = "v3v3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		regulator-always-on;
-	};
-
 	// The headphone output of the codec, on the audio jack
 	speaker: sound-speaker {
 		compatible = "simple-audio-card";
@@ -131,34 +112,6 @@
 			sound-dai = <&dmic>;
 		};
 	};
-
-	leds {
-		compatible = "gpio-leds";
-
-		led_green: led-green {
-			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&gpioi 12 GPIO_ACTIVE_LOW>;
-		};
-
-		led_orange: led-orange {
-			color = <LED_COLOR_ID_ORANGE>;
-			gpios = <&gpioi 13 GPIO_ACTIVE_LOW>;
-		};
-
-		led_red: led-red {
-			color = <LED_COLOR_ID_RED>;
-			gpios = <&gpioi 14 GPIO_ACTIVE_LOW>;
-		};
-
-		led_blue: led-blue {
-			color = <LED_COLOR_ID_BLUE>;
-			gpios = <&gpioi 15 GPIO_ACTIVE_LOW>;
-		};
-	};
-};
-
-&clk_hse {
-	clock-frequency = <25000000>;
 };
 
 // The CPU at 400 MHz from PLL1 on HSE, AHB at 200 MHz and APB at 100 MHz
@@ -173,11 +126,6 @@
 	// crystal, and SAI1 and SAI4 divide PLL2 P to 256 and 128 times the audio rates within 0.03%
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
 			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>, <0>;
-};
-
-// The SMPS supplies VCORE, as the kit ships
-&pwr {
-	st,supply-config = "direct-smps";
 };
 
 &dma1 {
@@ -392,6 +340,12 @@
 		partition@0 {
 			label = "code";
 			reg = <0x0 0x100000>;
+		};
+
+		// Bank 2, where the Cortex-M4 boots from, which the Cortex-M7 starts
+		partition@100000 {
+			label = "m4";
+			reg = <0x100000 0x100000>;
 		};
 	};
 };
