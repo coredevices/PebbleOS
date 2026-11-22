@@ -561,5 +561,26 @@
 			clocks = <&rcc HSEM_CK>;
 			clock-names = "hsem";
 		};
+
+		bdma: dma-controller@58025400 {
+			compatible = "st,stm32h7-bdma";
+			reg = <0x58025400 0x400>;
+			interrupts = <129>, <130>, <131>, <132>, <133>, <134>, <135>, <136>;
+			clocks = <&rcc BDMA_CK>;
+			#dma-cells = <4>;
+			dma-requests = <8>;
+			status = "disabled";
+		};
+
+		dmamux2: dma-router@58025800 {
+			compatible = "st,stm32h7-dmamux";
+			reg = <0x58025800 0x40>;
+			#dma-cells = <3>;
+			dma-channels = <8>;
+			dma-requests = <32>;
+			dma-masters = <&bdma>;
+			clocks = <&rcc BDMA_CK>;
+			status = "disabled";
+		};
 	};
 };
