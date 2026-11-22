@@ -32,4 +32,10 @@ config USB_DEVICE_PRODUCT
     string "Product"
     default "PebbleOS device"
 
+config USB_CDC_ACM
+    bool "Serial port"
+    select UART
+    help
+      A serial port over USB, CDC ACM, as a UART (pbl/usb/cdc_acm.h).
+
 endif # USB_DEVICE

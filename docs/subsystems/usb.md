@@ -6,7 +6,7 @@ enumerates it. Its public API is `include/pbl/usb/usbd.h`. It is built with
 
 ```{mermaid}
 flowchart TD
-  fn["Functions"]
+  fn["Functions<br/>CDC ACM, ..."]
   usbd["Device stack<br/>subsys/usb/usbd.c"]
   udc["USB device controller<br/>pbl/drivers/udc.h"]
   drv["Controller driver<br/>DWC2, ..."]
@@ -34,6 +34,24 @@ controller's interrupt.
 | `CONFIG_USB_DEVICE_PID` | `0x0001` | Product ID, pid.codes' test one |
 | `CONFIG_USB_DEVICE_MANUFACTURER` | `PebbleOS` | Manufacturer string |
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
+
+## Serial port
+
+`CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:
+`USB_CDC_ACM_UART` in `include/pbl/usb/cdc_acm.h`. The device connects to the
+bus when the port comes up. A board or an application can give it a role, as
+the console's:
+
+```yaml
+console_uart:
+  symbol: USB_CDC_ACM_UART
+  include: pbl/usb/cdc_acm.h
+```
+
+Received bytes go to the UART's receive callback, from the interrupt, without
+flow control: a callback that cannot keep up loses them. Bytes sent before the
+host configures the device, or that do not fit while it does not read, are
+dropped.
 
 ## Controllers
 
