@@ -40,7 +40,10 @@ DMA2D work so far.
 - **Audio**: the Cirrus Logic WM8994 codec, on I2C4, plays to the headphone
   jack from SAI1 block A, the master of their I2S link, with its master
   clock at 256 times the rate from PLL2 at 73.75 MHz; it is the `speaker`.
-  The digital microphone, on SAI4 as PDM, is not supported yet
+  The digital microphone is on the PDM interface of SAI4 block A (clock PE2,
+  data PC1), clocked at 64 times the rate from PLL2, 128 times at 8 kHz, and
+  decimated in software; the BDMA moves its raw samples, through the first
+  4 KiB of the SRAM4, the only RAM it reaches; it is the `mic`
 - **Graphics**: the DMA2D (Chrom-ART) fills and blits, with format
   conversion and blending; it is the `gpu`
 - **Supply**: the SoC SMPS supplies the core domain directly, as the kit

@@ -24,6 +24,12 @@
 			reg = <0x70000000 0xbb800>;
 			no-map;
 		};
+
+		// The raw ring of the microphones, in the SRAM4, the only RAM the BDMA reaches
+		mic_ring: mic-ring@38000000 {
+			reg = <0x38000000 0x1000>;
+			no-map;
+		};
 	};
 
 	// What the LTDC scans to the panel, landscape, which the panel takes turned a quarter turn
@@ -106,6 +112,26 @@
 		};
 	};
 
+	// The pair of digital microphones, on the PDM interface of SAI4
+	dmic: dmic {
+		compatible = "dmic-codec";
+		#sound-dai-cells = <0>;
+	};
+
+	mic: sound-mic {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "mic";
+		simple-audio-card,format = "pdm";
+
+		simple-audio-card,cpu {
+			sound-dai = <&sai4a>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dmic>;
+		};
+	};
+
 	leds {
 		compatible = "gpio-leds";
 
@@ -139,13 +165,14 @@
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>, <&rcc PLL3_R>,
-			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc PLL2_P>, <&rcc SAI1_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc PLL2_P>, <&rcc SAI1_CK>,
+			  <&rcc SAI4A_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>;
+				 <0>, <&rcc LSE_CK>, <&rcc LSE_CK>, <0>, <&rcc PLL2_P>, <&rcc PLL2_P>;
 	// PLL3 R is the pixel clock of the frames to the panel, LPTIM1 and the RTC count the LSE
-	// crystal, and SAI1 divides PLL2 P to 256 times the audio rates within 0.03%
+	// crystal, and SAI1 and SAI4 divide PLL2 P to 256 and 128 times the audio rates within 0.03%
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>;
+			       <100000000>, <100000000>, <42000000>, <0>, <0>, <73750000>, <0>, <0>;
 };
 
 // The SMPS supplies VCORE, as the kit ships
@@ -162,6 +189,14 @@
 };
 
 &dmamux1 {
+	status = "okay";
+};
+
+&bdma {
+	status = "okay";
+};
+
+&dmamux2 {
 	status = "okay";
 };
 
@@ -316,6 +351,19 @@
 	pinctrl-0 = <&sai1a_default>;
 	pinctrl-names = "default";
 	dma-names = "tx";
+	status = "okay";
+};
+
+&sai4 {
+	status = "okay";
+};
+
+// The master of the microphones, through its PDM interface
+&sai4a {
+	pinctrl-0 = <&sai4a_pdm>;
+	pinctrl-names = "default";
+	dma-names = "rx";
+	memory-region = <&mic_ring>;
 	status = "okay";
 };
 

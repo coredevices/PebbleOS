@@ -11,3 +11,4 @@ touch: touchscreen
 rtc: rtc
 backlight: panel
 speaker: speaker
+mic: mic
