@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig SDHC
+    bool "SD host controllers"
+    help
+      SD host controller class (pbl/drivers/sdhc.h), selected by the SD
+      card stack.
+
+if SDHC
+
+endif # SDHC

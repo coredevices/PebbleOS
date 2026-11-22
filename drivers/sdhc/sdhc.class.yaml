@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: sdhc
+type: struct pbl_sdhc
+include: pbl/drivers/sdhc.h
+roles:
+  sdhc: SD
