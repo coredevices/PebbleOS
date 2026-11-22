@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 compatible: st,stm32h7-dmamux
+masters: st,stm32-dma
 config: DMA_STM32H7
 class: dma
 define: PBL_DMA_STM32H7_DEFINE

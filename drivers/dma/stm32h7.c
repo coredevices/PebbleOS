@@ -275,4 +275,4 @@ const struct pbl_dma_controller_ops pbl_dma_stm32h7_ops = {
   .tx_status = prv_tx_status,
 };
 
-#include PBL_DT_INSTANCES(st_stm32h7_dmamux)
+#include PBL_DT_INSTANCES(st_stm32h7_dmamux_dma_st_stm32_dma)
