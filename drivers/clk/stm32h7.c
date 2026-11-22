@@ -33,7 +33,8 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
               STM32H7_CLK_I2C4_CK == I2C4_CK && STM32H7_CLK_RTC_CK == RTC_CK &&
               STM32H7_CLK_RTCAPB_CK == RTCAPB_CK && STM32H7_CLK_SAI1_CK == SAI1_CK &&
               STM32H7_CLK_BDMA_CK == BDMA_CK && STM32H7_CLK_SAI4A_CK == SAI4A_CK &&
-              STM32H7_CLK_CRC_CK == CRC_CK && STM32H7_CLK_ADC3_CK == ADC3_CK);
+              STM32H7_CLK_CRC_CK == CRC_CK && STM32H7_CLK_ADC3_CK == ADC3_CK &&
+              STM32H7_CLK_LPTIM2_CK == LPTIM2_CK);
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
@@ -109,6 +110,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_I2C4_CK] = GATE(APB4ENR, 7, PCLK4),
   [STM32H7_CLK_RTCAPB_CK] = GATE(APB4ENR, 16, PCLK4),
+  [STM32H7_CLK_LPTIM2_CK] = GATE(APB4ENR, 9, PCLK4),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
   [STM32H7_CLK_SAI1_CK] = GATE(APB2ENR, 22, PLL1_Q),
   [STM32H7_CLK_SAI4A_CK] = GATE(APB4ENR, 21, PLL1_Q),
@@ -294,6 +296,30 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   return 0;
 }
 
+// LPTIM1 and LPTIM2 take the same parents, their bus clock being PCLK1 or PCLK4
+static int prv_get_lptim_parent(const struct pbl_clk_controller *ctrl, uint32_t pclk, uint32_t sel,
+                                struct pbl_clk *parent) {
+  switch (sel) {
+    case RCC_LPTIMSEL_PCLK:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, pclk);
+      return 0;
+    case RCC_LPTIMSEL_PLL2_P:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL2_P);
+      return 0;
+    case RCC_LPTIMSEL_PLL3_R:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL3_R);
+      return 0;
+    case RCC_LPTIMSEL_LSE:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+      return 0;
+    case RCC_LPTIMSEL_LSI:
+      *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
 static int prv_get_sai_parent(const struct pbl_clk_controller *ctrl, uint32_t sel,
                               struct pbl_clk *parent) {
   switch (sel) {
@@ -430,26 +456,15 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           return -ENOENT;
       }
     case STM32H7_CLK_LPTIM1_CK:
-      switch (PBL_FIELD_GET(RCC_D2CCIP2R_LPTIM1SEL_MASK,
-                            prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
-        case RCC_D2CCIP2R_LPTIM1SEL_PCLK:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PCLK1);
-          return 0;
-        case RCC_D2CCIP2R_LPTIM1SEL_PLL2_P:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL2_P);
-          return 0;
-        case RCC_D2CCIP2R_LPTIM1SEL_PLL3_R:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL3_R);
-          return 0;
-        case RCC_D2CCIP2R_LPTIM1SEL_LSE:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
-          return 0;
-        case RCC_D2CCIP2R_LPTIM1SEL_LSI:
-          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
-          return 0;
-        default:
-          return -ENOTSUP;
-      }
+      return prv_get_lptim_parent(
+          ctrl, STM32H7_CLK_PCLK1,
+          PBL_FIELD_GET(RCC_D2CCIP2R_LPTIM1SEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET)),
+          parent);
+    case STM32H7_CLK_LPTIM2_CK:
+      return prv_get_lptim_parent(
+          ctrl, STM32H7_CLK_PCLK4,
+          PBL_FIELD_GET(RCC_D3CCIPR_LPTIM2SEL_MASK, prv_getreg(rcc, STM32H7_RCC_D3CCIPR_OFFSET)),
+          parent);
     case STM32H7_CLK_FMC_CK:
       switch (PBL_FIELD_GET(RCC_D1CCIPR_FMCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D1CCIPR_OFFSET))) {
         case RCC_D1CCIPR_FMCSEL_HCLK:
@@ -687,8 +702,9 @@ static int prv_set_sys_parent(const struct pbl_clk_controller *ctrl, const struc
   return 0;
 }
 
-static int prv_set_lptim1_parent(const struct pbl_clk_controller *ctrl,
-                                 const struct pbl_clk *parent) {
+// LPTIM1 and LPTIM2 take the same parents, their bus clock being PCLK1 or PCLK4
+static int prv_set_lptim_parent(const struct pbl_clk_controller *ctrl, uint32_t offset,
+                                uint32_t mask, uint32_t pclk, const struct pbl_clk *parent) {
   uint32_t sel;
 
   if (parent->ctrl != ctrl) {
@@ -696,26 +712,27 @@ static int prv_set_lptim1_parent(const struct pbl_clk_controller *ctrl,
   }
 
   switch (parent->id) {
-    case STM32H7_CLK_PCLK1:
-      sel = RCC_D2CCIP2R_LPTIM1SEL_PCLK;
-      break;
     case STM32H7_CLK_PLL2_P:
-      sel = RCC_D2CCIP2R_LPTIM1SEL_PLL2_P;
+      sel = RCC_LPTIMSEL_PLL2_P;
       break;
     case STM32H7_CLK_PLL3_R:
-      sel = RCC_D2CCIP2R_LPTIM1SEL_PLL3_R;
+      sel = RCC_LPTIMSEL_PLL3_R;
       break;
     case STM32H7_CLK_LSE_CK:
-      sel = RCC_D2CCIP2R_LPTIM1SEL_LSE;
+      sel = RCC_LPTIMSEL_LSE;
       break;
     case STM32H7_CLK_LSI_CK:
-      sel = RCC_D2CCIP2R_LPTIM1SEL_LSI;
+      sel = RCC_LPTIMSEL_LSI;
       break;
     default:
-      return -EINVAL;
+      if (parent->id != pclk) {
+        return -EINVAL;
+      }
+      sel = RCC_LPTIMSEL_PCLK;
+      break;
   }
 
-  prv_modify(prv_rcc(ctrl), STM32H7_RCC_D2CCIP2R_OFFSET, RCC_D2CCIP2R_LPTIM1SEL_MASK, sel);
+  prv_modify(prv_rcc(ctrl), offset, mask, sel);
 
   return 0;
 }
@@ -795,7 +812,11 @@ static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
     case STM32H7_CLK_RTC_CK:
       return prv_set_rtc_parent(ctrl, parent);
     case STM32H7_CLK_LPTIM1_CK:
-      return prv_set_lptim1_parent(ctrl, parent);
+      return prv_set_lptim_parent(ctrl, STM32H7_RCC_D2CCIP2R_OFFSET, RCC_D2CCIP2R_LPTIM1SEL_MASK,
+                                  STM32H7_CLK_PCLK1, parent);
+    case STM32H7_CLK_LPTIM2_CK:
+      return prv_set_lptim_parent(ctrl, STM32H7_RCC_D3CCIPR_OFFSET, RCC_D3CCIPR_LPTIM2SEL_MASK,
+                                  STM32H7_CLK_PCLK4, parent);
     case STM32H7_CLK_PLLSRC:
       return prv_set_pllsrc(ctrl, parent);
     case STM32H7_CLK_SYS_CK:
