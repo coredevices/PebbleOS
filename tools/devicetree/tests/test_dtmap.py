@@ -2653,6 +2653,63 @@ def test_entry_steps_over_the_cells_of_each_target(tmp_path):
         dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
 
 
+def test_router_driver_bound_by_its_masters(tmp_path):
+    classes = {
+        **CLASSES,
+        "dma": {"class": "dma", "type": "struct dma", "include": "dma.h"},
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    dma1: dma@1000 {
+        compatible = "acme,dma";
+        reg = <0x1000 0x100>;
+    };
+    bdma: dma@2000 {
+        compatible = "acme,bdma";
+        reg = <0x2000 0x100>;
+    };
+    mux1: mux@3000 {
+        compatible = "acme,mux";
+        reg = <0x3000 0x100>;
+        dma-masters = <&dma1>;
+    };
+    mux2: mux@4000 {
+        compatible = "acme,mux";
+        reg = <0x4000 0x100>;
+        dma-masters = <&bdma>;
+    };
+};
+"""
+    group = [
+        {
+            "compatible": "acme,mux",
+            "config": "MUX",
+            "class": "dma",
+            "define": define,
+            "masters": master,
+            "args": [{"reg": 0}],
+        }
+        for define, master in (("MUX", "acme,dma"), ("BMUX", "acme,bdma"))
+    ]
+    path, dtb = tmp_path / "mux.dts", tmp_path / "mux.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = [dtmap.Spec(f"m{i}", data, classes) for i, data in enumerate(group)]
+    loaded[0].file = "acme_mux_dma_acme_dma"
+    loaded[1].file = "acme_mux_dma_acme_bdma"
+    gen = dtmap.Generator(fdt.load(dtb), {"acme,mux": loaded}, {"MUX"})
+    gen.run()
+    assert "MUX(dt_mux1, 0x3000);" in instances(gen, "acme_mux_dma_acme_dma")
+    assert "BMUX(dt_mux2, 0x4000);" in instances(gen, "acme_mux_dma_acme_bdma")
+    assert "\nMUX(dt_mux2" not in "\n" + body(gen)
+    assert "acme,bdma" in dtmap.kconfig_compatibles({"acme,mux": loaded})
+
+
 def test_from_the_node_pointing_here(tmp_path):
     classes = {
         **CLASSES,
