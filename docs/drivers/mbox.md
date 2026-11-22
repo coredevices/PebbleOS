@@ -15,3 +15,4 @@ over channels. A consumer takes its channel from a devicetree `mboxes` entry.
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
 | SiFli SF32LB mailbox | `sifli,sf32lb52-mailbox` | `CONFIG_MBOX_SF32LB` |
+| STM32H7 hardware semaphores | `st,stm32-hwspinlock` | `CONFIG_MBOX_STM32_HSEM` |
