@@ -5,4 +5,5 @@
 config: TIMER_STM32_LPTIM
 labels:
   - lptimer1
+  - lptimer2
 compatible: st,stm32-lptimer-timer

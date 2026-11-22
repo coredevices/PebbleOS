@@ -39,12 +39,17 @@ config TIMER_STM32_TIM
       mode.
 
 config TIMER_STM32_LPTIM
-    bool "ST STM32 LPTIM1"
+    bool "ST STM32 LPTIM"
     select CLK
     help
-      Clock source and clock event device on LPTIM1 of the STM32H7,
-      counting its kernel clock, the 32.768 kHz crystal on boards that
-      have one. It keeps running and wakes the CPU up in Stop mode.
+      Clock source and clock event device on LPTIM1 of the STM32H7, or
+      LPTIM2 when the board enables it instead, counting its kernel clock,
+      the 32.768 kHz crystal on boards that have one. It keeps running and
+      wakes the CPU up in Stop mode.
+
+config TIMER_STM32_LPTIM2
+    def_bool $(dt_nodelabel_enabled,lptimer2)
+    depends on TIMER_STM32_LPTIM
 
 config TIMER_POSIX
     bool "POSIX"

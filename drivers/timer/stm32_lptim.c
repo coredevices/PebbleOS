@@ -28,7 +28,20 @@
  * once the counter moved on far enough for the one before to be taken.
  */
 
-static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, STM32H7_CLK_LPTIM1_CK);
+// LPTIM1, or LPTIM2 for a core that leaves LPTIM1 to the other
+#ifdef CONFIG_TIMER_STM32_LPTIM2
+#define LPTIM_BASE PBL_DT_REG_LPTIMER2
+#define LPTIM_CLK  STM32H7_CLK_LPTIM2_CK
+#define LPTIM_IRQN PBL_SOC_IRQN_LPTIM2
+#define LPTIM_NAME "lptim2"
+#else
+#define LPTIM_BASE PBL_DT_REG_LPTIMER1
+#define LPTIM_CLK  STM32H7_CLK_LPTIM1_CK
+#define LPTIM_IRQN PBL_SOC_IRQN_LPTIM1
+#define LPTIM_NAME "lptim1"
+#endif
+
+static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, LPTIM_CLK);
 static uint64_t s_rate_mhz;
 // Count at which the last compare value was written, if any
 static bool s_cmp_written;
@@ -41,11 +54,11 @@ static bool s_forced;
 static atomic_bool s_armed;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(PBL_DT_REG_LPTIMER1 + offset);
+  return pbl_readl(LPTIM_BASE + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, PBL_DT_REG_LPTIMER1 + offset);
+  pbl_writel(value, LPTIM_BASE + offset);
 }
 
 // The counter runs on the low-power clock: read until two reads agree
@@ -83,7 +96,7 @@ static void prv_set_next(const struct pbl_clockevent *ce, uint32_t delta) {
   atomic_store(&s_armed, true);
 
   if (s_forced) {
-    pbl_irq_set_pending(PBL_IRQN(LPTIM1));
+    pbl_irq_set_pending(LPTIM_IRQN);
   }
 }
 
@@ -102,16 +115,16 @@ static const struct pbl_clockevent_ops s_ce_ops = {
   .shutdown = prv_shutdown,
 };
 
-PBL_DEVICE_STATE_DEFINE(s_lptim1_cs);
-static const struct pbl_clocksource s_lptim1_cs =
-    PBL_CLOCKSOURCE_INIT(s_lptim1_cs, "lptim1", prv_init, nullptr, &s_cs_ops, 16);
+PBL_DEVICE_STATE_DEFINE(s_lptim_cs);
+static const struct pbl_clocksource s_lptim_cs =
+    PBL_CLOCKSOURCE_INIT(s_lptim_cs, LPTIM_NAME, prv_init, nullptr, &s_cs_ops, 16);
 
-PBL_DEVICE_STATE_DEFINE(s_lptim1_ce);
-static const struct pbl_clockevent s_lptim1_ce = PBL_CLOCKEVENT_INIT(
-    s_lptim1_ce, "lptim1", prv_init, nullptr, &s_ce_ops, MIN_DELTA, LPTIM_CNT_MASK / 2U);
+PBL_DEVICE_STATE_DEFINE(s_lptim_ce);
+static const struct pbl_clockevent s_lptim_ce = PBL_CLOCKEVENT_INIT(
+    s_lptim_ce, LPTIM_NAME, prv_init, nullptr, &s_ce_ops, MIN_DELTA, LPTIM_CNT_MASK / 2U);
 
-const struct pbl_clocksource *const pbl_system_clocksource = &s_lptim1_cs;
-const struct pbl_clockevent *const pbl_system_clockevent = &s_lptim1_ce;
+const struct pbl_clocksource *const pbl_system_clocksource = &s_lptim_cs;
+const struct pbl_clockevent *const pbl_system_clockevent = &s_lptim_ce;
 
 static void prv_isr(void) {
   if ((prv_getreg(STM32_LPTIM_ISR_OFFSET) & LPTIM_ISR_CMPM) != 0U) {
@@ -124,11 +137,11 @@ static void prv_isr(void) {
   }
 
   atomic_store(&s_armed, false);
-  pbl_clockevent_handler(&s_lptim1_ce);
+  pbl_clockevent_handler(&s_lptim_ce);
 }
 
 // Lowest priority, as the kernel's own interrupts.
-PBL_IRQ_CONNECT(LPTIM1, (1U << CONFIG_NUM_IRQ_PRIO_BITS) - 1U, prv_isr, , 0);
+PBL_IRQ_CONNECT_NUM(LPTIM_IRQN, (1U << CONFIG_NUM_IRQ_PRIO_BITS) - 1U, prv_isr, , 0);
 
 // Both devices share the timer.
 static int prv_init(const struct pbl_device *dev) {
@@ -161,14 +174,14 @@ static int prv_init(const struct pbl_device *dev) {
     // Not counting yet, nothing sets a flag while they are cleared
     prv_putreg(STM32_LPTIM_ICR_OFFSET, LPTIM_ISR_ALL);
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT);
-    pbl_irq_enable(PBL_IRQN(LPTIM1));
+    pbl_irq_enable(LPTIM_IRQN);
     s_started = true;
   }
 
-  if (dev == &s_lptim1_cs.dev) {
-    pbl_clocksource_set_mhz(&s_lptim1_cs, s_rate_mhz);
+  if (dev == &s_lptim_cs.dev) {
+    pbl_clocksource_set_mhz(&s_lptim_cs, s_rate_mhz);
   } else {
-    pbl_clockevent_set_hz(&s_lptim1_ce, (uint32_t)(s_rate_mhz / 1000U));
+    pbl_clockevent_set_hz(&s_lptim_ce, (uint32_t)(s_rate_mhz / 1000U));
   }
 
   return 0;
