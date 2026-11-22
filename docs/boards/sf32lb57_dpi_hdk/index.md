@@ -25,8 +25,10 @@ module, which carries an SF32LB579V6EN6.
 - **PSRAM**: 16 MiB HyperRAM in the SoC package
 - **Clocks**: 48 MHz crystal
 - **Buttons**: three user buttons and a reset button
-- **Microphones**: two analog MEMS microphones
-- **Speaker**: Nsiway NS4150B class D amplifier, with a speaker connector
+- **Microphones**: two analog MEMS microphones, U9 on ADC1P with H46 and U10
+  on PA10 (ADC2P) with H47, powered from the codec's microphone bias
+- **Speaker**: Nsiway NS4150B class D amplifier on the codec DAC, to J12, with
+  H42 for its 5 V supply and H43 on 1-2 for its enable on PA51
 - **USB**: WCH CH343P USB to UART bridge on the debug UART, and a full-speed
   USB port, both on USB-C
 - **Storage**: microSD card slot

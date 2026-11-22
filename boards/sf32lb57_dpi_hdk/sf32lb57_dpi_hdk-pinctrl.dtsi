@@ -167,6 +167,24 @@
 		};
 	};
 
+	// Analog microphones: U9 on ADC1P, U10 on PA10 (ADC2P), powered from MIC_BIAS
+	audcodec_default: audcodec-default-state {
+		adc1-pins {
+			pins = "PA55";
+			function = "adc1p";
+		};
+
+		adc2-pins {
+			pins = "PA10";
+			function = "adc2p";
+		};
+
+		micbias-pins {
+			pins = "PA56";
+			function = "micbias";
+		};
+	};
+
 	lcd_qspi_touch_default: touch-default-state {
 		int-pins {
 			pins = "PA06";

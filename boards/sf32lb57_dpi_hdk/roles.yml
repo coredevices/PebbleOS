@@ -9,3 +9,5 @@ bt_controller: lcpu
 udc: usbc
 charger: pmuc
 can_bus: can1
+mic: mic
+speaker: speaker
