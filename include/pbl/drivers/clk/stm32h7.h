@@ -98,6 +98,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_BDMA_CK 74
 /** CRC unit clock. */
 #define STM32H7_CLK_CRC_CK 75
+/** ADC3 bus clock, which also clocks its conversions in synchronous mode. */
+#define STM32H7_CLK_ADC3_CK 128
 /** DMA2D clock. */
 #define STM32H7_CLK_DMA2D_CK 56
 /** DSI clock. */
