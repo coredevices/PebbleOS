@@ -172,6 +172,16 @@
 		};
 	};
 
+	sai4a_pdm: sai4a-pdm-0 {
+		pins {
+			pinmux = <STM32_PINMUX('E', 2, AF10)>, /* SAI4_CK1 */
+				 <STM32_PINMUX('C', 1, AF10)>; /* SAI4_D1 */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+	};
+
 	touch_default: touch-0 {
 		pins {
 			pinmux = <STM32_PINMUX('K', 7, GPIO)>; /* CTP_INT */
