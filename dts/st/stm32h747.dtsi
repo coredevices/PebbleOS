@@ -50,6 +50,11 @@
 	st,syscfg = <&pwr>;
 };
 
+// The interrupt of the Cortex-M7, then that of the Cortex-M4
+&hsem {
+	interrupts = <125>, <126>;
+};
+
 &rtc {
 	st,syscfg = <&pwr 0x00 0x100>;
 };
