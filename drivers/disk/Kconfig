@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DISK
+    bool "Disks"
+    help
+      Disk class (pbl/drivers/disk.h), storage read and written in whole
+      sectors, selected by the disk drivers.
