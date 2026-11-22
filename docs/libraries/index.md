@@ -13,6 +13,7 @@ c.md
 util.md
 fuel_gauge/index.md
 kraepelin.md
+pdm.md
 vanhees.md
 shared.md
 ```
