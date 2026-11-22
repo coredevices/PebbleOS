@@ -11,6 +11,10 @@ tests link against directly.
   `pbl/kraepelin/kraepelin.h`; see {apidoc}`the API reference <kraepelin>`.
 - **Fuel gauge**: `lib/fuel_gauge`, battery state-of-charge estimation,
   included as `pbl/fuel_gauge/fuel_gauge.h`; see [Fuel gauge](fuel_gauge/index.md).
+- **PDM**: `lib/pdm`, the decimation of the stream of a PDM microphone to
+  PCM, for audio interfaces that capture it raw, included as
+  `pbl/pdm/pdm.h`; its tables come from `tools/pdm/pdm_tables.py`; see
+  {apidoc}`the API reference <pdm>`.
 - **van Hees**: `lib/vanhees`, the wrist angle sleep classifier the
   activity service tells sleep minutes apart with, included as
   `pbl/vanhees/vanhees.h`; see {apidoc}`the API reference <vanhees>`.

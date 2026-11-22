@@ -9,3 +9,4 @@ tools/clar/*
 tests/fixtures/**
 third_party/nimble/port/include/syscfg/syscfg.h
 tests/vendor/duma/*
+lib/pdm/pdm_tables.h

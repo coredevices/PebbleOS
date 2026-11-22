@@ -18,6 +18,12 @@ config KRAEPELIN
 
 rsource "fuel_gauge/Kconfig"
 
+config PDM
+    bool
+    help
+      Decimation of the stream of PDM microphones to PCM, for the audio
+      interfaces that capture it raw.
+
 config VANHEES
     bool "van Hees"
     help
