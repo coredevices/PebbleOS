@@ -45,6 +45,28 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		// The factory calibration of the analog blocks, in system memory
+		romem: efuse@1ff1e800 {
+			compatible = "st,stm32f4-otp";
+			reg = <0x1ff1e800 0x100>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			// The temperature sensor at 30 and 130 degrees (110 on revision Y), and
+			// VREFINT, read at 3.3 V
+			ts_cal1: calib@20 {
+				reg = <0x20 0x2>;
+			};
+
+			ts_cal2: calib@40 {
+				reg = <0x40 0x2>;
+			};
+
+			vrefint: calib@60 {
+				reg = <0x60 0x2>;
+			};
+		};
+
 		lptimer1: timer@40002400 {
 			compatible = "st,stm32-lptimer";
 			reg = <0x40002400 0x400>;
@@ -389,5 +411,29 @@
 			status = "disabled";
 		};
 
+		adc_3: adc@58026000 {
+			compatible = "st,stm32h7-adc-core";
+			reg = <0x58026000 0x400>;
+			interrupts = <127>;
+			clocks = <&rcc ADC3_CK>;
+			clock-names = "bus";
+			interrupt-controller;
+			#interrupt-cells = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+
+			// Its internal channels: the temperature sensor on 18, VREFINT on 19
+			adc3: adc@0 {
+				compatible = "st,stm32h7-adc";
+				#io-channel-cells = <1>;
+				reg = <0x0>;
+				interrupt-parent = <&adc_3>;
+				interrupts = <0>;
+				nvmem-cells = <&vrefint>, <&ts_cal1>, <&ts_cal2>;
+				nvmem-cell-names = "vrefint", "ts-cal1", "ts-cal2";
+				status = "disabled";
+			};
+		};
 	};
 };
