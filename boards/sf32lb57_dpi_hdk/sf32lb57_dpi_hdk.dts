@@ -41,6 +41,33 @@
 				 &gpio1 6 IRQ_TYPE_LEVEL_LOW>;
 	};
 
+	// NS4150B on DAC1P/DAC1N, with H42 fitted for its 5 V supply and H43 on
+	// 1-2 for its CTRL on PA51; the speaker goes in J12
+	speaker_amp: audio-amplifier {
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&gpio1 51 GPIO_ACTIVE_HIGH>;
+	};
+
+	speaker: sound-speaker {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "speaker";
+		simple-audio-card,aux-devs = <&speaker_amp>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&audcodec 0>;
+		};
+	};
+
+	// U9 and U10, with H46 and H47 fitted: mono records U9, stereo both
+	mic: sound-mic {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "mic";
+
+		simple-audio-card,cpu {
+			sound-dai = <&audcodec 1>;
+		};
+	};
+
 	// KEY-1..3 pull PA34 up through a ladder, which raises its GPIO too
 	adc-keys {
 		compatible = "adc-keys-irq";
@@ -93,6 +120,16 @@ lcd_qspi_i2c: &i2c1 {
 &can1 {
 	pinctrl-0 = <&can1_default>;
 	pinctrl-names = "default";
+	status = "okay";
+};
+
+&audcodec {
+	pinctrl-0 = <&audcodec_default>;
+	pinctrl-names = "default";
+	dmas = <&gpdma1 3 SF32LB57_GPDMA1_REQ_AUDCODEC_DAC0 SF32LB57_DMA_PRIO_HIGH>,
+	       <&gpdma1 4 SF32LB57_GPDMA1_REQ_AUDCODEC_ADC0 SF32LB57_DMA_PRIO_HIGH>,
+	       <&gpdma1 5 SF32LB57_GPDMA1_REQ_AUDCODEC_ADC1 SF32LB57_DMA_PRIO_HIGH>;
+	dma-names = "tx", "rx1", "rx2";
 	status = "okay";
 };
 
