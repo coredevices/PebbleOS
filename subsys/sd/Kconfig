@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SD
+    bool "SD cards"
+    select SDHC
+    select DISK
+    help
+      The SD card stack (pbl/sd/sd.h): the card in the slot of the board's
+      SD host controller, its sdhc role, brought up as a disk of 512-byte
+      sectors.
+
+if SD
+
+module = SD
+module-str = SD cards
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SD
