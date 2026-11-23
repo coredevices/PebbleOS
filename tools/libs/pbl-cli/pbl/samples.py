@@ -16,7 +16,7 @@ A sample is a directory with a ``sample.yml`` next to its ``CMakeLists.txt``:
     skip: [native_emery]
     roles: [accel]
     addons: [sifli_lcm_1p85]
-    integration: [qemu_emery, asterix]
+    integration: [qemu_emery, obelix@pvt]
     build_only: true
 
 ``expect`` is what makes the sample a test: the lines its console has to
@@ -27,9 +27,9 @@ what it needs (default: all of them), and ``skip`` names those that lack it.
 ``roles`` names the roles it uses: boards without them, after the board's and
 the sample's roles files, are skipped too. ``addons`` are plugged into the
 board, from ``boards/addons``, and give it roles too. ``integration`` names
-the boards it covers enough to check on: with ``--integration`` it is only
-built and run on those (default: every board it is for), and with
-``build_only`` it is only built.
+the boards it covers enough to check on, with their revision for boards that
+have revisions: with ``--integration`` it is built and run on each of those,
+and a sample naming none is an error. With ``build_only`` it is only built.
 """
 
 import os
@@ -86,8 +86,8 @@ class Sample:
 
     def integrates(self, board):
         """Whether ``board`` is one to check the sample on in integration mode."""
-        name = board.partition("@")[0]
-        return not self.integration or name in self.integration
+        return any(_names_board(entry, board) for entry in self.integration)
+
 
     def missing_roles(self, srcdir, board):
         """The roles the sample uses that ``board`` gives no device."""
@@ -105,6 +105,35 @@ class Sample:
         except dtmap.DtError as e:
             raise SampleError(str(e)) from e
         return [role for role in self.roles if role not in have]
+
+
+def _names_board(entry, board):
+    """Whether an entry of a board list, ``name[@revision]``, names ``board``: a revision
+    of a board matches the entry naming the board alone too."""
+    name, _, revision = entry.partition("@")
+    board_name, _, board_revision = board.partition("/")[0].partition("@")
+    return name == board_name and (not revision or revision == board_revision)
+
+
+def plan(found, board=None, integration=False):
+    """The (board, sample) pairs to build, by board, in sample order within a board.
+
+    Without ``integration`` every sample is for ``board``. With it, each sample is for each of
+    its integration boards, and ``board``, if given, keeps only those naming it.
+    """
+    if not integration:
+        return [(board, sample) for sample in found]
+    missing = [sample.name for sample in found if not sample.integration]
+    if missing:
+        raise SampleError(f"samples naming no integration board: {', '.join(missing)}")
+    pairs = []
+    for sample in found:
+        if board is not None:
+            if sample.integrates(board):
+                pairs.append((board, sample))
+        else:
+            pairs += [(entry, sample) for entry in sample.integration]
+    return sorted(pairs, key=lambda pair: pair[0])
 
 
 def load(path, name=None):
