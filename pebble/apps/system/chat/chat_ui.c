@@ -675,6 +675,7 @@ static int message_image_top(int index, GRect bounds);
 static void show_action_window(ActionMenuMode mode);
 static void end_search(void);
 static void start_dictation(void);
+static bool phone_ready(void);
 static void action_click_config_provider(void *context);
 static void action_window_unload(Window *window);
 #if TOUCH_KEYBOARD_AVAILABLE
@@ -2781,7 +2782,7 @@ static int s_day_pill_offset = -1;      // scroll offset the pill last saw
 static time_t message_time(const Message *m) {
   int64_t v = 0;
   for (const char *p = m->id; *p; p++) {
-    if (*p < '0' || *p > '9') {
+    if (*p < '0' || *p > '9' || v > (INT64_MAX - 9) / 10) {  // not a number, or past any real time
       return 0;
     }
     v = v * 10 + (*p - '0');
@@ -5616,9 +5617,12 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
     draw_spinner(ctx, GPoint(bounds.size.w / 2, older_spinner_y() - s_chat_scroll_offset));
   }
 
+  // A message is drawn while any of it shows: its reaction pill and status hang below the
+  // bubble, its day label above
   int first = 0;
   while (first < s_message_count - 1 &&
-         s_message_y[first] + s_message_h[first] < s_chat_scroll_offset - 12) {
+         s_message_y[first] + s_message_h[first] + reactions_overhang(&s_messages[first]) + 16 <
+             s_chat_scroll_offset) {
     first++;
   }
 
@@ -5627,7 +5631,7 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
     MsgBox *box = &s_box[i];
     int y = s_message_y[i] - s_chat_scroll_offset;
     int h = s_message_h[i];
-    if (y > visible_h) {
+    if (y - (s_day_label[i] ? DAY_LABEL_H : 0) > visible_h) {
       break;
     }
     bool selected = i == s_selected_message;
@@ -8291,7 +8295,7 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       break;
     case ActionItemArchiveChat: {
       int index = action_chat_index();
-      if (index >= 0) {
+      if (index >= 0 && phone_ready()) {
         send_selected_chat_action("archive_chat");
         copy_cstr(s_chat_to_remove, sizeof(s_chat_to_remove), s_chats[index].id);
         app_timer_register(0, leave_chat_after_action, NULL);
@@ -8314,7 +8318,7 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
     case ActionItemMarkUnread: {
       // One item, both ways: an unread chat is marked read, a read one unread
       int index = action_chat_index();
-      if (index < 0) {
+      if (index < 0 || !phone_ready()) {
         break;
       }
       bool was_unread = s_view_state != ViewStateChat && chat_is_unread(&s_chats[index]);
@@ -8346,8 +8350,10 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       s_pending_send_as_reply = false;
       break;
     case ActionItemSearch:
-      s_search_dictation = true;
-      s_native_deferred_dictation = true;
+      if (phone_ready()) {
+        s_search_dictation = true;
+        s_native_deferred_dictation = true;
+      }
       break;
     case ActionItemShowInbox:
       end_search();
@@ -8438,7 +8444,20 @@ static void start_dictation(void) {
   if (!s_dictation_session) {
     s_dictation_session = dictation_session_create(MAX_TEXT - 1, dictation_callback, NULL);
   }
-  dictation_session_start(s_dictation_session);
+  if (!s_dictation_session ||
+      dictation_session_start(s_dictation_session) != DictationSessionStatusSuccess) {
+    s_search_dictation = false;  // no callback comes: the next dictation is a message again
+    show_status("Dictation failed");
+  }
+}
+
+// Archive, read state and search are done by the phone; without it, change nothing here
+static bool phone_ready(void) {
+  if (chat_ds_phone_connected()) {
+    return true;
+  }
+  show_status("Phone not connected");
+  return false;
 }
 
 static void action_window_unload(Window *window) {

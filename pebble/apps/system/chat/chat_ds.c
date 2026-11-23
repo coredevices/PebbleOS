@@ -63,6 +63,15 @@ typedef struct {
   uint32_t time;
 } RowRef;
 
+// The newest rows the phone rewrites in place: a status, a reaction, an edit
+#define TAIL_ROWS 10
+
+typedef struct {
+  uint8_t key[sizeof(((RowRef *)0)->key)];
+  uint8_t key_len;
+  uint32_t hash;
+} ShownRow;
+
 static struct {
   AppMessageInboxReceived inbox_received;
   AppMessageOutboxSent outbox_sent;
@@ -80,6 +89,8 @@ static struct {
   bool chat_open;
   uint8_t open_chat[CHAT_DB_CHAT_KEY_LEN];
   uint32_t newest_shown;
+  ShownRow tail[TAIL_ROWS];
+  int tail_count;
   int transfer_seq;
 
   char launch_hint[64];
@@ -157,7 +168,12 @@ static void prv_chat_time(char *out, size_t size, uint32_t utc) {
   const int days_ago = (today.tm_yday - when.tm_yday + 366) % 366;
   static const char *const weekdays[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   if (when.tm_year == today.tm_year && days_ago == 0) {
+    if (clock_is_24h_style()) {
     snprintf(out, size, "%u:%02u", (uint8_t)when.tm_hour, (uint8_t)when.tm_min);
+  } else {
+    snprintf(out, size, "%u:%02u %s", (uint8_t)((when.tm_hour + 11) % 12 + 1), (uint8_t)when.tm_min,
+             when.tm_hour < 12 ? "AM" : "PM");
+  }
   } else if (days_ago < 7 && now - t < 7 * 86400) {
     snprintf(out, size, "%s", weekdays[when.tm_wday]);
   } else {
@@ -168,7 +184,12 @@ static void prv_chat_time(char *out, size_t size, uint32_t utc) {
 static void prv_message_time(char *out, size_t size, uint32_t utc) {
   const time_t t = utc;
   struct pbl_tm when = *pbl_override_localtime(&t);
-  snprintf(out, size, "%u:%02u", (uint8_t)when.tm_hour, (uint8_t)when.tm_min);
+  if (clock_is_24h_style()) {
+    snprintf(out, size, "%u:%02u", (uint8_t)when.tm_hour, (uint8_t)when.tm_min);
+  } else {
+    snprintf(out, size, "%u:%02u %s", (uint8_t)((when.tm_hour + 11) % 12 + 1), (uint8_t)when.tm_min,
+             when.tm_hour < 12 ? "AM" : "PM");
+  }
 }
 
 ////////////////////////////
@@ -503,6 +524,45 @@ static void prv_deliver_appended(const RowRef *rows, int from, int to, int total
   prv_deliver_done("messages_done", total, transfer_id);
 }
 
+static uint32_t prv_hash(const uint8_t *b, int len) {
+  uint32_t h = 2166136261u;  // FNV-1a
+  for (int i = 0; i < len; i++) {
+    h = (h ^ b[i]) * 16777619u;
+  }
+  return h;
+}
+
+// Remembers the open chat's newest rows; with deliver, sends each one that changed since as an
+// update in place (Sent to Seen, a new reaction). Rows new to the tail were appended, not updated.
+static void prv_check_tail(const RowRef *rows, int count, bool deliver) {
+  ShownRow now[TAIL_ROWS];
+  int n = 0;
+  for (int i = count > TAIL_ROWS ? count - TAIL_ROWS : 0; i < count; i++) {
+    int len;
+    uint8_t *val = prv_read(&rows[i], &len);
+    if (!val) {
+      continue;
+    }
+    ShownRow *row = &now[n++];
+    memcpy(row->key, rows[i].key, rows[i].key_len);
+    row->key_len = rows[i].key_len;
+    row->hash = prv_hash(val, len);
+    for (int j = 0; deliver && j < s_ds.tail_count; j++) {
+      const ShownRow *old = &s_ds.tail[j];
+      if (old->key_len == row->key_len && memcmp(old->key, row->key, row->key_len) == 0) {
+        ChatDbMessage m;
+        if (old->hash != row->hash && chat_db_parse_message(val, len, &m)) {
+          prv_deliver_message("message_update", 0, 0, 0, &m);
+        }
+        break;
+      }
+    }
+    app_free(val);
+  }
+  memcpy(s_ds.tail, now, n * sizeof(now[0]));
+  s_ds.tail_count = n;
+}
+
 // Nothing older or newer to show.
 static void prv_deliver_no_more(bool silent) {
   DictionaryIterator *iter = prv_begin("messages_done");
@@ -543,6 +603,7 @@ static void prv_deliver_window(const uint8_t *chat_key) {
   const int count = prv_rows(CHAT_DB_KIND_MESSAGE, chat_key, rows, MAX_ROWS);
   s_ds.newest_shown = 0;
   prv_deliver_window_rows(ModeInitial, false, rows, prv_window_start(count, -1, 0), count);
+  prv_check_tail(rows, count, false);
   app_free(rows);
 }
 
@@ -719,7 +780,11 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
   } else if (strcmp(cmd, "archive_chat") == 0 || strcmp(cmd, "mark_unread") == 0 ||
              strcmp(cmd, "mark_read") == 0 || strcmp(cmd, "app_open") == 0 ||
              strcmp(cmd, "search_chats") == 0) {
-    prv_forward(dict, len);  // the phone does it, then syncs the chats
+    // The phone does it, then syncs the chats. app_open is a heartbeat: nothing to say if it's lost
+    if (!prv_forward(dict, len) && strcmp(cmd, "app_open") != 0) {
+      // A passing note: "error" in the list means the account failed to sign in
+      prv_deliver_simple("status", MESSAGE_KEY_Status, "Phone not connected");
+    }
   } else if (strcmp(cmd, "send_message") == 0 || strcmp(cmd, "edit_message") == 0 ||
              strcmp(cmd, "delete_message") == 0 || strcmp(cmd, "send_reaction") == 0) {
     if (!prv_forward(dict, len)) {
@@ -852,6 +917,7 @@ static void prv_apply_changes(void *data) {
   if (from < count) {
     prv_deliver_appended(rows, from, count, count);
   }
+  prv_check_tail(rows, count, true);
   app_free(rows);
 }
 
@@ -878,6 +944,10 @@ static void prv_hint_arrived(void) {
   if (!prv_open_hinted_chat()) {  // not on the watch yet: open it when the phone sends it
     s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
   }
+}
+
+bool chat_ds_phone_connected(void) {
+  return pbl_pp_session_get_system() != nullptr;
 }
 
 bool chat_ds_has_launch_hint(void) {

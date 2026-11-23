@@ -23,6 +23,9 @@ void chat_ui_open_chat(const char *chat_id);
 //! Whether the app was opened for a chat; the UI then keeps the chat list hidden until it opens.
 bool chat_ds_has_launch_hint(void);
 
+// True while the phone is connected to take the app's commands.
+bool chat_ds_phone_connected(void);
+
 //! The chat picture size the UI draws (square, in pixels), or 0 when pictures are off.
 //! Implemented by chat_ui.c.
 int chat_ui_avatar_size(void);
