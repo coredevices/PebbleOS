@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/mag.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
@@ -63,14 +63,20 @@ typedef struct {
 static void prv_update_display(void *context) {
   AppData *data = context;
 
-  MagData sample;
-  int ret = pbl_mag_peek(MAG, &sample);
+  int32_t nt[3];
+  int ret = pbl_sensor_read(MAG, PBL_SENSOR_MAGN, nt, nullptr);
 
   if (ret != 0) {
     snprintf(data->status_string, sizeof(data->status_string), "MAG ERROR:\n%d", ret);
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
+
+  const struct {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+  } sample = {(int16_t)(nt[0] / 100), (int16_t)(nt[1] / 100), (int16_t)(nt[2] / 100)};
 
   // Log raw magnetometer samples at debug level
   PBL_LOG_DBG("Mag (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x, sample.y, sample.z);
@@ -179,7 +185,7 @@ static void prv_handle_init(void) {
   app_state_set_user_data(data);
 
   // Initialize magnetometer
-  (void)pbl_mag_set_sampling_interval(MAG, 50000U, nullptr);
+  (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){50000});
 
   Window *window = &data->window;
   window_init(window, "");
@@ -212,7 +218,7 @@ static void prv_handle_init(void) {
 
 static void prv_handle_deinit(void) {
   evented_timer_cancel(s_timer);
-  (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
+  (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){0});
 }
 
 static void s_main(void) {

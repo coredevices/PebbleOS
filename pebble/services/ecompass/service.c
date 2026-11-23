@@ -1,214 +1,169 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/mag.h>
-#include <pbl/kernel/assert.h>
+#include "calibration.h"
+
+#include <math.h>
+
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/syscall.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/sensing/sensing.h>
 #include <pbl/services/ecompass.h>
 #include <pbl/services/event_service.h>
+#include <pbl/settings/settings.h>
 #include <pbl/util/trig.h>
 
-#include <applib/accel_service.h>
 #include <applib/compass_service.h>
 #include <syscall/syscall.h>
 
 PBL_LOG_MODULE_DEFINE(service_ecompass, CONFIG_SERVICE_ECOMPASS_LOG_LEVEL);
 
-// Duration (in minutes) to run high-frequency sampling during compass calibration.
-// Defaults to 2 minutes, but some platforms (e.g., Asterix) require longer.
+// Faster magnetometer sampling while uncalibrated, for at most this long per subscription
 #ifdef CONFIG_BOARD_ASTERIX
-#define ECOMPASS_CALIBRATION_FAST_MINUTES 6
+#define FAST_MINUTES 6
 #else
-#define ECOMPASS_CALIBRATION_FAST_MINUTES 2
+#define FAST_MINUTES 2
 #endif
 
-#define ECOMPASS_SAMPLING_INTERVAL_US       200000U
-#define ECOMPASS_CALIB_SAMPLING_INTERVAL_US 50000U
+#define MAG_INTERVAL_US      200000U
+#define MAG_FAST_INTERVAL_US 50000U
 
-#define VALID_CORR_MARKER       0x5644
-#define BITS_PER_CORRECTION_VAL 16
-#define CORRECTION_VAL_MASK     ((1 << BITS_PER_CORRECTION_VAL) - 1)
+// Heading events stay at the slow rate while sampling fast
+#define FAST_EVENT_DIVIDER (MAG_INTERVAL_US / MAG_FAST_INTERVAL_US)
 
-static CompassStatus s_current_cal_status = CompassStatusDataInvalid;
-static int16_t s_active_corr[3] = {};
+// Gravity: accelerometer at 25 Hz, low-pass filtered with a ~0.4 s time constant
+#define ACCEL_INTERVAL_US 40000U
+#define ACCEL_BATCH       5U
+#define ACCEL_ALPHA       0.1f
 
-static bool s_service_init = false;
-static bool s_saved_corr_present = false;
-static int16_t s_saved_corr[3] = {};
+// Fit error thresholds for the reported status
+#define CALIBRATED_ERROR  0.035f
+#define CALIBRATING_ERROR 0.10f
 
-static int32_t s_last_heading = -1; // the last heading we found
+// A sample this far off the field is disturbed: hold the status at calibrating
+#define DISTURBED_DEVIATION 0.25f
 
-static MagData s_mag_sample;
+// Below this horizontal fraction, the top of the watch points up or down: use its back
+#define MIN_HORIZONTAL 0.14f
 
-//////////////////////////////////////////////////////////////////////////////////
-// Calibration state variables
-static void prv_calibration_time_expired_cb(struct pbl_work *work);
+// Least time between two saves of an improving calibration
+#define SAVE_INTERVAL_S 600U
 
-static bool s_high_freq_calib_active = false;
-static bool s_calib_run = false;
-static struct pbl_wallclock_work s_cb_info;
+#define SETTINGS_FILE     "ecompass"
+#define SETTINGS_MAX_SIZE 256
+#define SETTINGS_VERSION  1U
 
-//////////////////////////////////////////////////////////////////////////////////
-// Compass subscription state variables
+struct prv_saved {
+  uint8_t version;
+  struct ecompass_cal cal;
+};
 
-static uint8_t s_compass_subscribers_count = 0;
-static bool s_compass_subscribers[NumPebbleTask] = {};
+static const char s_key[] = "cal";
 
-//////////////////////////////////////////////////////////////////////////////////
-// Accel service state variables
+static struct ecompass_calibrator s_cal;
+static bool s_loaded;
+static bool s_dirty;
+static uint32_t s_last_save_s;
 
-static AccelServiceState *s_accel_session = nullptr;
-static bool s_charger_plugged = false;
-static AccelRawData s_accel_data = {};
+static CompassStatus s_status = CompassStatusDataInvalid;
+static int32_t s_last_heading = -1;
 
-//////////////////////////////////////////////////////////////////////////////////
-// Private calibration handlers
+static bool s_charger_plugged;
+static bool s_fast;
+static bool s_fast_done;
+static uint32_t s_events;
+static struct pbl_wallclock_work s_fast_timer;
 
-static void prv_get_roll_and_pitch(AccelRawData *d, int32_t *rollp, int32_t *pitchp) {
-  if ((d->x == 0) && (d->y == 0) && (d->z == 0)) {
-    *rollp = *pitchp = 0;
+static uint8_t s_subscribers;
+static bool s_subscribed[NumPebbleTask];
+
+static struct pbl_sensing_client s_mag_client;
+static struct pbl_sensing_client s_accel_client;
+
+// Latest samples, under the device lock of their sensor
+static int32_t s_mag_nt[3];
+static float s_gravity[3];
+static bool s_gravity_valid;
+
+/*
+ * Persistence
+ */
+
+static void prv_load(void) {
+  struct pbl_settings_file file;
+  struct prv_saved saved;
+
+  s_loaded = true;
+
+  if (pbl_settings_open(&file, SETTINGS_FILE, SETTINGS_MAX_SIZE) != 0) {
+    ecompass_cal_init(&s_cal, nullptr);
     return;
   }
 
-  int32_t roll = atan2_lookup(d->y, d->z);
-
-  int32_t act_ang = (roll * 360) / TRIG_MAX_ANGLE;
-  if (act_ang > 180) {
-    roll = roll - TRIG_MAX_ANGLE;
+  if (pbl_settings_get(&file, s_key, sizeof(s_key), &saved, sizeof(saved)) == 0 &&
+      saved.version == SETTINGS_VERSION) {
+    PBL_LOG_DBG("Loaded a %d-parameter calibration", (int)saved.cal.order);
+    ecompass_cal_init(&s_cal, &saved.cal);
+  } else {
+    ecompass_cal_init(&s_cal, nullptr);
   }
 
-  int32_t pitch =
-      atan2_lookup(-d->x, (d->y * sin_lookup(roll) + d->z * cos_lookup(roll)) / TRIG_MAX_RATIO);
-
-  // solution repeats every 180 degrees
-  if (pitch > (TRIG_MAX_ANGLE / 4)) { // > 90 degrees
-    if (pitch < ((270 * TRIG_MAX_ANGLE) / 360)) {
-      pitch -= (TRIG_MAX_ANGLE / 2);
-    } else {
-      pitch -= TRIG_MAX_ANGLE;
-    }
-  }
-
-  *rollp = roll;
-  *pitchp = pitch;
+  pbl_settings_close(&file);
 }
 
-static int32_t prv_correct_for_roll_and_pitch(AccelRawData *accel_data, MagData *mag_data,
-                                              int32_t roll, int32_t pitch) {
-  int32_t mx = mag_data->x - s_active_corr[0];
-  int32_t my = mag_data->y - s_active_corr[1];
-  int32_t mz = mag_data->z - s_active_corr[2];
+static void prv_save(void) {
+  struct pbl_settings_file file;
+  const struct prv_saved saved = {
+    .version = SETTINGS_VERSION,
+    .cal = s_cal.cal,
+  };
 
-  int32_t mx_rot, my_rot;
+  s_dirty = false;
+  s_last_save_s = (uint32_t)(pbl_uptime_ms() / 1000U);
 
-  // per freescale AN4249, roll is unstable close to vertical but pitch is ok
-  int32_t corr = 0;
-  if (PBL_TRIGANGLE_TO_DEG(pitch) > 82) {
-    pitch = TRIG_MAX_ANGLE / 4;
-    roll = 0;
-  } else if (accel_data->z < 0) {
-    // the watch has been flipped over. If someone is viewing the watch
-    // at a pitch > 90 degrees, this means the heading will rotate around
-    // on them (since technically, the 'front' of the watch is pointing
-    // at them.) Flip the heading back around in this case.
-    corr = TRIG_MAX_ANGLE / 2;
+  if (pbl_settings_open(&file, SETTINGS_FILE, SETTINGS_MAX_SIZE) != 0) {
+    return;
   }
 
-  mx_rot = (mx * cos_lookup(pitch)) / TRIG_MAX_RATIO;
-  mx_rot += (((my * sin_lookup(pitch)) / TRIG_MAX_RATIO) * sin_lookup(roll)) / TRIG_MAX_RATIO;
-  mx_rot += (((mz * sin_lookup(pitch)) / TRIG_MAX_RATIO) * cos_lookup(roll)) / TRIG_MAX_RATIO;
-
-  my_rot = mz * sin_lookup(roll) - my * cos_lookup(roll);
-  my_rot /= TRIG_MAX_RATIO;
-
-  int32_t heading = (atan2_lookup(-my_rot, mx_rot) + corr) % TRIG_MAX_ANGLE;
-  return (heading);
-}
-
-//////////////////////////////////////////////////////////////////////////////////
-// Private handlers for compass service
-
-static void prv_calibration_time_expired_cb(struct pbl_work *work) {
-  PBL_LOG_DBG(
-      "Calibration time expired, complete, or app exit, "
-      "dropping back to low frequency");
-
-  if (pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr) != 0) {
-    PBL_LOG_WRN("Could not drop back to low frequency");
+  if (pbl_settings_set(&file, s_key, sizeof(s_key), &saved, sizeof(saved)) != 0) {
+    PBL_LOG_WRN("Could not save the calibration");
   }
 
-  s_high_freq_calib_active = false;
-  pbl_wallclock_work_stop(&s_cb_info);
+  pbl_settings_close(&file);
 }
 
-static void prv_accel_for_compass_handler(AccelRawData *d, uint32_t num_samples,
-                                          uint64_t timestamp) {
-  int32_t x = 0, y = 0, z = 0;
+/*
+ * Sampling rate
+ */
 
-  // 1st order butterworth filter with a cutoff freq of 0.02Fs
-  static int32_t xp = 0, yp = 0, zp = 0;
-  static int32_t xr = 0, yr = 0, zr = 0;
-
-  for (uint32_t i = 0; i < num_samples; i++) {
-    xr = (305 * d[i].x + 305 * xp + 9391 * xr) / 10000;
-    yr = (305 * d[i].y + 305 * yp + 9391 * yr) / 10000;
-    zr = (305 * d[i].z + 305 * zp + 9391 * zr) / 10000;
-    xp = d[i].x;
-    yp = d[i].y;
-    zp = d[i].z;
-    x += xr;
-    y += yr;
-    z += zr;
+static void prv_set_fast(bool fast) {
+  if (fast == s_fast) {
+    return;
   }
 
-  x /= (int)num_samples;
-  y /= (int)num_samples;
-  z /= (int)num_samples;
+  s_fast = fast;
+  pbl_sensing_client_set_interval(&s_mag_client, fast ? MAG_FAST_INTERVAL_US : MAG_INTERVAL_US);
 
-  // TODO: could this ever be called in the middle of ecompass_service_handle?
-  // map accel data to NED coordinate system
-  s_accel_data.x = y;
-  s_accel_data.y = x;
-  s_accel_data.z = -z;
-}
-
-static void prv_compass_data_service_stop(PebbleTask task) {
-  if (s_compass_subscribers[task]) {
-    s_compass_subscribers[task] = false;
-
-    if (--s_compass_subscribers_count == 0) {
-      // If this was the last subscribed process, then stop the compass
-      // service
-      if (s_high_freq_calib_active) {
-        prv_calibration_time_expired_cb(nullptr);
-        s_calib_run = false;
-      }
-      accel_session_data_unsubscribe(s_accel_session);
-      accel_session_delete(s_accel_session);
-      s_accel_session = nullptr;
-      (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
-    }
+  if (fast) {
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_fast_timer, 60, FAST_MINUTES);
+  } else {
+    pbl_wallclock_work_stop(&s_fast_timer);
   }
-  PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
 }
 
-static void prv_compass_data_service_start(PebbleTask task) {
-  prv_compass_data_service_stop(task);
-  s_compass_subscribers[task] = true;
-  if (++s_compass_subscribers_count == 1) {
-    // If this is the first subscriber to the compass service, start sampling
-    PBL_ASSERTN(s_accel_session == nullptr);
-
-    s_accel_session = accel_session_create();
-    accel_session_raw_data_subscribe(s_accel_session, ACCEL_SAMPLING_25HZ, 5,
-                                     prv_accel_for_compass_handler);
-
-    (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_SAMPLING_INTERVAL_US, nullptr);
-  }
-  PBL_LOG_DBG("subscribers %" PRIu8, s_compass_subscribers_count);
+static void prv_fast_expired(struct pbl_work *work) {
+  PBL_LOG_DBG("Fast calibration time expired");
+  s_fast_done = true;
+  prv_set_fast(false);
 }
+
+/*
+ * Sensor clients
+ */
 
 static void prv_post_event_work(void *data) {
   PebbleEvent e = {
@@ -217,159 +172,268 @@ static void prv_post_event_work(void *data) {
   event_put(&e);
 }
 
-static void prv_mag_sample_cb(const struct pbl_mag *mag, const MagData *sample, void *user_data) {
-  s_mag_sample = *sample;
+static bool prv_mag_notify(struct pbl_sensing_client *client) {
+  int32_t nt[3];
+  bool got = false;
 
-  // event_put() may block on KernelMain, which takes the device lock: post outside of it
-  pbl_sys_work_call_high(prv_post_event_work, nullptr);
+  while (pbl_sensing_read(client, nt, 1U, nullptr) == 1U) {
+    got = true;
+  }
+
+  if (got) {
+    s_mag_nt[0] = nt[0];
+    s_mag_nt[1] = nt[1];
+    s_mag_nt[2] = nt[2];
+
+    // event_put() may block on KernelMain, which takes the device lock: post outside of it
+    pbl_sys_work_call_high(prv_post_event_work, nullptr);
+  }
+
+  pbl_sensing_arm(client, 1U);
+
+  return true;
 }
 
-static const struct pbl_mag_listener s_mag_listener = {
-  .sample = prv_mag_sample_cb,
-};
+static bool prv_accel_notify(struct pbl_sensing_client *client) {
+  int32_t ug[ACCEL_BATCH][3];
+  uint16_t n;
 
-//////////////////////////////////////////////////////////////////////////////////
-// Public API
+  while ((n = pbl_sensing_read(client, &ug[0][0], ACCEL_BATCH, nullptr)) > 0U) {
+    for (uint16_t k = 0U; k < n; k++) {
+      for (int i = 0; i < 3; i++) {
+        float g = (float)ug[k][i] / 1e6f;
+        s_gravity[i] = s_gravity_valid ? s_gravity[i] + ACCEL_ALPHA * (g - s_gravity[i]) : g;
+      }
+      s_gravity_valid = true;
+    }
+  }
+
+  pbl_sensing_arm(client, ACCEL_BATCH);
+
+  return true;
+}
+
+/*
+ * Heading
+ */
+
+static void prv_cross(const float a[3], const float b[3], float out[3]) {
+  out[0] = a[1] * b[2] - a[2] * b[1];
+  out[1] = a[2] * b[0] - a[0] * b[2];
+  out[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+static float prv_norm(const float v[3]) {
+  return sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+// Heading of the top of the watch, clockwise from magnetic north, from the field and gravity in
+// the watch frame
+static bool prv_heading(const float m[3], const float up[3], int32_t *heading) {
+  const float down[3] = {-up[0], -up[1], -up[2]};
+  float east[3];
+  float north[3];
+
+  prv_cross(down, m, east);
+  prv_cross(east, down, north);
+
+  float en = prv_norm(east);
+  float nn = prv_norm(north);
+  if (en <= 0.0f || nn <= 0.0f) {
+    return false;
+  }
+
+  // Top of the watch, or its back when the top points up or down
+  float fe = east[1] / en;
+  float fn = north[1] / nn;
+  if (fe * fe + fn * fn < MIN_HORIZONTAL * MIN_HORIZONTAL) {
+    fe = -east[2] / en;
+    fn = -north[2] / nn;
+  }
+
+  *heading = atan2_lookup((int16_t)(fe * 16384.0f), (int16_t)(fn * 16384.0f)) % TRIG_MAX_ANGLE;
+
+  return true;
+}
+
+static CompassStatus prv_status(const float m[3]) {
+  const struct ecompass_cal *cal = &s_cal.cal;
+
+  if (cal->order == 0U || cal->error > CALIBRATING_ERROR) {
+    return CompassStatusDataInvalid;
+  }
+
+  if (!s_cal.verified || s_charger_plugged || cal->error > CALIBRATED_ERROR ||
+      fabsf(ecompass_cal_deviation(cal, m)) > DISTURBED_DEVIATION) {
+    return CompassStatusCalibrating;
+  }
+
+  return CompassStatusCalibrated;
+}
+
+/*
+ * Subscriptions
+ */
+
+static void prv_stop(PebbleTask task) {
+  if (!s_subscribed[task]) {
+    return;
+  }
+
+  s_subscribed[task] = false;
+  PBL_LOG_DBG("subscribers %d", (int)(s_subscribers - 1U));
+
+  if (--s_subscribers != 0U) {
+    return;
+  }
+
+  prv_set_fast(false);
+  pbl_sensing_client_remove(&s_accel_client);
+  pbl_sensing_client_remove(&s_mag_client);
+  s_gravity_valid = false;
+
+  if (s_dirty) {
+    prv_save();
+  }
+}
+
+static void prv_start(PebbleTask task) {
+  prv_stop(task);
+
+  s_subscribed[task] = true;
+  PBL_LOG_DBG("subscribers %d", (int)(s_subscribers + 1U));
+
+  if (s_subscribers++ != 0U) {
+    return;
+  }
+
+  if (!s_loaded) {
+    prv_load();
+  }
+
+  s_fast = false;
+  s_events = 0U;
+  s_mag_client.interval_us = MAG_INTERVAL_US;
+  if (pbl_sensing_client_add(&s_mag_client) == 0) {
+    pbl_sensing_arm(&s_mag_client, 1U);
+  }
+  if (pbl_sensing_client_add(&s_accel_client) == 0) {
+    pbl_sensing_arm(&s_accel_client, ACCEL_BATCH);
+  }
+}
+
+/*
+ * Public API
+ */
 
 void ecompass_handle_battery_state_change_event(PreciseBatteryChargeState new_state) {
-  if (new_state.is_plugged) {
-    s_charger_plugged = true;
-    s_current_cal_status = CompassStatusDataInvalid;
-    memset(s_active_corr, 0x00, sizeof(s_active_corr));
-    s_saved_corr_present = false;
-  } else if (s_charger_plugged) {
-    // we have unplugged the charger, initiate recalibration
-    s_charger_plugged = false;
-    s_calib_run = false; // trigger a rerun of fast compass calibration
-    PBL_LOG_DBG("Restarting calibration after charge event");
+  if (new_state.is_plugged == s_charger_plugged) {
+    return;
+  }
+
+  // Charging currents distort the field: calibration pauses meanwhile, and starts afresh after
+  s_charger_plugged = new_state.is_plugged;
+  if (!s_charger_plugged) {
+    ecompass_cal_reset_samples(&s_cal);
+    s_fast_done = false;
   }
 }
 
 void ecompass_service_init(void) {
-  s_service_init = true;
-  pbl_wallclock_work_init(&s_cb_info, prv_calibration_time_expired_cb);
+  pbl_wallclock_work_init(&s_fast_timer, prv_fast_expired);
 
-  (void)pbl_mag_set_listener(MAG, &s_mag_listener);
+  s_mag_client = (struct pbl_sensing_client){
+    .sensor = MAG,
+    .type = PBL_SENSOR_MAGN,
+    .batch = 1U,
+    .notify = prv_mag_notify,
+  };
+  s_accel_client = (struct pbl_sensing_client){
+    .sensor = ACCEL,
+    .type = PBL_SENSOR_ACCEL,
+    .interval_us = ACCEL_INTERVAL_US,
+    .batch = ACCEL_BATCH,
+    .notify = prv_accel_notify,
+  };
 
-  event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_compass_data_service_start,
-                     &prv_compass_data_service_stop);
+  event_service_init(PEBBLE_COMPASS_DATA_EVENT, &prv_start, &prv_stop);
 }
 
 void ecompass_service_handle(void) {
-  static int samples_collected = 0;
+  float m[3];
+  float up[3];
+  float corrected[3];
+  bool gravity_valid;
+  int32_t heading;
 
-  // Samples are reported for any magnetometer user
-  if (s_compass_subscribers_count == 0) {
+  if (s_subscribers == 0U) {
     return;
   }
 
-  MagData mag_data;
-  pbl_mag_lock(MAG);
-  mag_data = s_mag_sample;
-  pbl_mag_unlock(MAG);
+  pbl_sensor_lock(MAG);
+  for (int i = 0; i < 3; i++) {
+    m[i] = (float)s_mag_nt[i] / 1000.0f;
+  }
+  pbl_sensor_unlock(MAG);
 
-  // industry standard for heading coordinates uses NED convention (check out
-  // Freescale's AN4248 or ST's AN3192 as examples). Therefore, we map pebbles
-  // coordinate system (ENU) to NED in this service module
-  int16_t my_orig = mag_data.y;
-  mag_data.y = mag_data.x;
-  mag_data.x = my_orig;
-  mag_data.z = -mag_data.z;
+  pbl_sensor_lock(ACCEL);
+  gravity_valid = s_gravity_valid;
+  for (int i = 0; i < 3; i++) {
+    up[i] = s_gravity[i];
+  }
+  pbl_sensor_unlock(ACCEL);
 
-  samples_collected++;
-
-  // don't perform any calibration if the charger is plugged in
-  if (!s_charger_plugged && (s_current_cal_status != CompassStatusCalibrated)) {
-    // if we haven't tried to calibrate yet, run at a higher sampling rate
-    // for a short duration in order to finish calibration more quickly
-    if (!s_calib_run) {
-      ecomp_corr_reset();
-      (void)pbl_mag_set_sampling_interval(MAG, ECOMPASS_CALIB_SAMPLING_INTERVAL_US, nullptr);
-      pbl_wallclock_work_start(&pbl_sys_workq_high, &s_cb_info, 60,
-                               ECOMPASS_CALIBRATION_FAST_MINUTES);
-      s_calib_run = true;
-      s_high_freq_calib_active = true;
-      samples_collected = 0;
-      return; // if we are switching to high freq mode, don't use 1st sample
-    }
-
-    if (samples_collected < 5) {
-      return; // wait a few samples for ramp up error to stabilize
-    }
-
-    int16_t new_corr[3];
-    MagCalStatus cal_status = ecomp_corr_add_raw_mag_sample(
-        (int16_t *)&mag_data, (s_saved_corr_present) ? s_saved_corr : nullptr, new_corr);
-
-    if (cal_status != MagCalStatusNoSolution) {
-      PBL_LOG_INFO("%s : %d %d %d (type = %d)", "Mag Corr", (int)new_corr[0], (int)new_corr[1],
-                   (int)new_corr[2], (int)cal_status);
-    }
-
-    bool locked_sol = (cal_status == MagCalStatusNewLockedSolutionAvail);
-    if (locked_sol || ((cal_status == MagCalStatusNewSolutionAvail) && !s_saved_corr_present)) {
-      s_current_cal_status = CompassStatusCalibrating;
-      for (int i = 0; i < 3; i++) {
-        if ((s_active_corr[i] == 0) || locked_sol) {
-          s_active_corr[i] = new_corr[i];
-          continue;
-        }
-
-        // smooth out noise from solutions while we wait for a locked set
-        const int alpha = 30; // greater alpha leads to less smoothing
-        new_corr[i] = ((new_corr[i] - s_active_corr[i]) * alpha) / 100;
-        s_active_corr[i] += new_corr[i];
-      }
-    }
-
-    if (s_high_freq_calib_active && (cal_status == MagCalStatusNoSolution) &&
-        ((samples_collected % 4) != 0)) {
-      return; // only bubble up every 4th sample to app land with high samp rate
-    }
-
-    if ((cal_status == MagCalStatusNewLockedSolutionAvail) ||
-        (cal_status == MagCalStatusSavedSampleMatch)) {
-      if (s_high_freq_calib_active) {
-        prv_calibration_time_expired_cb(nullptr);
-      }
-      s_current_cal_status = CompassStatusCalibrated;
-      for (int i = 0; i < 3; i++) {
-        s_active_corr[i] = new_corr[i];
-      }
-      s_saved_corr_present = true;
-    }
+  if (!s_charger_plugged && ecompass_cal_add(&s_cal, m)) {
+    PBL_LOG_INFO("Calibrated: %d parameters, error %d permille", (int)s_cal.cal.order,
+                 (int)(s_cal.cal.error * 1000.0f));
+    s_dirty = true;
   }
 
-  // get the most recent accel readings
-  AccelRawData accel_data = s_accel_data;
-  int32_t roll = 0, pitch = 0;
-  prv_get_roll_and_pitch(&accel_data, &roll, &pitch);
+  s_status = prv_status(m);
+
+  if (s_dirty && s_status == CompassStatusCalibrated &&
+      (uint32_t)(pbl_uptime_ms() / 1000U) - s_last_save_s >= SAVE_INTERVAL_S) {
+    prv_save();
+  }
+
+  // Sample faster until calibrated, for a while
+  prv_set_fast(s_status != CompassStatusCalibrated && !s_fast_done && !s_charger_plugged);
+
+  if (s_fast && (s_events++ % FAST_EVENT_DIVIDER) != 0U) {
+    return;
+  }
+
+  ecompass_cal_apply(&s_cal.cal, m, corrected);
+  if (!gravity_valid || !prv_heading(corrected, up, &heading)) {
+    return;
+  }
+
+  s_last_heading = heading;
 
   PebbleEvent e = {
     .type = PEBBLE_COMPASS_DATA_EVENT,
     .compass_data = {
-      .magnetic_heading = prv_correct_for_roll_and_pitch(&accel_data, &mag_data, roll, pitch),
-      .calib_status = s_current_cal_status
-    }
+      .magnetic_heading = heading,
+      .calib_status = s_status,
+    },
   };
-
-  s_last_heading = e.compass_data.magnetic_heading;
   event_put(&e);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// System call handlers
+/*
+ * System calls
+ */
 
 PBL_SYSCALL(bool, sys_ecompass_service_subscribed) {
   PebbleTask task = pebble_task_get_current();
-  return s_compass_subscribers[task];
+  return s_subscribed[task];
 }
 
 PBL_SYSCALL(void, sys_ecompass_get_last_heading, (OUT, CompassHeadingData *, data)) {
   *data = (CompassHeadingData){
     .magnetic_heading = s_last_heading,
     .true_heading = s_last_heading,
-    .compass_status = s_current_cal_status,
-    .is_declination_valid = false
+    .compass_status = s_status,
+    .is_declination_valid = false,
   };
 }

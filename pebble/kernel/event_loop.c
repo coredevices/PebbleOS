@@ -267,7 +267,7 @@ static PBL_NOINLINE void prv_minimal_event_handler(PebbleEvent *e) {
 
     case PEBBLE_BATTERY_STATE_CHANGE_EVENT:
       battery_monitor_handle_state_change_event(e->battery_state.new_state);
-#ifdef CONFIG_MAG
+#ifdef CONFIG_SERVICE_ECOMPASS
       ecompass_handle_battery_state_change_event(e->battery_state.new_state);
 #endif
       return;
@@ -493,7 +493,7 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
       return;
 
     case PEBBLE_ECOMPASS_SERVICE_EVENT:
-#ifdef CONFIG_MAG
+#ifdef CONFIG_SERVICE_ECOMPASS
       ecompass_service_handle();
 #endif
       return;
@@ -599,7 +599,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
   battery_charger_init();
   battery_monitor_init();
   evented_timer_init();
-#ifdef CONFIG_MAG
+#ifdef CONFIG_SERVICE_ECOMPASS
   ecompass_service_init();
 #endif
   tick_timer_service_init();

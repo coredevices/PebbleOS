@@ -3,6 +3,7 @@
 
 config SERVICE_ACCEL_MANAGER
     bool "Accelerometer manager"
+    select SENSING
     help
       Accelerometer data subscription manager.
 
@@ -21,8 +22,7 @@ config SERVICE_ACCEL_MANAGER_BATCH_SAMPLES
     default 25
     help
       Maximum number of accelerometer samples delivered to a subscriber per
-      callback. Sizes the shared accel buffer. Limited by the accelerometer
-      FIFO depth.
+      callback. Limited by the accelerometer FIFO depth.
 
 module = SERVICE_ACCEL_MANAGER
 module-str = Accelerometer manager

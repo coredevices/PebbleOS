@@ -31,7 +31,7 @@ if(NOT CONFIG_MIC)
   list(APPEND excl voice/voice_window.c)
 endif()
 
-if(CONFIG_MAG)
+if(CONFIG_SERVICE_ECOMPASS)
   list(APPEND excl compass_service_stub.c)
 else()
   list(APPEND excl compass_service.c)
