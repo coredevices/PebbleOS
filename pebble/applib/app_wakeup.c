@@ -42,8 +42,8 @@ static status_t prv_status_from_errno(int err) {
   return (err == -EDQUOT) ? E_OUT_OF_RESOURCES : status_from_errno(err);
 }
 
-WakeupId app_wakeup_schedule(pbl_time32_t timestamp, int32_t cookie, bool notify_if_missed) {
-  WakeupId id = sys_wakeup_schedule(app_time_from_time32(timestamp), cookie, notify_if_missed);
+WakeupId app_wakeup_schedule(time_t timestamp, int32_t cookie, bool notify_if_missed) {
+  WakeupId id = sys_wakeup_schedule(timestamp, cookie, notify_if_missed);
   return (id < 0) ? prv_status_from_errno(id) : id;
 }
 
@@ -68,14 +68,27 @@ bool app_wakeup_get_launch_event(WakeupId *wakeup_id, int32_t *cookie) {
   return true;
 }
 
-bool app_wakeup_query(WakeupId wakeup_id, pbl_time32_t *timestamp) {
+bool app_wakeup_query(WakeupId wakeup_id, time_t *timestamp) {
   time_t scheduled_time = sys_wakeup_query(wakeup_id);
   if (scheduled_time < 0) {
     scheduled_time = prv_status_from_errno(scheduled_time);
   }
   if (timestamp != nullptr) {
-    *timestamp = pbl_time_to_time32(scheduled_time);
+    *timestamp = scheduled_time;
   }
 
   return (scheduled_time >= 0) ? true : false;
+}
+
+WakeupId app_wakeup_schedule_time32(pbl_time32_t timestamp, int32_t cookie, bool notify_if_missed) {
+  return app_wakeup_schedule(app_time_from_time32(timestamp), cookie, notify_if_missed);
+}
+
+bool app_wakeup_query_time32(WakeupId wakeup_id, pbl_time32_t *timestamp) {
+  time_t scheduled_time;
+  const bool scheduled = app_wakeup_query(wakeup_id, &scheduled_time);
+  if (timestamp != nullptr) {
+    *timestamp = pbl_time_to_time32(scheduled_time);
+  }
+  return scheduled;
 }

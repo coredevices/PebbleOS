@@ -333,9 +333,6 @@ const char *time_t_to_string(char *buffer, time_t t);
  * @param minute minute [0-59]
  * @return UTC timestamp of the next occurrence.
  */
-pbl_time32_t clock_to_timestamp_time32(WeekDay day, int hour, int minute);
-
-/** @brief clock_to_timestamp_time32() with a full-width time_t, for the firmware. */
 time_t clock_to_timestamp(WeekDay day, int hour, int minute);
 
 /**
