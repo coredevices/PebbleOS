@@ -140,7 +140,7 @@ config NUM_IRQS
 	range 1 512
 	help
 	  Number of SoC interrupt lines, i.e. vector table entries past the
-	  core exceptions. Defaulted per SoC in soc/*/Kconfig.defconfig.
+	  core exceptions. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 config KERNEL_NUM_PRIORITIES
 	int "Number of thread priorities"

@@ -254,13 +254,13 @@ config FLASH_BASE
     hex
     help
       Base address of the memory-mapped flash the firmware is linked to
-      run from. Defaulted per SoC in soc/*/Kconfig.defconfig.
+      run from. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 config FLASH_SIZE
     hex
     help
       Total size of the memory-mapped flash the firmware is linked to
-      run from. Defaulted per SoC in soc/*/Kconfig.defconfig.
+      run from. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 config FLASH_OFFSET
     hex
@@ -275,7 +275,7 @@ config FIRMWARE_OFFSET
     default 0
     help
       Offset of the firmware image within its flash slot, reserving room
-      for the image header. Defaulted per SoC in soc/*/Kconfig.defconfig.
+      for the image header. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 choice FIRMWARE_AREA
     prompt "Firmware flash area to link for"
