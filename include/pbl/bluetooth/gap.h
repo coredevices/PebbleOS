@@ -16,8 +16,9 @@ struct ble_gap_event;
  * @brief Handle a GAP event of a connection.
  *
  * Connections are only established through advertising: pass this handler to
- * ble_gap_adv_start(), and the events of the connections it leads to are reported through the
- * subsystem (see @ref bluetooth_gap_le_connect).
+ * ble_gap_adv_start(). It decides on the pairing of the connections that leads to, and hands
+ * their notifications to the GATT clients. Follow the other events with
+ * ble_gap_event_listener_register().
  *
  * @param event Event.
  * @param arg Unused.

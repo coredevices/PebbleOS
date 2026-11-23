@@ -19,25 +19,6 @@ pbl_clar_test(test_ams_util
     pebble/comm/ble/kernel_le_client/ams/ams_util.c
 )
 
-pbl_clar_test(test_bt_conn_mgr
-  SOURCES
-    pebble/comm/internals/bt_conn_mgr.c
-    tests/fakes/fake_gap_le_connect_params.c
-    tests/fakes/fake_rtc.c
-    pebble/services/clock/time.c
-)
-
-pbl_clar_test(test_gatt_service_changed_server
-  MODULES rand
-  SOURCES
-    pebble/comm/ble/gap_le_connection.c
-    pebble/comm/ble/gatt_service_changed.c
-    pebble/comm/internals/bt_conn_mgr.c
-    tests/fakes/fake_gap_le_connect_params.c
-    tests/fakes/fake_bt_gatt.c
-    tests/fakes/fake_rtc.c
-)
-
 pbl_clar_test(test_ancs
   MODULES timeline_item time rand
   SOURCES

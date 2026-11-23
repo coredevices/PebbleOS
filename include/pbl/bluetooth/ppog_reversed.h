@@ -14,7 +14,7 @@
  *
  * The service has a data characteristic the watch notifies and a data write characteristic the
  * phone writes without response, both requiring an encrypted link. The
- * @c pbl_bt_cb_ppog_reversed_* callbacks run on the NimBLE host task without @c bt_lock() held.
+ * @c pbl_bt_cb_ppog_reversed_* callbacks run on the NimBLE host task.
  *
  * @code{.c}
  * enum pbl_bt_errno err = pbl_bt_ppog_reversed_notify(conn_handle, pkt, pkt_len);
@@ -28,11 +28,9 @@
 /**
  * @brief Called when the phone enabled notifications on the data characteristic.
  *
- * @param device The phone.
  * @param conn_handle Connection handle, to pass to pbl_bt_ppog_reversed_notify().
  */
-extern void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
-                                               uint16_t conn_handle);
+extern void pbl_bt_cb_ppog_reversed_subscribed(uint16_t conn_handle);
 
 /**
  * @brief Called when the phone disabled notifications or disconnected.

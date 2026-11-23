@@ -18,8 +18,8 @@
  * The stack keeps its bonds, with their keys and Client Characteristic Configuration Descriptor
  * states, in the NimBLE store. They can be read and deleted with the stack stopped as well.
  *
- * Changes are reported on KernelMain through pbl_bt_cb_bond_added(), pbl_bt_cb_bond_changed()
- * and pbl_bt_cb_bond_deleted(), after the store has them.
+ * Changes are reported on the system work queue through pbl_bt_cb_bond_added(),
+ * pbl_bt_cb_bond_changed() and pbl_bt_cb_bond_deleted(), after the store has them.
  * @{
  */
 
@@ -116,7 +116,7 @@ int pbl_bt_unpair(const struct pbl_bt_device_internal *addr);
 /**
  * @brief Called after bonding with a new peer.
  *
- * Implemented by the firmware. Runs on KernelMain.
+ * Implemented by the firmware. Runs on the system work queue.
  *
  * @param info The new bond.
  */
@@ -125,7 +125,7 @@ extern void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info);
 /**
  * @brief Called after the keys of a bond changed, for example when its peer paired again.
  *
- * Implemented by the firmware. Runs on KernelMain.
+ * Implemented by the firmware. Runs on the system work queue.
  *
  * @param info The bond.
  */
@@ -134,7 +134,7 @@ extern void pbl_bt_cb_bond_changed(const struct pbl_bt_bond_info *info);
 /**
  * @brief Called after a bond was deleted.
  *
- * Implemented by the firmware. Runs on KernelMain.
+ * Implemented by the firmware. Runs on the system work queue.
  *
  * @param addr Identity address of the peer.
  */

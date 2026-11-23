@@ -153,7 +153,7 @@ static void click_config_provider(void *context) {
 
 static void handle_deinit(void) {
   pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
-                                    PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER, nullptr);
+                                    PBL_BT_RESPONSE_TIME_MAX, PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
 static void handle_init(void) {
@@ -181,7 +181,7 @@ static void handle_init(void) {
   start_logging();
 
   pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
-                                    PBL_BT_RESPONSE_TIME_MAX, MAX_PERIOD_RUN_FOREVER, nullptr);
+                                    PBL_BT_RESPONSE_TIME_MAX, PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
 ////////////////////

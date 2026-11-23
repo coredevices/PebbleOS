@@ -46,8 +46,7 @@ static bool prv_bt_log_dump_line_cb(uint8_t *message, uint32_t total_length) {
 
   // keep us sending data quickly
   pbl_pp_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session,
-                                    PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MIN, 5,
-                                    nullptr);
+                                    PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MIN, 5);
 
   const uint16_t required_length = total_length + 1 + 4;
   struct pbl_pp_send_buffer *sb = pbl_pp_send_buffer_begin_bulk(
@@ -88,8 +87,7 @@ static void prv_bt_log_dump_completed_cb(bool success) {
 
   // Ok to enter a lower power less responsive state
   pbl_pp_session_set_responsiveness(s_bt_dump_chunk_callback_data.comm_session,
-                                    PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MAX, 0,
-                                    nullptr);
+                                    PBL_BT_CONSUMER_PP_LOG_DUMP, PBL_BT_RESPONSE_TIME_MAX, 0);
   prv_put_status_event(DebugInfoStateFinished);
 }
 

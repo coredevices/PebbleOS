@@ -24,7 +24,7 @@ static void prv_request_fast_connection(struct pbl_pp_session *session) {
   // TODO: use a heuristic to decide whether to put the connection in fast mode
   pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 }
 
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(

@@ -12,11 +12,9 @@
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
+#include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/size.h>
-
-#include <comm/ble/gap_le_connect.h>
-#include <comm/ble/gap_le_connection.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
@@ -213,7 +211,7 @@ void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
     return;
   }
 
-  gap_le_connect_handle_bond_added(info);
+  bt_link_handle_bond_added();
   bt_advertising_set_reconnectable(true);
   bt_pairability_update_due_to_bonding_change();
 }
@@ -239,8 +237,7 @@ void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
     return;
   }
 
-  gap_le_connection_handle_bond_deleted(addr);
-  gap_le_connect_handle_bond_deleted(addr);
+  bt_link_handle_bond_deleted();
   bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
   bt_pairability_update_due_to_bonding_change();
 }

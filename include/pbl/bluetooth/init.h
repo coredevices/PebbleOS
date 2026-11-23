@@ -13,15 +13,13 @@
  * @ingroup subsys
  * @brief Bluetooth Low Energy stack interface (@c pbl/bluetooth).
  *
- * The firmware's Bluetooth code (@c pebble/comm/ble and @c pebble/services/bluetooth) talks to the
- * stack only through the @c pbl_bt_* API declared in these headers. It is implemented in
- * @c subsys/bluetooth on top of the NimBLE host, which runs in its own task.
+ * The subsystem runs the NimBLE host, in its own task, and adds what an application needs around
+ * it: the bond store, the GATT services and clients, pairing confirmation and connection
+ * response times. Everything else is done with NimBLE directly: connections are named by their
+ * handles, and their events are followed with ble_gap_event_listener_register().
  *
- * The API has two directions:
- * - Calls into the stack, such as pbl_bt_start() or ble_gap_adv_start().
- * - Callbacks, declared @c extern and named @c pbl_bt_handle_* or @c pbl_bt_cb_*, that the
- *   firmware implements and the stack invokes to report events. Unless stated otherwise they run
- *   on the NimBLE host task without @c bt_lock() held.
+ * A few events are reported through callbacks the application implements, declared @c extern
+ * and named @c pbl_bt_cb_*. Unless stated otherwise they run on the NimBLE host task.
  *
  * The NimBLE host reaches its controller through the HCI transport selected with the
  * @c NIMBLE_HCI_* Kconfig choice: the in-image NimBLE link layer (@c NIMBLE_HCI_NRF52), the SiFli
@@ -57,8 +55,6 @@ struct PBL_PACKED pbl_bt_config {
   struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   /** Values served by the Device Information Service. */
   struct pbl_bt_dis_info dis_info;
-  /** Identity address. Not used by the NimBLE backend, see pbl_bt_id_addr_get(). */
-  struct pbl_bt_addr identity_addr;
 };
 
 /**
@@ -89,18 +85,11 @@ bool pbl_bt_start(struct pbl_bt_config *config);
 void pbl_bt_stop(void);
 
 /**
- * @brief Power down the controller at boot if Bluetooth is not going to be started.
- *
- * Does nothing in the NimBLE backend.
- */
-void pbl_bt_power_down_controller_on_boot(void);
-
-/**
  * @brief Called each time the host (re-)synchronizes with the controller.
  *
  * Implemented by the firmware. The controller state is lost on a host reset, so this is where
  * advertising data and parameters must be pushed again. Invoked on the NimBLE host task.
  */
-extern void pbl_bt_handle_host_resynced(void);
+extern void pbl_bt_cb_host_synced(void);
 
 /** @} */

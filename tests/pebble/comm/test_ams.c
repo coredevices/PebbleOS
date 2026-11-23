@@ -5,13 +5,12 @@
 #include <string.h>
 
 #include <pbl/bluetooth/clients/ams.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/services/music.h>
 #include <pbl/services/music_internal.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/ams/ams.h>
-#include <comm/bt_conn_mgr.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
@@ -27,19 +26,14 @@ struct {
   uint16_t max_period_secs;
 } s_conn_mgr_states[PBL_BT_CONSUMER_NUM];
 
-void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
-                                         enum pbl_bt_response_time_state state,
-                                         uint16_t max_period_secs) {
+void pbl_bt_responsiveness_request(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+                                   enum pbl_bt_response_time_state state,
+                                   uint16_t max_period_secs) {
   s_conn_mgr_states[consumer].state = state;
   s_conn_mgr_states[consumer].max_period_secs = max_period_secs;
 }
 
 #define CONN_HANDLE 1
-
-GAPLEConnection *gap_le_connection_any(void) {
-  static GAPLEConnection s_connection = {.conn_handle = CONN_HANDLE};
-  return &s_connection;
-}
 
 //! When set, callbacks for KernelMain wait for prv_process_launcher_task_callback().
 static bool s_defer_launcher_task_callbacks;
@@ -417,7 +411,7 @@ void test_ams__music_request_reduced_latency(void) {
   cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].state,
                     PBL_BT_RESPONSE_TIME_MIDDLE);
   cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].max_period_secs,
-                    MAX_PERIOD_RUN_FOREVER);
+                    PBL_BT_RESPONSE_TIME_FOREVER);
 
   music_request_reduced_latency(false /* reduced_latency */);
   cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].state,

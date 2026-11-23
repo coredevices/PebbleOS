@@ -123,7 +123,7 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
     // cancel the fast connection interval.
     pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
                                       PBL_BT_RESPONSE_TIME_MIDDLE,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
@@ -132,7 +132,7 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
     // Restore the fast interval so the init ACK isn't delayed by the slow connection parameters.
     pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
                                       PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
   } else {
     // Some data we want has already been written, just continue from last valid location!
     storage->current_offset += append_offset;
@@ -170,5 +170,5 @@ void pb_storage_raw_deinit(PutBytesStorage *storage, bool is_success) {
   // Restore normal BLE responsiveness that was reduced in pb_storage_raw_init
   pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
 }

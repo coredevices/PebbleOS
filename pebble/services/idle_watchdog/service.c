@@ -5,10 +5,10 @@
 
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/work.h>
+#include <pbl/services/bluetooth/link.h>
 #include <pbl/services/idle_watchdog.h>
 
 #include <applib/event_service_client.h>
-#include <comm/ble/gap_le_connection.h>
 
 #define PRF_IDLE_TIMEOUT_MINUTES 10
 static struct pbl_wallclock_work s_is_idle_timer;
@@ -18,9 +18,7 @@ static EventServiceInfo s_button_event_info;
 static atomic_bool s_running;
 
 static void prv_handle_watchdog_timeout_cb(void *not_used) {
-  GAPLEConnection *le_connection = gap_le_connection_any();
-
-  if (le_connection) {
+  if (bt_link_is_connected()) {
     // We are still connected, don't shut down
     return;
   }

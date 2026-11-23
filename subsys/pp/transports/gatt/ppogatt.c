@@ -1118,8 +1118,7 @@ static void prv_reversed_data_main_cb(void *data) {
   pbl_free(ctx);
 }
 
-void pbl_bt_cb_ppog_reversed_subscribed(const struct pbl_bt_device_internal *device,
-                                        uint16_t conn_handle) {
+void pbl_bt_cb_ppog_reversed_subscribed(uint16_t conn_handle) {
   pbl_pp_main_call(prv_reversed_subscribed_main_cb, (void *)(uintptr_t)conn_handle);
 }
 
@@ -1787,8 +1786,7 @@ static void prv_transport_reset(struct pbl_pp_session *session) {
 static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
                                              enum pbl_bt_consumer consumer,
                                              enum pbl_bt_response_time_state state,
-                                             uint16_t max_period_secs,
-                                             pbl_bt_responsiveness_granted_cb_t granted) {
+                                             uint16_t max_period_secs) {
   uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE;
 
   prv_lock();
@@ -1799,7 +1797,7 @@ static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
   prv_unlock();
 
   if (conn_handle != BLE_HS_CONN_HANDLE_NONE) {
-    pbl_pp_gatt_cb_set_responsiveness(conn_handle, consumer, state, max_period_secs, granted);
+    pbl_pp_gatt_cb_set_responsiveness(conn_handle, consumer, state, max_period_secs);
   }
 }
 

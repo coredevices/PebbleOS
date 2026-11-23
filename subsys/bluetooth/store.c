@@ -3,20 +3,17 @@
 
 #include "store.h"
 
-#include "nimble_type_conversions.h"
-
 #include <errno.h>
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
-#include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 
 #include <host/ble_hs.h>
 #include <host/ble_store.h>
-#include <kernel/event_loop.h>
 #include <nimble/nimble_port_pebble.h>
 #include <store/config/ble_store_config.h>
 #include <syscfg/syscfg.h>
@@ -32,6 +29,18 @@ static struct pbl_bt_sm_key s_local_irk;
 // NimBLE's store is not thread-safe, and the firmware reads and deletes bonds from its own
 // threads.
 static PBL_MUTEX_DEFINE(s_lock);
+
+static void prv_addr_to_device(const ble_addr_t *addr, struct pbl_bt_device_internal *device) {
+  *device = (struct pbl_bt_device_internal){
+    .is_random_address = (addr->type == BLE_ADDR_RANDOM),
+  };
+  memcpy(device->address.octets, addr->val, BLE_DEV_ADDR_LEN);
+}
+
+static void prv_device_to_addr(const struct pbl_bt_device_internal *device, ble_addr_t *addr) {
+  addr->type = device->is_random_address ? BLE_ADDR_RANDOM : BLE_ADDR_PUBLIC;
+  memcpy(addr->val, device->address.octets, BLE_DEV_ADDR_LEN);
+}
 
 static int prv_read(int obj_type, const union ble_store_key *key, union ble_store_value *value) {
   int rc;
@@ -95,7 +104,7 @@ static void prv_value_to_info(const struct ble_store_value_sec *value_sec,
     .irk_valid = value_sec->irk_present,
   };
 
-  nimble_addr_to_pebble_device(&value_sec->peer_addr, &info->addr);
+  prv_addr_to_device(&value_sec->peer_addr, &info->addr);
   if (value_sec->irk_present) {
     memcpy(info->irk.data, value_sec->irk, KEY_SIZE);
   }
@@ -108,16 +117,6 @@ struct sec_written {
 
 static void prv_sec_written_cb(void *data) {
   struct sec_written *ctx = data;
-
-  if (ctx->info.irk_valid) {
-    struct pbl_bt_irk_change irk_change = {
-      .device = ctx->info.addr,
-      .irk = ctx->info.irk,
-      .irk_valid = true,
-    };
-
-    pbl_bt_handle_le_connection_handle_update_irk(&irk_change);
-  }
 
   if (ctx->is_new) {
     pbl_bt_cb_bond_added(&ctx->info);
@@ -169,7 +168,7 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
   if (is_new) {
     PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(ctx->info.addr.address));
   }
-  launcher_task_add_callback(prv_sec_written_cb, ctx);
+  (void)pbl_sys_work_call(prv_sec_written_cb, ctx);
 
   return 0;
 }
@@ -201,9 +200,9 @@ static int prv_store_delete(int obj_type, const union ble_store_key *key) {
   }
 
   addr = pbl_malloc_check(sizeof(*addr));
-  nimble_addr_to_pebble_device(&value.sec.peer_addr, addr);
+  prv_addr_to_device(&value.sec.peer_addr, addr);
   PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(addr->address));
-  launcher_task_add_callback(prv_bond_deleted_cb, addr);
+  (void)pbl_sys_work_call(prv_bond_deleted_cb, addr);
 
   return 0;
 }
@@ -244,7 +243,7 @@ static int prv_read_peer_sec(const struct pbl_bt_device_internal *addr, uint8_t 
   int rc;
 
   if (addr != nullptr) {
-    pebble_device_to_nimble_addr(addr, &key.sec.peer_addr);
+    prv_device_to_addr(addr, &key.sec.peer_addr);
   } else {
     key.sec.peer_addr = *BLE_ADDR_ANY;
   }
@@ -310,7 +309,7 @@ int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_b
   }
 
   memset(keys, 0, sizeof(*keys));
-  nimble_addr_to_pebble_device(&peer.peer_addr, &info->identity);
+  prv_addr_to_device(&peer.peer_addr, &info->identity);
 
   if (peer.ltk_present) {
     info->is_remote_encryption_info_valid = true;
@@ -350,7 +349,7 @@ static void prv_keys_to_value_sec(const struct pbl_bt_bond_keys *keys, bool loca
   value_sec->key_size = KEY_SIZE;
   value_sec->sc = (keys->flags & PBL_BT_BOND_FLAG_SECURE_CONNECTIONS) != 0U;
   value_sec->authenticated = (keys->flags & PBL_BT_BOND_FLAG_AUTHENTICATED) != 0U;
-  pebble_device_to_nimble_addr(&info->identity, &value_sec->peer_addr);
+  prv_device_to_addr(&info->identity, &value_sec->peer_addr);
 
   if (local && info->is_local_encryption_info_valid) {
     value_sec->ediv = info->local_encryption_info.ediv;

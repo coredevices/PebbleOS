@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <pbl/pp/session.h>
+#include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/version.h>
@@ -25,9 +26,6 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_private.h>
 #include <apps/core/spinner_ui_window.h>
-#include <comm/ble/gap_le_connect.h>
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_device_name.h>
 #include <kernel/event_loop.h>
 #include <mfg/mfg_info.h>
 #include <mfg/mfg_serials.h>
@@ -132,18 +130,17 @@ static void prv_click_configure(void *context) {
 // Windows
 
 static void prv_update_name_text(RecoveryFUAppData *data) {
-  const GAPLEConnection *gap_conn = gap_le_connection_any();
+  const bool connected = bt_link_is_connected();
 
   // Set the name text
   if (data->is_showing_version) {
     size_t len = PBL_MIN(strlen(PBL_VERSION_TAG), sizeof(data->name_text_buffer) - 1);
     memcpy(data->name_text_buffer, PBL_VERSION_TAG, len);
     data->name_text_buffer[len] = '\0';
-  } else if ((pbl_pp_session_get_system() != nullptr) && (gap_conn != nullptr)) {
+  } else if ((pbl_pp_session_get_system() != nullptr) && connected) {
     // If we have connected to a device and we have a connection to the mobile app, show the device
     // name (we are required to have a connection to mobile app to get the name).
-    gap_le_connection_copy_device_name(gap_conn, data->name_text_buffer,
-                                       PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+    bt_link_copy_peer_name(data->name_text_buffer, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
   } else {
     // If we aren't connected and/or don't have a session, display the name of the device
     // so it's easier for a user to figure out what they should be trying to connect to
@@ -151,7 +148,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
 
     // For debugging purposes, we are going to add -'s to the beginning and end of the name
     // if we are connected to a BLE device but don't have a session
-    if (gap_le_connect_is_connected_as_slave()) {
+    if (connected) {
       memmove(&data->name_text_buffer[1], &data->name_text_buffer[0],
               PBL_BT_DEVICE_NAME_BUFFER_SIZE);
       data->name_text_buffer[0] = '-';
@@ -255,7 +252,7 @@ static void prv_pebble_mobile_app_event_handler(PebbleEvent *event, void *contex
   s_fu_app_data->is_pebble_mobile_app_connected = event->bluetooth.comm_session_event.is_open;
   if (is_connected) {
     s_fu_app_data->has_pebble_mobile_app_connected = true;
-    gap_le_device_name_request_all();
+    bt_link_read_peer_name();
   } else {
     // The app may have started with a session already open
     prv_allow_pairing(s_fu_app_data, true);

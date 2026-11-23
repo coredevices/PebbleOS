@@ -13,7 +13,6 @@
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_connection.h>
 #include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <fake_spi_flash.h>
 
@@ -105,19 +104,10 @@ bool bt_ctl_is_bluetooth_running(void) {
   return false;
 }
 
-void bt_lock(void) {
+void bt_link_handle_bond_deleted(void) {
 }
 
-void bt_unlock(void) {
-}
-
-void gap_le_connection_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
-}
-
-void gap_le_connect_handle_bond_deleted(const struct pbl_bt_device_internal *addr) {
-}
-
-void gap_le_connect_handle_bond_added(const struct pbl_bt_bond_info *info) {
+void bt_link_handle_bond_added(void) {
 }
 
 void bt_advertising_set_reconnectable(bool reconnectable) {

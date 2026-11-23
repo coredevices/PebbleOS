@@ -65,7 +65,7 @@ A transport:
 | `send_next` | Mandatory |
 | `close` | Close a session for a new system session; NULL if the watch cannot close it, which then refuses new system sessions |
 | `reset` | Reset a session on request, see `pbl_pp_session_reset()`; NULL if not supported |
-| `set_responsiveness` | Apply a connection response time; NULL grants every request at once |
+| `set_responsiveness` | Apply a connection response time; NULL if the transport has no such notion |
 
 Callbacks get the session, not the transport's context, and may run after
 the transport has closed it: the transport looks the session up among its

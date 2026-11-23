@@ -104,11 +104,9 @@ const char *pbl_pp_gatt_cb_get_serial_number(void);
  * @param consumer Consumer making the request.
  * @param state Requested response time state.
  * @param max_period_secs Maximum time to stay in @p state.
- * @param granted To call on the main thread once @p state is in effect. May be NULL.
  */
 void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted);
+                                       uint16_t max_period_secs);
 
 /** @} */

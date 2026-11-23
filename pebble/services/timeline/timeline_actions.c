@@ -102,15 +102,15 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
 
 static void prv_request_responsive_session(void) {
   // In anticipation of having to communicate with the phone, request the minimum latency for 10s:
-  pbl_pp_session_set_responsiveness(
-      pbl_pp_session_get_system(), PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
-      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS, nullptr);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
+                                    PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS);
 }
 
 static void prv_reset_session_responsiveness(void) {
   pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
                                     PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MAX,
-                                    0, nullptr);
+                                    0);
 }
 
 static WindowStack *prv_get_window_stack(ActionResultData *data) {
