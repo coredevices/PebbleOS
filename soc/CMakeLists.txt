@@ -3,7 +3,7 @@
 
 if(CONFIG_QEMU)
   add_subdirectory(qemu)
-elseif(CONFIG_SOC_NRF52)
+elseif(CONFIG_SOC_FAMILY_NRF)
   add_subdirectory(nrf)
 elseif(CONFIG_SOC_FAMILY_SF32LB)
   add_subdirectory(sf32lb)
