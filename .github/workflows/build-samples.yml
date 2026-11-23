@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: ["qemu_emery", "asterix", "obelix@pvt", "sf32lb57_dpi_hdk"]
+        board: ["qemu_emery", "qemu_flint", "asterix", "obelix@pvt", "sf32lb57_dpi_hdk"]
 
     steps:
       - name: Mark Github workspace as safe
@@ -77,9 +77,10 @@ jobs:
           pip install -U pip
           pip install -r requirements.txt
 
-      # Runs them too, and checks what they print, on the emulator.
+      # Runs them too, and checks what they print, on the emulator. Each
+      # sample is only checked on its integration boards.
       - name: Build and run
-        run: pbl samples --board ${{ matrix.board }}
+        run: pbl samples --integration --board ${{ matrix.board }}
 
   build-samples-status:
     needs: [changes-samples, build-samples]
