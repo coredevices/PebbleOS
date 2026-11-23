@@ -8,7 +8,7 @@ choice NIMBLE_HCI
 endchoice
 
 choice NIMBLE_ID_ADDR_SOURCE
-    default NIMBLE_ID_ADDR_SF32LB52_EFUSE
+    default NIMBLE_ID_ADDR_SF32LB_EFUSE
 endchoice
 
 # 32 MiB of external flash, memory-mapped through MPI.
