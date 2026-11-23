@@ -73,7 +73,8 @@ config UART_QEMU_IRQ_PRIO
 
 config UART_POSIX
     bool "POSIX UART"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       UART backed by a host file descriptor.
 

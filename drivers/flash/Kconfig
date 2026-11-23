@@ -65,7 +65,8 @@ config FLASH_QEMU
 
 config FLASH_POSIX
     bool "POSIX External Flash"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       External flash backed by a file on the host.
 

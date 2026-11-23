@@ -18,7 +18,8 @@ config PRESSURE_SHELL
 
 config PRESSURE_BMP390
     bool "Bosch BMP380 and BMP390"
-    default DT_HAS_BOSCH_BMP380_ENABLED
+    default y
+    depends on DT_HAS_BOSCH_BMP380_ENABLED
     select I2C
     help
       Support for the Bosch BMP380 and BMP390 barometric pressure sensors

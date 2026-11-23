@@ -32,7 +32,8 @@ config HRM_GH3X2X_FACTORY_TEST
 
 config HRM_QEMU
     bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       QEMU heart rate monitor. QEMU emulates none, so it can be enabled
       but never delivers samples.

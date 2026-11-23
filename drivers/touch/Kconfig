@@ -53,7 +53,7 @@ config TOUCH_QEMU_IRQ_PRIO
 
 config TOUCH_SDL
     bool "SDL mouse"
-    default y if SOC_POSIX
+    default y
     depends on DISPLAY_SDL
     select SDL
     help
@@ -63,13 +63,13 @@ if TOUCH_SDL
 
 config TOUCH_SDL_SIZE_X
     int "SDL touchscreen X coordinates"
-    default DISPLAY_SDL_WIDTH if DISPLAY_SDL
+    default DISPLAY_SDL_WIDTH
     help
       Number of X coordinates the SDL touchscreen reports.
 
 config TOUCH_SDL_SIZE_Y
     int "SDL touchscreen Y coordinates"
-    default DISPLAY_SDL_HEIGHT if DISPLAY_SDL
+    default DISPLAY_SDL_HEIGHT
     help
       Number of Y coordinates the SDL touchscreen reports.
 

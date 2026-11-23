@@ -96,7 +96,8 @@ config DISPLAY_QEMU
 
 config DISPLAY_SDL
     bool "SDL window"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     select SDL
     help
       Display shown in an SDL window on the host of a native build.
