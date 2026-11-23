@@ -204,6 +204,9 @@ jobs:
           name: itest-build-${{ matrix.watch }}-normal
           path: build-main
 
+      - name: Take the power supply
+        run: pbl power off --lab "$HOME/pebble-lab.yaml"
+
       - name: Integration tests
         env:
           MAIN_BUILD: ${{ matrix.variant == 'prf' && format('--main-build={0}/build-main', github.workspace) || '' }}
