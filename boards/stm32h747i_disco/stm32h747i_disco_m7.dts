@@ -9,6 +9,47 @@
 #include "st/stm32h747xi_m7.dtsi"
 #include "stm32h747i_disco.dtsi"
 
+/ {
+	// The joystick, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "JoyLeft";
+			gpios = <&gpiok 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+		};
+
+		button-up {
+			label = "JoyUp";
+			gpios = <&gpiok 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+		};
+
+		button-select {
+			label = "JoySel";
+			gpios = <&gpiok 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+		};
+
+		button-down {
+			label = "JoyDown";
+			gpios = <&gpiok 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+		};
+
+		button-right {
+			label = "JoyRight";
+			gpios = <&gpiok 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_RIGHT>;
+		};
+	};
+};
+
+&led_orange {
+	status = "disabled";
+};
+
 // The CPU at 400 MHz from PLL1 on HSE, AHB at 200 MHz and APB at 100 MHz; LPTIM1 counts the LSE
 // crystal
 &rcc {

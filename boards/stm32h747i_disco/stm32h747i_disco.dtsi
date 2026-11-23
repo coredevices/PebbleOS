@@ -5,9 +5,37 @@
 
 #include "stm32h747i_disco-pinctrl.dtsi"
 
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
 / {
 	model = "STMicroelectronics STM32H747I-DISCO";
 	compatible = "st,stm32h747i-disco", "st,stm32h747";
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_green: led-green {
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpioi 12 GPIO_ACTIVE_LOW>;
+		};
+
+		led_orange: led-orange {
+			color = <LED_COLOR_ID_ORANGE>;
+			gpios = <&gpioi 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led_red: led-red {
+			color = <LED_COLOR_ID_RED>;
+			gpios = <&gpioi 14 GPIO_ACTIVE_LOW>;
+		};
+
+		led_blue: led-blue {
+			color = <LED_COLOR_ID_BLUE>;
+			gpios = <&gpioi 15 GPIO_ACTIVE_LOW>;
+		};
+	};
 };
 
 &clk_hse {
