@@ -229,13 +229,13 @@ waits for the running thread to block.
 Drivers come in two halves: the top half is
 firmware code, and the bottom half (`*_bottom.c`, listed with
 `pbl_host_sources()`) talks to the host and sees none of the firmware headers.
-The `posix` SoC (`soc/posix`) owns the process `main()`, which knows no
-driver: it starts the firmware on a thread of its own and runs the main thread
-hooks and command line options that bottoms register (`posix_host.h`). SDL is
-one such bottom (`soc/posix/sdl`), selected by the drivers that use it: the
-display (`DISPLAY_SDL`), the buttons (`BUTTON_SDL`, the keyboard) and the
-touchscreen (`TOUCH_SDL`, the mouse). It runs on the main thread, as macOS
-requires.
+The `posix` SoC (`soc/native/posix`) owns the process `main()`, which knows
+no driver: it starts the firmware on a thread of its own and runs the main
+thread hooks and command line options that bottoms register (`posix_host.h`).
+SDL is one such bottom (`soc/native/posix/sdl`), selected by the drivers that
+use it: the display (`DISPLAY_SDL`), the buttons (`BUTTON_SDL`, the keyboard)
+and the touchscreen (`TOUCH_SDL`, the mouse). It runs on the main thread, as
+macOS requires.
 
 A native build is linked without the firmware linker script
 (`PBL_NO_LINKER_SCRIPT`, decided in `cmake/modules/linker.cmake`). Tables
@@ -252,6 +252,6 @@ back its thread. A kernel thread that never blocks gives the browser a turn
 every 20 ms.
 
 Things the linker script provides on the target, such as the heaps, the app
-RAM and the build ID, are plain objects in `soc/posix/memory.c`. Firmware
-`malloc()` and `free()` are renamed to the firmware heaps at compile time, as
+RAM and the build ID, are plain objects in `soc/native/posix/memory.c`.
+Firmware `malloc()` and `free()` are renamed to the firmware heaps at compile time, as
 `--wrap` does on the target.

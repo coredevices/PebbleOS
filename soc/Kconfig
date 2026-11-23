@@ -9,15 +9,6 @@ choice
 
 rsource "*/Kconfig.soc"
 
-config SOC_POSIX
-    bool "POSIX host"
-    select ARCH_POSIX
-    select SOC_HAS_RESET
-    select TIMER_POSIX
-    help
-      Run the firmware as a native application on a POSIX host
-      (Linux, macOS), with emulated peripherals.
-
 endchoice
 
 config SOC_HAS_IDLE_STATES
@@ -52,29 +43,6 @@ config SOC
     help
       Stringified SoC name, for places that need the name as a token
       (e.g. sftool -c). Empty on QEMU and POSIX boards.
-
-config POSIX_EMSCRIPTEN
-    bool "Emscripten"
-    depends on SOC_POSIX
-    select ARCH_POSIX_FIBERS
-    help
-      The host is a browser, running the firmware as WebAssembly built
-      with Emscripten. Kernel threads are fibers on the browser's single
-      thread, and the browser's event loop drives the host side.
-
-config POSIX_EMSCRIPTEN_FRAME
-    string
-    help
-      The watch the Emscripten page draws around the display: a directory of
-      soc/posix/emscripten/frames and an entry of the page's table of
-      frames. Set per board in boards/<board>/Kconfig.defconfig.
-
-config SDL
-    bool
-    depends on SOC_POSIX
-    help
-      SDL, for the host halves of the drivers of a native build that
-      need a window or its input. Selected by those drivers.
 
 config QEMU
     bool

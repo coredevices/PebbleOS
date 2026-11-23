@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config POSIX_EMSCRIPTEN
+    bool "Emscripten"
+    depends on SOC_POSIX
+    select ARCH_POSIX_FIBERS
+    help
+      The host is a browser, running the firmware as WebAssembly built
+      with Emscripten. Kernel threads are fibers on the browser's single
+      thread, and the browser's event loop drives the host side.
+
+config POSIX_EMSCRIPTEN_FRAME
+    string
+    help
+      The watch the Emscripten page draws around the display: a directory of
+      soc/native/posix/emscripten/frames and an entry of the page's table of
+      frames. Set per board in boards/<board>/Kconfig.defconfig.
+
+config SDL
+    bool
+    depends on SOC_POSIX
+    help
+      SDL, for the host halves of the drivers of a native build that
+      need a window or its input. Selected by those drivers.
