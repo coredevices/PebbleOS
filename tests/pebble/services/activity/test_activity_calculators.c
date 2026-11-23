@@ -230,3 +230,35 @@ void test_activity_calculators__inactive_calories(void) {
   cl_assert_equal_i(
       5, activity_private_compute_resting_calories(short_time_m) / ACTIVITY_CALORIES_PER_KCAL);
 }
+
+// ---------------------------------------------------------------------------------------
+void test_activity_calculators__active_calories_from_hr(void) {
+  const uint32_t one_min_ms = PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC;
+
+  prv_set_user(Human_TallMale);
+  cl_assert_equal_i(0, activity_private_compute_active_calories_from_hr(0, one_min_ms));
+  cl_assert_equal_i(0, activity_private_compute_active_calories_from_hr(140, 0));
+
+  // Below the resting metabolic rate there are no active calories
+  cl_assert_equal_i(0, activity_private_compute_active_calories_from_hr(60, one_min_ms));
+
+  // A harder effort burns more
+  const uint32_t moderate = activity_private_compute_active_calories_from_hr(140, one_min_ms);
+  const uint32_t hard = activity_private_compute_active_calories_from_hr(160, one_min_ms);
+  cl_assert_equal_i(11723, moderate);
+  cl_assert_equal_i(14739, hard);
+
+  // Scales with time
+  cl_assert_within(activity_private_compute_active_calories_from_hr(140, 30 * one_min_ms) /
+                       ACTIVITY_CALORIES_PER_KCAL,
+                   340, 360);
+
+  prv_set_user(Human_TallFemale);
+  cl_assert_equal_i(7210, activity_private_compute_active_calories_from_hr(140, one_min_ms));
+
+  prv_set_user(Human_ShortMale);
+  cl_assert_equal_i(10626, activity_private_compute_active_calories_from_hr(140, one_min_ms));
+
+  prv_set_user(Human_ShortFemale);
+  cl_assert_equal_i(8446, activity_private_compute_active_calories_from_hr(140, one_min_ms));
+}
