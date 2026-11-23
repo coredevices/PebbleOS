@@ -8,6 +8,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
@@ -908,9 +909,42 @@ static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
   }
 }
 
+// Q or R of a running PLL keeps its VCO: the output takes the divider for at most the rate, the
+// PLL stopped while it changes
+static int prv_pll_set_div(const struct pbl_clk_stm32h7 *rcc, uint32_t id, uint64_t rate_mhz,
+                           uint64_t src_mhz) {
+  uint32_t pll = prv_pll(id);
+  uint32_t divm =
+      PBL_FIELD_GET(RCC_PLLCKSELR_DIVM_MASK(pll), prv_getreg(rcc, STM32H7_RCC_PLLCKSELR_OFFSET));
+  uint32_t divr = prv_getreg(rcc, STM32H7_RCC_PLLDIVR_OFFSET(pll));
+  uint64_t vco_mhz;
+  uint64_t div;
+
+  if (divm == 0U) {
+    return -EINVAL;
+  }
+
+  vco_mhz = src_mhz / divm * (PBL_FIELD_GET(RCC_PLLDIVR_N_MASK, divr) + 1U);
+  div = PBL_DIV_ROUND_UP(vco_mhz, rate_mhz);
+  if (div > PLL_DIVPQR_MAX) {
+    return -EINVAL;
+  }
+
+  pbl_modifyl(RCC_CR_PLLON(pll), 0U, rcc->base + STM32H7_RCC_CR_OFFSET);
+  while ((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLLRDY(pll)) != 0U) {
+  }
+
+  prv_modify(rcc, STM32H7_RCC_PLLDIVR_OFFSET(pll), prv_pll_out_mask(id), (uint32_t)div - 1U);
+
+  pbl_modifyl(0U, RCC_CR_PLLON(pll), rcc->base + STM32H7_RCC_CR_OFFSET);
+
+  return PBL_POLL_BUSY_US((prv_getreg(rcc, STM32H7_RCC_CR_OFFSET) & RCC_CR_PLLRDY(pll)) != 0U, 10U,
+                          PLLRDY_TIMEOUT_US);
+}
+
 // Configures a PLL for one of its outputs, with the first reference within limits and the other
-// outputs at the same rate, then starts it. P of PLL1 only divides by even numbers. PLL1 must not
-// run the system clock.
+// outputs at the same rate, then starts it; Q or R of a running one only changes its divider.
+// P of PLL1 only divides by even numbers. PLL1 must not run the system clock.
 static int prv_pll_set_rate(const struct pbl_clk_stm32h7 *rcc, uint32_t id, uint64_t rate_mhz,
                             uint64_t src_mhz) {
   uint32_t pll = prv_pll(id);
@@ -924,6 +958,10 @@ static int prv_pll_set_rate(const struct pbl_clk_stm32h7 *rcc, uint32_t id, uint
   if (pll == 0U && PBL_FIELD_GET(RCC_CFGR_SWS_MASK, prv_getreg(rcc, STM32H7_RCC_CFGR_OFFSET)) ==
                        RCC_CFGR_SW_PLL1) {
     return -EBUSY;
+  }
+
+  if (prv_pll_on(rcc, pll) && prv_pll_out_mask(id) != RCC_PLLDIVR_P_MASK) {
+    return prv_pll_set_div(rcc, id, rate_mhz, src_mhz);
   }
 
   for (uint32_t div = step; div <= PLL_DIVPQR_MAX; div += step) {
