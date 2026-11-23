@@ -9,5 +9,6 @@ config SOC_STM32H7
     select CPU_HAS_ICACHE if CPU_CORTEX_M7
     select CPU_HAS_DCACHE if CPU_CORTEX_M7
     select PINCTRL
+    select TIMER_STM32_LPTIM
     help
       ST STM32H7 series, selected by its SoCs.
