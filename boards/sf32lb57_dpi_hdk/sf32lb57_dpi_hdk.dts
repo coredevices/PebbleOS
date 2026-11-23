@@ -102,6 +102,22 @@ lcd_qspi_i2c: &i2c1 {
 	status = "okay";
 };
 
+&dmac2 {
+	status = "okay";
+};
+
+&mailbox1 {
+	status = "okay";
+};
+
+&mailbox2 {
+	status = "okay";
+};
+
+&lcpu {
+	status = "okay";
+};
+
 &mpi1 {
 	status = "okay";
 };
