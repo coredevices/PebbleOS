@@ -12,7 +12,7 @@ if CLK
 config CLK_SHELL
     bool "Clock shell commands"
     default DRIVER_SHELL
-    depends on SHELL && CLK && DEVICE_NAMES
+    depends on SHELL && DEVICE_NAMES
     help
       The clk shell command: list clocks and rates, and sample, hold and
       inspect calibrated clocks.

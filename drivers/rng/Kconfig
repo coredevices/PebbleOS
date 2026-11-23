@@ -10,7 +10,8 @@ if RNG
 
 config RNG_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52
     help
       Support for the Nordic nRF5 RNG.
 
@@ -39,13 +40,15 @@ config RNG_STM32
 
 config RNG_QEMU
     bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
 
 config RNG_POSIX
     bool "POSIX"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       Host random number generator.
 

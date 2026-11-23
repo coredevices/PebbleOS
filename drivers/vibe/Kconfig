@@ -43,7 +43,8 @@ config VIBE_DRV2604
 
 config VIBE_SIM
     bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Simulated vibration motor, reporting its state through its
       simulator API (pbl/drivers/vibe/sim.h).

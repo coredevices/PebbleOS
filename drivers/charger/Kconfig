@@ -34,7 +34,8 @@ config CHARGER_NPM1300
 
 config CHARGER_SIM
     bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Simulated charger, set through its simulator API
       (pbl/drivers/charger/sim.h).

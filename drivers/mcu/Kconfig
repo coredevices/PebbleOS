@@ -10,13 +10,14 @@ if MCU
 
 config MCU_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52
     help
       Support for Nordic nRF5 MCU information.
 
 config MCU_SF32LB
     bool "SiFli SF32LB"
-    default y if SOC_SF32LB52
+    default y
     depends on SOC_SF32LB52
     select NVMEM
     help
@@ -24,14 +25,16 @@ config MCU_SF32LB
 
 config MCU_QEMU
     bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       QEMU MCU information. QEMU emulates no unique ID, so it reports a
       fixed serial.
 
 config MCU_POSIX
     bool "POSIX"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       MCU information for a native build.
 

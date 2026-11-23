@@ -21,7 +21,8 @@ config WATCHDOG_TIMEOUT_MS
 
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52
     help
       Support for the Nordic nRF5 watchdog.
 
@@ -50,7 +51,8 @@ config WATCHDOG_STM32_IWDG
 
 config WATCHDOG_QEMU
     bool "QEMU Watchdog"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       Support for the CMSDK APB watchdog of the QEMU Pebble machines.
 
