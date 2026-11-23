@@ -51,7 +51,7 @@ config CST816_FW
 
 config GH3X2X_ALGO
     bool "Goodix GH3X2X algorithm library"
-    depends on HRM_GH3X2X && BOARD_OBELIX
+    depends on HRM_GH3X2X && CPU_STAR_MC1
     default y
     select FP_SOFTFP_ABI
     help
