@@ -34,27 +34,27 @@
 #define LCPU_BOOT_DELAY_US 5000U
 
 // LCPU ROM configuration block, in its SRAM region
-#define CONFIG_OFFSET    0xfdc0U
-#define CONFIG_A4_OFFSET 0x2a00U
-#define CONFIG_SIZE      0x40U
-#define CONFIG_A4_SIZE   0xccU
-#define CONFIG_57_OFFSET 0x13800U
-#define CONFIG_57_SIZE   0x100U
-#define CONFIG_MAGIC     0x45457878U
+#define ROM_CFG_OFFSET    0xfdc0U
+#define ROM_CFG_A4_OFFSET 0x2a00U
+#define ROM_CFG_SIZE      0x40U
+#define ROM_CFG_A4_SIZE   0xccU
+#define ROM_CFG_57_OFFSET 0x13800U
+#define ROM_CFG_57_SIZE   0x100U
+#define ROM_CFG_MAGIC     0x45457878U
 
 // TX power table the SF32LB57 LCPU reads
 #define RF_CONFIG_57_OFFSET 0x13900U
 
-#define CONFIG_LPCYCLE_CURR     4U
-#define CONFIG_WDT_TIME         12U
-#define CONFIG_WDT_STATUS       16U
-#define CONFIG_BT_TX_PWR        20U
-#define CONFIG_WDT_CLK          24U
-#define CONFIG_XTAL_ENABLED     26U
-#define CONFIG_RC_CAL_IN_L      27U
-#define CONFIG_A4_BT_KE_BUF     128U
-#define CONFIG_A4_BT_CONFIG     172U
-#define CONFIG_A4_HCPU_TX_QUEUE 200U
+#define ROM_CFG_LPCYCLE_CURR     4U
+#define ROM_CFG_WDT_TIME         12U
+#define ROM_CFG_WDT_STATUS       16U
+#define ROM_CFG_BT_TX_PWR        20U
+#define ROM_CFG_WDT_CLK          24U
+#define ROM_CFG_XTAL_ENABLED     26U
+#define ROM_CFG_RC_CAL_IN_L      27U
+#define ROM_CFG_A4_BT_KE_BUF     128U
+#define ROM_CFG_A4_BT_CONFIG     172U
+#define ROM_CFG_A4_HCPU_TX_QUEUE 200U
 
 #define LXT32_HZ 32768U
 
@@ -90,26 +90,26 @@ static const struct pbl_rproc_sf32lb *prv_lcpu(const struct pbl_rproc *rproc) {
 }
 
 #ifdef CONFIG_SOC_SF32LB57
-#define CONFIG_BLOCK_OFFSET CONFIG_57_OFFSET
-#define CONFIG_BLOCK_SIZE   CONFIG_57_SIZE
+#define ROM_CFG_BLOCK_OFFSET ROM_CFG_57_OFFSET
+#define ROM_CFG_BLOCK_SIZE   ROM_CFG_57_SIZE
 #else
 static bool prv_rev_a4(void) {
   return soc_sf32lb52_revid() >= HPSYS_CFG_IDR_REVID_A4;
 }
 
-#define CONFIG_BLOCK_OFFSET (prv_rev_a4() ? CONFIG_A4_OFFSET : CONFIG_OFFSET)
-#define CONFIG_BLOCK_SIZE   (prv_rev_a4() ? CONFIG_A4_SIZE : CONFIG_SIZE)
+#define ROM_CFG_BLOCK_OFFSET (prv_rev_a4() ? ROM_CFG_A4_OFFSET : ROM_CFG_OFFSET)
+#define ROM_CFG_BLOCK_SIZE   (prv_rev_a4() ? ROM_CFG_A4_SIZE : ROM_CFG_SIZE)
 #endif
 
 static bool s_config_ready;
 
 // Cleared once, as the LCPU keeps its own values across restarts
 static uint8_t *prv_config(const struct pbl_rproc_sf32lb *lcpu) {
-  uint8_t *config = (uint8_t *)(lcpu->sram.base + CONFIG_BLOCK_OFFSET);
-  const uint32_t magic = CONFIG_MAGIC;
+  uint8_t *config = (uint8_t *)(lcpu->sram.base + ROM_CFG_BLOCK_OFFSET);
+  const uint32_t magic = ROM_CFG_MAGIC;
 
   if (!s_config_ready) {
-    memset(config, 0, CONFIG_BLOCK_SIZE);
+    memset(config, 0, ROM_CFG_BLOCK_SIZE);
     memcpy(config, &magic, sizeof(magic));
     s_config_ready = true;
   }
@@ -127,7 +127,7 @@ static void prv_lpcycle_set(uint8_t *config, uint64_t rate_mhz) {
   const float lp_hz = (float)rate_mhz / 1000.0f;
 
   if (rate_mhz != 0U && rate_mhz != LXT32_HZ * 1000ULL) {
-    memcpy(config + CONFIG_LPCYCLE_CURR, &lp_hz, sizeof(lp_hz));
+    memcpy(config + ROM_CFG_LPCYCLE_CURR, &lp_hz, sizeof(lp_hz));
   }
 }
 
@@ -174,10 +174,10 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config)
   const uint32_t wdt_time = 10U;
   const uint16_t wdt_clk = 32768U;
 
-  memcpy(config + CONFIG_WDT_STATUS, &wdt_status, sizeof(wdt_status));
-  memcpy(config + CONFIG_WDT_TIME, &wdt_time, sizeof(wdt_time));
-  memcpy(config + CONFIG_WDT_CLK, &wdt_clk, sizeof(wdt_clk));
-  memcpy(config + CONFIG_RC_CAL_IN_L, &rc_cal, sizeof(rc_cal));
+  memcpy(config + ROM_CFG_WDT_STATUS, &wdt_status, sizeof(wdt_status));
+  memcpy(config + ROM_CFG_WDT_TIME, &wdt_time, sizeof(wdt_time));
+  memcpy(config + ROM_CFG_WDT_CLK, &wdt_clk, sizeof(wdt_clk));
+  memcpy(config + ROM_CFG_RC_CAL_IN_L, &rc_cal, sizeof(rc_cal));
 
 #ifdef CONFIG_SOC_SF32LB57
   if (xtal_enabled == 0U) {
@@ -194,7 +194,7 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config)
     .default_xtal_enabled = xtal_enabled,
   };
 
-  memcpy(config + CONFIG_A4_BT_CONFIG, &bt, sizeof(bt));
+  memcpy(config + ROM_CFG_A4_BT_CONFIG, &bt, sizeof(bt));
 #else
   const uint32_t tx_queue = lcpu->mem.base;
   const struct lcpu_bt_config bt = {
@@ -208,12 +208,12 @@ static void prv_rom_config(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config)
     .max_nb_of_hci_completed = 6,
   };
 
-  memcpy(config + CONFIG_XTAL_ENABLED, &xtal_enabled, sizeof(xtal_enabled));
+  memcpy(config + ROM_CFG_XTAL_ENABLED, &xtal_enabled, sizeof(xtal_enabled));
 
   if (prv_rev_a4()) {
-    memcpy(config + CONFIG_A4_HCPU_TX_QUEUE, &tx_queue, sizeof(tx_queue));
-    memcpy(config + CONFIG_A4_BT_CONFIG, &bt, sizeof(bt));
-    memcpy(config + CONFIG_A4_BT_KE_BUF, &ke, sizeof(ke));
+    memcpy(config + ROM_CFG_A4_HCPU_TX_QUEUE, &tx_queue, sizeof(tx_queue));
+    memcpy(config + ROM_CFG_A4_BT_CONFIG, &bt, sizeof(bt));
+    memcpy(config + ROM_CFG_A4_BT_KE_BUF, &ke, sizeof(ke));
   }
 #endif
 }
@@ -263,7 +263,7 @@ static void prv_rf_cal(const struct pbl_rproc_sf32lb *lcpu, uint8_t *config) {
 #else
   uint32_t tx_pwr = pbl_rproc_sf32lb__rf_cal(&rf);
 
-  memcpy(config + CONFIG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
+  memcpy(config + ROM_CFG_BT_TX_PWR, &tx_pwr, sizeof(tx_pwr));
 #endif
   // calibration leaves data in the exchange memory
   memset((void *)(lcpu->sram.base + LCPU_EM_OFFSET), 0, LCPU_EM_SIZE);
