@@ -30,7 +30,8 @@ enum pbl_bt_id_addr_type {
  * @param[out] addr The address.
  * @param[out] type How the address is applied.
  * @retval 0 on success.
- * @retval -ENOENT if the source has none: the controller's address is used.
+ * @retval -ENOENT if the source has none: the controller's address is used, or a random static
+ *         one where the controller has none.
  * @return Another negative errno otherwise.
  */
 int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type);
