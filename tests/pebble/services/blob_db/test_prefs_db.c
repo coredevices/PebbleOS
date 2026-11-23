@@ -167,3 +167,24 @@ void test_prefs_db__dark_mode_schedule(void) {
     cl_assert_equal_m(&read, &expected, sizeof(expected));
   }
 }
+
+void test_prefs_db__backlight_preset_from_phone(void) {
+  backlight_set_preset(BacklightPreset_Advanced);
+  backlight_set_intensity(10);
+  backlight_set_timeout_ms(3000);
+
+  const uint8_t max = BacklightPreset_MaxBrightness;
+  prv_insert_from_phone("lightPreset", &max, sizeof(max));
+  fake_sys_work_callbacks_invoke_pending();
+  cl_assert_equal_i(backlight_get_intensity(), 100);
+  cl_assert_equal_i(backlight_get_timeout_ms(), 5000);
+  cl_assert_equal_i(backlight_get_preset(), BacklightPreset_MaxBrightness);
+
+  // Advanced leaves the underlying settings alone
+  backlight_set_intensity(10);
+  const uint8_t advanced = BacklightPreset_Advanced;
+  prv_insert_from_phone("lightPreset", &advanced, sizeof(advanced));
+  fake_sys_work_callbacks_invoke_pending();
+  cl_assert_equal_i(backlight_get_intensity(), 10);
+  cl_assert_equal_i(backlight_get_preset(), BacklightPreset_Advanced);
+}
