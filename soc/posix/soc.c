@@ -1,16 +1,12 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <stdint.h>
-
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sched.h>
 
 #include <pbl_arch_posix.h>
 #include <posix_host.h>
-
-uint32_t SystemCoreClock = 64000000;
 
 #ifdef CONFIG_ARCH_POSIX_FIBERS
 // One host thread: the main loop runs the kernel until it idles.

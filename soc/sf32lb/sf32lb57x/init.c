@@ -6,6 +6,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/bits.h>
 
 #include <devicetree/regs.h>
@@ -28,8 +29,6 @@
 
 #define SYSCLK_HZ   48000000U
 #define DLL_STEP_HZ 24000000U
-
-uint32_t SystemCoreClock = SYSCLK_HZ;
 
 static uint32_t prv_hclk_hz(void) {
   uint32_t csr = pbl_readl(HPSYS_RCC(CSR));
@@ -64,7 +63,7 @@ static void prv_gtimer_start(void) {
 
 void pbl_soc_early_init(void) {
   // Busy waits count cycles, and the boot ROM may have left any clock running
-  SystemCoreClock = prv_hclk_hz();
+  pbl_cycles_per_sec_set(prv_hclk_hz());
 
   // HXT48 runs the CPU and the peripherals until the clock tree takes over
   pbl_modifyl(0U, HPSYS_AON_ACR_HXT48_REQ, HPSYS_AON(ACR));
@@ -75,7 +74,7 @@ void pbl_soc_early_init(void) {
     pbl_modifyl(HPSYS_RCC_CSR_SEL_SYS_MASK,
                 PBL_FIELD_PREP(HPSYS_RCC_CSR_SEL_SYS_MASK, HPSYS_RCC_CSR_SEL_SYS_HXT48),
                 HPSYS_RCC(CSR));
-    SystemCoreClock = prv_hclk_hz();
+    pbl_cycles_per_sec_set(prv_hclk_hz());
   }
   pbl_modifyl(0U, HPSYS_RCC_CSR_SEL_PERI, HPSYS_RCC(CSR));
 

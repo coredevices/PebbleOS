@@ -13,6 +13,7 @@
 #include <pbl/kernel/kernel.h>
 #include <pbl/util/size.h>
 
+#include <arch.h>
 #include <clar.h>
 #include <kernel_test.h>
 
@@ -55,6 +56,8 @@ static struct pbl_thread *prv_spawn(int i, const char *name, pbl_prio_t prio, vo
 }
 
 void test_kernel__initialize(void) {
+  // What the boot does before the kernel runs, as giving the cycle counter its rate
+  arch_early_init();
   s_trace[0] = '\0';
   memset(s_threads, 0, sizeof(s_threads));
 }

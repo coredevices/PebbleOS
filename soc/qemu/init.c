@@ -5,11 +5,12 @@
 
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/init.h>
-
-// System clock frequency for QEMU (64 MHz)
-uint32_t SystemCoreClock = 64000000;
+#include <pbl/kernel/time.h>
 
 void pbl_soc_early_init(void) {
+  // The emulated CPU counts cycles at 64 MHz
+  pbl_cycles_per_sec_set(64000000U);
+
   watchdog_init();
   watchdog_start();
 }

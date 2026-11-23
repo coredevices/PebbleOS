@@ -13,6 +13,7 @@
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
+#include <pbl/kernel/time.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
@@ -36,9 +37,6 @@
 #define PCLK_MAX_HZ    120000000U
 #define PCLK2_MAX_HZ   7500000U
 #define MILLIHZ_PER_HZ 1000U
-
-// The CPU clock, which the busy waits count
-extern uint32_t SystemCoreClock;
 
 #define PRV_SAME_ID(name)                                               \
   static_assert(SF32LB52_HPSYS_CLK_##name == SF32LB_HPSYS_CLK_##name && \
@@ -468,7 +466,7 @@ static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
   uint64_t hclk_mhz = prv_rate(ctrl, SF32LB_HPSYS_CLK_HCLK);
 
   if (hclk_mhz != 0U) {
-    SystemCoreClock = (uint32_t)(hclk_mhz / MILLIHZ_PER_HZ);
+    pbl_cycles_per_sec_set((uint32_t)(hclk_mhz / MILLIHZ_PER_HZ));
   }
 }
 
