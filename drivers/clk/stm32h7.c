@@ -918,10 +918,10 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
 
 uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
-  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_C1_RSR_OFFSET);
+  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_RSR_OFFSET);
 
   if (clear) {
-    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_C1_RSR_OFFSET);
+    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_RSR_OFFSET);
   }
 
   return rsr;

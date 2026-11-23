@@ -162,13 +162,14 @@ struct pbl_clk_stm32h7 {
 };
 
 /**
- * @brief Read the reset flags of the Cortex-M7.
+ * @brief Read the reset flags of the core running the code.
  *
  * The RCC keeps the causes of the resets since the flags were last cleared.
  *
  * @param ctrl The RCC.
  * @param clear Clear the flags after reading them.
- * @return The C1_RSR register, @c RCC_RSR_ bits of hardware/stm32h7_rcc.h.
+ * @return The RSR register, which shows each core its own, @c RCC_RSR_ bits of
+ * hardware/stm32h7_rcc.h.
  */
 uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear);
 

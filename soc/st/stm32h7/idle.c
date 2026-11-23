@@ -24,6 +24,7 @@
 // The HSE crystal starts within a few milliseconds, the PLLs within a few hundred microseconds
 #define OSC_TIMEOUT_US 100000U
 
+#ifndef CONFIG_CPU_CORTEX_M4
 // What Stop turns off and the CPU turns back on: the HSE, the HSI48 and the PLLs
 #define RCC_CR_STOP_OFF \
   (RCC_CR_HSEON | RCC_CR_HSI48ON | RCC_CR_PLLON(0U) | RCC_CR_PLLON(1U) | RCC_CR_PLLON(2U))
@@ -63,24 +64,37 @@ static void prv_clocks_restore(uint32_t cr, uint32_t sw, uint32_t vos) {
   }
 }
 
+#endif
+
 static void prv_enter_stop(void) {
+#ifndef CONFIG_CPU_CORTEX_M4
   uint32_t cr = pbl_readl(RCC(CR)) & RCC_CR_STOP_OFF;
   uint32_t sw = PBL_FIELD_GET(RCC_CFGR_SW_MASK, pbl_readl(RCC(CFGR)));
   uint32_t vos = pbl_readl(PWR(D3CR)) & PWR_D3CR_VOS_MASK;
+#endif
 
 #ifdef CONFIG_RAM
   pbl_ram_suspend(EXTRAM);
 #endif
 
-  // Stop, not Standby, for every domain, with the regulator and the flash in low power
+  // A domain goes to Standby only when every core asks for it: the Cortex-M7 asks for Stop, but
+  // when powering off, and the Cortex-M4 leaves the choice to it. The regulator and the flash go
+  // to low power.
+#ifdef CONFIG_CPU_CORTEX_M4
+  pbl_modifyl(PWR_CPUCR_RUN_D3, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3,
+              PWR(CORECR));
+#else
   pbl_modifyl(PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3 | PWR_CPUCR_RUN_D3, 0U,
-              PWR(CPUCR));
+              PWR(CORECR));
+#endif
   pbl_modifyl(0U, PWR_CR1_LPDS | PWR_CR1_FLPS, PWR(CR1));
 
   pbl_cpu_idle_deep();
 
-  // The clocks only stop with the whole system, when the other core is stopped too
+  // The system leaves Stop on the HSI, and the clock tree is the Cortex-M7's: it brings it back
+#ifndef CONFIG_CPU_CORTEX_M4
   prv_clocks_restore(cr, sw, vos);
+#endif
 
 #ifdef CONFIG_RAM
   pbl_ram_resume(EXTRAM);
