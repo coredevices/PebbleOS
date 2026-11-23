@@ -155,6 +155,21 @@ typedef enum {
   ActivitySleepAlgorithmCount,
 } ActivitySleepAlgorithm;
 
+/**
+ * @brief Wording style of the insights.
+ *
+ * Every style gives the same guidance. Stored in prefs and synced with the phone: values must not
+ * change.
+ */
+typedef enum {
+  /** Plain wording. */
+  ActivityInsightsStyle_Standard = 0,
+  /** Upbeat, playful wording. */
+  ActivityInsightsStyle_Playful,
+  /** Number of styles. */
+  ActivityInsightsStyleCount,
+} ActivityInsightsStyle;
+
 /** @brief Heart rate monitor preferences, as stored in prefs. */
 typedef struct PBL_PACKED ActivityHRMSettings {
   /** Heart rate monitoring enabled. */
@@ -686,6 +701,20 @@ bool activity_prefs_activity_insights_are_enabled(void);
  * @param enable If true, enable sleep insights.
  */
 void activity_prefs_sleep_insights_set_enabled(bool enable);
+
+/**
+ * @brief Set the wording style of sleep insights.
+ *
+ * @param style Style.
+ */
+void activity_prefs_set_insights_style(ActivityInsightsStyle style);
+
+/**
+ * @brief Get the wording style of sleep insights.
+ *
+ * @return Style; @ref ActivityInsightsStyle_Standard if the stored value is unknown.
+ */
+ActivityInsightsStyle activity_prefs_get_insights_style(void);
 
 /**
  * @brief Check whether sleep insights are enabled.

@@ -35,6 +35,10 @@ bool PBL_WEAK activity_prefs_tracking_is_enabled(void) {
   return false;
 }
 
+ActivityInsightsStyle PBL_WEAK activity_prefs_get_insights_style(void) {
+  return ActivityInsightsStyle_Standard;
+}
+
 ActivitySleepAlgorithm PBL_WEAK activity_prefs_get_sleep_algorithm(void) {
   return ActivitySleepAlgorithm_VanHees;
 }

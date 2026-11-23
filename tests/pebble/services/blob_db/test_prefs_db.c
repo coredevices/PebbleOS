@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/fs/fs.h>
+#include <pbl/services/activity/activity.h>
 #include <pbl/services/blob_db/prefs_db.h>
 #include <pbl/util/size.h>
 #include <pbl/util/uuid.h>
@@ -187,4 +188,17 @@ void test_prefs_db__backlight_preset_from_phone(void) {
   fake_sys_work_callbacks_invoke_pending();
   cl_assert_equal_i(backlight_get_intensity(), 10);
   cl_assert_equal_i(backlight_get_preset(), BacklightPreset_Advanced);
+}
+
+void test_prefs_db__insights_style_from_phone(void) {
+  cl_assert_equal_i(activity_prefs_get_insights_style(), ActivityInsightsStyle_Standard);
+
+  const uint8_t playful = ActivityInsightsStyle_Playful;
+  prv_insert_from_phone("activityInsightsStyle", &playful, sizeof(playful));
+  cl_assert_equal_i(activity_prefs_get_insights_style(), ActivityInsightsStyle_Playful);
+
+  // A style from a newer phone app reads as the standard one
+  const uint8_t unknown = ActivityInsightsStyleCount + 1;
+  prv_insert_from_phone("activityInsightsStyle", &unknown, sizeof(unknown));
+  cl_assert_equal_i(activity_prefs_get_insights_style(), ActivityInsightsStyle_Standard);
 }

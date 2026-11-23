@@ -205,6 +205,13 @@ bool activity_prefs_sleep_insights_are_enabled(void) {
 void activity_prefs_sleep_insights_set_enabled(bool enable) {
 }
 
+ActivityInsightsStyle activity_prefs_get_insights_style(void) {
+  return ActivityInsightsStyle_Standard;
+}
+
+void activity_prefs_set_insights_style(ActivityInsightsStyle style) {
+}
+
 uint8_t activity_prefs_get_health_app_opened_version(void) {
   return 0;
 }
