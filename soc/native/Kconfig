@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_NATIVE
+    bool
+    help
+      Native SoCs, running the firmware as a host application, selected
+      by the host.
+
+rsource "*/Kconfig"
