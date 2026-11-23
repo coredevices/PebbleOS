@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ancs.h"
-
 #include "ancs_app_name_storage.h"
 
 #include <errno.h>
@@ -19,6 +17,7 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/util/size.h>
 #include <pbl/util/testing.h>
@@ -26,7 +25,7 @@
 
 #include <kernel/event_loop.h>
 
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 
 // -----------------------------------------------------------------------------
 // Static function prototypes

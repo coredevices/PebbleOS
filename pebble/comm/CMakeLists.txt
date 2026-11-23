@@ -2,20 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set(excl)
-if(NOT CONFIG_BT_ANCS_CLIENT)
-  list(APPEND excl ble/kernel_le_client/ancs/*.c)
-endif()
-if(NOT CONFIG_BT_AMS_CLIENT)
-  list(APPEND excl ble/kernel_le_client/ams/*.c)
-endif()
-if(NOT CONFIG_PP_TRANSPORT_GATT)
-  list(APPEND excl ble/pp_gatt.c)
-endif()
 if(NOT CONFIG_QEMU_SERIAL)
   list(APPEND excl qemu/*.c)
 elseif(NOT CONFIG_QEMU)
   list(APPEND excl qemu/settings.c)
 endif()
+
 pbl_library()
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS *.c)
 pbl_filter_sources(sources EXCLUDE ${excl})

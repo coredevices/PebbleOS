@@ -10,10 +10,10 @@
 #include <pbl/drivers/rng.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
+#include <pbl/services/bluetooth/gateway.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <fake_spi_flash.h>
 
 #define MAX_BONDS 4

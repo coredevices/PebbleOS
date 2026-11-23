@@ -1,25 +1,24 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "kernel_le_client.h"
-
-#if defined(CONFIG_BT_AMS_CLIENT)
-#include <comm/ble/kernel_le_client/ams/ams.h>
-#endif
-#if defined(CONFIG_BT_ANCS_CLIENT)
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
-#endif
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/services/bluetooth/advertising.h>
+#include <pbl/services/bluetooth/gateway.h>
+#if defined(CONFIG_BT_AMS_CLIENT)
+#include <pbl/services/music_ams.h>
+#endif
+#if defined(CONFIG_BT_ANCS_CLIENT)
+#include <pbl/services/notifications/ancs/ancs.h>
+#endif
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 //! How long the connection is kept fast for the clients to find their services.
 #define DISCOVERY_RESPONSE_TIME_SECS 30
@@ -81,7 +80,7 @@ static void prv_gatt_service_notified(struct pbl_bt_gattc_service *svc, uint8_t 
   launcher_task_add_callback(prv_services_changed_kernel_main_cb, (void *)(uintptr_t)s_generation);
 }
 
-void kernel_le_client_rediscover(void) {
+void bt_gateway_rediscover(void) {
   launcher_task_add_callback(prv_services_changed_kernel_main_cb, (void *)(uintptr_t)s_generation);
 }
 
@@ -147,7 +146,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_handle_event(const PebbleEvent *e) {
+void bt_gateway_handle_event(const PebbleEvent *e) {
   if (e->type == PEBBLE_BLE_CONNECTION_EVENT) {
     prv_handle_connection_event(&e->bluetooth.le.connection);
   }
@@ -164,7 +163,7 @@ static void prv_cleanup_clients_kernel_main_cb(void *unused) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_init(void) {
+void bt_gateway_init(void) {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   pbl_pp_gatt_reset_disconnect_counter();
 #endif
@@ -173,7 +172,7 @@ void kernel_le_client_init(void) {
 }
 
 // -------------------------------------------------------------------------------------------------
-void kernel_le_client_deinit(void) {
+void bt_gateway_deinit(void) {
   // Cleanup clients: their code must execute on KernelMain, so add callback:
   launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
 
@@ -187,7 +186,7 @@ void kernel_le_client_deinit(void) {
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **argv) {
-  kernel_le_client_rediscover();
+  bt_gateway_rediscover();
   return 0;
 }
 

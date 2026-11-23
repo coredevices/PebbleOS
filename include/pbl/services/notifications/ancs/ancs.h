@@ -5,7 +5,8 @@
 
 #include <stdint.h>
 
-//! @file ancs.h The session with the Apple Notification Center Service of the phone: it queues
+//! @file
+//! The session with the Apple Notification Center Service of the phone: it queues
 //! the notifications the ANCS client reports, gets their attributes and hands them to the
 //! notification services. KernelMain only.
 

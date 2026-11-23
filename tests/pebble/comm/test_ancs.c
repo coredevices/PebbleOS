@@ -7,12 +7,12 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/evented_timer.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/phone_call_util.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

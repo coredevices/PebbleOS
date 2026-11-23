@@ -169,15 +169,15 @@ used without the rest of the subsystem:
 
 The firmware uses them for everything it needs from the phone, which it calls
 the gateway: the bonded peer, once its link is encrypted.
-`pebble/comm/ble/kernel_le_client/` starts a client of each service when the
+`pebble/services/bluetooth/gateway.c` starts a client of each service when the
 gateway connects, and stops them when it goes:
 
 | Service | Client | What for |
 | --- | --- | --- |
 | PPoGATT | `subsys/pp/transports/gatt/` | Sessions with the phone app, and with other apps: each hosts an instance of the service |
-| Generic Attribute | `kernel_le_client.c` | Service Changed: when the phone indicates it, every client looks for its service again |
-| ANCS | `ancs/`, on the ANCS client | iOS notifications |
-| AMS | `ams/`, on the AMS client | iOS media control |
+| Generic Attribute | `gateway.c` | Service Changed: when the phone indicates it, every client looks for its service again |
+| ANCS | `pebble/services/notifications/ancs/ancs.c`, on the ANCS client | iOS notifications |
+| AMS | `pebble/services/music/ams.c`, on the AMS client | iOS media control |
 
 Each looks for its own service, in that order, so that the session with the
 phone app comes first. What a client reports on the NimBLE host thread is

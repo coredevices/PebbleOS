@@ -7,10 +7,10 @@
 #include <pbl/bluetooth/clients/ams.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/services/music.h>
+#include <pbl/services/music_ams.h>
 #include <pbl/services/music_internal.h>
 
 #include <clar.h>
-#include <comm/ble/kernel_le_client/ams/ams.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////

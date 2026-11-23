@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "ams.h"
-
 #include "ams_analytics.h"
 #include "ams_util.h"
 
@@ -17,6 +15,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/music_ams.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
@@ -24,7 +23,7 @@
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
 
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
 // -------------------------------------------------------------------------------------------------
 // Function prototypes
@@ -673,7 +672,7 @@ static const struct pbl_bt_ams_client_cb s_client_cb = {
 };
 
 // -------------------------------------------------------------------------------------------------
-// Interface towards kernel_le_client.c
+// Interface towards the gateway
 
 void ams_create(uint16_t conn_handle) {
   PBL_ASSERTN(!s_ams_client);
