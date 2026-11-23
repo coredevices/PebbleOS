@@ -37,6 +37,17 @@ uint32_t activity_private_compute_distance_mm(uint32_t steps, uint32_t ms);
 uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t ms);
 
 /**
+ * @brief Estimate the active calories burned at a heart rate.
+ *
+ * Uses the Keytel heart rate prediction, minus the resting metabolic rate.
+ *
+ * @param bpm Heart rate, in beats per minute.
+ * @param ms Time spent at that heart rate, in milliseconds.
+ * @return Calories (1/1000 kcal); 0 if @p bpm or @p ms is 0, or below the resting rate.
+ */
+uint32_t activity_private_compute_active_calories_from_hr(uint32_t bpm, uint32_t ms);
+
+/**
  * @brief Estimate the resting calories burned over a period.
  *
  * Uses the Mifflin-St Jeor resting metabolic rate.
