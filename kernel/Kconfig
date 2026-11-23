@@ -124,8 +124,7 @@ config KERNEL_MPU_IN_FAULTS
 
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
-	default 1000 if QEMU || SOC_FAMILY_SF32LB || SOC_POSIX
-	default 1024
+	default 1000
 
 config KERNEL_IRQ_PRIO_KERNEL
 	int "NVIC priority of the kernel's interrupts"
