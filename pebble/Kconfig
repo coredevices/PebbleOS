@@ -38,22 +38,19 @@ config DEBUGGER_AWARE
     default y if !RELEASE
     depends on ARCH_HAS_DEBUGGER_DETECT
 
+# MFG writes the flash security registers from the shell.
 config FLASH_SHELL
     default y if MFG
     depends on FLASH && SHELL
 
 config FLASH_SHELL_TEST
-    default y if RECOVERY_FW
+    default y if MFG
     depends on FLASH_SHELL
 
 # Apps are built soft-float and call into the firmware.
 config FP_SOFTFP_ABI
     default y
     depends on CPU_HAS_FPU
-
-config FS_PFS_SHELL_LITTER
-    default !RECOVERY_FW && !RELEASE
-    depends on FS_PFS && SHELL
 
 config GH3X2X_ALGO
     default n if RECOVERY_FW && !MFG
@@ -78,10 +75,6 @@ config PP_TRANSPORT_GATT
 config SHELL
     default y
     depends on CONSOLE
-
-config TEMP_SHELL
-    default n if RECOVERY_FW
-    depends on TEMP && SHELL
 
 config USERSPACE
     default y
