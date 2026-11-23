@@ -13,12 +13,23 @@
 			compatible = "arm,cortex-m7";
 			device_type = "cpu";
 			reg = <0>;
+			cpu-idle-states = <&stop>;
 		};
 
 		cpu1: cpu@1 {
 			compatible = "arm,cortex-m4";
 			device_type = "cpu";
 			reg = <1>;
+		};
+
+		idle-states {
+			// Stop, the time back mostly the HSE crystal starting
+			stop: cpu-sleep-0 {
+				compatible = "arm,idle-state";
+				entry-latency-us = <50>;
+				exit-latency-us = <2000>;
+				min-residency-us = <10000>;
+			};
 		};
 	};
 

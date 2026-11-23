@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-# Blocks the early init touches before there are devices
+# Blocks the early init and the idle states touch outside of devices
 config: SOC_STM32H7
 labels:
   - rcc
+  - pwr
+  - exti
