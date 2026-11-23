@@ -411,7 +411,14 @@ static void prv_controller_config(void) {
   int rc;
 
   rc = pbl_bt_id_addr_get(&addr, &type);
-  PBL_ASSERT(rc == 0, "No identity address (%d)", rc);
+  if (rc == -ENOENT) {
+    // The ROM default is shared by every part: leave the controller without
+    // one, so the host takes a random static address.
+    memset(&addr, 0, sizeof(addr));
+    type = PBL_BT_ID_ADDR_PUBLIC;
+  } else {
+    PBL_ASSERT(rc == 0, "No identity address (%d)", rc);
+  }
 
   prv_nvds_config(type == PBL_BT_ID_ADDR_PUBLIC ? addr.octets : nullptr);
 #else
