@@ -30,8 +30,10 @@ config NIMBLE_BLE_TRANSPORT_ACL_COUNT
 
 endif # NIMBLE
 
-
 config NUM_IRQS
     default 99
+
+config KERNEL_MPU_REGIONS
+    default 12
 
 endif # SOC_SF32LB52

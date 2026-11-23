@@ -111,11 +111,11 @@ config KERNEL_USER_STACK_GUARD_SIZE
 
 config KERNEL_MPU_REGIONS
     int
-    default 12 if SOC_SF32LB52 || SOC_SF32LB57
     default 8
     help
       MPU slots the core implements. The last four switch with the thread, and
-      the rest take the static regions.
+      the rest take the static regions. SoCs whose core implements more set
+      it in their Kconfig.defconfig.
 
 config KERNEL_MPU_IN_FAULTS
     bool
