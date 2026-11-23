@@ -210,8 +210,8 @@ struct pbl_spi_mem_ops {
                      pbl_spi_mem_pm_fn_t fn, void *arg);
   /**
    * Optional, not with @ref PBL_SPI_MEM_XIP. Run @p pm->enter, if @p pm is not NULL, and power
-   * the controller down until @c pm_resume, with interrupts disabled. Returns 0, or @c -EBUSY
-   * while a transfer is in progress.
+   * the controller down until @c pm_resume, with interrupts disabled. Returns 0, @c -EBUSY
+   * while a transfer is in progress, or @c -ENOTSUP for commands the controller cannot run then.
    */
   int (*pm_suspend)(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm);
   /** With @c pm_suspend. Power the controller back up and run @p pm->exit. */
