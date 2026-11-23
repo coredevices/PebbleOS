@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Per-SoC symbol defaults; loaded first so they take precedence.
 osource "soc/*/Kconfig.defconfig"
 
@@ -13,9 +16,8 @@ rsource "soc/Kconfig"
 config RELEASE
     bool "Release build"
     help
-      Whether this is a release build. Pass
-      `-DCONFIG_RELEASE=y` to `./waf configure` to enable. Gates
-      features that should only run on shipping firmware.
+      Build the firmware as shipped: features meant for development only
+      are left out. Enabled with -DCONFIG_RELEASE=y when configuring.
 
 config PBLBOOT
     bool "PBLBOOT bootloader"
