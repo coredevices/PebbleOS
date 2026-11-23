@@ -92,6 +92,10 @@ static int prv_early_init(const struct pbl_uart *uart) {
   prv_putreg(nrf5, NRF52_UARTE_PSEL_CTS_OFFSET, UARTE_PSEL_DISCONNECTED);
   prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
 
+  // A transmitter left started, e.g. by the bootloader, keeps the high-frequency clock running
+  prv_putreg(nrf5, NRF52_UARTE_TASKS_STOPTX_OFFSET, 1U);
+  prv_event_wait(nrf5, NRF52_UARTE_EVENTS_TXSTOPPED_OFFSET);
+
   return 0;
 }
 
