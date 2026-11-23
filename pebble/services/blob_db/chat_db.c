@@ -85,6 +85,8 @@ bool chat_db_parse_message(const uint8_t *val, int val_len, ChatDbMessage *out) 
   out->reactions = prv_read_str(&r, 1);
   out->reply_sender = prv_read_str(&r, 1);
   out->reply_text = prv_read_str(&r, 1);
+  // Added later: a value without it is still a message
+  out->status = r.ok && r.pos < r.end ? prv_read_str(&r, 1) : (ChatDbStr){0};
   return prv_done(&r);
 }
 

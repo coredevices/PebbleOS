@@ -11,6 +11,7 @@
 #include "chat_warp.h"
 
 #include <pbl/services/notifications/alerts_preferences_private.h>
+#include <applib/dark_mode_service.h>
 #include <shell/system_theme.h>
 
 #define MAX_CHATS 20
@@ -26,7 +27,8 @@
 #define MAX_REACTIONS 64
 #define REACTION_LINE_H 17
 #define REACTION_MAX_LINES 3
-#define MAX_META 16
+#define REACTION_OVERLAP 10  // how much of a reaction pill sits on its bubble
+#define MAX_META 48  // "time|status": the status is "Seen by Anna, Bob" at its longest
 #define MAX_CONTEXT_TEXT PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT, 60, 60, 60, 56, 72, 56, 64)
 #define MAX_ID 24
 #define MAX_IMAGE_ERROR 32
@@ -69,7 +71,7 @@ typedef struct {
   GColor chat_bg, in_bubble, out_bubble, bubble_shadow, in_meta, out_meta, out_accent;
   GColor select_ring, accent, pill_in, pill_out, service_pill, ctx_in, ctx_out, wall_hi;
   // Text on the coloured surfaces above: black or white, whichever reads better.
-  GColor on_header, on_selected, on_badge, on_service, on_out, on_accent, on_ring;
+  GColor on_header, on_selected, on_badge, on_service, on_out, on_in, on_accent, on_ring;
 } Theme;
 
 static Theme s_theme;
@@ -103,6 +105,7 @@ static Theme s_theme;
 #define TG_ON_BADGE s_theme.on_badge
 #define TG_ON_SERVICE s_theme.on_service
 #define TG_ON_OUT s_theme.on_out
+#define TG_ON_IN s_theme.on_in
 #define TG_ON_ACCENT s_theme.on_accent
 #define TG_ON_RING s_theme.on_ring
 #define HEADER_H PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT, 26, 26, 26, 26, 32, 26, 34)
@@ -141,11 +144,11 @@ typedef struct {
 } Appearance;
 
 #define APPEARANCE_KEY 1
-#define APPEARANCE_VERSION 1
+#define APPEARANCE_VERSION 2  // 2: Beeper look (plain background, blue bubbles)
 // The pickers' defaults stand for "the theme's own colour"; see theme_apply().
 #define DEFAULT_ACCENT GColorBlueMoon  // Beeper blue (#0D4FFB)
-#define DEFAULT_CHAT_BG GColorVeryLightBlue  // Beeper periwinkle, doodles in BabyBlueEyes
-#define DEFAULT_OUT_BUBBLE GColorMintGreen
+#define DEFAULT_CHAT_BG GColorWhite  // black in the dark theme, as in Beeper
+#define DEFAULT_OUT_BUBBLE GColorBlueMoon  // Beeper blue, white text
 
 static Appearance s_appearance;
 
@@ -153,6 +156,7 @@ static void appearance_defaults(Appearance *a) {
   memset(a, 0, sizeof(*a));
   a->version = APPEARANCE_VERSION;
   a->text_size = 1;
+  a->pattern = PatternNone;
   a->photos = 1;
   a->big_emoji = 1;
 #ifdef PBL_COLOR
@@ -189,24 +193,22 @@ static void theme_apply(void) {
   bool own_out = !gcolor_equal(out, DEFAULT_OUT_BUBBLE);
   if (dark) {
     t->header = own_accent ? accent : GColorBlack;
-    t->list_bg = GColorOxfordBlue;
-    t->list_selected = own_accent ? accent : GColorCobaltBlue;
+    t->list_bg = GColorBlack;
+    t->list_selected = own_accent ? accent : GColorDarkGray;
     t->text = GColorWhite;
     t->subtext = GColorLightGray;
     t->separator = GColorDarkGray;
     t->link = own_accent ? accent : GColorCeleste;
-    t->badge = own_accent ? accent : GColorMayGreen;
+    t->badge = accent;
     t->badge_muted = GColorDarkGray;
-    t->in_bubble = GColorDarkGray;
-    t->in_meta = GColorLightGray;
+    t->in_bubble = GColorWhite;  // black on white: the most contrast a bubble can have on black
+    t->in_meta = GColorDarkGray;
     t->select_ring = own_accent ? accent : GColorVividCerulean;
     t->accent = own_accent ? accent : GColorCobaltBlue;
-    t->pill_in = t->pill_out = t->ctx_in = t->ctx_out = GColorBlack;
+    t->pill_in = t->pill_out = t->ctx_out = GColorBlack;
+    t->ctx_in = GColorLightGray;
     if (gcolor_equal(bg, DEFAULT_CHAT_BG)) {
-      bg = GColorOxfordBlue;
-    }
-    if (!own_out) {
-      out = GColorCobaltBlue;
+      bg = GColorBlack;
     }
   } else {
     t->header = accent;
@@ -216,9 +218,9 @@ static void theme_apply(void) {
     t->subtext = GColorDarkGray;
     t->separator = GColorLightGray;
     t->link = accent;
-    t->badge = own_accent ? accent : GColorMayGreen;
+    t->badge = accent;
     t->badge_muted = GColorLightGray;
-    t->in_bubble = GColorWhite;
+    t->in_bubble = gcolor_equal(bg, GColorWhite) ? GColorLightGray : GColorWhite;
     t->in_meta = GColorDarkGray;
     t->select_ring = own_accent ? accent : GColorBlueMoon;
     t->accent = own_accent ? accent : GColorVividCerulean;
@@ -227,13 +229,14 @@ static void theme_apply(void) {
   }
   t->chat_bg = bg;
   t->out_bubble = out;
-  t->bubble_shadow = t->service_pill = shade(bg, -1);
+  // Black has no darker shade, and a pill must show on it
+  t->bubble_shadow = t->service_pill = gcolor_equal(bg, GColorBlack) ? GColorDarkGray : shade(bg, -1);
   t->wall_hi = shade(bg, gcolor_equal(contrast_on(bg), GColorWhite) ? 1 : -1);
   if (own_out) {
     t->out_meta = gcolor_equal(contrast_on(out), GColorBlack) ? GColorDarkGray : GColorLightGray;
     t->out_accent = t->link;
   } else {
-    t->out_meta = t->out_accent = dark ? GColorCeleste : GColorIslamicGreen;
+    t->out_meta = t->out_accent = GColorCeleste;
   }
 #else
   GColor fg = s_appearance.dark ? GColorWhite : GColorBlack;
@@ -249,6 +252,7 @@ static void theme_apply(void) {
   t->on_badge = contrast_on(t->badge);
   t->on_service = contrast_on(t->service_pill);
   t->on_out = contrast_on(t->out_bubble);
+  t->on_in = contrast_on(t->in_bubble);
   t->on_accent = contrast_on(t->accent);
   t->on_ring = contrast_on(t->select_ring);
 }
@@ -302,7 +306,7 @@ static const uint8_t TG_NAME_COLORS[7] = {
 // Beeper's Android provider doesn't. The phone says which in the "settings" message's Text.
 static bool s_message_actions;
 // Neither connection archives, mutes or marks chats unread yet; 1 brings Pebblegram's chat menu back.
-#define BEEPER_CHAT_ACTIONS 0
+#define BEEPER_CHAT_ACTIONS 1  // hold a chat: archive it, mark it read or unread
 #define TOUCH_KEYBOARD_MAX_TEXT 400
 // Only watches with a touchscreen. Pebble 2 Duo (flint) firmware exposes the
 // touch API too, but has no touchscreen and needs that RAM for itself.
@@ -362,7 +366,9 @@ typedef enum {
   ActionItemEditKeyboard,
   ActionItemReactGrid,
   ActionItemEmojiGrid,
-  ActionItemReplyEmojiGrid
+  ActionItemReplyEmojiGrid,
+  ActionItemSearch,
+  ActionItemShowInbox
 } ActionItem;
 
 typedef enum {
@@ -494,6 +500,12 @@ static int s_full_text_height;
 static bool s_full_text_context;
 static bool s_native_has_deferred_mode;
 static bool s_native_deferred_dictation;
+// Search: the list's own menu (tap the header, or Up twice at the top) asks for a name by voice;
+// the phone then fills the chat list with the chats that match, newest message first.
+static bool s_list_menu;          // the menu being built is the list's, not a chat's
+static bool s_search_dictation;   // the dictation under way is a search, not a message
+static char s_search_query[40];   // what the list shows results for; "" = the inbox
+static uint8_t s_top_presses;     // Up presses on the first chat
 static int s_native_deferred_keyboard = -1;
 static int s_native_deferred_grid = -1;
 static bool s_native_deferred_grid_reply;
@@ -661,6 +673,7 @@ static void copy_cstr(char *dest, size_t dest_size, const char *src);
 static int message_bubble_width(GRect bounds);
 static int message_image_top(int index, GRect bounds);
 static void show_action_window(ActionMenuMode mode);
+static void end_search(void);
 static void start_dictation(void);
 static void action_click_config_provider(void *context);
 static void action_window_unload(Window *window);
@@ -1010,6 +1023,24 @@ static __attribute__((unused)) uint32_t tg_hash(const char *text) {
     hash = ((hash << 5) + hash) + (uint8_t)*text++;
   }
   return hash;
+}
+
+// What each chat row showed before a refresh, to tell which chats have news afterwards.
+static uint32_t s_chat_seen[MAX_CHATS];
+static int s_chat_seen_count;
+
+static uint32_t chat_row_hash(const Chat *chat) {
+  return tg_hash(chat->id) * 31 + tg_hash(chat->preview) + (uint32_t)chat->unread_count;
+}
+
+static bool chat_row_was_seen(const Chat *chat) {
+  const uint32_t hash = chat_row_hash(chat);
+  for (int i = 0; i < s_chat_seen_count; i++) {
+    if (s_chat_seen[i] == hash) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static GColor tg_avatar_color(const char *key) {
@@ -2020,15 +2051,17 @@ static void header_update_proc(Layer *layer, GContext *ctx) {
   GColor sub_color = PBL_IF_COLOR_ELSE(gcolor_equal(on_header, GColorWhite) ? GColorCeleste : GColorDarkGray,
                                        on_header);
   // In the chat list, a status ("Connecting...") replaces the title, as in Telegram.
+  // Search results are titled with what was searched for
+  const char *idle_title = s_search_query[0] ? s_search_query : "Chat";
   const char *title = chat ? s_current_chat_title :
-                      (s_status_text[0] ? s_status_text : "Chat");
+                      (s_status_text[0] && strcmp(s_status_text, "Chat") != 0 ? s_status_text : idle_title);
   const char *subtitle = header_has_subtitle() ? s_status_text : NULL;
   graphics_context_set_text_color(ctx, on_header);
 
   if (ROUND_UI) {
     // The cap of the circle is narrow: bold 18 if the title fits there, else 14, then an ellipsis.
     s_round_org = GPointZero;
-    int icon_w = chat ? 0 : 20;
+    int icon_w = 0;
     int left;
     int right;
     round_span(14, 14, 3, &left, &right);
@@ -2038,9 +2071,6 @@ static void header_update_proc(Layer *layer, GContext *ctx) {
     int title_y = big ? 10 : (subtitle ? 3 : 12);
     int tw = PG_MIN(avail, text_width(title, font));
     int x = (b.size.w - (tw + icon_w)) / 2;
-    if (!chat) {
-      draw_beeper_mark_centered(ctx, GPoint(x + 6, title_y + (big ? 12 : 9)), big ? 4 : 3, on_header, TG_HEADER);
-    }
     graphics_draw_text(ctx, title, font, GRect(x + icon_w, title_y, tw + 2, 22),
                        GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
     if (subtitle) {
@@ -2065,9 +2095,6 @@ static void header_update_proc(Layer *layer, GContext *ctx) {
                   current && s_appearance.photos ? header_avatar_for(current->avatar_bitmap, r) : NULL, TG_HEADER);
       x += (r * 2) + 7;
     }
-  } else {
-    draw_beeper_mark_centered(ctx, GPoint(x + 6, subtitle ? mid - 5 : mid - 1), 4, on_header, TG_HEADER);
-    x += 24;
   }
   int w = b.size.w - x - 4;
   if (subtitle) {
@@ -2235,7 +2262,9 @@ static void chat_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, 
   if (selected) {
     graphics_context_set_fill_color(ctx, row_bg);
     if (ROUND_UI) {
-      round_fill(ctx, GRect(0, 1, bounds.size.w, bounds.size.h - 2), 6, GCornersAll, 2, row_bg);
+      // From the row's first pixel: a 1px gap showed as a line under the header on the first chat
+      // and out to the bezel: a 2px inset left a rim of the list's background around it
+      round_fill(ctx, GRect(0, 0, bounds.size.w, bounds.size.h - 1), 0, GCornerNone, 0, row_bg);
     } else {
       // Leave a 1px gap above the highlight and above the separator line.
       graphics_fill_rect(ctx, GRect(0, 1, bounds.size.w, bounds.size.h - 3), 0, GCornerNone);
@@ -2740,6 +2769,72 @@ static void message_meta_time(const char *meta, char *dest, size_t dest_size) {
   }
 }
 
+// ---- Days and status (Beeper-style) ----------------------------------------
+
+static bool s_day_label[MAX_MESSAGES];  // the message is the first of its day on screen
+static bool s_day_pill;                 // the floating day shows: the chat just scrolled
+static AppTimer *s_day_pill_timer;
+static AppTimer *s_fling_timer;  // momentum after a swipe, see fling_start()
+static int s_day_pill_offset = -1;      // scroll offset the pill last saw
+
+// A message id is its time in ms x 10 plus a tie-breaker (the phone's numbering); 0 for any other id.
+static time_t message_time(const Message *m) {
+  int64_t v = 0;
+  for (const char *p = m->id; *p; p++) {
+    if (*p < '0' || *p > '9') {
+      return 0;
+    }
+    v = v * 10 + (*p - '0');
+  }
+  return v > 10000000000000LL ? (time_t)(v / 10000) : 0;
+}
+
+// Local midnight of t's day, as a time.
+static time_t day_start(time_t t) {
+  struct pbl_tm tm = *localtime(&t);
+  return t - (tm.tm_hour * 3600 + tm.tm_min * 60 + tm.tm_sec);
+}
+
+// Whole days from a's day to b's; the rounding absorbs a daylight-saving hour.
+static int days_between(time_t a, time_t b) {
+  return (int)((day_start(b) - day_start(a) + 43200) / 86400);
+}
+
+// "Today", "Yesterday", the weekday within a week, else "Sat, Oct 31".
+static void day_label_text(time_t t, char *out, size_t size) {
+  static const char *const days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+  static const char *const months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  int ago = days_between(t, time(NULL));
+  struct pbl_tm tm = *localtime(&t);
+  if (ago <= 0) {
+    copy_cstr(out, size, "Today");
+  } else if (ago == 1) {
+    copy_cstr(out, size, "Yesterday");
+  } else if (ago < 7) {
+    copy_cstr(out, size, days[tm.tm_wday % 7]);
+  } else {
+    snprintf(out, size, "%.3s, %s %d", days[tm.tm_wday % 7], months[tm.tm_mon % 12], tm.tm_mday);
+  }
+}
+
+// The status of my message, sent by the phone after the time: "Sent", "Seen at 10:52", ...
+static const char *message_status(const Message *m) {
+  const char *separator = m->meta ? strchr(m->meta, '|') : NULL;
+  return separator && separator[1] ? separator + 1 : NULL;
+}
+
+// How far a message's reaction pills reach below its bubble.
+static int reactions_overhang(const Message *m) {
+  return m->pills_h ? m->pills_h - REACTION_OVERLAP + 2 : 0;
+}
+
+// The status shows under the chat's newest message when it is mine.
+static bool message_shows_status(int index) {
+  return s_at_newest && index == s_message_count - 1 && s_messages[index].outgoing &&
+         message_status(&s_messages[index]);
+}
+
 // ---- Message layout (Telegram-style bubbles) ------------------------------
 //
 // Bubbles shrink to fit their content like Telegram's. Measuring text is the
@@ -2747,7 +2842,7 @@ static void message_meta_time(const char *meta, char *dest, size_t dest_size) {
 // string storage, which is reallocated whenever the text changes) and the
 // per-frame layout only does cheap arithmetic.
 
-#define BUBBLE_R 8
+#define BUBBLE_R 12
 #define BUBBLE_PAD_X 7
 #define BUBBLE_INSET 4  // round: gap kept between a bubble and the bezel
 #define BUBBLE_PAD_TOP 3
@@ -2757,6 +2852,9 @@ static void message_meta_time(const char *meta, char *dest, size_t dest_size) {
 #define BUBBLE_META_H 15
 #define BUBBLE_GAP_SAME 4
 #define BUBBLE_GAP_OTHER 6
+#define DAY_LABEL_H 20  // "Today", "Friday", "Sat, Oct 31" above a day's first message
+#define STATUS_LINE_H 16  // "Sent", "Seen at 10:52" under my last message
+#define DAY_PILL_MS 1500
 #define PILL_H 22
 #define PILL_GAP 4
 #define GROUP_AVATAR_R 11
@@ -3009,7 +3107,9 @@ static uint8_t message_meta_receipts(const char *meta);
 
 static int meta_width(const char *meta) {
   char time_text[8];
-  if (!meta || !meta[0]) {
+  // Beeper's bubbles carry no time: days are labelled between messages, and my last message
+  // has its status under it. The meta drawing below stays for a theme that wants times back.
+  if (true || !meta || !meta[0]) {
     return 0;
   }
   message_meta_time(meta, time_text, sizeof(time_text));
@@ -3043,7 +3143,10 @@ static void layout_pills(GContext *ctx, const char *reactions, int max_w, GPoint
     token[len] = '\0';
     trim_incomplete_utf8(token);
     p = end;
-    int w = PG_MIN(max_w, text_width(token, pill_font()) + 12);
+    // Word-wrap measuring: the ellipsis mode text_width() uses gives an emoji next to no width
+    int token_w = graphics_text_layout_get_content_size(token, pill_font(), GRect(0, 0, 200, 40),
+                                                        GTextOverflowModeWordWrap, GTextAlignmentLeft).w;
+    int w = PG_MIN(max_w, PG_MAX(token_w, 14) + 14);
     if (any && x + PILL_GAP + w > max_w) {
       x = 0;
       y += PILL_H + PILL_GAP;
@@ -3051,20 +3154,30 @@ static void layout_pills(GContext *ctx, const char *reactions, int max_w, GPoint
     int px = any && x > 0 ? x + PILL_GAP : x;
     if (ctx) {
       GRect pill = GRect(origin.x + px, origin.y + y, w, PILL_H);
-      if (ROUND_UI) {
-        pill = round_clamp(pill, BUBBLE_INSET + BUBBLE_PAD_X);
+      if (ROUND_UI && !s_round_flat) {  // in the warped column the warp keeps it inside the circle
+        pill = round_clamp(pill, BUBBLE_INSET);
       }
       if (pill.size.w >= PG_MIN(w, 28)) {  // round: a pill squeezed by the bezel goes away
-        graphics_context_set_fill_color(ctx, outgoing ? TG_PILL_OUT : TG_PILL_IN);
-        graphics_fill_rect(ctx, pill, PILL_H / 2, GCornersAll);
+        // A rim in the chat's background lifts the pill off the bubble it overlaps
+        GRect rim = GRect(pill.origin.x - 2, pill.origin.y - 2, pill.size.w + 4, pill.size.h + 4);
+        if (ROUND_UI) {
+          // Row by row, like the bubbles: the system's rounded fill loses most of a pill in the warp's strips
+          round_fill(ctx, rim, PILL_H / 2 + 2, GCornersAll, 0, TG_CHAT_BG);
+          round_fill(ctx, pill, PILL_H / 2, GCornersAll, 0, TG_IN_BUBBLE);
+        } else {
+          graphics_context_set_fill_color(ctx, TG_CHAT_BG);
+          graphics_fill_rect(ctx, rim, PILL_H / 2 + 2, GCornersAll);
+          graphics_context_set_fill_color(ctx, TG_IN_BUBBLE);
+          graphics_fill_rect(ctx, pill, PILL_H / 2, GCornersAll);
+        }
         if (BW_UI) {
           graphics_context_set_stroke_color(ctx, TG_TEXT);
           graphics_draw_round_rect(ctx, pill, PILL_H / 2);
         }
-        graphics_context_set_text_color(ctx, outgoing ? TG_OUT_ACCENT : TG_LINK);
+        graphics_context_set_text_color(ctx, TG_ON_IN);
         graphics_draw_text(ctx, token, pill_font(),
-                           GRect(pill.origin.x + 6, pill.origin.y - 1, pill.size.w - 10, PILL_H),
-                           GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+                           GRect(pill.origin.x, pill.origin.y - 1, pill.size.w, PILL_H),
+                           GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
       }
     }
     x = px + w;
@@ -3178,7 +3291,7 @@ static int layout_message(int index, GRect bounds, int max_w) {
     box->text_box_w = inner;
     content_w = PG_MAX(m->text_w, m->meta_w + 10);
     box->meta_y = m->text_h + 1;
-    h = box->meta_y + 16;
+    h = m->meta_w ? box->meta_y + 16 : m->text_h + 2;
     box->w = content_w;
   } else {
     h = BUBBLE_PAD_TOP;
@@ -3226,15 +3339,8 @@ static int layout_message(int index, GRect bounds, int max_w) {
       h += m->text_h;
     }
     if (m->pills_h) {
-      box->pills_y = h + 3;
-      content_w = PG_MAX(content_w, m->pills_w);
-      h += m->pills_h + 3;
-      if (m->pills_last_w + 6 + m->meta_w <= inner) {
-        box->flags |= BOX_META_ON_PILLS;
-        content_w = PG_MAX(content_w, m->pills_last_w + 6 + m->meta_w);
-        box->meta_y = h - BUBBLE_META_H - 2;
-        meta_placed = true;
-      }
+      // Reactions aren't in the bubble: they overlap its bottom corner (see reactions_overhang)
+      content_w = PG_MAX(content_w, m->pills_w - (BUBBLE_PAD_X * 2) + 12);
     }
     if (box->flags & BOX_META_ON_PHOTO) {
       meta_placed = true;
@@ -3245,6 +3351,7 @@ static int layout_message(int index, GRect bounds, int max_w) {
       h += BUBBLE_META_H;
     }
     h += BUBBLE_PAD_BOTTOM;
+    box->pills_y = h - REACTION_OVERLAP;
     box->w = PG_MIN(max_w, PG_MAX(40, content_w + (BUBBLE_PAD_X * 2)));
   }
 
@@ -3284,9 +3391,20 @@ static void recalc_message_layout(void) {
       bool photo = s_messages[i - 1].image_placeholder || s_messages[i].image_placeholder;
       y += (same_author(&s_messages[i - 1], &s_messages[i]) && !photo) ? BUBBLE_GAP_SAME : BUBBLE_GAP_OTHER;
     }
+    // A day's first message gets its label. The oldest one loaded only when nothing is older:
+    // otherwise the page above may be the same day, and a label there would come and go.
+    time_t t = message_time(&s_messages[i]);
+    time_t before = i > 0 ? message_time(&s_messages[i - 1]) : 0;
+    s_day_label[i] = t && (i > 0 ? (before && days_between(before, t) != 0) : s_at_oldest);
+    if (s_day_label[i]) {
+      y += DAY_LABEL_H;
+    }
     s_message_y[i] = y;
     s_message_h[i] = layout_message(i, bounds, max_w);
-    y += s_message_h[i];
+    y += s_message_h[i] + reactions_overhang(&s_messages[i]);
+    if (message_shows_status(i)) {
+      y += STATUS_LINE_H;
+    }
   }
   int bottom_pad = ROUND_UI ? 28 : 5;  // round: keeps the input bar inside the circle
   int compose_min_y = visible_h - COMPOSE_BAR_H - (ROUND_UI ? 28 : 5);
@@ -5142,15 +5260,16 @@ static void draw_bubble_shape(GContext *ctx, GRect r, bool outgoing, bool tail, 
   if (tail) {
     corners &= outgoing ? ~GCornerBottomRight : ~GCornerBottomLeft;
   }
+  const int radius = PG_MIN(BUBBLE_R, r.size.h / 2);  // a one-line bubble is a pill
   if (ROUND_UI) {
     if (round_clamp(r, BUBBLE_INSET).size.w < r.size.w) {
-      round_fill(ctx, r, BUBBLE_R, GCornersAll, BUBBLE_INSET, fill);  // at the bezel: follows the curve, no tail
+      round_fill(ctx, r, radius, GCornersAll, BUBBLE_INSET, fill);  // at the bezel: follows the curve, no tail
       return;
     }
-    round_fill(ctx, r, BUBBLE_R, corners, BUBBLE_INSET, fill);
+    round_fill(ctx, r, radius, corners, BUBBLE_INSET, fill);
   } else {
     graphics_context_set_fill_color(ctx, fill);
-    graphics_fill_rect(ctx, r, BUBBLE_R, corners);
+    graphics_fill_rect(ctx, r, radius, corners);
   }
   if (tail) {
     int b = r.origin.y + r.size.h - 1;
@@ -5168,14 +5287,11 @@ static void draw_bubble_shape(GContext *ctx, GRect r, bool outgoing, bool tail, 
 
 static void draw_bubble(GContext *ctx, GRect r, bool outgoing, bool tail, bool selected) {
 #ifdef PBL_COLOR
+  // Beeper's bubbles: flat, fully rounded, no tail. The selection ring is the same shape, 2px larger.
+  tail = false;
   if (selected) {
-    // The selection ring is the bubble's own shape (tail included), 2px larger.
     draw_bubble_shape(ctx, GRect(r.origin.x - 2, r.origin.y - 2, r.size.w + 4, r.size.h + 4), outgoing, tail,
                       TG_SELECT_RING);
-  } else {
-    // A 1px darker edge under each bubble, like Telegram's soft shadow.
-    draw_bubble_shape(ctx, GRect(r.origin.x, r.origin.y + 1, r.size.w, r.size.h), outgoing, tail,
-                      TG_BUBBLE_SHADOW);
   }
   draw_bubble_shape(ctx, r, outgoing, tail, outgoing ? TG_OUT_BUBBLE : TG_IN_BUBBLE);
 #else
@@ -5256,7 +5372,7 @@ static void draw_message_context(GContext *ctx, Message *m, GRect rect) {
   }
   message_context_strings(m, title, sizeof(title), body, sizeof(body));
   GColor accent = m->outgoing ? TG_OUT_ACCENT :
-                  (strncmp(title, "Fwd from ", 9) == 0 ? TG_LINK : tg_name_color(title));
+                  TG_ON_IN;
 #ifdef PBL_COLOR
   graphics_context_set_fill_color(ctx, m->outgoing ? TG_CTX_OUT : TG_CTX_IN);
   graphics_fill_rect(ctx, rect, 4, GCornersAll);
@@ -5267,7 +5383,7 @@ static void draw_message_context(GContext *ctx, Message *m, GRect rect) {
   graphics_draw_text(ctx, strncmp(title, "Fwd from ", 9) == 0 ? title + 9 : title, font_bold14(),
                      GRect(rect.origin.x + 7, rect.origin.y - 1, rect.size.w - 9, 16),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
-  graphics_context_set_text_color(ctx, TG_TEXT);
+  graphics_context_set_text_color(ctx, m->outgoing ? TG_TEXT : TG_ON_IN);
   graphics_draw_text(ctx, body, font_14(), GRect(rect.origin.x + 7, rect.origin.y + 14, rect.size.w - 9, 18),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 }
@@ -5392,7 +5508,7 @@ static void draw_compose_bar(GContext *ctx, GRect compose, bool selected) {
     graphics_context_set_stroke_width(ctx, 1);
   }
   bool draft = touch_keyboard_has_draft();
-  graphics_context_set_text_color(ctx, draft ? TG_TEXT : TG_SUBTEXT);
+  graphics_context_set_text_color(ctx, draft ? TG_ON_IN : TG_IN_META);
   graphics_draw_text(ctx, draft ? "Continue draft" : "Message", font_18(),
                      GRect(field.origin.x + 12, field.origin.y + (compose.size.h - 24) / 2, field.size.w - 16, 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
@@ -5471,8 +5587,10 @@ static void messages_root_update_proc(Layer *layer, GContext *ctx) {
     for (int i = 0; i < s_message_count; i++) {
       // The selection ring (2px) and shadow (1px) around a bubble scale with it, or they land
       // in rows at the circle's own scale and draw wider than the bubble, as dark lines.
-      items[i].top = s_message_y[i] - s_chat_scroll_offset - 2;
-      items[i].bottom = items[i].top + s_message_h[i] + 4;
+      // So do its day label above and its status line below.
+      items[i].top = s_message_y[i] - s_chat_scroll_offset - 2 - (s_day_label[i] ? DAY_LABEL_H : 0);
+      items[i].bottom = s_message_y[i] - s_chat_scroll_offset + s_message_h[i] + 2 +
+                        reactions_overhang(&s_messages[i]) + (message_shows_status(i) ? STATUS_LINE_H : 0);
     }
     chat_warp_build(&s_warp, visible_h, PBL_DISPLAY_HEIGHT / 2 - frame.origin.y,
                     PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_WIDTH / 2 - CHAT_WARP_SIDE_INSET + 6 + CHAT_WARP_BEZEL_GAP,
@@ -5514,6 +5632,20 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
     }
     bool selected = i == s_selected_message;
     GRect bubble = GRect(box->x, y, box->w, h);
+    if (s_day_label[i]) {
+      char day[20];
+      day_label_text(message_time(m), day, sizeof(day));
+      graphics_context_set_text_color(ctx, TG_SUBTEXT);
+      graphics_draw_text(ctx, day, font_bold14(), GRect(0, y - DAY_LABEL_H, bounds.size.w, 16),
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    }
+    if (message_shows_status(i)) {
+      int right = box->x + box->w - 4;
+      graphics_context_set_text_color(ctx, TG_SUBTEXT);
+      graphics_draw_text(ctx, message_status(m), font_14(),
+                         GRect(right - 160, y + h - 1 + reactions_overhang(m), 160, 16),
+                         GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+    }
 
 
     if (box->flags & BOX_AVATAR) {
@@ -5560,7 +5692,7 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
 
     if (box->flags & BOX_NAME) {
       GRect name = GRect(left, y + BUBBLE_PAD_TOP - 2, inner_w, 16);
-      graphics_context_set_text_color(ctx, tg_name_color(m->sender));
+      graphics_context_set_text_color(ctx, TG_ON_IN);  // one colour for every name: bold already sets it apart
       graphics_draw_text(ctx, m->sender, font_bold14(), ROUND_UI ? round_clamp(name, BUBBLE_INSET + BUBBLE_PAD_X) : name,
                          GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
     }
@@ -5572,12 +5704,14 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
                                        box->image_w, box->image_h));
     }
     if (display_text[0] && m->text_h) {
-      graphics_context_set_text_color(ctx, m->outgoing ? TG_ON_OUT : TG_TEXT);
+      graphics_context_set_text_color(ctx, m->outgoing ? TG_ON_OUT : TG_ON_IN);
       draw_message_text(ctx, m, display_text, GRect(left, y + box->text_y, box->text_box_w, m->text_h),
                         (box->flags & BOX_META_INLINE) ? meta_right - m->meta_w - 6 : PBL_DISPLAY_WIDTH);
     }
     if (m->pills_h) {
-      layout_pills(ctx, m->reactions, box->w - (BUBBLE_PAD_X * 2), GPoint(left, y + box->pills_y),
+      // On the bubble's own side: right for mine, left for theirs
+      int pills_x = m->outgoing ? box->x + box->w - 6 - m->pills_w : box->x + 6;
+      layout_pills(ctx, m->reactions, m->pills_w, GPoint(pills_x, y + box->pills_y),
                    m->outgoing, NULL, NULL, NULL);
     }
     if (box->flags & BOX_META_ON_PHOTO) {
@@ -5594,8 +5728,45 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
 
 }
 
-// What stays put over the messages: the composer and the keyboard.
+static void day_pill_timer_callback(void *data) {
+  s_day_pill_timer = NULL;
+  s_day_pill = false;
+  mark_messages_dirty();
+}
+
+// The day of the messages at the top, as a pill, while the chat scrolls and a moment after:
+// the day's own label is usually far above.
+static void draw_day_pill(GContext *ctx, GRect bounds) {
+  if (s_chat_scroll_offset != s_day_pill_offset) {
+    bool first = s_day_pill_offset < 0;
+    s_day_pill_offset = s_chat_scroll_offset;
+    if (!first) {
+      s_day_pill = true;
+      cancel_timer(&s_day_pill_timer);
+      s_day_pill_timer = app_timer_register(DAY_PILL_MS, day_pill_timer_callback, NULL);
+    }
+  }
+  if (!s_day_pill || s_message_count == 0) {
+    return;
+  }
+  const int top = 4;
+  int i = 0;
+  while (i < s_message_count - 1 && s_message_y[i] + s_message_h[i] - s_chat_scroll_offset < top + 22) {
+    i++;
+  }
+  time_t t = message_time(&s_messages[i]);
+  // Not when that day's label is itself in view at the top: it would be said twice
+  if (!t || (s_day_label[i] && s_message_y[i] - DAY_LABEL_H - s_chat_scroll_offset >= top)) {
+    return;
+  }
+  char day[20];
+  day_label_text(t, day, sizeof(day));
+  draw_service_pill(ctx, bounds, top, day);
+}
+
+// What stays put over the messages: the day, the composer and the keyboard.
 static void draw_messages_overlay(GContext *ctx, GRect bounds) {
+  draw_day_pill(ctx, bounds);
   GRect compose_rect = compose_rect_for_bounds(bounds);
   if (s_at_newest && !s_touch_keyboard_open &&
       compose_rect.origin.y < bounds.size.h && compose_rect.origin.y + COMPOSE_BAR_H > 0 &&
@@ -5611,6 +5782,10 @@ static void draw_messages_overlay(GContext *ctx, GRect bounds) {
 }
 
 static void destroy_chat_view(void) {
+  cancel_timer(&s_fling_timer);
+  cancel_timer(&s_day_pill_timer);
+  s_day_pill = false;
+  s_day_pill_offset = -1;
   if (s_chat_menu_animation) {
     animation_unschedule((Animation *)s_chat_menu_animation);
     property_animation_destroy(s_chat_menu_animation);
@@ -5701,6 +5876,12 @@ static void show_chat_view(void) {
   recalc_message_layout();
   if (s_message_count > 0) {
     s_chat_scroll_offset = clamp_scroll_offset(s_chat_content_height);
+    // Opened from a notification: a long newest message starts at its top, to read from there
+    const int last = s_message_count - 1;
+    const int top = s_message_y[last] - (s_day_label[last] ? DAY_LABEL_H : 0) - (ROUND_UI ? 30 : 4);
+    if (instant && top < s_chat_scroll_offset) {
+      s_chat_scroll_offset = clamp_scroll_offset(top);
+    }
   }
   render_messages();
   if (instant) {
@@ -6423,12 +6604,46 @@ static void send_selected_reaction(const char *token) {
   send_command("send_reaction", s_current_chat_id, token, NULL, s_messages[s_selected_message].id);
 }
 
+// The chat a chat action is about: the open one in a chat, else the list's selected row. -1 if none.
+static int action_chat_index(void) {
+  if (s_view_state == ViewStateChat) {
+    for (int i = 0; i < s_chat_count; i++) {
+      if (strcmp(s_chats[i].id, s_current_chat_id) == 0) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  return s_selected_chat >= 0 && s_selected_chat < s_chat_count ? s_selected_chat : -1;
+}
+
+static bool chat_is_unread(const Chat *chat) {
+  return chat->unread || chat->unread_count > 0;
+}
+
 static void send_selected_chat_action(const char *command) {
-  if (s_selected_chat < 0 || s_selected_chat >= s_chat_count) {
+  int index = action_chat_index();
+  if (index < 0) {
     return;
   }
   show_status("Updating...");
-  send_command(command, s_chats[s_selected_chat].id, NULL, NULL, NULL);
+  send_command(command, s_chats[index].id, NULL, NULL, NULL);
+}
+
+// After archiving or marking unread from inside a chat: back to the list, once the menu has closed.
+static char s_chat_to_remove[MAX_ID];
+
+static void leave_chat_after_action(void *data) {
+  if (s_view_state == ViewStateChat) {
+    main_back_click_handler(NULL, NULL);
+  }
+  for (int i = 0; s_chat_to_remove[0] && i < s_chat_count; i++) {
+    if (strcmp(s_chats[i].id, s_chat_to_remove) == 0) {
+      remove_chat_at(i);
+      break;
+    }
+  }
+  s_chat_to_remove[0] = '\0';
 }
 
 // Message text follows the watch's notification text size (Settings > Notifications > Text Size),
@@ -6457,6 +6672,7 @@ static void appearance_load(void) {
     appearance_defaults(&s_appearance);
   }
   s_appearance.text_size = system_text_size();
+  s_appearance.dark = system_theme_is_dark_mode();  // Settings > Display, like the system apps
   theme_apply();
 }
 
@@ -6490,6 +6706,11 @@ static void appearance_refresh(void *data) {
   }
 }
 
+static void dark_mode_changed(bool is_dark) {
+  s_appearance.dark = is_dark;
+  app_timer_register(0, appearance_refresh, NULL);
+}
+
 #ifdef PBL_COLOR
 static uint8_t tuple_color(DictionaryIterator *iter, uint32_t key, uint8_t fallback) {
   Tuple *tuple = dict_find(iter, key);
@@ -6499,7 +6720,7 @@ static uint8_t tuple_color(DictionaryIterator *iter, uint32_t key, uint8_t fallb
 
 static void appearance_receive(DictionaryIterator *iter) {
   Appearance *a = &s_appearance;
-  a->dark = tuple_int(iter, MESSAGE_KEY_Theme, a->dark) == 1;
+  a->dark = system_theme_is_dark_mode();
   a->pattern = PG_MAX(0, PG_MIN(PatternLast, tuple_int(iter, MESSAGE_KEY_BgPattern, a->pattern)));
   a->text_size = system_text_size();  // the watch's setting, not the phone's
   a->bold = tuple_int(iter, MESSAGE_KEY_TextBold, a->bold) == 1;
@@ -6633,6 +6854,17 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
       copy_cstr(s_chat_list_selected_id, sizeof(s_chat_list_selected_id), s_chats[s_selected_chat].id);
     } else if (s_selected_chat >= s_chat_count) {
       s_selected_chat = s_chat_count > 0 ? s_chat_count - 1 : 0;
+    }
+    // A new message moves its chat up the list. Above the selected row it would land off screen,
+    // since the list keeps the selection where it was: select that chat, so the news is seen.
+    if (s_view_state == ViewStateChatList && s_chat_seen_count > 0) {
+      for (int i = 0; i < s_selected_chat && i < s_chat_count; i++) {
+        if (s_chats[i].unread && !chat_row_was_seen(&s_chats[i])) {
+          s_selected_chat = i;
+          copy_cstr(s_chat_list_selected_id, sizeof(s_chat_list_selected_id), s_chats[i].id);
+          break;
+        }
+      }
     }
     if (s_chat_menu) {
       menu_layer_reload_data(s_chat_menu);
@@ -7010,6 +7242,10 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
 
   if (strcmp(type, "chat") == 0 && index >= 0 && index < MAX_CHATS) {
     if (index == 0) {
+      s_chat_seen_count = s_chat_count;
+      for (int i = 0; i < s_chat_count; i++) {
+        s_chat_seen[i] = chat_row_hash(&s_chats[i]);
+      }
       s_chat_refresh_selected_id[0] = '\0';
       if (s_chat_menu && s_view_state == ViewStateChatList) {
         MenuIndex selected = menu_layer_get_selected_index(s_chat_menu);
@@ -7496,13 +7732,13 @@ static int action_item_count(void) {
       if (!has_selected_message()) {
         return 4 + (touch_keyboard_supported() ? 1 : 0);
       }
-      return (s_message_actions ? 4 : 2) +
+      return (s_message_actions ? 4 : 2) + 2 +  // + Archive Chat, Mark as Unread
              (s_message_actions && s_messages[s_selected_message].outgoing ?
               (touch_keyboard_supported() ? 2 : 1) : 0) +
              (selected_message_has_context() ? 1 : 0) +
              (selected_message_is_truncated() ? 1 : 0);
     case ActionMenuChat:
-      return 5;
+      return 2;
     case ActionMenuCanned:
       return canned_reply_count();
     case ActionMenuConfirm:
@@ -7754,6 +7990,8 @@ static ActionMenuLevel *native_build_main_level(void) {
     native_add_action(level, "Delete Message", ActionItemDelete, -1);
   }
   native_add_action(level, "Go to Bottom", ActionItemGoToBottom, -1);
+  native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
+  native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
   return level;
 }
 
@@ -7762,11 +8000,17 @@ static ActionMenuLevel *native_build_chat_level(void) {
   if (!level) {
     return NULL;
   }
+  if (s_list_menu) {
+    native_add_action(level, "Search", ActionItemSearch, -1);
+    if (s_search_query[0]) {
+      native_add_action(level, "Show Inbox", ActionItemShowInbox, -1);
+    }
+    return level;
+  }
+  int index = action_chat_index();
   native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
-  native_add_action(level, "Delete Chat", ActionItemDeleteChat, -1);
-  native_add_action(level, "Mute Chat", ActionItemMuteChat, -1);
-  native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
-  native_add_action(level, "Go Back", ActionItemGoBack, -1);
+  native_add_action(level, index >= 0 && chat_is_unread(&s_chats[index]) ? "Mark as Read" : "Mark as Unread",
+                    ActionItemMarkUnread, -1);
   return level;
 }
 
@@ -7803,6 +8047,39 @@ static ActionMenuLevel *native_build_action_level(ActionMenuMode mode) {
   return NULL;
 }
 
+// When the selected message was sent, across the top of its menu: bubbles carry no time.
+static TextLayer *s_action_time_layer;
+static char s_action_time_text[40];
+
+static void action_menu_show_time(ActionMenu *menu) {
+  if (!has_selected_message()) {
+    return;
+  }
+  const Message *m = &s_messages[s_selected_message];
+  time_t t = message_time(m);
+  if (!t) {
+    return;
+  }
+  char day[20];
+  char clock[8];
+  day_label_text(t, day, sizeof(day));
+  message_meta_time(m->meta, clock, sizeof(clock));
+  snprintf(s_action_time_text, sizeof(s_action_time_text), "%s, %s", day, clock);
+  // The menu is a window of its own; the line sits above its centred items
+  Layer *root = window_get_root_layer((Window *)menu);
+  GRect b = layer_get_bounds(root);
+  s_action_time_layer = text_layer_create(GRect(0, ROUND_UI ? 30 : 2, b.size.w, 18));
+  if (!s_action_time_layer) {
+    return;
+  }
+  text_layer_set_text(s_action_time_layer, s_action_time_text);
+  text_layer_set_font(s_action_time_layer, font_bold14());
+  text_layer_set_text_alignment(s_action_time_layer, GTextAlignmentCenter);
+  text_layer_set_text_color(s_action_time_layer, GColorWhite);
+  text_layer_set_background_color(s_action_time_layer, GColorClear);
+  layer_add_child(root, text_layer_get_layer(s_action_time_layer));
+}
+
 static void native_action_menu_did_close(ActionMenu *menu, const ActionMenuItem *performed_action,
                                          void *context) {
   ActionMenuLevel *root = s_native_action_root;
@@ -7816,6 +8093,10 @@ static void native_action_menu_did_close(ActionMenu *menu, const ActionMenuItem 
   bool show_next = s_native_has_deferred_mode;
   ActionMenuMode next_mode = s_native_deferred_mode;
 
+  if (s_action_time_layer) {
+    text_layer_destroy(s_action_time_layer);
+    s_action_time_layer = NULL;
+  }
   s_native_action_menu = NULL;
   s_native_action_root = NULL;
   s_native_deferred_dictation = false;
@@ -7875,6 +8156,9 @@ static bool show_native_action_menu(ActionMenuMode mode) {
     .align = ActionMenuAlignCenter
   };
   s_native_action_menu = action_menu_open(&config);
+  if (s_native_action_menu) {
+    action_menu_show_time(s_native_action_menu);
+  }
   if (!s_native_action_menu) {
     action_menu_hierarchy_destroy(s_native_action_root, NULL, NULL);
     s_native_action_root = NULL;
@@ -7921,6 +8205,7 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       s_pending_edit_message_id[0] = '\0';
       s_pending_chat_command[0] = '\0';
       s_pending_send_as_reply = false;
+      s_search_dictation = false;
       s_native_deferred_dictation = true;
       break;
     case ActionItemCanned:
@@ -7940,6 +8225,7 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       s_pending_edit_message_id[0] = '\0';
       s_pending_chat_command[0] = '\0';
       s_pending_send_as_reply = true;
+      s_search_dictation = false;
       s_native_deferred_dictation = true;
       break;
     case ActionItemReplyEmoji:
@@ -7965,7 +8251,8 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
                   s_messages[s_selected_message].id);
         s_pending_chat_command[0] = '\0';
         s_pending_send_as_reply = false;
-        s_native_deferred_dictation = true;
+        s_search_dictation = false;
+      s_native_deferred_dictation = true;
       }
       break;
     case ActionItemDelete:
@@ -8002,9 +8289,15 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
     case ActionItemGoToBottom:
       go_to_bottom();
       break;
-    case ActionItemArchiveChat:
-      send_selected_chat_action("archive_chat");
+    case ActionItemArchiveChat: {
+      int index = action_chat_index();
+      if (index >= 0) {
+        send_selected_chat_action("archive_chat");
+        copy_cstr(s_chat_to_remove, sizeof(s_chat_to_remove), s_chats[index].id);
+        app_timer_register(0, leave_chat_after_action, NULL);
+      }
       break;
+    }
     case ActionItemDeleteChat:
       copy_cstr(s_pending_chat_command, sizeof(s_pending_chat_command), "delete_chat");
       if (s_selected_chat >= 0 && s_selected_chat < s_chat_count) {
@@ -8018,17 +8311,24 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
     case ActionItemMuteChat:
       send_selected_chat_action("mute_chat");
       break;
-    case ActionItemMarkUnread:
-      if (s_selected_chat >= 0 && s_selected_chat < s_chat_count) {
-        s_chats[s_selected_chat].unread = true;
-        s_chats[s_selected_chat].unread_count = 0;
-        if (s_chat_menu) {
-          menu_layer_reload_data(s_chat_menu);
-          select_chat_row(s_selected_chat, false);
-        }
+    case ActionItemMarkUnread: {
+      // One item, both ways: an unread chat is marked read, a read one unread
+      int index = action_chat_index();
+      if (index < 0) {
+        break;
       }
-      send_selected_chat_action("mark_unread");
+      bool was_unread = s_view_state != ViewStateChat && chat_is_unread(&s_chats[index]);
+      s_chats[index].unread = !was_unread;
+      s_chats[index].unread_count = 0;
+      send_selected_chat_action(was_unread ? "mark_read" : "mark_unread");
+      if (s_view_state == ViewStateChat) {
+        app_timer_register(0, leave_chat_after_action, NULL);  // staying would read it again
+      } else if (s_chat_menu) {
+        menu_layer_reload_data(s_chat_menu);
+        select_chat_row(index, false);
+      }
       break;
+    }
     case ActionItemConfirmSend:
       if (s_pending_chat_command[0]) {
         send_selected_chat_action(s_pending_chat_command);
@@ -8045,9 +8345,31 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       s_pending_chat_command[0] = '\0';
       s_pending_send_as_reply = false;
       break;
+    case ActionItemSearch:
+      s_search_dictation = true;
+      s_native_deferred_dictation = true;
+      break;
+    case ActionItemShowInbox:
+      end_search();
+      break;
     case ActionItemGoBack:
       break;
   }
+}
+
+static void show_action_window(ActionMenuMode mode);
+
+// Back from search results to the inbox.
+static void end_search(void) {
+  s_search_query[0] = '\0';
+  send_command("search_chats", NULL, "", NULL, NULL);
+  show_status("Chat");
+}
+
+static void show_list_menu(void) {
+  s_list_menu = true;
+  show_action_window(ActionMenuChat);
+  s_list_menu = false;
 }
 
 static void show_action_window(ActionMenuMode mode) {
@@ -8090,6 +8412,19 @@ static void show_action_window(ActionMenuMode mode) {
 
 static void dictation_callback(DictationSession *session, DictationSessionStatus status,
                                char *transcription, void *context) {
+  if (s_search_dictation) {
+    s_search_dictation = false;
+    if (status == DictationSessionStatusSuccess && transcription && transcription[0]) {
+      copy_cstr(s_search_query, sizeof(s_search_query), transcription);
+      // Dictation ends a phrase with a full stop; a name has none
+      for (int n = strlen(s_search_query); n > 0 && strchr(".!? ", s_search_query[n - 1]); n--) {
+        s_search_query[n - 1] = '\0';
+      }
+      send_command("search_chats", NULL, s_search_query, NULL, NULL);
+      show_status("Searching...");
+    }
+    return;
+  }
   if (status == DictationSessionStatusSuccess && transcription) {
     copy_cstr(s_pending_text, MAX_TEXT, transcription);
     s_pending_chat_command[0] = '\0';
@@ -8258,6 +8593,15 @@ static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) 
       show_status("Loading messages...");
       return;
     }
+    // Up on the first chat, twice: the list's menu, with Search
+    if (menu_layer_get_selected_index(s_chat_menu).row == 0 && !repeating) {
+      if (++s_top_presses >= 2) {
+        s_top_presses = 0;
+        show_list_menu();
+      }
+      return;
+    }
+    s_top_presses = 0;
     menu_layer_set_selected_next(s_chat_menu, true, MenuRowAlignCenter, !repeating);
     s_selected_chat = menu_layer_get_selected_index(s_chat_menu).row;
     if (s_selected_chat >= 0 && s_selected_chat < s_chat_count) {
@@ -8339,6 +8683,10 @@ static void main_back_click_handler(ClickRecognizerRef recognizer, void *context
   if (s_touch_keyboard_open) {
     close_touch_keyboard();
     show_status(s_current_chat_title);
+    return;
+  }
+  if (s_view_state == ViewStateChatList && s_search_query[0]) {
+    end_search();  // Back leaves the results first, the app next
     return;
   }
   if (s_view_state == ViewStateChat) {
@@ -8835,6 +9183,84 @@ static void touch_chat_drag(int dy) {
   mark_messages_dirty();
 }
 
+static void touch_chat_drag_end(GRect bounds);
+
+// ---- Momentum: a chat let go while moving keeps going and slows down ----
+#define FLING_FRAME_MS 30
+#define FLING_MIN_V16 (4 * 16)  // slower than 4px a frame at lift-off: no fling
+#define FLING_MAX_V16 (108 * 16)  // 3600px/s, the system scroll layer's limit
+#define FLING_FRICTION_NUM 57   // speed kept each frame, of 64: the system fling's 240ms decay
+static int s_fling_v16;      // px per frame x16, the finger's direction (+ = content moves down)
+static uint32_t s_drag_ms;   // when the last drag sample came
+
+static uint32_t touch_now_ms(void) {
+  time_t seconds;
+  uint16_t ms;
+  time_ms(&seconds, &ms);
+  return (uint32_t)seconds * 1000 + ms;
+}
+
+// The finger's recent path. The throw's speed is measured across FLING_WINDOW_MS of it, not from
+// the last sample: a real finger slows or repeats a position just as it lifts.
+#define FLING_SAMPLES 8
+#define FLING_WINDOW_MS 120
+static struct { uint32_t ms; int16_t y; } s_fling_path[FLING_SAMPLES];
+static int s_fling_path_n;
+
+static void fling_track(int y) {
+  if (s_fling_path_n == FLING_SAMPLES) {
+    memmove(s_fling_path, s_fling_path + 1, sizeof(s_fling_path[0]) * --s_fling_path_n);
+  }
+  s_drag_ms = touch_now_ms();
+  s_fling_path[s_fling_path_n].ms = s_drag_ms;
+  s_fling_path[s_fling_path_n++].y = y;
+}
+
+static void fling_stop(bool settle) {
+  cancel_timer(&s_fling_timer);
+  s_fling_v16 = 0;
+  if (settle && s_view_state == ViewStateChat && s_messages_root) {
+    touch_chat_drag_end(layer_get_bounds(s_messages_root));
+  }
+}
+
+static void fling_timer_callback(void *data) {
+  s_fling_timer = NULL;
+  if (s_view_state != ViewStateChat || !s_messages_root) {
+    s_fling_v16 = 0;
+    return;
+  }
+  int before = s_chat_scroll_offset;
+  touch_chat_drag(s_fling_v16 / 16);  // the same path as a finger: older messages load on the way up
+  s_fling_v16 = s_fling_v16 * FLING_FRICTION_NUM / 64;
+  if (s_chat_scroll_offset == before || touch_abs(s_fling_v16) < 16) {
+    fling_stop(true);  // at an end of the chat, or slowed to a stop
+    return;
+  }
+  s_fling_timer = app_timer_register(FLING_FRAME_MS, fling_timer_callback, NULL);
+}
+
+// The finger left a dragged chat: throw it if it was moving, else settle where it is.
+static void fling_start(void) {
+  s_fling_v16 = 0;
+  const uint32_t now = touch_now_ms();
+  if (s_fling_path_n >= 2 && now - s_drag_ms <= FLING_WINDOW_MS) {  // else it paused: placed, not thrown
+    int from = s_fling_path_n - 2;
+    while (from > 0 && now - s_fling_path[from - 1].ms <= FLING_WINDOW_MS) {
+      from--;
+    }
+    const int dt = PG_MAX(10, (int)(now - s_fling_path[from].ms));
+    const int dy = s_fling_path[s_fling_path_n - 1].y - s_fling_path[from].y;
+    s_fling_v16 = PG_MAX(-FLING_MAX_V16, PG_MIN(FLING_MAX_V16, dy * 16 * FLING_FRAME_MS / dt));
+  }
+  if (touch_abs(s_fling_v16) < FLING_MIN_V16) {
+    fling_stop(true);
+    return;
+  }
+  cancel_timer(&s_fling_timer);
+  s_fling_timer = app_timer_register(FLING_FRAME_MS, fling_timer_callback, NULL);
+}
+
 // After a drag, point the buttons at what's on screen and load what's needed.
 static void touch_chat_drag_end(GRect bounds) {
   int visible_h = visible_message_height(bounds);
@@ -8992,6 +9418,9 @@ static void touch_handler(const TouchEvent *event, void *context) {
   switch (event->type) {
     case TouchEvent_Touchdown:
       touch_cancel_long_press();
+      fling_stop(false);  // a touch catches a moving chat
+      s_fling_path_n = 0;
+      fling_track(screen.y);
       s_gesture = (TouchGesture){.down = true, .start = screen, .last = screen};
       s_long_press_timer = app_timer_register(TOUCH_LONG_PRESS_MS, touch_long_press_callback, NULL);
       return;
@@ -9013,6 +9442,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
         if (full_text) {
           touch_full_text_drag(dy);
         } else if (s_view_state == ViewStateChat && s_messages_root) {
+          fling_track(screen.y);
           touch_chat_drag(dy);
         } else if (s_view_state == ViewStateChatList && s_chat_menu) {
           touch_chat_list_drag(dy);
@@ -9048,7 +9478,7 @@ static void touch_handler(const TouchEvent *event, void *context) {
 
       if (gesture.dragging) {
         if (!full_text && s_view_state == ViewStateChat && s_messages_root) {
-          touch_chat_drag_end(layer_get_bounds(s_messages_root));
+          fling_start();
         }
         return;
       }
@@ -9060,6 +9490,10 @@ static void touch_handler(const TouchEvent *event, void *context) {
       if (!ROUND_UI && s_view_state == ViewStateChat && gesture.start.y < HEADER_H &&
           gesture.start.x < HEADER_H + 24) {
         main_back_click_handler(NULL, NULL);  // Header back arrow.
+        return;
+      }
+      if (s_view_state == ViewStateChatList && gesture.start.y < HEADER_H) {
+        show_list_menu();  // Tap the "Chat" title.
         return;
       }
       if (s_view_state == ViewStateChatList && s_chat_menu) {
@@ -9079,6 +9513,16 @@ static void click_config_provider(void *context) {
   window_single_repeating_click_subscribe(BUTTON_ID_UP, REPEAT_SCROLL_MS, main_up_click_handler);
   window_single_repeating_click_subscribe(BUTTON_ID_DOWN, REPEAT_SCROLL_MS, main_down_click_handler);
   window_single_click_subscribe(BUTTON_ID_BACK, main_back_click_handler);
+}
+
+// While Chat is on screen the phone keeps its sync with Beeper going, so new messages show up
+// without leaving and reopening. It stops by itself 45 s after the last of these.
+#define APP_OPEN_BEAT_MS 20000
+static AppTimer *s_app_open_timer;
+
+static void app_open_beat(void *data) {
+  send_command_with_status("app_open", NULL, NULL, NULL, NULL, false);
+  s_app_open_timer = app_timer_register(APP_OPEN_BEAT_MS, app_open_beat, NULL);
 }
 
 static void main_window_load(Window *window) {
@@ -9115,9 +9559,11 @@ static void main_window_load(Window *window) {
   }
   menu_layer_set_normal_colors(s_chat_menu, TG_LIST_BG, TG_TEXT);
   layer_add_child(window_layer, menu_layer_get_layer(s_chat_menu));
+  s_app_open_timer = app_timer_register(1000, app_open_beat, NULL);
 }
 
 static void main_window_unload(Window *window) {
+  cancel_timer(&s_app_open_timer);
   light_enable(false);
   cancel_status_clear();
   destroy_chat_view();
@@ -9153,6 +9599,7 @@ static void init(void) {
   s_kb_draft = calloc(1, TOUCH_KEYBOARD_MAX_TEXT);
 #endif
   appearance_load();
+  dark_mode_service_subscribe(dark_mode_changed);  // "Auto" switches while Chat is open
   s_view_state = ViewStateChatList;
   s_selected_message = -1;
   s_chats_loading = true;
@@ -9185,6 +9632,7 @@ static void init(void) {
 }
 
 static void deinit(void) {
+  dark_mode_service_unsubscribe();
   light_enable(false);
   cancel_timer(&s_startup_wake_timer);
   cancel_timer(&s_chat_retry_timer);

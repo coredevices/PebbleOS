@@ -22,7 +22,8 @@
  * - Chat: version (1), flags (::ChatDbChatFlags), unread count (u16), last activity (u32 UTC),
  *   last synced (u32 UTC), title (str8), preview (str8).
  * - Message: version (1), flags (::ChatDbMessageFlags), time (u32 UTC), id (str8), sender (str8),
- *   text (str16), reactions (str8), reply sender (str8), reply text (str8).
+ *   text (str16), reactions (str8), reply sender (str8), reply text (str8), and optionally
+ *   status (str8).
  * - Features: str8.
  * @{
  */
@@ -96,6 +97,8 @@ typedef struct {
   ChatDbStr reply_sender;
   /** Text of the message replied to, empty if none. */
   ChatDbStr reply_text;
+  /** Where my message got to, as shown under it ("Sent", "Seen at 10:52"); empty for others' and older ones. */
+  ChatDbStr status;
 } ChatDbMessage;
 
 /**

@@ -47,7 +47,7 @@
 #define MAX_TEXT_BYTES 460
 #define MAX_REACTIONS_BYTES 63
 #define MAX_REPLY_BYTES 95
-#define MAX_META_BYTES 15
+#define MAX_META_BYTES 47
 
 #define CHAT_KEY_HEX_LEN (CHAT_DB_CHAT_KEY_LEN * 2)
 
@@ -302,6 +302,11 @@ static void prv_deliver_message(const char *type, int index, int count, int tran
                                 const ChatDbMessage *m) {
   char meta[MAX_META_BYTES + 1];
   prv_message_time(meta, sizeof(meta), m->time);
+  if (m->status.len) {
+    // "time|status": the app shows the status under my newest message
+    const size_t at = strlen(meta);
+    snprintf(meta + at, sizeof(meta) - at, "|%.*s", (int)m->status.len, m->status.str);
+  }
   DictionaryIterator *iter = prv_begin(type);
   dict_write_int32(iter, MESSAGE_KEY_Index, index);
   dict_write_int32(iter, MESSAGE_KEY_Count, count);
@@ -711,6 +716,10 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     prv_deliver_context(chat_key, message_id, false);
   } else if (strcmp(cmd, "leave_chat") == 0) {
     s_ds.chat_open = false;
+  } else if (strcmp(cmd, "archive_chat") == 0 || strcmp(cmd, "mark_unread") == 0 ||
+             strcmp(cmd, "mark_read") == 0 || strcmp(cmd, "app_open") == 0 ||
+             strcmp(cmd, "search_chats") == 0) {
+    prv_forward(dict, len);  // the phone does it, then syncs the chats
   } else if (strcmp(cmd, "send_message") == 0 || strcmp(cmd, "edit_message") == 0 ||
              strcmp(cmd, "delete_message") == 0 || strcmp(cmd, "send_reaction") == 0) {
     if (!prv_forward(dict, len)) {
