@@ -68,6 +68,8 @@ Single quotes keep YAML from reading the backslashes.
 | `skip` | The boards the sample is not for, when few lack what it needs |
 | `roles` | The roles the sample uses, as in `roles.yml`: it is skipped on boards that give one of them no device, counting its own `roles.yml` and `boards/<board>.roles.yml` |
 | `addons` | The add-ons plugged into the board, from `boards/addons`: their devices and roles count for it |
+| `integration` | The boards that cover the sample, e.g. one per SoC family or per driver it exercises: `pbl samples --integration`, which CI runs, builds and runs it only on those (default: every board it is for) |
+| `build_only` | Whether `pbl samples --integration` only builds the sample, when running it takes long and its code is checked well enough elsewhere (default: false) |
 
 ## Writing a sample
 
