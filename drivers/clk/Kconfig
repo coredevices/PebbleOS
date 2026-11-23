@@ -81,6 +81,9 @@ config CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S
     int "LRC10 calibration period (seconds)"
     range 10 3600
     default 60
+    help
+      Time between LRC10 measurements, which follow its drift with
+      temperature.
 
 endif # CLK_SF32LB52_PMUC
 
@@ -117,6 +120,9 @@ config CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S
     int "LRC10 calibration period (seconds)"
     range 10 3600
     default 60
+    help
+      Time between LRC10 measurements, which follow its drift with
+      temperature.
 
 endif # CLK_SF32LB57_PMUC
 

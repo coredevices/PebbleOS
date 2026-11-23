@@ -5,7 +5,8 @@ menuconfig TOUCH
     bool "Touchscreen"
     select INPUT
     help
-      Touchscreen Drivers
+      Touchscreen class (pbl/drivers/touch.h) and its drivers, which
+      report touches as input events.
 
 if TOUCH
 
@@ -38,7 +39,7 @@ config TOUCH_FT6236
       FT6236 and the FT6146.
 
 config TOUCH_QEMU
-    bool "QEMU Touchscreen"
+    bool "QEMU touchscreen"
     default y
     depends on DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
     help

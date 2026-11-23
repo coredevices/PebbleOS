@@ -4,7 +4,7 @@
 menuconfig WATCHDOG
     bool "Watchdog"
     help
-      Watchdog Drivers
+      Hardware watchdog class (pbl/drivers/watchdog.h) and its drivers.
 
 if WATCHDOG
 
@@ -50,7 +50,7 @@ config WATCHDOG_STM32_IWDG
       Support for the ST STM32H7 independent watchdog.
 
 config WATCHDOG_QEMU
-    bool "QEMU Watchdog"
+    bool "QEMU watchdog"
     default y
     depends on SOC_QEMU_PEBBLE
     help

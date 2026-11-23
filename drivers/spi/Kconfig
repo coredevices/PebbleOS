@@ -4,12 +4,13 @@
 menuconfig SPI
     bool "SPI"
     help
-      SPI Drivers
+      SPI bus class (pbl/drivers/spi.h), selected by the drivers of the
+      devices on a SPI bus.
 
 if SPI
 
 config SPI_NRF5
-    bool "Nordic nRF5 SPI Controller"
+    bool "Nordic nRF5 SPI controller"
     default y
     depends on DT_HAS_NORDIC_NRF52832_SPIM_ENABLED
     help

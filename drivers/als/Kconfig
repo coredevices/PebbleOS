@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig ALS
-    bool "Ambient Light Sensor"
+    bool "Ambient light sensor"
     help
       Ambient light sensor drivers (pbl/drivers/als.h). The board
       instantiates the sensor it has and exports it as ALS.
@@ -52,7 +52,7 @@ config ALS_BITS
       dark/backlight thresholds exposed to the shell and settings UI.
 
 module = DRIVER_ALS
-module-str = Ambient Light Sensor
+module-str = Ambient light sensor
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # ALS

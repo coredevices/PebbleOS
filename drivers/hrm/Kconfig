@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig HRM
-    bool "Heart Rate Monitor"
+    bool "Heart rate monitor"
     help
-      Heart Rate Monitor Drivers
+      Heart rate monitor class (pbl/drivers/hrm.h) and its drivers.
 
 if HRM
 
@@ -16,7 +16,6 @@ config HRM_GH3X2X
 config HRM_HRV
     bool "HRV (RR interval) support"
     depends on HRM_GH3X2X
-    default n
     help
       Expose heart-rate-variability (RR/inter-beat interval) data from the
       HRM sensor. Enables the Goodix HRV algorithm and links the nonfree
@@ -39,7 +38,7 @@ config HRM_QEMU
       but never delivers samples.
 
 module = DRIVER_HRM
-module-str = Heart Rate Monitor
+module-str = Heart rate monitor
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # HRM

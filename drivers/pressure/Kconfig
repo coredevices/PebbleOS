@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig PRESSURE
-    bool "Pressure Sensor"
+    bool "Pressure sensor"
     help
       Barometric pressure sensor drivers (pbl/drivers/pressure.h). The
       board instantiates the sensor it has and exports it as PRESSURE.
@@ -26,7 +26,7 @@ config PRESSURE_BMP390
       (devicetree compatible bosch,bmp380).
 
 module = DRIVER_PRESSURE
-module-str = Pressure Sensor
+module-str = Pressure sensor
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # PRESSURE

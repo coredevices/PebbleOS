@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig TEMP
-    bool "Temperature Sensor"
+    bool "Temperature sensor"
     help
-      Temperature Sensor Drivers
+      Temperature sensor class (pbl/drivers/temp.h) and its drivers.
 
 if TEMP
 

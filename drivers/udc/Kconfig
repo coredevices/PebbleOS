@@ -23,6 +23,8 @@ config UDC_MUSB_IRQ_PRIO
     int "Interrupt priority"
     default 0
     depends on UDC_MUSB
+    help
+      Priority of the controller interrupt.
 
 module = DRIVER_UDC
 module-str = USB device controller

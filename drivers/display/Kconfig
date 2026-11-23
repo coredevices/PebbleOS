@@ -4,7 +4,8 @@
 menuconfig DISPLAY
     bool "Display"
     help
-      Display Drivers
+      Display class (pbl/drivers/display.h) and its drivers: the
+      controllers that take the framebuffer to the panel.
 
 if DISPLAY
 
@@ -88,7 +89,7 @@ config DISPLAY_SHARP_MEMORY
       LS013B7DH05, LS027B7DH01, LS027B7DH01A and LS044Q7DH01.
 
 config DISPLAY_QEMU
-    bool "QEMU Framebuffer Display"
+    bool "QEMU framebuffer display"
     default y
     depends on DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
     help

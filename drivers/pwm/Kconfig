@@ -4,7 +4,8 @@
 menuconfig PWM
     bool "PWM"
     help
-      PWM Drivers
+      PWM controller class (pbl/drivers/pwm.h), selected by the drivers
+      of PWM-driven devices.
 
 if PWM
 
