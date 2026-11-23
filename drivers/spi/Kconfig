@@ -17,7 +17,7 @@ config SPI_NRF5
 
 config SPI_NRF5_IRQ_PRIO
     int "Interrupt priority"
-    default 7
+    default 1
     depends on SPI_NRF5
     help
       Priority of the controller interrupts.

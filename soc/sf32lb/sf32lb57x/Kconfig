@@ -10,6 +10,7 @@ config SOC_SF32LB57
     select CPU_HAS_DCACHE
     select ARCH_VECTOR_TABLE_RAM
     select KERNEL_MPU_IN_FAULTS
+    select KERNEL_ZERO_LATENCY_IRQS
     select FLASH if CPU_IDLE
     select RAMFUNC
     select SOC_HAS_IDLE_STATES

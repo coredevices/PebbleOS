@@ -46,7 +46,7 @@ config TOUCH_QEMU
 
 config TOUCH_QEMU_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on TOUCH_QEMU
     help
       Priority of the touchscreen interrupt.

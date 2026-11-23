@@ -98,8 +98,7 @@ static void prv_isr(void) {
   pbl_clockevent_handler(&s_lptim1_ce);
 }
 
-// Lowest priority, as the kernel's own interrupts.
-PBL_IRQ_CONNECT(LPTIM1, PBL_IRQ_PRIO_LOWEST, prv_isr, , 0);
+PBL_IRQ_CONNECT(LPTIM1, CONFIG_TIMER_SF32LB_LPTIM_IRQ_PRIO, prv_isr, , 0);
 
 // Both devices share the timer.
 static int prv_init(const struct pbl_device *dev) {

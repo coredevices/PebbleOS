@@ -45,7 +45,7 @@ static void prv_rng_irq_handler(void) {
   }
 }
 
-PBL_IRQ_CONNECT(RNG, 7, prv_rng_irq_handler, , 0);
+PBL_IRQ_CONNECT(RNG, CONFIG_RNG_NRF5_IRQ_PRIO, prv_rng_irq_handler, , 0);
 
 static void prv_init(void) {
   prv_putreg(NRF52_RNG_CONFIG_OFFSET, RNG_CONFIG_DERCEN);

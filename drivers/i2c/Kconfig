@@ -17,7 +17,7 @@ config I2C_NRF5
 
 config I2C_NRF5_IRQ_PRIO
     int "Interrupt priority"
-    default 7
+    default 1
     depends on I2C_NRF5
     help
       Priority of the controller interrupts.
@@ -34,7 +34,7 @@ config I2C_SF32LB
 
 config I2C_SF32LB_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on I2C_SF32LB
     help
       Priority of the controller interrupts.

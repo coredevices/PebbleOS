@@ -43,21 +43,13 @@
  */
 
 /**
- * @brief NVIC priority of the kernel's own interrupts (tick, context switch).
+ * @brief Priority register value of the kernel's own interrupts (tick, context switch).
  *
- * Raw 8-bit priority register value, from @c CONFIG_KERNEL_IRQ_PRIO_KERNEL.
+ * Raw 8-bit value, the least urgent level of the controller.
  */
-#define PBL_IRQ_PRIO_KERNEL CONFIG_KERNEL_IRQ_PRIO_KERNEL
+#define PBL_IRQ_PRIO_KERNEL ARCH_IRQ_PRIO_KERNEL
 /**
- * @brief Most urgent NVIC priority from which kernel calls are allowed.
- *
- * Raw 8-bit priority register value (lower is more urgent), from
- * @c CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL. pbl_irq_lock() masks this level and every less urgent
- * one.
- */
-#define PBL_IRQ_PRIO_MAX_SYSCALL CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL
-/**
- * @brief Mask interrupts up to @ref PBL_IRQ_PRIO_MAX_SYSCALL.
+ * @brief Mask every interrupt that may call the kernel.
  *
  * Nestable; balance each call with pbl_irq_unlock(). Usable from threads and ISRs. Interrupts
  * flagged @ref PBL_IRQ_ZERO_LATENCY are not masked.
@@ -92,16 +84,17 @@ typedef uint16_t pbl_irq_t;
 #define PBL_IRQN(line) ((pbl_irq_t)PBL_SOC_IRQN_##line)
 
 /**
- * @brief Flag for an ISR that runs above @ref PBL_IRQ_PRIO_MAX_SYSCALL.
+ * @brief Flag for an ISR that runs above every other interrupt.
  *
- * pbl_irq_lock() does not mask it, and it must not call into the kernel. Required for any
- * priority more urgent than @ref PBL_IRQ_PRIO_MAX_SYSCALL, which is a build error otherwise.
+ * pbl_irq_lock() does not mask it, and it must not call into the kernel. It needs
+ * @c CONFIG_KERNEL_ZERO_LATENCY_IRQS, and its priority is ignored: such lines share the level
+ * reserved for them.
  */
 #define PBL_IRQ_ZERO_LATENCY (1U << 0)
 
 #include <pbl_arch_irq.h>
 
-/** @brief Least urgent priority of the interrupt controller, in controller units. */
+/** @brief Least urgent priority an interrupt may have. */
 #define PBL_IRQ_PRIO_LOWEST ARCH_IRQ_PRIO_LOWEST
 
 /**
@@ -111,7 +104,7 @@ typedef uint16_t pbl_irq_t;
  * @c isr(). Expands to a definition at file scope.
  *
  * @param line Line name, as in @c soc_irqs.h.
- * @param prio Priority in controller units, 0 being the most urgent.
+ * @param prio Priority, 0 being the most urgent interrupt that may call the kernel.
  * @param isr Handler function.
  * @param arg Argument passed to @p isr, may be empty.
  * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
@@ -123,7 +116,7 @@ typedef uint16_t pbl_irq_t;
  * @brief PBL_IRQ_CONNECT() with the line given by number, for generated code.
  *
  * @param n Line number, a literal.
- * @param prio Priority in controller units, 0 being the most urgent.
+ * @param prio Priority, 0 being the most urgent interrupt that may call the kernel.
  * @param isr Handler function.
  * @param arg Argument passed to @p isr, may be empty.
  * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
@@ -134,7 +127,7 @@ typedef uint16_t pbl_irq_t;
  * @brief Bind a SoC interrupt line to the handler body that follows the macro.
  *
  * @param line Line name, as in @c soc_irqs.h.
- * @param prio Priority in controller units, 0 being the most urgent.
+ * @param prio Priority, 0 being the most urgent interrupt that may call the kernel.
  * @param flags 0 or @ref PBL_IRQ_ZERO_LATENCY.
  */
 #define PBL_IRQ_DIRECT(line, prio, flags) ARCH_IRQ_DIRECT(PBL_SOC_IRQN_##line, #line, prio, flags)
