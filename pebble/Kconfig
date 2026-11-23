@@ -3,8 +3,9 @@
 
 mainmenu "Pebble Firmware Configuration"
 
-# Defaults for options of PebbleOS that the firmware wants wherever they are
-# available, which a prj.conf cannot express.
+# Defaults for options of PebbleOS that depend on the build type (release,
+# MFG), on what the architecture offers or on the devicetree, which a .conf
+# file cannot express. Anything else belongs in prj*.conf or boards/*.conf.
 
 choice FIRMWARE_AREA
     default FIRMWARE_AREA_RECOVERY if RECOVERY_FW && !MFG
@@ -22,10 +23,6 @@ config FW_FLASH_SIZE
     default $(dt_partition_size,firmware-slot-1) if PBLBOOT && FIRMWARE_SLOT = 1
     default $(dt_partition_size,firmware-slot-0) if PBLBOOT
 
-config BT_REPEAT_PAIRING_ALWAYS
-    default y if RECOVERY_FW
-    depends on BT
-
 config CONSOLE
     default y if !RELEASE || MFG
 
@@ -36,9 +33,6 @@ config CONSOLE_IMAGING
 config COREDUMP
     default y
     depends on ARCH_HAS_COREDUMP
-
-config CPU_IDLE
-    default y
 
 config DEBUGGER_AWARE
     default y if !RELEASE
@@ -80,10 +74,6 @@ config PP_TRANSPORT_CONSOLE
 config PP_TRANSPORT_GATT
     default y
     depends on PP && BT
-
-config PP_TRANSPORT_GATT_SYSTEM_ONLY
-    default y if RECOVERY_FW
-    depends on PP_TRANSPORT_GATT
 
 config SHELL
     default y
