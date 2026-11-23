@@ -17,7 +17,8 @@ The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
 PebbleOS is built for each core on its own: `stm32h747i_disco/m7` runs on the
 Cortex-M7, which sets up the clocks and starts the Cortex-M4, and
 `stm32h747i_disco/m4` on the Cortex-M4. Each core has its own console and its
-own system timer.
+own system timer. The Cortex-M7 reads the joystick and drives the green, red
+and blue LEDs, the Cortex-M4 the orange one.
 
 ## Hardware
 
@@ -35,6 +36,16 @@ own system timer.
   Cortex-M4, count the LSE
 - **Debug**: ST-LINK/V3E on CN2, which also powers the kit, with its virtual
   COM port on USART1, PA9 (TX) and PA10 (RX), the console of the Cortex-M7
+
+## Buttons and LEDs
+
+| Device | Pins | PebbleOS |
+| --- | --- | --- |
+| Joystick left, up, center, down | PK4, PK6, PK2, PK3, active low | Back, Up, Select and Down buttons (`gpio-keys`) |
+| Joystick right | PK5, active low | Right key (`gpio-keys`) of the Cortex-M7, which watch software leaves alone |
+| LD1 to LD4, green, orange, red, blue | PI12 to PI15, active low | LEDs (`gpio-leds`): LD1 is the status LED of the Cortex-M7, LD2 of the Cortex-M4 |
+
+The User button (PC13) is not described.
 
 ## Flashing
 
