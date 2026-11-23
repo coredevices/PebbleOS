@@ -11,3 +11,4 @@ expect:
   - 'E .* sample: an error'
   - 'W .* sample: a warning'
   - 'Sample done'
+integration: [qemu_emery]

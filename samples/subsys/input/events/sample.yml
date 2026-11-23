@@ -4,3 +4,4 @@ expect:
   - 'input: \d+ events'
   - 'Sample done'
 timeout: 40
+integration: [qemu_emery]

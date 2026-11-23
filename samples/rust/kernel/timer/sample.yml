@@ -5,3 +5,4 @@ expect:
   - 'main: stopped, active: no'
   - 'main: stopped before it expired, 0 blinks since'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

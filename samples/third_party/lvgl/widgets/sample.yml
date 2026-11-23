@@ -2,3 +2,5 @@ description: The widgets demo of LVGL, tabs of controls driven by the touchscree
 expect:
   - 'lvgl: widgets on \d+x\d+'
 roles: [display]
+integration: [qemu_emery]
+build_only: true

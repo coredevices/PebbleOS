@@ -4,3 +4,4 @@ expect:
   - 'speaker: done, \d+ xruns'
   - 'Sample done'
 roles: [speaker]
+integration: [qemu_emery, asterix, obelix]

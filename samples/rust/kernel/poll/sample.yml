@@ -5,3 +5,4 @@ expect:
   - 'loop: button 1 released'
   - 'loop: nothing for 100 ms'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

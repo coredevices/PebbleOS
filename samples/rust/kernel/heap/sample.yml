@@ -9,3 +9,4 @@ expect:
   - 'heap: all freed: 0 used, \d+ free, largest free block \d+'
   - 'heap: least memory it ever had left: \d+ of \d+ bytes'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

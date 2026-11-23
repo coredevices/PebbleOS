@@ -5,3 +5,4 @@ expect:
   - 'display: checkerboard shown'
   - 'Sample done'
 roles: [display]
+integration: [qemu_emery, qemu_flint, asterix, obelix]

@@ -6,3 +6,4 @@ expect:
   - 'main: created two threads of lower priority, which wait for main to block'
   - 'main: ping ran 3 rounds, pong ran 3 rounds'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

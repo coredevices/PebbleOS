@@ -5,3 +5,4 @@ expect:
   - 'main: 4 workers shared 2 channels, at most 2 busy at once'
   - 'main: 2 channels free again'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

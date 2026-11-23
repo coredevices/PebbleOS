@@ -4,3 +4,4 @@ expect:
   - 'record: up to 3 readers at once, 0 half written records read'
   - 'record: 0 writes made with a reader in the room'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

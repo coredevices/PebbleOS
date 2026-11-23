@@ -7,3 +7,4 @@ expect:
   - 'aes: equal blocks encrypt to equal blocks in ECB mode: yes'
   - 'aes: 20 bytes, not whole blocks: -EINVAL'
   - 'Sample done'
+integration: [qemu_emery, obelix]

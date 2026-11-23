@@ -7,3 +7,4 @@ expect:
   - 'rng: 1000 words, \d+ repeated, \d+ per mille of the bits set'
   - 'Sample done'
 skip: [sf32lb57_dpi_hdk]
+integration: [qemu_emery, asterix, obelix]

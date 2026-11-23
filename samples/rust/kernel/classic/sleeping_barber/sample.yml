@@ -10,3 +10,4 @@ expect:
   - 'shop: 3 haircuts, 2 customers turned away'
   - 'shop: empty, barber asleep: yes'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

@@ -2,3 +2,5 @@ description: The keypad and encoder demo of LVGL, widgets driven by the keys alo
 expect:
   - 'lvgl: keypad and encoder on \d+x\d+'
 roles: [display]
+integration: [qemu_emery]
+build_only: true

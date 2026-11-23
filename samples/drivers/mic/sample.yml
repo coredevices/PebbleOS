@@ -13,3 +13,4 @@ expect:
   - 'mic: peak \d+, rms \d+'
   - 'Sample done'
 roles: [mic]
+integration: [qemu_emery, asterix, obelix]

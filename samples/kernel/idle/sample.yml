@@ -3,3 +3,4 @@ expect:
   - 'main: idled for most of a 200 ms sleep: yes'
   - 'main: idled for any of a 200 ms sleep with the state blocked: no'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]
