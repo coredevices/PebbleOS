@@ -20,7 +20,7 @@ IDLE_NOMINAL_UA = {
         "airplane_mode": 89,
     },
     "getafix": {
-        "airplane_mode": 86,
+        "airplane_mode": 75,
     },
     "asterix": {
         "airplane_mode": 67,
