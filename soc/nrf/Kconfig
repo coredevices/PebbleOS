@@ -1,30 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SOC_NRF52
+config SOC_FAMILY_NRF
     bool
-    select CPU_CORTEX_M4
-    select CPU_HAS_FPU
-    select CRC
-    select FLASH_IDLE_PM if FLASH && CPU_IDLE
-    select SOC_HAS_POWER_OFF
-    select TIMER_NRF5_RTC
     help
-      Nordic nRF52 series, selected by its lines.
+      Nordic nRF family, selected by its series.
 
-if SOC_NRF52
-
-config SOC_NRF52_RETAINED_RAM_BASE
-    hex
-    default $(dt_nodelabel_reg_addr,retained_ram)
-    help
-      Base of the RAM kept across resets, the retained_ram reserved memory
-      region.
-
-config SOC_NRF52_RETAINED_RAM_SIZE
-    hex
-    default $(dt_nodelabel_reg_size,retained_ram)
-    help
-      Size of the RAM kept across resets.
-
-endif # SOC_NRF52
+rsource "*/Kconfig"
