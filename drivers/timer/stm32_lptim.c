@@ -9,6 +9,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/st/exti.h>
 #include <pbl/util/math.h>
 
 #include <devicetree/regs.h>
@@ -33,6 +34,7 @@
 #define LPTIM_BASE PBL_DT_REG_ST_STM32_LPTIMER_TIMER
 // Its interrupt comes through its line of the EXTI, which wakes the CPU from Stop
 #define LPTIM_IRQN STM32H7_EXTI_IRQ(PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER)
+#define EXTI_LINE  PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER
 
 static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, PBL_DT_CLK_ST_STM32_LPTIMER_TIMER);
 static const struct pbl_reset s_rst =
@@ -174,6 +176,8 @@ static int prv_init(const struct pbl_device *dev) {
     }
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT);
     pbl_irq_enable(LPTIM_IRQN);
+    // Wakes this core from Stop
+    pbl_soc_stm32h7_wakeup_enable(EXTI_LINE);
     s_started = true;
   }
 
