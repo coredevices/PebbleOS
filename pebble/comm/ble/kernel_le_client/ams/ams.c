@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/clients/ams.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -20,9 +21,6 @@
 #include <pbl/util/size.h>
 #include <pbl/util/units.h>
 
-#include <comm/ble/gap_le_connection.h>
-#include <comm/bt_conn_mgr.h>
-#include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/pebble_tasks.h>
 
@@ -120,14 +118,9 @@ static void prv_request_response_time(enum pbl_bt_consumer consumer,
                                       enum pbl_bt_response_time_state state,
                                       uint16_t max_period_secs) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
-  bt_lock();
   if (s_ams_client && s_ams_client->discovered) {
-    GAPLEConnection *connection = gap_le_connection_any();
-    if (connection && connection->conn_handle == s_ams_client->conn_handle) {
-      conn_mgr_set_ble_conn_response_time(connection, consumer, state, max_period_secs);
-    }
+    pbl_bt_responsiveness_request(s_ams_client->conn_handle, consumer, state, max_period_secs);
   }
-  bt_unlock();
 }
 
 static void prv_request_reduced_latency_cb(void *data) {
@@ -135,7 +128,7 @@ static void prv_request_reduced_latency_cb(void *data) {
   const enum pbl_bt_response_time_state state =
       reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
   prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
-                            MAX_PERIOD_RUN_FOREVER);
+                            PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
 static void prv_request_low_latency_for_period_cb(void *data) {

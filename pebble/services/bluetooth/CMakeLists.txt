@@ -6,9 +6,9 @@ set(sources
   bluetooth_ctl.c
   bonding.c
   dis.c
+  link.c
   local_id.c
   pairability.c
-  pebble_pairing_service.c
   pp_ble_control.c
 )
 if(NOT CONFIG_RECOVERY_FW)

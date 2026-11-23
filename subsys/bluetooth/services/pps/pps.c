@@ -4,9 +4,7 @@
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/nimble_type_conversions.h>
 #include <bluetooth/services/services.h>
-#include <comm/ble/gap_le_connection.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_store.h>
@@ -48,8 +46,7 @@ static int pebble_pairing_service_get_connectivity_status(
   return 0;
 }
 
-int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
-                                                              uint16_t attr_handle) {
+static int prv_notify_connectivity_status(uint16_t conn_handle, uint16_t attr_handle) {
   struct pbl_bt_pps_connectivity_status status;
   int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
   if (rc != 0) {
@@ -148,6 +145,25 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
   },
 };
 
+/* A central that subscribed is told when the link gets encrypted. */
+static int prv_gap_event(struct ble_gap_event *event, void *arg) {
+  uint16_t attr_handle;
+
+  if (event->type != BLE_GAP_EVENT_ENC_CHANGE || event->enc_change.status != 0) {
+    return 0;
+  }
+
+  if (ble_gatts_find_chr(pebble_pairing_svc[0].uuid,
+                         BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)),
+                         nullptr, &attr_handle) == 0) {
+    (void)prv_notify_connectivity_status(event->enc_change.conn_handle, attr_handle);
+  }
+
+  return 0;
+}
+
+static struct ble_gap_event_listener s_listener;
+
 int pbl_bt__pps_init(void) {
   int rc = ble_gatts_count_cfg(pebble_pairing_svc);
   if (rc != 0) {
@@ -161,28 +177,11 @@ int pbl_bt__pps_init(void) {
     return rc;
   }
 
+  /* Listeners outlive the services, which are added each time the stack starts. */
+  rc = ble_gap_event_listener_register(&s_listener, prv_gap_event, nullptr);
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    return rc;
+  }
+
   return 0;
-}
-
-void prv_notify_chr_updated(const GAPLEConnection *connection, const ble_uuid_t *chr_uuid) {
-  int rc;
-  uint16_t conn_handle;
-
-  if (!pebble_device_to_nimble_conn_handle(&connection->device, &conn_handle)) {
-    PBL_LOG_ERR("prv_notify_chr_updated: failed to find connection handle");
-    return;
-  }
-
-  uint16_t attr_handle;
-  rc = ble_gatts_find_chr(pebble_pairing_svc[0].uuid, chr_uuid, nullptr, &attr_handle);
-  if (rc != 0) {
-    PBL_LOG_ERR("prv_notify_chr_updated: failed to find characteristic handle");
-    return;
-  }
-  pebble_pairing_service_get_connectivity_send_notification(conn_handle, attr_handle);
-}
-
-void pbl_bt_pps_handle_status_change(const GAPLEConnection *connection) {
-  prv_notify_chr_updated(connection,
-                         BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)));
 }

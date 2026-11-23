@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/services/get_bytes/get_bytes.h>
 #include <pbl/services/get_bytes/get_bytes_private.h>
 #include <pbl/services/get_bytes/get_bytes_storage.h>
@@ -48,11 +47,6 @@ bool gb_storage_read_next_chunk(GetBytesStorage *storage, uint8_t *buffer, uint3
 void gb_storage_cleanup(GetBytesStorage *storage, bool successful) {
   s_cleanup_count++;
   s_last_cleanup_successful = successful;
-}
-
-void bluetooth_analytics_handle_get_bytes_stats(
-    GetBytesObjectType type, uint32_t total_size, uint32_t elapsed_time_ms,
-    const struct pbl_bt_slave_conn_event_stats *orig_stats) {
 }
 
 static void prv_sent_cb(uint16_t endpoint_id, const uint8_t *data, unsigned int data_length) {

@@ -74,7 +74,7 @@ static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
   if (total_payload_size > 500) {
     pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                       PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
   }
 
   AppMessageReceiver *rcv = (AppMessageReceiver *)pbl_zalloc(sizeof(AppMessageReceiver));
@@ -122,7 +122,7 @@ static void prv_app_message_receiver_write(struct pbl_pp_receiver *receiver, con
 
   pbl_pp_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = PBL_MIN(rcv->header_bytes_remaining, length);

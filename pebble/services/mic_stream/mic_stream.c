@@ -81,7 +81,7 @@ static MicStreamTeardown prv_teardown_locked(bool phone_expects_stop) {
 }
 
 //! Expects s_lock not held: the driver calls prv_mic_data_handler with its own lock held, and the
-//! endpoint takes bt_lock and may block on the send.
+//! endpoint takes its lock and may block on the send.
 static void prv_finish_teardown(const MicStreamTeardown *teardown) {
   // The mic stops first, so no frame arrives while the stop is sent. Also drops the reservation;
   // no-op on the mic if it never started or dictation already took it.
@@ -122,7 +122,7 @@ static void prv_mic_data_handler(int16_t *samples, size_t sample_count, void *co
     len = voice_speex_encode_frame(samples, s_packet, sizeof(s_packet));
   }
   pbl_mutex_unlock(&s_lock);
-  // Unlocked as it takes bt_lock. A frame for a session that just closed is dropped.
+  // Unlocked as the endpoint takes its lock. A frame for a session that just closed is dropped.
   if (len > 0) {
     audio_endpoint_add_frame(session, s_packet, (uint8_t)len);
   }
@@ -143,7 +143,8 @@ static void prv_setup_timeout_bg(void *data) {
   }
 }
 
-//! The teardown takes bt_lock and stops the mic, so it never runs on the high priority queue.
+//! The teardown takes the endpoint lock and stops the mic, so it never runs on the high priority
+//! queue.
 static void prv_setup_timeout(struct pbl_work *work) {
   pbl_sys_work_call(prv_setup_timeout_bg, (void *)(uintptr_t)s_setup_timer_stream_id);
 }
@@ -164,7 +165,7 @@ static void prv_transfer_stopped_bg(void *data) {
   }
 }
 
-//! Called by the endpoint with bt_lock held, so s_lock is only taken on SysWorkq.
+//! Called by the endpoint with its lock held, so s_lock is only taken on SysWorkq.
 static void prv_transfer_stopped(AudioEndpointSessionId session_id) {
   pbl_sys_work_call(prv_transfer_stopped_bg, (void *)(uintptr_t)session_id);
 }

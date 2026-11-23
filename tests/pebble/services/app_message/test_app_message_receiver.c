@@ -1,13 +1,13 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/pp/endpoint.h>
 
 #include <applib/app_inbox.h>
 #include <applib/app_message/app_message_internal.h>
 #include <applib/app_message/app_message_receiver.h>
 #include <clar.h>
-#include <comm/bt_conn_mgr.h>
 #include <fff.h>
 #include <kernel/events.h>
 #include <process_management/app_install_types.h>
@@ -69,8 +69,7 @@ void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted) {
+                                       uint16_t max_period_secs) {
 }
 
 static bool s_kernel_receiver_available;

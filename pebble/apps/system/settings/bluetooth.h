@@ -10,11 +10,9 @@
 
 #include <kernel/events.h>
 
-typedef struct GAPLEConnection GAPLEConnection;
-
 typedef struct StoredRemoteBLE {
   struct pbl_bt_device_internal identity;
-  GAPLEConnection *connection;
+  bool connected;
 } StoredRemoteBLE;
 
 typedef struct StoredRemote {

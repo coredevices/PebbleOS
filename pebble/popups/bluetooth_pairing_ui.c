@@ -24,7 +24,6 @@
 #include <applib/ui/ui.h>
 #include <applib/ui/window_private.h>
 #include <applib/ui/window_stack.h>
-#include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
@@ -313,9 +312,7 @@ static void prv_send_response(bool is_confirmed) {
     return;
   }
 
-  bt_lock();
   pbl_bt_pairing_confirm(s_data_ptr->ctx, is_confirmed);
-  bt_unlock();
 }
 
 static bool prv_has_device_name(BTPairingUIData *data) {

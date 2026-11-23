@@ -295,27 +295,14 @@ void pbl_pp_session_reset(struct pbl_pp_session *session) {
   transport->reset(session);
 }
 
-static void prv_granted_cb(void *data) {
-  pbl_bt_responsiveness_granted_cb_t granted = data;
-
-  granted();
-}
-
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted) {
+                                       uint16_t max_period_secs) {
   const struct pbl_pp_transport *transport = pbl_pp_session_get_transport(session);
 
-  if (transport == nullptr) {
-    return;
-  }
-
-  if (transport->set_responsiveness != nullptr) {
-    transport->set_responsiveness(session, consumer, state, max_period_secs, granted);
-  } else if (granted != nullptr) {
-    pbl_pp_main_call(prv_granted_cb, granted);
+  if (transport != nullptr && transport->set_responsiveness != nullptr) {
+    transport->set_responsiveness(session, consumer, state, max_period_secs);
   }
 }
 

@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/time.h>
@@ -19,7 +18,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
-#include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
@@ -33,7 +31,6 @@ typedef struct {
   bool sent_header;
   GetBytesStorage storage;
   pbl_tick_t start_ticks;
-  struct pbl_bt_slave_conn_event_stats conn_event_stats;
 } GetBytesState;
 
 // ----------------------------------------------------------------------------------------
@@ -82,8 +79,6 @@ static void prv_gather_and_record_stats(GetBytesState *state) {
   uint32_t elapsed_time_ms = pbl_ticks_to_ms(pbl_uptime_ticks() - state->start_ticks);
   uint32_t bytes_per_sec = ((state->num_bytes * PBL_MSEC_PER_SEC) / elapsed_time_ms);
   PBL_LOG_DBG("GET_BYTES: Done sending data. Pushed %" PRIu32 " bytes/sec", bytes_per_sec);
-  bluetooth_analytics_handle_get_bytes_stats(state->object_type, state->num_bytes, elapsed_time_ms,
-                                             &state->conn_event_stats);
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -179,12 +174,12 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
     pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_GET_BYTES,
-                                      PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
+                                      PBL_BT_RESPONSE_TIME_MAX, 0);
     return;
   } else {
     pbl_pp_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
                                       PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS, nullptr);
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS);
   }
 
   pbl_sys_work_call(prv_protocol_send_next_chunk, state);

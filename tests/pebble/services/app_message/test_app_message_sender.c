@@ -87,8 +87,7 @@ FAKE_VOID_FUNC(pbl_pp_session_send_next, struct pbl_pp_session *);
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted) {
+                                       uint16_t max_period_secs) {
 }
 
 void app_session_sanitize(struct pbl_pp_session **session_in_out) {

@@ -3,7 +3,6 @@
 
 #include <limits.h>
 
-#include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
@@ -58,11 +57,6 @@ void pbl_sleep_ms(uint32_t ms) {
 void app_storage_get_file_name(char *name, size_t buf_length, AppInstallId app_id,
                                PebbleTask task) {
   strcpy(name, "t");
-}
-
-void bluetooth_analytics_handle_put_bytes_stats(
-    bool successful, uint8_t type, uint32_t total_size, uint32_t elapsed_time_ms,
-    const struct pbl_bt_slave_conn_event_stats *orig_stats) {
 }
 
 typedef enum {

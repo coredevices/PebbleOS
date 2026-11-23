@@ -236,7 +236,7 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
   pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
 
   // We're only sending one attribute now: the speex audio transfer info packet
   size_t size = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +

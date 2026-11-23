@@ -91,8 +91,8 @@ static void prv_reset(struct pbl_pp_session *session) {
 
 static int s_responsiveness_count;
 static void prv_set_responsiveness(struct pbl_pp_session *session, enum pbl_bt_consumer consumer,
-                                   enum pbl_bt_response_time_state state, uint16_t max_period_secs,
-                                   pbl_bt_responsiveness_granted_cb_t granted) {
+                                   enum pbl_bt_response_time_state state,
+                                   uint16_t max_period_secs) {
   ++s_responsiveness_count;
 }
 
@@ -119,11 +119,6 @@ static const struct pbl_pp_transport s_qemu = {
   .send_next = prv_send_next,
 };
 
-static int s_granted_count;
-static void prv_granted(void) {
-  ++s_granted_count;
-}
-
 // Tests
 ///////////////////////////////////////////////////////////
 
@@ -143,7 +138,6 @@ void test_session__initialize(void) {
   s_last_closed = nullptr;
   s_reset_count = 0;
   s_responsiveness_count = 0;
-  s_granted_count = 0;
 }
 
 void test_session__cleanup(void) {
@@ -377,25 +371,18 @@ void test_session__reset(void) {
 
 void test_session__responsiveness(void) {
   struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
-  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10,
-                                    prv_granted);
+  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
-  cl_assert_equal_i(s_granted_count, 0);
 
-  // Transports without the notion grant at once, on KernelMain.
+  // Transports without the notion ignore it.
   struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  fake_sys_work_callbacks_cleanup();
-  pbl_pp_session_set_responsiveness(qemu, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10,
-                                    prv_granted);
+  pbl_pp_session_set_responsiveness(qemu, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
-  fake_sys_work_callbacks_invoke_pending();
-  cl_assert_equal_i(s_granted_count, 1);
 
   pbl_pp_session_close(gatt);
   pbl_pp_session_close(qemu);
 
-  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10,
-                                    prv_granted);
+  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
 }
 

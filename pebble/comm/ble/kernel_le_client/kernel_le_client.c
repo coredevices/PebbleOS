@@ -11,13 +11,11 @@
 #endif
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/clients/gatt.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/services/bluetooth/advertising.h>
 
-#include <comm/ble/gap_le_connection.h>
-#include <comm/bt_conn_mgr.h>
-#include <comm/bt_lock.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 
@@ -105,27 +103,13 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
   PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u", event->hci_reason,
               event->connected);
 
-  // Assume the gateway is always bonded. The bonds can't be checked here: this
-  // may run as a result of a disconnect due to forgetting a bond.
-
-  const struct pbl_bt_device_internal device = PebbleEventToBTDeviceInternal(event);
   if (event->connected) {
+    const uint16_t conn_handle = event->conn_handle;
+
     PBL_LOG_DBG("Connected to Gateway!");
 
-    uint16_t conn_handle = 0;
-    bool found = false;
-    bt_lock();
-    GAPLEConnection *connection = gap_le_connection_by_device(&device);
-    if (connection) {
-      conn_handle = connection->conn_handle;
-      found = true;
-      conn_mgr_set_ble_conn_response_time(connection, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
-                                          PBL_BT_RESPONSE_TIME_MIN, DISCOVERY_RESPONSE_TIME_SECS);
-    }
-    bt_unlock();
-    if (!found) {
-      return;
-    }
+    pbl_bt_responsiveness_request(conn_handle, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
+                                  PBL_BT_RESPONSE_TIME_MIN, DISCOVERY_RESPONSE_TIME_SECS);
 
     ++s_generation;
     s_is_connected = true;
@@ -198,3 +182,15 @@ void kernel_le_client_deinit(void) {
   pbl_pp_gatt_destroy();
 #endif
 }
+
+#ifdef CONFIG_SHELL
+#include <pbl/shell/shell.h>
+
+static int prv_cmd_rediscover(const struct pbl_shell *sh, size_t argc, char **argv) {
+  kernel_le_client_rediscover();
+  return 0;
+}
+
+PBL_SHELL_SUBCMD_ADD(sub_bt, rediscover, nullptr, "Look for the services of the phone again",
+                     prv_cmd_rediscover, 0, 0);
+#endif

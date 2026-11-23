@@ -6,7 +6,6 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/nimble_type_conversions.h>
 #include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
@@ -91,15 +90,7 @@ static void prv_handle_subscribe_event(struct ble_gap_event *event) {
     return;
   }
   if (event->subscribe.cur_notify) {
-    struct ble_gap_conn_desc desc;
-    if (ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
-      PBL_LOG_ERR("Reversed PPoG subscribe: no conn descriptor for handle %u",
-                  event->subscribe.conn_handle);
-      return;
-    }
-    struct pbl_bt_device_internal device;
-    nimble_addr_to_pebble_device(&desc.peer_id_addr, &device);
-    pbl_bt_cb_ppog_reversed_subscribed(&device, event->subscribe.conn_handle);
+    pbl_bt_cb_ppog_reversed_subscribed(event->subscribe.conn_handle);
   } else {
     pbl_bt_cb_ppog_reversed_unsubscribed(event->subscribe.conn_handle);
   }

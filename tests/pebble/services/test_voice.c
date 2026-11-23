@@ -42,7 +42,7 @@ FAKE_VOID_FUNC(mic_manager_set_dictation_active, bool);
 FAKE_VOID_FUNC(voice_endpoint_setup_session, VoiceEndpointSessionType, AudioEndpointSessionId,
                AudioTransferInfoSpeex *, Uuid *);
 FAKE_VOID_FUNC(pbl_pp_session_set_responsiveness, struct pbl_pp_session *, enum pbl_bt_consumer,
-               enum pbl_bt_response_time_state, uint16_t, pbl_bt_responsiveness_granted_cb_t);
+               enum pbl_bt_response_time_state, uint16_t);
 
 #define FAKES(FAKE)                      \
   FAKE(audio_endpoint_add_frame)         \

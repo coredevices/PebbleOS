@@ -337,7 +337,7 @@ void app_fetch_binaries(const Uuid *uuid, AppInstallId app_id, bool has_worker) 
   // Put bytes will extend the low-latency period after this:
   pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_APP_FETCH,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS);
 
   pbl_sys_work_call(prv_app_fetch_binaries_sys_work_cb, request);
 }

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/send.h>
@@ -12,7 +13,6 @@
 
 #include <applib/app_comm.h>
 #include <applib/app_message/app_message_internal.h>
-#include <comm/bt_conn_mgr.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 
@@ -48,7 +48,7 @@ PBL_SYSCALL(bool, sys_app_pp_send_data, (VAL, struct pbl_pp_session *, session),
   // TODO: use a heuristic to decide whether to put the connection in fast mode
   pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
                                     PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
 
   // FIXME: Let the app task wait indefinitely for now
   const uint32_t timeout_ms = ~0;
@@ -65,11 +65,10 @@ PBL_SYSCALL(void, sys_app_comm_set_responsiveness, (VAL, SniffInterval, interval
   switch (interval) {
     case SNIFF_INTERVAL_REDUCED:
       pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIDDLE,
-                                        MAX_PERIOD_RUN_FOREVER, nullptr);
+                                        PBL_BT_RESPONSE_TIME_FOREVER);
       return;
     case SNIFF_INTERVAL_NORMAL:
-      pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX, 0,
-                                        nullptr);
+      pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX, 0);
       return;
   }
   PBL_LOG_WRN("Invalid sniff interval");

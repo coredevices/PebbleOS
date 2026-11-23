@@ -69,7 +69,6 @@ static void prv_send_ping_kernel_bg_cb(void *unused) {
 
 // ------------------------------------------------------------------------------------------------------------
 // If a ping is due to be sent, send it.
-// bt_lock() is held by the caller
 void ping_send_if_due(void) {
   if (s_is_ping_kernel_bg_callback_scheduled) {
     return;
