@@ -17,9 +17,6 @@
 
 #include <kernel.h>
 
-// Kept up to date by the SoC clock code
-extern uint32_t SystemCoreClock;
-
 #ifdef CONFIG_CPU_HAS_FPU
 #define HAS_FPU 1
 #else
@@ -205,10 +202,6 @@ void arch_thread_exit(void) {
 
 bool arch_in_isr(void) {
   return mcu_state_is_isr();
-}
-
-PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
-  return SystemCoreClock;
 }
 
 // Faults and the most urgent interrupts stay enabled.

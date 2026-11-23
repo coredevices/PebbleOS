@@ -7,6 +7,7 @@
 #include <pbl/kernel/init.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/time.h>
 
 #include <devicetree/regs.h>
 #include <hardware/nrf52_approtect.h>
@@ -15,8 +16,6 @@
 #include <hardware/nrf52_uicr.h>
 
 #define RESET_PIN 18U
-
-uint32_t SystemCoreClock = 64000000U;
 
 static void prv_uicr_write(uint32_t val, uintptr_t offset) {
   pbl_writel(NVMC_CONFIG_WEN_WEN, PBL_DT_REG_NVMC + NRF52_NVMC_CONFIG_OFFSET);
@@ -62,6 +61,9 @@ static void prv_uicr_init(void) {
 }
 
 void pbl_soc_early_init(void) {
+  // The CPU runs at 64 MHz, from HFCLK
+  pbl_cycles_per_sec_set(64000000U);
+
   prv_approtect_init();
   prv_uicr_init();
 

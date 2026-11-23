@@ -5,6 +5,7 @@ pbl_clar_test(test_task_wdt
   SOURCES
     subsys/task_wdt/task_wdt.c
     kernel/tick.c
+    kernel/time.c
     kernel/sched.c
     kernel/timer.c
     kernel/thread.c
@@ -16,6 +17,7 @@ pbl_clar_test(test_task_wdt
     kernel/irq.c
     kernel/debug.c
     kernel/arch/posix/arch.c
+    kernel/arch/posix/cycle.c
     kernel/arch/posix/test.c
     kernel/timekeeping.c
     kernel/wallclock.c

@@ -20,13 +20,19 @@ uint64_t pbl_uptime_ms(void) {
   return pbl_uptime_ticks() * 1000U / PBL_TICK_HZ;
 }
 
+static uint32_t s_cycles_per_sec;
+
 PBL_SECTION_RAM uint32_t pbl_cycles_per_sec(void) {
-  return arch_cycles_per_sec();
+  return s_cycles_per_sec;
+}
+
+void pbl_cycles_per_sec_set(uint32_t hz) {
+  s_cycles_per_sec = hz;
 }
 
 PBL_SECTION_RAM void pbl_busy_wait_us(uint32_t us) {
   // Cycles per microsecond, rounded up.
-  uint32_t per_us = (arch_cycles_per_sec() + 999999U) / 1000000U;
+  uint32_t per_us = (s_cycles_per_sec + 999999U) / 1000000U;
   uint64_t cycles = (uint64_t)us * per_us;
   uint32_t start = arch_cycle_get_32();
 

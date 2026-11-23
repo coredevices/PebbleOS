@@ -7,6 +7,8 @@
 
 #include <string.h>
 
+#include <pbl/kernel/time.h>
+
 #include <kernel.h>
 #include <pthread.h>
 
@@ -69,7 +71,9 @@ static void *prv_thread_main(void *arg) {
   return nullptr;
 }
 
+// The cycle counter counts nanoseconds of the host's monotonic clock
 void arch_early_init(void) {
+  pbl_cycles_per_sec_set(1000000000U);
 }
 
 void arch_init(void) {
@@ -145,10 +149,6 @@ void arch_thread_aborted(struct pbl_thread *t) {
 
 bool arch_in_isr(void) {
   return posix_in_isr;
-}
-
-uint32_t arch_cycles_per_sec(void) {
-  return 1000000000U;
 }
 
 // Threads only yield the CPU when they block, which no heap operation does.
