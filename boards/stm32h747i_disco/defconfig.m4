@@ -1,0 +1,3 @@
+# The Cortex-M4
+
+CONFIG_SOC_STM32H747_M4=y

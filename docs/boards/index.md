@@ -6,6 +6,7 @@
 | [`obelix`](obelix/index.md) | `bb2`, `dvt`, `pvt` | | | Pebble Time 2 | Emery |
 | [`getafix`](getafix/index.md) | `dvt`, `dvt2` | | | Pebble Round 2 | Gabbro |
 | [`sf32lb57_dpi_hdk`](sf32lb57_dpi_hdk/index.md) | | | | SiFli SF32LB57x-DPI-HDK | |
+| [`stm32h747i_disco`](stm32h747i_disco/index.md) | | `m7`, `m4` | | STMicroelectronics STM32H747I-DISCO | |
 | `qemu_flint` | | | | Emulated Pebble 2 Duo | Flint |
 | `qemu_emery` | | | | Emulated Pebble Time 2 | Emery |
 | `qemu_gabbro` | | | | Emulated Pebble Round 2 | Gabbro |
@@ -23,5 +24,6 @@ asterix/index.md
 obelix/index.md
 getafix/index.md
 sf32lb57_dpi_hdk/index.md
+stm32h747i_disco/index.md
 addons/index.md
 ```
