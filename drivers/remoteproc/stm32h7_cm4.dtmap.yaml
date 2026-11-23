@@ -25,4 +25,6 @@ args:
     index: 1
   - prop: st,syscfg-flash
     index: 2
+  - mbox: shutdown
+    default: "{}"
   - flag: st,auto-boot

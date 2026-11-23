@@ -24,10 +24,12 @@ config REMOTEPROC_SF32LB
 config REMOTEPROC_STM32H7_CM4
     bool "STM32H7 Cortex-M4"
     default y
-    depends on DT_HAS_ST_STM32H747_M4_ENABLED
+    depends on DT_HAS_ST_STM32H747_M4_ENABLED && CPU_CORTEX_M7
+    select MBOX
     help
       The Cortex-M4 of a dual-core STM32H7, as the Cortex-M7 sees it:
-      booted from the address of its option bytes.
+      booted from the address of its option bytes, and told before the
+      system powers off.
 
 config REMOTEPROC_SHELL
     bool "Remote processor shell commands"
