@@ -147,6 +147,8 @@ class Power(PblCommand):
             reply = daemon.request(key, "start", name=args.name)
         elif args.action == "stop":
             reply = daemon.request(key, "stop", save=self._save_dir(args))
+        elif args.action == "off":
+            reply = daemon.stop(key)
         else:
             reply = daemon.request(key, args.action)
         return self._print(reply, args)
