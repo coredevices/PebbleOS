@@ -236,6 +236,12 @@ static void prv_click_config_provider(void *context) {
 static bool prv_crumbs_contains_point(const Layer *layer, const GPoint *point) {
   return false;
 }
+
+// The menu is inset by the crumbs ring, but a touch that starts on the ring (a swipe from the
+// screen's edge) is still meant for the menu.
+static bool prv_menu_contains_point(const Layer *layer, const GPoint *point) {
+  return true;
+}
 #endif
 
 static void prv_action_window_load(Window *window) {
@@ -259,6 +265,7 @@ static void prv_action_window_load(Window *window) {
 #ifdef CONFIG_TOUCH
   // The decorative ring must not intercept touches intended for the menu.
   layer_set_contains_point_override((Layer *)crumbs_layer, prv_crumbs_contains_point);
+  layer_set_contains_point_override((Layer *)action_menu_layer, prv_menu_contains_point);
 #endif
   // Add them to the tree
   layer_add_child(window_get_root_layer(window), (Layer *)action_menu_layer);
