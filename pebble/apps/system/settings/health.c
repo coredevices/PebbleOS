@@ -25,6 +25,13 @@ static const char *s_units_distance_labels[] = {
   pbl_i18n_noop("Miles"),
 };
 
+// Indexed by ActivityInsightsStyle
+static const char *s_insights_style_labels[] = {
+  pbl_i18n_noop("Standard"),
+  pbl_i18n_noop("Playful"),
+};
+static_assert(PBL_ARRAY_SIZE(s_insights_style_labels) == ActivityInsightsStyleCount);
+
 #ifdef CONFIG_HRM
 static const HRMonitoringInterval s_hrm_intervals[] = {
   HRMonitoringInterval_5Min,  HRMonitoringInterval_10Min,    HRMonitoringInterval_30Min,
@@ -72,6 +79,7 @@ static int prv_spo2_interval_to_index(HRMonitoringInterval interval) {
 enum SettingsHealthItem {
   SettingsHealthTrackingEnabled,
   SettingsHealthUnitDistance,
+  SettingsHealthInsightsStyle,
 #ifdef CONFIG_HRM
   SettingsHealthHRMonitoringInterval,
   SettingsHealthHRActivityTracking,
@@ -80,6 +88,27 @@ enum SettingsHealthItem {
 #endif
   NumSettingsHealthItems
 };
+
+// Insights style option menu
+/////////////////////////////
+
+static void prv_insights_style_menu_select(OptionMenu *option_menu, int selection, void *context) {
+  if (selection >= 0 && selection < ActivityInsightsStyleCount) {
+    activity_prefs_set_insights_style((ActivityInsightsStyle)selection);
+  }
+  app_window_stack_remove(&option_menu->window, true /*animated*/);
+}
+
+static void prv_insights_style_menu_push(SettingsHealthData *data) {
+  const OptionMenuCallbacks callbacks = {
+    .select = prv_insights_style_menu_select,
+  };
+  const char *title = pbl_i18n_noop("Insights Style");
+  settings_option_menu_push(title, OptionMenuContentType_SingleLine,
+                            activity_prefs_get_insights_style(), &callbacks,
+                            PBL_ARRAY_SIZE(s_insights_style_labels), true /* icons_enabled */,
+                            s_insights_style_labels, data);
+}
 
 #ifdef CONFIG_HRM
 // HRM Interval option menu
@@ -158,6 +187,11 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
       }
       break;
     }
+    case SettingsHealthInsightsStyle: {
+      title = pbl_i18n_noop("Insights Style");
+      subtitle = s_insights_style_labels[activity_prefs_get_insights_style()];
+      break;
+    }
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval: {
       title = pbl_i18n_noop("HR Monitoring");
@@ -210,6 +244,9 @@ static void prv_select_click_cb(SettingsCallbacks *context, uint16_t row) {
       shell_prefs_set_units_distance(unit);
       break;
     }
+    case SettingsHealthInsightsStyle:
+      prv_insights_style_menu_push((SettingsHealthData *)context);
+      break;
 #ifdef CONFIG_HRM
     case SettingsHealthHRMonitoringInterval:
       prv_hrm_interval_menu_push((SettingsHealthData *)context);
