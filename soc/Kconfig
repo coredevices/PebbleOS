@@ -7,9 +7,7 @@ choice
       SoC. Real boards pick their SoC line; QEMU boards pick the core of
       the Pebble QEMU machine.
 
-rsource "nrf/Kconfig.soc"
-rsource "sf32lb/Kconfig.soc"
-rsource "qemu/Kconfig.soc"
+rsource "*/Kconfig.soc"
 
 config SOC_POSIX
     bool "POSIX host"
@@ -84,6 +82,4 @@ config QEMU
       Derived alias for SOC_QEMU_PEBBLE. Gates features that don't make
       sense under emulation.
 
-rsource "nrf/Kconfig"
-rsource "qemu/Kconfig"
-rsource "sf32lb/Kconfig"
+rsource "*/Kconfig"
