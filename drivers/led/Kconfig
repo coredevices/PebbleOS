@@ -4,7 +4,8 @@
 menuconfig LED
     bool "LED"
     help
-      LED Drivers
+      LED class (pbl/drivers/led.h), selected by the drivers that light
+      LEDs, such as the LED backlight.
 
 if LED
 

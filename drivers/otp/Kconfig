@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig OTP
-    bool "OTP Storage"
+    bool "OTP storage"
     help
-      One-Time Programmable storage for serial numbers, HW revision, etc.
+      One-time programmable storage class (pbl/drivers/otp.h), for serial
+      numbers, the hardware revision and other factory data.
 
 if OTP
 

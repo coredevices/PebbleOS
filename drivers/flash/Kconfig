@@ -4,7 +4,8 @@
 menuconfig FLASH
     bool "Flash"
     help
-      Flash Drivers
+      Flash class (pbl/drivers/flash.h) and its drivers: the flash that
+      holds the file system, resources and firmware images.
 
 if FLASH
 
@@ -57,14 +58,14 @@ config FLASH_SPI_NOR_PY25Q128HA
 endif
 
 config FLASH_QEMU
-    bool "QEMU External Flash"
+    bool "QEMU external flash"
     default y
     depends on DT_HAS_QEMU_PEBBLE_EXTFLASH_ENABLED
     help
       Support for the QEMU external flash peripheral.
 
 config FLASH_POSIX
-    bool "POSIX External Flash"
+    bool "POSIX external flash"
     default y
     depends on SOC_POSIX
     help

@@ -4,7 +4,8 @@
 menuconfig GPIO
     bool "GPIO"
     help
-      GPIO Drivers
+      GPIO controller class (pbl/drivers/gpio.h), selected by the
+      drivers that drive or read pins.
 
 if GPIO
 

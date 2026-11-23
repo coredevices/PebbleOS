@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig VIBE
-    bool "Vibration Motor"
+    bool "Vibration motor"
     help
-      Vibration Motor Drivers
+      Vibration motor class (pbl/drivers/vibe.h) and its drivers.
 
 if VIBE
 
@@ -50,7 +50,7 @@ config VIBE_SIM
       simulator API (pbl/drivers/vibe/sim.h).
 
 module = DRIVER_VIBE
-module-str = Vibration Motor
+module-str = Vibration motor
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # VIBE
