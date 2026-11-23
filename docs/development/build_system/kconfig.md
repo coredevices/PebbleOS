@@ -14,7 +14,8 @@ source `Kconfig.pebbleos`, which sources the rest of the tree:
 
 - `soc/*/Kconfig.defconfig` and `subsys/bluetooth/Kconfig.defconfig`
   first, so their defaults win over the ones given with the definitions;
-- `soc/Kconfig`, with the SoC and CPU symbols;
+- `soc/Kconfig`, with the SoC and CPU symbols, from the vendor directories
+  (see [](#kconfig-socs));
 - the board's files, only for the selected board and revision:
   `boards/<board>/Kconfig`, `Kconfig.<revision>`, `Kconfig.defconfig` and
   `Kconfig.defconfig.<revision>`;
@@ -25,6 +26,26 @@ A symbol is defined next to the code it enables: a driver class's
 `Kconfig` lives in `drivers/<class>/`, a subsystem's in `subsys/<name>/`.
 {doc}`../../reference/kconfig` lists every option, with its dependencies,
 defaults and location.
+
+(kconfig-socs)=
+
+### SoCs
+
+A series of SoCs has its code and its Kconfig in `soc/<vendor>/<series>/`,
+as `soc/sf32lb/sf32lb52x`, the QEMU machine `soc/qemu/pebble` and the host
+`soc/native/posix`:
+
+| File | Contents |
+| --- | --- |
+| `soc/<vendor>/<series>/Kconfig.soc` | The SoCs of the series, entries of the SoC choice a board picks in its `defconfig`. Each selects its series, and its CPU where the SoCs of a series differ in it |
+| `soc/<vendor>/<series>/Kconfig` | The series symbol, what the series selects, and its options |
+| `soc/<vendor>/<series>/Kconfig.defconfig` | The defaults the series gives to common symbols |
+| `soc/<vendor>/Kconfig` | The family symbol, `SOC_FAMILY_<VENDOR>`, which its series select, and the options of every series of the family |
+
+`soc/<vendor>/Kconfig.soc` and `soc/<vendor>/Kconfig.defconfig` source those of
+the series, and `soc/Kconfig` those of every vendor directory.
+`soc/CMakeLists.txt` builds the directory of the selected family, which builds
+that of the selected series.
 
 ## Configuration fragments
 

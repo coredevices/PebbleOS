@@ -14,7 +14,7 @@ PBL_IRQ_DIRECT(AON, 0, PBL_IRQ_ZERO_LATENCY) {
 A line is named after its `PBL_SOC_IRQN_<line>` define in the SoC's
 checked-in `soc_irqs.h`, which also gives its number: `PBL_IRQN(I2C1)` is
 `PBL_SOC_IRQN_I2C1`. Binding a line needs no vendor header. The SoC's line
-count is `CONFIG_NUM_IRQS`, set in `soc/*/Kconfig.defconfig`, and its priority
+count is `CONFIG_NUM_IRQS`, set in `soc/*/*/Kconfig.defconfig`, and its priority
 bits the `arm,num-irq-priority-bits` of the devicetree NVIC.
 
 `PBL_IRQ_CONNECT()` calls `isr(arg)` with whatever type `isr` takes (an
