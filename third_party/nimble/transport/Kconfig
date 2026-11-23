@@ -73,9 +73,9 @@ config NIMBLE_ID_ADDR_CONTROLLER
     help
       Use the address the controller reports, or let NimBLE pick one.
 
-config NIMBLE_ID_ADDR_SF32LB52_EFUSE
-    bool "SF32LB52 eFUSE"
-    depends on SOC_SF32LB52 && NVMEM_SF32LB
+config NIMBLE_ID_ADDR_SF32LB_EFUSE
+    bool "SF32LB eFUSE"
+    depends on SOC_FAMILY_SF32LB && NVMEM_SF32LB
     select NIMBLE_ID_ADDR
     help
       Public address derived from the unique ID in the SoC's eFUSE.

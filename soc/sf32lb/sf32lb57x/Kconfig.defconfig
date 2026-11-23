@@ -7,6 +7,10 @@ choice NIMBLE_HCI
     default NIMBLE_HCI_SF32LB
 endchoice
 
+choice NIMBLE_ID_ADDR_SOURCE
+    default NIMBLE_ID_ADDR_SF32LB_EFUSE
+endchoice
+
 # No FLASH_BASE or FLASH_SIZE default: the flash is the board's, the boot
 # ROM reads it from the boot device the part and its strapping select.
 

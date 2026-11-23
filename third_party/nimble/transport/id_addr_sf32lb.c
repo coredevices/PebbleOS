@@ -11,10 +11,16 @@
 #define UID_SIZE  8U
 #define UID_MAGIC 0xA5U
 
-static const struct pbl_nvmem_cell s_uid_cell = PBL_NVMEM_CELL(SF32LB52_EFUSE, 0U, UID_SIZE);
+#ifdef CONFIG_SOC_SF32LB57
+#define EFUSE SF32LB57_EFUSE
+#else
+#define EFUSE SF32LB52_EFUSE
+#endif
+
+static const struct pbl_nvmem_cell s_uid_cell = PBL_NVMEM_CELL(EFUSE, 0U, UID_SIZE);
 
 // The first six bytes of the eFUSE unique ID are the address, followed by
-// their checksum and a magic byte.
+// their checksum and a magic byte. Parts not programmed at the factory have none.
 int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type) {
   uint8_t uid[UID_SIZE];
   uint8_t chksum = 0U;
@@ -26,7 +32,7 @@ int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type)
   }
 
   if (uid[7] != UID_MAGIC) {
-    return -ENODEV;
+    return -ENOENT;
   }
 
   for (size_t i = 0U; i < sizeof(addr->octets); i++) {
