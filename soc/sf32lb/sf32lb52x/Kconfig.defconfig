@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SF32LB52
+
+choice NIMBLE_HCI
+    default NIMBLE_HCI_SF32LB
+endchoice
+
+choice NIMBLE_ID_ADDR_SOURCE
+    default NIMBLE_ID_ADDR_SF32LB52_EFUSE
+endchoice
+
+# 32 MiB of external flash, memory-mapped through MPI.
+config FLASH_BASE
+    default 0x12000000
+
+config FLASH_SIZE
+    default 0x2000000
+
+config FIRMWARE_OFFSET
+    default 4096 if PBLBOOT
+
+if NIMBLE
+
+# Sized over the peak measured under load (22 blocks). Exhaustion blocks the
+# HCI RX task, it does not drop data.
+config NIMBLE_BLE_TRANSPORT_ACL_COUNT
+    default 36
+
+endif # NIMBLE
+
+
+config NUM_IRQS
+    default 99
+
+endif # SOC_SF32LB52
