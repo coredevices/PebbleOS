@@ -35,6 +35,8 @@
 #define OUT_SIZE 700
 #define IN_SIZE 1400
 #define CHANGE_DELAY_MS 300
+// Opened from a notification before the phone sent that chat: open it when it arrives, this long
+#define HINT_WAIT_MS 30000
 #define STALE_SECS (5 * 60)
 
 // Field limits of the watchapp's phone side (chat/pbw/src/pkjs/index.js), which the UI expects.
@@ -81,6 +83,7 @@ static struct {
   int transfer_seq;
 
   char launch_hint[64];
+  AppTimer *hint_timer;
 
   // Chat pictures: asked for one at a time, each chat once per launch
   AppTimer *avatar_timer;
@@ -225,10 +228,21 @@ static int prv_compare_time(const void *a, const void *b) {
 
 // Rows of a kind, oldest first.
 static int prv_rows(char kind, const uint8_t *chat_key, RowRef *rows, int cap) {
+  if (!rows) {
+    return 0;
+  }
   Collect c = {.kind = kind, .chat_key = chat_key, .rows = rows, .cap = cap};
   chat_db_each(prv_collect, &c);
   qsort(rows, c.count, sizeof(RowRef), prv_compare_time);
   return c.count;
+}
+
+// Row lists live on the heap, not the stack: each row is handed to the UI, which lays out and
+// draws on top of the caller's frame, and a system app's 4 KB stack can't also hold 32 of them
+// (getafix overflowed it scrolling back through a chat). Free with app_free(); null when out of
+// memory, which prv_rows() treats as no rows.
+static RowRef *prv_rows_alloc(int cap) {
+  return app_malloc(cap * sizeof(RowRef));
 }
 
 // The record's value, app heap allocated; NULL if gone.
@@ -351,10 +365,22 @@ static void prv_deliver_settings(void) {
   prv_deliver(iter);
 }
 
+static void prv_hint_expired(void *data) {
+  s_ds.hint_timer = nullptr;
+  s_ds.launch_hint[0] = '\0';
+}
+
+static void prv_clear_hint(void) {
+  if (s_ds.hint_timer) {
+    app_timer_cancel(s_ds.hint_timer);
+  }
+  prv_hint_expired(nullptr);
+}
+
 // Answers get_chats. Returns the id of the newest chat whose title is the launch hint, if any
 // (two chats can share a name, e.g. the same person on two networks).
 static void prv_deliver_chats(char *hint_chat_id) {
-  RowRef rows[MAX_CHATS];
+  RowRef *rows = prv_rows_alloc(MAX_CHATS);
   const int count = prv_rows(CHAT_DB_KIND_CHAT, nullptr, rows, MAX_CHATS);
   uint32_t oldest_sync = UINT32_MAX;
   int delivered = 0;
@@ -393,6 +419,7 @@ static void prv_deliver_chats(char *hint_chat_id) {
     prv_deliver(iter);
     delivered++;
   }
+  app_free(rows);
   prv_deliver_done("chats_done", delivered, 0);
 
   // Say how old the list is when the phone hasn't refreshed it lately
@@ -507,35 +534,37 @@ static int prv_window_start(int count, int anchor, int older_ahead) {
 }
 
 static void prv_deliver_window(const uint8_t *chat_key) {
-  RowRef rows[MAX_ROWS];
+  RowRef *rows = prv_rows_alloc(MAX_ROWS);
   const int count = prv_rows(CHAT_DB_KIND_MESSAGE, chat_key, rows, MAX_ROWS);
   s_ds.newest_shown = 0;
   prv_deliver_window_rows(ModeInitial, false, rows, prv_window_start(count, -1, 0), count);
+  app_free(rows);
 }
 
 // An older or newer page from the cache, around the selected message (anchor_id), past the
 // window's edge message (edge_id). False if the cache has nothing past the edge.
 static bool prv_deliver_page(const uint8_t *chat_key, StreamMode mode, bool silent,
                              const char *edge_id, const char *anchor_id) {
-  RowRef rows[MAX_ROWS];
+  RowRef *rows = prv_rows_alloc(MAX_ROWS);
   const int count = prv_rows(CHAT_DB_KIND_MESSAGE, chat_key, rows, MAX_ROWS);
   const int edge = prv_find_message(rows, count, edge_id);
   const bool more = (mode == ModeOlder) ? edge > 0 : (edge >= 0 && edge < count - 1);
-  if (!more) {
-    return false;
+  if (more) {
+    const int start = prv_window_start(count, prv_find_message(rows, count, anchor_id), 4);
+    const int end = start + WINDOW_ROWS < count ? start + WINDOW_ROWS : count;
+    prv_deliver_window_rows(mode, silent, rows, start, end);
   }
-  const int start = prv_window_start(count, prv_find_message(rows, count, anchor_id), 4);
-  const int end = start + WINDOW_ROWS < count ? start + WINDOW_ROWS : count;
-  prv_deliver_window_rows(mode, silent, rows, start, end);
-  return true;
+  app_free(rows);
+  return more;
 }
 
 static void prv_deliver_context(const uint8_t *chat_key, const char *id, bool full_text) {
-  RowRef rows[MAX_ROWS];
+  RowRef *rows = prv_rows_alloc(MAX_ROWS);
   const int count = prv_rows(CHAT_DB_KIND_MESSAGE, chat_key, rows, MAX_ROWS);
   const int i = prv_find_message(rows, count, id);
   int len = 0;
   uint8_t *val = i >= 0 ? prv_read(&rows[i], &len) : nullptr;
+  app_free(rows);
   ChatDbMessage m;
   const bool found = val && chat_db_parse_message(val, len, &m);
 
@@ -617,7 +646,7 @@ static void prv_request_avatars(void) {
   if (chat_ui_avatar_size() <= 0 || !pbl_pp_session_get_system()) {
     return;
   }
-  RowRef rows[MAX_CHATS];
+  RowRef *rows = prv_rows_alloc(MAX_CHATS);
   const int count = prv_rows(CHAT_DB_KIND_CHAT, nullptr, rows, MAX_CHATS);
   s_ds.avatar_queue_len = 0;
   s_ds.avatar_queue_next = 0;
@@ -626,6 +655,7 @@ static void prv_request_avatars(void) {
       memcpy(s_ds.avatar_queue[s_ds.avatar_queue_len++], rows[i].key + 1, CHAT_DB_CHAT_KEY_LEN);
     }
   }
+  app_free(rows);
   if (s_ds.avatar_queue_len && !s_ds.avatar_timer) {
     s_ds.avatar_timer = app_timer_register(AVATAR_FIRST_DELAY_MS, prv_send_next_avatar, nullptr);
   }
@@ -651,11 +681,16 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
     prv_deliver_chats(hint_chat);
     if (s_ds.launch_hint[0]) {
-      s_ds.launch_hint[0] = '\0';
       chat_ui_open_chat(hint_chat);  // "" when no chat has that name: the UI shows the list
+      if (hint_chat[0]) {
+        prv_clear_hint();
+      } else if (!s_ds.hint_timer) {
+        s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
+      }
     }
     prv_request_avatars();
   } else if (strcmp(cmd, "get_messages") == 0 && has_chat) {
+    prv_clear_hint();  // a chat is open: don't jump to another one
     s_ds.chat_open = true;
     memcpy(s_ds.open_chat, chat_key, sizeof(chat_key));
     prv_deliver_window(chat_key);
@@ -777,13 +812,29 @@ static void prv_from_phone(const uint8_t *dict, size_t len) {
 }
 
 // The phone changed the chat db: show new messages of the open chat, or the new chat list.
+// Opens the notification's chat if the app has it now; true if it did.
+static bool prv_open_hinted_chat(void) {
+  char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
+  prv_deliver_chats(hint_chat);
+  if (!hint_chat[0]) {
+    return false;
+  }
+  prv_clear_hint();
+  chat_ui_open_chat(hint_chat);
+  return true;
+}
+
 static void prv_apply_changes(void *data) {
   s_ds.change_timer = nullptr;
+  if (s_ds.launch_hint[0] && prv_open_hinted_chat()) {
+    return;  // the notification's chat just arrived
+  }
   if (!s_ds.chat_open) {
     prv_deliver_chats(nullptr);
+    prv_request_avatars();  // pictures of new chats, or all of them if the phone wasn't there at launch
     return;
   }
-  RowRef rows[MAX_ROWS];
+  RowRef *rows = prv_rows_alloc(MAX_ROWS);
   const int count = prv_rows(CHAT_DB_KIND_MESSAGE, s_ds.open_chat, rows, MAX_ROWS);
   int from = count;
   while (from > 0 && rows[from - 1].time > s_ds.newest_shown) {
@@ -792,6 +843,7 @@ static void prv_apply_changes(void *data) {
   if (from < count) {
     prv_deliver_appended(rows, from, count, count);
   }
+  app_free(rows);
 }
 
 static void prv_blob_db_event(PebbleEvent *e, void *context) {
@@ -805,6 +857,20 @@ static void prv_blob_db_event(PebbleEvent *e, void *context) {
   }
 }
 
+// "Open chat" on a notification while the app is already open (in the list or in a chat)
+static void prv_hint_arrived(void) {
+  if (s_ds.hint_timer) {
+    app_timer_cancel(s_ds.hint_timer);
+    s_ds.hint_timer = nullptr;
+  }
+  if (!chat_service_take_launch_hint(s_ds.launch_hint, sizeof(s_ds.launch_hint))) {
+    return;
+  }
+  if (!prv_open_hinted_chat()) {  // not on the watch yet: open it when the phone sends it
+    s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
+  }
+}
+
 bool chat_ds_has_launch_hint(void) {
   return s_ds.launch_hint[0] != '\0';
 }
@@ -813,6 +879,7 @@ void chat_ds_init(void) {
   memset(&s_ds, 0, sizeof(s_ds));
   chat_service_take_launch_hint(s_ds.launch_hint, sizeof(s_ds.launch_hint));
   chat_service_set_handler(prv_from_phone);
+  chat_service_set_hint_handler(prv_hint_arrived);
   s_ds.blob_db_event = (EventServiceInfo){
     .type = PEBBLE_BLOBDB_EVENT,
     .handler = prv_blob_db_event,
@@ -822,11 +889,13 @@ void chat_ds_init(void) {
 
 void chat_ds_deinit(void) {
   chat_service_set_handler(nullptr);
+  chat_service_set_hint_handler(nullptr);
   event_service_client_unsubscribe(&s_ds.blob_db_event);
   if (s_ds.change_timer) {
     app_timer_cancel(s_ds.change_timer);
   }
   s_ds.change_timer = nullptr;
+  prv_clear_hint();
   if (s_ds.avatar_timer) {
     app_timer_cancel(s_ds.avatar_timer);
   }

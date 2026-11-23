@@ -18,6 +18,7 @@
 
 static ChatServiceHandler s_handler;
 static char s_launch_hint[LAUNCH_HINT_SIZE];
+static ChatServiceHintHandler s_hint_handler;
 
 typedef struct {
   size_t len;
@@ -77,8 +78,21 @@ bool chat_service_send(const uint8_t *dict, size_t len) {
   return true;
 }
 
+static void prv_deliver_hint(void *data) {
+  if (s_hint_handler) {
+    s_hint_handler();
+  }
+}
+
 void chat_service_set_launch_hint(const char *title) {
   strncpy(s_launch_hint, title ? title : "", sizeof(s_launch_hint) - 1);
+  if (s_hint_handler) {  // the app is running: it reads the hint now, not at its next launch
+    process_manager_send_callback_event_to_process(PebbleTask_App, prv_deliver_hint, nullptr);
+  }
+}
+
+void chat_service_set_hint_handler(ChatServiceHintHandler handler) {
+  s_hint_handler = handler;
 }
 
 bool chat_service_take_launch_hint(char *out, size_t out_size) {

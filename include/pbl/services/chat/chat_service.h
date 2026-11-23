@@ -53,6 +53,14 @@ bool chat_service_send(const uint8_t *dict, size_t len);
  */
 void chat_service_set_launch_hint(const char *title);
 
+typedef void (*ChatServiceHintHandler)(void);
+
+/**
+ * @brief Called on the app task when a launch hint is set while the Chat app is already running
+ * (opening it again doesn't restart it, so it wouldn't read the hint). nullptr to stop.
+ */
+void chat_service_set_hint_handler(ChatServiceHintHandler handler);
+
 /**
  * @brief Take the title set by chat_service_set_launch_hint(), clearing it.
  *

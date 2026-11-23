@@ -10,8 +10,15 @@
 #include "kb_words.h"
 #include "chat_warp.h"
 
+#include <pbl/services/notifications/alerts_preferences_private.h>
+#include <shell/system_theme.h>
+
 #define MAX_CHATS 20
 #define MAX_MESSAGES 9
+// Room above the first message for the "Loading..." pill while older history may exist
+#define OLDER_LOADER_H 30
+#define OLDER_LOADER_FRAME_MS 80
+#define OLDER_SPINNER_R 10
 #define MAX_TEXT 460
 #define MAX_FULL_TEXT 1200
 #define MESSAGE_PREVIEW_TEXT PBL_PLATFORM_SWITCH(PBL_PLATFORM_TYPE_CURRENT, 132, 132, 132, 132, 220, 132, 220)
@@ -589,6 +596,10 @@ static int s_qr_modules;
 static bool s_chat_view_pending;
 static bool s_loading_messages;
 static bool s_loading_older_messages;
+static bool s_touch_paging;  // older messages asked for by a drag, which carries on when they come
+static AppTimer *s_loader_timer;
+static uint8_t s_loader_frame;
+static uint8_t s_page_miss_count;  // pages in a row that didn't hold the selected message
 static bool s_loading_newer_messages;
 static bool s_user_scrolled_messages;
 static bool s_at_newest;
@@ -2873,7 +2884,8 @@ static GFont bubble_text_font(uint8_t size) {
     {FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_18, FONT_KEY_GOTHIC_24, FONT_KEY_GOTHIC_28},
     {FONT_KEY_GOTHIC_14_BOLD, FONT_KEY_GOTHIC_18_BOLD, FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_28_BOLD}
   };
-  return fonts_get_system_font(keys[s_appearance.bold ? 1 : 0][size]);
+  // Gothic 24 is bold at Medium, as in a notification's body: plain 24 looks thin and rough
+  return fonts_get_system_font(keys[(s_appearance.bold || size == 2) ? 1 : 0][size]);
 }
 
 // Bigger fonts start their glyphs lower in the text box, so draw them higher.
@@ -3262,6 +3274,9 @@ static void recalc_message_layout(void) {
 #endif
   int max_w = message_bubble_width(bounds);
   int y = ROUND_UI ? 8 : 5;
+  if (!s_at_oldest && s_message_count > 0) {
+    y += OLDER_LOADER_H;  // where "Loading..." shows when scrolling up to the top
+  }
 
   for (int i = 0; i < s_message_count; i++) {
     if (i > 0) {
@@ -5321,6 +5336,26 @@ static void draw_service_pill(GContext *ctx, GRect bounds, int y, const char *te
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
+// Centre row (content coordinates) of the spinner above the oldest message while older ones load.
+static int older_spinner_y(void) {
+  return s_message_y[0] - OLDER_LOADER_H / 2;
+}
+
+// A white disc with a three-quarter accent ring turning 45 degrees a frame.
+static void draw_spinner(GContext *ctx, GPoint c) {
+  const int r = OLDER_SPINNER_R;
+  graphics_context_set_fill_color(ctx, TG_BUBBLE_SHADOW);
+  graphics_fill_circle(ctx, GPoint(c.x, c.y + 1), r + 2);
+  graphics_context_set_fill_color(ctx, TG_IN_BUBBLE);
+  graphics_fill_circle(ctx, c, r + 2);
+  const int32_t start = PBL_DEG_TO_TRIGANGLE((s_loader_frame % 8) * 45);
+  graphics_context_set_stroke_color(ctx, TG_ACCENT);
+  graphics_context_set_stroke_width(ctx, 3);
+  graphics_draw_arc(ctx, GRect(c.x - r + 2, c.y - r + 2, (r - 2) * 2 + 1, (r - 2) * 2 + 1),
+                    GOvalScaleModeFitCircle, start, start + PBL_DEG_TO_TRIGANGLE(270));
+  graphics_context_set_stroke_width(ctx, 1);
+}
+
 // Round mic button used on the input bar.
 static void draw_mic_icon(GContext *ctx, GPoint c, GColor color) {
   graphics_context_set_fill_color(ctx, color);
@@ -5425,14 +5460,23 @@ static void messages_root_update_proc(Layer *layer, GContext *ctx) {
     static ChatWarpMap s_warp;
     GRect frame = layer_get_frame(layer);
     // Each bubble scales as one, so its text keeps its shape
-    ChatWarpItem items[MAX_MESSAGES];
+    ChatWarpItem items[MAX_MESSAGES + 1];
+    int n = s_message_count;
+    if (s_loading_older_messages && !s_at_oldest && n > 0 && n < MAX_MESSAGES + 1) {
+      // The spinner scales as one too, so it stays round near the bezel
+      items[n].top = older_spinner_y() - OLDER_SPINNER_R - 3 - s_chat_scroll_offset;
+      items[n].bottom = items[n].top + OLDER_SPINNER_R * 2 + 7;
+      n++;
+    }
     for (int i = 0; i < s_message_count; i++) {
-      items[i].top = s_message_y[i] - s_chat_scroll_offset;
-      items[i].bottom = items[i].top + s_message_h[i];
+      // The selection ring (2px) and shadow (1px) around a bubble scale with it, or they land
+      // in rows at the circle's own scale and draw wider than the bubble, as dark lines.
+      items[i].top = s_message_y[i] - s_chat_scroll_offset - 2;
+      items[i].bottom = items[i].top + s_message_h[i] + 4;
     }
     chat_warp_build(&s_warp, visible_h, PBL_DISPLAY_HEIGHT / 2 - frame.origin.y,
                     PBL_DISPLAY_WIDTH / 2, PBL_DISPLAY_WIDTH / 2 - CHAT_WARP_SIDE_INSET + 6 + CHAT_WARP_BEZEL_GAP,
-                    items, s_message_count);
+                    items, n);
     s_round_flat = true;
     chat_warp_draw(ctx, &s_warp, GRect(frame.origin.x, frame.origin.y, bounds.size.w, visible_h),
                    PBL_DISPLAY_WIDTH / 2, TG_CHAT_BG, draw_warp_strip, &bounds);
@@ -5448,6 +5492,10 @@ static void draw_messages(GContext *ctx, GRect bounds, int visible_h) {
   if (s_message_count == 0) {
     draw_service_pill(ctx, bounds, bounds.size.h / 2 - 20,
                       s_loading_messages ? "Loading messages..." : "No messages here yet");
+  }
+
+  if (s_loading_older_messages && !s_at_oldest && s_message_count > 0) {
+    draw_spinner(ctx, GPoint(bounds.size.w / 2, older_spinner_y() - s_chat_scroll_offset));
   }
 
   int first = 0;
@@ -6063,6 +6111,23 @@ static void image_retry_timer_callback(void *data) {
   }
 }
 
+static void loader_timer_callback(void *data) {
+  s_loader_timer = NULL;
+  if (!s_loading_older_messages || s_view_state != ViewStateChat) {
+    return;
+  }
+  s_loader_frame++;
+  mark_messages_dirty();
+  s_loader_timer = app_timer_register(OLDER_LOADER_FRAME_MS, loader_timer_callback, NULL);
+}
+
+static void start_loader_animation(void) {
+  if (!s_loader_timer) {
+    s_loader_frame = 0;
+    s_loader_timer = app_timer_register(OLDER_LOADER_FRAME_MS, loader_timer_callback, NULL);
+  }
+}
+
 static void request_older_messages(bool silent) {
   if (s_at_oldest) {
     if (!silent) {
@@ -6106,6 +6171,7 @@ static void request_older_messages(bool silent) {
     s_older_anchor_y = 0;
   }
   s_loading_older_messages = true;
+  start_loader_animation();
   s_message_request_attempts = 1;
   if (!silent) {
     show_status("Loading older...");
@@ -6365,6 +6431,23 @@ static void send_selected_chat_action(const char *command) {
   send_command(command, s_chats[s_selected_chat].id, NULL, NULL, NULL);
 }
 
+// Message text follows the watch's notification text size (Settings > Notifications > Text Size),
+// the size a notification's body is in: Gothic 18, 24 Bold or 28 (Chat's biggest, for Extra Large too).
+static uint8_t system_text_size(void) {
+  PreferredContentSize size = alerts_preferences_get_notification_content_size();
+  if (size == NotificationContentSizeSystem) {
+    size = system_theme_get_content_size();
+  }
+  switch (size) {
+    case PreferredContentSizeSmall:
+      return 1;
+    case PreferredContentSizeMedium:
+      return 2;
+    default:
+      return 3;
+  }
+}
+
 static void appearance_load(void) {
   Appearance saved;
   if (persist_read_data(APPEARANCE_KEY, &saved, sizeof(saved)) == (int)sizeof(saved) &&
@@ -6373,6 +6456,7 @@ static void appearance_load(void) {
   } else {
     appearance_defaults(&s_appearance);
   }
+  s_appearance.text_size = system_text_size();
   theme_apply();
 }
 
@@ -6417,7 +6501,7 @@ static void appearance_receive(DictionaryIterator *iter) {
   Appearance *a = &s_appearance;
   a->dark = tuple_int(iter, MESSAGE_KEY_Theme, a->dark) == 1;
   a->pattern = PG_MAX(0, PG_MIN(PatternLast, tuple_int(iter, MESSAGE_KEY_BgPattern, a->pattern)));
-  a->text_size = PG_MAX(0, PG_MIN(3, tuple_int(iter, MESSAGE_KEY_TextSize, a->text_size)));
+  a->text_size = system_text_size();  // the watch's setting, not the phone's
   a->bold = tuple_int(iter, MESSAGE_KEY_TextBold, a->bold) == 1;
   a->photos = tuple_int(iter, MESSAGE_KEY_ShowPhotos, a->photos) == 1;
   a->big_emoji = tuple_int(iter, MESSAGE_KEY_BigEmoji, a->big_emoji) == 1;
@@ -6731,6 +6815,7 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
     selected_id[0] = '\0';
 
     if (loading_older && count == 0) {
+      s_touch_paging = false;
       s_loading_older_messages = false;
       s_older_anchor_id[0] = '\0';
       s_older_anchor_y = 0;
@@ -6808,6 +6893,13 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
         show_status(s_current_chat_title);
         mark_messages_dirty();
       }
+      // A page without the message the user is on is asked again, but not forever: a phone that
+      // keeps sending such pages would keep the radio busy and the spinner turning.
+      if (++s_page_miss_count > 2) {
+        s_page_miss_count = 0;
+        s_touch_paging = false;
+        return;
+      }
       if (loading_older && !s_at_oldest) {
         request_older_messages(true);
       } else if (loading_newer && !s_at_newest) {
@@ -6816,6 +6908,9 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
       return;
     }
 
+    if (staged_load) {
+      s_page_miss_count = 0;
+    }
     if (staged_load && !live_anchor && fallback_id[0]) {
       copy_cstr(selected_id, sizeof(selected_id), fallback_id);
     }
@@ -6861,6 +6956,18 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
       if (staged_load && preserved_index >= 0) {
         GRect bounds = layer_get_bounds(s_messages_root);
         int margin = 6;
+        if (loading_older && s_touch_paging && live_anchor) {
+          // A drag fetched them: the message under the finger stays put, so the drag carries on
+          s_touch_paging = false;
+          set_chat_scroll_offset(live_anchor_scroll_offset + (s_message_y[preserved_index] - live_anchor_y),
+                                 false);
+          show_status(s_current_chat_title);
+          mark_messages_dirty();
+          s_older_anchor_y = 0;
+          s_newer_anchor_y = 0;
+          request_next_image();
+          return;
+        }
         if (loading_older && !loading_silent && preserved_index > 0) {
           s_selected_message = preserved_index - 1;
           set_chat_scroll_offset(s_message_y[s_selected_message] - margin, false);
@@ -8713,6 +8820,18 @@ static void touch_chat_drag(int dy) {
   finish_pending_chat_scroll();
   set_chat_scroll_offset_quiet(s_chat_scroll_offset - dy);
   s_user_scrolled_messages = true;
+  // Within half a screen of the top: fetch older messages now, without waiting for the finger to
+  // lift, anchored on the top message on screen so the drag carries on into them
+  if (dy > 0 && !s_at_oldest && !s_loading_older_messages && s_message_count > 0 &&
+      s_chat_scroll_offset < visible_message_height(layer_get_bounds(s_messages_root)) / 2) {
+    int top = 0;
+    while (top < s_message_count - 1 && s_message_y[top] + s_message_h[top] <= s_chat_scroll_offset) {
+      top++;
+    }
+    s_selected_message = top;
+    s_touch_paging = true;
+    request_older_messages(false);
+  }
   mark_messages_dirty();
 }
 
