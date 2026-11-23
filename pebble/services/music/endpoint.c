@@ -7,13 +7,12 @@
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/music_ams.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
-
-#include <comm/ble/kernel_le_client/ams/ams.h>
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 

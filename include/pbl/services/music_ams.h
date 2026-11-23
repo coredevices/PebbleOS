@@ -5,7 +5,8 @@
 
 #include <stdint.h>
 
-//! @file ams.h The session with the Apple Media Service of the phone: it registers for the
+//! @file
+//! The session with the Apple Media Service of the phone: it registers for the
 //! player, the queue and the track with the AMS client, and is the music server the music
 //! service controls the phone through. KernelMain only.
 

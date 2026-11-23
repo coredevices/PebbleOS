@@ -13,6 +13,7 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notifications.h>
 #include <pbl/services/phone_call_util.h>
@@ -29,7 +30,6 @@
 #include <applib/ui/status_bar_layer.h>
 #include <apps/system/timeline/pin_window.h>
 #include <apps/system/timeline/timeline.h>
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <kernel/event_loop.h>
 #include <kernel/ui/modals/modal_manager.h>
 #include <process_management/app_install_manager.h>

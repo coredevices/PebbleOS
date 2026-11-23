@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <clar.h>
-#include <comm/ble/kernel_le_client/ams/ams_util.h>
+#include <services/music/ams_util.h>
 
 // Stubs
 ///////////////////////////////////////////////////////////

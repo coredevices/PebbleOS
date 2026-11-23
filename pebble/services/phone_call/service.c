@@ -7,13 +7,13 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/notifications/alerts.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_phone_call.h>
 #include <pbl/services/phone_call.h>
 #include <pbl/services/phone_pp.h>
 #include <pbl/util/testing.h>
 
 #include <applib/event_service_client.h>
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <popups/phone_ui.h>
 
 PBL_LOG_MODULE_DEFINE(service_phone_call, CONFIG_SERVICE_PHONE_CALL_LOG_LEVEL);

@@ -15,6 +15,7 @@
 #include <pbl/services/notifications/action_chaining_window.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
@@ -40,7 +41,6 @@
 #include <applib/ui/window_manager.h>
 #include <applib/voice/voice_window.h>
 #include <applib/voice/voice_window_private.h>
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/ui/kernel_ui.h>

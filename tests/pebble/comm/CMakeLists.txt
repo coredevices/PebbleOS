@@ -3,8 +3,8 @@
 
 pbl_clar_test(test_ams
   SOURCES
-    pebble/comm/ble/kernel_le_client/ams/ams_util.c
-    pebble/comm/ble/kernel_le_client/ams/ams.c
+    pebble/services/music/ams_util.c
+    pebble/services/music/ams.c
     subsys/bluetooth/clients/ams/ams.c
     pebble/services/music/service.c
     tests/fakes/fake_events.c
@@ -16,14 +16,14 @@ pbl_clar_test(test_ams
 
 pbl_clar_test(test_ams_util
   SOURCES
-    pebble/comm/ble/kernel_le_client/ams/ams_util.c
+    pebble/services/music/ams_util.c
 )
 
 pbl_clar_test(test_ancs
   MODULES timeline_item time rand
   SOURCES
-    pebble/comm/ble/kernel_le_client/ancs/ancs.c
-    pebble/comm/ble/kernel_le_client/ancs/ancs_app_name_storage.c
+    pebble/services/notifications/ancs/ancs.c
+    pebble/services/notifications/ancs/ancs_app_name_storage.c
     subsys/bluetooth/clients/ancs/ancs.c
     tests/fakes/fake_events.c
     tests/fakes/fake_gattc_service.c

@@ -3,11 +3,10 @@
 
 #include <pbl/bluetooth/ancs.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_notifications_util.h>
 #include <pbl/services/notifications/ancs/nexmo.h>
 #include <pbl/util/testing.h>
-
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 
 PBL_LOG_MODULE_DECLARE(service_notifications, CONFIG_SERVICE_NOTIFICATIONS_LOG_LEVEL);
 

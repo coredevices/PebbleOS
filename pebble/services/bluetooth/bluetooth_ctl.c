@@ -16,11 +16,11 @@
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/dis.h>
+#include <pbl/services/bluetooth/gateway.h>
 #include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 
-#include <comm/ble/kernel_le_client/kernel_le_client.h>
 #include <comm/qemu/pp_transport.h>
 #include <kernel/events.h>
 
@@ -80,7 +80,7 @@ static void prv_comm_start(void) {
   if (s_comm_is_running) {
     bt_link_init();
     bt_advertising_init();
-    kernel_le_client_init();
+    bt_gateway_init();
     bt_local_id_configure_driver();
 #ifdef CONFIG_BT_SERVICE_BAS
     bt_battery_level_start();
@@ -101,7 +101,7 @@ static void prv_comm_stop(void) {
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
 #endif
-  kernel_le_client_deinit();
+  bt_gateway_deinit();
   bt_link_deinit();
   bt_advertising_deinit();
 #ifdef CONFIG_QEMU_SERIAL
