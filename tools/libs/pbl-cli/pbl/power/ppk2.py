@@ -25,6 +25,9 @@ MIN_SAMPLE_RATIO = 0.95
 # How far, and how often, the supply is lowered at a time.
 VOLTAGE_STEP_DOWN_MV = 50
 VOLTAGE_STEP_S = 0.05
+# How long to wait for the PPK2 to come back on USB, and how often to look.
+APPEAR_TIMEOUT_S = 15.0
+APPEAR_POLL_S = 0.5
 
 
 def _aligned(data):
@@ -48,20 +51,22 @@ class Ppk2(Supply):
     measures = True
 
     def __init__(self, port="auto", voltage_mv=None):
-        from ppk2_api.ppk2_api import PPK2_API
-
         super().__init__(port)
-        ports = PPK2_API.list_devices() if port == "auto" else [port]
-        for candidate in ports:
-            ppk = PPK2_API(
-                candidate, timeout=READ_TIMEOUT_S, write_timeout=1, exclusive=True
-            )
-            metadata = self._read_metadata(ppk)
-            if metadata is not None:
+        # The PPK2 resets when its port closes: it drops off USB and comes
+        # back a few seconds later, so the session before may have just left.
+        deadline = time.monotonic() + APPEAR_TIMEOUT_S
+        while True:
+            ports, errors, found = self._open(port)
+            if found is not None:
                 break
-            ppk.ser.close()
-        else:
-            raise PowerError(f"no PPK2 answering on {', '.join(ports) or 'any port'}")
+            if time.monotonic() >= deadline:
+                what = ", ".join(ports) or "any port"
+                raise PowerError(
+                    f"no PPK2 answering on {what}"
+                    + (f": {'; '.join(errors)}" if errors else "")
+                )
+            time.sleep(APPEAR_POLL_S)
+        candidate, ppk, metadata = found
 
         # ppk2-api's own reader keeps only the last chunk of the metadata,
         # losing the calibration.
@@ -77,6 +82,34 @@ class Ppk2(Supply):
         if voltage_mv is None:
             raise PowerError(f"the PPK2 on {candidate} reports no voltage: pass one")
         self.set_voltage(voltage_mv)
+
+    @classmethod
+    def _open(cls, port):
+        """Look for the PPK2 once: the ports looked at, the errors on them,
+        and (port, ppk, metadata) for the one that answered, or None."""
+        import serial
+        from ppk2_api.ppk2_api import PPK2_API
+
+        ports = PPK2_API.list_devices() if port == "auto" else [port]
+        errors = []
+        for candidate in ports:
+            try:
+                ppk = PPK2_API(
+                    candidate, timeout=READ_TIMEOUT_S, write_timeout=1, exclusive=True
+                )
+            except (serial.SerialException, OSError) as e:
+                errors.append(f"{candidate}: {e}")
+                continue
+            try:
+                metadata = cls._read_metadata(ppk)
+            except (serial.SerialException, OSError) as e:
+                errors.append(f"{candidate}: {e}")
+                metadata = None
+            if metadata is not None:
+                return ports, errors, (candidate, ppk, metadata)
+            with contextlib.suppress(Exception):
+                ppk.ser.close()
+        return ports, errors, None
 
     def set_voltage(self, voltage_mv):
         # A large step down resets the PPK2 (it drops off USB); small ones do not.
