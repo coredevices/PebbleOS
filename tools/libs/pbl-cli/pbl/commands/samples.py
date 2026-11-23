@@ -48,6 +48,12 @@ class Samples(PblCommand):
             "-l", "--list", action="store_true", help="List the samples and exit"
         )
         parser.add_argument(
+            "--integration",
+            action="store_true",
+            help="Only the samples that name the board in their integration "
+            "boards, or name none, and only build those marked build_only",
+        )
+        parser.add_argument(
             "--build-only",
             action="store_true",
             help="Build the samples without running",
@@ -79,7 +85,7 @@ class Samples(PblCommand):
         failed = []
         counts = {}
         for sample in found:
-            reason = self._skip_reason(sample, args.board)
+            reason = self._skip_reason(sample, args.board, args.integration)
             if reason:
                 outcome = "skipped"
             else:
@@ -103,9 +109,11 @@ class Samples(PblCommand):
         self.inf(f"{args.board}: {summary}", color="red" if failed else "green")
         return 1 if failed else 0
 
-    def _skip_reason(self, sample, board):
+    def _skip_reason(self, sample, board, integration):
         if not sample.supports(board):
             return f"not for {board}"
+        if integration and not sample.integrates(board):
+            return f"{board} is not an integration board"
         try:
             missing = sample.missing_roles(self.topdir, board)
         except samples.SampleError as e:
@@ -135,7 +143,7 @@ class Samples(PblCommand):
         if rc:
             self._show(log_path)
             return "failed"
-        if args.build_only:
+        if args.build_only or (args.integration and sample.build_only):
             return "built"
 
         try:

@@ -16,6 +16,8 @@ A sample is a directory with a ``sample.yml`` next to its ``CMakeLists.txt``:
     skip: [native_emery]
     roles: [accel]
     addons: [sifli_lcm_1p85]
+    integration: [qemu_emery, asterix]
+    build_only: true
 
 ``expect`` is what makes the sample a test: the lines its console has to
 print, in that order, with any others in between, and before it boots a
@@ -24,7 +26,10 @@ seconds it gets (default 10). ``boards`` limits it to the boards that have
 what it needs (default: all of them), and ``skip`` names those that lack it.
 ``roles`` names the roles it uses: boards without them, after the board's and
 the sample's roles files, are skipped too. ``addons`` are plugged into the
-board, from ``boards/addons``, and give it roles too.
+board, from ``boards/addons``, and give it roles too. ``integration`` names
+the boards it covers enough to check on: with ``--integration`` it is only
+built and run on those (default: every board it is for), and with
+``build_only`` it is only built.
 """
 
 import os
@@ -42,7 +47,17 @@ DEFAULT_TIMEOUT = 10
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 _BOOT = re.compile(r"\*\*\* Booting PebbleOS ")
-_KEYS = {"description", "expect", "timeout", "boards", "skip", "roles", "addons"}
+_KEYS = {
+    "description",
+    "expect",
+    "timeout",
+    "boards",
+    "skip",
+    "roles",
+    "addons",
+    "integration",
+    "build_only",
+}
 
 
 class SampleError(Exception):
@@ -61,11 +76,18 @@ class Sample:
     skip: tuple = ()
     roles: tuple = ()
     addons: tuple = ()
+    integration: tuple = ()
+    build_only: bool = False
 
     def supports(self, board):
         """Whether the sample is for ``board``, given as ``name[@revision]``."""
         name = board.partition("@")[0]
         return name not in self.skip and (not self.boards or name in self.boards)
+
+    def integrates(self, board):
+        """Whether ``board`` is one to check the sample on in integration mode."""
+        name = board.partition("@")[0]
+        return not self.integration or name in self.integration
 
     def missing_roles(self, srcdir, board):
         """The roles the sample uses that ``board`` gives no device."""
@@ -137,6 +159,7 @@ def load(path, name=None):
         ("skip", "board"),
         ("roles", "role"),
         ("addons", "add-on"),
+        ("integration", "board"),
     ):
         lists[key] = data.get(key, [])
         if not isinstance(lists[key], list) or not all(
@@ -146,7 +169,11 @@ def load(path, name=None):
                 f"invalid {manifest}: {key} must be a list of {what} names"
             )
 
-    return Sample(
+    build_only = data.get("build_only", False)
+    if not isinstance(build_only, bool):
+        raise SampleError(f"invalid {manifest}: build_only must be true or false")
+
+    sample = Sample(
         name=name or os.path.basename(os.path.abspath(path)),
         path=os.path.abspath(path),
         description=description.strip(),
@@ -156,7 +183,16 @@ def load(path, name=None):
         skip=tuple(lists["skip"]),
         roles=tuple(lists["roles"]),
         addons=tuple(lists["addons"]),
+        integration=tuple(lists["integration"]),
+        build_only=build_only,
     )
+    unsupported = [b for b in sample.integration if not sample.supports(b)]
+    if unsupported:
+        raise SampleError(
+            f"invalid {manifest}: integration boards it is not for: "
+            f"{', '.join(unsupported)}"
+        )
+    return sample
 
 
 def find(root, paths=()):

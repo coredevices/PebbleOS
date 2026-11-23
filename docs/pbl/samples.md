@@ -17,6 +17,11 @@ Each sample is built in a directory of its own,
 console of a sample when a line it should print does not come; `--verbose`
 shows it for every sample.
 
+`--integration` keeps to the samples that name the board in their
+`integration` boards, or name none, so that each is checked on a few boards
+that cover it instead of on all of them, and only builds those marked
+`build_only`. CI checks the samples that way.
+
 {doc}`../samples/index` lists the samples and covers writing one.
 
 ## Options
