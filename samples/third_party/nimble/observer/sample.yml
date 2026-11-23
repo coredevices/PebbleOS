@@ -4,4 +4,4 @@ expect:
   - 'observer: scanning for 5 seconds'
   - 'observer: \d+ devices? found'
   - 'Sample done'
-integration: [qemu_emery, asterix, obelix, sf32lb57_dpi_hdk]
+integration: [qemu_emery, asterix, obelix@pvt, sf32lb57_dpi_hdk]

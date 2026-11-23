@@ -7,4 +7,4 @@ expect:
   - 'Sample done'
 timeout: 20
 roles: [touch]
-integration: [qemu_emery, obelix]
+integration: [qemu_emery, obelix@pvt]

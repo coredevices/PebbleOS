@@ -4,4 +4,4 @@ expect:
   - 'sha256: 56 bytes, two blocks: 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1'
   - 'sha256: 1000 bytes in uneven chunks, the same as in one go: yes'
   - 'Sample done'
-integration: [qemu_emery, obelix]
+integration: [qemu_emery, obelix@pvt]

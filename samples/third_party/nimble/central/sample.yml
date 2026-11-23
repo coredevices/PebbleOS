@@ -1,4 +1,4 @@
 description: A central that finds the peripheral sample, reads and writes its message and follows its counter
 expect:
   - 'central: scanning for the peripheral sample'
-integration: [qemu_emery, asterix, obelix, sf32lb57_dpi_hdk]
+integration: [qemu_emery, asterix, obelix@pvt, sf32lb57_dpi_hdk]
