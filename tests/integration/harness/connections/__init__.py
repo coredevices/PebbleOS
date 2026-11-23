@@ -117,12 +117,14 @@ class Connection(ABC):
 # The version response the harness answers with: a phone app (on Android
 # unless a test's phone is connected), with every protocol capability but
 # settings sync unless asked for: the harness leaves the watch's write-backs
-# unanswered, and the watch would retry them for minutes.
+# unanswered, and the watch would retry them for minutes. Nor 64-bit times,
+# as libpebble2 only speaks the 32-bit formats.
 PHONE_OS_UNKNOWN = 0
 PHONE_OS_IOS = 1
 PHONE_OS_ANDROID = 2
 SETTINGS_SYNC_SUPPORT = 1 << 23
-PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~SETTINGS_SYNC_SUPPORT
+TIME64_SUPPORT = 1 << 29
+PHONE_CAPABILITIES = 0xFFFFFFFFFFFFFFFF & ~(SETTINGS_SYNC_SUPPORT | TIME64_SUPPORT)
 
 
 def _phone_app_version(platform, settings_sync=False):

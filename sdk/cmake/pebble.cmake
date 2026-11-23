@@ -90,7 +90,9 @@ function(_pebble_platform p)
   target_compile_definitions(pebble_${p} INTERFACE
     ${PEBBLE_${p}_DEFINES}
     $<IF:$<CONFIG:Debug>,PBL_DEBUG,RELEASE>
-    $<$<BOOL:${PEBBLE_${p}_OWN_TIME_H}>:_TIME_H_;time_t=long>
+    $<$<BOOL:${PEBBLE_${p}_OWN_TIME_H}>:_TIME_H_>
+    # Frozen platforms keep the 32-bit time_t of their firmware.
+    $<$<AND:$<BOOL:${PEBBLE_${p}_OWN_TIME_H}>,$<BOOL:${PEBBLE_${p}_FROZEN}>>:time_t=long>
   )
   target_include_directories(pebble_${p} INTERFACE
     ${PEBBLE_${p}_SDK_INCLUDE}

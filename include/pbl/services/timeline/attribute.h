@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <time.h>
 
 #include <pbl/util/string_list.h>
 
@@ -227,6 +228,8 @@ typedef struct {
     struct pbl_string_list *string_list;
     /** Uint32List value. */
     Uint32List *uint32_list;
+    /** Time value (@ref AttributeIdLastUpdated, @ref AttributeIdTimestamp, ...). */
+    time_t time;
   };
 } Attribute;
 
@@ -307,6 +310,15 @@ void attribute_list_add_cstring(AttributeList *list, AttributeId id, const char 
  * @param uint32 Value.
  */
 void attribute_list_add_uint32(AttributeList *list, AttributeId id, uint32_t uint32);
+
+/**
+ * @brief Add a time attribute (@ref AttributeIdLastUpdated, @ref AttributeIdTimestamp, ...).
+ *
+ * @param list List to add to.
+ * @param id Attribute id.
+ * @param time Value.
+ */
+void attribute_list_add_time(AttributeList *list, AttributeId id, time_t time);
 
 /**
  * @brief Add a resource id attribute, or replace the value of an existing one.
@@ -433,6 +445,16 @@ uint8_t attribute_get_uint8(const AttributeList *attr_list, AttributeId id, uint
  */
 uint32_t attribute_get_uint32(const AttributeList *attr_list, AttributeId id,
                               uint32_t default_value);
+
+/**
+ * @brief Get the value of a time attribute.
+ *
+ * @param attr_list List to search.
+ * @param id Attribute id.
+ * @param default_value Value returned if the attribute is missing.
+ * @return The value, or @p default_value.
+ */
+time_t attribute_get_time(const AttributeList *attr_list, AttributeId id, time_t default_value);
 
 /**
  * @brief Get a Uint32List attribute.

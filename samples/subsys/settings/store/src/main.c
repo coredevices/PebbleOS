@@ -19,7 +19,7 @@
 static struct pbl_fs_mount s_mount = {.mnt_point = "/", .ops = &pbl_fs_pfs_ops};
 static struct pbl_settings_file s_file;
 
-static void prv_changed(const void *key, size_t key_len, uint32_t last_modified, void *user_data) {
+static void prv_changed(const void *key, size_t key_len, time_t last_modified, void *user_data) {
   printf("settings: changed %.*s\n", (int)key_len, (const char *)key);
 }
 

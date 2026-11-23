@@ -851,8 +851,8 @@ static ActivitySession *s_health_sessions;
 static time_t s_health_sessions_sleep_time;
 static time_t s_health_sessions_awake_time;
 
-static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_start,
-                                    pbl_time32_t time_end, void *context) {
+static bool prv_activity_iterate_cb(HealthActivity activity, time_t time_start, time_t time_end,
+                                    void *context) {
   if (s_health_sessions_count >= s_health_sessions_max) {
     return false;
   }
@@ -867,14 +867,12 @@ static bool prv_activity_iterate_cb(HealthActivity activity, pbl_time32_t time_s
     }
   }
 
-  const time_t start = time_start;
-  const time_t end = time_end;
   char time_start_text[64];
-  struct pbl_tm *local_tm = pbl_override_localtime(&start);
+  struct pbl_tm *local_tm = pbl_override_localtime(&time_start);
   pbl_strftime_r(time_start_text, sizeof(time_start_text), "%F %r", local_tm);
 
   char time_end_text[64];
-  local_tm = pbl_override_localtime(&end);
+  local_tm = pbl_override_localtime(&time_end);
   pbl_strftime_r(time_end_text, sizeof(time_end_text), "%F %r", local_tm);
 
   PBL_LOG_DBG("Got activity: %d %s to %s (%d min)", (int)activity, time_start_text, time_end_text,
@@ -1735,8 +1733,8 @@ void test_activity__get_minute_history(void) {
   for (int i = 0; i < ALG_MINUTES_PER_FILE_RECORD; i++) {
     // Ask for the last ALG_MINUTES_PER_RECORD minutes of data
     num_records = ALG_MINUTES_PER_FILE_RECORD;
-    pbl_time32_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
-    pbl_time32_t end_time = utc_sec;
+    time_t start_time = oldest_to_fetch + (i * PBL_SEC_PER_MIN);
+    time_t end_time = utc_sec;
     HealthMinuteData received_records[ALG_MINUTES_PER_FILE_RECORD];
     num_records =
         health_service_get_minute_history(received_records, num_records, &start_time, &end_time);
@@ -2088,6 +2086,84 @@ void test_activity__migrate_settings_v2(void) {
   cl_assert_equal_i(loaded_sessions[0].type, ActivitySessionType_Walk);
   cl_assert_equal_i(loaded_sessions[0].step_data.steps, 4200);
   cl_assert_equal_i(loaded_sessions[0].step_data.distance_meters, 3000);
+}
+
+void test_activity__load_32_bit_times(void) {
+  // Layout of a stored session before times went 64-bit
+  typedef struct PBL_PACKED {
+    int32_t start_utc;
+    uint16_t length_min;
+    uint8_t type;
+    uint8_t flags;
+    ActivitySessionDataStepping step_data;
+  } ActivitySessionV1;
+
+  // Layout of a history record as earlier firmware reads it
+  typedef struct {
+    uint32_t utc_sec;
+    uint32_t values[ACTIVITY_HISTORY_DAYS];
+  } ActivitySettingsValueHistoryV3;
+
+  // Build a version 3 settings file the way earlier firmware wrote it
+  pbl_fs_unlink(ACTIVITY_SETTINGS_FILE_NAME);
+  struct pbl_settings_file file;
+  cl_assert_equal_i(
+      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), 0);
+  ActivitySettingsKey key = ActivitySettingsKeyVersion;
+  const uint16_t version = 3;
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &version, sizeof(version)), 0);
+  key = ActivitySettingsKeyStepCountHistory;
+  const ActivitySettingsValueHistoryV3 history = {
+    .utc_sec = pbl_realtime(),
+    .values = {70000, 300, 200, 100},
+  };
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), &history, sizeof(history)), 0);
+
+  ActivitySessionV1 sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT] = {};
+  sessions[0] = (ActivitySessionV1){
+    .start_utc = pbl_realtime() - PBL_SEC_PER_HOUR,
+    .length_min = 42,
+    .type = ActivitySessionType_Walk,
+    .step_data = {.steps = 4200, .distance_meters = 3000},
+  };
+  key = ActivitySettingsKeyStoredActivities;
+  cl_assert_equal_i(pbl_settings_set(&file, &key, sizeof(key), sessions, sizeof(sessions)), 0);
+
+  const uint32_t last_step_utc = pbl_realtime() - 2 * PBL_SEC_PER_HOUR;
+  key = ActivitySettingsKeyLastStepActivityUTC;
+  cl_assert_equal_i(
+      pbl_settings_set(&file, &key, sizeof(key), &last_step_utc, sizeof(last_step_utc)), 0);
+  pbl_settings_close(&file);
+
+  prv_activity_init_and_set_enabled(true);
+
+  uint32_t session_entries = ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT;
+  ActivitySession loaded_sessions[ACTIVITY_MAX_ACTIVITY_SESSIONS_COUNT];
+  cl_assert(activity_get_sessions(&session_entries, loaded_sessions));
+  cl_assert_equal_i(session_entries, 1);
+  cl_assert(loaded_sessions[0].start_utc == sessions[0].start_utc);
+  cl_assert_equal_i(loaded_sessions[0].length_min, 42);
+  cl_assert_equal_i(loaded_sessions[0].type, ActivitySessionType_Walk);
+  cl_assert_equal_i(loaded_sessions[0].step_data.steps, 4200);
+  cl_assert_equal_i(loaded_sessions[0].step_data.distance_meters, 3000);
+
+  ActivityState *state = activity_private_state();
+  cl_assert(state->logged_step_activity_exit_at_utc == last_step_utc);
+
+  // The history keeps the layout earlier firmware reads, in a version 3 file
+  ASSERT_EQUAL_METRIC_HISTORY(ActivityMetricStepCount,
+                              ((const uint32_t[ACTIVITY_HISTORY_DAYS]){70000, 300, 200, 100}));
+  cl_assert_equal_i(
+      pbl_settings_open(&file, ACTIVITY_SETTINGS_FILE_NAME, ACTIVITY_SETTINGS_FILE_LEN), 0);
+  key = ActivitySettingsKeyStepCountHistory;
+  cl_assert_equal_i(pbl_settings_get_len(&file, &key, sizeof(key)),
+                    sizeof(ActivitySettingsValueHistoryV3));
+  key = ActivitySettingsKeyVersion;
+  uint16_t stored_version = 0;
+  cl_assert_equal_i(
+      pbl_settings_get(&file, &key, sizeof(key), &stored_version, sizeof(stored_version)), 0);
+  cl_assert_equal_i(stored_version, 3);
+  pbl_settings_close(&file);
 }
 
 // ----------------------------------------------------------------------------

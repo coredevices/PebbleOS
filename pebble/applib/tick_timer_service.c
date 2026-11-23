@@ -12,6 +12,7 @@
 #include <pbl/services/clock.h>
 #include <pbl/services/event_service.h>
 #include <pbl/services/tick_timer.h>
+#include <pbl/util/time.h>
 
 #include <kernel/events.h>
 #include <kernel/kernel_applib_state.h>
@@ -42,7 +43,8 @@ static void do_handle(PebbleEvent *e, void *context) {
 
   TimeUnits units_changed = 0;
   struct pbl_tm currtime;
-  const time_t tick_time = e->clock_tick.tick_time;
+  // Events hold the low 32 bits of the time
+  const time_t tick_time = pbl_time_from_low32(e->clock_tick.tick_time, sys_get_time());
   sys_localtime_r(&tick_time, &currtime);
 
   if (!state->first_tick) {
