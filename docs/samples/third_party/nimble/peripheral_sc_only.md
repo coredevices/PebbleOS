@@ -11,9 +11,8 @@ authenticated key. The sample also asks a peer to secure the link as soon as
 it connects. A bonded peer that has lost its keys is forgotten, and pairs
 again.
 
-Bonds are kept by NimBLE's config store, which PebbleOS saves in a settings
-file: the sample mounts the filesystem first, and lists the bonded peers at
-boot. The board overlays give each board a filesystem partition.
+Bonds are kept by NimBLE's config store in RAM, its default without settings:
+they are lost when the watch resets, and a peer that kept its own pairs again.
 
 ```{pebbleos-sample}
 :path: samples/third_party/nimble/peripheral_sc_only

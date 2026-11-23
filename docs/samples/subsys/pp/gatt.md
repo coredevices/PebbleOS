@@ -40,8 +40,9 @@ The sample handles the GAP events of its connection itself, and so hands the
 notifications it receives to the listeners with `pbl_bt_gattc_notify_rx()`,
 which is how the transport gets the data of the phone.
 
-The bond is kept by NimBLE's config store in a settings file: the board
-overlays give each board a filesystem partition.
+The bond is kept by NimBLE's config store in RAM, its default without
+settings: it is lost when the watch resets, and the phone, which keeps its
+own, then has to forget the watch and pair again.
 
 ```{pebbleos-sample}
 :path: samples/subsys/pp/gatt

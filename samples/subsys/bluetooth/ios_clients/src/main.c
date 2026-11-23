@@ -10,8 +10,6 @@
 #include <pbl/bluetooth/ams.h>
 #include <pbl/bluetooth/ancs.h>
 #include <pbl/bluetooth/clients/gatt.h>
-#include <pbl/fs/fs.h>
-#include <pbl/fs/pfs.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/util/size.h>
@@ -25,7 +23,6 @@
 
 #define NAME "PebbleOS"
 
-static struct pbl_fs_mount s_mount = {.mnt_point = "/", .ops = &pbl_fs_pfs_ops};
 static PBL_SEM_DEFINE(s_synced, 0, 1);
 static uint8_t s_own_addr_type;
 
@@ -134,13 +131,6 @@ static void prv_on_sync(void) {
 
 int main(void) {
   int rc;
-
-  /* The store keeps the bond in a settings file. */
-  rc = pbl_fs_mount(&s_mount);
-  if (rc != 0) {
-    printf("ios_clients: mount failed (%d)\n", rc);
-    return rc;
-  }
 
   nimble_port_init();
   ble_hs_cfg.sync_cb = prv_on_sync;
