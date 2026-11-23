@@ -55,7 +55,9 @@ const struct pbl_clockevent *const pbl_system_clockevent = &s_systick;
 
 static int prv_init(const struct pbl_device *dev) {
   prv_stop();
-  pbl_modifyl(SHPR3_PRI_15_MASK, (uint32_t)PBL_IRQ_PRIO_KERNEL << SHPR3_PRI_15_SHIFT, SHPR3);
+  pbl_modifyl(SHPR3_PRI_15_MASK,
+              (uint32_t)ARCH_IRQ_PRIO_HW(CONFIG_TIMER_ARM_SYSTICK_IRQ_PRIO) << SHPR3_PRI_15_SHIFT,
+              SHPR3);
   pbl_clockevent_set_hz(&s_systick, pbl_cycles_per_sec());
 
   return 0;

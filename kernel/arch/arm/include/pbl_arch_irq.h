@@ -13,31 +13,47 @@
 #include <pbl_arch_mmio.h>
 #include <soc_irqs.h>
 
-#define ARCH_IRQ_PRIO_BITS   PBL_DT_PROP_NVIC_ARM_NUM_IRQ_PRIORITY_BITS
-#define ARCH_IRQ_PRIO_LOWEST ((1U << ARCH_IRQ_PRIO_BITS) - 1U)
+#define ARCH_IRQ_PRIO_BITS  PBL_DT_PROP_NVIC_ARM_NUM_IRQ_PRIORITY_BITS
+#define ARCH_IRQ_PRIO_SHIFT (8U - ARCH_IRQ_PRIO_BITS)
+
+// Controller levels: the faults take the most urgent one, so that they are taken in an ISR or
+// with the kernel locked, then come the zero-latency interrupts, if any, then all the others,
+// priority 0 being the first level the kernel lock masks.
+#define ARCH_IRQ_PRIO_FAULT 0U
+#define ARCH_IRQ_PRIO_ZLI   1U
+#ifdef CONFIG_KERNEL_ZERO_LATENCY_IRQS
+#define ARCH_IRQ_PRIO_OFFSET 2U
+#else
+#define ARCH_IRQ_PRIO_OFFSET 1U
+#endif
+#define ARCH_IRQ_PRIO_LOWEST ((1U << ARCH_IRQ_PRIO_BITS) - 1U - ARCH_IRQ_PRIO_OFFSET)
+
+// As the priority registers and BASEPRI take them
+#define ARCH_IRQ_PRIO_FAULT_HW (ARCH_IRQ_PRIO_FAULT << ARCH_IRQ_PRIO_SHIFT)
+#define ARCH_IRQ_PRIO_HW(_p)   (((_p) + ARCH_IRQ_PRIO_OFFSET) << ARCH_IRQ_PRIO_SHIFT)
+#define ARCH_IRQ_PRIO_LOCK_HW  ARCH_IRQ_PRIO_HW(0U)
+#define ARCH_IRQ_PRIO_KERNEL   (0xFFU & ~((1U << ARCH_IRQ_PRIO_SHIFT) - 1U))
 
 struct arch_irq_prio {
   uint16_t irq;
   uint8_t prio;
 };
 
-#define ARCH_IRQ_PRIO_MAX_SYSCALL (CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL >> (8 - ARCH_IRQ_PRIO_BITS))
-
 #define ARCH_IRQ_HANDLER(_n)  ARCH_IRQ_HANDLER_(_n)
 #define ARCH_IRQ_HANDLER_(_n) pbl_isr_##_n
 #define ARCH_IRQ_PRIO(_n)     ARCH_IRQ_PRIO_(_n)
 #define ARCH_IRQ_PRIO_(_n)    pbl_irq_prio_##_n
 
-#define ARCH_IRQ_DECLARE(_n, _name, _prio, _flags)                                             \
-  static_assert((_prio) >= 0 && (_prio) < (1 << ARCH_IRQ_PRIO_BITS),                           \
-                _name ": priority out of range");                                              \
-  static_assert(((_flags) & PBL_IRQ_ZERO_LATENCY) || (_prio) >= ARCH_IRQ_PRIO_MAX_SYSCALL,     \
-                _name ": priority above PBL_IRQ_PRIO_MAX_SYSCALL needs PBL_IRQ_ZERO_LATENCY"); \
-  static const struct arch_irq_prio ARCH_IRQ_PRIO(_n)                                          \
-      PBL_ITERABLE_SECTION(const struct arch_irq_prio, irq_prio, "") = {                       \
-        .irq = (_n),                                                                           \
-        .prio = (_prio),                                                                       \
-  };                                                                                           \
+#define ARCH_IRQ_DECLARE(_n, _name, _prio, _flags)                                                 \
+  static_assert((_prio) >= 0 && (_prio) <= ARCH_IRQ_PRIO_LOWEST, _name ": priority out of range"); \
+  static_assert(!((_flags) & PBL_IRQ_ZERO_LATENCY) || ARCH_IRQ_PRIO_OFFSET > ARCH_IRQ_PRIO_ZLI,    \
+                _name ": PBL_IRQ_ZERO_LATENCY needs CONFIG_KERNEL_ZERO_LATENCY_IRQS");             \
+  static const struct arch_irq_prio ARCH_IRQ_PRIO(_n)                                              \
+      PBL_ITERABLE_SECTION(const struct arch_irq_prio, irq_prio, "") = {                           \
+        .irq = (_n),                                                                               \
+        .prio = ((_flags) & PBL_IRQ_ZERO_LATENCY) ? ARCH_IRQ_PRIO_ZLI                              \
+                                                  : (_prio) + ARCH_IRQ_PRIO_OFFSET,                \
+  };                                                                                               \
   void ARCH_IRQ_HANDLER(_n)(void)
 
 #define ARCH_IRQ_CONNECT(_n, _name, _prio, _isr, _arg, _flags) \
@@ -55,10 +71,6 @@ struct arch_irq_prio {
 #define ARCH_NVIC_ISPR(i) (0xE000E200UL + ((i) * 4U))
 #define ARCH_NVIC_IPR(n)  (0xE000E400UL + (n))
 #define ARCH_NVIC_WORDS   ((CONFIG_NUM_IRQS + 31U) / 32U)
-
-// Priority of the kernel's own interrupts as the NVIC stores it, unimplemented bits clear
-#define ARCH_IRQ_PRIO_KERNEL_HW \
-  (CONFIG_KERNEL_IRQ_PRIO_KERNEL & ~((1U << (8U - ARCH_IRQ_PRIO_BITS)) - 1U))
 
 static PBL_ALWAYS_INLINE unsigned int arch_irq_disable_all(void) {
   unsigned int primask;
@@ -86,7 +98,7 @@ static PBL_ALWAYS_INLINE unsigned int arch_irq_lock(void) {
 
   __asm volatile("mrs %0, basepri\n\tmsr basepri_max, %1\n\tisb"
                  : "=&r"(key)
-                 : "r"(CONFIG_KERNEL_IRQ_PRIO_MAX_SYSCALL)
+                 : "r"(ARCH_IRQ_PRIO_LOCK_HW)
                  : "memory");
 
   return key;
@@ -103,7 +115,7 @@ static PBL_ALWAYS_INLINE bool arch_irq_is_locked(void) {
 
 // The more urgent of the kernel's own priority and the caller's mask
 static PBL_ALWAYS_INLINE uint32_t arch_irq_window_level(uint32_t basepri) {
-  return (basepri != 0U && basepri < ARCH_IRQ_PRIO_KERNEL_HW) ? basepri : ARCH_IRQ_PRIO_KERNEL_HW;
+  return (basepri != 0U && basepri < ARCH_IRQ_PRIO_KERNEL) ? basepri : ARCH_IRQ_PRIO_KERNEL;
 }
 
 static PBL_ALWAYS_INLINE bool arch_irq_window_pending(unsigned int key) {

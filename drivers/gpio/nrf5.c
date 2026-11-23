@@ -293,7 +293,7 @@ static void prv_gpiote_irq_handler(void) {
   }
 }
 
-PBL_IRQ_CONNECT(GPIOTE, 7, prv_gpiote_irq_handler, , 0);
+PBL_IRQ_CONNECT(GPIOTE, CONFIG_GPIO_NRF5_IRQ_PRIO, prv_gpiote_irq_handler, , 0);
 
 int pbl_gpio_nrf5_init(const struct pbl_device *dev) {
   const struct pbl_gpio_nrf5 *gpio =

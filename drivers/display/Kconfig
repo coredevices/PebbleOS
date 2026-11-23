@@ -22,7 +22,7 @@ config DISPLAY_SF32LB_LCDC
 
 config DISPLAY_SF32LB_LCDC_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on DISPLAY_SF32LB_LCDC
     help
       Priority of the controller interrupt.
@@ -42,7 +42,7 @@ config DISPLAY_SF32LB57_LCDC
 
 config DISPLAY_SF32LB57_LCDC_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on DISPLAY_SF32LB57_LCDC
     help
       Priority of the controller interrupt.
