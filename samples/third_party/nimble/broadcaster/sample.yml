@@ -4,3 +4,4 @@ expect:
   - 'broadcaster: advertising'
   - 'broadcaster: counter 5'
   - 'Sample done'
+integration: [qemu_emery, asterix, obelix, sf32lb57_dpi_hdk]

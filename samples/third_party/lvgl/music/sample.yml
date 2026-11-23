@@ -2,3 +2,5 @@ description: The music player demo of LVGL, playing by itself and driven by the 
 expect:
   - 'lvgl: music player on \d+x\d+'
 roles: [display]
+integration: [qemu_emery]
+build_only: true

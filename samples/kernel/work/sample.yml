@@ -9,3 +9,4 @@ expect:
   - 'main: touch work was pending and will not run'
   - 'main: touch work ran 1 time\(s\)'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

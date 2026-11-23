@@ -11,3 +11,4 @@ expect:
   - 'bench: thread create, run, end: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
   - 'bench: work submit to start: avg \d+ cycles \(\d+ ns\), best \d+ cycles'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

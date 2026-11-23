@@ -8,3 +8,4 @@ expect:
   - 'loader: relocation into the header: -EINVAL'
   - 'loader: image larger than its memory: -ENOMEM'
   - 'Sample done'
+integration: [qemu_emery]

@@ -4,3 +4,4 @@ expect:
   - 'peripheral_hr: advertising as PebbleOS HR'
   - 'peripheral_hr: battery at 99%'
 timeout: 20
+integration: [qemu_emery, asterix, obelix, sf32lb57_dpi_hdk]

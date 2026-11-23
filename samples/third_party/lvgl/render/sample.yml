@@ -6,3 +6,5 @@ expect:
   - 'Sample done'
 timeout: 120
 roles: [display]
+integration: [qemu_emery]
+build_only: true

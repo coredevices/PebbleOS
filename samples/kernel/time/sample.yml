@@ -5,3 +5,4 @@ expect:
   - 'time: device ready: yes'
   - 'time: a condition that never holds returns -ETIMEDOUT'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

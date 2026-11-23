@@ -1,3 +1,4 @@
 description: Smallest application in Rust, which prints a message from main()
 expect:
   - 'Hello World! \w+'
+integration: [qemu_emery, qemu_flint]

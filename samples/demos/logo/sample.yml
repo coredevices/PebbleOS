@@ -2,3 +2,4 @@ description: The PebbleOS logo bouncing around. On a touchscreen, a tap turns it
 expect:
   - 'logo: \d+x\d+, bouncing'
 roles: [display, backlight]
+integration: [qemu_emery]

@@ -7,3 +7,4 @@ expect:
   - 'medium: done'
   - 'low: back to its own priority: yes'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

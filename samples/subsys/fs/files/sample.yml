@@ -10,3 +10,4 @@ expect:
   - 'fs: after removing it, stat returns -ENOENT'
   - 'Sample done'
 roles: [flash]
+integration: [qemu_emery]

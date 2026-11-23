@@ -7,3 +7,4 @@ expect:
   - 'pressure: \d+\.\d\d hPa'
   - 'Sample done'
 roles: [pressure]
+integration: [asterix]

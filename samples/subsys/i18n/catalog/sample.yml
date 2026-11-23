@@ -7,3 +7,4 @@ expect:
   - 'i18n: 26 characters, in 16 bytes: Votre montre es'
   - 'i18n: catalog removed: Hello / Watch / Watch / Good night'
   - 'Sample done'
+integration: [qemu_emery]

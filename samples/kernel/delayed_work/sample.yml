@@ -6,3 +6,4 @@ expect:
   - 'button: settled, press 2'
   - 'main: heartbeat stopped after \d beats, pending: no'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

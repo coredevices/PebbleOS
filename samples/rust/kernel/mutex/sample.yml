@@ -5,3 +5,4 @@ expect:
   - 'main: lock held by another thread, 10 ms wait returns Err\(EAGAIN\)'
   - 'main: locked twice, unlocked once, still the owner: yes'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]
