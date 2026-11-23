@@ -8,4 +8,4 @@ expect:
   - 'als: level \d+, \d+ (lux|counts)'
   - 'Sample done'
 roles: [als]
-integration: [qemu_emery, asterix, obelix]
+integration: [qemu_emery, asterix, obelix@pvt]

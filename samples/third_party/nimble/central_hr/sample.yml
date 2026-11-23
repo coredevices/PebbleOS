@@ -1,4 +1,4 @@
 description: A central that finds a heart rate sensor, subscribes to its measurements and prints ten
 expect:
   - 'central_hr: scanning for a heart rate sensor'
-integration: [qemu_emery, asterix, obelix, sf32lb57_dpi_hdk]
+integration: [qemu_emery, asterix, obelix@pvt, sf32lb57_dpi_hdk]

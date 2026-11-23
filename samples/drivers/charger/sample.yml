@@ -8,4 +8,4 @@ expect:
   - 'charger: external power (present|absent), charge [a-z ]+'
   - 'Sample done'
 roles: [charger]
-integration: [qemu_emery, asterix, obelix]
+integration: [qemu_emery, asterix, obelix@pvt]
