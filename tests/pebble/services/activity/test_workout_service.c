@@ -1026,3 +1026,62 @@ void test_workout_service__metrics(void) {
   cl_assert(workout_service_get_current_workout_metrics(&metrics));
   cl_assert_equal_i(3, metrics.hr_samples);
 }
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__hr_active_calories(void) {
+  const uint32_t ten_s_cal = activity_private_compute_active_calories_from_hr(140, 10000);
+  int32_t kcal;
+
+  // An open workout with no steps still burns calories from heart rate
+  cl_assert(workout_service_start_workout(ActivitySessionType_Open));
+  prv_put_bpm_event(140, CONF_HIGH);
+  for (int i = 0; i < 60; i++) {
+    prv_inc_time(10);
+    prv_put_bpm_event(140, CONF_HIGH);
+  }
+  workout_service_get_active_kcalories(&kcal);
+  cl_assert_equal_i(PBL_DIV_ROUND_CLOSEST(60 * ten_s_cal, ACTIVITY_CALORIES_PER_KCAL), kcal);
+
+  // Time while paused isn't counted
+  cl_assert(workout_service_pause_workout(true));
+  prv_inc_time(10);
+  prv_put_bpm_event(140, CONF_HIGH);
+  cl_assert(workout_service_pause_workout(false));
+  int32_t paused_kcal;
+  workout_service_get_active_kcalories(&paused_kcal);
+  cl_assert_equal_i(kcal, paused_kcal);
+
+  // A gap after going off-wrist isn't credited
+  prv_put_offwrist_event();
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
+  prv_put_bpm_event(140, CONF_HIGH);
+  int32_t gap_kcal;
+  workout_service_get_active_kcalories(&gap_kcal);
+  cl_assert_equal_i(kcal, gap_kcal);
+
+  cl_assert(workout_service_stop_workout());
+  cl_assert_equal_i(s_saved_session.step_data.active_kcalories, kcal);
+}
+
+// ---------------------------------------------------------------------------------------
+void test_workout_service__step_calories_win_when_higher(void) {
+  cl_assert(workout_service_start_workout(ActivitySessionType_Run));
+  prv_put_bpm_event(70, CONF_HIGH);
+  prv_inc_time(5 * PBL_SEC_PER_MIN);
+  prv_put_bpm_event(70, CONF_HIGH);
+  prv_inc_steps_and_put_event(900 /* 180 steps per min * 5 mins */);
+
+  // A resting heart rate gives no active calories, so the distance estimate is reported
+  int32_t steps, duration_s, distance_m, bpm;
+  HRZone zone;
+  cl_assert(
+      workout_service_get_current_workout_info(&steps, &duration_s, &distance_m, &bpm, &zone));
+  const int32_t step_kcal =
+      PBL_DIV_ROUND_CLOSEST(activity_private_compute_active_calories(
+                                distance_m * PBL_MM_PER_M, 5 * PBL_SEC_PER_MIN * PBL_MSEC_PER_SEC),
+                            ACTIVITY_CALORIES_PER_KCAL);
+  int32_t kcal;
+  workout_service_get_active_kcalories(&kcal);
+  cl_assert_gt(step_kcal, 0);
+  cl_assert_equal_i(step_kcal, kcal);
+}
