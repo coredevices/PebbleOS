@@ -295,6 +295,9 @@ static uint8_t s_activity_prefs_workout_app_opened = 0;
 #define PREF_KEY_ACTIVITY_SLEEP_ALGORITHM "activitySleepAlgorithm"
 static uint8_t s_activity_sleep_algorithm = ActivitySleepAlgorithm_VanHees;
 
+#define PREF_KEY_ACTIVITY_INSIGHTS_STYLE "activityInsightsStyle"
+static uint8_t s_activity_insights_style = ActivityInsightsStyle_Standard;
+
 #define PREF_KEY_ALARMS_APP_OPENED "alarmsAppOpened"
 static uint8_t s_alarms_app_opened = 0;
 
@@ -823,6 +826,12 @@ static bool prv_set_s_activity_sleep_algorithm(uint8_t *algorithm) {
     return false;
   }
   s_activity_sleep_algorithm = *algorithm;
+  return true;
+}
+
+// Unknown styles, e.g. synced from a newer phone app, are kept and read as the standard one
+static bool prv_set_s_activity_insights_style(uint8_t *style) {
+  s_activity_insights_style = *style;
   return true;
 }
 
@@ -2201,6 +2210,20 @@ void activity_prefs_set_sleep_algorithm(ActivitySleepAlgorithm algorithm) {
       (s_activity_sleep_algorithm != (uint8_t)algorithm)) {
     uint8_t value = algorithm;
     prv_pref_set(PREF_KEY_ACTIVITY_SLEEP_ALGORITHM, &value, sizeof(value));
+  }
+}
+
+ActivityInsightsStyle activity_prefs_get_insights_style(void) {
+  if (s_activity_insights_style >= ActivityInsightsStyleCount) {
+    return ActivityInsightsStyle_Standard;
+  }
+  return (ActivityInsightsStyle)s_activity_insights_style;
+}
+
+void activity_prefs_set_insights_style(ActivityInsightsStyle style) {
+  if ((style < ActivityInsightsStyleCount) && (s_activity_insights_style != (uint8_t)style)) {
+    uint8_t value = style;
+    prv_pref_set(PREF_KEY_ACTIVITY_INSIGHTS_STYLE, &value, sizeof(value));
   }
 }
 

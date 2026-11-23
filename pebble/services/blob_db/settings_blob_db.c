@@ -112,6 +112,7 @@ static const char *s_syncable_settings[] = {
   "activityPreferences",
   "activityHealthAppOpened",
   "activityWorkoutAppOpened",
+  "activityInsightsStyle",
   "alarmsAppOpened",
   "hrmPreferences",
   "heartRatePreferences",
