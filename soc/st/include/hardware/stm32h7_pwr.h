@@ -16,6 +16,13 @@
 #define STM32H7_PWR_WKUPCR_OFFSET  0x0020
 #define STM32H7_PWR_WKUPEPR_OFFSET 0x0028
 
+/* The CPUCR of the core running the code, CPU2CR on the Cortex-M4, both laid out alike */
+#ifdef CONFIG_CPU_CORTEX_M4
+#define STM32H7_PWR_CORECR_OFFSET STM32H7_PWR_CPU2CR_OFFSET
+#else
+#define STM32H7_PWR_CORECR_OFFSET STM32H7_PWR_CPUCR_OFFSET
+#endif
+
 /* Register bit definitions */
 
 #define PWR_CR1_LPDS PBL_BIT(0)
