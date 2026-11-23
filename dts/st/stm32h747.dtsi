@@ -39,6 +39,8 @@
 		st,syscfg-holdboot = <&rcc 0xa0 0x8>;
 		st,syscfg-boot-address = <&flash 0x48 0xffff>;
 		st,syscfg-flash = <&rcc 0x194 0x100>;
+		mboxes = <&hsem 0>;
+		mbox-names = "shutdown";
 		status = "disabled";
 	};
 

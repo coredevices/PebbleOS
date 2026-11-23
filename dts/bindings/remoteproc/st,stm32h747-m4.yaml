@@ -11,7 +11,8 @@ maintainers:
 
 description:
   The Cortex-M4 of a dual-core STM32H7, which runs its own firmware from the
-  flash. It waits until the Cortex-M7 lets it boot.
+  flash. It waits until the Cortex-M7 lets it boot, and the Cortex-M7 tells
+  it before powering the system off.
 
 properties:
   compatible:
@@ -48,6 +49,16 @@ properties:
           - description: The offset of the flash allocation register
           - description: The field mask of the flash allocation
 
+  mboxes:
+    items:
+      - description:
+          Tells the Cortex-M4 that the system is about to be powered off;
+          its acknowledgement means it is powering off.
+
+  mbox-names:
+    items:
+      - const: shutdown
+
   st,auto-boot:
     $ref: /schemas/types.yaml#/definitions/flag
     description: Boot the Cortex-M4 at startup, when its flash holds an image.
@@ -67,5 +78,7 @@ examples:
         st,syscfg-holdboot = <&rcc 0xa0 0x8>;
         st,syscfg-boot-address = <&flash 0x48 0xffff>;
         st,syscfg-flash = <&rcc 0x194 0x100>;
+        mboxes = <&hsem 0>;
+        mbox-names = "shutdown";
         st,auto-boot;
     };
