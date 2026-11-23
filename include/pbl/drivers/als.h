@@ -37,15 +37,8 @@
  * @{
  */
 
-/** @cond INTERNAL_HIDDEN */
-#ifndef CONFIG_ALS_BITS
-// Fallback for builds without Kconfig, e.g. unit tests.
-#define CONFIG_ALS_BITS 12
-#endif
-/** @endcond */
-
 /** @brief Upper bound of the raw light level scale (@c CONFIG_ALS_BITS bits). */
-static const uint32_t PBL_ALS_LEVEL_MAX = (1U << CONFIG_ALS_BITS);
+#define PBL_ALS_LEVEL_MAX (1U << CONFIG_ALS_BITS)
 
 struct pbl_als;
 
