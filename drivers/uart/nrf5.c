@@ -167,22 +167,8 @@ static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
   prv_event_wait(nrf5, NRF52_UARTE_EVENTS_TXSTOPPED_OFFSET);
 }
 
-static int prv_rx_enable(const struct pbl_uart *uart) {
-  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+static void prv_rx_start(const struct pbl_uart_nrf5 *nrf5) {
   struct pbl_uart_nrf5_state *state = nrf5->state;
-  int ret;
-
-  // PSEL may only be written while the UARTE is disabled
-  if (prv_getreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET) == UARTE_PSEL_DISCONNECTED) {
-    ret = prv_pin_init(&nrf5->rx, PBL_GPIO_INPUT);
-    if (ret != 0) {
-      return ret;
-    }
-
-    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_DISABLED);
-    prv_putreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET, pbl_gpio_nrf5_pin(&nrf5->rx));
-    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
-  }
 
   pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_CLEAR_OFFSET));
   pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_START_OFFSET));
@@ -198,14 +184,10 @@ static int prv_rx_enable(const struct pbl_uart *uart) {
   prv_putreg(nrf5, NRF52_UARTE_SHORTS_OFFSET, UARTE_SHORTS_ENDRX_STARTRX);
   prv_putreg(nrf5, NRF52_UARTE_INTENSET_OFFSET, UARTE_INT_RXSTARTED | UARTE_INT_RXDRDY);
   prv_putreg(nrf5, NRF52_UARTE_TASKS_STARTRX_OFFSET, 1U);
-
-  return 0;
 }
 
 // A running receiver keeps the high-frequency clock on
-static void prv_rx_disable(const struct pbl_uart *uart) {
-  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
-
+static void prv_rx_stop(const struct pbl_uart_nrf5 *nrf5) {
   prv_putreg(nrf5, NRF52_UARTE_INTENCLR_OFFSET, UARTE_INT_RXSTARTED | UARTE_INT_RXDRDY);
   prv_putreg(nrf5, NRF52_UARTE_SHORTS_OFFSET, 0U);
   prv_putreg(nrf5, NRF52_UARTE_TASKS_STOPRX_OFFSET, 1U);
@@ -217,6 +199,31 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
   prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXSTARTED_OFFSET);
   prv_event_clear(nrf5, NRF52_UARTE_EVENTS_RXDRDY_OFFSET);
   pbl_irq_clear_pending(nrf5->irq);
+}
+
+static int prv_rx_enable(const struct pbl_uart *uart) {
+  const struct pbl_uart_nrf5 *nrf5 = prv_nrf5(uart);
+  int ret;
+
+  // PSEL may only be written while the UARTE is disabled
+  if (prv_getreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET) == UARTE_PSEL_DISCONNECTED) {
+    ret = prv_pin_init(&nrf5->rx, PBL_GPIO_INPUT);
+    if (ret != 0) {
+      return ret;
+    }
+
+    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_DISABLED);
+    prv_putreg(nrf5, NRF52_UARTE_PSEL_RXD_OFFSET, pbl_gpio_nrf5_pin(&nrf5->rx));
+    prv_putreg(nrf5, NRF52_UARTE_ENABLE_OFFSET, UARTE_ENABLE_ENABLED);
+  }
+
+  prv_rx_start(nrf5);
+
+  return 0;
+}
+
+static void prv_rx_disable(const struct pbl_uart *uart) {
+  prv_rx_stop(prv_nrf5(uart));
 }
 
 void pbl_uart_nrf5_irq_handler(const struct pbl_uart_nrf5 *nrf5) {
@@ -234,6 +241,15 @@ void pbl_uart_nrf5_irq_handler(const struct pbl_uart_nrf5 *nrf5) {
 
   pbl_writel(1U, prv_timer_reg(nrf5, NRF52_TIMER_TASKS_CAPTURE_OFFSET(0)));
   count = pbl_readl(prv_timer_reg(nrf5, NRF52_TIMER_CC_OFFSET(0)));
+
+  // Served after a half or more went by, a start of reception may have been missed and the
+  // receiver restarted into the same half: what it holds can no longer be trusted, nor the halves
+  // to keep their turn. Start over.
+  if (count - state->rx_consumed >= RX_HALF_SIZE) {
+    prv_rx_stop(nrf5);
+    prv_rx_start(nrf5);
+    return;
+  }
 
   // The halves fill in turn, so byte n lands at n modulo the buffer size
   while (state->rx_consumed != count) {
