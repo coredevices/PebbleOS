@@ -57,6 +57,13 @@ PBL_LOG_MODULE_DECLARE(driver_spi_mem, CONFIG_DRIVER_SPI_MEM_LOG_LEVEL);
 #define OP_ERASE_4K  0x20U
 #define OP_ERASE_64K 0xD8U
 
+// Deep power-down commands the peripheral issues itself
+#define OP_DP  0xB9U
+#define OP_DPE 0xABU
+
+// DPMDUR counts in units of 256 periods of 16 MHz
+#define DPMDUR_UNIT_US 16U
+
 static const struct {
   uint8_t opcode;
   uint8_t readoc;
@@ -226,7 +233,7 @@ static PBL_ALWAYS_INLINE void prv_set_ifconfig0(const struct pbl_spi_mem_nrf5_qs
   prv_putreg(qspi, NRF52_QSPI_IFCONFIG0_OFFSET,
              PBL_FIELD_PREP(QSPI_IFCONFIG0_READOC_MASK, readoc) |
                  PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, writeoc) |
-                 (addr32 ? QSPI_IFCONFIG0_ADDRMODE_32BIT : 0U));
+                 (addr32 ? QSPI_IFCONFIG0_ADDRMODE_32BIT : 0U) | QSPI_IFCONFIG0_DPMENABLE);
 
   data->readoc = readoc;
   data->writeoc = writeoc;
@@ -458,17 +465,39 @@ static void prv_anomaly_122_workaround(const struct pbl_spi_mem_nrf5_qspi *qspi)
   prv_putreg(qspi, ANOMALY_122_OFFSET, 1U);
 }
 
+static void prv_set_dpm(const struct pbl_spi_mem_nrf5_qspi *qspi, bool enter) {
+  uint32_t ifconfig1 = prv_getreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET) & ~QSPI_IFCONFIG1_DPMEN;
+
+  prv_putreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET, ifconfig1 | (enter ? QSPI_IFCONFIG1_DPMEN : 0U));
+}
+
+// The peripheral puts the memory in deep power-down, and takes it out on activation, waiting for
+// it. Activating while the memory sleeps instead waits on a status register it does not answer,
+// for up to milliseconds. Nothing tells when the memory is in, so its time is waited.
+static void prv_enter_dpm(const struct pbl_spi_mem_nrf5_qspi *qspi,
+                          const struct pbl_spi_mem_pm *pm) {
+  prv_putreg(
+      qspi, NRF52_QSPI_DPMDUR_OFFSET,
+      PBL_FIELD_PREP(QSPI_DPMDUR_ENTER_MASK, PBL_DIV_ROUND_UP(pm->enter_us, DPMDUR_UNIT_US)) |
+          PBL_FIELD_PREP(QSPI_DPMDUR_EXIT_MASK, PBL_DIV_ROUND_UP(pm->exit_us, DPMDUR_UNIT_US)));
+  prv_set_dpm(qspi, true);
+  pbl_busy_wait_us(pm->enter_us);
+}
+
 // An interrupt driven transfer waits for the controller while the CPU idles
 static int prv_pm_suspend(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm) {
   const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
+
+  if (pm != nullptr && (pm->enter.cmd.opcode != OP_DP || pm->exit.cmd.opcode != OP_DPE)) {
+    return -ENOTSUP;
+  }
 
   if (atomic_load(&qspi->data->busy)) {
     return -EBUSY;
   }
 
   if (pm != nullptr) {
-    prv_exec_cinstr(qspi, &pm->enter);
-    pbl_busy_wait_us(pm->enter_us);
+    prv_enter_dpm(qspi, pm);
   }
 
   prv_putreg(qspi, NRF52_QSPI_INTENCLR_OFFSET, QSPI_INT_READY);
@@ -483,13 +512,10 @@ static int prv_pm_suspend(const struct pbl_spi_mem *mem, const struct pbl_spi_me
 static void prv_pm_resume(const struct pbl_spi_mem *mem, const struct pbl_spi_mem_pm *pm) {
   const struct pbl_spi_mem_nrf5_qspi *qspi = prv_qspi(mem);
 
+  // Activation takes the memory out of deep power-down first
+  prv_set_dpm(qspi, false);
   prv_putreg(qspi, NRF52_QSPI_ENABLE_OFFSET, QSPI_ENABLE_ENABLED);
   prv_activate(qspi);
-
-  if (pm != nullptr) {
-    prv_exec_cinstr(qspi, &pm->exit);
-    pbl_busy_wait_us(pm->exit_us);
-  }
 }
 
 static int prv_init(const struct pbl_spi_mem *mem) {
@@ -514,11 +540,14 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   data->readoc = QSPI_IFCONFIG0_READOC_FAST;
   data->writeoc = QSPI_IFCONFIG0_WRITEOC_PP;
   data->addr32 = false;
+  // No deep power-down durations until a memory asks for it
+  prv_putreg(qspi, NRF52_QSPI_DPMDUR_OFFSET, 0U);
   prv_putreg(qspi, NRF52_QSPI_IFCONFIG0_OFFSET,
              PBL_FIELD_PREP(QSPI_IFCONFIG0_READOC_MASK, data->readoc) |
-                 PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, data->writeoc));
+                 PBL_FIELD_PREP(QSPI_IFCONFIG0_WRITEOC_MASK, data->writeoc) |
+                 QSPI_IFCONFIG0_DPMENABLE);
 
-  // SPI mode 0, no deep power-down by the peripheral itself
+  // SPI mode 0, memory out of deep power-down
   prv_putreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET,
              (prv_getreg(qspi, NRF52_QSPI_IFCONFIG1_OFFSET) & QSPI_IFCONFIG1_RESERVED_MASK) |
                  PBL_FIELD_PREP(QSPI_IFCONFIG1_SCKDELAY_MASK, QSPI_SCK_DELAY) |
