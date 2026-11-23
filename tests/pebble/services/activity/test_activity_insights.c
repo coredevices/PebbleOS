@@ -18,6 +18,7 @@
 
 // Stubs
 #include <pbl/services/time.h>
+#include <pbl/util/size.h>
 #include <pbl/util/time.h>
 #include <pbl/util/units.h>
 
@@ -47,9 +48,11 @@ static struct pbl_tm s_init_time_tm = {
 #define MAX_ACTIVITY_SESSIONS 24
 
 extern const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
-                                             int32_t sleep_average_seconds, int variant);
+                                             int32_t sleep_average_seconds, int variant,
+                                             ActivityInsightsStyle style);
 extern const char *prv_get_sleep_pin_body(int32_t sleep_total_seconds,
-                                          int32_t sleep_average_seconds);
+                                          int32_t sleep_average_seconds,
+                                          ActivityInsightsStyle style);
 extern void prv_calculate_metric_history_stats(ActivityMetric metric,
                                                ActivityInsightMetricHistoryStats *stats);
 
@@ -1217,10 +1220,12 @@ void test_activity_insights__run_session_notification_includes_zero_calories(voi
 #define HOURS(h) ((int32_t)((h) * PBL_SEC_PER_HOUR))
 
 static void prv_assert_sleep_fmt(int32_t total, int32_t average, const char *needle, bool expect) {
-  for (int variant = 0; variant < 2; variant++) {
-    const char *fmt = prv_get_sleep_summary_fmt(total, average, variant);
-    cl_assert(fmt);
-    cl_assert_((strstr(fmt, needle) != nullptr) == expect, fmt);
+  for (ActivityInsightsStyle style = 0; style < ActivityInsightsStyleCount; style++) {
+    for (int variant = 0; variant < 2; variant++) {
+      const char *fmt = prv_get_sleep_summary_fmt(total, average, variant, style);
+      cl_assert(fmt);
+      cl_assert_((strstr(fmt, needle) != nullptr) == expect, fmt);
+    }
   }
 }
 
@@ -1244,16 +1249,60 @@ void test_activity_insights__sleep_summary_duration_bands(void) {
   prv_assert_sleep_fmt(HOURS(8.5), HOURS(7), "above your typical", true);
 
   // Variants past the end are rejected
-  cl_assert_equal_p(prv_get_sleep_summary_fmt(HOURS(11), HOURS(8), 2), nullptr);
+  cl_assert_equal_p(
+      prv_get_sleep_summary_fmt(HOURS(11), HOURS(8), 2, ActivityInsightsStyle_Standard), nullptr);
+  cl_assert_equal_p(
+      prv_get_sleep_summary_fmt(HOURS(11), HOURS(8), 2, ActivityInsightsStyle_Playful), nullptr);
+}
+
+static int prv_count_int_conversions(const char *fmt) {
+  int count = 0;
+  for (const char *p = strstr(fmt, "%d"); p; p = strstr(p + 2, "%d")) {
+    count++;
+  }
+  return count;
+}
+
+void test_activity_insights__sleep_summary_playful(void) {
+  activity_insights_init(pbl_realtime());
+
+  // Playful copy replaces the copy of each band outside the recommended range, and takes the
+  // same arguments
+  const int32_t nights[][2] = {
+    {HOURS(5), HOURS(8)},
+    {HOURS(6.5), HOURS(6)},
+    {HOURS(9.5), HOURS(7)},
+    {HOURS(11), HOURS(8)},
+  };
+  for (size_t i = 0; i < PBL_ARRAY_SIZE(nights); i++) {
+    for (int variant = 0; variant < 2; variant++) {
+      const char *plain = prv_get_sleep_summary_fmt(nights[i][0], nights[i][1], variant,
+                                                    ActivityInsightsStyle_Standard);
+      const char *playful = prv_get_sleep_summary_fmt(nights[i][0], nights[i][1], variant,
+                                                      ActivityInsightsStyle_Playful);
+      cl_assert(plain && playful);
+      cl_assert(strcmp(plain, playful) != 0);
+      cl_assert_equal_i(prv_count_int_conversions(playful), prv_count_int_conversions(plain));
+    }
+  }
+
+  // Within the recommended range the copy is the same
+  cl_assert_equal_p(
+      prv_get_sleep_summary_fmt(HOURS(8), HOURS(8), 0, ActivityInsightsStyle_Playful),
+      prv_get_sleep_summary_fmt(HOURS(8), HOURS(8), 0, ActivityInsightsStyle_Standard));
 }
 
 void test_activity_insights__sleep_pin_duration_bands(void) {
   activity_insights_init(pbl_realtime());
 
-  cl_assert(prv_get_sleep_pin_body(HOURS(11), HOURS(8)));
-  cl_assert(prv_get_sleep_pin_body(HOURS(9.5), HOURS(9.5)));
-  cl_assert(prv_get_sleep_pin_body(HOURS(5), HOURS(5)));
-  cl_assert(prv_get_sleep_pin_body(HOURS(6.5), HOURS(6)));
-  cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(6.5), HOURS(8)), nullptr);
-  cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(8), HOURS(7)), nullptr);
+  for (ActivityInsightsStyle style = 0; style < ActivityInsightsStyleCount; style++) {
+    cl_assert(prv_get_sleep_pin_body(HOURS(11), HOURS(8), style));
+    cl_assert(prv_get_sleep_pin_body(HOURS(9.5), HOURS(9.5), style));
+    cl_assert(prv_get_sleep_pin_body(HOURS(5), HOURS(5), style));
+    cl_assert(prv_get_sleep_pin_body(HOURS(6.5), HOURS(6), style));
+    cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(6.5), HOURS(8), style), nullptr);
+    cl_assert_equal_p(prv_get_sleep_pin_body(HOURS(8), HOURS(7), style), nullptr);
+  }
+  cl_assert(strcmp(prv_get_sleep_pin_body(HOURS(5), HOURS(5), ActivityInsightsStyle_Standard),
+                   prv_get_sleep_pin_body(HOURS(5), HOURS(5), ActivityInsightsStyle_Playful)) != 0);
 }
