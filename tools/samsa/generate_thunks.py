@@ -995,7 +995,7 @@ def main():
     unsaved = [
         (
             os.path.join(args.sdk_include, "samsa_prelude.h"),
-            "typedef long samsa_time_t;\ntypedef int samsa_time32_t;\n",
+            "typedef long long samsa_time_t;\ntypedef int samsa_time32_t;\n",
         ),
         (os.path.join(args.sdk_include, "message_keys.auto.h"), ""),
         (os.path.join(args.sdk_include, "src", "resource_ids.auto.h"), ""),

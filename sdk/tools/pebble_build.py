@@ -681,8 +681,8 @@ def configure(args):
             pinfo["defines"]
             + ["PBL_SDK_2" if sdk_version <= LAST_2X_SDK_VERSION else "PBL_SDK_3"],
         )
-        # pebble.h declares the time API with a 32-bit time_t, which libc's
-        # time.h must not redefine.
+        # pebble.h declares the time API, which libc's time.h must not
+        # redefine.
         emit(f"PEBBLE_{p}_OWN_TIME_H", sdk_version > LAST_2X_SDK_VERSION)
         emit(f"PEBBLE_{p}_RESOURCE_INPUTS", pinfo["resource_inputs"])
         pebble_libs = [lib for lib in libraries if "pebble" in lib]
