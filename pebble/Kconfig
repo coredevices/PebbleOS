@@ -62,8 +62,8 @@ config FS_PFS_SHELL_LITTER
     depends on FS_PFS && SHELL
 
 config GH3X2X_ALGO
-    default !RECOVERY_FW || MFG
-    depends on HRM_GH3X2X && BOARD_OBELIX
+    default n if RECOVERY_FW && !MFG
+    depends on HRM_GH3X2X
 
 config HRM_GH3X2X_FACTORY_TEST
     default y if MFG
@@ -72,10 +72,6 @@ config HRM_GH3X2X_FACTORY_TEST
 config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
-
-config LOG_HASHED
-    default y
-    depends on LOG && !QEMU
 
 config PP_TRANSPORT_CONSOLE
     default y
@@ -100,10 +96,6 @@ config TEMP_SHELL
 config USERSPACE
     default y
     depends on ARCH_HAS_USERSPACE
-
-config SAMSA
-    default y
-    depends on SOC_POSIX && !RECOVERY_FW
 
 # The SDK platform, and what follows from it.
 rsource "Kconfig.platform"
@@ -201,7 +193,6 @@ config MODDABLE_XS
 
 config MMAP_RESOURCES
     bool "Memory-mapped (zero-copy) resource reads"
-    default y if SOC_SF32LB52
     help
       Serve read-only system resources as direct pointers into
       memory-mapped flash instead of copying them out.
@@ -226,7 +217,6 @@ menu "Debug & instrumentation"
 
 config QEMU_SERIAL
     bool "QEMU serial protocol"
-    default y if QEMU || SOC_POSIX
     help
       The Pebble protocol and the emulator's controls (battery, taps,
       time format, ...) over the board's QEMU_UART, framed as libpebble2's
