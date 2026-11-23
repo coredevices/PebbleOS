@@ -179,7 +179,7 @@ static bool prv_zip_find_resource_pack(const uint8_t *zip, size_t len, const cha
     return false;
   }
   size_t eocd = len - 22;
-  while (prv_rd32(zip + eocd) != 0x06054b50) {
+  while (pbl_get_le32(zip + eocd) != 0x06054b50) {
     if (eocd == 0 || len - eocd > 22 + 0xffff) {
       return false;
     }
@@ -190,14 +190,15 @@ static bool prv_zip_find_resource_pack(const uint8_t *zip, size_t len, const cha
   bool found = false;
   unsigned best_width = 0;
   unsigned best_height = 0;
-  const uint16_t count = prv_rd16(zip + eocd + 10);
-  size_t at = prv_rd32(zip + eocd + 16);
+  const uint16_t count = pbl_get_le16(zip + eocd + 10);
+  size_t at = pbl_get_le32(zip + eocd + 16);
   for (uint16_t i = 0; i < count; i++) {
-    if (at + 46 > len || prv_rd32(zip + at) != 0x02014b50) {
+    if (at + 46 > len || pbl_get_le32(zip + at) != 0x02014b50) {
       break;
     }
-    const uint16_t this_len = prv_rd16(zip + at + 28);
-    const size_t next = at + 46 + this_len + prv_rd16(zip + at + 30) + prv_rd16(zip + at + 32);
+    const uint16_t this_len = pbl_get_le16(zip + at + 28);
+    const size_t next =
+        at + 46 + this_len + pbl_get_le16(zip + at + 30) + pbl_get_le16(zip + at + 32);
     if (next > len) {
       break;
     }
