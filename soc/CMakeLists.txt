@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-if(CONFIG_QEMU)
+if(CONFIG_SOC_FAMILY_QEMU)
   add_subdirectory(qemu)
 elseif(CONFIG_SOC_FAMILY_NRF)
   add_subdirectory(nrf)

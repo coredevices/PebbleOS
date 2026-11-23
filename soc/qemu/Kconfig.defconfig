@@ -1,22 +1,4 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-if SOC_QEMU_PEBBLE
-
-choice NIMBLE_ID_ADDR_SOURCE
-    default NIMBLE_ID_ADDR_QEMU
-endchoice
-
-# 4 MiB of emulated flash.
-config FLASH_BASE
-    default 0x00000000
-
-config FLASH_SIZE
-    default 0x400000
-
-# The SRAM layout is the machine's, and so given by the board.
-
-config NUM_IRQS
-    default 13
-
-endif # SOC_QEMU_PEBBLE
+rsource "*/Kconfig.defconfig"
