@@ -8,6 +8,7 @@
 #include <pbl/drivers/als.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/language_pack.h>
@@ -1429,6 +1430,15 @@ void prefs_private_unlock(void) {
   pbl_mutex_unlock(&s_mutex);
 }
 
+// A preset synced from the phone only stores the preset key; apply its settings
+// like the watch UI does. Deferred so the applied values sync back to the phone.
+static void prv_apply_synced_backlight_preset(void *unused) {
+  const BacklightPreset preset = (BacklightPreset)s_backlight_preset;
+  if (preset < BacklightPreset_Advanced && backlight_get_preset() != preset) {
+    backlight_set_preset(preset);
+  }
+}
+
 // ------------------------------------------------------------------------------------
 // Called from KernelMain when we get a blob DB event. We take this opportunity to update the state
 // of the given pref
@@ -1452,6 +1462,10 @@ void prefs_private_handle_blob_db_event(PebbleBlobDBEvent *event) {
       // If the handler returns false, that means it reset the global back to the default,
       // so we should write the new value to the backing
       prefs_private_write_backing(event->key, event->key_len, entry->value, entry->value_len);
+    }
+
+    if (entry->value == &s_backlight_preset) {
+      pbl_sys_work_call(prv_apply_synced_backlight_preset, nullptr);
     }
 
     // Notify UI that a preference changed so it can refresh
