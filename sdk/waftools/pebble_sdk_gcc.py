@@ -181,9 +181,12 @@ def gen_inject_metadata_rule(
         tgt_path = task.outputs[0].abspath()
 
         if project_info is not None:
-            error = pebble_project.undeclared_health_error(
-                project_info, inject_metadata.elf_symbol_names(elf_path)
-            )
+            symbols = inject_metadata.elf_symbol_names(elf_path)
+            error = pebble_project.undeclared_health_error(project_info, symbols)
+            if error:
+                Logs.error(error)
+                return 1
+            error = pebble_project.undeclared_timer_error(project_info, symbols)
             if error:
                 Logs.error(error)
                 return 1

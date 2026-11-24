@@ -27,6 +27,8 @@ MANIFEST_V2_KEYS = ("plugin", "usesPermissions", "configPage")
 WATCH_MICROPHONE = "WatchMicrophone"
 # And health data. The phone app only enforces it for apps built with an SDK that has this check.
 HEALTH = "Health"
+# And creating timers.
+TIMERS = "Timers"
 _MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
 
 # Message keys are numbered from here, in the order they are declared.
@@ -229,6 +231,26 @@ def _health_error(project_info, used):
         return None
     return (
         f"The app uses {used}, but package.json doesn't declare '{HEALTH}' in usesPermissions"
+    )
+
+
+def undeclared_timer_error(project_info, symbols):
+    """An error when a linked app uses timer_service_create() without declaring
+    the permission, or None.
+
+    symbols: the names of the symbols in the linked binary."""
+    if "timer_service_create" not in symbols:
+        return None
+    if project_info.get("manifestVersion", 2) < 2:
+        return (
+            "The app uses timer_service_create(), but manifestVersion 1 apps can't create "
+            f"timers: remove '\"manifestVersion\": 1' and declare '{TIMERS}' in usesPermissions"
+        )
+    if TIMERS in _declared_permissions(project_info):
+        return None
+    return (
+        "The app uses timer_service_create(), but package.json doesn't declare "
+        f"'{TIMERS}' in usesPermissions"
     )
 
 

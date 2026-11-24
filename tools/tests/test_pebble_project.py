@@ -8,7 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "sdk" / "tools"))
 
-from pebble_project import undeclared_health_error, undeclared_moddable_health_error
+from pebble_project import (
+    undeclared_health_error,
+    undeclared_moddable_health_error,
+    undeclared_timer_error,
+)
 
 
 class TestUndeclaredHealthError(unittest.TestCase):
@@ -32,6 +36,29 @@ class TestUndeclaredHealthError(unittest.TestCase):
     def test_a_legacy_manifest_cannot_use_health(self):
         info = {"manifestVersion": 1, "usesPermissions": ["Health"]}
         self.assertIn("manifestVersion 1", undeclared_health_error(info, self.SYMBOLS))
+
+
+class TestUndeclaredTimerError(unittest.TestCase):
+    SYMBOLS = ("main", "timer_service_create", "app_event_loop")
+
+    def test_only_apps_using_create_need_it(self):
+        self.assertIsNone(undeclared_timer_error({}, ["main", "app_event_loop"]))
+        self.assertIsNone(undeclared_timer_error({}, ["timer_service_can_create"]))
+        self.assertIsNone(undeclared_timer_error({}, ["timer_service_cancel"]))
+
+    def test_declaring_timers_allows_it(self):
+        self.assertIsNone(undeclared_timer_error({"usesPermissions": ["Timers"]}, self.SYMBOLS))
+        info = {"usesPermissions": [{"name": "Timers", "reason": "Starts a timer"}]}
+        self.assertIsNone(undeclared_timer_error(info, self.SYMBOLS))
+
+    def test_using_create_without_declaring_it_is_an_error(self):
+        error = undeclared_timer_error({"usesPermissions": ["Health"]}, self.SYMBOLS)
+        self.assertIn("timer_service_create", error)
+        self.assertIn("'Timers'", error)
+
+    def test_a_legacy_manifest_cannot_create_timers(self):
+        info = {"manifestVersion": 1, "usesPermissions": ["Timers"]}
+        self.assertIn("manifestVersion 1", undeclared_timer_error(info, self.SYMBOLS))
 
 
 class TestUndeclaredModdableHealthError(unittest.TestCase):
