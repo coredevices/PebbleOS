@@ -60,6 +60,8 @@ typedef struct BatteryState {
 } BatteryState;
 
 static BatteryState s_last_battery_state;
+//! Connection state before the last transition.
+static ConnectionStateID s_prev_connection;
 static void prv_update_callback(struct pbl_work *work);
 static PBL_DELAYED_WORK_DEFINE(s_periodic_timer, prv_update_callback);
 //! Whether the next run of the timer is a forced update.
@@ -70,17 +72,22 @@ static uint32_t s_analytics_last_cpct = 0;
 static void prv_schedule_update(uint32_t delay, bool force_update);
 PreciseBatteryChargeState prv_get_precise_charge_state(const BatteryState *state);
 
-static uint16_t prv_get_millivolts(void) {
+static int prv_get_millivolts(uint16_t *mv) {
   struct pbl_charger_measurements meas;
+  int ret;
 
-  if (pbl_charger_get_measurements(CHARGER, &meas) != 0) {
-    return 0;
+  ret = pbl_charger_get_measurements(CHARGER, &meas);
+  if (ret != 0) {
+    return ret;
   }
 
-  return (uint16_t)meas.voltage_mv;
+  *mv = (uint16_t)meas.voltage_mv;
+
+  return 0;
 }
 
 static void prv_transition(BatteryState *state, ConnectionStateID next_state) {
+  s_prev_connection = state->connection;
   state->connection = next_state;
   s_transitions[state->connection].enter();
 }
@@ -111,6 +118,12 @@ static void prv_update_plugged_change(void) {
 static void prv_update_done_charging(void) {
   prv_update_plugged_change();
 
+  // Only the end of a charge tells the full voltage: a charger that cannot report its status
+  // never charges, and is plugged in at any voltage
+  if (s_prev_connection != ConnectionStateChargingPlugged) {
+    return;
+  }
+
   // Amount in mV to drop the "Full" voltage by to briefly stay at 100% once unplugged
   const uint16_t BATTERY_FULL_FUDGE_AMOUNT = 10;
   PBL_LOG_DBG("Done charging - Updating curve");
@@ -128,7 +141,11 @@ static void battery_state_put_change_event(PreciseBatteryChargeState state) {
 }
 
 void battery_state_reset_filter(void) {
-  s_last_battery_state.voltage = prv_get_millivolts();
+  uint16_t mv;
+
+  if (prv_get_millivolts(&mv) == 0) {
+    s_last_battery_state.voltage = mv;
+  }
   // Reset the stabilization timer in case we encountered a current spike during the reset
   s_last_battery_state.init_time = pbl_uptime_ticks();
 }
@@ -187,8 +204,13 @@ static void prv_update_state(void *force_update) {
     }
   }
 
-  s_last_battery_state.voltage =
-      prv_filter_voltage(s_last_battery_state.voltage, prv_get_millivolts());
+  // A failed measurement is skipped, not averaged in
+  uint16_t mv;
+  if (prv_get_millivolts(&mv) == 0) {
+    s_last_battery_state.voltage = s_last_battery_state.voltage == 0U
+                                       ? mv
+                                       : prv_filter_voltage(s_last_battery_state.voltage, mv);
+  }
   bool charging = (s_last_battery_state.connection == ConnectionStateChargingPlugged);
 
   // Update Percent & Filtering
