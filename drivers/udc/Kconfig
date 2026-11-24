@@ -25,6 +25,14 @@ config UDC_NRF5_IRQ_PRIO
     help
       Priority of the USBD and POWER interrupts.
 
+config UDC_VBUS_CHARGER
+    bool
+    default y
+    depends on CHARGER
+    help
+      Sense USB power through the charger a controller's vbus-charger
+      property points to.
+
 config UDC_MUSB
     bool "Mentor Graphics MUSB"
     default y

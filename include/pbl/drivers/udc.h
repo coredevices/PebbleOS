@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/drivers/charger.h>
 #include <pbl/kernel/cache.h>
 #include <pbl/util/math.h>
 
@@ -32,6 +33,11 @@
  *
  * The driver takes the address as soon as the stack sets it, before the status stage of the
  * SET_ADDRESS request, as controllers that apply it in hardware need.
+ *
+ * A board that senses USB power gives the controller the charger on the connector's VBUS. The
+ * class then reports power coming and going as @ref PBL_UDC_EVENT_VBUS_READY and
+ * @ref PBL_UDC_EVENT_VBUS_REMOVED, from thread context, for the stack to connect only while it
+ * is there.
  * @{
  */
 
@@ -79,6 +85,10 @@ enum pbl_udc_event {
   PBL_UDC_EVENT_RESUME,
   /** A setup packet arrived on endpoint 0. */
   PBL_UDC_EVENT_SETUP,
+  /** USB power appeared: a host may be there. */
+  PBL_UDC_EVENT_VBUS_READY,
+  /** USB power went away: the host is gone. */
+  PBL_UDC_EVENT_VBUS_REMOVED,
 };
 
 struct pbl_udc;
@@ -95,6 +105,9 @@ struct pbl_udc_callbacks {
 struct pbl_udc_state {
   const struct pbl_udc_callbacks *cb;
   void *arg;
+  bool vbus;
+  const struct pbl_udc *udc;
+  struct pbl_charger_listener vbus_listener;
 };
 /** @endcond */
 
@@ -118,6 +131,12 @@ struct pbl_udc_ops {
   int (*ep_set_halt)(const struct pbl_udc *udc, uint8_t ep, bool halt);
   /** Start a transfer. Returns 0, @c -EBUSY if one is under way, or another negative errno. */
   int (*ep_queue)(const struct pbl_udc *udc, uint8_t ep, void *buf, size_t len);
+  /**
+   * Optional. Signal resume to the host that suspended the bus, a remote wakeup, from thread
+   * context. Returns 0, @c -EALREADY if the bus is not suspended, @c -ENOTCONN if the device is
+   * or gets disconnected, or another negative errno.
+   */
+  int (*wakeup)(const struct pbl_udc *udc);
 };
 
 /** @brief USB device controller. */
@@ -134,6 +153,8 @@ struct pbl_udc {
   enum pbl_udc_speed max_speed;
   /** Capabilities, as @ref PBL_UDC_CAP_EP_ONE_DIR. */
   uint8_t caps;
+  /** Charger on the connector's VBUS, or NULL when the board does not sense USB power. */
+  const struct pbl_charger *vbus_charger;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -164,15 +185,17 @@ extern const struct pbl_udc *const UDC;
  * @param _num_eps Number of endpoints in each direction.
  * @param _max_speed Fastest speed, one of @ref pbl_udc_speed.
  * @param _caps Capabilities, as @ref PBL_UDC_CAP_EP_ONE_DIR, or 0.
+ * @param _vbus_charger Charger on the connector's VBUS, or NULL.
  */
-#define PBL_UDC_INIT(sym, _name, _parent, _ops, _num_eps, _max_speed, _caps)             \
-  {                                                                                      \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_udc_dev_init, _parent, &pbl_udc_class), \
-    .ops = (_ops),                                                                       \
-    .state = &sym##_udc_state,                                                           \
-    .num_eps = (_num_eps),                                                               \
-    .max_speed = (_max_speed),                                                           \
-    .caps = (_caps),                                                                     \
+#define PBL_UDC_INIT(sym, _name, _parent, _ops, _num_eps, _max_speed, _caps, _vbus_charger) \
+  {                                                                                         \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_udc_dev_init, _parent, &pbl_udc_class),    \
+    .ops = (_ops),                                                                          \
+    .state = &sym##_udc_state,                                                              \
+    .num_eps = (_num_eps),                                                                  \
+    .max_speed = (_max_speed),                                                              \
+    .caps = (_caps),                                                                        \
+    .vbus_charger = (_vbus_charger),                                                        \
   }
 
 /**
@@ -199,6 +222,25 @@ int pbl_udc_enable(const struct pbl_udc *udc);
  * @return 0 or a negative errno.
  */
 int pbl_udc_disable(const struct pbl_udc *udc);
+
+/**
+ * @brief Check whether USB power is present.
+ *
+ * @param udc Controller.
+ * @return true while it is, and always on a board that does not sense it.
+ */
+bool pbl_udc_vbus_present(const struct pbl_udc *udc);
+
+/**
+ * @brief Signal resume to the host that suspended the bus, a remote wakeup, from thread context.
+ *
+ * The host must have allowed it; the stack checks that.
+ *
+ * @param udc Controller.
+ * @return 0, @c -ENOTSUP if the controller cannot, @c -EALREADY if the bus is not suspended, or
+ *         another negative errno.
+ */
+int pbl_udc_wakeup(const struct pbl_udc *udc);
 
 /**
  * @brief The speed the bus runs at, once enumerated.
