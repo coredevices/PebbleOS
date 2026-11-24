@@ -32,6 +32,7 @@ static GContext s_ctx;
 #include <fake_pfs.h>
 #include <fake_spi_flash.h>
 #include <fixtures/load_test_resources.h>
+#include <fixtures/screen_grid.h>
 
 GContext *graphics_context_get_current_context(void) {
   return &s_ctx;
@@ -215,6 +216,23 @@ void test_simple_dialog__alarm_deleted(void) {
 
   prv_push_and_render_simple_dialog(dialog);
   cl_check(gbitmap_pbi_eq(s_dest_bitmap, TEST_PBI_FILE));
+}
+
+void test_simple_dialog__content_sizes(void) {
+  ScreenGrid grid;
+  screen_grid_init(&grid, 1);
+  for (PreferredContentSize size = grid.first_size; size <= grid.last_size; size++) {
+    system_theme_set_content_size(size);
+    SimpleDialog *simple_dialog = simple_dialog_create("Alarm Snooze");
+    Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
+    dialog_set_text(dialog, "Snooze delay set to 10 minutes");
+    dialog_set_icon(dialog, RESOURCE_ID_GENERIC_CONFIRMATION_LARGE);
+    dialog_set_background_color(dialog, GColorJaegerGreen);
+    prv_push_and_render_simple_dialog(dialog);
+    screen_grid_add(&grid, &s_ctx, size, 0);
+  }
+  system_theme_set_content_size(PreferredContentSizeDefault);
+  screen_grid_check(&grid, TEST_PBI_FILE);
 }
 
 void test_simple_dialog__calendar_unmute(void) {

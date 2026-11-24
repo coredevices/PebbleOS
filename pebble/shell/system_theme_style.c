@@ -19,6 +19,15 @@
 #endif
 #endif
 
+//! Recovery firmware has no 36 point fonts, and only uses the default content size
+#if defined(CONFIG_RECOVERY_FW)
+#define DIALOG_FONT_36      FONT_KEY_GOTHIC_28
+#define DIALOG_FONT_36_BOLD FONT_KEY_GOTHIC_28_BOLD
+#else
+#define DIALOG_FONT_36      FONT_KEY_GOTHIC_36
+#define DIALOG_FONT_36_BOLD FONT_KEY_GOTHIC_36_BOLD
+#endif
+
 static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeSmall] =
       {
@@ -68,6 +77,13 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .double_line_cell_height = 56,
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
+            },
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_24_BOLD,
             },
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
@@ -132,6 +148,23 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
+#if PBL_DISPLAY_HEIGHT >= 200
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_24_BOLD,
+            },
+#else
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_28_BOLD,
+            },
+#endif
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
             {
@@ -202,6 +235,23 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .text_inset_multi = -3,
               .right_text_inset_with_icon = 4,
             },
+#if PBL_DISPLAY_HEIGHT >= 200
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_28,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_28_BOLD,
+            },
+#else
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_28_BOLD,
+              .text_max_lines = 3,
+              .body_font_key = FONT_KEY_GOTHIC_28_BOLD,
+              .header_font_key = DIALOG_FONT_36_BOLD,
+            },
+#endif
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
             {
@@ -259,6 +309,13 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           .text_inset_single = -1,
           .text_inset_multi = -3,
           .right_text_inset_with_icon = 4,
+        },
+    .dialog =
+        {
+          .text_font_key = DIALOG_FONT_36,
+          .text_max_lines = 3,
+          .body_font_key = FONT_KEY_GOTHIC_28_BOLD,
+          .header_font_key = DIALOG_FONT_36_BOLD,
         },
 #if !defined(CONFIG_RECOVERY_FW)
     .launcher = {
