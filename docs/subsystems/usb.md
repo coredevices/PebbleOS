@@ -37,6 +37,7 @@ from the controller's interrupt.
 | `CONFIG_USB_DEVICE_MANUFACTURER` | `PebbleOS` | Manufacturer string |
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
 | `CONFIG_USB_DEVICE_SERIAL_NUMBER` | `y` | Serial number string, from the SoC's unique ID |
+| `CONFIG_USB_DEVICE_REMOTE_WAKEUP` | `n` | Advertise remote wakeup |
 
 The serial number is the unique ID of the SoC, from `mcu_get_serial()`
 ({doc}`../drivers/mcu`), folded to 48 bits by XOR and written as 12 uppercase
@@ -183,6 +184,65 @@ PBL_USBD_FUNCTION_DEFINE(loopback) = {
 ```
 
 {doc}`../samples/subsys/usb/loopback` is a complete function.
+
+## USB power
+
+A host is only there when it powers the connector's VBUS. A board that senses
+that power points its USB controller at the charger on VBUS, whose input it
+is:
+
+```dts
+&usbc {
+	vbus-charger = <&pmuc>;
+};
+```
+
+The controller class listens to the charger and reports power coming and
+going to the stack, which connects to the bus, its pull-up on, only while
+power is present, and leaves it when power goes, ending the configuration as
+a reset does. Disconnected, the controller holds no clock and blocks no idle
+state. Without `vbus-charger`, power counts as always present: the
+device connects as soon as it is enabled.
+
+## Bus state
+
+Functions get the bus state through their optional `event` callback, and
+other code through a listener:
+
+```c
+static void prv_usb_event(enum pbl_usbd_event evt) {
+  if (evt == PBL_USBD_EVENT_SUSPENDED) {
+    /* At most the suspend current until the bus resumes */
+  }
+}
+
+PBL_USBD_LISTENER_DEFINE(app) = {.event = prv_usb_event};
+```
+
+| Event | When |
+| --- | --- |
+| `PBL_USBD_EVENT_CONNECTED` | The device connected to the bus, USB power present |
+| `PBL_USBD_EVENT_DISCONNECTED` | The device left the bus, USB power gone |
+| `PBL_USBD_EVENT_RESET` | The host reset the bus, which also ends a suspend |
+| `PBL_USBD_EVENT_SUSPENDED` | The host suspended the bus |
+| `PBL_USBD_EVENT_RESUMED` | The bus is active again, resumed by the host or the device |
+
+Like the rest of the stack, they run from the controller's interrupt, or from
+the charger's work queue with interrupts locked for USB power.
+
+## Suspend and remote wakeup
+
+A host suspends the bus by stopping all traffic, for the devices on it to
+draw the suspend current at most. The controller driver then releases what it
+holds to move packets, so the SoC can idle deeper, and takes it again when the
+host resumes or resets the bus.
+
+With `CONFIG_USB_DEVICE_REMOTE_WAKEUP`, the configuration descriptor tells the
+host the device can wake it. Once the host allows it, with
+SET_FEATURE(DEVICE_REMOTE_WAKEUP), `pbl_usbd_wakeup()` resumes the suspended
+bus, from a thread: the controller signals resume, then the stack reports the
+bus resumed. It returns `-EACCES` when the host did not allow it, and
+`-EALREADY` when the bus is not suspended.
 
 ## BOS, WinUSB and WebUSB
 
@@ -341,7 +401,9 @@ Its vendor requests, to its interface:
 ## Controllers
 
 A controller driver implements `struct pbl_udc_ops` and reports bus events,
-setup packets among them, and the end of transfers from its interrupt.
+setup packets, suspend and resume among them, and the end of transfers from its
+interrupt. Its optional `wakeup` op signals resume to the host, which the MUSB
+and DWC2 drivers implement.
 
 Drivers may move transfers by DMA, so the buffers given to
 `pbl_udc_ep_queue()` are aligned to `PBL_UDC_BUF_ALIGN`, a data cache line,
@@ -352,3 +414,12 @@ packets and share no cache line with other data.
 | --- | --- |
 | `drivers/udc/musb.c` | Mentor Graphics MUSB, as the full-speed USB controller of the SF32LB57, with its internal PHY; each endpoint number serves one direction at a time (`PBL_UDC_CAP_EP_ONE_DIR`), with a FIFO its packet size rounded up to a power of two, given out as endpoints are enabled from the FIFO RAM the devicetree gives (`sifli,fifo-size`); a bulk OUT endpoint gets room for two packets while 128 bytes are left for the endpoints after it, so the host can send the next packet while the CPU reads one |
 | `drivers/udc/dwc2.c` | Synopsys DesignWare USB 2.0 OTG, as the USB OTG HS of the STM32H7, at high speed with an external ULPI PHY; by DMA, multi-packet, when the core has it, through its FIFOs otherwise |
+
+On the SF32LB57, the controller is clocked only while connected. While the bus
+is active, deep WFI keeps clk_hpsys, its bus clocks undivided and the DLLs
+running for it, and deep sleep is blocked: with the bus clocks divided down,
+the controller sometimes misses the host suspending the bus. While the host
+suspends the bus, deep WFI drops them, the controller seeing the host resume
+or reset the bus on HRC48 too; deep sleep, which stops the controller, stays
+blocked. The PMU's charger senses USB power on the VBUS input of the package,
+and its interrupt wakes HPSYS from deep sleep.
