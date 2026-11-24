@@ -17,8 +17,8 @@
  * @c pbl_bt_cb_ppog_reversed_* callbacks run on the NimBLE host task.
  *
  * @code{.c}
- * enum pbl_bt_errno err = pbl_bt_ppog_reversed_notify(conn_handle, pkt, pkt_len);
- * if (err == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
+ * int ret = pbl_bt_ppog_reversed_notify(conn_handle, pkt, pkt_len);
+ * if (ret == -ENOMEM) {
  *   // No buffer-freed event exists: retry from a timer.
  * }
  * @endcode
@@ -54,13 +54,12 @@ extern void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *
  * @param conn_handle Connection handle.
  * @param buf The packet. Copied during the call.
  * @param len Length of @p buf in bytes.
- * @retval PBL_BT_ERRNO_OK Sent.
- * @retval PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES Out of buffers. Transient: retry after a short delay,
- *         the stack has no buffers-freed event.
- * @retval PBL_BT_ERRNO_INVALID_STATE Not connected.
- * @return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN plus the backend error code on other failures.
+ * @retval 0 Sent.
+ * @retval -ENOMEM Out of buffers. Transient: retry after a short delay, the stack has no
+ *         buffers-freed event.
+ * @retval -ENOTCONN Not connected.
+ * @retval -EIO Other failures.
  */
-enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
-                                              uint16_t len);
+int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len);
 
 /** @} */

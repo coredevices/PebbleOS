@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/malloc.h>
@@ -133,23 +135,22 @@ int pbl_bt__ppog_reversed_init(void) {
   return 0;
 }
 
-enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
-                                              uint16_t len) {
+int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
-    return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
+    return -ENOMEM;
   }
   int rc = ble_gatts_notify_custom(conn_handle, s_data_notify_handle, om);
   // ble_gatts_notify_custom always consumes the mbuf, even on error.
   switch (rc) {
     case 0:
-      return PBL_BT_ERRNO_OK;
+      return 0;
     case BLE_HS_ENOMEM:
-      return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
+      return -ENOMEM;
     case BLE_HS_ENOTCONN:
-      return PBL_BT_ERRNO_INVALID_STATE;
+      return -ENOTCONN;
     default:
       PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
-      return (enum pbl_bt_errno)(PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + rc);
+      return -EIO;
   }
 }

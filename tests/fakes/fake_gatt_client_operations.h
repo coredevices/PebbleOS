@@ -9,11 +9,11 @@ void fake_gatt_client_op_init(void);
 
 void fake_gatt_client_op_deinit(void);
 
-void fake_gatt_client_op_set_read_return_value(enum pbl_bt_errno e);
+void fake_gatt_client_op_set_read_return_value(int ret);
 
 void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic);
 
-void fake_gatt_client_op_set_write_return_value(enum pbl_bt_errno e);
+void fake_gatt_client_op_set_write_return_value(int ret);
 
 void fake_gatt_client_op_clear_write_list(void);
 
