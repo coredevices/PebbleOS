@@ -30,6 +30,7 @@ config PP_TRANSPORT_GATT_SYSTEM_ONLY
 config PP_TRANSPORT_CONSOLE
     bool "Console frames"
     depends on CONSOLE
+    select CONSOLE_INPUT
     help
       Pebble protocol over serial console frames, for development tools.
 

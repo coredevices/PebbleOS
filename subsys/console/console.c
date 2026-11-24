@@ -130,6 +130,7 @@ PBL_SHELL_DEFINE(shell_uart, "pebble> ", &s_shell_api, nullptr);
 
 #endif
 
+#ifdef CONFIG_CONSOLE_INPUT
 static void prv_text_input(char c) {
 #ifdef CONFIG_SHELL
   pbl_shell_input_from_isr(&shell_uart, c);
@@ -156,3 +157,4 @@ void pbl_console_set_rx_enabled(bool enabled) {
   }
   pbl_irq_unlock();
 }
+#endif
