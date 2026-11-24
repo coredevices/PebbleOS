@@ -311,9 +311,10 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   return true;
 }
 
-static void prv_set_responsiveness(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                    state, timeout_secs);
+void put_bytes_set_response_time(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
+  static struct pbl_bt_responsiveness_req s_req;
+
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_req, state, timeout_secs);
 }
 
 static void prv_send_nack_from_sys_work(void *data) {
@@ -345,7 +346,7 @@ static void prv_cleanup(void) {
   // PutBytes, we will stay at Min for an extra 10 seconds after the entire transaction is
   // completed. Marginal power hit, but shouldn't happen often since PutBytes itself doesn't
   // happen too often.
-  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, 10);
+  put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIN, 10);
 
   PebbleEvent event = {
     .type = PEBBLE_PUT_BYTES_EVENT,
@@ -1238,7 +1239,7 @@ void prv_receiver_finish(struct pbl_pp_receiver *receiver) {
   }
 
   // We are still processing PB data, keep the BT connection fast
-  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIN, PUT_BYTES_FAST_LINK_TIMEOUT_S);
 
   prv_finalize_pb_job();
   if (prv_receiver_contains_put_request()) {

@@ -1784,7 +1784,7 @@ static void prv_transport_reset(struct pbl_pp_session *session) {
 }
 
 static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
-                                             enum pbl_bt_consumer consumer,
+                                             struct pbl_bt_responsiveness_req *req,
                                              enum pbl_bt_response_time_state state,
                                              uint16_t max_period_secs) {
   uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE;
@@ -1797,7 +1797,7 @@ static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
   prv_unlock();
 
   if (conn_handle != BLE_HS_CONN_HANDLE_NONE) {
-    pbl_pp_gatt_cb_set_responsiveness(conn_handle, consumer, state, max_period_secs);
+    pbl_pp_gatt_cb_set_responsiveness(conn_handle, req, state, max_period_secs);
   }
 }
 

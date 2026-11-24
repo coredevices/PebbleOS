@@ -89,8 +89,10 @@ static void prv_reset(struct pbl_pp_session *session) {
   ++s_reset_count;
 }
 
+static struct pbl_bt_responsiveness_req s_req;
 static int s_responsiveness_count;
-static void prv_set_responsiveness(struct pbl_pp_session *session, enum pbl_bt_consumer consumer,
+static void prv_set_responsiveness(struct pbl_pp_session *session,
+                                   struct pbl_bt_responsiveness_req *req,
                                    enum pbl_bt_response_time_state state,
                                    uint16_t max_period_secs) {
   ++s_responsiveness_count;
@@ -371,18 +373,18 @@ void test_session__reset(void) {
 
 void test_session__responsiveness(void) {
   struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
-  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
+  pbl_pp_session_set_responsiveness(gatt, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
 
   // Transports without the notion ignore it.
   struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  pbl_pp_session_set_responsiveness(qemu, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
+  pbl_pp_session_set_responsiveness(qemu, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
 
   pbl_pp_session_close(gatt);
   pbl_pp_session_close(qemu);
 
-  pbl_pp_session_set_responsiveness(gatt, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 10);
+  pbl_pp_session_set_responsiveness(gatt, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
 }
 

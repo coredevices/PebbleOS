@@ -263,7 +263,7 @@ static uint32_t s_responsiveness_max_period_s;
 static bool s_responsiveness_latency_is_reduced;
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
   s_responsiveness_max_period_s = max_period_secs;

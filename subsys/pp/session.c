@@ -296,13 +296,13 @@ void pbl_pp_session_reset(struct pbl_pp_session *session) {
 }
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
   const struct pbl_pp_transport *transport = pbl_pp_session_get_transport(session);
 
   if (transport != nullptr && transport->set_responsiveness != nullptr) {
-    transport->set_responsiveness(session, consumer, state, max_period_secs);
+    transport->set_responsiveness(session, req, state, max_period_secs);
   }
 }
 

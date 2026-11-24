@@ -23,6 +23,8 @@
 PBL_SHELL_SUBCMD_SET_CREATE(sub_bt);
 PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", nullptr);
 
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 static int prv_cmd_mac(const struct pbl_shell *sh, size_t argc, char **argv) {
   char addr_hex_str[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE];
 
@@ -75,7 +77,7 @@ static int prv_cmd_le_mode(const struct pbl_shell *sh, size_t argc, char **argv)
     return -EINVAL;
   }
 
-  bt_link_set_response_time(PBL_BT_CONSUMER_PROMPT, state, PBL_BT_RESPONSE_TIME_FOREVER);
+  bt_link_set_response_time(&s_response_time_req, state, PBL_BT_RESPONSE_TIME_FOREVER);
   return 0;
 }
 

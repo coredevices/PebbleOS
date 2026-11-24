@@ -66,16 +66,9 @@ static const struct params s_params[PBL_BT_RESPONSE_TIME_NUM] = {
   },
 };
 
-struct request {
-  /* PBL_BT_RESPONSE_TIME_MAX when the consumer asks for nothing. */
-  enum pbl_bt_response_time_state state;
-  uint64_t until;
-};
-
 struct conn {
   uint16_t handle;
   uint64_t connected_at;
-  struct request requests[PBL_BT_CONSUMER_NUM];
   enum pbl_bt_response_time_state state;
   /* When the parameters are next asked for, NEVER once granted or given up. */
   uint64_t negotiate_at;
@@ -91,6 +84,8 @@ static PBL_MUTEX_DEFINE(s_lock);
 static PBL_DELAYED_WORK_DEFINE(s_work, prv_work_fn);
 static struct ble_gap_event_listener s_listener;
 static struct conn s_conns[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
+/* The requests that ask for something. */
+static struct pbl_bt_responsiveness_req *s_reqs;
 
 static uint64_t prv_secs_from(uint64_t ticks, uint32_t secs) {
   return ticks + (uint64_t)secs * PBL_TICK_HZ;
@@ -172,25 +167,43 @@ static void prv_negotiate(struct conn *conn, uint64_t now) {
   conn->negotiate_at = prv_secs_from(now, REQUEST_TIMEOUT_S);
 }
 
+static void prv_drop(struct pbl_bt_responsiveness_req **link) {
+  struct pbl_bt_responsiveness_req *req = *link;
+
+  *link = req->next;
+  req->next = nullptr;
+  req->active = false;
+}
+
+static void prv_drop_all(uint16_t handle) {
+  for (struct pbl_bt_responsiveness_req **link = &s_reqs; *link != nullptr;) {
+    if ((*link)->conn_handle == handle) {
+      prv_drop(link);
+    } else {
+      link = &(*link)->next;
+    }
+  }
+}
+
 /* Brings a connection up to date, and returns when it next needs to be. */
 static uint64_t prv_update_conn(struct conn *conn, uint64_t now) {
   enum pbl_bt_response_time_state state = PBL_BT_RESPONSE_TIME_MAX;
   uint64_t next = NEVER;
 
-  for (size_t i = 0; i < PBL_ARRAY_SIZE(conn->requests); i++) {
-    struct request *request = &conn->requests[i];
+  for (struct pbl_bt_responsiveness_req **link = &s_reqs; *link != nullptr;) {
+    struct pbl_bt_responsiveness_req *req = *link;
 
-    if (request->state == PBL_BT_RESPONSE_TIME_MAX) {
-      continue;
+    if (req->conn_handle == conn->handle) {
+      if (req->until <= now) {
+        prv_drop(link);
+        continue;
+      }
+
+      state = PBL_MAX(state, (enum pbl_bt_response_time_state)req->state);
+      next = PBL_MIN(next, req->until);
     }
 
-    if (request->until <= now) {
-      request->state = PBL_BT_RESPONSE_TIME_MAX;
-      continue;
-    }
-
-    state = PBL_MAX(state, request->state);
-    next = PBL_MIN(next, request->until);
+    link = &req->next;
   }
 
   if (state != conn->state) {
@@ -299,6 +312,7 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_DISCONNECT:
       conn = prv_find(event->disconnect.conn.conn_handle);
       if (conn != nullptr) {
+        prv_drop_all(conn->handle);
         conn->handle = BLE_HS_CONN_HANDLE_NONE;
       }
       break;
@@ -324,14 +338,17 @@ void pbl_bt__responsiveness_init(void) {
     s_conns[i].handle = BLE_HS_CONN_HANDLE_NONE;
   }
 
+  while (s_reqs != nullptr) {
+    prv_drop(&s_reqs);
+  }
+
   (void)ble_gap_event_listener_register(&s_listener, prv_gap_event, nullptr);
 }
 
-void pbl_bt_responsiveness_request(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+void pbl_bt_responsiveness_request(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
                                    enum pbl_bt_response_time_state state,
                                    uint16_t max_period_secs) {
   const uint64_t now = pbl_uptime_ticks();
-  struct request *request;
   struct conn *conn;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -342,16 +359,22 @@ void pbl_bt_responsiveness_request(uint16_t conn_handle, enum pbl_bt_consumer co
     return;
   }
 
-  request = &conn->requests[consumer];
   if (state == PBL_BT_RESPONSE_TIME_MAX) {
-    if (request->state != PBL_BT_RESPONSE_TIME_MAX) {
-      request->until = prv_secs_from(now, RELEASE_DELAY_S);
+    if (req->active && req->conn_handle == conn_handle) {
+      req->until = prv_secs_from(now, RELEASE_DELAY_S);
     }
   } else {
-    request->state = state;
-    request->until = (max_period_secs == PBL_BT_RESPONSE_TIME_FOREVER)
-                         ? NEVER
-                         : prv_secs_from(now, max_period_secs);
+    if (!req->active) {
+      req->active = true;
+      req->next = s_reqs;
+      s_reqs = req;
+    }
+
+    req->conn_handle = conn_handle;
+    req->state = state;
+    req->until = (max_period_secs == PBL_BT_RESPONSE_TIME_FOREVER)
+                     ? NEVER
+                     : prv_secs_from(now, max_period_secs);
   }
 
   prv_update();

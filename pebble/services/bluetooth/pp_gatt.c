@@ -12,8 +12,8 @@ const char *pbl_pp_gatt_cb_get_serial_number(void) {
   return mfg_get_serial_number();
 }
 
-void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
-  pbl_bt_responsiveness_request(conn_handle, consumer, state, max_period_secs);
+  pbl_bt_responsiveness_request(conn_handle, req, state, max_period_secs);
 }

@@ -39,7 +39,7 @@ struct pbl_pp_session *pbl_pp_session_get_system(void) {
 }
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
   return;

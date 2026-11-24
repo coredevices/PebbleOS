@@ -22,6 +22,8 @@
 
 PBL_LOG_MODULE_DEFINE(service_voice_endpoint, CONFIG_SERVICE_VOICE_ENDPOINT_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 10
+
 #ifdef CONFIG_MIC
 static bool prv_handle_result_common(VoiceEndpointResult result, bool app_initiated,
                                      AudioEndpointSessionId session_id,
@@ -230,13 +232,20 @@ void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
 }
 #endif
 
+void voice_endpoint_set_fast_link(bool fast) {
+  static struct pbl_bt_responsiveness_req s_req;
+
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_req,
+                                    fast ? PBL_BT_RESPONSE_TIME_MIN : PBL_BT_RESPONSE_TIME_MAX,
+                                    FAST_LINK_TIMEOUT_S);
+}
+
 void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
                                   AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info,
                                   Uuid *app_uuid) {
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
-  pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
+
+  voice_endpoint_set_fast_link(true);
 
   // We're only sending one attribute now: the speex audio transfer info packet
   size_t size = sizeof(SessionSetupMsg) + sizeof(struct pbl_generic_attr) +

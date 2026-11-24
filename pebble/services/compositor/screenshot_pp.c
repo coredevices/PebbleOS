@@ -17,6 +17,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_compositor, CONFIG_SERVICE_COMPOSITOR_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 5
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 static bool s_screenshot_in_progress = false;
 
 typedef enum {
@@ -70,16 +74,15 @@ static void prv_send_error_response(struct pbl_pp_session *session, uint8_t resp
 }
 
 static void prv_finish(ScreenshotState *state) {
-  pbl_pp_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_SCREENSHOT,
-                                    PBL_BT_RESPONSE_TIME_MAX, 0);
+  pbl_pp_session_set_responsiveness(state->session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MAX,
+                                    0);
   compositor_unfreeze();
   s_screenshot_in_progress = false;
 }
 
 static void prv_request_fast_connection(struct pbl_pp_session *session) {
-  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_SCREENSHOT,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS);
+  pbl_pp_session_set_responsiveness(session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                    FAST_LINK_TIMEOUT_S);
 }
 
 static uint32_t prv_framebuffer_next_chunk(FrameBufferState *restrict state,

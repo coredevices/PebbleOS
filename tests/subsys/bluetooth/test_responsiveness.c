@@ -21,6 +21,8 @@ static struct ble_gap_conn_desc s_desc;
 static struct ble_gap_upd_params s_requested;
 static int s_num_requests;
 static int s_request_rc;
+static struct pbl_bt_responsiveness_req s_req;
+static struct pbl_bt_responsiveness_req s_other_req;
 
 int ble_gap_event_listener_register(struct ble_gap_event_listener *listener, ble_gap_event_fn *fn,
                                     void *arg) {
@@ -115,7 +117,7 @@ void test_responsiveness__nothing_is_asked_for_on_its_own(void) {
 }
 
 void test_responsiveness__waits_after_connecting(void) {
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 30);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 30);
   cl_assert_equal_i(s_num_requests, 0);
 
   prv_spend_seconds(1);
@@ -127,12 +129,11 @@ void test_responsiveness__waits_after_connecting(void) {
 void test_responsiveness__fastest_wins_and_expires(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIDDLE, 30);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIDDLE, 30);
   cl_assert_equal_i(s_requested.latency, 4);
 
   /* The request with the central is answered before the next is made. */
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_PP_PUT_BYTES, PBL_BT_RESPONSE_TIME_MIN,
-                                10);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_other_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(s_num_requests, 1);
   prv_update(0, SLOW, 4);
@@ -153,13 +154,13 @@ void test_responsiveness__fastest_wins_and_expires(void) {
 void test_responsiveness__release_is_delayed(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN,
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
                                 PBL_BT_RESPONSE_TIME_FOREVER);
   prv_update(0, FAST, 0);
   prv_spend_seconds(600);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX, 0);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MAX, 0);
   prv_spend_seconds(1);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
   prv_spend_seconds(2);
@@ -170,13 +171,13 @@ void test_responsiveness__release_is_delayed(void) {
 void test_responsiveness__gives_up_after_three_requests(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN,
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
                                 PBL_BT_RESPONSE_TIME_FOREVER);
   prv_spend_seconds(60);
   cl_assert_equal_i(s_num_requests, 3);
 
   /* Asking for something else starts over. */
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX, 0);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MAX, 0);
   prv_spend_seconds(3);
   cl_assert_equal_i(s_num_requests, 4);
 }
@@ -184,7 +185,7 @@ void test_responsiveness__gives_up_after_three_requests(void) {
 void test_responsiveness__collisions_are_not_attempts(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN,
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
                                 PBL_BT_RESPONSE_TIME_FOREVER);
   for (int i = 0; i < 5; i++) {
     cl_assert_equal_i(s_num_requests, i + 1);
@@ -200,7 +201,7 @@ void test_responsiveness__collisions_are_not_attempts(void) {
 void test_responsiveness__asks_again_when_the_central_changes_them(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN,
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
                                 PBL_BT_RESPONSE_TIME_FOREVER);
   prv_update(0, FAST, 0);
   cl_assert_equal_i(s_num_requests, 1);
@@ -210,9 +211,23 @@ void test_responsiveness__asks_again_when_the_central_changes_them(void) {
 }
 
 void test_responsiveness__no_connection(void) {
-  pbl_bt_responsiveness_request(2, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIN, 30);
-  pbl_bt_responsiveness_request(BLE_HS_CONN_HANDLE_NONE, PBL_BT_CONSUMER_APP,
-                                PBL_BT_RESPONSE_TIME_MIN, 30);
+  pbl_bt_responsiveness_request(2, &s_req, PBL_BT_RESPONSE_TIME_MIN, 30);
+  pbl_bt_responsiveness_request(BLE_HS_CONN_HANDLE_NONE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 30);
   prv_spend_seconds(5);
   cl_assert_equal_i(s_num_requests, 0);
+}
+
+void test_responsiveness__requests_end_with_the_connection(void) {
+  prv_spend_seconds(2);
+
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
+                                PBL_BT_RESPONSE_TIME_FOREVER);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
+
+  test_responsiveness__cleanup();
+  prv_connect();
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MAX);
+
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIDDLE, 30);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIDDLE);
 }

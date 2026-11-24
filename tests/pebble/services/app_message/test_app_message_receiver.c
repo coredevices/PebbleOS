@@ -67,7 +67,7 @@ void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
 }
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
 }

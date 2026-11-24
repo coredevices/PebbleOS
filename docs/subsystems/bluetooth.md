@@ -104,8 +104,8 @@ The firmware builds on that in its Bluetooth service:
 
 A connection is slow and frugal, or fast and costly, and which one is a matter
 of its parameters. Whoever needs it fast asks for a response time on a
-connection with `pbl_bt_responsiveness_request()`, as a consumer and for a
-limited period; the fastest one asked for is negotiated with the central:
+connection with `pbl_bt_responsiveness_request()`, with a request it owns
+(`struct pbl_bt_responsiveness_req`) and for a limited period; the fastest one asked for is negotiated with the central:
 
 | Response time | Interval | Peripheral latency | Supervision timeout |
 | --- | --- | --- | --- |
