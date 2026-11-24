@@ -14,4 +14,8 @@ If a section is too small, you'll see an error like this:
 cannot move location counter backwards (from 0000000008011754 to 0000000008010800)
 If you see this, you need to bump the size to the next power of two.
 */
+#ifdef CONFIG_USERSPACE
 __unpriv_ro_bss_size__ = 2K;
+#else
+__unpriv_ro_bss_size__ = 0;
+#endif
