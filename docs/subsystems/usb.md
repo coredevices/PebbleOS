@@ -149,6 +149,32 @@ cmp image.bin readback.bin
 `-Z` stops the upload at the size of the image; without it the whole
 partition is read. On Linux, `stat -c %s` gives the size.
 
+## Test function
+
+`CONFIG_USB_TEST` adds a vendor-class function for testing the stack and the
+controller from a host, which the integration tests in `tests/integration/usb`
+drive (see [](../development/tests/integration.md)), with the
+`samples/subsys/usb/test` sample. It takes interface 0, so it goes with neither
+the serial port nor the firmware upgrade, and five endpoints, each number in
+one direction:
+
+| Endpoint | Type | What it does |
+| --- | --- | --- |
+| `0x01`, `0x82` | Bulk | Loopback: what arrives on `0x01` goes back on `0x82`, ending with a zero-length packet when it fills its packets |
+| `0x03` | Bulk | Sink: checks that the bytes of each packet count up from its sequence number |
+| `0x84` | Bulk | Source: sends packets whose bytes count up from their sequence number |
+| `0x85` | Interrupt | A 16-byte packet every frame the host polls, its first four bytes its sequence number |
+
+Its vendor requests, to interface 0:
+
+| Request | Direction | What it does |
+| --- | --- | --- |
+| `0x01` | OUT | Stores up to 1024 bytes; more stall |
+| `0x02` | IN | Returns `wValue` bytes of what was stored |
+| `0x03` | Either | Stalls |
+| `0x04` | OUT | Clears the counters and the sink's sequence number |
+| `0x05` | IN | Returns the counters, five 32-bit little-endian words: loopback, source and sink bytes, sink errors, interrupt packets |
+
 ## Controllers
 
 A controller driver implements `struct pbl_udc_ops` and reports bus events,
