@@ -87,7 +87,7 @@ pbl_clar_test(test_crc32)
 ```
 
 `pbl_crc32()` lives in `libcrc`, one of the static libraries
-`pbl_clar_test()` always links along with `libutil`, `libbtutil` and the
+`pbl_clar_test()` always links along with `libutil` and the
 stubs library (see below). A test or stub defining one of their functions,
 weak or not, replaces the library copy, since the linker only pulls an
 archive member for undefined symbols.
@@ -155,7 +155,7 @@ These mechanisms replace dependencies of the code under test:
   `pbl_test_stubs_*` library compiled with each test's own flags and
   linked into every test. Every definition there is weak, so a test or fake
   providing its own copy takes precedence. The library is linked ahead of
-  `libutil`, `libbtutil` and `libcrc`, so it must not stub their functions
+  `libutil` and `libcrc`, so it must not stub their functions
   or it would shadow them; the assert stubs are linked as an object so they
   also win over the weak `util_assertion_failed()` in `libutil`. A test
   reaching into a stub's state, e.g. `s_syscall_did_fail`, includes the

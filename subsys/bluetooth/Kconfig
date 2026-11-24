@@ -5,7 +5,6 @@ menu "Bluetooth"
 
 config BT
     bool "Bluetooth"
-    select BTUTIL
     select BT_GATT_CLIENT
     select KERNEL_SYS_WORKQ
     select NIMBLE

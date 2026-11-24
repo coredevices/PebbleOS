@@ -5,7 +5,6 @@
 
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/btutil/bt_device.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/advertising.h>
@@ -19,6 +18,12 @@
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 #define MAX_BONDS 4U
+
+static bool prv_addr_equal(const struct pbl_bt_device_internal *a,
+                           const struct pbl_bt_device_internal *b) {
+  return a->is_random_address == b->is_random_address &&
+         memcmp(&a->address, &b->address, sizeof(a->address)) == 0;
+}
 
 static bool prv_get_prf_pairing(struct pbl_bt_bond_keys *keys, char *name) {
   memset(keys, 0, sizeof(*keys));
@@ -59,7 +64,7 @@ static bool prv_keys_equal(const struct pbl_bt_bond_keys *a, const struct pbl_bt
   const struct pbl_bt_sm_pairing_info *ia = &a->info;
   const struct pbl_bt_sm_pairing_info *ib = &b->info;
 
-  if (a->flags != b->flags || !bt_device_internal_equal(&ia->identity, &ib->identity) ||
+  if (a->flags != b->flags || !prv_addr_equal(&ia->identity, &ib->identity) ||
       ia->is_remote_identity_info_valid != ib->is_remote_identity_info_valid) {
     return false;
   }
@@ -85,7 +90,7 @@ static void prv_copy_to_prf_store(const struct pbl_bt_device_internal *addr) {
     }
 
     // The name there is another peer's.
-    if (!bt_device_internal_equal(&keys.info.identity, &stored.info.identity)) {
+    if (!prv_addr_equal(&keys.info.identity, &stored.info.identity)) {
       pbl_bt_prf_store_erase_pairing();
     }
   }
@@ -102,8 +107,7 @@ struct others {
 static void prv_collect_others_cb(const struct pbl_bt_bond_info *info, void *user_data) {
   struct others *others = user_data;
 
-  if (others->count < PBL_ARRAY_SIZE(others->addrs) &&
-      !bt_device_internal_equal(&info->addr, others->keep)) {
+  if (others->count < PBL_ARRAY_SIZE(others->addrs) && !prv_addr_equal(&info->addr, others->keep)) {
     others->addrs[others->count++] = info->addr;
   }
 }
@@ -183,16 +187,15 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
 bool bt_bonding_get_peer_name(const struct pbl_bt_device_internal *addr, char *name) {
   struct pbl_bt_bond_keys stored;
 
-  return prv_get_prf_pairing(&stored, name) &&
-         bt_device_internal_equal(&stored.info.identity, addr) && name[0] != '\0';
+  return prv_get_prf_pairing(&stored, name) && prv_addr_equal(&stored.info.identity, addr) &&
+         name[0] != '\0';
 }
 
 void bt_bonding_set_peer_name(const struct pbl_bt_device_internal *addr, const char *name) {
   char stored_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   struct pbl_bt_bond_keys stored;
 
-  if (!prv_get_prf_pairing(&stored, stored_name) ||
-      !bt_device_internal_equal(&stored.info.identity, addr) ||
+  if (!prv_get_prf_pairing(&stored, stored_name) || !prv_addr_equal(&stored.info.identity, addr) ||
       strncmp(stored_name, name, sizeof(stored_name)) == 0) {
     return;
   }
@@ -228,8 +231,7 @@ void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
     return;
   }
 
-  if (prv_get_prf_pairing(&stored, nullptr) &&
-      bt_device_internal_equal(&stored.info.identity, addr)) {
+  if (prv_get_prf_pairing(&stored, nullptr) && prv_addr_equal(&stored.info.identity, addr)) {
     pbl_bt_prf_store_erase_pairing();
   }
 
