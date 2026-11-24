@@ -9,6 +9,8 @@
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/bluetooth/types.h>
 
+#include <nimble/ble.h>
+
 /**
  * @defgroup services_bluetooth_link Link
  * @ingroup services_bluetooth
@@ -45,7 +47,7 @@ bool bt_link_is_connected(void);
  *
  * @param identity Identity address of the peer.
  */
-bool bt_link_is_connected_to(const struct pbl_bt_device_internal *identity);
+bool bt_link_is_connected_to(const ble_addr_t *identity);
 
 /**
  * @brief Ask for a response time on the link, see pbl_bt_responsiveness_request().

@@ -10,6 +10,8 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 
+#include <nimble/ble.h>
+
 /**
  * @defgroup bluetooth_bond Bonds
  * @ingroup bluetooth
@@ -31,7 +33,7 @@
 /** @brief A bonded peer. */
 struct pbl_bt_bond_info {
   /** Identity address of the peer. */
-  struct pbl_bt_device_internal addr;
+  ble_addr_t addr;
   /** Identity Resolving Key of the peer, valid if @ref irk_valid. */
   struct pbl_bt_sm_key irk;
   /** True if the peer distributed its Identity Resolving Key. */
@@ -77,7 +79,7 @@ size_t pbl_bt_bond_count(void);
  * @retval 0 Success.
  * @retval -ENOENT Not bonded with @p addr.
  */
-int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info);
+int pbl_bt_bond_get(const ble_addr_t *addr, struct pbl_bt_bond_info *info);
 
 /**
  * @brief Get the keys of a bond.
@@ -87,7 +89,7 @@ int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bon
  * @retval 0 Success.
  * @retval -ENOENT Not bonded with @p addr.
  */
-int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_keys *keys);
+int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys);
 
 /**
  * @brief Add a bond from its keys, or replace the keys of the one with the same peer.
@@ -111,7 +113,7 @@ int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys);
  * @retval -ENOENT Not bonded with @p addr.
  * @retval -EIO Store error.
  */
-int pbl_bt_unpair(const struct pbl_bt_device_internal *addr);
+int pbl_bt_unpair(const ble_addr_t *addr);
 
 /**
  * @brief Called after bonding with a new peer.
@@ -138,6 +140,6 @@ extern void pbl_bt_cb_bond_changed(const struct pbl_bt_bond_info *info);
  *
  * @param addr Identity address of the peer.
  */
-extern void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr);
+extern void pbl_bt_cb_bond_deleted(const ble_addr_t *addr);
 
 /** @} */

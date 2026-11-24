@@ -9,9 +9,10 @@
 #include <pbl/util/list.h>
 
 #include <kernel/events.h>
+#include <nimble/ble.h>
 
 typedef struct StoredRemoteBLE {
-  struct pbl_bt_device_internal identity;
+  ble_addr_t identity;
   bool connected;
 } StoredRemoteBLE;
 

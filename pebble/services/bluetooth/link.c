@@ -114,14 +114,6 @@ static bool prv_is_bonded(const struct ble_gap_conn_desc *desc) {
   return ble_store_read_peer_sec(&key_sec, &value_sec) == 0;
 }
 
-static void prv_get_identity(const struct ble_gap_conn_desc *desc,
-                             struct pbl_bt_device_internal *identity) {
-  *identity = (struct pbl_bt_device_internal){
-    .is_random_address = (desc->peer_id_addr.type == BLE_ADDR_RANDOM),
-  };
-  memcpy(identity->address.octets, desc->peer_id_addr.val, sizeof(identity->address.octets));
-}
-
 /* s_lock must be held. */
 static void prv_update_gateway(void) {
   struct ble_gap_conn_desc desc;
@@ -282,18 +274,11 @@ bool bt_link_is_connected(void) {
   return bt_link_get_conn_handle() != BLE_HS_CONN_HANDLE_NONE;
 }
 
-bool bt_link_is_connected_to(const struct pbl_bt_device_internal *identity) {
-  struct pbl_bt_device_internal peer;
+bool bt_link_is_connected_to(const ble_addr_t *identity) {
   struct ble_gap_conn_desc desc;
 
-  if (ble_gap_conn_find(bt_link_get_conn_handle(), &desc) != 0) {
-    return false;
-  }
-
-  prv_get_identity(&desc, &peer);
-
-  return peer.is_random_address == identity->is_random_address &&
-         memcmp(&peer.address, &identity->address, sizeof(peer.address)) == 0;
+  return ble_gap_conn_find(bt_link_get_conn_handle(), &desc) == 0 &&
+         ble_addr_cmp(&desc.peer_id_addr, identity) == 0;
 }
 
 void bt_link_set_response_time(struct pbl_bt_responsiveness_req *req,
@@ -303,7 +288,6 @@ void bt_link_set_response_time(struct pbl_bt_responsiveness_req *req,
 
 static void prv_peer_name_changed_cb(void *data) {
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  struct pbl_bt_device_internal identity;
   struct ble_gap_conn_desc desc;
   PebbleEvent event = {
     .type = PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT,
@@ -313,9 +297,8 @@ static void prv_peer_name_changed_cb(void *data) {
     return;
   }
 
-  prv_get_identity(&desc, &identity);
   bt_link_copy_peer_name(name, sizeof(name));
-  bt_bonding_set_peer_name(&identity, name);
+  bt_bonding_set_peer_name(&desc.peer_id_addr, name);
   event_put(&event);
 }
 

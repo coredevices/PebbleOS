@@ -140,7 +140,7 @@ static void prv_print_bond(const struct pbl_bt_bond_info *info, void *user_data)
   }
 
   pbl_shell_print(sh, "Bond: " PBL_BT_ADDR_FMT " random=%u irk=%u",
-                  PBL_BT_ADDR_XPLODE(info->addr.address), info->addr.is_random_address,
+                  PBL_BT_ADDR_XPLODE_VAL(info->addr.val), info->addr.type == BLE_ADDR_RANDOM,
                   info->irk_valid);
   pbl_shell_print(sh, " Name: %s", name);
 }
@@ -154,8 +154,8 @@ static int prv_cmd_bonds(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   if (pbl_bt_prf_store_get_pairing(&info, name, &flags)) {
     pbl_shell_print(sh, "PRF store: " PBL_BT_ADDR_FMT " random=%u flags=0x%x",
-                    PBL_BT_ADDR_XPLODE(info.identity.address), info.identity.is_random_address,
-                    flags);
+                    PBL_BT_ADDR_XPLODE_VAL(info.identity.val),
+                    info.identity.type == BLE_ADDR_RANDOM, flags);
     pbl_shell_print(sh, " Name: %s", name);
   } else {
     pbl_shell_print(sh, "PRF store: no pairing");

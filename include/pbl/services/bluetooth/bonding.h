@@ -8,6 +8,8 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 
+#include <nimble/ble.h>
+
 /**
  * @defgroup services_bluetooth_bonding Bonding
  * @ingroup services_bluetooth
@@ -41,7 +43,7 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys);
  * @param[out] name Buffer of @c PBL_BT_DEVICE_NAME_BUFFER_SIZE bytes.
  * @return True if a name is stored for the peer.
  */
-bool bt_bonding_get_peer_name(const struct pbl_bt_device_internal *addr, char *name);
+bool bt_bonding_get_peer_name(const ble_addr_t *addr, char *name);
 
 /**
  * @brief Store the name of a bonded peer.
@@ -49,6 +51,6 @@ bool bt_bonding_get_peer_name(const struct pbl_bt_device_internal *addr, char *n
  * @param addr Identity address of the peer.
  * @param name The name.
  */
-void bt_bonding_set_peer_name(const struct pbl_bt_device_internal *addr, const char *name);
+void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name);
 
 /** @} */

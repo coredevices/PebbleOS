@@ -21,15 +21,9 @@ static struct pbl_bt_bond_keys s_bonds[MAX_BONDS];
 static size_t s_num_bonds;
 static int s_unfaithful_count;
 
-static bool prv_addr_equal(const struct pbl_bt_device_internal *a,
-                           const struct pbl_bt_device_internal *b) {
-  return a->is_random_address == b->is_random_address &&
-         memcmp(&a->address, &b->address, sizeof(a->address)) == 0;
-}
-
-static int prv_find(const struct pbl_bt_device_internal *addr) {
+static int prv_find(const ble_addr_t *addr) {
   for (size_t i = 0; i < s_num_bonds; i++) {
-    if (prv_addr_equal(&s_bonds[i].info.identity, addr)) {
+    if (ble_addr_cmp(&s_bonds[i].info.identity, addr) == 0) {
       return (int)i;
     }
   }
@@ -51,11 +45,11 @@ size_t pbl_bt_bond_count(void) {
   return s_num_bonds;
 }
 
-int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info) {
+int pbl_bt_bond_get(const ble_addr_t *addr, struct pbl_bt_bond_info *info) {
   return prv_find(addr) < 0 ? -ENOENT : 0;
 }
 
-int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_keys *keys) {
+int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys) {
   const int idx = prv_find(addr);
 
   if (idx < 0) {
@@ -80,7 +74,7 @@ int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys) {
   return 0;
 }
 
-int pbl_bt_unpair(const struct pbl_bt_device_internal *addr) {
+int pbl_bt_unpair(const ble_addr_t *addr) {
   const int idx = prv_find(addr);
 
   if (idx < 0) {
@@ -125,7 +119,7 @@ static struct pbl_bt_bond_keys prv_keys(uint8_t id) {
   struct pbl_bt_bond_keys keys = {
     .info =
         {
-          .identity.address.octets = {id, 2, 3, 4, 5, 6},
+          .identity.val = {id, 2, 3, 4, 5, 6},
           .is_remote_encryption_info_valid = true,
           .remote_encryption_info =
               {
@@ -164,7 +158,7 @@ static void prv_assert_prf_pairing(const struct pbl_bt_bond_keys *keys) {
   uint8_t flags;
 
   cl_assert(pbl_bt_prf_store_get_pairing(&info, nullptr, &flags));
-  cl_assert(prv_addr_equal(&info.identity, &keys->info.identity));
+  cl_assert_equal_i(ble_addr_cmp(&info.identity, &keys->info.identity), 0);
   cl_assert_equal_m(&info.remote_encryption_info.ltk, &keys->info.remote_encryption_info.ltk,
                     sizeof(struct pbl_bt_sm_key));
   cl_assert_equal_m(&info.local_encryption_info.ltk, &keys->info.local_encryption_info.ltk,

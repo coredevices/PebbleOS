@@ -249,57 +249,19 @@ struct PBL_PACKED pbl_bt_addr {
   (a).octets[5], (a).octets[4], (a).octets[3], (a).octets[2], (a).octets[1], (a).octets[0]
 
 /**
+ * @brief PBL_BT_ADDR_XPLODE() for the octets of an address, e.g. the @c val of a @c ble_addr_t.
+ *
+ * @param v The six octets, least significant first.
+ */
+#define PBL_BT_ADDR_XPLODE_VAL(v) (v)[5], (v)[4], (v)[3], (v)[2], (v)[1], (v)[0]
+
+/**
  * @brief PBL_BT_ADDR_XPLODE() taking a pointer.
  *
  * @param a Pointer to a struct pbl_bt_addr.
  */
 #define PBL_BT_ADDR_XPLODE_PTR(a) \
   (a)->octets[5], (a)->octets[4], (a)->octets[3], (a)->octets[2], (a)->octets[1], (a)->octets[0]
-
-/**
- * @brief Remote Bluetooth device, as exposed to applications.
- *
- * Opaque: the layout is struct pbl_bt_device_internal.
- */
-struct pbl_bt_device {
-  union {
-    /** Opaque storage, as 32-bit words. */
-    uint32_t opaque[2];
-    /** Opaque storage, as a 64-bit word. */
-    uint64_t opaque_64;
-  };
-};
-
-/**
- * @brief Remote Bluetooth device: its address and address type.
- *
- * The layout of struct pbl_bt_device. It is not exported to applications and its size must never
- * change.
- */
-struct PBL_PACKED pbl_bt_device_internal {
-  union {
-    struct PBL_PACKED {
-      /** Device address. */
-      struct pbl_bt_addr address;
-      /** Reserved, zero. */
-      uint8_t rsvd : 1;
-      /** True if @ref address is a random address, false if it is a public address. */
-      bool is_random_address : 1;
-      /** Unused, zero. */
-      uint16_t zero : 14;
-    };
-    /** The same device, as the opaque type. */
-    struct pbl_bt_device opaque;
-  };
-};
-
-/** @brief Invalid (all zero) struct pbl_bt_device. */
-#define PBL_BT_DEVICE_INVALID ((const struct pbl_bt_device){})
-/** @brief Invalid (all zero) struct pbl_bt_device_internal. */
-#define PBL_BT_DEVICE_INTERNAL_INVALID ((const struct pbl_bt_device_internal){})
-
-static_assert(sizeof(struct pbl_bt_device_internal) == sizeof(struct pbl_bt_device),
-              "struct pbl_bt_device_internal should be equal in size to struct pbl_bt_device");
 
 /** @brief Minimum connection interval, in 1.25 ms slots. */
 #define PBL_BT_LL_CONN_INTV_MIN_SLOTS (6) // 1.25ms / slot

@@ -85,8 +85,7 @@ static int prv_save(void) {
     return 0;
   }
 
-  info.identity.is_random_address = peer->peer_addr.type == BLE_ADDR_RANDOM;
-  memcpy(info.identity.address.octets, peer->peer_addr.val, sizeof(info.identity.address.octets));
+  info.identity = peer->peer_addr;
 
   if (peer->ltk_present) {
     info.is_remote_encryption_info_valid = true;
@@ -170,8 +169,7 @@ void ble_store_config_conf_init(void) {
     return;
   }
 
-  addr.type = info.identity.is_random_address ? BLE_ADDR_RANDOM : BLE_ADDR_PUBLIC;
-  memcpy(addr.val, info.identity.address.octets, sizeof(addr.val));
+  addr = info.identity;
 
   sec = &ble_store_config_peer_secs[0];
   memset(sec, 0, sizeof(*sec));

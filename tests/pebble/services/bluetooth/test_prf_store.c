@@ -130,8 +130,9 @@ static const struct pbl_bt_sm_pairing_info PAIRING_INFO = (const struct pbl_bt_s
             },
       },
   .identity =
-      (const struct pbl_bt_device_internal){
-        .opaque.opaque_64 = 0x1122334455667788,
+      {
+        .type = BLE_ADDR_RANDOM,
+        .val = {0x88, 0x77, 0x66, 0x55, 0x44, 0x33},
       },
 
   .csrk =
@@ -179,7 +180,7 @@ static const struct pbl_bt_sm_key ROOT_KEYS_CLEAR[PBL_BT_SM_ROOT_KEY_TYPE_NUM] =
 static bool prv_identity_equal(const struct pbl_bt_sm_pairing_info *a,
                                const struct pbl_bt_sm_pairing_info *b) {
   return a->is_remote_identity_info_valid && b->is_remote_identity_info_valid &&
-         memcmp(&a->identity, &b->identity, sizeof(a->identity)) == 0 &&
+         ble_addr_cmp(&a->identity, &b->identity) == 0 &&
          memcmp(&a->irk, &b->irk, sizeof(a->irk)) == 0;
 }
 
@@ -286,6 +287,21 @@ void test_prf_store__wipe_all(void) {
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
 }
 
+// The bytes older firmware wrote and reads: the address, the random bit, zero.
+void test_prf_store__identity_layout(void) {
+  static const uint8_t expected[] = {0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x02, 0x00};
+  uint8_t stored[sizeof(expected)];
+
+  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, 0 /* flags */);
+
+  pbl_flash_read(FLASH,
+                 SPRF_PAGE_FLASH_OFFSET(pbl_bt_prf_store__get_page()) +
+                     offsetof(SharedPRFData, ble_pairing_data) +
+                     offsetof(SprfBlePairingData, identity_addr),
+                 stored, sizeof(stored));
+  cl_assert_equal_m(stored, expected, sizeof(expected));
+}
+
 void test_prf_store__ble_pairing(void) {
   pbl_bt_prf_store_wipe();
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
@@ -313,7 +329,7 @@ void test_prf_store__ble_pairing(void) {
                     pairing_info_out.local_encryption_info.ediv);
   cl_assert_equal_i(PAIRING_INFO.local_encryption_info.div,
                     pairing_info_out.local_encryption_info.div);
-  cl_assert(PAIRING_INFO.identity.opaque.opaque_64 == pairing_info_out.identity.opaque.opaque_64);
+  cl_assert_equal_i(ble_addr_cmp(&PAIRING_INFO.identity, &pairing_info_out.identity), 0);
   cl_assert(PAIRING_INFO.remote_encryption_info.rand ==
             pairing_info_out.remote_encryption_info.rand);
   cl_assert_equal_i(PAIRING_INFO.remote_encryption_info.ediv,
