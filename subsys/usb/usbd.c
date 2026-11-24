@@ -335,7 +335,7 @@ static void prv_setup(const uint8_t *packet) {
     (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, nullptr, 0U);
   } else if (in) {
     len = PBL_MIN(len, setup->wLength);
-    s_ctrl.zlp = len < setup->wLength && (len % EP0_MPS) == 0U;
+    s_ctrl.zlp = len != 0U && len < setup->wLength && (len % EP0_MPS) == 0U;
     s_ctrl.stage = STAGE_DATA_IN;
     (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, data, len);
   } else if (data != nullptr && len >= setup->wLength) {
