@@ -147,4 +147,4 @@ static int prv_init(const struct pbl_device *dev) {
   PBL_SYS_OFF_HANDLER_DEFINE(sym##_power_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_HIGH,        \
                              prv_sys_off, (void *)&sym##_inst)
 
-#include PBL_DT_INSTANCES(st_stm32h747_m4)
+#include PBL_DT_INSTANCES(st_stm32h747_m4_rproc)
