@@ -23,6 +23,7 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 static char s_peer_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 static uint16_t s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
+static struct ble_gap_event_listener s_pairing_listener;
 
 static bool prv_is_bonded(const struct ble_gap_conn_desc *desc) {
   const struct ble_store_key_sec key_sec = {.peer_addr = desc->peer_id_addr};
@@ -58,8 +59,21 @@ static void prv_end_pairing(uint16_t conn_handle, bool success) {
   pbl_bt_cb_pairing_confirm_handle_completed(PAIRING_CTX(conn_handle), success);
 }
 
+/* A link dropped while pairing raises no pairing complete event. */
+static int prv_pairing_gap_event(struct ble_gap_event *event, void *arg) {
+  if (event->type == BLE_GAP_EVENT_DISCONNECT) {
+    prv_end_pairing(event->disconnect.conn.conn_handle, false);
+  }
+
+  return 0;
+}
+
 static void prv_handle_passkey(const struct ble_gap_event *event) {
   char passkey[7];
+
+  /* Listeners run newest first: the pairing ends before anyone else handles the disconnection. */
+  (void)ble_gap_event_listener_unregister(&s_pairing_listener);
+  (void)ble_gap_event_listener_register(&s_pairing_listener, prv_pairing_gap_event, nullptr);
 
   snprintf(
       passkey, sizeof(passkey), "%06" PRIu32,
@@ -115,10 +129,6 @@ int pbl_bt_gap_event_handler(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
       prv_handle_connect(event);
-      break;
-    case BLE_GAP_EVENT_DISCONNECT:
-      /* A link dropped while pairing raises no pairing complete event. */
-      prv_end_pairing(event->disconnect.conn.conn_handle, false);
       break;
     case BLE_GAP_EVENT_CONN_UPDATE_REQ:
       *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
