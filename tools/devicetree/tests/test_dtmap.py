@@ -1938,6 +1938,18 @@ def test_instance_files_of_specs_sharing_one_of_their_compatibles(tmp_path):
     ]
 
 
+def test_instance_file_of_a_spec_for_several_compatibles(tmp_path):
+    write_specs(
+        tmp_path,
+        {
+            "panel": "compatible:\n  - acme,one\n  - acme,two\nconfig: A\nclass: clk\ndefine: A\n",
+        },
+    )
+    assert dtmap.instance_files(dtmap.load_specs(tmp_path)) == [
+        "devicetree/instances/panel.inc",
+    ]
+
+
 def test_specs_sharing_a_compatible_need_a_class(tmp_path):
     write_specs(
         tmp_path,
