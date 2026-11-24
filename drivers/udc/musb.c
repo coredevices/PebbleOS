@@ -136,6 +136,19 @@ static void prv_index(const struct pbl_udc_musb *m, uint8_t n) {
   prv_wb(m, MUSB_INDEX, n);
 }
 
+// The calls the stack makes from a callback in the interrupt handler leave the endpoint the
+// handler selected
+static uint8_t prv_lock(const struct pbl_udc_musb *m) {
+  pbl_irq_lock();
+
+  return prv_rb(m, MUSB_INDEX);
+}
+
+static void prv_unlock(const struct pbl_udc_musb *m, uint8_t index) {
+  prv_index(m, index);
+  pbl_irq_unlock();
+}
+
 static void prv_write_fifo(const struct pbl_udc_musb *m, uint8_t n, const uint8_t *buf,
                            size_t len) {
   uintptr_t fifo = m->base + MUSB_FIFO(n);
@@ -496,6 +509,7 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
   bool in = (addr & PBL_UDC_EP_IN) != 0U;
   bool iso = type == PBL_UDC_EP_ISOCHRONOUS;
   int ret;
+  uint8_t index;
 
   if (n >= MAX_EPS || mps > EP_MPS_MAX) {
     return -EINVAL;
@@ -511,10 +525,10 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
     return -EBUSY;
   }
 
-  pbl_irq_lock();
+  index = prv_lock(m);
   ret = prv_fifo_alloc(m, n, mps, type == PBL_UDC_EP_BULK && !in);
   if (ret != 0) {
-    pbl_irq_unlock();
+    prv_unlock(m, index);
     return ret;
   }
 
@@ -539,7 +553,7 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
            MUSB_RXCSR_CLRDATATOG | MUSB_RXCSR_FLUSHFIFO | (iso ? MUSB_RXCSR_ISO : 0U));
     prv_ww(m, MUSB_INTRRXE, prv_rw(m, MUSB_INTRRXE) | PBL_BIT(n));
   }
-  pbl_irq_unlock();
+  prv_unlock(m, index);
 
   return 0;
 }
@@ -571,8 +585,9 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
   uint8_t n = addr & ~PBL_UDC_EP_IN;
   bool in = (addr & PBL_UDC_EP_IN) != 0U;
   struct prv_ep *ep = in ? &m->state->in[n] : &m->state->out[n];
+  uint8_t index;
 
-  pbl_irq_lock();
+  index = prv_lock(m);
   if (n != 0U) {
     prv_index(m, n);
     if (in) {
@@ -592,7 +607,7 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
       prv_fifo_reset(m);
     }
   }
-  pbl_irq_unlock();
+  prv_unlock(m, index);
 
   return 0;
 }
@@ -600,8 +615,9 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
 static int prv_ep_set_halt(const struct pbl_udc *udc, uint8_t addr, bool halt) {
   const struct pbl_udc_musb *m = prv_musb(udc);
   uint8_t n = addr & ~PBL_UDC_EP_IN;
+  uint8_t index;
 
-  pbl_irq_lock();
+  index = prv_lock(m);
   prv_index(m, n);
   if (n == 0U) {
     // A request the stack refuses: its setup packet is served with a stall
@@ -622,7 +638,7 @@ static int prv_ep_set_halt(const struct pbl_udc *udc, uint8_t addr, bool halt) {
 
     prv_ww(m, MUSB_RXCSR, halt ? csr | MUSB_RXCSR_SENDSTALL : csr | MUSB_RXCSR_CLRDATATOG);
   }
-  pbl_irq_unlock();
+  prv_unlock(m, index);
 
   return 0;
 }
@@ -675,12 +691,13 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
   bool in = (addr & PBL_UDC_EP_IN) != 0U;
   struct prv_ep *ep = in ? &m->state->in[n] : &m->state->out[n];
   int ret = 0;
+  uint8_t index;
 
   if (n >= MAX_EPS || ep->mps == 0U) {
     return -EINVAL;
   }
 
-  pbl_irq_lock();
+  index = prv_lock(m);
   if (ep->busy) {
     ret = -EBUSY;
   } else {
@@ -705,7 +722,7 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
       }
     }
   }
-  pbl_irq_unlock();
+  prv_unlock(m, index);
 
   return ret;
 }
