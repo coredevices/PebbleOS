@@ -58,6 +58,9 @@ typedef struct ActionToggleImpl {
     };
     ResourceId icons[ActionToggleDialogTypeCount];
   };
+  //! Icon for the dialogs that disable the setting, so the two states look different.
+  //! Optional; the icons above are used when unset.
+  ResourceId disable_icon;
   bool result_icon_static;
 } ActionToggleImpl;
 
