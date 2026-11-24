@@ -10,9 +10,12 @@
 #include <pbl/usb/cdc_acm.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/math.h>
+#include <pbl/util/size.h>
 
 #define IFACE_COMM 0U
 #define IFACE_DATA 1U
+
+#define STRING_NAME 1U
 
 #define EP_NOTIFY   (PBL_UDC_EP_IN | 1U)
 #define EP_DATA_OUT 2U
@@ -45,7 +48,7 @@ static const uint8_t s_desc[] = {
   CDC_CLASS,
   CDC_SUBCLASS_ACM,
   CDC_PROTOCOL_AT,
-  0,
+  STRING_NAME,
   // Communication interface, with its functional descriptors and notification endpoint
   9,
   PBL_USB_DESC_INTERFACE,
@@ -55,7 +58,7 @@ static const uint8_t s_desc[] = {
   CDC_CLASS,
   CDC_SUBCLASS_ACM,
   CDC_PROTOCOL_AT,
-  0,
+  STRING_NAME,
   5,
   PBL_USB_DESC_CS_INTERFACE,
   CDC_FUNC_HEADER,
@@ -106,6 +109,10 @@ static const uint8_t s_desc[] = {
   64,
   0,
   0,
+};
+
+static const char *const s_strings[] = {
+  CONFIG_USB_CDC_ACM_NAME,
 };
 
 static struct {
@@ -202,6 +209,8 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 PBL_USBD_FUNCTION_DEFINE(cdc_acm) = {
   .desc = s_desc,
   .desc_len = sizeof(s_desc),
+  .strings = s_strings,
+  .num_strings = PBL_ARRAY_SIZE(s_strings),
   .first_iface = IFACE_COMM,
   .num_ifaces = 2U,
   .configured = prv_configured,

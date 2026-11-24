@@ -59,6 +59,9 @@ console_uart:
   include: pbl/usb/cdc_acm.h
 ```
 
+`CONFIG_USB_CDC_ACM_NAME` (default `Serial port`) is the name the host
+shows for it, its function and interface string.
+
 Received bytes go to the UART's receive callback, from the interrupt, without
 flow control: a callback that cannot keep up loses them. Bytes sent before the
 host configures the device, or that do not fit while it does not read, are
