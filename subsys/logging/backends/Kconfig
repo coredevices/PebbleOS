@@ -4,7 +4,7 @@
 config LOG_BACKEND_UART
     bool "UART backend"
     default y
-    depends on CONSOLE
+    depends on LOG && CONSOLE
     select KERNEL_SYS_WORKQ
     help
       Write log messages as text lines to the serial console.
@@ -23,7 +23,7 @@ endif
 
 config LOG_BACKEND_FLASH
     bool "Flash backend"
-    depends on FLASH && $(has_partition,debug-db)
+    depends on LOG && FLASH && $(has_partition,debug-db)
     select KERNEL_SYS_WORKQ
     help
       Store log messages in the debug flash region, one log generation
