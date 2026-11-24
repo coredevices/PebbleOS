@@ -1241,7 +1241,9 @@ void test_spi_nor__otp_slots(void) {
 
   s_sr2 |= PBL_BIT(3);
   cl_assert(otp_is_locked(OTP_SERIAL));
-  cl_assert(otp_is_locked(OTP_PCBA_SERIAL));
+  // The lock covers the whole region, but a cell never written holds no value
+  cl_assert(!otp_is_locked(OTP_PCBA_SERIAL));
+  cl_assert(otp_get_slot(OTP_PCBA_SERIAL) == nullptr);
 }
 
 // Two parts in parallel: each unit spans both, and their OTP areas are not one

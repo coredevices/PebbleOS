@@ -34,10 +34,11 @@ enum {
 /**
  * @brief Check whether the OTP storage is locked.
  *
- * Locking applies to the whole security register holding the slots.
+ * Locking applies to the whole security register holding the slots. A slot that holds no
+ * NUL-terminated value, such as an unwritten one, does not count as locked.
  *
  * @param index Slot index.
- * @return true if locked.
+ * @return true if locked and written.
  */
 bool otp_is_locked(const uint8_t index);
 
@@ -45,8 +46,8 @@ bool otp_is_locked(const uint8_t index);
  * @brief Read a slot.
  *
  * @param index Slot index.
- * @return Slot contents, in a static buffer overwritten by the next read, or NULL on error. An
- *         unwritten slot reads as 0xFF bytes.
+ * @return Slot contents, in a static buffer overwritten by the next read, or NULL on error or if
+ *         the slot holds no NUL-terminated value, such as an unwritten slot.
  */
 char *otp_get_slot(const uint8_t index);
 
