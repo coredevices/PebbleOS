@@ -346,6 +346,11 @@ static void prv_deliver_message(const char *type, int index, int count, int tran
     prv_write_str(iter, MESSAGE_KEY_ReplyText, m->reply_text, MAX_REPLY_BYTES);
   }
   dict_write_int32(iter, MESSAGE_KEY_IsOutgoing, (m->flags & ChatDbMessageFlagOutgoing) ? 1 : 0);
+  if (m->image_token.len) {  // the UI asks the phone for it with get_image when it scrolls into view
+    prv_write_str(iter, MESSAGE_KEY_ImageToken, m->image_token, MAX_ID_BYTES);
+    dict_write_int32(iter, MESSAGE_KEY_ImageWidth, m->image_width);
+    dict_write_int32(iter, MESSAGE_KEY_ImageHeight, m->image_height);
+  }
   prv_deliver(iter);
 }
 
@@ -777,6 +782,9 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     prv_deliver_context(chat_key, message_id, false);
   } else if (strcmp(cmd, "leave_chat") == 0) {
     s_ds.chat_open = false;
+  } else if (strcmp(cmd, "get_image") == 0 || strcmp(cmd, "cancel_image") == 0) {
+    // The phone fetches and shrinks the photo; a lost request is retried by the UI
+    prv_forward(dict, len);
   } else if (strcmp(cmd, "archive_chat") == 0 || strcmp(cmd, "mark_unread") == 0 ||
              strcmp(cmd, "mark_read") == 0 || strcmp(cmd, "app_open") == 0 ||
              strcmp(cmd, "search_chats") == 0) {
@@ -798,7 +806,7 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     }
   }
   // Not needed without the watchapp's phone side: chat_first_paint, prefetch_*, save_draft,
-  // get_image, cancel_image, start_qr.
+  // start_qr.
 }
 
 typedef struct {

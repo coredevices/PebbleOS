@@ -23,7 +23,7 @@
  *   last synced (u32 UTC), title (str8), preview (str8).
  * - Message: version (1), flags (::ChatDbMessageFlags), time (u32 UTC), id (str8), sender (str8),
  *   text (str16), reactions (str8), reply sender (str8), reply text (str8), and optionally
- *   status (str8).
+ *   status (str8), then optionally a photo: image token (str8), width (u16), height (u16).
  * - Features: str8.
  * @{
  */
@@ -99,6 +99,11 @@ typedef struct {
   ChatDbStr reply_text;
   /** Where my message got to, as shown under it ("Sent", "Seen at 10:52"); empty for others' and older ones. */
   ChatDbStr status;
+  /** A photo's token for get_image, empty when the message has none. */
+  ChatDbStr image_token;
+  /** The photo's size, 0 when unknown. */
+  uint16_t image_width;
+  uint16_t image_height;
 } ChatDbMessage;
 
 /**

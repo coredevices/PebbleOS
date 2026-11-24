@@ -87,6 +87,14 @@ bool chat_db_parse_message(const uint8_t *val, int val_len, ChatDbMessage *out) 
   out->reply_text = prv_read_str(&r, 1);
   // Added later: a value without it is still a message
   out->status = r.ok && r.pos < r.end ? prv_read_str(&r, 1) : (ChatDbStr){0};
+  if (r.ok && r.pos < r.end) {  // a photo
+    out->image_token = prv_read_str(&r, 1);
+    out->image_width = prv_read_uint(&r, 2);
+    out->image_height = prv_read_uint(&r, 2);
+  } else {
+    out->image_token = (ChatDbStr){0};
+    out->image_width = out->image_height = 0;
+  }
   return prv_done(&r);
 }
 
