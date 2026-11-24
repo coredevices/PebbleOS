@@ -1086,10 +1086,23 @@ static void prv_perform_pill(NotificationWindowData *data, NotificationPill pill
       }
       return;
     }
-    case NotificationPillArchive:
-      // Notifications name the chat only by title, as opening it does
+    case NotificationPillArchive: {
+      // Notifications name the chat only by title, as opening it does. Dismissed quietly with an
+      // "Archived" result, as muting does, rather than the dismiss action's own "Dismissed"
       chat_service_archive_chat_titled(attribute_get_string(&item->attr_list, AttributeIdTitle, ""));
-      break;
+      if (action) {
+        timeline_invoke_action(item, action, nullptr);
+      }
+      SimpleDialog *simple_dialog = simple_dialog_create("Archived");
+      Dialog *dialog = simple_dialog_get_dialog(simple_dialog);
+      const char *msg = pbl_i18n_get("Archived", dialog);
+      dialog_set_text(dialog, msg);
+      dialog_set_icon(dialog, RESOURCE_ID_RESULT_DISMISSED_LARGE);
+      dialog_set_timeout(dialog, preferred_result_display_duration());
+      pbl_i18n_free(msg, dialog);
+      simple_dialog_push(simple_dialog, prv_get_window_stack());
+      return;
+    }
     case NotificationPillDismiss:
       break;
     case NotificationPillNone:
