@@ -4,7 +4,7 @@
 depends on nothing but the utility library, and originates from open source
 code provided by the Stanford Wearables Lab. Its API is
 `pbl/kraepelin/kraepelin.h`; see {apidoc}`the API reference <kraepelin>`.
-In the Pebble firmware, the {doc}`activity service <../services/activity/index>`
+In the Pebble firmware, the activity service (`pebble/services/activity/`)
 runs it. The plots below are drawn from the step samples the unit tests use.
 
 ## Step counting
