@@ -399,6 +399,23 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
   }
 }
 
+// A class or vendor request to an interface, for its function
+static int prv_function_request(const struct pbl_usbd_function **fn, uint8_t **data,
+                                uint16_t *len) {
+  const struct pbl_usb_setup *setup = &s_ctrl.setup;
+
+  if ((setup->bmRequestType & PBL_USB_RECIP_MASK) != PBL_USB_RECIP_INTERFACE) {
+    return -ENOTSUP;
+  }
+
+  *fn = prv_function((uint8_t)setup->wIndex);
+  if (*fn == nullptr || (*fn)->class_request == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return (*fn)->class_request(setup, data, len);
+}
+
 static void prv_stall(void) {
   (void)pbl_udc_ep_set_halt(UDC, PBL_UDC_EP_IN, true);
   (void)pbl_udc_ep_set_halt(UDC, 0U, true);
@@ -421,11 +438,14 @@ static void prv_setup(const uint8_t *packet) {
       ret = prv_standard(&data, &len);
       break;
     case PBL_USB_TYPE_CLASS:
-      fn = ((setup->bmRequestType & PBL_USB_RECIP_MASK) == PBL_USB_RECIP_INTERFACE)
-               ? prv_function((uint8_t)setup->wIndex)
-               : nullptr;
-      ret = (fn != nullptr && fn->class_request != nullptr) ? fn->class_request(setup, &data, &len)
-                                                            : -ENOTSUP;
+      ret = prv_function_request(&fn, &data, &len);
+      break;
+    case PBL_USB_TYPE_VENDOR:
+      // To the device, a request of the device's own, of which there is none; to an interface, its
+      // function's
+      ret = ((setup->bmRequestType & PBL_USB_RECIP_MASK) == PBL_USB_RECIP_DEVICE)
+                ? -ENOTSUP
+                : prv_function_request(&fn, &data, &len);
       break;
     default:
       ret = -ENOTSUP;

@@ -163,6 +163,10 @@ static void prv_configured(bool on) {
 }
 
 static int prv_class_request(const struct pbl_usb_setup *setup, uint8_t **data, uint16_t *len) {
+  if ((setup->bmRequestType & PBL_USB_TYPE_MASK) != PBL_USB_TYPE_CLASS) {
+    return -ENOTSUP;
+  }
+
   switch (setup->bRequest) {
     case CDC_SET_LINE_CODING:
     case CDC_GET_LINE_CODING:
