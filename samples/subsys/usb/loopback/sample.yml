@@ -1,0 +1,5 @@
+description: A USB function with alternate settings and strings of its own, looping data back
+expect:
+  - 'usb: loopback up'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk]

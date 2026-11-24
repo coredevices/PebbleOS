@@ -21,4 +21,5 @@ shell/commands.md
 task_wdt/stall.md
 usb/cdc_acm.md
 usb/dfu.md
+usb/loopback.md
 ```

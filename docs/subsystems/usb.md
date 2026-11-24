@@ -76,6 +76,8 @@ PBL_USBD_FUNCTION_DEFINE(loopback) = {
 };
 ```
 
+{doc}`../samples/subsys/usb/loopback` is a complete function.
+
 ## Serial port
 
 `CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:
