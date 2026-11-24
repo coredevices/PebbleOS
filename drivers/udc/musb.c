@@ -29,8 +29,10 @@
 // Direction bit of a setup packet's bmRequestType
 #define SETUP_DIR_IN 0x80U
 
-// Packets of the other endpoints, each number with one FIFO for the direction it serves
-#define EP_FIFO_LEN 64U
+// Largest packet of the other endpoints: full speed's, for bulk and interrupt
+#define EP_MPS_MAX 64U
+
+#define FIFO_MIN 8U
 
 // SiFli: the USB PHY, in the system configuration block, which also has the analog bandgap
 #define SIFLI_HPSYS_CFG_USBCR   0x3c
@@ -67,9 +69,18 @@ struct prv_ep {
   bool flushed;
 };
 
+// The FIFO of an endpoint number, for the direction it serves
+struct prv_fifo {
+  uint16_t addr;
+  uint16_t size;
+};
+
 struct pbl_udc_musb_state {
   struct prv_ep in[MAX_EPS];
   struct prv_ep out[MAX_EPS];
+  struct prv_fifo fifo[MAX_EPS];
+  // The FIFO RAM past the FIFOs given out
+  uint16_t fifo_end;
   enum prv_ep0 ep0;
   // SiFli: clk_hpsys kept running in deep WFI while connected
   bool deepwfi_held;
@@ -88,6 +99,8 @@ struct pbl_udc_musb {
   const struct pbl_pinctrl *pinctrl;
   // SiFli: the system configuration block holding the PHY controls
   uintptr_t syscfg;
+  // FIFO RAM, endpoint 0's included
+  uint16_t fifo_size;
   struct pbl_udc_musb_state *state;
 };
 
@@ -292,6 +305,12 @@ static void prv_ep0_isr(const struct pbl_udc_musb *m) {
   }
 }
 
+// Endpoint 0 keeps the first 64 bytes of the FIFO RAM
+static void prv_fifo_reset(const struct pbl_udc_musb *m) {
+  memset(m->state->fifo, 0, sizeof(m->state->fifo));
+  m->state->fifo_end = EP0_MPS;
+}
+
 static void prv_bus_reset(const struct pbl_udc_musb *m) {
   struct pbl_udc_musb_state *st = m->state;
 
@@ -312,6 +331,7 @@ static void prv_bus_reset(const struct pbl_udc_musb *m) {
     st->in[n].mps = 0U;
     st->out[n].mps = 0U;
   }
+  prv_fifo_reset(m);
   prv_ww(m, MUSB_INTRTXE, PBL_BIT(0));
   prv_ww(m, MUSB_INTRRXE, 0U);
 
@@ -403,20 +423,72 @@ static int prv_set_address(const struct pbl_udc *udc, uint8_t addr) {
   return 0;
 }
 
+// The FIFO of an endpoint number is the size of its packets, rounded up to a power of two, and
+// stays its own until no endpoint is enabled, or one the number serves next needs more
+static int prv_fifo_alloc(const struct pbl_udc_musb *m, uint8_t n, uint16_t mps) {
+  struct pbl_udc_musb_state *st = m->state;
+  uint16_t size = FIFO_MIN;
+
+  while (size < mps) {
+    size *= 2U;
+  }
+
+  if (st->fifo[n].size >= size) {
+    return 0;
+  }
+
+  if (st->fifo_end + size > m->fifo_size) {
+    return -ENOSPC;
+  }
+
+  st->fifo[n].addr = st->fifo_end;
+  st->fifo[n].size = size;
+  st->fifo_end += size;
+
+  return 0;
+}
+
+static void prv_fifo_set(const struct pbl_udc_musb *m, uint8_t n) {
+  const struct prv_fifo *fifo = &m->state->fifo[n];
+  uint8_t sz = 0U;
+
+  while ((FIFO_MIN << sz) < fifo->size) {
+    sz++;
+  }
+
+  prv_wb(m, MUSB_TXFIFOSZ, sz);
+  prv_ww(m, MUSB_TXFIFOADD, (uint16_t)(fifo->addr / 8U));
+  prv_wb(m, MUSB_RXFIFOSZ, sz);
+  prv_ww(m, MUSB_RXFIFOADD, (uint16_t)(fifo->addr / 8U));
+}
+
 static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_ep_type type,
                          uint16_t mps) {
   const struct pbl_udc_musb *m = prv_musb(udc);
   uint8_t n = addr & ~PBL_UDC_EP_IN;
   bool in = (addr & PBL_UDC_EP_IN) != 0U;
   bool iso = type == PBL_UDC_EP_ISOCHRONOUS;
+  int ret;
 
-  if (n >= MAX_EPS || mps > EP_FIFO_LEN) {
+  if (n >= MAX_EPS || mps > EP_MPS_MAX) {
     return -EINVAL;
   }
 
+  if (n == 0U) {
+    (in ? &m->state->in[0] : &m->state->out[0])->mps = mps;
+    return 0;
+  }
+
   // Each endpoint number serves one direction at a time, the one TXCSR.MODE selects
-  if (n != 0U && (in ? m->state->out[n].mps : m->state->in[n].mps) != 0U) {
+  if ((in ? m->state->out[n].mps : m->state->in[n].mps) != 0U) {
     return -EBUSY;
+  }
+
+  pbl_irq_lock();
+  ret = prv_fifo_alloc(m, n, mps);
+  if (ret != 0) {
+    pbl_irq_unlock();
+    return ret;
   }
 
   if (in) {
@@ -425,12 +497,8 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
     m->state->out[n].mps = mps;
   }
 
-  if (n == 0U) {
-    return 0;
-  }
-
-  pbl_irq_lock();
   prv_index(m, n);
+  prv_fifo_set(m, n);
   if (in) {
     prv_ww(m, MUSB_TXMAXP, mps);
     prv_ww(m, MUSB_TXCSR,
@@ -447,6 +515,16 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
   pbl_irq_unlock();
 
   return 0;
+}
+
+static bool prv_eps_disabled(const struct pbl_udc_musb *m) {
+  for (uint8_t n = 1U; n < MAX_EPS; n++) {
+    if (m->state->in[n].mps != 0U || m->state->out[n].mps != 0U) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
@@ -471,6 +549,9 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
   }
   if (n != 0U) {
     ep->mps = 0U;
+    if (prv_eps_disabled(m)) {
+      prv_fifo_reset(m);
+    }
   }
   pbl_irq_unlock();
 
@@ -629,38 +710,6 @@ static int prv_disable(const struct pbl_udc *udc) {
   return 0;
 }
 
-// Endpoint 0 has the first 64 bytes of the FIFO RAM, then each endpoint number one FIFO for the
-// direction it serves. The SF32LB57 garbles packets past the first 512 bytes, though RAMINFO gives
-// 1 KiB.
-static int prv_fifo_init(const struct pbl_udc_musb *m) {
-  uint32_t ram = 4U << PBL_FIELD_GET(MUSB_RAMINFO_RAMBITS_MASK, prv_rb(m, MUSB_RAMINFO));
-  uint32_t addr = EP0_MPS;
-  uint8_t sz = 0U;
-
-  while ((8U << sz) < EP_FIFO_LEN) {
-    sz++;
-  }
-
-  if (addr + EP_FIFO_LEN * (m->udc.num_eps - 1U) > ram) {
-    return -ENOMEM;
-  }
-
-  for (uint8_t n = 1U; n < m->udc.num_eps; n++) {
-    prv_index(m, n);
-    prv_wb(m, MUSB_TXFIFOSZ, sz);
-    prv_ww(m, MUSB_TXFIFOADD, (uint16_t)(addr / 8U));
-    prv_wb(m, MUSB_RXFIFOSZ, sz);
-    prv_ww(m, MUSB_RXFIFOADD, (uint16_t)(addr / 8U));
-    addr += EP_FIFO_LEN;
-  }
-
-  // One packet per FIFO: no double buffering
-  prv_ww(m, MUSB_RXDPKTBUFDIS, (uint16_t)~PBL_BIT(0));
-  prv_ww(m, MUSB_TXDPKTBUFDIS, (uint16_t)~PBL_BIT(0));
-
-  return 0;
-}
-
 // SiFli: the bandgap, the controller clock, then the PHY with its pull-up on D+, its session
 // valid inputs driven by the controller. The controller runs from its 60 MHz kernel clock, or
 // else from the 48 MHz crystal.
@@ -716,10 +765,10 @@ static int prv_init(const struct pbl_udc *udc) {
   // Disconnected, at full speed, until the stack connects
   prv_wb(m, MUSB_POWER, 0U);
 
-  ret = prv_fifo_init(m);
-  if (ret != 0) {
-    return ret;
-  }
+  // One packet per FIFO: no double buffering
+  prv_ww(m, MUSB_RXDPKTBUFDIS, (uint16_t)~PBL_BIT(0));
+  prv_ww(m, MUSB_TXDPKTBUFDIS, (uint16_t)~PBL_BIT(0));
+  prv_fifo_reset(m);
 
   m->state->address = -1;
   m->state->in[0].mps = EP0_MPS;
@@ -752,22 +801,23 @@ static const struct pbl_udc_ops s_ops = {
 // SiFli: endpoint 0 and seven others
 #define SIFLI_NUM_EPS 8U
 
-#define PBL_UDC_MUSB_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _pinctrl, _syscfg, ...) \
-  PBL_UDC_STATE_DEFINE(sym);                                                                \
-  static struct pbl_udc_musb_state sym##_musb_state;                                        \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                     \
-  static const struct pbl_pinctrl sym##_musb_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);      \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_musb, struct pbl_udc, udc){                       \
-    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL),    \
-    .base = (_base),                                                                        \
-    .irq = (_irq),                                                                          \
-    .quirks = (_quirks),                                                                    \
-    .clk = _clk,                                                                            \
-    .assigned = sym##_assigned,                                                             \
-    .pinctrl = &sym##_musb_pins,                                                            \
-    .syscfg = (_syscfg),                                                                    \
-    .state = &sym##_musb_state,                                                             \
-  };                                                                                        \
+#define PBL_UDC_MUSB_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _pinctrl, _syscfg, _fifo, ...) \
+  PBL_UDC_STATE_DEFINE(sym);                                                                       \
+  static struct pbl_udc_musb_state sym##_musb_state;                                               \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                            \
+  static const struct pbl_pinctrl sym##_musb_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_musb, struct pbl_udc, udc){                              \
+    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL),           \
+    .base = (_base),                                                                               \
+    .irq = (_irq),                                                                                 \
+    .quirks = (_quirks),                                                                           \
+    .clk = _clk,                                                                                   \
+    .assigned = sym##_assigned,                                                                    \
+    .pinctrl = &sym##_musb_pins,                                                                   \
+    .syscfg = (_syscfg),                                                                           \
+    .fifo_size = (_fifo),                                                                          \
+    .state = &sym##_musb_state,                                                                    \
+  };                                                                                               \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_MUSB_IRQ_PRIO, prv_isr, &sym##_inst, 0)
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_usb)
