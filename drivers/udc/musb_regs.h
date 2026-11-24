@@ -66,12 +66,9 @@
 #define MUSB_RXFIFOSZ  0x63
 #define MUSB_TXFIFOADD 0x64
 #define MUSB_RXFIFOADD 0x66
-#define MUSB_RAMINFO   0x79
 
 #define MUSB_RXDPKTBUFDIS 0x340
 #define MUSB_TXDPKTBUFDIS 0x342
-
-#define MUSB_RAMINFO_RAMBITS_MASK PBL_GENMASK(3, 0)
 
 /* SiFli: the controller clock, its 60 MHz kernel clock or the 48 MHz crystal */
 #define SIFLI_USBC_MODE_48M      0x3be

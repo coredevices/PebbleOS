@@ -16,5 +16,6 @@ args:
   - pinctrl: default
   - reg: 0
     of: sifli,hpsys-cfg
+  - prop: sifli,fifo-size
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true

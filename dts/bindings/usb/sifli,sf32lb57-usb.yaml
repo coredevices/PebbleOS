@@ -30,6 +30,13 @@ properties:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS configuration, which enables the PHY and the bandgap it runs from.
 
+  sifli,fifo-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description:
+      Bytes of FIFO RAM that hold packets correctly, endpoint 0's included.
+      The SF32LB57 corrupts packets past its first 512 bytes, though the
+      controller's RAMINFO register gives 1 KiB.
+
   dr_mode:
     enum: [peripheral]
 
@@ -43,6 +50,7 @@ required:
   - interrupts
   - clocks
   - sifli,hpsys-cfg
+  - sifli,fifo-size
 
 additionalProperties: false
 
@@ -54,4 +62,5 @@ examples:
         interrupts = <92>;
         clocks = <&hpsys_rcc 33>;
         sifli,hpsys-cfg = <&hpsys_cfg>;
+        sifli,fifo-size = <512>;
     };

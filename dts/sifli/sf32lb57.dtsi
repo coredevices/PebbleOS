@@ -444,6 +444,7 @@
 			assigned-clock-parents = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SYS>;
 			assigned-clock-rates = <60000000>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
+			sifli,fifo-size = <512>;
 			status = "disabled";
 		};
 
