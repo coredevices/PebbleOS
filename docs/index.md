@@ -61,6 +61,13 @@ From a fresh machine to PebbleOS running in the emulator or on a watch.
 The `pbl` CLI and every command, the build system, tests, QEMU and debugging.
 :::
 
+:::{grid-item-card} 🧪 Samples
+:link: samples/index
+:link-type: doc
+
+Small applications showing the kernel, subsystems and drivers in use.
+:::
+
 :::{grid-item-card} 🏛️ Architecture
 :link: architecture/index
 :link-type: doc
@@ -101,13 +108,6 @@ System services between drivers and apps, from activity to timeline.
 :link-type: doc
 
 Supported watches and emulated boards, and how to program them.
-:::
-
-:::{grid-item-card} 📖 Reference
-:link: reference/index
-:link-type: doc
-
-Protocols and file formats.
 :::
 
 ::::
