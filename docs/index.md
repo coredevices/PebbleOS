@@ -82,18 +82,18 @@ How PebbleOS is layered, configured and booted, and how applications sit on top.
 Threads, synchronization, interrupts and scheduling.
 :::
 
-:::{grid-item-card} 🧩 Subsystems
-:link: subsystems/index
-:link-type: doc
-
-Bluetooth, logging, input, the shell and the other OS subsystems.
-:::
-
 :::{grid-item-card} 🔌 Drivers
 :link: drivers/index
 :link-type: doc
 
 The device model and every hardware driver class.
+:::
+
+:::{grid-item-card} 🧩 Subsystems
+:link: subsystems/index
+:link-type: doc
+
+Bluetooth, logging, input, the shell and the other OS subsystems.
 :::
 
 :::{grid-item-card} ⌚ Pebble Firmware
@@ -147,8 +147,8 @@ development/conventions.md
 
 architecture/index.md
 kernel/index.md
-subsystems/index.md
 drivers/index.md
+subsystems/index.md
 libraries/index.md
 third_party/index.md
 ```
