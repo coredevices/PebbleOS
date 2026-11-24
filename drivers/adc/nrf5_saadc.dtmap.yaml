@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-saadc
+config: ADC_NRF5_SAADC
+class: adc
+define: PBL_ADC_NRF5_SAADC_DEFINE
+args:
+  - name: true
+  - reg: 0
