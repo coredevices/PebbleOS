@@ -1,0 +1,5 @@
+description: Follows the USB bus state, and wakes the host up when it suspends the bus, for a minute
+expect:
+  - 'usb: connected'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk]
