@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <setjmp.h>
 
 #include <pbl/services/battery/battery_curve.h>
@@ -272,6 +273,37 @@ void test_battery_monitor__curve_doesnt_shift_too_far(void) {
   periodic_timer_trigger(1);
 
   cl_assert_equal_i(battery_get_charge_state().charge_percent, 80);
+}
+
+void test_battery_monitor__plugged_without_charge_keeps_curve(void) {
+  int discharge_mv = battery_curve_lookup_voltage_by_percent(80, false);
+
+  fake_battery_init(discharge_mv, false, false);
+
+  battery_monitor_init();
+  periodic_timer_trigger(1);
+  cl_assert_equal_i(battery_get_charge_state().charge_percent, 80);
+
+  // A charger that cannot report charging: plugged in, never charging
+  fake_battery_set_connected(true);
+  periodic_timer_trigger(1);
+
+  cl_assert_equal_i(battery_get_charge_state().charge_percent, 80);
+}
+
+void test_battery_monitor__failed_measurement_is_skipped(void) {
+  int discharge_mv = battery_curve_lookup_voltage_by_percent(70, false);
+
+  fake_battery_init(discharge_mv, false, false);
+
+  battery_monitor_init();
+  periodic_timer_trigger(1);
+  cl_assert_equal_i(battery_get_charge_state().charge_percent, 70);
+
+  fake_battery_set_measurement_error(-EIO);
+  periodic_timer_trigger(10);
+
+  cl_assert_equal_i(battery_get_charge_state().charge_percent, 70);
 }
 
 /*

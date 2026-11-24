@@ -10,9 +10,11 @@
 static int s_millivolts = 0;
 static bool s_usb_connected = false;
 static bool s_charging = false;
+static int s_measurement_error = 0;
 
 void fake_battery_init(int millivolts, bool usb_connected, bool charging) {
   s_millivolts = millivolts;
+  s_measurement_error = 0;
   s_usb_connected = usb_connected;
   s_charging = charging;
 }
@@ -35,6 +37,10 @@ void fake_battery_set_connected(bool usb_connected) {
   event_put(&event);
 }
 
+void fake_battery_set_measurement_error(int error) {
+  s_measurement_error = error;
+}
+
 void fake_battery_set_charging(bool charging) {
   s_charging = charging;
 }
@@ -43,6 +49,10 @@ const struct pbl_charger *const CHARGER = nullptr;
 
 int pbl_charger_get_measurements(const struct pbl_charger *charger,
                                  struct pbl_charger_measurements *meas) {
+  if (s_measurement_error != 0) {
+    return s_measurement_error;
+  }
+
   meas->voltage_mv = s_millivolts;
   meas->current_ua = 0;
   meas->temp_mc = 25000;
