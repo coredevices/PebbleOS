@@ -43,7 +43,7 @@ first, then the variant's, then those of the core with the variant
 
 `--addon` plugs an add-on, such as a display module, into a connector of
 the board, and can be repeated. They are listed in
-{doc}`../boards/addons/index`:
+{doc}`../addons/index`:
 
 ```shell
 pbl configure --board sf32lb57_dpi_hdk --addon <addon> samples/demos/logo

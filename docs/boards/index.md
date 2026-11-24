@@ -15,7 +15,7 @@
 | `native_gabbro` | | | `wasm` | Host program | Gabbro |
 
 Hardware plugged into a connector of a board, such as a display module, is
-an add-on; see {doc}`addons/index`.
+an add-on; see {doc}`../addons/index`.
 
 ```{toctree}
 :hidden:
@@ -25,5 +25,4 @@ obelix/index.md
 getafix/index.md
 sf32lb57_dpi_hdk/index.md
 stm32h747i_disco/index.md
-addons/index.md
 ```

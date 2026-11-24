@@ -152,6 +152,7 @@ sdk/index.md
 :caption: Hardware
 
 boards/index.md
+addons/index.md
 programmers/index.md
 ```
 

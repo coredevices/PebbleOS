@@ -43,7 +43,7 @@ at a time; only FPC2 is described.
 
 ### SiFli 1.85" AMOLED module
 
-[`sifli_lcm_1p85`](../addons/sifli_lcm_1p85/index.md), on FPC2, with these
+[`sifli_lcm_1p85`](../../addons/sifli_lcm_1p85/index.md), on FPC2, with these
 jumpers fitted:
 
 - H20, for the 3.3 V supply of the connector.

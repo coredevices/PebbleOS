@@ -1,4 +1,4 @@
-# Add-ons
+# Board Add-ons
 
 Add-ons are hardware plugged into a connector of a board: display modules,
 expansion boards on a header. Each fits the boards with its connectors, and is
