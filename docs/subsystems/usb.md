@@ -35,6 +35,17 @@ controller's interrupt.
 | `CONFIG_USB_DEVICE_MANUFACTURER` | `PebbleOS` | Manufacturer string |
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
 
+### Strings
+
+A function names its strings with indices of its own, from 1, in the
+`iInterface` field of its interface descriptors and the `iFunction` field of
+its interface association descriptor, and lists them in `strings`: index `n`
+is `strings[n - 1]`. The stack numbers the strings of the device, after the
+manufacturer and the product, in the order of the functions, and puts those
+numbers in the configuration descriptor as it sends it, so the descriptors
+stay constant and functions do not have to know about each other. Indices in
+class-specific descriptors are left as they are.
+
 ## Serial port
 
 `CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:

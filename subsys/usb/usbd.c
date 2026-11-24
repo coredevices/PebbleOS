@@ -18,6 +18,7 @@
 #define STRING_LANGID       0U
 #define STRING_MANUFACTURER 1U
 #define STRING_PRODUCT      2U
+#define STRING_FUNCTIONS    3U
 
 // Bus-powered, at most 100 mA
 #define USB_CFG_ATTRIBUTES 0x80U
@@ -83,9 +84,15 @@ static bool prv_endpoint(const uint8_t *desc, uint8_t *ep, enum pbl_udc_ep_type 
   return true;
 }
 
+// A string index of a function as the device has it
+static uint8_t prv_string_index(const struct pbl_usbd_function *fn, uint8_t first, uint8_t index) {
+  return (index != 0U && index <= fn->num_strings) ? (uint8_t)(first + index - 1U) : 0U;
+}
+
 static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
   uint16_t len = 9U;
   uint8_t ifaces = 0U;
+  uint8_t first_string = STRING_FUNCTIONS;
 
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
     if (len + fn->desc_len > room) {
@@ -94,18 +101,24 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
 
     memcpy(&out[len], fn->desc, fn->desc_len);
     for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
+      const uint8_t *d = &fn->desc[i];
       uint8_t ep;
       enum pbl_udc_ep_type type;
       uint16_t mps;
       uint8_t interval;
 
-      if (prv_endpoint(&fn->desc[i], &ep, &type, &mps, &interval)) {
+      if (d[1] == PBL_USB_DESC_INTERFACE) {
+        out[len + i + 8U] = prv_string_index(fn, first_string, d[8]);
+      } else if (d[1] == PBL_USB_DESC_IAD) {
+        out[len + i + 7U] = prv_string_index(fn, first_string, d[7]);
+      } else if (prv_endpoint(d, &ep, &type, &mps, &interval)) {
         pbl_put_le16(mps, &out[len + i + 4U]);
         out[len + i + 6U] = interval;
       }
     }
     len += fn->desc_len;
     ifaces += fn->num_ifaces;
+    first_string += fn->num_strings;
   }
 
   out[0] = 9U;
@@ -149,6 +162,25 @@ static uint16_t prv_device_desc(uint8_t *out, bool qualifier) {
   return len;
 }
 
+static const char *prv_string(uint8_t index) {
+  if (index == STRING_MANUFACTURER) {
+    return CONFIG_USB_DEVICE_MANUFACTURER;
+  }
+  if (index == STRING_PRODUCT) {
+    return CONFIG_USB_DEVICE_PRODUCT;
+  }
+
+  index -= STRING_FUNCTIONS;
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    if (index < fn->num_strings) {
+      return fn->strings[index];
+    }
+    index -= fn->num_strings;
+  }
+
+  return nullptr;
+}
+
 static uint16_t prv_string_desc(uint8_t *out, uint16_t room, uint8_t index) {
   const char *str;
   uint16_t len;
@@ -160,9 +192,7 @@ static uint16_t prv_string_desc(uint8_t *out, uint16_t room, uint8_t index) {
     return 4U;
   }
 
-  str = (index == STRING_MANUFACTURER) ? CONFIG_USB_DEVICE_MANUFACTURER
-        : (index == STRING_PRODUCT)    ? CONFIG_USB_DEVICE_PRODUCT
-                                       : nullptr;
+  str = prv_string(index);
   if (str == nullptr) {
     return 0U;
   }
