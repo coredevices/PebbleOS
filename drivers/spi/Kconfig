@@ -22,6 +22,24 @@ config SPI_NRF5_IRQ_PRIO
     help
       Priority of the controller interrupts.
 
+config SPI_SF32LB57
+    bool "SiFli SF32LB57 SPI Controller"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_SPI_ENABLED
+    select CLK
+    select DMA
+    select GPIO
+    select PINCTRL
+    help
+      Support for the SiFli SF32LB57 SPI controller.
+
+config SPI_SF32LB57_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on SPI_SF32LB57
+    help
+      Priority of the controller interrupts.
+
 config SPI_SHELL
     bool "Shell commands"
     default DRIVER_SHELL

@@ -358,6 +358,28 @@
 			status = "disabled";
 		};
 
+		spi1: spi@50095000 {
+			compatible = "sifli,sf32lb57-spi";
+			reg = <0x50095000 0x1000>;
+			interrupts = <60>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SPI1>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_SPI1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		spi2: spi@50096000 {
+			compatible = "sifli,sf32lb57-spi";
+			reg = <0x50096000 0x1000>;
+			interrupts = <75>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_SPI2>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_SPI2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		i2c1: i2c@5009c000 {
 			compatible = "sifli,sf32lb57-i2c", "sifli,sf32lb52-i2c";
 			reg = <0x5009c000 0x1000>;
