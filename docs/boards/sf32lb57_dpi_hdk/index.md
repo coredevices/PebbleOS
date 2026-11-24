@@ -33,7 +33,9 @@ module, which carries an SF32LB579V6EN6.
 - **Debug**: SWD header
 - **Connectors**: 8080, quad SPI and RGB LCD, DVP camera, PDM microphones,
   and pin headers with the GPIOs
-- **Power**: from USB or a battery
+- **Power**: from USB or a battery. Both USB-C connectors, through H49 and
+  H56, feed the VBUS input of the PMU, whose charger tells the USB controller
+  whether USB power is present: with the DBG connector plugged in, it always is
 
 ## Add-ons
 
