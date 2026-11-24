@@ -863,7 +863,8 @@ static const struct pbl_udc_ops s_ops = {
   PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                            \
   static const struct pbl_pinctrl sym##_musb_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);             \
   PBL_DEVICE_INSTANCE(sym, struct pbl_udc_musb, struct pbl_udc, udc){                              \
-    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL),           \
+    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL,            \
+                        PBL_UDC_CAP_EP_ONE_DIR),                                                   \
     .base = (_base),                                                                               \
     .irq = (_irq),                                                                                 \
     .quirks = (_quirks),                                                                           \

@@ -687,7 +687,7 @@ static const struct pbl_udc_ops s_ops = {
   PBL_DEVICE_INSTANCE(sym, struct pbl_udc_dwc2, struct pbl_udc, udc){                         \
     .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops,                                          \
                         1U + PBL_ARRAY_SIZE(((const uint16_t[]){__VA_ARGS__})),               \
-                        (_ulpi) ? PBL_UDC_SPEED_HIGH : PBL_UDC_SPEED_FULL),                   \
+                        (_ulpi) ? PBL_UDC_SPEED_HIGH : PBL_UDC_SPEED_FULL, 0U),               \
     .base = (_base),                                                                          \
     .irq = (_irq),                                                                            \
     .quirks = (_quirks),                                                                      \
