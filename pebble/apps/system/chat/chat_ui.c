@@ -13,6 +13,9 @@
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <applib/dark_mode_service.h>
 #include <shell/system_theme.h>
+#ifdef CONFIG_TOUCH
+#include <applib/ui/scroll_layer_private.h>  // the system lists' rubber band and fling
+#endif
 
 #define MAX_CHATS 20
 #define MAX_MESSAGES 9
@@ -399,7 +402,6 @@ typedef enum {
   ActionItemEmoji,
   ActionItemReact,
   ActionItemEdit,
-  ActionItemDelete,
   ActionItemFullText,
   ActionItemFullContext,
   ActionItemGoToBottom,
@@ -590,6 +592,20 @@ typedef struct {
 
 static MsgBox s_box[MAX_MESSAGES];
 static int s_compose_bubble_y;
+// Scrolled up through the chat, a little scroll back down brings the input bar up over the
+// messages, pinned at the bottom, so replying doesn't need a trip back to the end.
+#define COMPOSE_FLOAT_TRIGGER 20  // px of scrolling, down to show it or up to hide it
+static bool s_compose_floating;
+static int s_compose_float_run;  // px scrolled in the current direction (+ down, - up)
+// A tap on a cut-short message waits a moment to see if a second tap comes (View Full Message)
+#define TOUCH_DOUBLE_TAP_MS 300
+static AppTimer *s_tap_menu_timer;
+static char s_tap_menu_id[MAX_ID];  // the tapped message, by id: indexes shift when one is deleted
+
+static void cancel_tap_menu(void) {
+  cancel_timer(&s_tap_menu_timer);
+  s_tap_menu_id[0] = '\0';
+}
 static uint8_t *s_image_buffer;
 static uint8_t *s_avatar_buffer;
 static uint16_t s_image_buffer_capacity;
@@ -699,7 +715,6 @@ static int clamp_scroll_offset(int offset);
 static void main_back_click_handler(ClickRecognizerRef recognizer, void *context);
 static void send_text_message(const char *text, bool as_reply);
 static void edit_selected_message(const char *text);
-static void delete_selected_message(void);
 static void send_selected_chat_action(const char *command);
 static void select_chat_row(int row, bool animated);
 static void remove_chat_at(int row);
@@ -754,6 +769,9 @@ static bool has_selected_message(void);
 static bool compose_target_is_selected(void);
 static void recalc_message_layout(void);
 static void scroll_to_bottom(bool animated);
+#if TOUCH_KEYBOARD_AVAILABLE
+static void touch_chat_list_follow(void);
+#endif
 static void go_to_bottom(void);
 static void set_chat_scroll_offset(int target, bool animated);
 static void set_chat_scroll_offset_quiet(int target);
@@ -3499,7 +3517,25 @@ static void scroll_to_bottom(bool animated) {
   request_next_image();
 }
 
+// delta: px the view just scrolled, + toward the newest messages
+static void compose_float_track(int delta) {
+  if (delta == 0) {
+    return;
+  }
+  if ((delta > 0) != (s_compose_float_run > 0)) {
+    s_compose_float_run = 0;  // turned around
+  }
+  s_compose_float_run += delta;
+  if (s_compose_float_run >= COMPOSE_FLOAT_TRIGGER) {
+    s_compose_floating = true;
+  } else if (s_compose_float_run <= -COMPOSE_FLOAT_TRIGGER) {
+    s_compose_floating = false;
+  }
+}
+
 static void go_to_bottom(void) {
+  s_compose_floating = false;
+  s_compose_float_run = 0;
   cancel_message_timeout();
   cancel_message_retry();
   s_loading_older_messages = false;
@@ -3687,6 +3723,7 @@ static uint32_t s_kb_last_shift_ms;
 static bool s_kb_touch_checked;
 static bool s_kb_touch_ok;
 static bool s_kb_awaiting_send;
+static bool s_kb_send_keeps_draft;  // sent with no bubble shown: the draft holds the text until "sent"
 
 // Cursor (byte offset into the draft) and the word-wrapped view of the draft.
 static uint16_t s_kb_cursor;
@@ -4709,6 +4746,12 @@ static void touch_keyboard_send_result(bool ok) {
   }
   if (ok) {
     s_kb_awaiting_send = false;
+    if (s_kb_send_keeps_draft) {
+      s_kb_send_keeps_draft = false;
+      s_kb_draft[0] = '\0';
+      s_kb_cursor = 0;
+      s_kb_synced = 0;
+    }
     int index = find_message_index_by_id("pending");
     if (index >= 0) {
       Message *message = &s_messages[index];
@@ -4718,6 +4761,7 @@ static void touch_keyboard_send_result(bool ok) {
       mark_messages_dirty();
     }
   } else {
+    s_kb_send_keeps_draft = false;
     kb_mark_pending_failed();
     show_status("Not sent - reopen keyboard to retry");
   }
@@ -4759,6 +4803,21 @@ static void kb_send(void) {
   }
 
   s_kb_awaiting_send = true;
+  if (!s_at_newest) {
+    // Sent from the floating bar on an older page: load the newest page, which brings the new
+    // message with it, instead of adding it after messages that skip the ones in between. No
+    // bubble holds the text meanwhile, so the draft keeps it until the phone says "sent".
+    s_kb_send_keeps_draft = true;
+    s_kb_draft[0] = '\0';  // the phone clears the Telegram draft itself
+    s_kb_synced = 0;
+    reset_touch_keyboard();
+    copy_cstr(s_kb_draft, TOUCH_KEYBOARD_MAX_TEXT, text);
+    s_kb_cursor = (uint16_t)strlen(s_kb_draft);
+    s_kb_synced = kb_draft_hash(s_kb_draft, kb_reply_target());  // local only, not saved as a draft
+    go_to_bottom();
+    return;
+  }
+  s_kb_send_keeps_draft = false;
   s_kb_draft[0] = '\0';  // the phone clears the Telegram draft itself
   s_kb_synced = 0;
   reset_touch_keyboard();
@@ -5592,6 +5651,11 @@ static void draw_compose_bar(GContext *ctx, GRect compose, bool selected) {
 
 static GRect compose_rect_for_bounds(GRect bounds) {
   int compose_y = s_compose_bubble_y - s_chat_scroll_offset;
+  if (s_compose_floating) {
+    // Where the docked bar sits with the chat scrolled to its end, so floating meets docked seamlessly
+    int pinned = visible_message_height(bounds) - COMPOSE_BAR_H - (ROUND_UI ? 28 : 5);
+    compose_y = s_at_newest ? PG_MIN(compose_y, pinned) : pinned;
+  }
   if (ROUND_UI) {
     s_round_org = layer_get_frame(s_messages_root).origin;
     return round_clamp(GRect((bounds.size.w - 170) / 2, compose_y, 170, COMPOSE_BAR_H), 6);
@@ -5839,7 +5903,7 @@ static void draw_day_pill(GContext *ctx, GRect bounds) {
 static void draw_messages_overlay(GContext *ctx, GRect bounds) {
   draw_day_pill(ctx, bounds);
   GRect compose_rect = compose_rect_for_bounds(bounds);
-  if (s_at_newest && !s_touch_keyboard_open &&
+  if ((s_at_newest || s_compose_floating) && !s_touch_keyboard_open &&
       compose_rect.origin.y < bounds.size.h && compose_rect.origin.y + COMPOSE_BAR_H > 0 &&
       compose_rect.size.w >= COMPOSE_BAR_H * 2) {
     draw_compose_bar(ctx, compose_rect, compose_target_is_selected());
@@ -5853,6 +5917,7 @@ static void draw_messages_overlay(GContext *ctx, GRect bounds) {
 }
 
 static void destroy_chat_view(void) {
+  cancel_tap_menu();
   cancel_timer(&s_fling_timer);
   cancel_timer(&s_day_pill_timer);
   s_day_pill = false;
@@ -6522,6 +6587,9 @@ static void request_messages(const char *chat_id) {
   reset_message_stream_state();
   s_selected_message = -1;
   s_user_scrolled_messages = false;
+  s_compose_floating = false;
+  s_compose_float_run = 0;
+  cancel_tap_menu();
   s_chat_view_pending = false;
   s_loading_messages = true;
   s_message_request_attempts = 1;
@@ -6600,19 +6668,6 @@ static bool selected_message_has_context(void) {
 static bool selected_message_context_is_forward(void) {
   return selected_message_has_context() &&
          strncmp(s_messages[s_selected_message].context, "Fwd from ", 9) == 0;
-}
-
-static void delete_selected_message(void) {
-  if (s_selected_message < 0 || s_selected_message >= s_message_count) {
-    return;
-  }
-  char message_id[MAX_ID];
-  int delete_index = s_selected_message;
-  copy_cstr(message_id, sizeof(message_id), s_messages[s_selected_message].id);
-  show_status("Deleting...");
-  if (send_command("delete_message", s_current_chat_id, NULL, NULL, message_id)) {
-    remove_message_at(delete_index);
-  }
 }
 
 // PebbleOS 4.29.0 added ~1,200 emoji to the system fonts.
@@ -7833,9 +7888,9 @@ static int action_item_count(void) {
   switch (s_action_mode) {
     case ActionMenuMain:
       if (!has_selected_message()) {
-        return 4 + (touch_keyboard_supported() ? 1 : 0);
+        return 6 + (touch_keyboard_supported() ? 1 : 0);  // + Archive Chat, Mark as Unread
       }
-      return (s_message_actions ? 4 : 2) + 2 +  // + Archive Chat, Mark as Unread
+      return (s_message_actions ? 3 : 2) + 2 +  // + Archive Chat, Mark as Unread
              (s_message_actions && s_messages[s_selected_message].outgoing ?
               (touch_keyboard_supported() ? 2 : 1) : 0) +
              (selected_message_has_context() ? 1 : 0) +
@@ -7877,6 +7932,9 @@ static void full_text_layer_update_proc(Layer *layer, GContext *ctx) {
   int pad = ROUND_UI ? 30 : 10;
   int text_w = bounds.size.w - (pad * 2);
   int header_h = ROUND_UI ? 50 : 30;
+  // A message (not a quote or forward) also says when it was sent, on a second header line
+  char when[40];
+  when[0] = '\0';
 
   title[0] = '\0';
   if (s_selected_message >= 0 && s_selected_message < s_message_count) {
@@ -7888,13 +7946,28 @@ static void full_text_layer_update_proc(Layer *layer, GContext *ctx) {
       text = s_full_text_body ? s_full_text_body : "";
     } else if (s_full_text_context) {
       // "View Full Message": the full text arrives from the phone into the body.
-      copy_cstr(title, sizeof(title), m->outgoing ? "You" : (m->sender[0] ? m->sender : "Message"));
+      copy_cstr(title, sizeof(title), m->outgoing ? "You" : (m->sender[0] ? m->sender : (s_current_chat_title[0] ? s_current_chat_title : "Message")));
       text = s_full_text_body ? s_full_text_body : m->text;
     } else {
-      copy_cstr(title, sizeof(title), m->outgoing ? "You" : (m->sender[0] ? m->sender : "Message"));
+      copy_cstr(title, sizeof(title), m->outgoing ? "You" : (m->sender[0] ? m->sender : (s_current_chat_title[0] ? s_current_chat_title : "Message")));
       text = m->text;
     }
     heading = title;
+    if (!s_full_text_title[0]) {
+      char clock[8];
+      message_meta_time(meta, clock, sizeof(clock));
+      time_t sent = message_time(m);
+      if (sent) {
+        day_label_text(sent, when, sizeof(when));
+      }
+      if (clock[0]) {
+        size_t used = strlen(when);
+        snprintf(when + used, sizeof(when) - used, "%s%s", used ? ", " : "", clock);
+      }
+    }
+  }
+  if (when[0]) {
+    header_h += 16;
   }
 
   GSize text_size = graphics_text_layout_get_content_size(
@@ -7913,28 +7986,23 @@ static void full_text_layer_update_proc(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, GRect(0, top, bounds.size.w, header_h), 0, GCornerNone);
   if (heading && heading[0]) {
     int avatar_r = 10;
-    int name_x = pad + (ROUND_UI ? 0 : avatar_r * 2 + 6);
-    int name_y = top + header_h - 26;
     if (!ROUND_UI) {
       draw_avatar(ctx, GPoint(pad + avatar_r, top + header_h / 2), avatar_r, heading, heading, NULL, TG_HEADER);
     }
-    char time_text[8];
-    time_text[0] = '\0';
-    if (!s_full_text_title[0] && meta) {
-      message_meta_time(meta, time_text, sizeof(time_text));
-    }
-    int time_w = time_text[0] ? text_width(time_text, font_14()) + 4 : 0;
+    int name_y = top + (ROUND_UI ? 22 : 3);
+    int name_x = pad + (ROUND_UI ? 0 : avatar_r * 2 + 6);
     graphics_context_set_text_color(ctx, TG_ON_HEADER);
     graphics_draw_text(ctx, heading, font_bold18(),
-                       GRect(name_x, name_y, bounds.size.w - name_x - pad - time_w, 22),
+                       GRect(name_x, name_y, bounds.size.w - name_x - pad, 22),
                        GTextOverflowModeTrailingEllipsis,
                        ROUND_UI ? GTextAlignmentCenter : GTextAlignmentLeft, NULL);
-    if (time_w) {
+    if (when[0]) {
       graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(gcolor_equal(TG_ON_HEADER, GColorWhite) ? GColorCeleste : GColorDarkGray,
                                                              TG_ON_HEADER));
-      graphics_draw_text(ctx, time_text, font_14(),
-                         GRect(bounds.size.w - pad - time_w, name_y + 4, time_w, 16),
-                         GTextOverflowModeFill, GTextAlignmentRight, NULL);
+      graphics_draw_text(ctx, when, font_14(),
+                         GRect(name_x, name_y + 20, bounds.size.w - name_x - pad, 16),
+                         GTextOverflowModeTrailingEllipsis,
+                         ROUND_UI ? GTextAlignmentCenter : GTextAlignmentLeft, NULL);
     }
   }
   (void)outgoing;
@@ -8065,6 +8133,8 @@ static ActionMenuLevel *native_build_main_level(void) {
       native_add_action(level, "Keyboard", ActionItemKeyboard, -1);
     }
     native_add_action(level, "Go to Bottom", ActionItemGoToBottom, -1);
+    native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
+    native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
     return level;
   }
 
@@ -8088,9 +8158,6 @@ static ActionMenuLevel *native_build_main_level(void) {
   }
   if (selected_message_is_truncated()) {
     native_add_action(level, "View Full Message", ActionItemFullText, -1);
-  }
-  if (s_message_actions) {
-    native_add_action(level, "Delete Message", ActionItemDelete, -1);
   }
   native_add_action(level, "Go to Bottom", ActionItemGoToBottom, -1);
   if (network_has_feature(s_current_chat_network, "archive")) {
@@ -8334,6 +8401,26 @@ static void open_favorite(void *data) {
   chat_menu_select_callback(s_chat_menu, &cell, NULL);
 }
 
+// "View Full Message" for the selected message: from its menu (opens once the menu has closed),
+// or straight from a double tap on it.
+static void open_full_text(bool from_menu) {
+  s_full_text_context = true;
+  if (!has_selected_message() || !ensure_full_text_body()) {
+    show_status("Memory low");
+    return;
+  }
+  s_full_text_title[0] = '\0';
+  copy_cstr(s_full_text_body, MAX_FULL_TEXT, s_messages[s_selected_message].text);
+  send_command_with_status("get_message_text", s_current_chat_id, NULL, NULL,
+                           s_messages[s_selected_message].id, false);
+  s_full_text_scroll_offset = 0;
+  if (from_menu) {
+    native_defer_action_mode(ActionMenuFullText);
+  } else {
+    show_action_window(ActionMenuFullText);
+  }
+}
+
 static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem *action,
                                   void *context) {
   void *data = action_menu_item_get_action_data(action);
@@ -8422,21 +8509,8 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
       s_native_deferred_dictation = true;
       }
       break;
-    case ActionItemDelete:
-      delete_selected_message();
-      break;
     case ActionItemFullText:
-      s_full_text_context = true;
-      if (!has_selected_message() || !ensure_full_text_body()) {
-        show_status("Memory low");
-        break;
-      }
-      s_full_text_title[0] = '\0';
-      copy_cstr(s_full_text_body, MAX_FULL_TEXT, s_messages[s_selected_message].text);
-      send_command_with_status("get_message_text", s_current_chat_id, NULL, NULL,
-                               s_messages[s_selected_message].id, false);
-      s_full_text_scroll_offset = 0;
-      native_defer_action_mode(ActionMenuFullText);
+      open_full_text(true);
       break;
     case ActionItemFullContext:
       s_full_text_context = true;
@@ -8730,6 +8804,7 @@ static void main_select_long_click_handler(ClickRecognizerRef recognizer, void *
 // selects the next message and brings it into view. Returns false at the
 // start/end of the loaded messages.
 static bool chat_step(int direction, bool repeating) {
+  compose_float_track(direction * COMPOSE_FLOAT_TRIGGER);  // one press shows or hides the bar
   GRect bounds = layer_get_bounds(s_messages_root);
   int view_h = visible_message_height(bounds);
   int step = view_h / 2;
@@ -8787,6 +8862,9 @@ static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) 
       show_status("Loading messages...");
       return;
     }
+#if TOUCH_KEYBOARD_AVAILABLE
+    touch_chat_list_follow();  // a throw may have left the highlight off screen
+#endif
     // Up on the first chat, twice: the list's menu, with Search
     if (menu_layer_get_selected_index(s_chat_menu).row == 0 && !repeating) {
       if (++s_top_presses >= 2) {
@@ -8835,6 +8913,9 @@ static void main_down_click_handler(ClickRecognizerRef recognizer, void *context
       show_status("Loading messages...");
       return;
     }
+#if TOUCH_KEYBOARD_AVAILABLE
+    touch_chat_list_follow();
+#endif
     menu_layer_set_selected_next(s_chat_menu, false, MenuRowAlignCenter, !repeating);
     s_selected_chat = menu_layer_get_selected_index(s_chat_menu).row;
     if (s_selected_chat >= 0 && s_selected_chat < s_chat_count) {
@@ -9265,33 +9346,85 @@ static void touch_chat_list_hold(GPoint point) {
   }
 }
 
-// Dragging scrolls the list with the finger, pixel for pixel. The highlight
-// follows quietly: it only moves when the selected chat would leave the screen,
-// and then just to the nearest chat that is fully visible.
-static void touch_chat_list_drag(int dy) {
+// Keep the highlight on screen: when the selected chat would leave it, move it to the nearest
+// chat that is fully visible, without moving the list out from under the finger.
+static void touch_chat_list_follow(void) {
   if (s_chat_count == 0) {
     return;
   }
   ScrollLayer *scroll = menu_layer_get_scroll_layer(s_chat_menu);
   GRect frame = layer_get_frame(menu_layer_get_layer(s_chat_menu));
-  int content_h = s_chat_count * CHAT_ROW_H;
-  int min_y = PG_MIN(0, frame.size.h - content_h);
   GPoint offset = scroll_layer_get_content_offset(scroll);
-  offset.y = PG_MAX(min_y, PG_MIN(0, offset.y + dy));
-  scroll_layer_set_content_offset(scroll, offset, false);
-
   int first_full = (-offset.y + CHAT_ROW_H - 1) / CHAT_ROW_H;
   int last_full = (-offset.y + frame.size.h) / CHAT_ROW_H - 1;
   first_full = PG_MAX(0, PG_MIN(s_chat_count - 1, first_full));
   last_full = PG_MAX(first_full, PG_MIN(s_chat_count - 1, last_full));
   int row = menu_layer_get_selected_index(s_chat_menu).row;
   if (row < first_full || row > last_full) {
-    row = row < first_full ? first_full : last_full;
-    touch_chat_list_select(row, false);
-    // Selecting must not move the list out from under the finger.
+    touch_chat_list_select(row < first_full ? first_full : last_full, false);
+#ifdef CONFIG_TOUCH
+    scroll_layer_touch_set_content_offset_overscrolled(scroll, offset.y);  // keeps a rubber band
+#else
     scroll_layer_set_content_offset(scroll, offset, false);
+#endif
   }
 }
+
+static int touch_lift_velocity(void);
+
+#ifdef CONFIG_TOUCH
+// Dragging scrolls the list with the finger, pixel for pixel, and pulls a little past either end
+// with a rubber band that springs back on lift-off; a throw coasts, like the system's menus.
+static int16_t s_list_drag_base;  // the list's offset when the finger came down
+
+static void touch_chat_list_down(void) {
+  if (s_chat_menu) {
+    ScrollLayer *scroll = menu_layer_get_scroll_layer(s_chat_menu);
+    scroll_layer_touch_handle_touchdown(scroll);
+    s_list_drag_base = scroll_layer_get_content_offset(scroll).y;
+  }
+}
+
+static void touch_chat_list_drag(int dy_total) {
+  if (s_chat_count == 0) {
+    return;
+  }
+  scroll_layer_touch_handle_pan_update(menu_layer_get_scroll_layer(s_chat_menu),
+                                       GPoint(0, s_list_drag_base), GPoint(0, dy_total));
+  touch_chat_list_follow();
+}
+
+static void touch_chat_list_release(int dy_total) {
+  if (s_chat_count == 0) {
+    return;
+  }
+  scroll_layer_touch_handle_snap(menu_layer_get_scroll_layer(s_chat_menu), GPoint(0, s_list_drag_base),
+                                 GPoint(0, dy_total), GPoint(0, touch_lift_velocity()));
+}
+#else
+static int s_list_drag_base;
+
+static void touch_chat_list_down(void) {
+  if (s_chat_menu) {
+    s_list_drag_base = scroll_layer_get_content_offset(menu_layer_get_scroll_layer(s_chat_menu)).y;
+  }
+}
+
+static void touch_chat_list_drag(int dy_total) {
+  if (s_chat_count == 0) {
+    return;
+  }
+  ScrollLayer *scroll = menu_layer_get_scroll_layer(s_chat_menu);
+  GRect frame = layer_get_frame(menu_layer_get_layer(s_chat_menu));
+  int min_y = PG_MIN(0, frame.size.h - s_chat_count * CHAT_ROW_H);
+  int y = s_list_drag_base + dy_total;
+  scroll_layer_set_content_offset(scroll, GPoint(0, PG_MAX(min_y, PG_MIN(0, y))), false);
+  touch_chat_list_follow();
+}
+
+static void touch_chat_list_release(int dy_total) {
+}
+#endif
 
 // ---- Chat -----------------------------------------------------------------
 
@@ -9306,15 +9439,26 @@ static int touch_message_at(GPoint point) {
 }
 
 static bool touch_on_compose(GRect bounds, GPoint point) {
-  if (!s_at_newest || s_touch_keyboard_open) {
+  if ((!s_at_newest && !s_compose_floating) || s_touch_keyboard_open) {
     return false;
   }
   GRect compose = compose_rect_for_bounds(bounds);
   return grect_contains_point(&compose, &point);
 }
 
+static void tap_menu_timer_callback(void *data) {
+  s_tap_menu_timer = NULL;
+  int index = find_message_index_by_id(s_tap_menu_id);
+  s_tap_menu_id[0] = '\0';
+  if (index >= 0 && s_view_state == ViewStateChat && s_selected_message == index &&
+      !s_touch_keyboard_open && window_stack_get_top_window() == s_main_window) {
+    show_action_window(ActionMenuMain);
+  }
+}
+
 static void touch_chat_tap(GRect bounds, GPoint point) {
   if (touch_on_compose(bounds, point)) {
+    cancel_tap_menu();
     GRect mic = compose_mic_rect(compose_rect_for_bounds(bounds));
     if (grect_contains_point(&mic, &point)) {
       // Mic button: dictate a new message.
@@ -9339,15 +9483,29 @@ static void touch_chat_tap(GRect bounds, GPoint point) {
   if (s_touch_keyboard_open) {
     close_touch_keyboard();  // Tapping the chat puts the keyboard away (draft is kept).
   }
+  // A cut-short message ("...") waits a moment for a second tap: double tap = View Full Message
+  if (s_tap_menu_timer && strcmp(s_messages[index].id, s_tap_menu_id) == 0 &&
+      s_selected_message == index) {
+    cancel_tap_menu();
+    open_full_text(false);
+    return;
+  }
+  cancel_tap_menu();
   s_user_scrolled_messages = true;
   s_selected_message = index;
   prepare_selected_image_request();
   mark_messages_dirty();
+  if (selected_message_is_truncated()) {
+    copy_cstr(s_tap_menu_id, sizeof(s_tap_menu_id), s_messages[index].id);
+    s_tap_menu_timer = app_timer_register(TOUCH_DOUBLE_TAP_MS, tap_menu_timer_callback, NULL);
+    return;
+  }
   show_action_window(ActionMenuMain);
 }
 
 static void touch_chat_hold(GRect bounds, GPoint point) {
   int index = touch_message_at(point);
+  cancel_tap_menu();
   if (index < 0 || touch_on_compose(bounds, point)) {
     return;
   }
@@ -9359,8 +9517,11 @@ static void touch_chat_hold(GRect bounds, GPoint point) {
 }
 
 static void touch_chat_drag(int dy) {
+  cancel_tap_menu();
   finish_pending_chat_scroll();
+  int before = s_chat_scroll_offset;
   set_chat_scroll_offset_quiet(s_chat_scroll_offset - dy);
+  compose_float_track(s_chat_scroll_offset - before);
   s_user_scrolled_messages = true;
   // Within half a screen of the top: fetch older messages now, without waiting for the finger to
   // lift, anchored on the top message on screen so the drag carries on into them
@@ -9434,19 +9595,24 @@ static void fling_timer_callback(void *data) {
   s_fling_timer = app_timer_register(FLING_FRAME_MS, fling_timer_callback, NULL);
 }
 
+// The finger's speed at lift-off in px/s (+ = down), 0 if it paused first: placed, not thrown.
+static int touch_lift_velocity(void) {
+  const uint32_t now = touch_now_ms();
+  if (s_fling_path_n < 2 || now - s_drag_ms > FLING_WINDOW_MS) {
+    return 0;
+  }
+  int from = s_fling_path_n - 2;
+  while (from > 0 && now - s_fling_path[from - 1].ms <= FLING_WINDOW_MS) {
+    from--;
+  }
+  const int dt = PG_MAX(10, (int)(now - s_fling_path[from].ms));
+  return (s_fling_path[s_fling_path_n - 1].y - s_fling_path[from].y) * 1000 / dt;
+}
+
 // The finger left a dragged chat: throw it if it was moving, else settle where it is.
 static void fling_start(void) {
-  s_fling_v16 = 0;
-  const uint32_t now = touch_now_ms();
-  if (s_fling_path_n >= 2 && now - s_drag_ms <= FLING_WINDOW_MS) {  // else it paused: placed, not thrown
-    int from = s_fling_path_n - 2;
-    while (from > 0 && now - s_fling_path[from - 1].ms <= FLING_WINDOW_MS) {
-      from--;
-    }
-    const int dt = PG_MAX(10, (int)(now - s_fling_path[from].ms));
-    const int dy = s_fling_path[s_fling_path_n - 1].y - s_fling_path[from].y;
-    s_fling_v16 = PG_MAX(-FLING_MAX_V16, PG_MIN(FLING_MAX_V16, dy * 16 * FLING_FRAME_MS / dt));
-  }
+  s_fling_v16 = PG_MAX(-FLING_MAX_V16,
+                       PG_MIN(FLING_MAX_V16, touch_lift_velocity() * 16 * FLING_FRAME_MS / 1000));
   if (touch_abs(s_fling_v16) < FLING_MIN_V16) {
     fling_stop(true);
     return;
@@ -9615,6 +9781,9 @@ static void touch_handler(const TouchEvent *event, void *context) {
       fling_stop(false);  // a touch catches a moving chat
       s_fling_path_n = 0;
       fling_track(screen.y);
+      if (!full_text && s_view_state == ViewStateChatList) {
+        touch_chat_list_down();
+      }
       s_gesture = (TouchGesture){.down = true, .start = screen, .last = screen};
       s_long_press_timer = app_timer_register(TOUCH_LONG_PRESS_MS, touch_long_press_callback, NULL);
       return;
@@ -9639,7 +9808,8 @@ static void touch_handler(const TouchEvent *event, void *context) {
           fling_track(screen.y);
           touch_chat_drag(dy);
         } else if (s_view_state == ViewStateChatList && s_chat_menu) {
-          touch_chat_list_drag(dy);
+          fling_track(screen.y);
+          touch_chat_list_drag(dy_total);
         }
       }
       s_gesture.last = screen;
@@ -9673,6 +9843,8 @@ static void touch_handler(const TouchEvent *event, void *context) {
       if (gesture.dragging) {
         if (!full_text && s_view_state == ViewStateChat && s_messages_root) {
           fling_start();
+        } else if (!full_text && s_view_state == ViewStateChatList && s_chat_menu) {
+          touch_chat_list_release(dy);  // springs back from past an end, or coasts
         }
         return;
       }
