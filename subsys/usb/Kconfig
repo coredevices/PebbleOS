@@ -38,6 +38,14 @@ config USB_CDC_ACM
     help
       A serial port over USB, CDC ACM, as a UART (pbl/usb/cdc_acm.h).
 
+config USB_CDC_ACM_NAME
+    string "Serial port name"
+    depends on USB_CDC_ACM
+    default "Serial port"
+    help
+      The name the host shows for the serial port, as its function and
+      interface string.
+
 config USB_DFU
     bool "Firmware upgrade"
     depends on FLASH
