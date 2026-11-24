@@ -59,8 +59,12 @@ struct prv_ep {
   uint8_t *buf;
   size_t len;
   size_t done;
+  // IN: the packet in the FIFO, which a stall flushes
+  size_t chunk;
   uint16_t mps;
   bool busy;
+  // IN: a stall flushed the packet, which goes again once the stall clears
+  bool flushed;
 };
 
 struct pbl_udc_musb_state {
@@ -142,6 +146,7 @@ static void prv_tx_packet(const struct pbl_udc_musb *m, uint8_t n) {
   prv_index(m, n);
   prv_write_fifo(m, n, &ep->buf[ep->done], chunk);
   ep->done += chunk;
+  ep->chunk = chunk;
 
   if (n == 0U) {
     // A full packet short of wLength leaves the data stage open, for the next transfer
@@ -279,6 +284,49 @@ static void prv_bus_reset(const struct pbl_udc_musb *m) {
   pbl_udc_event(&m->udc, PBL_UDC_EVENT_ENUMERATED, nullptr);
 }
 
+static void prv_tx_isr(const struct pbl_udc_musb *m, uint8_t n) {
+  struct prv_ep *ep = &m->state->in[n];
+  uint16_t csr;
+
+  prv_index(m, n);
+  csr = prv_rw(m, MUSB_TXCSR);
+  if ((csr & MUSB_TXCSR_SENTSTALL) != 0U) {
+    prv_ww(m, MUSB_TXCSR,
+           (csr & ~(MUSB_TXCSR_SENTSTALL | MUSB_TXCSR_TXPKTRDY)) |
+               ((csr & MUSB_TXCSR_TXPKTRDY) != 0U ? MUSB_TXCSR_FLUSHFIFO : 0U));
+    if (ep->busy && !ep->flushed) {
+      ep->done -= ep->chunk;
+      ep->flushed = true;
+    }
+    return;
+  }
+
+  if (!ep->busy) {
+    return;
+  }
+
+  if (ep->done < ep->len) {
+    prv_tx_packet(m, n);
+  } else {
+    prv_done(m, n | PBL_UDC_EP_IN, ep, (int)ep->len);
+  }
+}
+
+// A stall the endpoint sent interrupts too, without a packet
+static void prv_rx_isr(const struct pbl_udc_musb *m, uint8_t n) {
+  uint16_t csr;
+
+  prv_index(m, n);
+  csr = prv_rw(m, MUSB_RXCSR);
+  if ((csr & MUSB_RXCSR_SENTSTALL) != 0U) {
+    prv_ww(m, MUSB_RXCSR, csr & ~MUSB_RXCSR_SENTSTALL);
+  }
+
+  if ((csr & MUSB_RXCSR_RXPKTRDY) != 0U && m->state->out[n].busy) {
+    prv_rx_packet(m, n);
+  }
+}
+
 static void prv_isr(const struct pbl_udc_musb *m) {
   uint8_t usb = prv_rb(m, MUSB_INTRUSB);
   uint16_t tx = prv_rw(m, MUSB_INTRTX);
@@ -299,19 +347,11 @@ static void prv_isr(const struct pbl_udc_musb *m) {
   }
 
   for (uint8_t n = 1U; n < m->udc.num_eps; n++) {
-    struct prv_ep *in = &m->state->in[n];
-    struct prv_ep *out = &m->state->out[n];
-
-    if ((tx & PBL_BIT(n)) != 0U && in->busy) {
-      if (in->done < in->len) {
-        prv_tx_packet(m, n);
-      } else {
-        prv_done(m, n | PBL_UDC_EP_IN, in, (int)in->len);
-      }
+    if ((tx & PBL_BIT(n)) != 0U) {
+      prv_tx_isr(m, n);
     }
-
-    if ((rx & PBL_BIT(n)) != 0U && out->busy) {
-      prv_rx_packet(m, n);
+    if ((rx & PBL_BIT(n)) != 0U) {
+      prv_rx_isr(m, n);
     }
   }
 }
@@ -418,6 +458,10 @@ static int prv_ep_set_halt(const struct pbl_udc *udc, uint8_t addr, bool halt) {
     uint16_t csr = prv_rw(m, MUSB_TXCSR) & ~(MUSB_TXCSR_SENDSTALL | MUSB_TXCSR_SENTSTALL);
 
     prv_ww(m, MUSB_TXCSR, halt ? csr | MUSB_TXCSR_SENDSTALL : csr | MUSB_TXCSR_CLRDATATOG);
+    if (!halt && m->state->in[n].busy && m->state->in[n].flushed) {
+      m->state->in[n].flushed = false;
+      prv_tx_packet(m, n);
+    }
   } else {
     uint16_t csr = prv_rw(m, MUSB_RXCSR) & ~(MUSB_RXCSR_SENDSTALL | MUSB_RXCSR_SENTSTALL);
 
@@ -489,6 +533,7 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
     ep->len = len;
     ep->done = 0U;
     ep->busy = true;
+    ep->flushed = false;
 
     if (n == 0U) {
       ret = prv_ep0_queue(m, in, ep);
