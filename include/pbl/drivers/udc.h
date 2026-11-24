@@ -32,6 +32,12 @@
 /** Direction bit of an IN endpoint address. */
 #define PBL_UDC_EP_IN 0x80U
 
+/**
+ * Capability of a controller whose endpoint numbers each serve one direction: endpoint n is IN
+ * or OUT, not both.
+ */
+#define PBL_UDC_CAP_EP_ONE_DIR 0x01U
+
 /** @brief Endpoint transfer types, as the endpoint descriptor gives them. */
 enum pbl_udc_ep_type {
   /** Control. */
@@ -117,6 +123,8 @@ struct pbl_udc {
   uint8_t num_eps;
   /** Fastest speed the controller and its PHY run at. */
   enum pbl_udc_speed max_speed;
+  /** Capabilities, as @ref PBL_UDC_CAP_EP_ONE_DIR. */
+  uint8_t caps;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -146,14 +154,16 @@ extern const struct pbl_udc *const UDC;
  * @param _ops Driver operations.
  * @param _num_eps Number of endpoints in each direction.
  * @param _max_speed Fastest speed, one of @ref pbl_udc_speed.
+ * @param _caps Capabilities, as @ref PBL_UDC_CAP_EP_ONE_DIR, or 0.
  */
-#define PBL_UDC_INIT(sym, _name, _parent, _ops, _num_eps, _max_speed)                    \
+#define PBL_UDC_INIT(sym, _name, _parent, _ops, _num_eps, _max_speed, _caps)             \
   {                                                                                      \
     .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_udc_dev_init, _parent, &pbl_udc_class), \
     .ops = (_ops),                                                                       \
     .state = &sym##_udc_state,                                                           \
     .num_eps = (_num_eps),                                                               \
     .max_speed = (_max_speed),                                                           \
+    .caps = (_caps),                                                                     \
   }
 
 /**
