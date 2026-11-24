@@ -15,16 +15,24 @@
  * Keys start with a record kind:
  * - ``'C'`` + 8 byte chat key: a chat.
  * - ``'M'`` + 8 byte chat key + 8 byte message key: a message of that chat.
- * - ``'F'``: what the phone can do, a comma separated feature list.
+ * - ``'F'`` + network id (1 byte, ::ChatDbNetwork): what the phone can do on that network.
+ * - ``'P'`` + 8 byte chat key: a favourite, the chat to send to.
+ * - ``'V'``: the db's meta record; the Chat app asks the phone to wipe and resend the db when it
+ *   is missing or its schema is not ::CHAT_DB_VERSION.
  *
  * Values are little endian. ``str8`` is a length byte and UTF-8 bytes, ``str16`` a 16 bit length
  * and UTF-8 bytes, without NUL.
- * - Chat: version (1), flags (::ChatDbChatFlags), unread count (u16), last activity (u32 UTC),
- *   last synced (u32 UTC), title (str8), preview (str8).
- * - Message: version (1), flags (::ChatDbMessageFlags), time (u32 UTC), id (str8), sender (str8),
+ * - Chat: version, flags (::ChatDbChatFlags), network (u8), unread count (u16), last activity
+ *   (u32 UTC), last synced (u32 UTC), title (str8), preview (str8), address (str8, may be empty).
+ * - Message: version, flags (::ChatDbMessageFlags), time (u32 UTC), id (str8), sender (str8),
  *   text (str16), reactions (str8), reply sender (str8), reply text (str8), and optionally
  *   status (str8), then optionally a photo: image token (str8), width (u16), height (u16).
- * - Features: str8.
+ * - Features: version, comma separated list (str8).
+ * - Favourite: version, network (u8), name (str8), address (str8).
+ * - Meta: version, schema (u8), epoch (u32, how many times the phone reset the db).
+ *
+ * Every value starts with ::CHAT_DB_VERSION; other versions are refused. The db is a cache of the
+ * phone's: a format change bumps the version and the phone resends everything.
  * @{
  */
 
@@ -36,10 +44,24 @@
 #define CHAT_DB_KIND_CHAT 'C'
 /** @brief Key kind of a message record. */
 #define CHAT_DB_KIND_MESSAGE 'M'
-/** @brief Key kind of the features record. */
+/** @brief Key kind of a network's features record. */
 #define CHAT_DB_KIND_FEATURES 'F'
-/** @brief Version of chat and message values. */
-#define CHAT_DB_VERSION 1
+/** @brief Key kind of a favourite. */
+#define CHAT_DB_KIND_FAVORITE 'P'
+/** @brief Key kind of the meta record. */
+#define CHAT_DB_KIND_META 'V'
+/** @brief Version of every value, and the schema the meta record must name. */
+#define CHAT_DB_VERSION 2
+
+/** @brief Where a chat comes from. */
+typedef enum {
+  /** Beeper (gomuks or the Beeper app). */
+  ChatDbNetworkBeeper = 0,
+  /** The phone's own SMS. */
+  ChatDbNetworkSms = 1,
+  /** Number of networks this firmware knows. */
+  ChatDbNetworkCount,
+} ChatDbNetwork;
 
 /** @brief Chat flags. */
 typedef enum {
@@ -47,6 +69,8 @@ typedef enum {
   ChatDbChatFlagGroup = 1 << 0,
   /** Muted. */
   ChatDbChatFlagMuted = 1 << 1,
+  /** A search result: a person with no conversation yet. */
+  ChatDbChatFlagContact = 1 << 2,
 } ChatDbChatFlags;
 
 /** @brief Message flags. */
@@ -67,6 +91,8 @@ typedef struct {
 typedef struct {
   /** ::ChatDbChatFlags. */
   uint8_t flags;
+  /** ::ChatDbNetwork. */
+  uint8_t network;
   /** Unread messages. */
   uint16_t unread_count;
   /** Time of the newest message, UTC. */
@@ -77,7 +103,27 @@ typedef struct {
   ChatDbStr title;
   /** Newest message, shortened. */
   ChatDbStr preview;
+  /** The other side's address (an SMS number), empty when the network has none. */
+  ChatDbStr address;
 } ChatDbChat;
+
+/** @brief A parsed favourite; strings point into the value. */
+typedef struct {
+  /** ::ChatDbNetwork. */
+  uint8_t network;
+  /** Name to show. */
+  ChatDbStr name;
+  /** Address, may be empty. */
+  ChatDbStr address;
+} ChatDbFavorite;
+
+/** @brief The parsed meta record. */
+typedef struct {
+  /** Schema the phone wrote. */
+  uint8_t schema;
+  /** How many times the phone reset the db. */
+  uint32_t epoch;
+} ChatDbMeta;
 
 /** @brief A parsed message value; strings point into the value. */
 typedef struct {
@@ -112,9 +158,18 @@ typedef struct {
  * @param val Value.
  * @param val_len Length of @p val in bytes.
  * @param[out] out Parsed chat.
- * @return true if the value is a complete version 1 chat.
+ * @return true if the value is a complete chat of ::CHAT_DB_VERSION.
  */
 bool chat_db_parse_chat(const uint8_t *val, int val_len, ChatDbChat *out);
+
+/** @brief Parse a features value into its comma separated list. */
+bool chat_db_parse_features(const uint8_t *val, int val_len, ChatDbStr *out);
+
+/** @brief Parse a favourite value. */
+bool chat_db_parse_favorite(const uint8_t *val, int val_len, ChatDbFavorite *out);
+
+/** @brief Parse the meta value. */
+bool chat_db_parse_meta(const uint8_t *val, int val_len, ChatDbMeta *out);
 
 /**
  * @brief Parse a message value.
@@ -122,7 +177,7 @@ bool chat_db_parse_chat(const uint8_t *val, int val_len, ChatDbChat *out);
  * @param val Value.
  * @param val_len Length of @p val in bytes.
  * @param[out] out Parsed message.
- * @return true if the value is a complete version 1 message.
+ * @return true if the value is a complete message of ::CHAT_DB_VERSION.
  */
 bool chat_db_parse_message(const uint8_t *val, int val_len, ChatDbMessage *out);
 

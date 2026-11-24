@@ -42,3 +42,5 @@
 #define MESSAGE_KEY_Theme 10029
 #define MESSAGE_KEY_Type 10001
 #define MESSAGE_KEY_UnreadCount 10011
+#define MESSAGE_KEY_Network 10038  // ChatDbNetwork of a chat, favourite or features message
+#define MESSAGE_KEY_Address 10039  // a chat's address (an SMS number)

@@ -87,6 +87,7 @@ static struct {
   AppTimer *change_timer;
 
   bool chat_open;
+  bool reset_asked;  // reset_db sent this launch
   uint8_t open_chat[CHAT_DB_CHAT_KEY_LEN];
   uint32_t newest_shown;
   ShownRow tail[TAIL_ROWS];
@@ -358,14 +359,45 @@ static void prv_deliver_message(const char *type, int index, int count, int tran
 // Chat list
 ////////////////////////////
 
-static void prv_deliver_settings(void) {
-  char features[128] = "";
-  const uint8_t key = CHAT_DB_KIND_FEATURES;
-  uint8_t val[sizeof(features)];
-  const int len = chat_db_get_len(&key, 1);
-  if (len > 1 && len <= (int)sizeof(val) && chat_db_read(&key, 1, val, len) == 0) {
-    prv_copy_str(features, (const char *)val + 1, val[0], sizeof(features) - 1);
+static bool prv_forward(const uint8_t *dict, size_t len);
+
+// A network's comma separated features, "" when the phone hasn't said.
+static void prv_read_features(uint8_t network, char *out, size_t size) {
+  out[0] = '\0';
+  const uint8_t key[] = {CHAT_DB_KIND_FEATURES, network};
+  uint8_t val[130];
+  const int len = chat_db_get_len(key, sizeof(key));
+  ChatDbStr features;
+  if (len > 0 && len <= (int)sizeof(val) && chat_db_read(key, sizeof(key), val, len) == 0 &&
+      chat_db_parse_features(val, len, &features)) {
+    prv_copy_str(out, features.str, features.len, size - 1);
   }
+}
+
+// The db is the phone's cache: missing meta or another schema means it was written by other
+// firmware (or not at all), so ask the phone to wipe it and send everything again.
+static void prv_check_meta(void) {
+  if (s_ds.reset_asked) {
+    return;
+  }
+  const uint8_t key = CHAT_DB_KIND_META;
+  uint8_t val[8];
+  const int len = chat_db_get_len(&key, 1);
+  ChatDbMeta meta;
+  if (len > 0 && len <= (int)sizeof(val) && chat_db_read(&key, 1, val, len) == 0 &&
+      chat_db_parse_meta(val, len, &meta) && meta.schema == CHAT_DB_VERSION) {
+    return;
+  }
+  uint8_t buf[32];
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buf, sizeof(buf));
+  dict_write_cstring(&iter, MESSAGE_KEY_Command, "reset_db");
+  s_ds.reset_asked = prv_forward(buf, dict_write_end(&iter));
+}
+
+static void prv_deliver_settings(void) {
+  char features[128];
+  prv_read_features(ChatDbNetworkBeeper, features, sizeof(features));
 
   // The canned replies the phone app set for notification replies
   char canned[200] = "";
@@ -394,6 +426,41 @@ static void prv_deliver_settings(void) {
   }
   dict_write_cstring(iter, MESSAGE_KEY_Text, features);
   prv_deliver(iter);
+
+  // Each network's own features: the UI builds a chat's menus from its network's
+  for (uint8_t n = 0; n < ChatDbNetworkCount; n++) {
+    prv_read_features(n, features, sizeof(features));
+    iter = prv_begin("features");
+    dict_write_int32(iter, MESSAGE_KEY_Network, n);
+    dict_write_cstring(iter, MESSAGE_KEY_Text, features);
+    prv_deliver(iter);
+  }
+}
+
+// Answers get_favorites: every favourite, then favorites_done.
+static void prv_deliver_favorites(void) {
+  RowRef *rows = prv_rows_alloc(MAX_CHATS);
+  const int count = prv_rows(CHAT_DB_KIND_FAVORITE, nullptr, rows, MAX_CHATS);
+  int delivered = 0;
+  for (int i = 0; i < count; i++) {
+    int len;
+    uint8_t *val = prv_read(&rows[i], &len);
+    ChatDbFavorite fav;
+    if (val && chat_db_parse_favorite(val, len, &fav)) {
+      char id[CHAT_KEY_HEX_LEN + 1];
+      prv_hex(id, rows[i].key + 1, CHAT_DB_CHAT_KEY_LEN);
+      DictionaryIterator *iter = prv_begin("favorite");
+      dict_write_int32(iter, MESSAGE_KEY_Index, delivered++);
+      dict_write_cstring(iter, MESSAGE_KEY_ChatId, id);
+      dict_write_int32(iter, MESSAGE_KEY_Network, fav.network);
+      prv_write_str(iter, MESSAGE_KEY_Sender, fav.name, MAX_TITLE_BYTES);
+      prv_write_str(iter, MESSAGE_KEY_Address, fav.address, MAX_TITLE_BYTES);
+      prv_deliver(iter);
+    }
+    app_free(val);
+  }
+  app_free(rows);
+  prv_deliver_done("favorites_done", delivered, 0);
 }
 
 static void prv_hint_expired(void *data) {
@@ -428,8 +495,9 @@ static void prv_deliver_chats(char *hint_chat_id) {
     char meta[MAX_META_BYTES + 1];
     char when[12];
     prv_chat_time(when, sizeof(when), chat.last_activity);
-    snprintf(meta, sizeof(meta), "%s|%s%s", when, (chat.flags & ChatDbChatFlagGroup) ? "g" : "",
-             (chat.flags & ChatDbChatFlagMuted) ? "m" : "");
+    snprintf(meta, sizeof(meta), "%s|%s%s%s", when, (chat.flags & ChatDbChatFlagGroup) ? "g" : "",
+             (chat.flags & ChatDbChatFlagMuted) ? "m" : "",
+             (chat.flags & ChatDbChatFlagContact) ? "c" : "");
     if (hint_chat_id && !hint_chat_id[0] && s_ds.launch_hint[0] && prv_str_eq(chat.title, s_ds.launch_hint)) {
       strcpy(hint_chat_id, id);
     }
@@ -446,6 +514,10 @@ static void prv_deliver_chats(char *hint_chat_id) {
     dict_write_int32(iter, MESSAGE_KEY_IsUnread, chat.unread_count > 0);
     dict_write_int32(iter, MESSAGE_KEY_UnreadCount, chat.unread_count);
     dict_write_cstring(iter, MESSAGE_KEY_MessageMeta, meta);
+    dict_write_int32(iter, MESSAGE_KEY_Network, chat.network);
+    if (chat.address.len) {
+      prv_write_str(iter, MESSAGE_KEY_Address, chat.address, MAX_TITLE_BYTES);
+    }
     app_free(val);
     prv_deliver(iter);
     delivered++;
@@ -748,6 +820,7 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
 
   if (strcmp(cmd, "get_chats") == 0) {
     s_ds.chat_open = false;
+    prv_check_meta();
     prv_deliver_settings();
     char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
     prv_deliver_chats(hint_chat);
@@ -780,6 +853,8 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     prv_deliver_context(chat_key, message_id, true);
   } else if (strcmp(cmd, "get_context") == 0 && has_chat) {
     prv_deliver_context(chat_key, message_id, false);
+  } else if (strcmp(cmd, "get_favorites") == 0) {
+    prv_deliver_favorites();
   } else if (strcmp(cmd, "leave_chat") == 0) {
     s_ds.chat_open = false;
   } else if (strcmp(cmd, "get_image") == 0 || strcmp(cmd, "cancel_image") == 0) {

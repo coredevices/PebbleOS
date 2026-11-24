@@ -64,11 +64,43 @@ bool chat_db_parse_chat(const uint8_t *val, int val_len, ChatDbChat *out) {
     return false;
   }
   out->flags = prv_read_uint(&r, 1);
+  out->network = prv_read_uint(&r, 1);
   out->unread_count = prv_read_uint(&r, 2);
   out->last_activity = prv_read_uint(&r, 4);
   out->synced = prv_read_uint(&r, 4);
   out->title = prv_read_str(&r, 1);
   out->preview = prv_read_str(&r, 1);
+  out->address = prv_read_str(&r, 1);
+  return prv_done(&r);
+}
+
+bool chat_db_parse_features(const uint8_t *val, int val_len, ChatDbStr *out) {
+  Reader r = {val, val + val_len, val_len > 0};
+  if (prv_read_uint(&r, 1) != CHAT_DB_VERSION) {
+    return false;
+  }
+  *out = prv_read_str(&r, 1);
+  return prv_done(&r);
+}
+
+bool chat_db_parse_favorite(const uint8_t *val, int val_len, ChatDbFavorite *out) {
+  Reader r = {val, val + val_len, val_len > 0};
+  if (prv_read_uint(&r, 1) != CHAT_DB_VERSION) {
+    return false;
+  }
+  out->network = prv_read_uint(&r, 1);
+  out->name = prv_read_str(&r, 1);
+  out->address = prv_read_str(&r, 1);
+  return prv_done(&r);
+}
+
+bool chat_db_parse_meta(const uint8_t *val, int val_len, ChatDbMeta *out) {
+  Reader r = {val, val + val_len, val_len > 0};
+  if (prv_read_uint(&r, 1) != CHAT_DB_VERSION) {
+    return false;
+  }
+  out->schema = prv_read_uint(&r, 1);
+  out->epoch = prv_read_uint(&r, 4);
   return prv_done(&r);
 }
 
@@ -108,6 +140,10 @@ static bool prv_key_valid(const uint8_t *key, int key_len) {
     case CHAT_DB_KIND_MESSAGE:
       return key_len == 1 + CHAT_DB_CHAT_KEY_LEN + CHAT_DB_MESSAGE_KEY_LEN;
     case CHAT_DB_KIND_FEATURES:
+      return key_len == 2;
+    case CHAT_DB_KIND_FAVORITE:
+      return key_len == 1 + CHAT_DB_CHAT_KEY_LEN;
+    case CHAT_DB_KIND_META:
       return key_len == 1;
     default:
       return false;
@@ -127,10 +163,17 @@ static bool prv_record_valid(const uint8_t *key, int key_len, const uint8_t *val
       ChatDbMessage message;
       return chat_db_parse_message(val, val_len, &message);
     }
+    case CHAT_DB_KIND_FEATURES: {
+      ChatDbStr features;
+      return chat_db_parse_features(val, val_len, &features);
+    }
+    case CHAT_DB_KIND_FAVORITE: {
+      ChatDbFavorite favorite;
+      return chat_db_parse_favorite(val, val_len, &favorite);
+    }
     default: {
-      Reader r = {val, val + val_len, val_len > 0};
-      prv_read_str(&r, 1);
-      return prv_done(&r);
+      ChatDbMeta meta;
+      return chat_db_parse_meta(val, val_len, &meta);
     }
   }
 }
