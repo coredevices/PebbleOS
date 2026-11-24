@@ -1,11 +1,14 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <stdio.h>
 
-#include <pbl/drivers/accel.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/sensing/sensing.h>
 #include <pbl/services/event_service.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -16,8 +19,7 @@
 #include <fake_sys_work.h>
 
 // helpers from accel manager
-extern void test_accel_manager_get_subsample_info(AccelManagerState *state, uint16_t *num,
-                                                  uint16_t *den, uint16_t *samps_per_update);
+extern struct pbl_sensing_client *test_accel_manager_get_client(AccelManagerState *state);
 extern void test_accel_manager_reset(void);
 
 // stub
@@ -51,55 +53,73 @@ static int s_num_samples = 0;
 //! If true, ignore attempts to change the sampling interval
 static bool s_force_sampling_interval;
 
-static int prv_init(const struct pbl_accel *accel) {
-  return 0;
-}
-
-static int prv_set_sampling_interval(const struct pbl_accel *accel, uint32_t interval_us,
-                                     uint32_t *actual_us) {
-  if (!s_force_sampling_interval) {
-    s_sampling_interval_us = interval_us;
-  }
-  *actual_us = s_sampling_interval_us;
-  return 0;
-}
-
-static uint32_t prv_get_sampling_interval(const struct pbl_accel *accel) {
-  return s_sampling_interval_us;
-}
-
-static int prv_set_num_samples(const struct pbl_accel *accel, uint32_t num_samples) {
-  s_num_samples = num_samples;
-  return 0;
-}
-
-static uint32_t prv_get_max_num_samples(const struct pbl_accel *accel) {
-  return 32;
-}
-
-static int prv_peek(const struct pbl_accel *accel, struct pbl_accel_sample *sample) {
-  return 0;
-}
-
-static int prv_set_detection(const struct pbl_accel *accel, bool on) {
-  return 0;
-}
-
-static const struct pbl_accel_ops s_fake_ops = {
-  .init = prv_init,
-  .set_sampling_interval = prv_set_sampling_interval,
-  .get_sampling_interval = prv_get_sampling_interval,
-  .set_num_samples = prv_set_num_samples,
-  .get_max_num_samples = prv_get_max_num_samples,
-  .peek = prv_peek,
-  .set_shake_detection = prv_set_detection,
-  .set_double_tap_detection = prv_set_detection,
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, 1000, 1, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, 1000, 1, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, 1000, 1, 0),
 };
 
-PBL_ACCEL_STATE_DEFINE(s_fake_accel);
-static const struct pbl_accel s_fake_accel =
-    PBL_ACCEL_INIT(s_fake_accel, "accel", nullptr, &s_fake_ops);
-const struct pbl_accel *const ACCEL = &s_fake_accel;
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+  return 0;
+}
+
+static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      if (!s_force_sampling_interval) {
+        s_sampling_interval_us = *val;
+      }
+      *val = s_sampling_interval_us;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH:
+      s_num_samples = *val;
+      return 0;
+    case PBL_SENSOR_ATTR_SHAKE_SENSITIVITY:
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      *val = s_sampling_interval_us;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = s_num_samples;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH_MAX:
+      *val = 32;
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_set_event(const struct pbl_sensor *sensor, enum pbl_sensor_event_type type,
+                         bool on) {
+  return 0;
+}
+
+static const struct pbl_sensor_ops s_fake_ops = {
+  .read = prv_read,
+  .attr_set = prv_attr_set,
+  .attr_get = prv_attr_get,
+  .set_event = prv_set_event,
+};
+
+PBL_SENSOR_STREAM_STATE_DEFINE(s_fake_accel, 2, 6);
+static const struct pbl_sensor s_fake_accel =
+    PBL_SENSOR_INIT(s_fake_accel, "accel", nullptr, &s_fake_ops, PBL_BIT(PBL_SENSOR_ACCEL),
+                    PBL_BIT(PBL_SENSOR_EVENT_SHAKE) | PBL_BIT(PBL_SENSOR_EVENT_DOUBLE_TAP),
+                    PBL_SENSOR_MOUNT_IDENTITY);
+const struct pbl_sensor *const ACCEL = &s_fake_accel;
 
 // Data events for a SysWorkqHigh subscriber land here, so a test can count them
 static int s_posted_events;
@@ -134,6 +154,31 @@ void test_accel_manager__cleanup(void) {
 }
 
 static void prv_noop_sample_handler(void *context) {
+}
+
+static uint64_t s_now_us;
+
+// Feeds samples in from the driver at a rate, one batch per sample
+static void prv_feed_at(int rate_hz, int count) {
+  for (int i = 0; i < count; i++) {
+    pbl_sensor_lock(ACCEL);
+    uint8_t *frame = pbl_sensor_buf_alloc(ACCEL, nullptr);
+    cl_assert(frame != nullptr);
+    pbl_put_le16((uint16_t)i, &frame[0]);
+    pbl_put_le16(0U, &frame[2]);
+    pbl_put_le16(0U, &frame[4]);
+    pbl_sensor_report(ACCEL, &(const struct pbl_sensor_batch){
+                               .data = frame,
+                               .chans = s_chans,
+                               .num_chans = PBL_ARRAY_SIZE(s_chans),
+                               .stride = 6,
+                               .num_frames = 1,
+                               .timestamp_us = s_now_us,
+                               .interval_us = 1000000 / rate_hz,
+                             });
+    pbl_sensor_unlock(ACCEL);
+    s_now_us += 1000000 / rate_hz;
+  }
 }
 
 static void prv_validate_sample_rates(int *arr, int num_samples) {
@@ -173,25 +218,18 @@ static void prv_run_accel_test(int *sample_arr, int num_items) {
     sys_accel_manager_set_sample_buffer(sessions[i], fake_buf, 1);
   }
 
-  //  make sure all sampling rates are what they should be
+  cl_assert_equal_i(1000000 / s_sampling_interval_us, fastest_rate);
+  cl_assert_equal_i(s_num_samples, 1);
+
+  // Each subscriber gets its own rate out of a second of samples, kept waiting
   for (int i = 0; i < num_items; i++) {
-    stub_pebble_tasks_set_current(tasks[i]);
-
-    uint16_t num, den, samps_per_update;
-    test_accel_manager_get_subsample_info(sessions[i], &num, &den, &samps_per_update);
-
-    if ((fastest_rate % sample_arr[i]) == 0) {
-      // the current sample rate is a multiple of the rate we are running at
-      cl_assert_equal_i(num, 1);
-      cl_assert_equal_i(den, fastest_rate / sample_arr[i]);
-      cl_assert_equal_i(samps_per_update, 1);
-    } else {
-      // the sample rate is not an even multiple of our fastest rate
-      uint32_t gcd_of_rates = gcd(fastest_rate, sample_arr[i]);
-      cl_assert_equal_i(num, sample_arr[i] / gcd_of_rates);
-      cl_assert_equal_i(den, fastest_rate / gcd_of_rates);
-      cl_assert_equal_i(samps_per_update, 1);
-    }
+    pbl_sensing_arm(test_accel_manager_get_client(sessions[i]), 0U);
+  }
+  prv_feed_at(fastest_rate, fastest_rate);
+  for (int i = 0; i < num_items; i++) {
+    struct pbl_sensing_client *client = test_accel_manager_get_client(sessions[i]);
+    cl_assert_equal_i(pbl_sensing_available(client), sample_arr[i]);
+    pbl_sensing_discard(client);
   }
 
   cl_assert_equal_i(1000000 / s_sampling_interval_us, fastest_rate);
@@ -253,12 +291,10 @@ void test_accel_manager__jitterfree(void) {
 
   cl_assert_equal_i(resulting_mhz, 12500);
 
-  uint16_t num, den, samples_per_update;
-  test_accel_manager_get_subsample_info(state, &num, &den, &samples_per_update);
-
-  cl_assert_equal_i(num, 1);
-  cl_assert_equal_i(den, 10);
-  cl_assert_equal_i(samples_per_update, PBL_ARRAY_SIZE(fake_buf));
+  // Every tenth sample of the 125 Hz the accelerometer runs at, kept waiting
+  pbl_sensing_arm(test_accel_manager_get_client(state), 0U);
+  prv_feed_at(125, 20);
+  cl_assert_equal_i(pbl_sensing_available(test_accel_manager_get_client(state)), 2);
 }
 
 void test_accel_manager__batched_samples(void) {
@@ -284,17 +320,9 @@ void test_accel_manager__batched_samples(void) {
 // Data events
 //////////////////////////////////////////
 
-static uint64_t s_now_us;
-
 // Feeds samples in from the driver, one sampling interval apart
 static void prv_feed(int count) {
-  for (int i = 0; i < count; i++) {
-    struct pbl_accel_sample sample = {.x = i, .timestamp_us = s_now_us};
-    s_now_us += 1000000 / ACCEL_SAMPLING_25HZ;
-    pbl_accel_lock(ACCEL);
-    pbl_accel_report_sample(ACCEL, &sample);
-    pbl_accel_unlock(ACCEL);
-  }
+  prv_feed_at(ACCEL_SAMPLING_25HZ, count);
 }
 
 static AccelManagerState *prv_subscribe_on(PebbleTask task) {

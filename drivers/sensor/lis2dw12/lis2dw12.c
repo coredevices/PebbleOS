@@ -1,0 +1,1130 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <errno.h>
+#include <inttypes.h>
+#include <string.h>
+
+#include <pbl/analytics/analytics.h>
+#include <pbl/devicetree.h>
+#include <pbl/drivers/gpio.h>
+#include <pbl/drivers/i2c.h>
+#include <pbl/drivers/sensor.h>
+#include <pbl/drivers/sensor/lis2dw12/lis2dw12.h>
+#include <pbl/kernel/delay.h>
+#include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
+#include <pbl/util/misc.h>
+#include <pbl/util/size.h>
+
+PBL_LOG_MODULE_DECLARE(driver_sensor, CONFIG_DRIVER_SENSOR_LOG_LEVEL);
+
+// The single instance, for interrupt and timer contexts
+static const struct pbl_lis2dw12 *s_dev;
+
+// Implementation notes:
+//
+// - Peeking returns the last FIFO sample when sampling is active, otherwise
+//   single-shot mode is used to perform the measurement
+// - Low-power mode 1 (12-bit) is always used (minimum power mode)
+// - Frames are reported in the sensor axes; the class applies the mount matrix
+//   and the rotation.
+// - ODR is limited to the [12.5, 200] Hz range
+// - Shake detection uses 12.5Hz when no active sampling is ongoing
+// - Wake-up duration absolute time depends on the ODR, a parameter that can
+//   be changed depending on the sampling interval configuration. Value is NOT
+//   adjusted automatically when ODR changes (we just have 2 bits...), so it is
+//   possible to notice sensitivity changes when changing sampling interval.
+// - INT1 mixes level (FIFO threshold) and latched (wake-up) sources on a
+//   rising-edge interrupt, so a pad latched HIGH yields no further edges: shake
+//   events die and the pending interrupt blocks deep sleep. The work handler
+//   re-checks the pad after servicing; a watchdog recovers the stream (FIFO
+//   cadence while sampling, fixed-rate pad poll in shake-only mode).
+
+// Time to wait after reset (us)
+#define LIS2DW12_RESET_TIME_US 5
+
+// DRDY polling parameters for single-shot peeks
+#define LIS2DW12_DRDY_POLL_DELAY_MS   (5)   /* ms between data-ready polls */
+#define LIS2DW12_DRDY_POLL_TIMEOUT_MS (100) /* max wait (~5x 20ms at 50Hz ODR) */
+
+// FIFO threshold periods without a FIFO read before the stream is considered
+// stalled (>1x to tolerate scheduling jitter), and threshold lower bound
+#define LIS2DW12_STALL_MARGIN 2U
+#define LIS2DW12_STALL_MIN_MS 1000U
+
+// INT1 watchdog poll rate in shake-only mode (no FIFO cadence to track)
+#define LIS2DW12_SHAKE_WDT_PERIOD_S 5U
+
+// Consecutive stuck-high watchdog passes before a full stream recovery
+#define LIS2DW12_SHAKE_STUCK_PASSES_MAX 3U
+
+// Scale range when in 12-bit mode (low-power mode 1)
+#define LIS2DW12_S12_SCALE_RANGE PBL_BIT(11)
+
+// I2C address bit set by the SA0 pin
+#define LIS2DW12_ADDR_SA0 PBL_BIT(0)
+
+// Registers
+#define LIS2DW12_WHO_AM_I            0x0FU
+#define LIS2DW12_UNDOC               0x17U
+#define LIS2DW12_CTRL1               0x20U
+#define LIS2DW12_CTRL2               0x21U
+#define LIS2DW12_CTRL3               0x22U
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL 0x23U
+#define LIS2DW12_CTRL5_INT2_PAD_CTRL 0x24U
+#define LIS2DW12_CTRL6               0x25U
+#define LIS2DW12_STATUS              0x27U
+#define LIS2DW12_OUT_X_L             0x28U
+#define LIS2DW12_FIFO_CTRL           0x2EU
+#define LIS2DW12_FIFO_SAMPLES        0x2FU
+#define LIS2DW12_WAKE_UP_THS         0x34U
+#define LIS2DW12_WAKE_UP_DUR         0x35U
+#define LIS2DW12_WAKE_UP_SRC         0x38U
+#define LIS2DW12_ALL_INT_SRC         0x3BU
+#define LIS2DW12_CTRL7               0x3FU
+
+// WHO_AM_I fields
+#define LIS2DW12_WHO_AM_I_VAL 0x44U
+
+// UNDOC fields
+#define LIS2DW12_UNDOC_ADDR_PULLUP_DIS PBL_BIT(6)
+
+// CTRL1 fields
+#define LIS2DW12_CTRL1_LP_MODE_MASK      PBL_GENMASK(1, 0)
+#define LIS2DW12_CTRL1_LP_MODE1          0x0U
+#define LIS2DW12_CTRL1_MODE_MASK         PBL_GENMASK(3, 2)
+#define LIS2DW12_CTRL1_MODE_LP           0x0U
+#define LIS2DW12_CTRL1_MODE_SINGLE       0x2U
+#define LIS2DW12_CTRL1_ODR_MASK          PBL_GENMASK(7, 4)
+#define LIS2DW12_CTRL1_ODR_PD            0x0U
+#define LIS2DW12_CTRL1_ODR_1HZ6_LP_ONLY  0x1U
+#define LIS2DW12_CTRL1_ODR_12HZ5         0x2U
+#define LIS2DW12_CTRL1_ODR_25HZ          0x3U
+#define LIS2DW12_CTRL1_ODR_50HZ          0x4U
+#define LIS2DW12_CTRL1_ODR_100HZ         0x5U
+#define LIS2DW12_CTRL1_ODR_200HZ         0x6U
+#define LIS2DW12_CTRL1_ODR_400HZ_HP_ONLY 0x7U
+#define LIS2DW12_CTRL1_ODR_800HZ_HP_ONLY 0x8U
+#define LIS2DW12_CTRL1_ODR_1K6HZ_HP_ONLY 0x9U
+
+// CTRL2 fields
+#define LIS2DW12_CTRL2_SOFT_RESET PBL_BIT(6)
+#define LIS2DW12_CTRL2_BOOT       PBL_BIT(7)
+
+// CTRL3 fields
+#define LIS2DW12_CTRL3_SLP_MODE_1              PBL_BIT(0)
+#define LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 PBL_BIT(1)
+#define LIS2DW12_CTRL3_LIR                     PBL_BIT(4)
+
+// CTRL4_INT1_PAD_CTRL fields
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU  PBL_BIT(5)
+#define LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_FTH PBL_BIT(1)
+
+// CTRL5_INT2_PAD_CTRL fields
+#define LIS2DW12_CTRL5_INT2_PAD_CTRL_INT2_OVR PBL_BIT(3)
+
+// CTRL6 fields
+#define LIS2DW12_CTRL6_FS_MASK PBL_GENMASK(5, 4)
+#define LIS2DW12_CTRL6_FS_2G   0x0U
+#define LIS2DW12_CTRL6_FS_4G   0x1U
+#define LIS2DW12_CTRL6_FS_8G   0x2U
+#define LIS2DW12_CTRL6_FS_16G  0x3U
+
+// STATUS fields
+#define LIS2DW12_STATUS_DRDY PBL_BIT(0)
+
+// FIFO_CTRL fields
+#define LIS2DW12_FIFO_CTRL_FTH_MASK         PBL_GENMASK(4, 0)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_MASK   PBL_GENMASK(7, 5)
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS 0x0U
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_FIFO   0x1U
+#define LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT   0x6U
+
+// FIFO_SAMPLES fields
+#define LIS2DW12_FIFO_SAMPLES_DIFF_MASK PBL_GENMASK(5, 0)
+#define LIS2DW12_FIFO_SAMPLES_FIFO_OVR  PBL_BIT(6)
+#define LIS2DW12_FIFO_SAMPLES_FIFO_FTH  PBL_BIT(7)
+
+// WAKE_UP_THS fields
+#define LIS2DW12_WAKE_UP_THS_WK_THS_MASK PBL_GENMASK(5, 0)
+
+// WAKE_UP_DUR fields
+#define LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK PBL_GENMASK(6, 5)
+
+// WAKE_UP_SRC fields
+#define LIS2DW12_WAKE_UP_SRC_WU_IA              PBL_BIT(3)
+#define LIS2DW12_WAKE_UP_SRC_AXIS_WU(chip_axis) PBL_BIT(2U - (chip_axis))
+
+// CTRL7 fields
+#define LIS2DW12_CTRL7_INTERRUPTS_ENABLE PBL_BIT(5)
+#define LIS2DW12_CTRL7_INT2_ON_INT1      PBL_BIT(6)
+
+// Samples are 12-bit left-justified within a 16-bit little-endian word, so the raw word is the
+// 12-bit value << 4: raw words to micro-g
+#define LIS2DW12_UG_NUM (CONFIG_ACCEL_LIS2DW12_SCALE_MG * 1000)
+#define LIS2DW12_UG_DEN (LIS2DW12_S12_SCALE_RANGE << 4U)
+
+static const struct pbl_sensor_chan s_chans[] = {
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_X, 0, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Y, 2, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+  PBL_SENSOR_CHAN(PBL_SENSOR_ACCEL, PBL_SENSOR_AXIS_Z, 4, PBL_SENSOR_FMT_S16_LE, LIS2DW12_UG_NUM,
+                  LIS2DW12_UG_DEN, 0),
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Private
+////////////////////////////////////////////////////////////////////////////////
+
+static bool prv_lis2dw12_write(uint8_t reg, const uint8_t *data, uint16_t len) {
+  return pbl_i2c_burst_write(&s_dev->i2c, reg, data, len) == 0;
+}
+
+static bool prv_lis2dw12_read(uint8_t reg, uint8_t *data, uint16_t len) {
+  return pbl_i2c_burst_read(&s_dev->i2c, reg, data, len) == 0;
+}
+
+static bool prv_lis2dw12_read_fifo(uint8_t *buf, uint8_t samples) {
+  uint8_t reg = LIS2DW12_OUT_X_L;
+  struct pbl_i2c_msg msgs[] = {
+    {.buf = &reg, .len = 1U, .flags = PBL_I2C_MSG_WRITE},
+    {.buf = buf,
+     .len = samples * LIS2DW12_SAMPLE_SIZE_BYTES,
+     .flags = PBL_I2C_MSG_READ | PBL_I2C_MSG_DMA_SAFE},
+  };
+
+  return pbl_i2c_transfer(&s_dev->i2c, msgs, PBL_ARRAY_SIZE(msgs)) == 0;
+}
+
+// Report the samples read into buf, a buffer from pbl_sensor_buf_alloc(). Kept free of device
+// I/O so it can run after the I2C reads instead of in between them.
+static void prv_lis2dw12_process_samples(uint8_t *buf, uint8_t num_samples, uint64_t timestamp_us) {
+  struct pbl_lis2dw12_state *state = s_dev->state;
+
+  // Keep the most recent sample around for reads.
+  memcpy(state->last_sample, &buf[(num_samples - 1U) * LIS2DW12_SAMPLE_SIZE_BYTES],
+         LIS2DW12_SAMPLE_SIZE_BYTES);
+  state->last_sample_timestamp_us = timestamp_us;
+  state->last_sample_valid = true;
+
+  pbl_sensor_report(&s_dev->sensor, &(const struct pbl_sensor_batch){
+                                      .data = buf,
+                                      .chans = s_chans,
+                                      .num_chans = PBL_ARRAY_SIZE(s_chans),
+                                      .stride = LIS2DW12_SAMPLE_SIZE_BYTES,
+                                      .num_frames = num_samples,
+                                      .timestamp_us = timestamp_us,
+                                      .interval_us = state->sampling_interval_us,
+                                    });
+}
+
+//! Buffer for a FIFO read, or NULL if the listener still holds all of them
+static uint8_t *prv_alloc_buf(void) {
+  uint8_t *buf = pbl_sensor_buf_alloc(&s_dev->sensor, nullptr);
+
+  if (buf == nullptr) {
+    PBL_LOG_WRN("No free buffer, leaving samples in the FIFO");
+  }
+
+  return buf;
+}
+
+static bool prv_lis2dw12_enable_fifo(uint8_t num_samples) {
+  bool ret;
+  uint8_t val;
+
+  val = PBL_FIELD_PREP(LIS2DW12_FIFO_CTRL_FIFO_MODE_MASK, LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS);
+  ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write FIFO_CTRL register");
+    return ret;
+  }
+
+  val = PBL_FIELD_PREP(LIS2DW12_FIFO_CTRL_FTH_MASK, num_samples) |
+        PBL_FIELD_PREP(LIS2DW12_FIFO_CTRL_FIFO_MODE_MASK, LIS2DW12_FIFO_CTRL_FIFO_MODE_CONT);
+  ret = prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write FIFO_CTRL register");
+    return ret;
+  }
+
+  PBL_LOG_DBG("FIFO enabled with threshold %" PRIu8, num_samples);
+
+  return true;
+}
+
+//! Salvage and dispatch any samples queued in the FIFO
+static void prv_lis2dw12_drain_fifo(void) {
+  uint8_t val;
+  uint8_t samples;
+
+  if (!prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1)) {
+    PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
+    return;
+  }
+
+  samples = PBL_MIN(PBL_FIELD_GET(LIS2DW12_FIFO_SAMPLES_DIFF_MASK, val), LIS2DW12_FIFO_SIZE);
+  if (samples == 0U) {
+    return;
+  }
+
+  uint8_t *buf = prv_alloc_buf();
+  if (buf == nullptr) {
+    return;
+  }
+
+  if (!prv_lis2dw12_read_fifo(buf, samples)) {
+    pbl_sensor_buf_free(&s_dev->sensor, buf);
+    PBL_LOG_ERR("Failed to read samples");
+    return;
+  }
+
+  prv_lis2dw12_process_samples(buf, samples, pbl_uptime_us());
+  s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
+}
+
+static void prv_lis2dw12_dispatch_shake(uint8_t wake_up_src) {
+  uint8_t raw[LIS2DW12_SAMPLE_SIZE_BYTES] = {0U};
+  uint8_t axis = PBL_SENSOR_AXIS_Z;
+  int16_t val = 0;
+  bool found = false;
+
+  if (s_dev->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+    if (s_dev->state->last_sample_valid) {
+      memcpy(raw, s_dev->state->last_sample, sizeof(raw));
+    }
+  } else if (!prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, sizeof(raw))) {
+    PBL_LOG_ERR("Failed to read sample");
+  }
+
+  for (uint8_t a = PBL_SENSOR_AXIS_X; a <= PBL_SENSOR_AXIS_Z; a++) {
+    int16_t v;
+
+    if ((wake_up_src & LIS2DW12_WAKE_UP_SRC_AXIS_WU(a)) == 0U) {
+      continue;
+    }
+
+    v = (int16_t)pbl_get_le16(&raw[a * 2U]);
+    if (!found || PBL_ABS(v) > PBL_ABS(val)) {
+      axis = a;
+      val = v;
+      found = true;
+    }
+  }
+
+  pbl_sensor_report_event(&s_dev->sensor, &(const struct pbl_sensor_event){
+                                            .type = PBL_SENSOR_EVENT_SHAKE,
+                                            .axis = axis,
+                                            .direction = (val < 0) ? -1 : 1,
+                                          });
+}
+
+static void prv_lis2dw12_recover(void);
+
+//! Single INT1 servicing pass; returns true if any INT source was handled.
+//! fifo_progress is set when FIFO data was consumed (samples or overrun).
+static bool prv_lis2dw12_service_int1(bool *fifo_progress) {
+  bool ret;
+  uint8_t val;
+  uint8_t wake_up_src;
+  bool action_taken = false;
+  bool fifo_overrun = false;
+  bool shake = false;
+  uint8_t samples = 0U;
+  uint64_t timestamp_us = 0U;
+  uint8_t *buf = nullptr;
+
+  // Read all device registers back-to-back to keep the I2C critical section
+  // short, then convert/dispatch below. The sample processing has no dependency
+  // on these reads, so deferring it avoids stretching the gap between the FIFO
+  // read and the WAKE_UP_SRC read if this task gets preempted mid-handler.
+  if (s_dev->state->num_samples > 0U) {
+    ret = prv_lis2dw12_read(LIS2DW12_FIFO_SAMPLES, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Could not read FIFO_SAMPLES register");
+      return false;
+    }
+
+    if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_OVR) != 0U) {
+      fifo_overrun = true;
+    } else if ((val & LIS2DW12_FIFO_SAMPLES_FIFO_FTH) != 0U) {
+      samples = PBL_FIELD_GET(LIS2DW12_FIFO_SAMPLES_DIFF_MASK, val);
+      if (samples > 0U) {
+        buf = prv_alloc_buf();
+        if (buf == nullptr) {
+          // Nothing lost, the samples stay queued until a buffer is free
+          return true;
+        }
+
+        if (!prv_lis2dw12_read_fifo(buf, samples)) {
+          pbl_sensor_buf_free(&s_dev->sensor, buf);
+          PBL_LOG_ERR("Failed to read samples");
+          return false;
+        }
+        timestamp_us = pbl_uptime_us();
+        s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
+      }
+    }
+  }
+
+  if (s_dev->state->shake_detection_enabled) {
+    ret = prv_lis2dw12_read(LIS2DW12_WAKE_UP_SRC, &wake_up_src, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Could not read WAKE_UP_SRC register");
+      if (buf != nullptr) {
+        pbl_sensor_buf_free(&s_dev->sensor, buf);
+      }
+      return false;
+    }
+
+    shake = (wake_up_src & LIS2DW12_WAKE_UP_SRC_WU_IA) != 0U;
+  }
+
+  if (fifo_overrun) {
+    PBL_LOG_WRN("FIFO overrun detected, recovering");
+    prv_lis2dw12_recover();
+    action_taken = true;
+    *fifo_progress = true;
+  } else if (samples > 0U) {
+    prv_lis2dw12_process_samples(buf, samples, timestamp_us);
+    action_taken = true;
+    *fifo_progress = true;
+  }
+
+  if (shake) {
+    // WU_IA stays set while the wake-up condition persists (LIR), so only
+    // dispatch on its assertion to avoid flooding events
+    if (!s_dev->state->wu_active) {
+      prv_lis2dw12_dispatch_shake(wake_up_src);
+    }
+    action_taken = true;
+  }
+  s_dev->state->wu_active = shake;
+
+  if (!action_taken) {
+    PBL_LOG_WRN("INT1 triggered but no action taken");
+  }
+
+  return action_taken;
+}
+
+static void prv_work_cb(void *data) {
+  void (*work)(void) = data;
+
+  pbl_sensor_lock(&s_dev->sensor);
+  work();
+  pbl_sensor_unlock(&s_dev->sensor);
+}
+
+//! Run driver work on the timer task, with the device lock held
+static void prv_queue_work(void (*work)(void)) {
+  pbl_sys_work_call_high(prv_work_cb, (void *)work);
+}
+
+static void prv_queue_work_from_isr(void (*work)(void)) {
+  pbl_sys_work_call_high_from_isr(prv_work_cb, (void *)work);
+}
+
+static void prv_lis2dw12_int1_work_handler(void) {
+  bool fifo_progress = false;
+  bool action_taken = prv_lis2dw12_service_int1(&fifo_progress);
+
+  // Sources asserting while the pad is high produce no new edge: requeue on
+  // FIFO progress, recover when nothing was serviced (stuck pad). A pad held
+  // by a persistent wake-up condition is left to the stall watchdog.
+  if (!pbl_gpio_get(&s_dev->int1_in)) {
+    return;
+  }
+
+  if (fifo_progress) {
+    prv_queue_work(prv_lis2dw12_int1_work_handler);
+    return;
+  }
+
+  if (action_taken) {
+    return;
+  }
+
+  // Retry once, a source may have asserted after the status reads
+  action_taken = prv_lis2dw12_service_int1(&fifo_progress);
+  if (fifo_progress) {
+    prv_queue_work(prv_lis2dw12_int1_work_handler);
+  } else if (!action_taken && pbl_gpio_get(&s_dev->int1_in)) {
+    prv_lis2dw12_recover();
+  }
+}
+
+static void prv_lis2dw12_int1_irq_handler(void *arg) {
+  // A rising edge proves the pad was low, i.e. the wake-up source deasserted
+  s_dev->state->wu_active = false;
+  // ... which also breaks any stuck-high streak the watchdog counted
+  s_dev->state->shake_stuck_passes = 0U;
+  prv_queue_work_from_isr(prv_lis2dw12_int1_work_handler);
+}
+
+static bool prv_configure_odr(uint32_t sampling_interval_us, bool shake_detection_enabled) {
+  uint8_t odr;
+  uint8_t val;
+  bool ret;
+
+  // If shake detection is enabled, ensure a minimum ODR of 12.5Hz (80ms)
+  if (shake_detection_enabled && (sampling_interval_us == 0UL)) {
+    sampling_interval_us = 80000UL;
+  }
+
+  if (sampling_interval_us == 0U) {
+    odr = LIS2DW12_CTRL1_ODR_PD;
+    sampling_interval_us = 0UL;
+  } else if (sampling_interval_us >= 80000UL) {
+    odr = LIS2DW12_CTRL1_ODR_12HZ5;
+    sampling_interval_us = 80000UL;
+  } else if (sampling_interval_us >= 40000UL) {
+    odr = LIS2DW12_CTRL1_ODR_25HZ;
+    sampling_interval_us = 40000UL;
+  } else if (sampling_interval_us >= 20000UL) {
+    odr = LIS2DW12_CTRL1_ODR_50HZ;
+    sampling_interval_us = 20000UL;
+  } else if (sampling_interval_us >= 10000UL) {
+    odr = LIS2DW12_CTRL1_ODR_100HZ;
+    sampling_interval_us = 10000UL;
+  } else {
+    odr = LIS2DW12_CTRL1_ODR_200HZ;
+    sampling_interval_us = 5000UL;
+  }
+
+  val = PBL_FIELD_PREP(LIS2DW12_CTRL1_LP_MODE_MASK, LIS2DW12_CTRL1_LP_MODE1) |
+        PBL_FIELD_PREP(LIS2DW12_CTRL1_MODE_MASK, LIS2DW12_CTRL1_MODE_LP) |
+        PBL_FIELD_PREP(LIS2DW12_CTRL1_ODR_MASK, odr);
+
+  PBL_LOG_DBG("Configuring ODR to %" PRIu32 " ms (%" PRIu32 " mHz)", sampling_interval_us / 1000UL,
+              sampling_interval_us > 0UL ? 1000000000UL / sampling_interval_us : 0UL);
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &val, 1);
+  if (!ret) {
+    return ret;
+  }
+
+  s_dev->state->sampling_interval_us = sampling_interval_us;
+
+  return true;
+}
+
+static bool prv_configure_int1(bool shake_detection_enabled, bool fifo_enabled) {
+  bool ret;
+  uint8_t ctrl4;
+  uint8_t ctrl5;
+  uint8_t ctrl7;
+
+  ctrl4 = 0U;
+  ctrl5 = 0U;
+
+  if (shake_detection_enabled) {
+    ctrl4 |= LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_WU;
+  }
+
+  if (fifo_enabled) {
+    ctrl4 |= LIS2DW12_CTRL4_INT1_PAD_CTRL_INT1_FTH;
+    ctrl5 |= LIS2DW12_CTRL5_INT2_PAD_CTRL_INT2_OVR;
+  }
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL4_INT1_PAD_CTRL, &ctrl4, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL4_INT1_PAD_CTRL register");
+    return ret;
+  }
+
+  PBL_LOG_DBG("INT1 configured: %02" PRIx8, ctrl4);
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL5_INT2_PAD_CTRL, &ctrl5, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL5_INT2_PAD_CTRL register");
+    return ret;
+  }
+
+  PBL_LOG_DBG("INT2 configured: %02" PRIx8, ctrl5);
+
+  ctrl7 = (ctrl4 == 0U && ctrl5 == 0U)
+              ? 0U
+              : LIS2DW12_CTRL7_INTERRUPTS_ENABLE | LIS2DW12_CTRL7_INT2_ON_INT1;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL7, &ctrl7, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL7 register");
+    return ret;
+  }
+
+  PBL_LOG_DBG("Enabled interrupts: %u", ctrl7 != 0U);
+
+  return true;
+}
+
+//! Recover a dead INT1/FIFO stream by re-asserting ODR, FIFO and INT routing.
+//! Routing is quiesced first so a latched-high pad produces a fresh edge.
+static void prv_lis2dw12_recover(void) {
+  uint8_t val;
+
+  s_dev->state->num_recoveries++;
+  PBL_ANALYTICS_ADD(accel_stream_recovery_count, 1);
+  PBL_LOG_WRN("Recovering accel stream (count %" PRIu32 ")", s_dev->state->num_recoveries);
+
+  if (!prv_configure_int1(false, false)) {
+    return;
+  }
+
+  // Salvage queued samples
+  if (s_dev->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+  }
+
+  // Clear any latched function INT source while routing is quiesced
+  if (!prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1)) {
+    PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    return;
+  }
+
+  if (!prv_configure_odr(s_dev->state->sampling_interval_us,
+                         s_dev->state->shake_detection_enabled)) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return;
+  }
+
+  if (s_dev->state->num_samples > 0U) {
+    if (!prv_lis2dw12_enable_fifo(s_dev->state->num_samples)) {
+      return;
+    }
+  }
+
+  if (!prv_configure_int1(s_dev->state->shake_detection_enabled, s_dev->state->num_samples > 0U)) {
+    return;
+  }
+
+  s_dev->state->wu_active = false;
+  s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
+}
+
+static uint32_t prv_ms_since_last_fifo_read(void) {
+  uint64_t ticks = pbl_uptime_ticks() - s_dev->state->last_fifo_read_tick;
+  return (uint32_t)((ticks * 1000) / PBL_TICK_HZ);
+}
+
+static uint32_t prv_stall_threshold_ms(void) {
+  return PBL_MAX(LIS2DW12_STALL_MARGIN * s_dev->state->int1_period_ms, LIS2DW12_STALL_MIN_MS);
+}
+
+//! Arm/disarm the INT1 stall watchdog to match the active INT1 sources.
+//! Call after num_samples or shake_detection_enabled changes.
+static void prv_update_int1_watchdog(void) {
+  pbl_wallclock_work_stop(&s_dev->state->int1_wdt_timer);
+  s_dev->state->shake_stuck_passes = 0U;
+
+  if (s_dev->state->num_samples > 0U) {
+    s_dev->state->last_fifo_read_tick = pbl_uptime_ticks();
+    s_dev->state->int1_period_ms =
+        (s_dev->state->sampling_interval_us * s_dev->state->num_samples) / 1000;
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
+                             PBL_MAX(PBL_DIV_ROUND_UP(s_dev->state->int1_period_ms, 1000UL), 1U));
+  } else if (s_dev->state->shake_detection_enabled) {
+    pbl_wallclock_work_start(&pbl_sys_workq_high, &s_dev->state->int1_wdt_timer, 1,
+                             LIS2DW12_SHAKE_WDT_PERIOD_S);
+  }
+}
+
+//! Shared by the INT1 watchdog and the peek staleness trigger;
+//! re-validates the stall at execution time.
+static void prv_stall_check_work_cb(void) {
+  uint32_t ms_since_last_read;
+
+  s_dev->state->recovery_pending = false;
+
+  // Sampling may have stopped between scheduling and execution
+  if (s_dev->state->num_samples == 0U) {
+    // Shake-only mode: re-run the servicing pass if the pad is stuck high
+    // (reading the INT source clears the latch); escalate to a full recovery
+    // after consecutive passes that never release it.
+    if (s_dev->state->shake_detection_enabled && pbl_gpio_get(&s_dev->int1_in)) {
+      prv_lis2dw12_int1_work_handler();
+      // A pad released by the pass is healthy; count only a still-high pad
+      if (!pbl_gpio_get(&s_dev->int1_in)) {
+        s_dev->state->shake_stuck_passes = 0U;
+      } else if (++s_dev->state->shake_stuck_passes >= LIS2DW12_SHAKE_STUCK_PASSES_MAX) {
+        PBL_LOG_WRN("INT1 pad stuck high for %" PRIu8 " shake watchdog passes, recovering",
+                    s_dev->state->shake_stuck_passes);
+        prv_lis2dw12_recover();
+        s_dev->state->shake_stuck_passes = 0U;
+      }
+    } else {
+      s_dev->state->shake_stuck_passes = 0U;
+    }
+    return;
+  }
+
+  ms_since_last_read = prv_ms_since_last_fifo_read();
+  if (ms_since_last_read < prv_stall_threshold_ms()) {
+    return;
+  }
+
+  PBL_LOG_WRN("FIFO stream stalled for %" PRIu32 " ms", ms_since_last_read);
+  prv_lis2dw12_recover();
+}
+
+static void prv_int1_wdt_cb(struct pbl_work *work) {
+  prv_queue_work(prv_stall_check_work_cb);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Accelerometer interface
+////////////////////////////////////////////////////////////////////////////////
+
+static int prv_init(const struct pbl_sensor *sensor) {
+  bool ret;
+  int err;
+  uint8_t val;
+
+  s_dev = PBL_CONTAINER_OF(sensor, const struct pbl_lis2dw12, sensor);
+
+  // Check device ID
+  ret = prv_lis2dw12_read(LIS2DW12_WHO_AM_I, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not read WHO_AM_I register");
+    return -ENODEV;
+  }
+
+  if (val != LIS2DW12_WHO_AM_I_VAL) {
+    PBL_LOG_ERR("Unexpected id: 0x%02X!=0x%02X", val, LIS2DW12_WHO_AM_I_VAL);
+    return -ENODEV;
+  }
+
+  // Perform a software reset (so we can rely on defaults)
+  val = LIS2DW12_CTRL2_SOFT_RESET;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL2, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL2 register");
+    return -EIO;
+  }
+
+  pbl_busy_wait_us(LIS2DW12_RESET_TIME_US);
+
+  do {
+    ret = prv_lis2dw12_read(LIS2DW12_CTRL2, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Could not read CTRL2 register");
+      return -EIO;
+    }
+  } while ((val & LIS2DW12_CTRL2_BOOT) != 0U);
+
+  // The address LSB is SA0: a grounded SA0 leaks through its pull-up
+  // (undocumented register, provided by the FAE)
+  if ((s_dev->i2c.addr & LIS2DW12_ADDR_SA0) == 0U) {
+    ret = prv_lis2dw12_read(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Failed to read LIS2DW12 register 0x17");
+      return -EIO;
+    }
+
+    val |= LIS2DW12_UNDOC_ADDR_PULLUP_DIS;
+    ret = prv_lis2dw12_write(LIS2DW12_UNDOC, &val, 1);
+    if (!ret) {
+      PBL_LOG_ERR("Failed to write LIS2DW12 register 0x17");
+      return -EIO;
+    }
+  }
+
+  // Single-data conversion via SLP_MODE_1, latch function IRQ
+  val = LIS2DW12_CTRL3_SLP_MODE_SEL_SLP_MODE_1 | LIS2DW12_CTRL3_LIR;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL3 register");
+    return -EIO;
+  }
+
+  // Configure scale
+  switch (CONFIG_ACCEL_LIS2DW12_SCALE_MG) {
+    case 2000U:
+      val = PBL_FIELD_PREP(LIS2DW12_CTRL6_FS_MASK, LIS2DW12_CTRL6_FS_2G);
+      break;
+    case 4000U:
+      val = PBL_FIELD_PREP(LIS2DW12_CTRL6_FS_MASK, LIS2DW12_CTRL6_FS_4G);
+      break;
+    case 8000U:
+      val = PBL_FIELD_PREP(LIS2DW12_CTRL6_FS_MASK, LIS2DW12_CTRL6_FS_8G);
+      break;
+    case 16000U:
+      val = PBL_FIELD_PREP(LIS2DW12_CTRL6_FS_MASK, LIS2DW12_CTRL6_FS_16G);
+      break;
+    default:
+      PBL_LOG_ERR("Invalid scale: %d", CONFIG_ACCEL_LIS2DW12_SCALE_MG);
+      return -EIO;
+  }
+
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL6, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL6 register");
+    return -EIO;
+  }
+
+  // Configure wake-up threshold defaults
+  val = PBL_FIELD_PREP(LIS2DW12_WAKE_UP_DUR_WAKE_DUR_MASK, CONFIG_ACCEL_LIS2DW12_WK_DUR_DEFAULT);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_DUR, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write WAKE_UP_DUR register");
+    return -EIO;
+  }
+
+  val = PBL_FIELD_PREP(LIS2DW12_WAKE_UP_THS_WK_THS_MASK, CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
+    return -EIO;
+  }
+
+  s_dev->state->wk_ths_curr = CONFIG_ACCEL_LIS2DW12_WK_THS_DEFAULT;
+
+  pbl_wallclock_work_init(&s_dev->state->int1_wdt_timer, prv_int1_wdt_cb);
+
+  if (s_dev->int1.intc == nullptr) {
+    return 0;
+  }
+
+  err = pbl_device_init(&s_dev->int1.intc->dev);
+  if (err != 0) {
+    PBL_LOG_ERR("INT1 interrupt controller unavailable");
+    return err;
+  }
+
+  err = pbl_gpio_configure(&s_dev->int1_in, PBL_GPIO_INPUT);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not configure the INT1 input (%d)", err);
+    return err;
+  }
+
+  err = pbl_intc_request(&s_dev->int1, prv_lis2dw12_int1_irq_handler, nullptr);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not request INT1 (%d)", err);
+    return err;
+  }
+
+  err = pbl_intc_enable(&s_dev->int1);
+  if (err != 0) {
+    PBL_LOG_ERR("Could not enable INT1 (%d)", err);
+    return err;
+  }
+
+  return 0;
+}
+
+static int prv_set_sampling_interval(uint32_t interval_us, uint32_t *actual_us) {
+  // FIXME: we should technically stop and drain the FIFO here, otherwise
+  // we may report existing samples in the FIFO buffer with an incorrect timestamp
+
+  const uint32_t prev_interval_us = s_dev->state->sampling_interval_us;
+  if (!prv_configure_odr(interval_us, s_dev->state->shake_detection_enabled)) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return -EIO;
+  }
+
+  // Re-arm the watchdog only on an actual ODR change (a re-arm resets the
+  // stall tracking, so repeat calls must not defer it)
+  if (s_dev->state->sampling_interval_us != prev_interval_us) {
+    prv_update_int1_watchdog();
+  }
+
+  PBL_LOG_DBG("Set sampling interval to %" PRIu32 " us", s_dev->state->sampling_interval_us);
+
+  *actual_us = s_dev->state->sampling_interval_us;
+
+  return 0;
+}
+
+static int prv_set_num_samples(uint32_t num_samples) {
+  bool ret;
+  uint8_t val;
+
+  if (num_samples > 0U && s_dev->int1.intc == nullptr) {
+    return -ENOTSUP;
+  }
+
+  // Limit to FIFO threshold
+  if (num_samples > LIS2DW12_FIFO_SIZE) {
+    num_samples = LIS2DW12_FIFO_SIZE;
+  }
+
+  // Disable all INT1 before changing FIFO threshold
+  prv_configure_int1(false, false);
+
+  // Config change invalidates any queued stall check; re-arm the peek trigger
+  s_dev->state->recovery_pending = false;
+
+  // Salvage queued samples
+  if (s_dev->state->num_samples > 0U) {
+    prv_lis2dw12_drain_fifo();
+  }
+
+  if (num_samples == 0U) {
+    // Bypass FIFO (disable)
+    val = PBL_FIELD_PREP(LIS2DW12_FIFO_CTRL_FIFO_MODE_MASK, LIS2DW12_FIFO_CTRL_FIFO_MODE_BYPASS);
+    if (!prv_lis2dw12_write(LIS2DW12_FIFO_CTRL, &val, 1)) {
+      PBL_LOG_ERR("Could not write FIFO_CTRL register");
+    }
+  } else {
+    // Configure FIFO in CONT mode with threshold
+    ret = prv_lis2dw12_enable_fifo((uint8_t)num_samples);
+    if (!ret) {
+      PBL_LOG_ERR("Could not enable FIFO");
+      return -EIO;
+    }
+
+    s_dev->state->last_sample_valid = false;
+  }
+
+  // Re-configure INT1
+  ret = prv_configure_int1(s_dev->state->shake_detection_enabled, num_samples > 0U);
+  if (!ret) {
+    PBL_LOG_ERR("Could not configure INT1");
+    return -EIO;
+  }
+
+  s_dev->state->num_samples = num_samples;
+  // Arm/disarm the INT1 liveness watchdog for the new source configuration
+  prv_update_int1_watchdog();
+
+  PBL_LOG_DBG("Set number of samples to %" PRIu32, num_samples);
+
+  return 0;
+}
+
+//! True once a sample is ready, or when the status read fails.
+static bool prv_data_ready(bool *read_ok) {
+  uint8_t status;
+  *read_ok = prv_lis2dw12_read(LIS2DW12_STATUS, &status, 1);
+  return !*read_ok || (status & LIS2DW12_STATUS_DRDY) != 0U;
+}
+
+static int prv_read(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                    struct pbl_sensor_frame *frame) {
+  int err = 0;
+  bool ret;
+  uint8_t ctrl1;
+  uint8_t ctrl1_bck;
+  uint8_t ctrl3;
+  uint8_t *raw = frame->data;
+
+  frame->chans = s_chans;
+  frame->num_chans = PBL_ARRAY_SIZE(s_chans);
+
+  // If sampling is active, the FIFO batches samples for subscribers, so the
+  // cached sample can be a full watermark period old. The FIFO is read through
+  // the output registers, so peeking those directly would steal a sample from
+  // the stream; drain the FIFO instead, which refreshes the cached sample and
+  // dispatches the queued samples to subscribers.
+  if (s_dev->state->num_samples > 0U) {
+    // Self-heal: a stalled stream would otherwise freeze peek data forever
+    if (!s_dev->state->recovery_pending &&
+        (prv_ms_since_last_fifo_read() >= prv_stall_threshold_ms())) {
+      s_dev->state->recovery_pending = true;
+      prv_queue_work(prv_stall_check_work_cb);
+    }
+
+    prv_lis2dw12_drain_fifo();
+
+    if (!s_dev->state->last_sample_valid) {
+      return -EIO;
+    }
+    memcpy(raw, s_dev->state->last_sample, LIS2DW12_SAMPLE_SIZE_BYTES);
+    frame->timestamp_us = s_dev->state->last_sample_timestamp_us;
+    return 0;
+  }
+
+  // Save CTRL1
+  ret = prv_lis2dw12_read(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not read CTRL1 register");
+    return -EIO;
+  }
+
+  // Configure single mode, ODR@50Hz (recommended ODR, see DT0102 rev1)
+  ctrl1 = PBL_FIELD_PREP(LIS2DW12_CTRL1_MODE_MASK, LIS2DW12_CTRL1_MODE_SINGLE) |
+          PBL_FIELD_PREP(LIS2DW12_CTRL1_ODR_MASK, LIS2DW12_CTRL1_ODR_50HZ);
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL1 register");
+    return -EIO;
+  }
+
+  // Trigger single measurement by setting SLP_MODE_1 bit
+  ret = prv_lis2dw12_read(LIS2DW12_CTRL3, &ctrl3, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not read CTRL3 register");
+    return -EIO;
+  }
+
+  ctrl3 |= LIS2DW12_CTRL3_SLP_MODE_1;
+  ret = prv_lis2dw12_write(LIS2DW12_CTRL3, &ctrl3, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write CTRL3 register");
+    return -EIO;
+  }
+
+  // Poll for data ready (timeout after 100ms, ~5x the expected 20ms at 50Hz ODR)
+  bool read_ok;
+  int rc = PBL_POLL_SLEEP_MS(prv_data_ready(&read_ok), LIS2DW12_DRDY_POLL_DELAY_MS,
+                             LIS2DW12_DRDY_POLL_TIMEOUT_MS);
+  if (!read_ok) {
+    PBL_LOG_ERR("Could not read STATUS register");
+    err = -EIO;
+    goto end;
+  }
+  if (rc < 0) {
+    PBL_LOG_ERR("DRDY timeout after %d ms", LIS2DW12_DRDY_POLL_TIMEOUT_MS);
+    err = -EIO;
+    goto end;
+  }
+
+  // Read sample
+  ret = prv_lis2dw12_read(LIS2DW12_OUT_X_L, raw, LIS2DW12_SAMPLE_SIZE_BYTES);
+  if (!ret) {
+    PBL_LOG_ERR("Failed to read sample");
+    err = -EIO;
+    goto end;
+  }
+
+  frame->timestamp_us = pbl_uptime_us();
+
+end:
+  // Restore CTRL1 (back to previous state, e.g. power-down or shake ODR)
+  (void)prv_lis2dw12_write(LIS2DW12_CTRL1, &ctrl1_bck, 1);
+
+  return err;
+}
+
+static int prv_set_shake_detection(bool on) {
+  bool ret;
+
+  if (on && s_dev->int1.intc == nullptr) {
+    return -ENOTSUP;
+  }
+
+  // Configure ODR (use current interval, will be adjusted if < 12.5Hz)
+  ret = prv_configure_odr(s_dev->state->sampling_interval_us, on);
+  if (!ret) {
+    PBL_LOG_ERR("Could not configure ODR");
+    return -EIO;
+  }
+
+  if (on) {
+    uint8_t val;
+
+    // WU_IA latches even while unrouted (e.g. on ODR startup transients);
+    // clear it so a phantom shake is not dispatched on enable
+    if (!prv_lis2dw12_read(LIS2DW12_ALL_INT_SRC, &val, 1)) {
+      PBL_LOG_ERR("Could not read ALL_INT_SRC register");
+    }
+  }
+
+  // Configure INT1
+  ret = prv_configure_int1(on, s_dev->state->num_samples > 0U);
+  if (!ret) {
+    PBL_LOG_ERR("Could not configure INT1");
+    return -EIO;
+  }
+
+  s_dev->state->shake_detection_enabled = on;
+  s_dev->state->wu_active = false;
+  // Arm/disarm the INT1 liveness watchdog now that shake routing changed
+  prv_update_int1_watchdog();
+
+  PBL_LOG_DBG("%s shake detection", on ? "Enabled" : "Disabled");
+
+  return 0;
+}
+
+static int prv_set_shake_sensitivity_percent(uint8_t percent) {
+  bool ret;
+  uint8_t val;
+  uint8_t raw;
+
+  // Reverse mapping: 0 = min sensitivity (MAX threshold), 100 = max sensitivity (MIN threshold)
+  // [0, 100] -> [wk_ths_max, wk_ths_min]
+  raw = CONFIG_ACCEL_LIS2DW12_WK_THS_MAX -
+        (percent * (CONFIG_ACCEL_LIS2DW12_WK_THS_MAX - CONFIG_ACCEL_LIS2DW12_WK_THS_MIN)) / 100U;
+
+  val = PBL_FIELD_PREP(LIS2DW12_WAKE_UP_THS_WK_THS_MASK, raw);
+  ret = prv_lis2dw12_write(LIS2DW12_WAKE_UP_THS, &val, 1);
+  if (!ret) {
+    PBL_LOG_ERR("Could not write WAKE_UP_THS register");
+    return -EIO;
+  }
+
+  s_dev->state->wk_ths_curr = raw;
+
+  PBL_LOG_DBG("Configured shake sensitivity to %" PRIu8 " (%" PRIu8 ")", percent, raw);
+
+  return 0;
+}
+
+static int prv_attr_set(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  uint32_t actual_us;
+  int ret;
+
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      if (*val < 0) {
+        return -EINVAL;
+      }
+      ret = prv_set_sampling_interval((uint32_t)*val, &actual_us);
+      if (ret == 0) {
+        *val = (int32_t)actual_us;
+      }
+      return ret;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = PBL_CLAMP(*val, 0, LIS2DW12_FIFO_SIZE);
+      return prv_set_num_samples((uint32_t)*val);
+    case PBL_SENSOR_ATTR_SHAKE_SENSITIVITY:
+      *val = PBL_CLAMP(*val, 0, 100);
+      return prv_set_shake_sensitivity_percent((uint8_t)*val);
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  switch (attr) {
+    case PBL_SENSOR_ATTR_INTERVAL:
+      *val = (int32_t)s_dev->state->sampling_interval_us;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH:
+      *val = s_dev->state->num_samples;
+      return 0;
+    case PBL_SENSOR_ATTR_BATCH_MAX:
+      *val = LIS2DW12_FIFO_SIZE;
+      return 0;
+    default:
+      return -ENOTSUP;
+  }
+}
+
+static int prv_set_event(const struct pbl_sensor *sensor, enum pbl_sensor_event_type type,
+                         bool on) {
+  if (type != PBL_SENSOR_EVENT_SHAKE) {
+    return -ENOTSUP;
+  }
+
+  return prv_set_shake_detection(on);
+}
+
+const struct pbl_sensor_ops pbl_lis2dw12_ops = {
+  .init = prv_init,
+  .read = prv_read,
+  .attr_set = prv_attr_set,
+  .attr_get = prv_attr_get,
+  .set_event = prv_set_event,
+};
+
+#include PBL_DT_INSTANCES(st_lis2dw12)

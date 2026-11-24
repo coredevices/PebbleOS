@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/accel.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/evented_timer.h>
@@ -63,14 +63,20 @@ typedef struct {
 static void prv_update_display(void *context) {
   AppData *data = context;
 
-  struct pbl_accel_sample sample;
-  int ret = pbl_accel_peek(ACCEL, &sample);
+  int32_t ug[3];
+  int ret = pbl_sensor_read(ACCEL, PBL_SENSOR_ACCEL, ug, nullptr);
 
   if (ret != 0) {
     snprintf(data->status_string, sizeof(data->status_string), "ACCEL ERROR:\n%d", ret);
     text_layer_set_text(&data->status, data->status_string);
     return;
   }
+
+  const struct {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+  } sample = {(int16_t)(ug[0] / 1000), (int16_t)(ug[1] / 1000), (int16_t)(ug[2] / 1000)};
 
   PBL_LOG_DBG("Accel (mG): X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x, sample.y, sample.z);
 

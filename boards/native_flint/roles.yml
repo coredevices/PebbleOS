@@ -21,7 +21,7 @@ flash:
   include: pbl/drivers/flash/posix.h
 accel:
   symbol: SIM_ACCEL
-  include: pbl/drivers/imu/sim.h
+  include: pbl/drivers/sensor/sim.h
 als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h
@@ -33,7 +33,7 @@ mic:
   include: pbl/drivers/audio/sim.h
 die_temp:
   symbol: SIM_TEMP
-  include: pbl/drivers/temp/sim.h
+  include: pbl/drivers/sensor/sim.h
 rtc:
   symbol: POSIX_RTC
   include: pbl/drivers/rtc/posix.h

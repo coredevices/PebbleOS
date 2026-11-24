@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/hrm.h>
 #include <pbl/drivers/hrm/gh3x2x.h>
 #include <pbl/kernel/time.h>

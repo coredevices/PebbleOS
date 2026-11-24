@@ -10,7 +10,7 @@ flash: flash0
 extram: psram
 accel:
   symbol: SIM_ACCEL
-  include: pbl/drivers/imu/sim.h
+  include: pbl/drivers/sensor/sim.h
 als:
   symbol: SIM_ALS
   include: pbl/drivers/als/sim.h
@@ -24,7 +24,7 @@ mic:
 speaker: speaker
 die_temp:
   symbol: SIM_TEMP
-  include: pbl/drivers/temp/sim.h
+  include: pbl/drivers/sensor/sim.h
 rtc:
   symbol: QEMU_RTC
   include: pbl/drivers/rtc/qemu.h
