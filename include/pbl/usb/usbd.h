@@ -20,8 +20,8 @@
  * endpoint descriptors, with its interface numbers and endpoint addresses: the functions of a
  * device do not share any. The stack sets the maximum packet size of their bulk endpoints for the
  * bus speed, enables their endpoints when the host configures the device, and hands them the
- * class requests to their interfaces and the end of the transfers on their endpoints. Everything
- * the stack calls runs from the controller's interrupt.
+ * class and vendor requests to their interfaces and the end of the transfers on their endpoints.
+ * Everything the stack calls runs from the controller's interrupt.
  *
  * An interface can have alternate settings: its interface descriptor is followed by others with the
  * same interface number and a higher bAlternateSetting, each with its own endpoints. Two settings
@@ -62,12 +62,12 @@ struct pbl_usbd_function {
    */
   void (*set_alt)(uint8_t iface, uint8_t alt);
   /**
-   * Optional. A class request to an interface of the function. For an IN request, point @p data
-   * at what to send, @p len bytes; for an OUT one, at room for @p len bytes, which then arrive
-   * through @ref control_out. Returns 0, or a negative errno for the request to stall.
+   * Optional. A class or vendor request to an interface of the function. For an IN request, point
+   * @p data at what to send, @p len bytes; for an OUT one, at room for @p len bytes, which then
+   * arrive through @ref control_out. Returns 0, or a negative errno for the request to stall.
    */
   int (*class_request)(const struct pbl_usb_setup *setup, uint8_t **data, uint16_t *len);
-  /** Optional. The data of an OUT class request, the request done. */
+  /** Optional. The data of an OUT class or vendor request, the request done. */
   void (*control_out)(const struct pbl_usb_setup *setup, const uint8_t *data, uint16_t len);
   /** Optional. A transfer on an endpoint of the function ended: bytes moved, or a negative errno.
    */
