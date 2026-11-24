@@ -100,6 +100,12 @@ void modal_manager_pop_all_below_priority(ModalPriority priority) {
 void modal_manager_set_min_priority(ModalPriority priority) {
 }
 
+void alarm_popup_push_pending(void) {
+}
+
+void timer_popup_push_pending(void) {
+}
+
 static PreciseBatteryChargeState prv_make_state(uint8_t percent, bool is_charging,
                                                 bool is_plugged) {
   PreciseBatteryChargeState state = (PreciseBatteryChargeState){

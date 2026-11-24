@@ -111,14 +111,16 @@ uint8_t timer_service_get_timers(TimerServiceInfo *timers, uint8_t max_timers);
 //! Cancel a timer.
 //!
 //! The app needs the `Timers` permission. Any app with the permission can
-//! cancel any timer, including one created by another app.
+//! cancel any timer, including one created by another app. A timer that has
+//! already fired cannot be cancelled.
 //!
 //! @param id ID returned by timer_service_create() or
 //!        timer_service_get_timers().
-//! @return true if the timer was cancelled, false if it was not found.
+//! @return true if the timer was cancelled, false if it was not found or
+//!         already fired.
 bool timer_service_cancel(TimerServiceId id);
 
-//! Cancel every timer the calling app created.
+//! Cancel every running timer the calling app created.
 //!
 //! This only affects the calling app's timers and does not need the `Timers`
 //! permission, so an app can always clean up after itself. Use

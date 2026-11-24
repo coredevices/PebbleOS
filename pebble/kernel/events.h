@@ -352,10 +352,11 @@ typedef struct PBL_PACKED { // 8 bytes
 
 typedef struct PBL_PACKED { // 8 bytes
   uint32_t alarm_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
-  const char *alarm_label;
+  int32_t alarm_id;    //!< Alarm that fired, or ALARM_INVALID_ID for a synthetic event.
 } PebbleAlarmClockEvent;
 
-typedef struct PBL_PACKED { // 4 bytes
+typedef struct PBL_PACKED { // 8 bytes
+  int32_t id;               //!< ID of the timer that expired.
   uint32_t duration_s;      //!< Length of the timer that expired.
 } PebbleTimerEvent;
 

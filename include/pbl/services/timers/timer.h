@@ -85,9 +85,17 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner);
  * The syscall layer checks the caller's Timers permission.
  *
  * @param id Timer ID.
- * @return true if the timer was cancelled, false if it was not found.
+ * @return true if the timer was cancelled, false if it was not found or already fired.
  */
 bool timer_cancel(TimerId id);
+
+/**
+ * @brief Release a fired timer's slot once its notification is consumed.
+ *
+ * @param id Timer ID.
+ * @return true if a fired timer with this ID was released.
+ */
+bool timer_acknowledge(TimerId id);
 
 /**
  * @brief Cancel every timer created by an app.

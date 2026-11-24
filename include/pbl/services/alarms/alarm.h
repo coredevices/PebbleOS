@@ -201,12 +201,23 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out);
 /**
  * @brief Get the most recently fired alarm.
  *
- * Used by the alarm popup to look up the settings of the firing alarm.
+ * Used by the alarm popup for synthetic events that carry no alarm ID.
  *
  * @return ID of the most recently fired alarm, or @ref ALARM_INVALID_ID if none fired since boot
  *         (or it was since disabled or deleted).
  */
 AlarmId alarm_get_most_recent_id(void);
+
+/**
+ * @brief Make an alarm the one the alarm popup's snooze and dismiss act on.
+ *
+ * Used when an alarm event was deferred, so the popup operates on the alarm it
+ * is actually showing rather than the most recently fired one.
+ *
+ * @param id Alarm ID.
+ * @return true if the alarm exists and its configuration was loaded.
+ */
+bool alarm_set_most_recent_alarm(AlarmId id);
 
 /**
  * @brief Get the days of the week an alarm runs on.

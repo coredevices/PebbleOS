@@ -83,9 +83,12 @@ of ringing. It shows the timer's original duration, not the remaining time.
 Expiries that arrive while the popup is already visible, while an alarm is
 active, or while modal popups are disabled are queued and shown in turn. If
 an alarm takes over the screen, the timer popup is dismissed and its expiry is
-queued to show after the alarm. Queued expiries are heap-backed, so they are
-not limited to the eight running-timer slots. Alarms that fire while modal
-popups are disabled are deferred and shown when the lockout ends.
+queued to show after the alarm. A fired timer keeps its slot until its popup
+has been shown and dismissed, so queued expiries count against
+`TIMER_SERVICE_MAX_TIMERS`; if every slot is waiting for its notification,
+`timer_service_create()` returns `TimerServiceCreateErrNoSpace` until they
+are shown. Alarms that fire while modal popups are disabled are deferred and
+shown when the lockout ends.
 
 The popup uses the existing `ALARM_CLOCK_LARGE` resource, the animated
 alarm-clock PDC (`Pebble_80x80_Alarm_clock.pdc`) that the timer app also plays

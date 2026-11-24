@@ -451,14 +451,11 @@ static void prv_put_alarm_event(void) {
     return;
   }
 
-  AlarmConfig *config =
-      s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : nullptr;
-  const bool is_smart = (config && config->is_smart && activity_tracking_on());
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
       .alarm_time = pbl_realtime(),
-      .alarm_label = is_smart ? pbl_i18n_noop("Smart Alarm") : pbl_i18n_noop("Alarm")
+      .alarm_id = s_most_recent_alarm_id,
     }
   };
 
@@ -1100,6 +1097,29 @@ cleanup:
 // ----------------------------------------------------------------------------------------------
 AlarmId alarm_get_most_recent_id(void) {
   return s_most_recent_alarm_id;
+}
+
+// ----------------------------------------------------------------------------------------------
+bool alarm_set_most_recent_alarm(AlarmId id) {
+  if (id == ALARM_INVALID_ID) {
+    return false;
+  }
+
+  struct pbl_settings_file file;
+  if (!prv_file_open_and_lock(&file)) {
+    return false;
+  }
+
+  AlarmConfig config;
+  const bool found = prv_alarm_get_config(&file, id, &config);
+  prv_file_close_and_unlock(&file);
+  if (!found) {
+    return false;
+  }
+
+  s_most_recent_alarm_id = id;
+  s_most_recent_alarm_config = config;
+  return true;
 }
 
 // ----------------------------------------------------------------------------------------------

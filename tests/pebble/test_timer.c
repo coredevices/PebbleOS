@@ -15,7 +15,6 @@
 static const Uuid s_owner_a = UuidMake(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 static const Uuid s_owner_b = UuidMake(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
-static uint64_t s_uptime_ms;
 static time_t s_wall_time;
 static int s_num_timer_events;
 static PebbleTimerEvent s_last_timer_event;
@@ -23,10 +22,6 @@ static PebbleTimerEvent s_last_timer_event;
 // The test harness's uuid helper always returns false; compare for real here.
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {
   return uu1 && uu2 && memcmp(uu1, uu2, sizeof(Uuid)) == 0;
-}
-
-uint64_t pbl_uptime_ms(void) {
-  return s_uptime_ms;
 }
 
 time_t pbl_realtime(void) {
@@ -42,7 +37,6 @@ void event_put(PebbleEvent *event) {
 
 void test_timer__initialize(void) {
   fake_work_cleanup();
-  s_uptime_ms = 0;
   s_wall_time = 1447286400;
   timer_init();
   s_num_timer_events = 0;
@@ -54,14 +48,16 @@ void test_timer__cleanup(void) {
   timer_init();
 }
 
-static void prv_advance_time(uint32_t seconds) {
-  s_uptime_ms += (uint64_t)seconds * 1000U;
-}
-
 static void prv_fire_next(void) {
   struct pbl_delayed_work *next = fake_work_get_next();
   cl_assert(next != nullptr);
   fake_work_fire(next);
+}
+
+static void prv_elapse_seconds(uint32_t seconds) {
+  struct pbl_delayed_work *next = fake_work_get_next();
+  cl_assert(next != nullptr);
+  next->timer.timeout.expires -= pbl_ms_to_ticks(seconds * 1000U);
 }
 
 void test_timer__create_and_fire(void) {
@@ -70,17 +66,13 @@ void test_timer__create_and_fire(void) {
   cl_assert(timer_can_create());
   cl_assert_equal_i(s_num_timer_events, 0);
 
-  prv_advance_time(59);
-  cl_assert_equal_i(s_num_timer_events, 0);
-
-  prv_advance_time(1);
   prv_fire_next();
   cl_assert_equal_i(s_num_timer_events, 1);
+  cl_assert_equal_i(s_last_timer_event.id, id);
   cl_assert_equal_i(s_last_timer_event.duration_s, 60);
 }
 
 void test_timer__schedules_a_full_duration_from_now(void) {
-  s_uptime_ms = 999;
   const TimerId id = timer_start(1, &s_owner_a);
   cl_assert(id != TIMER_INVALID_ID);
 
@@ -102,8 +94,6 @@ void test_timer__cancel(void) {
   cl_assert(timer_cancel(id));
   cl_assert(!timer_cancel(id));
   cl_assert(fake_work_get_next() == nullptr);
-
-  prv_advance_time(60);
   cl_assert_equal_i(s_num_timer_events, 0);
 }
 
@@ -117,7 +107,6 @@ void test_timer__cancel_all_only_affects_the_owner(void) {
   cl_assert(!timer_cancel(a1));
   cl_assert(!timer_cancel(a2));
 
-  prv_advance_time(60);
   prv_fire_next();
   cl_assert_equal_i(s_num_timer_events, 1);
   cl_assert_equal_i(s_last_timer_event.duration_s, 60);
@@ -146,6 +135,24 @@ void test_timer__ids_are_not_reused(void) {
   const TimerId second = timer_start(60, &s_owner_a);
   cl_assert(second != TIMER_INVALID_ID);
   cl_assert(second != first);
+}
+
+void test_timer__fired_timer_holds_slot_until_acknowledged(void) {
+  const TimerId fired = timer_start(10, &s_owner_a);
+  cl_assert(fired != TIMER_INVALID_ID);
+  for (int i = 1; i < TIMER_MAX_COUNT; ++i) {
+    cl_assert(timer_start(3600, &s_owner_a) != TIMER_INVALID_ID);
+  }
+
+  prv_fire_next();
+  cl_assert_equal_i(s_num_timer_events, 1);
+  cl_assert_equal_i(s_last_timer_event.id, fired);
+  cl_assert(!timer_cancel(fired));
+  cl_assert_equal_i(timer_start(60, &s_owner_a), TIMER_INVALID_ID);
+
+  cl_assert(timer_acknowledge(fired));
+  cl_assert(!timer_acknowledge(fired));
+  cl_assert(timer_start(60, &s_owner_a) != TIMER_INVALID_ID);
 }
 
 void test_timer__formats_duration(void) {
@@ -201,7 +208,7 @@ void test_timer__remaining_time_counts_down(void) {
   const TimerId id = timer_start(60, &s_owner_a);
   cl_assert(id != TIMER_INVALID_ID);
 
-  prv_advance_time(10);
+  prv_elapse_seconds(10);
   TimerInfo timers[1];
   cl_assert_equal_i(timer_get_timers(timers, 1), 1);
   cl_assert_equal_i(timers[0].id, id);
@@ -212,7 +219,7 @@ void test_timer__wall_clock_changes_do_not_affect_remaining(void) {
   const TimerId id = timer_start(60, &s_owner_a);
   cl_assert(id != TIMER_INVALID_ID);
 
-  prv_advance_time(10);
+  prv_elapse_seconds(10);
   TimerInfo timers[1];
   cl_assert_equal_i(timer_get_timers(timers, 1), 1);
   cl_assert_equal_i(timers[0].remaining_s, 50);
@@ -236,7 +243,6 @@ void test_timer__list_is_empty_after_fire_or_cancel(void) {
   cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 1);
   cl_assert_equal_i(timers[0].id, fired);
 
-  prv_advance_time(10);
   prv_fire_next();
   cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 0);
 }

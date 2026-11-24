@@ -438,11 +438,18 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 #endif
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
-  // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
-  // — see static_assert in events.c). Fall back to the most-recently-fired
-  // alarm tracked in the alarm service. Synthetic events (trigger_alarm demo)
-  // get ALARM_INVALID_ID and skip the per-alarm config lookup.
-  const AlarmId alarm_id = alarm_get_most_recent_id();
+  // The event carries the firing alarm's ID. Synthetic events (trigger_alarm
+  // demo) use ALARM_INVALID_ID and fall back to the most-recently-fired alarm
+  // tracked in the alarm service.
+  AlarmId alarm_id = event->alarm_id;
+  if (alarm_id == ALARM_INVALID_ID) {
+    // Synthetic events, e.g. the trigger_alarm demo, have no configuration.
+    alarm_id = alarm_get_most_recent_id();
+  } else if (alarm_id != alarm_get_most_recent_id()) {
+    // This alarm was deferred behind another, so make it the one snooze and
+    // dismiss act on before the popup handles it.
+    alarm_set_most_recent_alarm(alarm_id);
+  }
   AlarmInfo info;
   const bool have_info = (alarm_id != ALARM_INVALID_ID) && alarm_get_info(alarm_id, &info);
   const bool vibe_on = !have_info || info.vibrate_enabled;

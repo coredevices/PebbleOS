@@ -35,25 +35,28 @@ typedef struct {
   ActionableDialog *timer_popup;
   GBitmap *action_bar_dismiss;
   ActionBarLayer action_bar;
+  TimerId id;
   uint32_t duration_s;
+  bool acknowledged;
 
   int max_vibes;
   int vibe_count;
   VibeScore *vibe_score;
 } TimerPopupData;
 
-typedef struct PendingExpiry {
+typedef struct {
+  TimerId id;
   uint32_t duration_s;
-  struct PendingExpiry *next;
 } PendingExpiry;
 
 static TimerPopupData *s_timer_popup_data = nullptr;
 
-// Expiries that arrived while another alert or a locked modal stack owned the
-// screen. They are shown in order as the popup becomes available. The list is
-// heap-backed so it is not limited by the number of live timer slots.
-static PendingExpiry *s_pending_head;
-static PendingExpiry *s_pending_tail;
+// Expiries whose service slots are still held. The service keeps a fired
+// timer's slot until the notification is consumed, so this queue is bounded by
+// the service's timer slots rather than growing without limit.
+static PendingExpiry s_pending[TIMER_MAX_COUNT];
+static uint8_t s_pending_head;
+static uint8_t s_pending_count;
 
 static void prv_vibe(struct pbl_work *work);
 static void prv_vibe_kernel_main_cb(void *callback_context);
@@ -68,32 +71,25 @@ static WindowStack *prv_get_window_stack(void) {
   return modal_manager_get_window_stack(TIMER_PRIORITY);
 }
 
-static void prv_enqueue(uint32_t duration_s) {
-  PendingExpiry *pending = pbl_malloc(sizeof(*pending));
-  if (!pending) {
-    PBL_LOG_WRN("Dropping timer expiry: out of memory");
+static void prv_enqueue(TimerId id, uint32_t duration_s) {
+  if (s_pending_count == TIMER_MAX_COUNT) {
+    PBL_LOG_WRN("Dropping timer expiry: popup queue full");
     return;
   }
-  *pending = (PendingExpiry){.duration_s = duration_s};
-  if (s_pending_tail) {
-    s_pending_tail->next = pending;
-  } else {
-    s_pending_head = pending;
-  }
-  s_pending_tail = pending;
+  const uint8_t tail = (s_pending_head + s_pending_count) % TIMER_MAX_COUNT;
+  s_pending[tail] = (PendingExpiry){.id = id, .duration_s = duration_s};
+  s_pending_count++;
 }
 
-static bool prv_take_pending(uint32_t *duration_s) {
-  PendingExpiry *pending = s_pending_head;
-  if (!pending) {
+static bool prv_take_pending(TimerId *id, uint32_t *duration_s) {
+  if (s_pending_count == 0) {
     return false;
   }
-  s_pending_head = pending->next;
-  if (!s_pending_head) {
-    s_pending_tail = nullptr;
-  }
-  *duration_s = pending->duration_s;
-  pbl_free(pending);
+  const PendingExpiry pending = s_pending[s_pending_head];
+  s_pending_head = (s_pending_head + 1) % TIMER_MAX_COUNT;
+  s_pending_count--;
+  *id = pending.id;
+  *duration_s = pending.duration_s;
   return true;
 }
 
@@ -138,8 +134,17 @@ static void prv_start_vibes(void) {
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_vibe_timer, PBL_TICKS(s_vibe_period_ticks));
 }
 
-static void prv_update_popup(uint32_t duration_s) {
+static void prv_acknowledge_current(void) {
+  if (s_timer_popup_data && !s_timer_popup_data->acknowledged) {
+    timer_acknowledge(s_timer_popup_data->id);
+    s_timer_popup_data->acknowledged = true;
+  }
+}
+
+static void prv_update_popup(TimerId id, uint32_t duration_s) {
+  s_timer_popup_data->id = id;
   s_timer_popup_data->duration_s = duration_s;
+  s_timer_popup_data->acknowledged = false;
   char display_time[TIMER_DESCRIPTION_SIZE];
   timer_format_duration(display_time, sizeof(display_time), duration_s);
   dialog_set_text(actionable_dialog_get_dialog(s_timer_popup_data->timer_popup), display_time);
@@ -151,9 +156,11 @@ static void prv_show_next_or_pop(void) {
   if (!s_timer_popup_data) {
     return;
   }
+  TimerId id;
   uint32_t duration_s;
-  if (prv_take_pending(&duration_s)) {
-    prv_update_popup(duration_s);
+  prv_acknowledge_current();
+  if (prv_take_pending(&id, &duration_s)) {
+    prv_update_popup(id, duration_s);
   } else {
     actionable_dialog_pop(s_timer_popup_data->timer_popup);
   }
@@ -211,6 +218,11 @@ static void prv_push_pending_timer_cb(void *callback_context) {
 
 static void prv_cleanup_timer_popup(void *callback_context) {
   if (s_timer_popup_data) {
+    if (!s_timer_popup_data->acknowledged) {
+      // The popup was force-closed while showing this expiry; keep it queued
+      // and leave the service slot held until it is shown again.
+      prv_enqueue(s_timer_popup_data->id, s_timer_popup_data->duration_s);
+    }
     prv_stop_vibes();
     light_enable(false);
     // The action bar owns a redraw timer armed on button press; it must be
@@ -225,9 +237,9 @@ static void prv_cleanup_timer_popup(void *callback_context) {
   }
 }
 
-static void prv_show_popup(uint32_t duration_s) {
+static void prv_show_popup(TimerId id, uint32_t duration_s) {
   s_timer_popup_data = pbl_malloc_check(sizeof(TimerPopupData));
-  *s_timer_popup_data = (TimerPopupData){.duration_s = duration_s};
+  *s_timer_popup_data = (TimerPopupData){.id = id, .duration_s = duration_s};
 
   prv_setup_action_bar();
 
@@ -272,14 +284,15 @@ void timer_popup_push_window(const PebbleTimerEvent *event) {
 
   if (s_timer_popup_data || alarm_popup_is_active() ||
       !modal_manager_is_priority_enabled(TIMER_PRIORITY)) {
-    prv_enqueue(event->duration_s);
+    prv_enqueue(event->id, event->duration_s);
     return;
   }
 
-  prv_enqueue(event->duration_s);
+  prv_enqueue(event->id, event->duration_s);
+  TimerId id;
   uint32_t duration_s;
-  if (prv_take_pending(&duration_s)) {
-    prv_show_popup(duration_s);
+  if (prv_take_pending(&id, &duration_s)) {
+    prv_show_popup(id, duration_s);
   }
 }
 
@@ -289,9 +302,10 @@ void timer_popup_push_pending(void) {
     return;
   }
 
+  TimerId id;
   uint32_t duration_s;
-  if (prv_take_pending(&duration_s)) {
-    prv_show_popup(duration_s);
+  if (prv_take_pending(&id, &duration_s)) {
+    prv_show_popup(id, duration_s);
   }
 }
 
@@ -300,9 +314,7 @@ void timer_popup_abort(void) {
     return;
   }
 
-  const uint32_t duration_s = s_timer_popup_data->duration_s;
   ActionableDialog *dialog = s_timer_popup_data->timer_popup;
-  prv_enqueue(duration_s);
   prv_cleanup_timer_popup(nullptr);
   actionable_dialog_pop(dialog);
 }

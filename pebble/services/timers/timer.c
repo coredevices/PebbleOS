@@ -20,6 +20,7 @@ typedef enum TimerState {
   TimerState_Creating,
   TimerState_Running,
   TimerState_Cancelled,
+  TimerState_Fired,
 } TimerState;
 
 typedef struct Timer {
@@ -27,7 +28,6 @@ typedef struct Timer {
   TimerState state;
   Uuid owner;
   uint32_t duration_s;
-  uint64_t deadline_ms;
   struct pbl_delayed_work work;
 } Timer;
 
@@ -75,8 +75,13 @@ static void prv_timer_cb(struct pbl_work *work) {
     return;
   }
   const bool cancelled = timer->state == TimerState_Cancelled;
+  const TimerId id = timer->id;
   const uint32_t duration_s = timer->duration_s;
-  prv_release(timer);
+  if (cancelled) {
+    prv_release(timer);
+  } else {
+    timer->state = TimerState_Fired;
+  }
   pbl_mutex_unlock(&s_mutex);
 
   if (cancelled) {
@@ -86,7 +91,7 @@ static void prv_timer_cb(struct pbl_work *work) {
   PBL_LOG_DBG("Timer fired after %u s", (unsigned int)duration_s);
   PebbleEvent event = {
     .type = PEBBLE_TIMER_EVENT,
-    .timer = {.duration_s = duration_s},
+    .timer = {.id = id, .duration_s = duration_s},
   };
   event_put(&event);
 }
@@ -134,7 +139,6 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner) {
     timer->state = TimerState_Creating;
     timer->owner = *owner;
     timer->duration_s = duration_s;
-    timer->deadline_ms = pbl_uptime_ms() + (uint64_t)duration_s * 1000U;
     pbl_delayed_work_init(&timer->work, prv_timer_cb);
   }
   pbl_mutex_unlock(&s_mutex);
@@ -167,7 +171,7 @@ bool timer_cancel(TimerId id) {
   bool cancelled = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   Timer *timer = prv_find_locked(id);
-  if (timer) {
+  if (timer && timer->state != TimerState_Fired) {
     timer->state = TimerState_Cancelled;
     // False when the callback is already running or the work is not scheduled
     // yet; both paths release the slot themselves.
@@ -189,7 +193,8 @@ uint32_t timer_cancel_all(const Uuid *owner) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   for (int i = 0; i < TIMER_MAX_COUNT; ++i) {
     Timer *timer = &s_timers[i];
-    if (timer->state == TimerState_Free || !uuid_equal(&timer->owner, owner)) {
+    if (timer->state == TimerState_Free || timer->state == TimerState_Fired ||
+        !uuid_equal(&timer->owner, owner)) {
       continue;
     }
     timer->state = TimerState_Cancelled;
@@ -202,6 +207,18 @@ uint32_t timer_cancel_all(const Uuid *owner) {
   return count;
 }
 
+bool timer_acknowledge(TimerId id) {
+  bool acknowledged = false;
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  Timer *timer = prv_find_locked(id);
+  if (timer && timer->state == TimerState_Fired) {
+    prv_release(timer);
+    acknowledged = true;
+  }
+  pbl_mutex_unlock(&s_mutex);
+  return acknowledged;
+}
+
 uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
   if (!out || max == 0) {
     return 0;
@@ -209,7 +226,6 @@ uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
 
   TimerInfo entries[TIMER_MAX_COUNT];
   uint8_t count = 0;
-  const uint64_t now_ms = pbl_uptime_ms();
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   for (int i = 0; i < TIMER_MAX_COUNT; ++i) {
@@ -220,8 +236,8 @@ uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
     TimerInfo *entry = &entries[count++];
     entry->id = timer->id;
     entry->duration_s = timer->duration_s;
-    const uint64_t remaining_ms = timer->deadline_ms > now_ms ? timer->deadline_ms - now_ms : 0;
-    entry->remaining_s = (uint32_t)(remaining_ms / 1000U);
+    const uint32_t remaining_ms = pbl_ticks_to_ms(pbl_delayed_work_remaining(&timer->work));
+    entry->remaining_s = (remaining_ms + 999U) / 1000U;
     timer_format_duration(entry->description, sizeof(entry->description), timer->duration_s);
   }
   pbl_mutex_unlock(&s_mutex);
