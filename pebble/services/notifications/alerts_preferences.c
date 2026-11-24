@@ -986,6 +986,8 @@ void alerts_preferences_handle_blob_db_event(PebbleBlobDBEvent *event) {
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_NOTIFICATIONS, s_vibe_score_notifications);
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_INCOMING_CALLS, s_vibe_score_incoming_calls);
   RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_ALARMS, s_vibe_score_alarms);
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_HOURLY, s_vibe_score_hourly);
+  RELOAD_IF_MATCH(PREF_KEY_VIBE_SCORE_ON_DISCONNECT, s_vibe_score_on_disconnect);
   RELOAD_IF_MATCH(PREF_KEY_DND_MANUALLY_ENABLED, s_do_not_disturb_manually_enabled);
   RELOAD_IF_MATCH(PREF_KEY_DND_SMART_ENABLED, s_do_not_disturb_smart_dnd_enabled);
   RELOAD_IF_MATCH(s_dnd_schedule_keys[WeekdaySchedule].schedule_pref_key,
