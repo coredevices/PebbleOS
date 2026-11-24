@@ -75,6 +75,8 @@
 #define PBL_FLASH_NOR_CMD_PRSCUR 0x42U
 /** Read a security register. */
 #define PBL_FLASH_NOR_CMD_RDSCUR 0x48U
+/** Read the security status register, on @ref PBL_FLASH_NOR_F_SECR parts. */
+#define PBL_FLASH_NOR_CMD_RDSECR 0x2BU
 /** @} */
 
 /**
@@ -89,6 +91,9 @@
 #define PBL_FLASH_NOR_SR2_QE PBL_BIT(1)
 /** Status register 2: erase suspended. */
 #define PBL_FLASH_NOR_SR2_SUS PBL_BIT(7)
+
+/** Security status register: erase suspended. */
+#define PBL_FLASH_NOR_SECR_ESB PBL_BIT(3)
 
 /* Flag status register bits */
 #define PBL_FLASH_NOR_FSR_ERASE_SUS PBL_BIT(6)
@@ -148,6 +153,12 @@ struct pbl_flash_nor_otp {
  * suspended when its bit 6 is set, and status register 1 is written alone.
  */
 #define PBL_FLASH_NOR_F_FSR PBL_BIT(1)
+
+/**
+ * @brief The part has a security status register (2Bh) instead of status register 2: an erase is
+ * suspended when its bit 3 is set, and status register 1 is written alone.
+ */
+#define PBL_FLASH_NOR_F_SECR PBL_BIT(2)
 
 /** @brief A NOR part. */
 struct pbl_flash_nor_part {
