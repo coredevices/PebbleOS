@@ -23,7 +23,7 @@ static int s_unfaithful_count;
 
 static int prv_find(const ble_addr_t *addr) {
   for (size_t i = 0; i < s_num_bonds; i++) {
-    if (ble_addr_cmp(&s_bonds[i].info.identity, addr) == 0) {
+    if (ble_addr_cmp(&s_bonds[i].peer.peer_addr, addr) == 0) {
       return (int)i;
     }
   }
@@ -34,7 +34,7 @@ static int prv_find(const ble_addr_t *addr) {
 void pbl_bt_foreach_bond(pbl_bt_bond_cb_t func, void *user_data) {
   for (size_t i = 0; i < s_num_bonds; i++) {
     const struct pbl_bt_bond_info info = {
-      .addr = s_bonds[i].info.identity,
+      .addr = s_bonds[i].peer.peer_addr,
     };
 
     func(&info, user_data);
@@ -62,7 +62,7 @@ int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys) 
 }
 
 int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys) {
-  int idx = prv_find(&keys->info.identity);
+  int idx = prv_find(&keys->peer.peer_addr);
 
   if (idx < 0) {
     cl_assert(s_num_bonds < MAX_BONDS);
@@ -117,36 +117,36 @@ void bt_pairability_update_due_to_bonding_change(void) {
 
 static struct pbl_bt_bond_keys prv_keys(uint8_t id) {
   struct pbl_bt_bond_keys keys = {
-    .info =
+    .peer =
         {
-          .identity.val = {id, 2, 3, 4, 5, 6},
-          .is_remote_encryption_info_valid = true,
-          .remote_encryption_info =
-              {
-                .ediv = id,
-                .rand = 0x1000U + id,
-              },
-          .is_local_encryption_info_valid = true,
-          .local_encryption_info =
-              {
-                .ediv = (uint16_t)(id + 1U),
-                .rand = 0x2000U + id,
-              },
-          .is_remote_identity_info_valid = true,
+          .peer_addr.val = {id, 2, 3, 4, 5, 6},
+          .key_size = 16,
+          .ediv = id,
+          .rand_num = 0x1000U + id,
+          .ltk_present = 1,
+          .irk_present = 1,
+          .sc = 1,
         },
-    .flags = PBL_BT_BOND_FLAG_SECURE_CONNECTIONS,
+    .our = {
+      .peer_addr.val = {id, 2, 3, 4, 5, 6},
+      .key_size = 16,
+      .ediv = (uint16_t)(id + 1U),
+      .rand_num = 0x2000U + id,
+      .ltk_present = 1,
+      .sc = 1,
+    },
   };
 
-  memset(keys.info.remote_encryption_info.ltk.data, id, sizeof(struct pbl_bt_sm_key));
-  memset(keys.info.local_encryption_info.ltk.data, id + 1, sizeof(struct pbl_bt_sm_key));
-  memset(keys.info.irk.data, id + 2, sizeof(struct pbl_bt_sm_key));
+  memset(keys.peer.ltk, id, sizeof(keys.peer.ltk));
+  memset(keys.our.ltk, id + 1, sizeof(keys.our.ltk));
+  memset(keys.peer.irk, id + 2, sizeof(keys.peer.irk));
 
   return keys;
 }
 
 static void prv_add(const struct pbl_bt_bond_keys *keys) {
   const struct pbl_bt_bond_info info = {
-    .addr = keys->info.identity,
+    .addr = keys->peer.peer_addr,
   };
 
   pbl_bt_bond_set_keys(keys);
@@ -154,16 +154,16 @@ static void prv_add(const struct pbl_bt_bond_keys *keys) {
 }
 
 static void prv_assert_prf_pairing(const struct pbl_bt_bond_keys *keys) {
-  struct pbl_bt_sm_pairing_info info;
-  uint8_t flags;
+  struct ble_store_value_sec peer;
+  struct ble_store_value_sec our;
 
-  cl_assert(pbl_bt_prf_store_get_pairing(&info, nullptr, &flags));
-  cl_assert_equal_i(ble_addr_cmp(&info.identity, &keys->info.identity), 0);
-  cl_assert_equal_m(&info.remote_encryption_info.ltk, &keys->info.remote_encryption_info.ltk,
-                    sizeof(struct pbl_bt_sm_key));
-  cl_assert_equal_m(&info.local_encryption_info.ltk, &keys->info.local_encryption_info.ltk,
-                    sizeof(struct pbl_bt_sm_key));
-  cl_assert_equal_i(flags, keys->flags);
+  cl_assert(pbl_bt_prf_store_get_pairing(&peer, &our, nullptr));
+  cl_assert_equal_i(ble_addr_cmp(&peer.peer_addr, &keys->peer.peer_addr), 0);
+  cl_assert_equal_m(peer.ltk, keys->peer.ltk, sizeof(peer.ltk));
+  cl_assert_equal_m(peer.irk, keys->peer.irk, sizeof(peer.irk));
+  cl_assert_equal_m(our.ltk, keys->our.ltk, sizeof(our.ltk));
+  cl_assert_equal_i(peer.sc, keys->peer.sc);
+  cl_assert_equal_i(peer.authenticated, keys->peer.authenticated);
 }
 
 void test_bonding__initialize(void) {
@@ -186,15 +186,15 @@ void test_bonding__init_takes_the_prf_pairing(void) {
   struct pbl_bt_bond_keys keys;
 
   pbl_bt_bond_set_keys(&other);
-  pbl_bt_prf_store_set_pairing(&prf.info, "Phone", prf.flags);
+  pbl_bt_prf_store_set_pairing(&prf.peer, &prf.our, "Phone");
 
   bt_bonding_init();
 
   cl_assert_equal_i(s_num_bonds, 1);
-  cl_assert_equal_i(pbl_bt_bond_get_keys(&prf.info.identity, &keys), 0);
-  cl_assert_equal_m(&keys.info.remote_encryption_info.ltk, &prf.info.remote_encryption_info.ltk,
-                    sizeof(struct pbl_bt_sm_key));
-  cl_assert_equal_i(keys.flags, prf.flags);
+  cl_assert_equal_i(pbl_bt_bond_get_keys(&prf.peer.peer_addr, &keys), 0);
+  cl_assert_equal_m(keys.peer.ltk, prf.peer.ltk, sizeof(keys.peer.ltk));
+  cl_assert_equal_m(keys.our.ltk, prf.our.ltk, sizeof(keys.our.ltk));
+  cl_assert_equal_i(keys.peer.sc, prf.peer.sc);
 }
 
 void test_bonding__init_copies_the_bond_to_the_prf_store(void) {
@@ -217,40 +217,40 @@ void test_bonding__new_bond_replaces_the_others(void) {
   prv_assert_prf_pairing(&first);
   cl_assert_equal_i(s_unfaithful_count, 1);
 
-  bt_bonding_set_peer_name(&first.info.identity, "First");
-  cl_assert(bt_bonding_get_peer_name(&first.info.identity, name));
+  bt_bonding_set_peer_name(&first.peer.peer_addr, "First");
+  cl_assert(bt_bonding_get_peer_name(&first.peer.peer_addr, name));
   cl_assert_equal_s(name, "First");
 
   prv_add(&second);
 
   cl_assert_equal_i(s_num_bonds, 1);
-  cl_assert_equal_i(pbl_bt_bond_get(&second.info.identity, nullptr), 0);
+  cl_assert_equal_i(pbl_bt_bond_get(&second.peer.peer_addr, nullptr), 0);
   prv_assert_prf_pairing(&second);
   cl_assert_equal_i(s_unfaithful_count, 2);
-  cl_assert(!bt_bonding_get_peer_name(&second.info.identity, name));
-  cl_assert(!bt_bonding_get_peer_name(&first.info.identity, name));
+  cl_assert(!bt_bonding_get_peer_name(&second.peer.peer_addr, name));
+  cl_assert(!bt_bonding_get_peer_name(&first.peer.peer_addr, name));
 
   // The first bond's deletion is reported after the second is there.
-  pbl_bt_cb_bond_deleted(&first.info.identity);
+  pbl_bt_cb_bond_deleted(&first.peer.peer_addr);
   prv_assert_prf_pairing(&second);
 }
 
 void test_bonding__changed_keys_are_copied(void) {
   struct pbl_bt_bond_keys bond = prv_keys(1);
   const struct pbl_bt_bond_info info = {
-    .addr = bond.info.identity,
+    .addr = bond.peer.peer_addr,
   };
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
   prv_add(&bond);
-  bt_bonding_set_peer_name(&bond.info.identity, "Phone");
+  bt_bonding_set_peer_name(&bond.peer.peer_addr, "Phone");
 
-  memset(bond.info.remote_encryption_info.ltk.data, 0x55, sizeof(struct pbl_bt_sm_key));
+  memset(bond.peer.ltk, 0x55, sizeof(bond.peer.ltk));
   pbl_bt_bond_set_keys(&bond);
   pbl_bt_cb_bond_changed(&info);
 
   prv_assert_prf_pairing(&bond);
-  cl_assert(bt_bonding_get_peer_name(&bond.info.identity, name));
+  cl_assert(bt_bonding_get_peer_name(&bond.peer.peer_addr, name));
   cl_assert_equal_s(name, "Phone");
 }
 
@@ -258,8 +258,8 @@ void test_bonding__deleted_bond_leaves_the_prf_store(void) {
   const struct pbl_bt_bond_keys bond = prv_keys(1);
 
   prv_add(&bond);
-  pbl_bt_unpair(&bond.info.identity);
-  pbl_bt_cb_bond_deleted(&bond.info.identity);
+  pbl_bt_unpair(&bond.peer.peer_addr);
+  pbl_bt_cb_bond_deleted(&bond.peer.peer_addr);
 
   cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));
 }
@@ -270,7 +270,7 @@ void test_bonding__peer_paired_again_keeps_the_prf_pairing(void) {
   prv_add(&bond);
 
   // Deleted and added again before the deletion is reported.
-  pbl_bt_cb_bond_deleted(&bond.info.identity);
+  pbl_bt_cb_bond_deleted(&bond.peer.peer_addr);
 
   prv_assert_prf_pairing(&bond);
 }

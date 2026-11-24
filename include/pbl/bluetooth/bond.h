@@ -10,6 +10,7 @@
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
 
+#include <host/ble_store.h>
 #include <nimble/ble.h>
 
 /**
@@ -25,11 +26,6 @@
  * @{
  */
 
-/** @brief Bond flag: paired with Secure Connections. */
-#define PBL_BT_BOND_FLAG_SECURE_CONNECTIONS 0x01U
-/** @brief Bond flag: the pairing was authenticated (MITM protected). */
-#define PBL_BT_BOND_FLAG_AUTHENTICATED 0x02U
-
 /** @brief A bonded peer. */
 struct pbl_bt_bond_info {
   /** Identity address of the peer. */
@@ -40,12 +36,12 @@ struct pbl_bt_bond_info {
   bool irk_valid;
 };
 
-/** @brief The keys of a bond, to copy it to or from other storage. */
+/** @brief The keys of a bond, as NimBLE stores them, to copy it to or from other storage. */
 struct pbl_bt_bond_keys {
-  /** Keys and identity exchanged during pairing. */
-  struct pbl_bt_sm_pairing_info info;
-  /** @c PBL_BT_BOND_FLAG_* values. */
-  uint8_t flags;
+  /** The peer's keys. */
+  struct ble_store_value_sec peer;
+  /** The keys of the watch for that peer: without an LTK if it has none. */
+  struct ble_store_value_sec our;
 };
 
 /**

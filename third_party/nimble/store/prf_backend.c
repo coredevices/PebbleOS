@@ -17,9 +17,6 @@
 
 #define KEY_SIZE 16
 
-#define FLAG_SECURE_CONNECTIONS 0x01U
-#define FLAG_AUTHENTICATED      0x02U
-
 /* The PRF store keeps one bonding: the one written last. */
 static struct ble_store_value_sec s_seen_our_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
 static struct ble_store_value_sec s_seen_peer_secs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
@@ -65,10 +62,8 @@ static const struct ble_store_value_sec *prv_find(const struct ble_store_value_s
 }
 
 static int prv_save(void) {
-  struct pbl_bt_sm_pairing_info info = {};
   const struct ble_store_value_sec *peer;
   const struct ble_store_value_sec *our;
-  uint8_t flags = 0U;
 
   prv_note_written(ble_store_config_our_secs, ble_store_config_num_our_secs, s_seen_our_secs,
                    &s_num_seen_our_secs);
@@ -85,35 +80,7 @@ static int prv_save(void) {
     return 0;
   }
 
-  info.identity = peer->peer_addr;
-
-  if (peer->ltk_present) {
-    info.is_remote_encryption_info_valid = true;
-    info.remote_encryption_info.ediv = peer->ediv;
-    info.remote_encryption_info.rand = peer->rand_num;
-    memcpy(info.remote_encryption_info.ltk.data, peer->ltk, KEY_SIZE);
-  }
-
-  if (peer->irk_present) {
-    info.is_remote_identity_info_valid = true;
-    memcpy(info.irk.data, peer->irk, KEY_SIZE);
-  }
-
-  if (our != nullptr && our->ltk_present) {
-    info.is_local_encryption_info_valid = true;
-    info.local_encryption_info.ediv = our->ediv;
-    info.local_encryption_info.rand = our->rand_num;
-    memcpy(info.local_encryption_info.ltk.data, our->ltk, KEY_SIZE);
-  }
-
-  if (peer->sc) {
-    flags |= FLAG_SECURE_CONNECTIONS;
-  }
-  if (peer->authenticated) {
-    flags |= FLAG_AUTHENTICATED;
-  }
-
-  pbl_bt_prf_store_set_pairing(&info, nullptr, flags);
+  pbl_bt_prf_store_set_pairing(peer, our, nullptr);
 
   return 0;
 }
@@ -156,57 +123,27 @@ static int prv_gen_key(uint8_t key, struct ble_store_gen_key *gen_key, uint16_t 
 }
 
 void ble_store_config_conf_init(void) {
-  struct pbl_bt_sm_pairing_info info;
-  struct ble_store_value_sec *sec;
-  ble_addr_t addr;
-  uint8_t flags;
+  struct ble_store_value_sec *peer = &ble_store_config_peer_secs[0];
+  struct ble_store_value_sec *our = &ble_store_config_our_secs[0];
 
   ble_hs_cfg.store_gen_key_cb = prv_gen_key;
 
   pbl_bt_prf_store_init();
 
-  if (!pbl_bt_prf_store_get_pairing(&info, nullptr, &flags)) {
+  if (!pbl_bt_prf_store_get_pairing(peer, our, nullptr)) {
     return;
   }
 
-  addr = info.identity;
-
-  sec = &ble_store_config_peer_secs[0];
-  memset(sec, 0, sizeof(*sec));
-  sec->peer_addr = addr;
-  sec->key_size = KEY_SIZE;
-  sec->sc = (flags & FLAG_SECURE_CONNECTIONS) != 0U;
-  sec->authenticated = (flags & FLAG_AUTHENTICATED) != 0U;
-  if (info.is_remote_encryption_info_valid) {
-    sec->ediv = info.remote_encryption_info.ediv;
-    sec->rand_num = info.remote_encryption_info.rand;
-    sec->ltk_present = 1;
-    memcpy(sec->ltk, info.remote_encryption_info.ltk.data, KEY_SIZE);
-  }
-  if (info.is_remote_identity_info_valid) {
-    sec->irk_present = 1;
-    memcpy(sec->irk, info.irk.data, KEY_SIZE);
-  }
   ble_store_config_num_peer_secs = 1;
-  s_seen_peer_secs[0] = *sec;
+  s_seen_peer_secs[0] = *peer;
   s_num_seen_peer_secs = 1;
-  s_last_addr = addr;
+  s_last_addr = peer->peer_addr;
 
-  if (!info.is_local_encryption_info_valid) {
+  if (!our->ltk_present) {
     return;
   }
 
-  sec = &ble_store_config_our_secs[0];
-  memset(sec, 0, sizeof(*sec));
-  sec->peer_addr = addr;
-  sec->key_size = KEY_SIZE;
-  sec->sc = (flags & FLAG_SECURE_CONNECTIONS) != 0U;
-  sec->authenticated = (flags & FLAG_AUTHENTICATED) != 0U;
-  sec->ediv = info.local_encryption_info.ediv;
-  sec->rand_num = info.local_encryption_info.rand;
-  sec->ltk_present = 1;
-  memcpy(sec->ltk, info.local_encryption_info.ltk.data, KEY_SIZE);
   ble_store_config_num_our_secs = 1;
-  s_seen_our_secs[0] = *sec;
+  s_seen_our_secs[0] = *our;
   s_num_seen_our_secs = 1;
 }

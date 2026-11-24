@@ -3,13 +3,15 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include <pbl/kernel/compiler.h>
 
 /**
- * @defgroup bluetooth_prf_store_layout PRF store layout
- * @ingroup bluetooth_prf_store
- * @brief On-flash layout of the PRF store entries.
+ * @file
+ * On-flash layout of the PRF store entries. Recovery firmware in the field reads it, so it cannot
+ * change: its types are its own, and are used nowhere else.
  *
  * The region holds a rolling list of @ref SharedPRFData entries of 256 bytes, so that a whole
  * number of them fits in a flash sector. Exactly one entry is valid (or unpopulated); entries
@@ -22,8 +24,23 @@
  * - corrupted, e.g. partially written, otherwise, which invalidates the whole entry.
  *
  * Rewriting a field invalidates the current entry and copies its other fields to the next one.
- * @{
  */
+
+/** @brief Size of a stored device name, including the terminator. */
+#define SPRF_NAME_SIZE 20
+
+/** @brief Number of root keys: Encryption Root (ER), then Identity Root (IR). */
+#define SPRF_NUM_ROOT_KEYS 2
+
+/** @brief A 128-bit key. */
+struct PBL_PACKED sprf_key {
+  uint8_t data[16];
+};
+
+/** @brief A device address, least significant octet first. */
+struct PBL_PACKED sprf_addr {
+  uint8_t octets[6];
+};
 
 /** @brief Page index meaning no valid entry has been found. */
 #define SPRF_PAGE_IDX_INVALID ((uint16_t)~0)
@@ -67,10 +84,15 @@ static_assert(sizeof(SprfMagic) == 4, "SprfMagic unexpected size");
 typedef struct PBL_PACKED SprfRootKeys {
   /** Field CRC. */
   uint32_t crc;
-  /** Keys indexed by @ref pbl_bt_sm_root_key_type. */
-  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+  /** The keys. */
+  struct sprf_key keys[SPRF_NUM_ROOT_KEYS];
 } SprfRootKeys;
 static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
+
+/** @brief Pairing flag: paired with Secure Connections. */
+#define SPRF_PAIRING_FLAG_SECURE_CONNECTIONS 0x01U
+/** @brief Pairing flag: the pairing was authenticated (MITM protected). */
+#define SPRF_PAIRING_FLAG_AUTHENTICATED 0x02U
 
 /** @brief Identity flag: the identity address is a random one, a public one otherwise. */
 #define SPRF_IDENTITY_FLAG_RANDOM 0x02U
@@ -81,7 +103,7 @@ typedef struct PBL_PACKED SprfBlePairingData {
   uint32_t crc;
 
   /** Local LTK. */
-  struct pbl_bt_sm_key l_ltk;
+  struct sprf_key l_ltk;
   /** Local Rand. */
   uint64_t l_rand;
   /** Local EDIV. */
@@ -90,16 +112,16 @@ typedef struct PBL_PACKED SprfBlePairingData {
   /** Remote EDIV. */
   uint16_t r_ediv;
   /** Remote LTK. */
-  struct pbl_bt_sm_key r_ltk;
+  struct sprf_key r_ltk;
   /** Remote Rand. */
   uint64_t r_rand;
 
   /** Remote IRK. */
-  struct pbl_bt_sm_key irk;
+  struct sprf_key irk;
   /** Remote CSRK. */
-  struct pbl_bt_sm_key csrk;
-  /** Remote identity address, least significant octet first. */
-  uint8_t identity_addr[6];
+  struct sprf_key csrk;
+  /** Remote identity address. */
+  struct sprf_addr identity_addr;
   /** @c SPRF_IDENTITY_FLAG_* values. */
   uint8_t identity_flags;
   /** Reserved, zero. */
@@ -112,7 +134,7 @@ typedef struct PBL_PACKED SprfBlePairingData {
   /** Unused, always false. Older firmware pinned the local address when set. */
   bool requires_address_pinning;
 
-  /** Pairing flags. Added in version 2, always 0 in version 1. */
+  /** @c SPRF_PAIRING_FLAG_* values. Added in version 2, always 0 in version 1. */
   uint8_t flags;
 } SprfBlePairingData;
 static_assert(offsetof(SprfBlePairingData, crc) == 0, "crc must be the first field");
@@ -122,7 +144,7 @@ typedef struct PBL_PACKED SprfBlePairingName {
   /** Field CRC. */
   uint32_t crc;
   /** Remote device name. */
-  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[SPRF_NAME_SIZE];
 } SprfBlePairingName;
 static_assert(offsetof(SprfBlePairingName, crc) == 0, "crc must be the first field");
 
@@ -131,7 +153,7 @@ typedef struct PBL_PACKED SprfPinnedAddress {
   /** Field CRC. */
   uint32_t crc;
   /** Pinned address of the device most recently paired. */
-  struct pbl_bt_addr pinned_address;
+  struct sprf_addr pinned_address;
   /** Reserved. */
   uint8_t rsvd[2];
 } SprfPinnedAddress;
@@ -153,7 +175,7 @@ typedef struct PBL_PACKED SprfLocalName {
   /** Field CRC. */
   uint32_t crc;
   /** Local device name, replacing the default "Pebble XXXX". */
-  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+  char name[SPRF_NAME_SIZE];
 } SprfLocalName;
 static_assert(offsetof(SprfLocalName, crc) == 0, "crc must be the first field");
 
@@ -167,7 +189,7 @@ typedef struct PBL_PACKED SprfLocalIdentityAddress {
   /** Field CRC. */
   uint32_t crc;
   /** Random static identity address of the watch, for controllers without one of their own. */
-  struct pbl_bt_addr address;
+  struct sprf_addr address;
   /** Reserved. */
   uint8_t rsvd[2];
 } SprfLocalIdentityAddress;
@@ -204,7 +226,28 @@ typedef struct PBL_PACKED SharedPRFData {
   } main_fw_scratch;
 } SharedPRFData;
 
-static_assert(PBL_BT_DEVICE_NAME_BUFFER_SIZE == 20, "Changing the length will break SharedPRF");
 static_assert(sizeof(SharedPRFData) == 256, "SharedPRFData does not match expected size");
 
-/** @} */
+// Where recovery firmware in the field looks for each field.
+static_assert(offsetof(SprfBlePairingData, l_ltk) == 4);
+static_assert(offsetof(SprfBlePairingData, l_rand) == 20);
+static_assert(offsetof(SprfBlePairingData, l_ediv) == 28);
+static_assert(offsetof(SprfBlePairingData, r_ediv) == 30);
+static_assert(offsetof(SprfBlePairingData, r_ltk) == 32);
+static_assert(offsetof(SprfBlePairingData, r_rand) == 48);
+static_assert(offsetof(SprfBlePairingData, irk) == 56);
+static_assert(offsetof(SprfBlePairingData, csrk) == 72);
+static_assert(offsetof(SprfBlePairingData, identity_addr) == 88);
+static_assert(offsetof(SprfBlePairingData, identity_flags) == 94);
+static_assert(offsetof(SprfBlePairingData, is_mitm_protection_enabled) == 97);
+static_assert(offsetof(SprfBlePairingData, requires_address_pinning) == 98);
+static_assert(offsetof(SprfBlePairingData, flags) == 99);
+static_assert(sizeof(SprfBlePairingData) == 100);
+static_assert(offsetof(SharedPRFData, root_keys) == 8);
+static_assert(offsetof(SharedPRFData, ble_pairing_data) == 44);
+static_assert(offsetof(SharedPRFData, ble_pairing_name) == 144);
+static_assert(offsetof(SharedPRFData, pinned_address) == 168);
+static_assert(offsetof(SharedPRFData, getting_started) == 180);
+static_assert(offsetof(SharedPRFData, local_name) == 188);
+static_assert(offsetof(SharedPRFData, local_identity_address) == 212);
+static_assert(offsetof(SharedPRFData, main_fw_scratch) == 224);

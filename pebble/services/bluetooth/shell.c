@@ -18,6 +18,7 @@
 #include <pbl/shell/shell.h>
 
 #include <host/ble_gap.h>
+#include <host/ble_store.h>
 #include <services/gatt/ble_svc_gatt.h>
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_bt);
@@ -146,16 +147,15 @@ static void prv_print_bond(const struct pbl_bt_bond_info *info, void *user_data)
 }
 
 static int prv_cmd_bonds(const struct pbl_shell *sh, size_t argc, char **argv) {
-  struct pbl_bt_sm_pairing_info info;
+  struct ble_store_value_sec peer;
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  uint8_t flags;
 
   pbl_bt_foreach_bond(prv_print_bond, (void *)sh);
 
-  if (pbl_bt_prf_store_get_pairing(&info, name, &flags)) {
-    pbl_shell_print(sh, "PRF store: " PBL_BT_ADDR_FMT " random=%u flags=0x%x",
-                    PBL_BT_ADDR_XPLODE_VAL(info.identity.val),
-                    info.identity.type == BLE_ADDR_RANDOM, flags);
+  if (pbl_bt_prf_store_get_pairing(&peer, nullptr, name)) {
+    pbl_shell_print(sh, "PRF store: " PBL_BT_ADDR_FMT " random=%u sc=%u authenticated=%u",
+                    PBL_BT_ADDR_XPLODE_VAL(peer.peer_addr.val),
+                    peer.peer_addr.type == BLE_ADDR_RANDOM, peer.sc, peer.authenticated);
     pbl_shell_print(sh, " Name: %s", name);
   } else {
     pbl_shell_print(sh, "PRF store: no pairing");
