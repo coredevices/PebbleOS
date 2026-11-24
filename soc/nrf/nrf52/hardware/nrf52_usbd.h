@@ -1,0 +1,68 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define NRF52_USBD_TASKS_STARTEPIN_OFFSET(n)  (0x0004 + ((n) * 4))
+#define NRF52_USBD_TASKS_STARTEPOUT_OFFSET(n) (0x0028 + ((n) * 4))
+#define NRF52_USBD_TASKS_EP0RCVOUT_OFFSET     0x004C
+#define NRF52_USBD_TASKS_EP0STATUS_OFFSET     0x0050
+#define NRF52_USBD_TASKS_EP0STALL_OFFSET      0x0054
+#define NRF52_USBD_EVENTS_USBRESET_OFFSET     0x0100
+#define NRF52_USBD_EVENTS_ENDEPIN_OFFSET(n)   (0x0108 + ((n) * 4))
+#define NRF52_USBD_EVENTS_EP0DATADONE_OFFSET  0x0128
+#define NRF52_USBD_EVENTS_ENDEPOUT_OFFSET(n)  (0x0130 + ((n) * 4))
+#define NRF52_USBD_EVENTS_USBEVENT_OFFSET     0x0158
+#define NRF52_USBD_EVENTS_EP0SETUP_OFFSET     0x015C
+#define NRF52_USBD_EVENTS_EPDATA_OFFSET       0x0160
+#define NRF52_USBD_INTEN_OFFSET               0x0300
+#define NRF52_USBD_EVENTCAUSE_OFFSET          0x0400
+#define NRF52_USBD_EPDATASTATUS_OFFSET        0x046C
+#define NRF52_USBD_BMREQUESTTYPE_OFFSET       0x0480
+#define NRF52_USBD_SIZE_EPOUT_OFFSET(n)       (0x04A0 + ((n) * 4))
+#define NRF52_USBD_ENABLE_OFFSET              0x0500
+#define NRF52_USBD_USBPULLUP_OFFSET           0x0504
+#define NRF52_USBD_DTOGGLE_OFFSET             0x050C
+#define NRF52_USBD_EPINEN_OFFSET              0x0510
+#define NRF52_USBD_EPOUTEN_OFFSET             0x0514
+#define NRF52_USBD_EPSTALL_OFFSET             0x0518
+#define NRF52_USBD_EPIN_PTR_OFFSET(n)         (0x0600 + ((n) * 0x14))
+#define NRF52_USBD_EPIN_MAXCNT_OFFSET(n)      (0x0604 + ((n) * 0x14))
+#define NRF52_USBD_EPOUT_PTR_OFFSET(n)        (0x0700 + ((n) * 0x14))
+#define NRF52_USBD_EPOUT_MAXCNT_OFFSET(n)     (0x0704 + ((n) * 0x14))
+
+/* Setup packet registers, a byte each, word apart */
+#define NRF52_USBD_SETUP_STRIDE 4
+
+/* Register bit definitions */
+
+#define USBD_INTEN_USBRESET    PBL_BIT(0)
+#define USBD_INTEN_EP0DATADONE PBL_BIT(10)
+#define USBD_INTEN_USBEVENT    PBL_BIT(22)
+#define USBD_INTEN_EP0SETUP    PBL_BIT(23)
+#define USBD_INTEN_EPDATA      PBL_BIT(24)
+
+#define USBD_EVENTCAUSE_SUSPEND PBL_BIT(8)
+#define USBD_EVENTCAUSE_RESUME  PBL_BIT(9)
+#define USBD_EVENTCAUSE_READY   PBL_BIT(11)
+
+#define USBD_EPDATASTATUS_EPIN(n)  PBL_BIT(n)
+#define USBD_EPDATASTATUS_EPOUT(n) PBL_BIT(16 + (n))
+
+#define USBD_DTOGGLE_EP_MASK     PBL_GENMASK(2, 0)
+#define USBD_DTOGGLE_IO_IN       PBL_BIT(7)
+#define USBD_DTOGGLE_VALUE_MASK  PBL_GENMASK(9, 8)
+#define USBD_DTOGGLE_VALUE_NOP   0U
+#define USBD_DTOGGLE_VALUE_DATA0 1U
+
+#define USBD_EPSTALL_EP_MASK PBL_GENMASK(2, 0)
+#define USBD_EPSTALL_IO_IN   PBL_BIT(7)
+#define USBD_EPSTALL_STALL   PBL_BIT(8)
+
+/* Errata 199: the DMA workaround register, in the USBD block */
+#define NRF52_USBD_ERRATA_199_OFFSET 0x0C1C
+#define USBD_ERRATA_199_DMA_ON       0x82U
