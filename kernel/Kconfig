@@ -5,7 +5,7 @@ menu "Kernel"
 
 config KERNEL_IDLE_STACK_SIZE
     int "Idle thread stack size in bytes"
-    default 1024
+    default 512
     help
       Stack of the idle thread, which runs the idle states of the SoC.
 
@@ -20,7 +20,7 @@ config CPU_IDLE
 
 config KERNEL_MAIN_STACK_SIZE
     int "Main thread stack size in bytes"
-    default 4096
+    default 1024
     help
       Stack of the main thread, which initializes the system and then
       runs main().
@@ -43,7 +43,7 @@ if KERNEL_SYS_WORKQ
 
 config KERNEL_SYS_WORKQ_STACK_SIZE
     int "Background work queue stack size in bytes"
-    default 4096
+    default 1024
     help
       Stack of SysWorkq, the thread of the background work queue.
 
@@ -100,7 +100,7 @@ config KERNEL_SYS_WORKQ_HIGH_CALL_TIMEOUT_MS
 
 config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
     int "High priority work queue stack size in bytes"
-    default 1380
+    default 1024
     help
       Stack of SysWorkqHigh, the thread of the high priority work queue.
 
