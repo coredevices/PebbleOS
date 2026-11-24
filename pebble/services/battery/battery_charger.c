@@ -8,7 +8,8 @@
 
 static bool s_charging_forced_disable;
 
-static void prv_online_changed(const struct pbl_charger *charger) {
+static void prv_online_changed(const struct pbl_charger *charger,
+                               struct pbl_charger_listener *listener) {
   PebbleEvent event = {
     .type = PEBBLE_BATTERY_CONNECTION_EVENT,
     .battery_connection = {
@@ -19,12 +20,12 @@ static void prv_online_changed(const struct pbl_charger *charger) {
   event_put(&event);
 }
 
-static const struct pbl_charger_listener s_listener = {
+static struct pbl_charger_listener s_listener = {
   .online_changed = prv_online_changed,
 };
 
 void battery_charger_init(void) {
-  pbl_charger_set_listener(CHARGER, &s_listener);
+  pbl_charger_add_listener(CHARGER, &s_listener);
 }
 
 bool battery_is_usb_connected(void) {

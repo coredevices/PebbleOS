@@ -23,14 +23,15 @@ static const char *const s_status[] = {
 
 static atomic_bool s_toggle;
 
-static void prv_online_changed(const struct pbl_charger *charger) {
+static void prv_online_changed(const struct pbl_charger *charger,
+                               struct pbl_charger_listener *listener) {
   bool online = false;
 
   (void)pbl_charger_is_online(charger, &online);
   printf("charger: external power %s\n", online ? "connected" : "removed");
 }
 
-static const struct pbl_charger_listener s_listener = {
+static struct pbl_charger_listener s_listener = {
   .online_changed = prv_online_changed,
 };
 
@@ -93,7 +94,7 @@ int main(void) {
   int ret = 0;
 
   /* Called from a work queue whenever external power comes or goes. */
-  pbl_charger_set_listener(CHARGER, &s_listener);
+  pbl_charger_add_listener(CHARGER, &s_listener);
 
   (void)prv_set_charging(charging);
   printf("charger: press Select to toggle charging\n");
@@ -113,7 +114,7 @@ int main(void) {
   }
 
   (void)prv_set_charging(false);
-  pbl_charger_set_listener(CHARGER, nullptr);
+  pbl_charger_remove_listener(CHARGER, &s_listener);
 
   if (ret != 0) {
     return ret;

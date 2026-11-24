@@ -18,7 +18,7 @@
  * charged or not. Every call into the driver runs with the device lock held, a recursive mutex.
  *
  * Drivers report external power changes with pbl_charger_report_online_changed(), from thread
- * context, to the listener set with pbl_charger_set_listener().
+ * context, to the listeners added with pbl_charger_add_listener().
  *
  * @code{.c}
  * struct pbl_charger_measurements meas;
@@ -59,7 +59,10 @@ struct pbl_charger_measurements {
 /** @brief Charger listener. */
 struct pbl_charger_listener {
   /** External power was connected or removed. Called with the device lock held. */
-  void (*online_changed)(const struct pbl_charger *charger);
+  void (*online_changed)(const struct pbl_charger *charger, struct pbl_charger_listener *listener);
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_charger_listener *next;
+  /** @endcond */
 };
 
 /** @brief Charger driver operations, called with the device lock held. */
@@ -82,8 +85,8 @@ struct pbl_charger_ops {
 struct pbl_charger_state {
   /** Device lock. */
   struct pbl_mutex lock;
-  /** Listener, or NULL. */
-  const struct pbl_charger_listener *listener;
+  /** Listeners. */
+  struct pbl_charger_listener *listeners;
   /** Number of high load requests held. */
   uint8_t high_load_count;
 };
@@ -195,13 +198,22 @@ int pbl_charger_high_load_request(const struct pbl_charger *charger);
 int pbl_charger_high_load_release(const struct pbl_charger *charger);
 
 /**
- * @brief Set the listener of a charger.
+ * @brief Add a listener to a charger.
  *
  * @param charger Charger.
- * @param listener Listener, or NULL for none.
+ * @param listener Listener, not added yet, which stays in use until removed.
  */
-void pbl_charger_set_listener(const struct pbl_charger *charger,
-                              const struct pbl_charger_listener *listener);
+void pbl_charger_add_listener(const struct pbl_charger *charger,
+                              struct pbl_charger_listener *listener);
+
+/**
+ * @brief Remove a listener from a charger.
+ *
+ * @param charger Charger.
+ * @param listener Listener.
+ */
+void pbl_charger_remove_listener(const struct pbl_charger *charger,
+                                 struct pbl_charger_listener *listener);
 
 /**
  * @brief Report that external power was connected or removed, for drivers.
