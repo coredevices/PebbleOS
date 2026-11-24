@@ -11,7 +11,6 @@ application enables it, or when the code that uses it selects it.
 
 c.md
 util.md
-btutil.md
 fuel_gauge/index.md
 kraepelin.md
 vanhees.md

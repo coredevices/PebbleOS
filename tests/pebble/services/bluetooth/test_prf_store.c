@@ -7,7 +7,6 @@
 #include <pbl/bluetooth/prf_store_layout.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/board/partitions.h>
-#include <pbl/btutil/sm_util.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
@@ -176,6 +175,13 @@ static const struct pbl_bt_sm_key ROOT_KEYS_CLEAR[PBL_BT_SM_ROOT_KEY_TYPE_NUM] =
   {.data = {0x33}},
   {.data = {0x44}},
 };
+
+static bool prv_identity_equal(const struct pbl_bt_sm_pairing_info *a,
+                               const struct pbl_bt_sm_pairing_info *b) {
+  return a->is_remote_identity_info_valid && b->is_remote_identity_info_valid &&
+         memcmp(&a->identity, &b->identity, sizeof(a->identity)) == 0 &&
+         memcmp(&a->irk, &b->irk, sizeof(a->irk)) == 0;
+}
 
 static void prv_set_field(bool set) {
   struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
@@ -382,7 +388,7 @@ void test_prf_store__save_all_data_confirm_all_data_correct(void) {
   uint8_t flags = 0;
   pbl_bt_prf_store_get_pairing(&pairing_info_out, device_name_out, &flags);
   cl_assert_equal_i(flags, 0xff);
-  cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
+  cl_assert_equal_b(prv_identity_equal(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
 
   // Check the root keys
@@ -413,7 +419,7 @@ void test_prf_store__write_in_loop_confirm_data_still_intact(void) {
 
   pbl_bt_prf_store_get_pairing(&pairing_info_out, device_name_out, &flags);
   cl_assert_equal_i(flags, 0xff);
-  cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
+  cl_assert_equal_b(prv_identity_equal(&PAIRING_INFO, &pairing_info_out), true);
   cl_assert_equal_s(device_name_out, DEVICE_NAME);
 }
 

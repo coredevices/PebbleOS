@@ -6,7 +6,6 @@
 
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/btutil/bt_device.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
@@ -22,9 +21,15 @@ static struct pbl_bt_bond_keys s_bonds[MAX_BONDS];
 static size_t s_num_bonds;
 static int s_unfaithful_count;
 
+static bool prv_addr_equal(const struct pbl_bt_device_internal *a,
+                           const struct pbl_bt_device_internal *b) {
+  return a->is_random_address == b->is_random_address &&
+         memcmp(&a->address, &b->address, sizeof(a->address)) == 0;
+}
+
 static int prv_find(const struct pbl_bt_device_internal *addr) {
   for (size_t i = 0; i < s_num_bonds; i++) {
-    if (bt_device_internal_equal(&s_bonds[i].info.identity, addr)) {
+    if (prv_addr_equal(&s_bonds[i].info.identity, addr)) {
       return (int)i;
     }
   }
@@ -159,7 +164,7 @@ static void prv_assert_prf_pairing(const struct pbl_bt_bond_keys *keys) {
   uint8_t flags;
 
   cl_assert(pbl_bt_prf_store_get_pairing(&info, nullptr, &flags));
-  cl_assert(bt_device_internal_equal(&info.identity, &keys->info.identity));
+  cl_assert(prv_addr_equal(&info.identity, &keys->info.identity));
   cl_assert_equal_m(&info.remote_encryption_info.ltk, &keys->info.remote_encryption_info.ltk,
                     sizeof(struct pbl_bt_sm_key));
   cl_assert_equal_m(&info.local_encryption_info.ltk, &keys->info.local_encryption_info.ltk,
