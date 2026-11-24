@@ -22,6 +22,11 @@
  * bus speed, enables their endpoints when the host configures the device, and hands them the
  * class requests to their interfaces and the end of the transfers on their endpoints. Everything
  * the stack calls runs from the controller's interrupt.
+ *
+ * A function names its strings with its own indices, from 1, in the iInterface field of its
+ * interface descriptors and the iFunction field of its interface association descriptor: index n
+ * is @ref pbl_usbd_function.strings[n - 1]. The stack gives them indices of the device when it
+ * sends the configuration descriptor. Strings in class-specific descriptors are not mapped.
  * @{
  */
 
@@ -31,6 +36,10 @@ struct pbl_usbd_function {
   const uint8_t *desc;
   /** Length of @ref desc, in bytes. */
   uint16_t desc_len;
+  /** Optional. Strings of the descriptors, ASCII, by their index minus 1. */
+  const char *const *strings;
+  /** Number of @ref strings. */
+  uint8_t num_strings;
   /** First interface. */
   uint8_t first_iface;
   /** Number of interfaces. */
