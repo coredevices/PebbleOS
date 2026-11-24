@@ -1,18 +1,18 @@
 # Boards
 
-| Board | Revisions | Cores | Variants | Device | Platform |
-| --- | --- | --- | --- | --- | --- |
-| [`asterix`](asterix/index.md) | | | | Pebble 2 Duo | Flint |
-| [`obelix`](obelix/index.md) | `bb2`, `dvt`, `pvt` | | | Pebble Time 2 | Emery |
-| [`getafix`](getafix/index.md) | `dvt`, `dvt2` | | | Pebble Round 2 | Gabbro |
-| [`sf32lb57_dpi_hdk`](sf32lb57_dpi_hdk/index.md) | | | | SiFli SF32LB57x-DPI-HDK | |
-| [`stm32h747i_disco`](stm32h747i_disco/index.md) | | `m7`, `m4` | | STMicroelectronics STM32H747I-DISCO | |
-| `qemu_flint` | | | | Emulated Pebble 2 Duo | Flint |
-| `qemu_emery` | | | | Emulated Pebble Time 2 | Emery |
-| `qemu_gabbro` | | | | Emulated Pebble Round 2 | Gabbro |
-| `native_flint` | | | `wasm` | Host program | Flint |
-| `native_emery` | | | `wasm` | Host program | Emery |
-| `native_gabbro` | | | `wasm` | Host program | Gabbro |
+| Board | Description |
+| --- | --- |
+| [`asterix`](asterix/index.md) | Pebble 2 Duo |
+| [`obelix`](obelix/index.md) | Pebble Time 2 |
+| [`getafix`](getafix/index.md) | Pebble Round 2 |
+| [`sf32lb57_dpi_hdk`](sf32lb57_dpi_hdk/index.md) | SiFli SF32LB57x-DPI-HDK development kit |
+| [`stm32h747i_disco`](stm32h747i_disco/index.md) | STMicroelectronics STM32H747I-DISCO discovery kit |
+| `qemu_flint` | Flint platform emulator (e.g. Pebble 2 Duo) |
+| `qemu_emery` | Emery platform emulator (e.g. Pebble Time 2) |
+| `qemu_gabbro` | Gabbro platform emulator (e.g. Pebble Round 2) |
+| `native_flint` | Flint platform host/wasm simulator (e.g. Pebble 2 Duo) |
+| `native_emery` | Emery platform host/wasm simulator (e.g. Pebble Time 2) |
+| `native_gabbro` | Gabbro platform host/wasm simulator (e.g. Pebble Round 2) |
 
 Hardware plugged into a connector of a board, such as a display module, is
 an add-on; see {doc}`../addons/index`.

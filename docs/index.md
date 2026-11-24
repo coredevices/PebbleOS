@@ -51,7 +51,7 @@ Try it in the browser
 :link: getting_started/index
 :link-type: doc
 
-From a fresh machine to PebbleOS running in the emulator or on a watch.
+From a fresh machine to PebbleOS running in the emulator or on a board.
 :::
 
 :::{grid-item-card} 🛠️ Development
@@ -103,11 +103,11 @@ Bluetooth, logging, input, the shell and the other OS subsystems.
 The watch firmware built on PebbleOS: a playground and the application SDK.
 :::
 
-:::{grid-item-card} ⌚ Boards
+:::{grid-item-card} 🔧 Boards
 :link: boards/index
 :link-type: doc
 
-Supported watches and emulated boards, and how to program them.
+Supported hardware, emulated and host boards, and how to program them.
 :::
 
 ::::

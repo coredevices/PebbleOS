@@ -11,13 +11,10 @@
 :Board: `obelix`
 :Revisions: `bb2`, `dvt`, `pvt`
 :SoC: SiFli SF32LB52
-:Platform: Emery
-:Emulator: `qemu_emery`
 :::
 
 Pebble Time 2 is a rectangular color watch with a touchscreen and a heart
-rate monitor, built around the SiFli SF32LB52. Its firmware targets the
-Emery platform, which apps see as a 200 × 228 color display.
+rate monitor, built around the SiFli SF32LB52.
 
 ## Hardware
 

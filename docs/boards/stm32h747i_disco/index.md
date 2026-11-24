@@ -10,7 +10,6 @@
 
 :Board: `stm32h747i_disco/m7`, `stm32h747i_disco/m4`
 :SoC: ST STM32H747
-:Platform: none, samples only
 :::
 
 The STM32H747I-DISCO is the ST Discovery kit for the dual-core STM32H747.
