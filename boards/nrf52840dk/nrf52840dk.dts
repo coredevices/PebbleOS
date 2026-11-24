@@ -181,6 +181,10 @@ arduino_spi: &spi3 {
 	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
 
+&usbd {
+	status = "okay";
+};
+
 &temp {
 	status = "okay";
 };
