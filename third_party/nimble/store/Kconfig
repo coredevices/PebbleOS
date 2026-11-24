@@ -51,11 +51,18 @@ config NIMBLE_STORE_PRF
 choice NIMBLE_STORE_PRF_LAYOUT
     prompt "PRF store layout"
     depends on NIMBLE_STORE_PRF
-    default NIMBLE_STORE_PRF_LAYOUT_LEGACY
+    default NIMBLE_STORE_PRF_LAYOUT_RECORDS
     help
       How the partition is laid out. Both firmwares of a device have to
       agree on it, and it cannot change once a device is in the field:
       the recovery firmware there is not updated.
+
+config NIMBLE_STORE_PRF_LAYOUT_RECORDS
+    bool "Records"
+    help
+      A log of records of 140 bytes with one CRC, each holding all the
+      store keeps: the last valid one is the store. For devices that
+      have not shipped with the legacy layout.
 
 config NIMBLE_STORE_PRF_LAYOUT_LEGACY
     bool "Legacy"
