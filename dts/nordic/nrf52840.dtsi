@@ -127,6 +127,14 @@
 			interrupts = <6>;
 		};
 
+		adc: adc@40007000 {
+			compatible = "nordic,nrf52840-saadc", "nordic,nrf52832-saadc";
+			reg = <0x40007000 0x1000>;
+			interrupts = <7>;
+			#io-channel-cells = <1>;
+			status = "disabled";
+		};
+
 		timer0: timer@40008000 {
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x40008000 0x1000>;
