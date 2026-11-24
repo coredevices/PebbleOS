@@ -178,10 +178,16 @@ jobs:
       - name: Rebase onto target branch
         uses: ./.github/actions/rebase
 
-      - name: Run clang-format
-        uses: jidicula/clang-format-action@v4.18.0
+      - name: Set up Python
+        uses: actions/setup-python@v7
         with:
-          clang-format-version: "22"
+          python-version: "3.13"
+
+      - name: Install clang-format
+        run: pip install $(grep '^clang-format==' requirements.txt)
+
+      - name: Run clang-format
+        run: clang-format --dry-run --Werror $(git ls-files '*.c' '*.h')
 
   devicetree:
     runs-on: ubuntu-24.04
