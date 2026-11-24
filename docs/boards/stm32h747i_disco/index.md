@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/stm32h747i_disco.webp
-:alt: STMicroelectronics STM32H747I-DISCO
+```{thumbnail} images/stm32h747i_disco.webp
 ```
 
 :Board: `stm32h747i_disco/m7`, `stm32h747i_disco/m4`

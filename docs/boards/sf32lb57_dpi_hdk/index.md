@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/sf32lb57_dpi_hdk.webp
-:alt: SiFli SF32LB57x-DPI-HDK
+```{thumbnail} images/sf32lb57_dpi_hdk.webp
 ```
 
 :Board: `sf32lb57_dpi_hdk`

@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/obelix.webp
-:alt: Pebble Time 2
+```{thumbnail} images/obelix.webp
 ```
 
 :Board: `obelix`
