@@ -433,7 +433,8 @@ static int prv_ep0_queue(const struct pbl_udc_musb *m, bool in, struct prv_ep *e
   prv_index(m, 0U);
   switch (st->ep0) {
     case EP0_SETUP:
-      if (ep->len == 0U) {
+      // An IN data stage may be empty, a zero-length packet, when the request has data
+      if (ep->len == 0U && !(in && (st->setup[6] != 0U || st->setup[7] != 0U))) {
         prv_ww(m, MUSB_CSR0, MUSB_CSR0_SERVICEDRXPKTRDY | MUSB_CSR0_DATAEND);
         st->ep0 = EP0_STATUS;
       } else if (in) {
