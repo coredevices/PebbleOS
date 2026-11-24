@@ -34,7 +34,8 @@ CLI, one page per command, and `extending.md` for how to extend it),
 
 ## Code style
 
-- clang-format for C code
+- clang-format for C code, the version pinned in `requirements.txt`; other
+  versions format some lines differently and fail CI
 - ruff for Python code
 - Keep code comments short and concise. Extended descriptions can be kept in
   the Git commit message.
