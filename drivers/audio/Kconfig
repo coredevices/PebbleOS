@@ -77,6 +77,7 @@ config AUDIO_SIM_MIC
     bool "Simulated microphone"
     default y if MIC
     depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Simulated microphone, recording the audio written through its
       simulator API (pbl/drivers/audio/sim.h), and silence when none is.

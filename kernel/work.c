@@ -9,14 +9,6 @@
 #include <pbl/mcu/fpu.h>
 #include <pbl/util/misc.h>
 
-PBL_WORKQ_DEFINE(pbl_sys_workq);
-PBL_WORKQ_DEFINE(pbl_sys_workq_high);
-
-static struct pbl_thread s_sys_thread;
-static struct pbl_thread s_sys_high_thread;
-PBL_THREAD_STACK_DEFINE(s_sys_stack, CONFIG_KERNEL_SYS_WORKQ_STACK_SIZE);
-PBL_THREAD_STACK_DEFINE(s_sys_high_stack, CONFIG_KERNEL_SYS_WORKQ_HIGH_STACK_SIZE);
-
 struct pbl_work__barrier {
   struct pbl_work work;
   struct pbl_sem done;
@@ -186,41 +178,6 @@ void pbl_workq_thread(void *arg) {
     }
   }
 }
-
-static void prv_sys_workq_start(struct pbl_workq *q, struct pbl_thread *thread, const char *name,
-                                pbl_prio_t prio, void *stack, size_t stack_size) {
-  const struct pbl_thread_attr attr = {
-    .name = name,
-    .entry = pbl_workq_thread,
-    .arg = q,
-    .prio = prio,
-    .privileged = true,
-    .stack = stack,
-    .stack_size = stack_size,
-  };
-
-  // Set here too, as callers can ask for it before the thread first runs.
-  q->thread = thread;
-  PBL_ASSERTN(pbl_thread_create(thread, &attr) == 0);
-}
-
-void sys_workq_init(void) {
-  pbl_workq_set_boost_prio(&pbl_sys_workq, CONFIG_KERNEL_SYS_WORKQ_BOOST_PRIO);
-  prv_sys_workq_start(&pbl_sys_workq, &s_sys_thread, "SysWorkq", CONFIG_KERNEL_SYS_WORKQ_PRIO,
-                      s_sys_stack, sizeof(s_sys_stack));
-  prv_sys_workq_start(&pbl_sys_workq_high, &s_sys_high_thread, "SysWorkqHigh",
-                      CONFIG_KERNEL_SYS_WORKQ_HIGH_PRIO, s_sys_high_stack,
-                      sizeof(s_sys_high_stack));
-}
-
-#if UNITTEST
-void sys_workq_reset_for_test(void) {
-  memset(&s_sys_thread, 0, sizeof(s_sys_thread));
-  memset(&s_sys_high_thread, 0, sizeof(s_sys_high_thread));
-  pbl_workq_init(&pbl_sys_workq);
-  pbl_workq_init(&pbl_sys_workq_high);
-}
-#endif
 
 void pbl_workq_flush(struct pbl_workq *q) {
   struct pbl_work__barrier barrier;

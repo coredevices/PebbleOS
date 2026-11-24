@@ -10,6 +10,7 @@ if HRM
 
 config HRM_GH3X2X
     bool "Goodix GH3X2X"
+    select KERNEL_SYS_WORKQ
     help
       Support for the Goodix GH3X2X heart rate sensor.
 

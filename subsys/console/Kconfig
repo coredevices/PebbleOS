@@ -11,6 +11,8 @@ config CONSOLE
 config CONSOLE_INPUT
     bool
     depends on CONSOLE
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Receive on the console port: shell commands and frames from the
       development tools. Selected by what reads the input.

@@ -32,6 +32,15 @@ config KERNEL_MAIN_THREAD_PRIO
       Priority of the main thread, between 0 and KERNEL_NUM_PRIORITIES - 1,
       higher first.
 
+config KERNEL_SYS_WORKQ
+    bool "Background work queue"
+    help
+      SysWorkq, the system's queue for background work, and the
+      pbl_sys_work_call() family running on it. Selected by what uses
+      them.
+
+if KERNEL_SYS_WORKQ
+
 config KERNEL_SYS_WORKQ_STACK_SIZE
     int "Background work queue stack size in bytes"
     default 4096
@@ -65,6 +74,16 @@ config KERNEL_SYS_WORKQ_CALL_TIMEOUT_MS
       How long pbl_sys_work_call() waits for a free slot before it panics,
       as the queue is then stuck.
 
+endif # KERNEL_SYS_WORKQ
+
+config KERNEL_SYS_WORKQ_HIGH
+    bool "High priority work queue"
+    help
+      SysWorkqHigh, the system's queue for short, time sensitive work,
+      and pbl_sys_work_call_high(). Selected by what uses them.
+
+if KERNEL_SYS_WORKQ_HIGH
+
 config KERNEL_SYS_WORKQ_HIGH_CALLS
     int "Calls with a payload pending at once on the high priority work queue"
     default 5
@@ -90,6 +109,8 @@ config KERNEL_SYS_WORKQ_HIGH_PRIO
     default 4
     help
       Priority of SysWorkqHigh.
+
+endif # KERNEL_SYS_WORKQ_HIGH
 
 config KERNEL_ISR_STACK_SIZE
     int "ISR stack size in bytes"

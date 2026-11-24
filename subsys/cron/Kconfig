@@ -3,6 +3,7 @@
 
 config CRON
     bool "Cron"
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Wall-clock based job scheduler that handles DST and time zone
       changes.

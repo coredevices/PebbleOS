@@ -3,6 +3,7 @@
 
 menuconfig FLASH
     bool "Flash"
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Flash class (pbl/drivers/flash.h) and its drivers: the flash that
       holds the file system, resources and firmware images.

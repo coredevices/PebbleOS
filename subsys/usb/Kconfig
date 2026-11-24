@@ -49,6 +49,7 @@ config USB_CDC_ACM_NAME
 config USB_DFU
     bool "Firmware upgrade"
     depends on FLASH
+    select KERNEL_SYS_WORKQ
     help
       Device Firmware Upgrade 1.1, in DFU mode (pbl/usb/dfu.h): the host
       downloads an image to a flash partition and uploads it back.

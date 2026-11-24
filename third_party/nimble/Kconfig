@@ -3,6 +3,7 @@
 
 menuconfig NIMBLE
     bool "NimBLE"
+    select KERNEL_SYS_WORKQ_HIGH
     select MBEDTLS
     help
       The NimBLE Bluetooth Low Energy stack: its host, its porting layer
