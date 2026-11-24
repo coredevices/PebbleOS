@@ -9,6 +9,7 @@
 
 #include <pbl/drivers/mcu.h>
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/logging/logging.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/bits.h>
@@ -55,6 +56,7 @@
 #define BULK_MPS_HS 512U
 
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usbd_function, usbd_functions);
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usbd_listener, usbd_listeners);
 
 enum prv_stage {
   STAGE_IDLE,
@@ -87,6 +89,14 @@ static struct {
     uint8_t ep;
   } eps[2][MAX_EPS];
 } s_num;
+
+// Bus state, under the IRQ lock. The bus idles from the connection until the host resets it: that
+// is no suspend to report.
+static struct {
+  bool reset;
+  bool connected;
+  bool suspended;
+} s_bus;
 
 static atomic_bool s_enabled;
 
@@ -122,6 +132,18 @@ static char s_serial[2U * SERIAL_LEN + 1U];
 
 static uint16_t prv_bulk_mps(enum pbl_udc_speed speed) {
   return speed == PBL_UDC_SPEED_HIGH ? BULK_MPS_HS : BULK_MPS_FS;
+}
+
+static void prv_notify(enum pbl_usbd_event evt) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    if (fn->event != nullptr) {
+      fn->event(evt);
+    }
+  }
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_listener, usbd_listeners, l) {
+    l->event(evt);
+  }
 }
 
 uint16_t pbl_usbd_bulk_mps(void) {
@@ -818,20 +840,82 @@ static void prv_ep0_done(uint8_t ep, int ret) {
   }
 }
 
+// The configuration ends with the bus, at a reset or a disconnection
+static void prv_unconfigure(void) {
+  if (s_ctrl.config != 0U) {
+    s_ctrl.config = 0U;
+    (void)prv_set_configured(false);
+  }
+  s_ctrl.stage = STAGE_IDLE;
+  s_bus.suspended = false;
+}
+
+// With the IRQ lock held
+static int prv_connect(void) {
+  int ret;
+
+  if (s_bus.connected || !atomic_load(&s_enabled) || !pbl_udc_vbus_present(UDC)) {
+    return 0;
+  }
+
+  ret = pbl_udc_enable(UDC);
+  if (ret != 0) {
+    return ret;
+  }
+
+  s_bus.connected = true;
+  s_bus.reset = false;
+  prv_notify(PBL_USBD_EVENT_CONNECTED);
+
+  return 0;
+}
+
+// With the IRQ lock held
+static void prv_disconnect(void) {
+  if (!s_bus.connected) {
+    return;
+  }
+
+  s_bus.connected = false;
+  prv_unconfigure();
+  (void)pbl_udc_disable(UDC);
+  prv_notify(PBL_USBD_EVENT_DISCONNECTED);
+}
+
 static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const uint8_t *setup,
                       void *arg) {
   switch (evt) {
     case PBL_UDC_EVENT_RESET:
-      if (s_ctrl.config != 0U) {
-        s_ctrl.config = 0U;
-        (void)prv_set_configured(false);
-      }
-      s_ctrl.stage = STAGE_IDLE;
+      prv_unconfigure();
       (void)pbl_udc_ep_enable(udc, 0U, PBL_UDC_EP_CONTROL, EP0_MPS);
       (void)pbl_udc_ep_enable(udc, PBL_UDC_EP_IN, PBL_UDC_EP_CONTROL, EP0_MPS);
+      s_bus.reset = true;
+      prv_notify(PBL_USBD_EVENT_RESET);
       break;
     case PBL_UDC_EVENT_SETUP:
       prv_setup(setup);
+      break;
+    case PBL_UDC_EVENT_SUSPEND:
+      if (s_bus.connected && s_bus.reset && !s_bus.suspended) {
+        s_bus.suspended = true;
+        prv_notify(PBL_USBD_EVENT_SUSPENDED);
+      }
+      break;
+    case PBL_UDC_EVENT_RESUME:
+      if (s_bus.suspended) {
+        s_bus.suspended = false;
+        prv_notify(PBL_USBD_EVENT_RESUMED);
+      }
+      break;
+    case PBL_UDC_EVENT_VBUS_READY:
+      pbl_irq_lock();
+      (void)prv_connect();
+      pbl_irq_unlock();
+      break;
+    case PBL_UDC_EVENT_VBUS_REMOVED:
+      pbl_irq_lock();
+      prv_disconnect();
+      pbl_irq_unlock();
       break;
     default:
       break;
@@ -878,7 +962,11 @@ static int prv_enable(void) {
 
   pbl_udc_register(UDC, &s_callbacks, nullptr);
 
-  return pbl_udc_enable(UDC);
+  pbl_irq_lock();
+  ret = prv_connect();
+  pbl_irq_unlock();
+
+  return ret;
 }
 
 #if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)

@@ -24,7 +24,8 @@
  * their bulk endpoints for the bus speed, enables their endpoints when the host configures the
  * device, and hands them the class and vendor requests to their interfaces and the end of the
  * transfers on their endpoints, with their own numbers. A function queues transfers on the
- * endpoint pbl_usbd_ep() gives. Everything the stack calls runs from the controller's interrupt.
+ * endpoint pbl_usbd_ep() gives. Everything the stack calls runs from the controller's interrupt, or
+ * with interrupts locked.
  *
  * An interface can have alternate settings: its interface descriptor is followed by others with the
  * same interface number and a higher bAlternateSetting, each with its own endpoints. Two settings
@@ -40,8 +41,26 @@
  * With @c CONFIG_USB_DEVICE_MS_OS_20 or @c CONFIG_USB_DEVICE_WEBUSB, the device is USB 2.1 and
  * has a BOS descriptor, with their platform capabilities, and the stack answers their vendor
  * requests to the device.
+ *
+ * On a board that senses USB power, the device connects to the bus only while it is present.
+ * Functions, and listeners defined with PBL_USBD_LISTENER_DEFINE(), hear about the bus state
+ * through @ref pbl_usbd_event.
  * @{
  */
+
+/** @brief Bus state changes. */
+enum pbl_usbd_event {
+  /** The device connected to the bus, USB power present: a host may enumerate it. */
+  PBL_USBD_EVENT_CONNECTED,
+  /** The device left the bus, USB power gone. */
+  PBL_USBD_EVENT_DISCONNECTED,
+  /** The host reset the bus, which also ends a suspend. */
+  PBL_USBD_EVENT_RESET,
+  /** The host suspended the bus: the device must draw no more than the suspend current. */
+  PBL_USBD_EVENT_SUSPENDED,
+  /** The bus is active again, resumed by the host or by the device. */
+  PBL_USBD_EVENT_RESUMED,
+};
 
 /** @brief A function of the device: a class, on interfaces and endpoints of its own. */
 struct pbl_usbd_function {
@@ -93,6 +112,14 @@ struct pbl_usbd_function {
    * applications find it by this GUID.
    */
   const char *winusb_guid;
+  /** Optional. The bus state changed. */
+  void (*event)(enum pbl_usbd_event evt);
+};
+
+/** @brief Something that follows the bus state. */
+struct pbl_usbd_listener {
+  /** The bus state changed. */
+  void (*event)(enum pbl_usbd_event evt);
 };
 
 /**
@@ -120,7 +147,18 @@ struct pbl_usbd_function {
 #define PBL_USBD_FUNCTION(name) (&pbl_usbd_function_##name)
 
 /**
+ * @brief Define a listener of the bus state.
+ *
+ * @param name Name.
+ */
+#define PBL_USBD_LISTENER_DEFINE(name)                                                 \
+  static const struct pbl_usbd_listener pbl_usbd_listener_##name PBL_ITERABLE_SECTION( \
+      const struct pbl_usbd_listener, usbd_listeners, #name)
+
+/**
  * @brief Connect the device to the bus, once: the controller first, if it is not up yet.
+ *
+ * Without USB power, the device connects when it comes, and leaves the bus when it goes.
  *
  * @return 0, or a negative errno: @c -ENOSPC when the functions need more interfaces or endpoints
  * than the device has, @c -ENODEV when the controller failed.

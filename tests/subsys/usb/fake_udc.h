@@ -64,6 +64,14 @@ int pbl_udc_enable(const struct pbl_udc *udc) {
   return 0;
 }
 
+int pbl_udc_disable(const struct pbl_udc *udc) {
+  return 0;
+}
+
+bool pbl_udc_vbus_present(const struct pbl_udc *udc) {
+  return true;
+}
+
 enum pbl_udc_speed pbl_udc_speed(const struct pbl_udc *udc) {
   return s_speed;
 }
