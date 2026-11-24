@@ -6,11 +6,17 @@
 #include <pbl/drivers/mcu.h>
 #include <pbl/drivers/nvmem/sf32lb.h>
 
+#if defined(CONFIG_SOC_SF32LB57)
+#define EFUSE SF32LB57_EFUSE
+#else
+#define EFUSE SF32LB52_EFUSE
+#endif
+
 #define EFUSE_UID_OFFSET 0U
 #define EFUSE_UID_SIZE   16U
 
 static const struct pbl_nvmem_cell s_uid_cell =
-    PBL_NVMEM_CELL(SF32LB52_EFUSE, EFUSE_UID_OFFSET, EFUSE_UID_SIZE);
+    PBL_NVMEM_CELL(EFUSE, EFUSE_UID_OFFSET, EFUSE_UID_SIZE);
 
 int mcu_get_serial(void *buf, size_t *buf_sz) {
   const uint8_t *id = buf;
