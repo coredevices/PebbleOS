@@ -15,4 +15,6 @@ config SOC_STM32H747_M4
     select CPU_CORTEX_M4
     help
       The Cortex-M4 of the STM32H747, CPU2, which runs once the Cortex-M7
-      starts it, and leaves the supply and the clock tree to it.
+      starts it, and leaves the supply and the clock tree to it. It powers
+      off when the Cortex-M7 does, which tells it through a hardware
+      semaphore doorbell.

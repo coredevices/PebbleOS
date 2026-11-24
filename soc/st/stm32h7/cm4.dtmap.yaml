@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h747-m4
+config: SOC_STM32H7_CM4_SHUTDOWN
+class: device
+define: PBL_STM32H7_CM4_DEFINE
+args:
+  - name: true
+  - mbox: shutdown

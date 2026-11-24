@@ -11,8 +11,19 @@ config SOC_STM32H7
     select CPU_HAS_DCACHE if CPU_CORTEX_M7
     select PINCTRL
     select SOC_HAS_IDLE_STATES
-    select SOC_HAS_POWER_OFF if CPU_CORTEX_M7
-    select REMOTEPROC if DT_HAS_ST_STM32H747_M4_ENABLED
+    select SOC_HAS_POWER_OFF
+    select RAMFUNC if CPU_CORTEX_M4
+    select REMOTEPROC if DT_HAS_ST_STM32H747_M4_ENABLED && CPU_CORTEX_M7
     select TIMER_STM32_LPTIM
     help
       ST STM32H7 series, selected by its SoCs.
+
+config SOC_STM32H7_CM4_SHUTDOWN
+    bool "Power-off requests of the Cortex-M7"
+    default y
+    depends on CPU_CORTEX_M4 && DT_HAS_ST_STM32H747_M4_ENABLED
+    select KERNEL_SYS_WORKQ
+    select MBOX
+    help
+      Power this core off when the Cortex-M7 asks, before it powers the
+      system off: Standby needs both cores stopped.

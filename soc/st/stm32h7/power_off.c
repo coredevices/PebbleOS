@@ -7,6 +7,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/section.h>
 #include <pbl/soc/st/pwr.h>
 #include <pbl/util/bits.h>
 
@@ -17,6 +18,59 @@
 
 #define PWR(reg)  (PBL_DT_REG_PWR + STM32H7_PWR_##reg##_OFFSET)
 #define EXTI(reg) (PBL_DT_REG_EXTI + STM32H7_EXTI_##reg##_OFFSET)
+
+// Only the wakeup pins armed, on the Cortex-M7, wake the system: the timers and the
+// other lines of this core that wake it from Stop are masked
+static void prv_mask_wakeups(uint32_t wkup) {
+  pbl_writel(0U, EXTI(CORE_IMR1));
+  pbl_writel(0U, EXTI(CORE_EMR1));
+  pbl_writel(wkup, EXTI(CORE_IMR2));
+  pbl_writel(0U, EXTI(CORE_EMR2));
+  pbl_writel(0U, EXTI(CORE_IMR3));
+  pbl_writel(0U, EXTI(CORE_EMR3));
+  pbl_writel(UINT32_MAX, EXTI(CORE_PR1));
+  pbl_writel(UINT32_MAX, EXTI(CORE_PR2));
+  pbl_writel(UINT32_MAX, EXTI(CORE_PR3));
+}
+
+// A pending interrupt ends WFI at once, masked or not: none may stay enabled or pending, as the
+// timer's would
+static void prv_irqs_off(void) {
+  for (pbl_irq_t irq = 0; irq < CONFIG_NUM_IRQS; irq++) {
+    pbl_irq_disable(irq);
+    pbl_irq_clear_pending(irq);
+  }
+}
+
+#ifdef CONFIG_CPU_CORTEX_M4
+
+// Only the Cortex-M7 powers the system off, and wakes
+int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
+  return -ENOTSUP;
+}
+
+// From RAM: once this core stops, the domain of the Cortex-M7 goes down with the flash, and a
+// wakeup would have nothing to run
+[[noreturn]] static PBL_SECTION_RAM void prv_stop(void) {
+  while (true) {
+    pbl_cpu_idle_deep();
+  }
+}
+
+// Asked by the Cortex-M7: Standby for every domain, as far as this core is concerned, with
+// nothing to wake it
+[[noreturn]] void pbl_soc_power_off(void) {
+  (void)pbl_irq_disable_all();
+  prv_irqs_off();
+
+  prv_mask_wakeups(0U);
+  pbl_modifyl(PWR_CPUCR_RUN_D3, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3,
+              PWR(CORECR));
+
+  prv_stop();
+}
+
+#else
 
 // WKUP1 to WKUP6, as port (A = 0) and pin
 static const struct {
@@ -63,38 +117,23 @@ static void prv_arm_wakeup_pins(void) {
   pbl_writel(PWR_WKUPCR_ALL, PWR(WKUPCR));
 }
 
-// A pending interrupt ends WFI at once, masked or not: none may stay enabled or pending, as the
-// timer's would
-static void prv_irqs_off(void) {
-  for (pbl_irq_t irq = 0; irq < CONFIG_NUM_IRQS; irq++) {
-    pbl_irq_disable(irq);
-    pbl_irq_clear_pending(irq);
-  }
-}
-
-// Standby for every domain, of both cores, with only the wakeup pins armed to wake the
-// Cortex-M7: the timers and other lines that wake it from Stop are masked. Only the backup domain,
-// with the RTC, keeps running; the SoC starts again from reset.
+// Standby for every domain, with only the wakeup pins armed to wake the Cortex-M7. Only
+// the backup domain, with the RTC, keeps running; the SoC starts again from reset.
 [[noreturn]] void pbl_soc_power_off(void) {
   (void)pbl_irq_disable_all();
   prv_irqs_off();
   prv_arm_wakeup_pins();
 
-  pbl_writel(0U, EXTI(C1IMR1));
-  pbl_writel(0U, EXTI(C1EMR1));
-  pbl_writel(EXTI_LINES2_WKUP, EXTI(C1IMR2));
-  pbl_writel(0U, EXTI(C1EMR2));
-  pbl_writel(0U, EXTI(C1IMR3));
-  pbl_writel(0U, EXTI(C1EMR3));
-  pbl_writel(UINT32_MAX, EXTI(C1PR1));
-  pbl_writel(UINT32_MAX, EXTI(C1PR2));
-  pbl_writel(UINT32_MAX, EXTI(C1PR3));
-
-  // A running Cortex-M4 asks for Standby itself, as it idles in Stop
+  prv_mask_wakeups(EXTI_LINES2_WKUP);
   pbl_modifyl(0U, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3 | PWR_CPUCR_CSSF,
               PWR(CPUCR));
+  // A domain goes to Standby only when every core asks for it: a Cortex-M4 that never ran, or
+  // missed the doorbell, did not. One that ran has set the same bits by now.
+  pbl_modifyl(0U, PWR_CPU2CR_PDDS_D1 | PWR_CPU2CR_PDDS_D2 | PWR_CPU2CR_PDDS_D3, PWR(CPU2CR));
 
   while (true) {
     pbl_cpu_idle_deep();
   }
 }
+
+#endif

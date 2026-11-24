@@ -35,6 +35,11 @@
 	};
 };
 
+// Powers off when the Cortex-M7 asks
+&m4 {
+	status = "okay";
+};
+
 &uart8 {
 	pinctrl-0 = <&uart8_default>;
 	pinctrl-names = "default";
