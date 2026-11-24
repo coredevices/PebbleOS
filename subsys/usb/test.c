@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -113,10 +114,10 @@ static struct {
   uint32_t stats[STAT_COUNT];
   uint8_t stats_le[4U * STAT_COUNT];
   uint8_t ctrl[CTRL_LEN];
-  uint8_t loop[LOOP_LEN];
-  uint8_t source[STREAM_LEN];
-  uint8_t sink[STREAM_LEN];
-  uint8_t intr[INT_MPS];
+  uint8_t loop[LOOP_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
+  uint8_t source[STREAM_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
+  uint8_t sink[STREAM_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
+  uint8_t intr[INT_MPS] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
 } s_test;
 
 static uint8_t prv_ep(uint8_t ep) {
