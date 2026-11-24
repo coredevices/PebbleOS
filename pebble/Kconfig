@@ -70,6 +70,18 @@ config KERNEL_SYS_WORKQ
 config KERNEL_SYS_WORKQ_HIGH
     default y
 
+config KERNEL_IDLE_STACK_SIZE
+    default 1024
+
+config KERNEL_MAIN_STACK_SIZE
+    default 4096
+
+config KERNEL_SYS_WORKQ_STACK_SIZE
+    default 4096
+
+config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
+    default 1380
+
 config PP_TRANSPORT_CONSOLE
     default y
     depends on PP && CONSOLE
