@@ -31,6 +31,15 @@ static int prv_cmd_reset(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_reboot();
 }
 
+#ifdef CONFIG_BOOTLOADER_DFU
+static int prv_cmd_dfu(const struct pbl_shell *sh, size_t argc, char **argv) {
+  RebootReason reason = {RebootReasonCode_Serial, 0};
+  reboot_reason_set(&reason);
+  boot_bit_set(BOOT_BIT_FORCE_DFU);
+  pbl_reboot();
+}
+#endif
+
 static int prv_cmd_poweroff(const struct pbl_shell *sh, size_t argc, char **argv) {
   pbl_power_off();
 }
@@ -240,6 +249,10 @@ static int prv_cmd_mpu(const struct pbl_shell *sh, size_t argc, char **argv) {
 PBL_SHELL_SUBCMD_ADD(sub_sys, mpu, nullptr, "Dump the MPU regions", prv_cmd_mpu, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, reset, nullptr, "Reset the system", prv_cmd_reset, 0, 0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, poweroff, nullptr, "Power the system off", prv_cmd_poweroff, 0, 0);
+#ifdef CONFIG_BOOTLOADER_DFU
+PBL_SHELL_SUBCMD_ADD(sub_sys, dfu, nullptr, "Reset into the bootloader USB DFU mode", prv_cmd_dfu,
+                     0, 0);
+#endif
 PBL_SHELL_SUBCMD_ADD(sub_sys, powercut, nullptr, "Cut the power of the system", prv_cmd_powercut, 0,
                      0);
 PBL_SHELL_SUBCMD_ADD(sub_sys, crash, nullptr, "Reset as if the launcher panicked", prv_cmd_crash, 0,
