@@ -64,6 +64,12 @@ config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
 
+config KERNEL_SYS_WORKQ
+    default y
+
+config KERNEL_SYS_WORKQ_HIGH
+    default y
+
 config PP_TRANSPORT_CONSOLE
     default y
     depends on PP && CONSOLE

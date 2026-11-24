@@ -27,6 +27,8 @@ config CHARGER_NPM1300
     default y
     depends on DT_HAS_NORDIC_NPM1300_ENABLED
     select CHARGER_HIGH_LOAD
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
     select MFD
     select MFD_NPM1300
     help

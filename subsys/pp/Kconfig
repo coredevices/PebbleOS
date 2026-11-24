@@ -3,6 +3,7 @@
 
 menuconfig PP
     bool "Pebble protocol"
+    select KERNEL_SYS_WORKQ
     help
       Pebble protocol sessions with phone apps: endpoints, send queues
       and the transports that carry them.
@@ -17,6 +18,8 @@ config PP_TRANSPORT_GATT
     bool "PPoGATT"
     depends on NIMBLE
     select BT_GATT_CLIENT
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Pebble protocol over GATT (PPoGATT), the transport phones use.
 
@@ -31,6 +34,7 @@ config PP_TRANSPORT_CONSOLE
     bool "Console frames"
     depends on CONSOLE
     select CONSOLE_INPUT
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Pebble protocol over serial console frames, for development tools.
 

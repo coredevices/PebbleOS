@@ -10,6 +10,7 @@ config INPUT_ADC_KEYS
     depends on INPUT
     select ADC
     select GPIO
+    select KERNEL_SYS_WORKQ
     help
       Keys on a resistor ladder read through an ADC channel on an
       interrupt that a press or release raises.

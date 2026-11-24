@@ -33,6 +33,7 @@ config DISPLAY_SF32LB57_LCDC
     default y
     depends on DT_HAS_SIFLI_SF32LB57_LCDC_ENABLED
     select CLK
+    select KERNEL_SYS_WORKQ
     select MIPI_DBI
     select PANEL
     select PINCTRL

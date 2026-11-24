@@ -4,6 +4,8 @@
 config ANALYTICS
     bool "Analytics"
     depends on SERVICE_DATA_LOGGING
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Firmware analytics and telemetry.
 
