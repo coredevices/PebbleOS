@@ -124,31 +124,22 @@ config KERNEL_MPU_IN_FAULTS
 
 config KERNEL_TICK_HZ
 	int "Tick rate in Hz"
-	default 1000 if QEMU || SOC_FAMILY_SF32LB || SOC_POSIX
-	default 1024
+	default 1000
 
-config KERNEL_IRQ_PRIO_KERNEL
-	int "NVIC priority of the kernel's interrupts"
-	default 255
-
-config KERNEL_IRQ_PRIO_MAX_SYSCALL
-	int "Highest NVIC priority allowed to call into the kernel"
-	default 191
+config KERNEL_ZERO_LATENCY_IRQS
+	bool "Zero-latency interrupts"
+	help
+	  Reserve the controller level above every other interrupt for lines
+	  bound with PBL_IRQ_ZERO_LATENCY, which the kernel never masks and
+	  which must not call it. The other interrupts then start one level
+	  lower.
 
 config NUM_IRQS
 	int
 	range 1 512
 	help
 	  Number of SoC interrupt lines, i.e. vector table entries past the
-	  core exceptions. Defaulted per SoC in soc/*/Kconfig.defconfig.
-
-config NUM_IRQ_PRIO_BITS
-	int
-	depends on CPU_CORTEX_M
-	range 1 8
-	help
-	  Number of priority bits implemented by the interrupt controller.
-	  Defaulted per SoC in soc/*/Kconfig.defconfig.
+	  core exceptions. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 config KERNEL_NUM_PRIORITIES
 	int "Number of thread priorities"

@@ -6,3 +6,4 @@ expect:
   - 'mag: \d+ samples'
   - 'Sample done'
 roles: [mag]
+integration: [qemu_emery, asterix]

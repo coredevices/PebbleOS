@@ -18,7 +18,7 @@ config UART_NRF5
 
 config UART_NRF5_IRQ_PRIO
     int "Interrupt priority"
-    default 7
+    default 1
     depends on UART_NRF5
     help
       Priority of the port interrupts.
@@ -35,8 +35,24 @@ config UART_SF32LB
 
 config UART_SF32LB_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on UART_SF32LB
+    help
+      Priority of the port interrupts.
+
+config UART_STM32
+    bool "ST STM32 UART Controller"
+    default y
+    depends on DT_HAS_ST_STM32H7_UART_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for the ST STM32H7 USART and UART controllers.
+
+config UART_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UART_STM32
     help
       Priority of the port interrupts.
 
@@ -49,7 +65,7 @@ config UART_QEMU
 
 config UART_QEMU_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on UART_QEMU
     help
       Priority of the port interrupts.

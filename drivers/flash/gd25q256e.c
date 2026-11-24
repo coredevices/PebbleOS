@@ -3,7 +3,7 @@
 
 #include <pbl/drivers/flash/nor.h>
 
-const struct pbl_flash_nor_part pbl_flash_nor_gd25q256e = {
+PBL_FLASH_NOR_PART_DEFINE(pbl_flash_nor_gd25q256e) = {
   .name = "GD25Q256E",
   .id = 0x1940c8U,
   .flags = PBL_FLASH_NOR_F_4B_OPCODES,

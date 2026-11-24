@@ -7,6 +7,8 @@
 #include <pbl/kernel/mpu.h>
 #include <pbl/util/size.h>
 
+#include <devicetree/regs.h>
+
 const struct pbl_mpu_region pbl_soc_mpu_regions[] = {
   {
     .name = "peripherals",
@@ -22,10 +24,10 @@ const struct pbl_mpu_region pbl_soc_mpu_regions[] = {
     .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_NC,
   },
   {
-    // The LCPU reads and writes the last 2 KiB of HPSYS SRAM directly.
+    // The LCPU and ACPU read and write their mailbox buffers directly.
     .name = "lcpu mailbox",
-    .base = 0x2007f800U,
-    .size = 0x00000800U,
+    .base = PBL_DT_REG_IPC_BUFS,
+    .size = PBL_DT_REG_LCPU_IPC + PBL_DT_SIZE_LCPU_IPC - PBL_DT_REG_IPC_BUFS,
     .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_NC,
   },
 };

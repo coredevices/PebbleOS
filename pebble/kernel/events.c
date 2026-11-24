@@ -334,11 +334,6 @@ static void *prv_buffer_slot(PebbleEvent *event) {
     case PEBBLE_REMINDER_EVENT:
       return &event->reminder.reminder_id;
 
-    case PEBBLE_BLE_GATT_CLIENT_EVENT:
-      if (event->bluetooth.le.gatt_client.subtype == PebbleBLEGATTClientEventTypeServiceChange) {
-        return &event->bluetooth.le.gatt_client_service.info;
-      }
-      break;
 #ifdef CONFIG_MFG
     case PEBBLE_HRM_EVENT:
       if (event->hrm.event_type == HRMEvent_CTR) {

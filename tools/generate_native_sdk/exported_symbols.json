@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "116",
+  "revision" : "117",
   "version" : "2.0",
   "files": [
     "pebble/applib/status.h",
@@ -43,6 +43,7 @@
     "pebble/applib/moddable/moddable.h",
     "pebble/applib/notification_service.h",
     "pebble/applib/platform.h",
+    "pebble/applib/pressure_service.h",
     "pebble/applib/tick_timer_service.h",
     "pebble/applib/touch_service.h",
     "include/pbl/services/touch/touch_event.h",
@@ -539,6 +540,16 @@
                   "type": "function",
                   "name": "notification_service_peek_count",
                   "addedRevision": "115"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "PressureService",
+              "exports": [
+                {
+                  "type": "function",
+                  "name": "pressure_service_peek",
+                  "addedRevision": "117"
                 }
               ]
             }, {

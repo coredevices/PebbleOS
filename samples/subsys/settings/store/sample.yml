@@ -12,3 +12,4 @@ expect:
   - 'settings: level exists after deleting it: no'
   - 'Sample done'
 roles: [flash]
+integration: [qemu_emery]

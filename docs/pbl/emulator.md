@@ -68,6 +68,7 @@ without one. Each kind of data is a subcommand:
 ```shell
 pbl emulator feed weather                         # a forecast for a few built-in cities
 pbl emulator feed weather Tokyo Sydney --seed 3   # a subset; the first is the current location
+pbl emulator feed weather --minor 5               # records as older phone apps write them
 pbl emulator feed weather --clear                 # remove every location
 pbl emulator feed music                           # a player and playlist; keeps serving until Ctrl-C
 pbl emulator feed music --title "Demo" --paused   # a single track of your own

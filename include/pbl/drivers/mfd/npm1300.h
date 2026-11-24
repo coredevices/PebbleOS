@@ -8,6 +8,7 @@
 #include <pbl/device.h>
 #include <pbl/drivers/i2c.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/util/misc.h>
 
 /**
@@ -20,6 +21,9 @@
  * its init. Each cell is a child device in its own subsystem: the charger
  * (@ref drivers_charger), the GPIO port (@ref drivers_gpio_npm1300) and one regulator per
  * rail (@ref drivers_regulator_npm1300).
+ *
+ * As the system power controller, the core cuts the power of the system for pbl_power_cut() by
+ * entering ship mode, which a button press or VBUS ends. The cut is refused while VBUS is present.
  * @{
  */
 
@@ -37,10 +41,14 @@ struct pbl_npm1300 {
   struct pbl_i2c_dev i2c;
   /** Runtime state. */
   struct pbl_npm1300_state *state;
+  /** Whether it cuts the power of the system. */
+  bool system_power_controller;
 };
 
 /** @cond INTERNAL_HIDDEN */
 int pbl_npm1300_init(const struct pbl_device *dev);
+int pbl_npm1300_power_cut_check(void *user_data);
+void pbl_npm1300_power_cut(enum pbl_sys_off_mode mode, void *user_data);
 /** @endcond */
 
 /**
@@ -49,16 +57,21 @@ int pbl_npm1300_init(const struct pbl_device *dev);
  * @param sym Symbol of the core.
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
+ * @param _system_power_controller Whether it cuts the power of the system.
  */
-#define PBL_NPM1300_DEFINE(sym, _bus, _addr)                                \
-  PBL_DEVICE_STATE_DEFINE(sym);                                             \
-  static struct pbl_npm1300_state sym##_npm1300_state;                      \
-  const struct pbl_npm1300 sym = {                                          \
-    .dev = PBL_DEVICE_INIT(sym, "npm1300", pbl_npm1300_init, &(_bus)->dev), \
-    .i2c = PBL_I2C_DEV(_bus, _addr),                                        \
-    .state = &sym##_npm1300_state,                                          \
-  };                                                                        \
-  PBL_DEVICE_REGISTER(sym, &sym.dev)
+#define PBL_NPM1300_DEFINE(sym, _bus, _addr, _system_power_controller)                     \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                            \
+  static struct pbl_npm1300_state sym##_npm1300_state;                                     \
+  const struct pbl_npm1300 sym = {                                                         \
+    .dev = PBL_DEVICE_INIT(sym, "npm1300", pbl_npm1300_init, &(_bus)->dev),                \
+    .i2c = PBL_I2C_DEV(_bus, _addr),                                                       \
+    .state = &sym##_npm1300_state,                                                         \
+    .system_power_controller = (_system_power_controller),                                 \
+  };                                                                                       \
+  PBL_DEVICE_REGISTER(sym, &sym.dev);                                                      \
+  PBL_SYS_OFF_POWER_CUT_HANDLER_DEFINE(sym##_power_cut, PBL_SYS_OFF_PRIO_DEFAULT,          \
+                                       pbl_npm1300_power_cut_check, pbl_npm1300_power_cut, \
+                                       (void *)&sym)
 
 /**
  * @brief Get the core a cell belongs to.

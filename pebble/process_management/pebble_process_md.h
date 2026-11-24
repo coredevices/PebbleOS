@@ -236,6 +236,7 @@ typedef enum {
   PLATFORM_FEATURE_TOUCH = PBL_BIT(5),
   PLATFORM_FEATURE_RGB_BACKLIGHT = PBL_BIT(6),
   PLATFORM_FEATURE_SPEAKER = PBL_BIT(7),
+  PLATFORM_FEATURE_BAROMETER = PBL_BIT(8),
 } PebblePlatformFeature;
 
 //! The size of the framebuffer an app draws to: that of the display it was built for when ours
@@ -245,6 +246,10 @@ GSize process_metadata_get_app_framebuffer_size(const PebbleProcessMd *md);
 //! What the platform the process was built for is like, as its binary says.
 //! @return NULL if the binary does not say: system apps, and apps of SDKs that predate the record
 const PebblePlatformInfo *process_metadata_get_platform_info(const PebbleProcessMd *md);
+
+//! Whether resources of this version are ones the process was built with. They are the one pack
+//! it was built with, or any pack of its set if it has one.
+bool process_metadata_resources_match(const PebbleProcessMd *md, const ResourceVersion *version);
 
 //! Whether a watch with these features, a bitwise OR of PebblePlatformFeature, has all a process
 //! cannot run without. Only a flexible binary says what it requires.

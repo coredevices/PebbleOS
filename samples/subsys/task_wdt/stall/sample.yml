@@ -10,3 +10,4 @@ expect:
   - 'task_wdt: recovered'
   - 'Sample done'
 timeout: 15
+integration: [qemu_emery]

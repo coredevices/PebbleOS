@@ -10,7 +10,6 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
-#include <pbl/pp/transports/qemu.h>
 #include <pbl/services/bluetooth/battery_level.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
@@ -20,7 +19,7 @@
 #include <pbl/services/bluetooth/pairability.h>
 
 #include <comm/ble/gap_le.h>
-#include <comm/ble/gatt_client_subscriptions.h>
+#include <comm/qemu/pp_transport.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -83,8 +82,8 @@ static void prv_comm_start(void) {
     bt_battery_level_start();
 #endif
     bt_pairability_init();
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-    pbl_pp_qemu_start();
+#ifdef CONFIG_QEMU_SERIAL
+    qemu_pp_start();
 #endif
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
@@ -99,8 +98,8 @@ static void prv_comm_stop(void) {
   bt_battery_level_stop();
 #endif
   gap_le_deinit();
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-  pbl_pp_qemu_stop();
+#ifdef CONFIG_QEMU_SERIAL
+  qemu_pp_stop();
 #endif
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
@@ -213,8 +212,6 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 void bt_ctl_init(void) {
   s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
   s_comm_initialized = true;
-
-  gatt_client_subscription_boot();
 }
 
 static void prv_bt_ctl_reset_bluetooth_callback(void *context) {

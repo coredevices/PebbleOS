@@ -1,11 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-# Blocks the early init and the power-off path touch before there are devices
+# Blocks the early init and the power-off path touch before there are devices,
+# and the memory shared with the LCPU and ACPU, which the MPU maps
 config: SOC_SF32LB57
 labels:
   - hpsys_aon
   - hpsys_rcc
+  - ipc_bufs
+  - lcpu_ipc
   - lpsys_aon
   - lpsys_rcc
   - pmuc

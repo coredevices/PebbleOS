@@ -3,8 +3,9 @@
 
 mainmenu "Pebble Firmware Configuration"
 
-# Defaults for options of PebbleOS that the firmware wants wherever they are
-# available, which a prj.conf cannot express.
+# Defaults for options of PebbleOS that depend on the build type (release,
+# MFG), on what the architecture offers or on the devicetree, which a .conf
+# file cannot express. Anything else belongs in prj*.conf or boards/*.conf.
 
 choice FIRMWARE_AREA
     default FIRMWARE_AREA_RECOVERY if RECOVERY_FW && !MFG
@@ -22,10 +23,6 @@ config FW_FLASH_SIZE
     default $(dt_partition_size,firmware-slot-1) if PBLBOOT && FIRMWARE_SLOT = 1
     default $(dt_partition_size,firmware-slot-0) if PBLBOOT
 
-config BT_REPEAT_PAIRING_ALWAYS
-    default y if RECOVERY_FW
-    depends on BT
-
 config CONSOLE
     default y if !RELEASE || MFG
 
@@ -37,19 +34,17 @@ config COREDUMP
     default y
     depends on ARCH_HAS_COREDUMP
 
-config CPU_IDLE
-    default y
-
 config DEBUGGER_AWARE
     default y if !RELEASE
     depends on ARCH_HAS_DEBUGGER_DETECT
 
+# MFG writes the flash security registers from the shell.
 config FLASH_SHELL
     default y if MFG
     depends on FLASH && SHELL
 
 config FLASH_SHELL_TEST
-    default y if RECOVERY_FW
+    default y if MFG
     depends on FLASH_SHELL
 
 # Apps are built soft-float and call into the firmware.
@@ -57,13 +52,9 @@ config FP_SOFTFP_ABI
     default y
     depends on CPU_HAS_FPU
 
-config FS_PFS_SHELL_LITTER
-    default !RECOVERY_FW && !RELEASE
-    depends on FS_PFS && SHELL
-
 config GH3X2X_ALGO
-    default !RECOVERY_FW || MFG
-    depends on HRM_GH3X2X && BOARD_OBELIX
+    default n if RECOVERY_FW && !MFG
+    depends on HRM_GH3X2X
 
 config HRM_GH3X2X_FACTORY_TEST
     default y if MFG
@@ -73,29 +64,21 @@ config KERNEL_STACK_GUARD
     default y
     depends on ARCH_HAS_STACK_GUARD
 
-config LOG_HASHED
+config PP_TRANSPORT_CONSOLE
     default y
-    depends on LOG && !QEMU
+    depends on PP && CONSOLE
 
-config PP_TRANSPORT_GATT_SYSTEM_ONLY
-    default y if RECOVERY_FW
-    depends on PP_TRANSPORT_GATT
+config PP_TRANSPORT_GATT
+    default y
+    depends on PP && BT
 
 config SHELL
     default y
     depends on CONSOLE
 
-config TEMP_SHELL
-    default n if RECOVERY_FW
-    depends on TEMP && SHELL
-
 config USERSPACE
     default y
     depends on ARCH_HAS_USERSPACE
-
-config SAMSA
-    default y
-    depends on SOC_POSIX && !RECOVERY_FW
 
 # The SDK platform, and what follows from it.
 rsource "Kconfig.platform"
@@ -193,7 +176,6 @@ config MODDABLE_XS
 
 config MMAP_RESOURCES
     bool "Memory-mapped (zero-copy) resource reads"
-    default y if SOC_SF32LB52
     help
       Serve read-only system resources as direct pointers into
       memory-mapped flash instead of copying them out.
@@ -218,7 +200,6 @@ menu "Debug & instrumentation"
 
 config QEMU_SERIAL
     bool "QEMU serial protocol"
-    default y if QEMU || SOC_POSIX
     help
       The Pebble protocol and the emulator's controls (battery, taps,
       time format, ...) over the board's QEMU_UART, framed as libpebble2's

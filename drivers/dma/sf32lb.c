@@ -16,11 +16,6 @@
 
 static_assert(PBL_DMA_SF32LB_NUM_CHANNELS == SF32LB52_DMAC_NUM_CHANNELS);
 
-// The MPI (XIP flash) code bus window, which the DMAC reaches through the system bus instead
-#define MPI_CBUS_START  0x10000000U
-#define MPI_CBUS_END    0x20000000U
-#define MPI_CBUS_2_SBUS 0x50000000U
-
 static const struct pbl_dma_sf32lb *prv_dmac(const struct pbl_dma_controller *ctrl) {
   return PBL_CONTAINER_OF(ctrl, const struct pbl_dma_sf32lb, ctrl);
 }
@@ -34,12 +29,8 @@ static inline void prv_putreg(const struct pbl_dma_controller *ctrl, uint32_t of
   pbl_writel(value, prv_dmac(ctrl)->base + offset);
 }
 
-static uint32_t prv_bus_addr(uintptr_t addr) {
-  if (addr >= MPI_CBUS_START && addr < MPI_CBUS_END) {
-    return addr + MPI_CBUS_2_SBUS;
-  }
-
-  return addr;
+static uint32_t prv_bus_addr(const struct pbl_dma_controller *ctrl, uintptr_t addr) {
+  return (uint32_t)pbl_dma_window_addr(&prv_dmac(ctrl)->window, addr);
 }
 
 static int prv_slave_config(const struct pbl_dma_controller *ctrl, const struct pbl_dma_chan *chan,
@@ -98,7 +89,7 @@ static int prv_start(const struct pbl_dma_controller *ctrl, uint8_t channel, voi
   prv_putreg(ctrl, SF32LB52_DMAC_CCR_OFFSET(channel), ccr);
   prv_putreg(ctrl, SF32LB52_DMAC_CNDTR_OFFSET(channel), len / width);
   prv_putreg(ctrl, SF32LB52_DMAC_CPAR_OFFSET(channel), par);
-  prv_putreg(ctrl, SF32LB52_DMAC_CM0AR_OFFSET(channel), prv_bus_addr((uintptr_t)buf));
+  prv_putreg(ctrl, SF32LB52_DMAC_CM0AR_OFFSET(channel), prv_bus_addr(ctrl, (uintptr_t)buf));
   prv_putreg(ctrl, SF32LB52_DMAC_IFCR_OFFSET, DMAC_ISR_ALL(channel));
   prv_putreg(ctrl, SF32LB52_DMAC_CCR_OFFSET(channel), ccr | DMAC_CCR_EN);
 

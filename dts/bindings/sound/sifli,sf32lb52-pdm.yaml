@@ -53,13 +53,14 @@ unevaluatedProperties: false
 
 examples:
   - |
+    #include <dt-bindings/dma/sifli,sf32lb52-dmac.h>
     audio-controller@5009a000 {
         compatible = "sifli,sf32lb52-pdm";
         reg = <0x5009a000 0x1000>;
         interrupts = <82>;
         clocks = <&hpsys_rcc 21>;
         resets = <&hpsys_rcc 21>;
-        dmas = <&dmac1 4 36 0>;
+        dmas = <&dmac1 4 SF32LB52_DMAC1_REQ_PDM1_L SF32LB52_DMA_PRIO_LOW>;
         dma-names = "rx";
         #sound-dai-cells = <0>;
     };

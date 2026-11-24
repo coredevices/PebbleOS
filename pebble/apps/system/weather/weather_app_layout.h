@@ -74,6 +74,9 @@ typedef struct WeatherAppLayout {
     WeatherType outgoing_weather_type;
     WeatherType incoming_weather_type;
     WeatherType tomorrow_exit_weather_type; // weather type of tomorrow icon while it exits/enters
+    // Y in root_layer coordinates where the new day's sidebar color meets the old one. It moves
+    // with the incoming icon, and the new color fills the bar as the icon lands.
+    int16_t sidebar_edge_y;
     bool animate_down;
     bool tomorrow_reparented; // true when tomorrow_layer lives in root_layer during animation
     bool tomorrow_incoming;   // true when tomorrow_layer is animating IN during DOWN animation
@@ -128,33 +131,10 @@ void weather_app_layout_deinit(WeatherAppLayout *layout);
 void weather_app_layout_animate(WeatherAppLayout *layout, const WeatherLocationForecast *new_today,
                                 const WeatherLocationForecast *new_next, bool animate_down);
 
-#if PBL_ROUND
-// The weather report's UV bar, as a reusable component: glass-concentric arc ends, sun glyph,
-// "UV INDEX", ten tally squares and the big value. The sunset card (expanded_view.c) draws the
-// SAME bar, so this is the single implementation — do not clone it.
-//
-// `gc` is the glass centre IN THE CALLER'S coordinate space and every element is positioned
-// relative to it, so the bar lands identically whether the caller draws into the report's inset
-// content layer or the card's full-screen canvas. `by` is the bar's top row in that same space.
-// `uv_value` drives the fill/severity colour; `uv_text` is drawn verbatim as the big number
-// (callers may pass a string the integer parse would not reproduce).
-//
-// The bar's WIDTH is the glass chord at its own rows, so it narrows as it moves down: keep the
-// content rows above ~y200 or the fixed-width contents overrun the arc ends.
-// Two sizes. Full = the weather report's bar. Compact = a narrower bar for the sunset card,
-// which hangs BELOW the card's centred content group where the glass has far less width: same
-// glass-concentric arc ends and the same large LECO value, but tighter tally squares and a
-// pulled-in value box so all ten squares still fit.
-typedef enum {
-  WeatherUvBarFull = 0,
-  WeatherUvBarCompact,
-} WeatherUvBarSize;
+// "16km/h": `mph` in the user's wind unit, "--" when unknown. `owner` scopes the i18n lookups.
+void weather_app_layout_format_wind(int mph, const void *owner, char *buf, size_t buf_size);
 
-// `label` is the caption drawn beside the sun glyph — the report says "UV INDEX", the
-// sunset card says "CURRENT UV" (its value is the current hour's, not the day's).
-void weather_app_layout_draw_uv_bar(GContext *ctx, GPoint gc, int by, int uv_value,
-                                    const char *uv_text, WeatherUvBarSize size, const char *label);
-
-// Height in rows of each bar size, so callers can budget vertical space without guessing.
-int weather_app_layout_uv_bar_height(WeatherUvBarSize size);
-#endif
+// The UV reading as `text`, "UV 4" with the label wherever its translation puts it, and as the
+// bare `value`, "4". "UV --" and "--" when `uv` is negative. `owner` scopes the i18n lookups.
+void weather_app_layout_format_uv(int uv, const void *owner, char *text, size_t text_size,
+                                  char *value, size_t value_size);

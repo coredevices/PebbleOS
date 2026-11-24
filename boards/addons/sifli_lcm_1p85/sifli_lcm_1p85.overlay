@@ -3,15 +3,18 @@
 
 // SiFli 1.85" 390x450 AMOLED module: a CO5300 panel and an FT6146 touchscreen
 
-#include <dt-bindings/connector/sifli-lcd-qspi.h>
+#include <dt-bindings/connector/sifli,lcd-qspi-connector.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 
 &lcd_qspi_lcdc {
+	#address-cells = <1>;
+	#size-cells = <0>;
 	status = "okay";
 
-	lcd_qspi_panel: panel {
+	lcd_qspi_panel: panel@0 {
 		compatible = "chipone,co5300";
+		reg = <0>;
 		reset-gpios = <&lcd_qspi_connector SIFLI_LCD_QSPI_RESET GPIO_ACTIVE_LOW>;
 		te-gpios = <&lcd_qspi_connector SIFLI_LCD_QSPI_TE GPIO_ACTIVE_HIGH>;
 		spi-max-frequency = <48000000>;

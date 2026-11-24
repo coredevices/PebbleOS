@@ -5,3 +5,4 @@ expect:
   - 'worker \d: ready'
   - 'main: 3 past the barrier, 0 of them before the last was ready'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

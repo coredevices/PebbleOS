@@ -3,40 +3,16 @@
 
 #pragma once
 
-#include <pbl/bluetooth/gatt_discovery.h>
 #include <pbl/bluetooth/hci_types.h>
 #include <pbl/bluetooth/types.h>
+#include <pbl/kernel/compiler.h>
 
 #include <comm/ble/gap_le_connection.h>
 
 /**
  * @defgroup bluetooth_gatt GATT
  * @ingroup bluetooth
- * @brief GATT client operations, GATT events and the Service Changed characteristic.
- *
- * Reads and writes complete asynchronously: the result is delivered to
- * pbl_bt_cb_gatt_client_operations_handle_response() on the NimBLE host task, together with the
- * context passed when issuing the operation.
- *
- * @code{.c}
- * enum pbl_bt_errno err = pbl_bt_gatt_read(connection, value_handle, my_ctx);
- * if (err != PBL_BT_ERRNO_OK) {
- *   // Not issued, no response will follow.
- * }
- *
- * static const uint8_t enable[] = { 0x01, 0x00 };
- * pbl_bt_gatt_write(connection, enable, sizeof(enable), cccd_handle, my_ctx);
- *
- * void pbl_bt_cb_gatt_client_operations_handle_response(
- *     struct pbl_bt_gatt_client_op_response_hdr *event) {
- *   if (event->type == PBL_BT_GATT_CLIENT_OP_RESPONSE_READ &&
- *       event->error_code == PBL_BT_GATT_ERROR_SUCCESS) {
- *     const struct pbl_bt_gatt_client_op_read_response *rsp = (const void *)event;
- *     // rsp->value is only valid during the callback.
- *     prv_handle_value(event->context, rsp->value, rsp->value_length);
- *   }
- * }
- * @endcode
+ * @brief GATT events and the Service Changed characteristic.
  *
  * The events identify the peer by struct pbl_bt_addr: the address type is not available.
  * @{
@@ -63,20 +39,6 @@ struct pbl_bt_gatt_device_connection_event {
 struct pbl_bt_gatt_device_disconnection_event {
   /** Address of the peer. */
   struct pbl_bt_addr dev_address;
-};
-
-/** @brief A notification or indication was received from a peer's GATT server. */
-struct pbl_bt_gatt_server_notif_indic_event {
-  /** Address of the peer. */
-  struct pbl_bt_addr dev_address;
-  /** Handle of the attribute. */
-  uint16_t attr_handle;
-  /** Length of @ref attr_val in bytes. */
-  uint16_t attr_val_len;
-  /** Attribute value. Only valid during the callback. */
-  uint8_t *attr_val;
-  /** Unused by the NimBLE backend. */
-  void *context;
 };
 
 /** @brief The ATT MTU of a connection changed. */
@@ -119,41 +81,12 @@ struct pbl_bt_gatt_server_subscribe_event {
   bool is_subscribing;
 };
 
-/** @brief Type of a GATT client operation response. */
-enum pbl_bt_gatt_client_op_response_type {
-  /** Response to pbl_bt_gatt_read(), a struct pbl_bt_gatt_client_op_read_response. */
-  PBL_BT_GATT_CLIENT_OP_RESPONSE_READ,
-  /** Response to pbl_bt_gatt_write(), a struct pbl_bt_gatt_client_op_write_response. */
-  PBL_BT_GATT_CLIENT_OP_RESPONSE_WRITE,
-};
-
-/** @brief Common header of GATT client operation responses. */
-struct pbl_bt_gatt_client_op_response_hdr {
-  /** Response type, tells which response structure embeds this header. */
-  enum pbl_bt_gatt_client_op_response_type type;
-  /**
-   * Result. ATT errors are reported as is; other failures as PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN
-   * plus the backend error code.
-   */
-  enum pbl_bt_gatt_error error_code;
-  /** Context passed to pbl_bt_gatt_read() or pbl_bt_gatt_write(). */
-  void *context;
-};
-
-/** @brief Response to pbl_bt_gatt_read(). */
-struct pbl_bt_gatt_client_op_read_response {
-  /** Common header. */
-  struct pbl_bt_gatt_client_op_response_hdr hdr;
-  /** Length of @ref value in bytes. */
-  uint16_t value_length;
-  /** Value read. Only valid during the callback. */
-  uint8_t *value;
-};
-
-/** @brief Response to pbl_bt_gatt_write(). */
-struct pbl_bt_gatt_client_op_write_response {
-  /** Common header. */
-  struct pbl_bt_gatt_client_op_response_hdr hdr;
+/** @brief Inclusive range of ATT handles. */
+struct PBL_PACKED pbl_bt_att_handle_range {
+  /** First handle. */
+  uint16_t start;
+  /** Last handle. */
+  uint16_t end;
 };
 
 /**
@@ -176,55 +109,6 @@ void pbl_bt_gatt_respond_read_subscription(uint32_t transaction_id, uint16_t res
  */
 void pbl_bt_gatt_send_changed_indication(const struct pbl_bt_device_internal *device,
                                          const struct pbl_bt_att_handle_range *data);
-
-/**
- * @brief Write a characteristic value without response.
- *
- * @param connection The connection.
- * @param value Value to write. Copied during the call.
- * @param value_length Length of @p value in bytes, at most ATT MTU - 3.
- * @param att_handle Handle of the attribute.
- * @retval PBL_BT_ERRNO_OK The write was queued.
- * @retval PBL_BT_ERRNO_INVALID_STATE @p connection is not connected.
- * @retval PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES Out of buffers. Transient: retry after a short delay.
- * @return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN plus the backend error code on other failures.
- */
-enum pbl_bt_errno pbl_bt_gatt_write_without_response(GAPLEConnection *connection,
-                                                     const uint8_t *value, size_t value_length,
-                                                     uint16_t att_handle);
-
-/**
- * @brief Write an attribute value.
- *
- * The result is reported through pbl_bt_cb_gatt_client_operations_handle_response().
- *
- * @param connection The connection.
- * @param value Value to write. Copied during the call.
- * @param value_length Length of @p value in bytes.
- * @param att_handle Handle of the attribute.
- * @param context Passed back in the response.
- * @retval PBL_BT_ERRNO_OK The write was issued.
- * @retval PBL_BT_ERRNO_INVALID_STATE @p connection is not connected.
- * @return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN plus the backend error code on other failures. No
- *         response follows a failure.
- */
-enum pbl_bt_errno pbl_bt_gatt_write(GAPLEConnection *connection, const uint8_t *value,
-                                    size_t value_length, uint16_t att_handle, void *context);
-
-/**
- * @brief Read an attribute value.
- *
- * The value is reported through pbl_bt_cb_gatt_client_operations_handle_response().
- *
- * @param connection The connection.
- * @param att_handle Handle of the attribute.
- * @param context Passed back in the response.
- * @retval PBL_BT_ERRNO_OK The read was issued.
- * @retval PBL_BT_ERRNO_INVALID_STATE @p connection is not connected.
- * @return PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN plus the backend error code on other failures. No
- *         response follows a failure.
- */
-enum pbl_bt_errno pbl_bt_gatt_read(GAPLEConnection *connection, uint16_t att_handle, void *context);
 
 /**
  * @brief Called when a GATT connection is established. Not invoked by the NimBLE backend.
@@ -252,24 +136,6 @@ extern void pbl_bt_cb_gatt_handle_mtu_update(
     const struct pbl_bt_gatt_device_mtu_update_event *event);
 
 /**
- * @brief Called when a notification is received.
- *
- * @param event The notification.
- */
-extern void pbl_bt_cb_gatt_handle_notification(
-    const struct pbl_bt_gatt_server_notif_indic_event *event);
-
-/**
- * @brief Called when an indication is received.
- *
- * The backend confirms the indication on reception, before this is called.
- *
- * @param event The indication.
- */
-extern void pbl_bt_cb_gatt_handle_indication(
-    const struct pbl_bt_gatt_server_notif_indic_event *event);
-
-/**
  * @brief Called when a peer confirmed a Service Changed indication. Not invoked by NimBLE.
  *
  * @param event The confirmation.
@@ -294,22 +160,5 @@ extern void pbl_bt_cb_gatt_service_changed_server_subscribe(
  */
 extern void pbl_bt_cb_gatt_service_changed_server_read_subscription(
     const struct pbl_bt_gatt_server_read_subscription_event *event);
-
-/**
- * @brief Called after subscribing to a peer's Service Changed indications.
- *
- * @param connection The connection.
- * @param handle Value handle of the peer's Service Changed characteristic.
- */
-extern void pbl_bt_cb_gatt_client_discovery_handle_service_changed(GAPLEConnection *connection,
-                                                                   uint16_t handle);
-
-/**
- * @brief Called with the result of pbl_bt_gatt_read() or pbl_bt_gatt_write().
- *
- * @param event Response header. Cast to the structure given by its @c type.
- */
-extern void pbl_bt_cb_gatt_client_operations_handle_response(
-    struct pbl_bt_gatt_client_op_response_hdr *event);
 
 /** @} */

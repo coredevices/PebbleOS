@@ -29,6 +29,7 @@ for the machine, a board tree for each.
 | `boards/<board>/<board>.dtsi` | What the revisions of a board share |
 | `boards/<board>/<board>-pinctrl.dtsi` | The pin control states of the board, on SoCs with a pin controller |
 | `boards/<board>/<board>_<revision>.dts` | A revision, e.g. `obelix_pvt.dts`, or `<board>.dts` for boards with one |
+| `boards/<board>/<board>_<core>.dts` | A core of a board with several, e.g. `stm32h747i_disco_m4.dts`, or `<board>_<revision>_<core>.dts` for one of a revision; a board variant of a core may have `<board>_<core>_<variant>.dts`, and one of a board without cores `<board>_<variant>.dts` |
 | `include/dt-bindings/` | Constants the trees use, such as clock IDs and GPIO flags |
 | `dts/bindings/` | Bindings that upstream does not have |
 
@@ -180,6 +181,12 @@ other way around:
   the instances are generated, and an ID the driver does not know fails the
   build.
 
+  A header is named after the compatible it serves, and carries the license
+  of the bindings, `(GPL-2.0-only OR BSD-2-Clause)`, with `_DT_BINDINGS_*`
+  include guards, as upstream's do. The generic ones, as the GPIO flags, are
+  our own copies of the upstream values rather than the upstream headers,
+  which C code includes too and most of which are GPL-2.0-only.
+
   ```dts
   #include <dt-bindings/clock/vendor,soc-rcc.h>
 
@@ -189,7 +196,8 @@ other way around:
   ```
 - **Pins.** On SoCs with a pin controller, pins are pin control states, with
   the generic pin configuration properties (`input-enable`, `bias-pull-up`,
-  `drive-strength`, `output-low`). Peripherals that select their own pins,
+  `drive-strength`, `output-low`). A group names its pins as its binding does:
+  `pins` and `function` strings, or `pinmux` cells packing pin and function. Peripherals that select their own pins,
   as on the nRF52, take them as GPIO properties named after the signal
   (`scl-gpios`, `sck-gpios`, `tx-gpios`).
 - **References.** A device that uses another one points to it, with the
@@ -329,7 +337,9 @@ class header, as `SPEAKER`:
 | `charger` | `charger` | `CHARGER` |
 
 A board gives each role it has a device in `boards/<board>/roles.yml`, and
-a revision changes them in `roles.<revision>.yml`. A device is the label of
+a revision changes them in `roles.<revision>.yml`, then a core in
+`roles.<core>.yml`, a board variant in `roles.<variant>.yml` and a board
+variant of a core in `roles.<core>_<variant>.yml`. A device is the label of
 a node, or a symbol for a device defined in C, with the header declaring it:
 
 ```yaml
@@ -342,8 +352,10 @@ accel:
 
 The add-ons of the board add theirs in their `roles.yml`; see
 [](#devicetree-addons). An application changes them in its `roles.yml`, then in
-`boards/<board>.roles.yml`: a role there replaces the board's, and `null`
-removes it. A class object of the node is taken, so a node implementing
+`boards/<board>.roles.yml`, then `boards/<board>_<core>.roles.yml`,
+`boards/<board>_<variant>.roles.yml` and
+`boards/<board>_<core>_<variant>.roles.yml`: a role
+there replaces the board's, and `null` removes it. A class object of the node is taken, so a node implementing
 several classes, as a display with its backlight, can have several roles.
 
 `dtmap.py` writes `devicetree/roles.c`, defining each role whose symbol is
@@ -499,7 +511,7 @@ args:
 | `provides` | Templates of references to this driver's devices, when they differ from the class's |
 | `header` | Driver headers the `provides` templates need, e.g. for the modes of the parts a panel driver supports |
 | `ids` | How the abstract IDs of a binding map to the numbers of the driver; see below |
-| `pinctrl` | For pin controllers: how pins and their configuration become C |
+| `pinctrl` | For pin controllers: how pins and their configuration become C. `pin` formats each of `pins` with `{pin}` and `{function}`, `pinmux` each cell of `pinmux` with `{value}`; `flags` and `values` add the C of the configuration properties |
 | `children` | For devices made of named children, such as the regulators of a PMIC |
 | `drives` | Compatibles of the child a node must have for the driver to bind to it, for a controller with a driver per kind of memory it can drive |
 
@@ -529,6 +541,7 @@ An argument takes its value from one place:
 | `parent: <kind>` | What the parent provides, as the bus of a device on it |
 | `self: <kind>` | What a node provides, with `remote`, the device at the other end of a port |
 | `phandle: <property>` | What the node this phandle property points to provides, as the battery of `monitored-battery` |
+| `dma-window: true` | The one entry of the `dma-ranges` of the node's bus that moves addresses, as `PBL_DMA_WINDOW(cpu, dma, size)`: a memory window a bus master reaches at another address than the CPU, absent without one |
 | `consumers: <property>` | One more than the highest specifier cell, `index` (0 by default), that the enabled nodes give this one in that property, absent without any: how many channels of a mailbox are used, from `mboxes` |
 | `list: [<compatible>, ...]` | One `item` per enabled child of the node reached through children of these compatibles, or of the node itself for `[]`: a template of the child's `reg` cells and name, or a `define` with `args` read from the child, as the keys of `gpio-keys` |
 | `id: true` | For `children`, the ID of the child |
@@ -589,8 +602,9 @@ description gives, never an index into a table in the driver:
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_I2C_SOC_IRQ_PRIO, pbl_i2c_soc_irq_handler, &sym##_inst, 0)
 ```
 
-The macro stays usable from C, for boards without a tree. The driver includes
-its instances at its end, and defaults on from the tree:
+The macro sits in the driver's public header, with the ops, init and interrupt
+handler it names, so it stays usable from C, for boards without a tree. The
+driver includes its instances at its end, and defaults on from the tree:
 
 ```c
 #include PBL_DT_INSTANCES(vendor_soc_i2c)
@@ -680,6 +694,22 @@ layout has every partition. The image is linked at `CONFIG_FLASH_OFFSET`,
 for `CONFIG_FW_FLASH_SIZE` bytes, which default to the `code` partition. An
 application that runs from another partition sets them from its label.
 
+Kconfig reads other nodes by label the same way, so that the common symbols
+code can also set by hand default to the tree when it has the node:
+
+- `$(dt_has_nodelabel,LABEL)`: `y` if a node has the label;
+- `$(dt_nodelabel_reg_addr,LABEL[,INDEX])` and
+  `$(dt_nodelabel_reg_size,LABEL[,INDEX])`: address and size of its `reg`
+  entry, the first one by default, the address translated through the `ranges`
+  above;
+- `$(dt_memory_free_addr,LABEL)` and `$(dt_memory_free_size,LABEL)`: the
+  largest span of a memory node no enabled `/reserved-memory` region covers.
+
+`CONFIG_SRAM_BASE` and `CONFIG_SRAM_SIZE`, the RAM the firmware lays out,
+default to the free part of the `sram0` memory node. RAM set aside for
+another use, as retained RAM or memory shared with another core, is a
+`/reserved-memory` region, which its users name by label.
+
 (devicetree-regs)=
 
 (devicetree-idle-states)=
@@ -763,11 +793,39 @@ config: SOC_SF32LB52
 labels: [hpsys_rcc, pmuc]
 ```
 
-When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` for the
-first `reg` entry of each, translated through the `ranges` above as for
-instances. The node may be disabled, as its registers
+When the symbol is set, `devicetree/regs.h` has `PBL_DT_REG_<LABEL>` and
+`PBL_DT_SIZE_<LABEL>` for the first `reg` entry of each, translated through the
+`ranges` above as for instances. A label may also name another entry, as
+`{label: flash0, reg: mem}`, which gives `PBL_DT_REG_FLASH0_MEM` and
+`PBL_DT_SIZE_FLASH0_MEM` for the entry of that name in `reg-names`.
+The node may be disabled, as its registers
 are there all the same. Only the labels listed get a constant: everything else
 reaches the tree through its instance.
+
+A property code needs before devices, or without any, is listed the same way
+under `props`, and becomes `PBL_DT_PROP_<LABEL>_<PROPERTY>`, from its one cell:
+
+```yaml
+config: CPU_CORTEX_M
+props:
+  - label: nvic
+    prop: arm,num-irq-priority-bits
+```
+
+Code driving whichever of several instances the board enables, as the
+system timer on the LPTIM each core of the STM32H747 leaves to the other,
+names its compatible instead:
+
+```yaml
+config: TIMER_STM32_LPTIM
+compatible: st,stm32-lptimer-timer
+```
+
+The tree must enable exactly one node of it. `PBL_DT_REG_<COMPATIBLE>` and
+`PBL_DT_SIZE_<COMPATIBLE>` are its first `reg` entry, `PBL_DT_IRQ_<COMPATIBLE>`
+its first interrupt, a bare number for `PBL_IRQ_CONNECT_NUM()`, and `PBL_DT_CLK_<COMPATIBLE>` the specifier cell of its
+first clock, each when it has them. A function of a multi-function device,
+as the `timer` child of an LPTIM, has those of its parent.
 
 ## Tests
 

@@ -134,6 +134,94 @@ static bool prv_zip_find(const uint8_t *zip, size_t len, const char *name, ZipEn
   return false;
 }
 
+//! The display a resource pack is for at least, from what follows "app_resources" in its name:
+//! "~200w~228h.pbpack". A side without a tag is 0.
+static bool prv_pack_size(const char *tags, size_t len, unsigned *width, unsigned *height) {
+  static const char suffix[] = ".pbpack";
+  const size_t suffix_len = sizeof(suffix) - 1;
+  if (len < suffix_len || memcmp(tags + len - suffix_len, suffix, suffix_len) != 0) {
+    return false;
+  }
+  len -= suffix_len;
+  *width = 0;
+  *height = 0;
+  size_t at = 0;
+  while (at < len) {
+    if (tags[at++] != '~') {
+      return false;
+    }
+    unsigned value = 0;
+    size_t digits = 0;
+    while (at < len && tags[at] >= '0' && tags[at] <= '9' && digits < 5) {
+      value = value * 10 + (unsigned)(tags[at++] - '0');
+      digits++;
+    }
+    if (digits == 0 || at >= len) {
+      return false;
+    }
+    if (tags[at] == 'w') {
+      *width = value;
+    } else if (tags[at] == 'h') {
+      *height = value;
+    } else {
+      return false;
+    }
+    at++;
+  }
+  return true;
+}
+
+//! The resource pack of a directory for the largest display that is no larger than this one:
+//! what whoever installs a pbw sends in place of the default pack.
+static bool prv_zip_find_resource_pack(const uint8_t *zip, size_t len, const char *directory,
+                                       char *name, size_t name_size) {
+  if (len < 22) {
+    return false;
+  }
+  size_t eocd = len - 22;
+  while (pbl_get_le32(zip + eocd) != 0x06054b50) {
+    if (eocd == 0 || len - eocd > 22 + 0xffff) {
+      return false;
+    }
+    eocd--;
+  }
+  char prefix[112];
+  const size_t prefix_len = (size_t)snprintf(prefix, sizeof(prefix), "%sapp_resources", directory);
+  bool found = false;
+  unsigned best_width = 0;
+  unsigned best_height = 0;
+  const uint16_t count = pbl_get_le16(zip + eocd + 10);
+  size_t at = pbl_get_le32(zip + eocd + 16);
+  for (uint16_t i = 0; i < count; i++) {
+    if (at + 46 > len || pbl_get_le32(zip + at) != 0x02014b50) {
+      break;
+    }
+    const uint16_t this_len = pbl_get_le16(zip + at + 28);
+    const size_t next =
+        at + 46 + this_len + pbl_get_le16(zip + at + 30) + pbl_get_le16(zip + at + 32);
+    if (next > len) {
+      break;
+    }
+    const char *this_name = (const char *)zip + at + 46;
+    unsigned width;
+    unsigned height;
+    if (this_len > prefix_len && this_len < name_size &&
+        memcmp(this_name, prefix, prefix_len) == 0 &&
+        prv_pack_size(this_name + prefix_len, this_len - prefix_len, &width, &height) &&
+        (width + height > 0) && width <= CONFIG_PLATFORM_DISPLAY_WIDTH &&
+        height <= CONFIG_PLATFORM_DISPLAY_HEIGHT &&
+        (!found || width > best_width || (width == best_width && height > best_height))) {
+      found = true;
+      best_width = width;
+      best_height = height;
+      memcpy(name, this_name, this_len);
+      name[this_len] = '\0';
+    }
+    at = next;
+  }
+  return found;
+}
+
 //! Inflate or copy a zip entry into a new file, in chunks.
 static bool prv_write_file(const char *name, const ZipEntry *entry) {
   pbl_fs_unlink(name);
@@ -311,7 +399,9 @@ static void prv_install(void *data) {
   }
   snprintf(name, sizeof(name), "%spebble-worker.bin", platform);
   prv_zip_find(install->pbw, install->len, name, &install->worker);
-  snprintf(name, sizeof(name), "%sapp_resources.pbpack", platform);
+  if (!prv_zip_find_resource_pack(install->pbw, install->len, platform, name, sizeof(name))) {
+    snprintf(name, sizeof(name), "%sapp_resources.pbpack", platform);
+  }
   prv_zip_find(install->pbw, install->len, name, &install->res);
 
   // The app's header is all the app database takes, and it is stored first.

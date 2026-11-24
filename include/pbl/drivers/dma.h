@@ -67,6 +67,37 @@ enum pbl_dma_slave_buswidth {
   PBL_DMA_SLAVE_BUSWIDTH_4_BYTES = 4,
 };
 
+/**
+ * @brief Memory a bus master reaches at another address than the CPU, from the dma-ranges of its
+ * bus.
+ */
+struct pbl_dma_window {
+  /** Start, as the CPU sees it. */
+  uintptr_t cpu;
+  /** Start, as the bus master sees it. */
+  uintptr_t dma;
+  /** Size, 0 for none. */
+  size_t size;
+};
+
+/** @brief Initializer of a struct pbl_dma_window. */
+#define PBL_DMA_WINDOW(_cpu, _dma, _size) {.cpu = (_cpu), .dma = (_dma), .size = (_size)}
+
+/**
+ * @brief Address a bus master uses for a CPU address.
+ *
+ * @param window Window of the bus master.
+ * @param addr Address, as the CPU sees it.
+ * @return The address in the window, or @p addr outside it.
+ */
+static inline uintptr_t pbl_dma_window_addr(const struct pbl_dma_window *window, uintptr_t addr) {
+  if (addr - window->cpu < window->size) {
+    return addr - window->cpu + window->dma;
+  }
+
+  return addr;
+}
+
 /** @brief Peripheral side of a channel. */
 struct pbl_dma_slave_config {
   /** Peripheral register read from, for @ref PBL_DMA_DEV_TO_MEM transfers. */

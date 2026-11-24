@@ -10,8 +10,6 @@
 #include <pbl/pp/transport.h>
 
 #include <clar.h>
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
 
 // Fakes
 ///////////////////////////////////////////////////////////
@@ -19,15 +17,12 @@
 #include <fake_kernel_malloc.h>
 #include <fake_sys_work.h>
 
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
+void pbl_pp_main_call(void (*callback)(void *data), void *data) {
   pbl_sys_work_call(callback, data);
 }
 
-bool launcher_task_is_current_task(void) {
+bool pbl_pp_main_is_current(void) {
   return false;
-}
-
-void event_put(PebbleEvent *event) {
 }
 
 void pbl_pp__version_request(struct pbl_pp_session *session) {

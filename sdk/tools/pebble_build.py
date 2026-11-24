@@ -20,6 +20,7 @@ import struct
 import subprocess
 import sys
 import time
+import zlib
 from string import Template
 
 SDK_TOOLS = os.path.dirname(os.path.abspath(__file__))
@@ -180,10 +181,12 @@ def _flexible_builds(info, installed, sdk_root):
 class _Bld:
     """What the resource generators expect of their build context."""
 
-    def __init__(self, project_dir, build_dir, platform):
+    def __init__(self, project_dir, build_dir, platform, breakpoint_size=None):
         import wafshim
 
         self.env = wafshim.Env(PLATFORM_NAME=platform)
+        if breakpoint_size is not None:
+            self.env.RESOURCE_BREAKPOINT = breakpoint_size
         self.variant = ""
         self.path = wafshim.Node(project_dir, bld_root=build_dir, src_root=project_dir)
 
@@ -200,13 +203,62 @@ def _load_generators():
     import resources.resource_map.resource_generator_raw  # noqa: F401
 
 
-def _resource_definitions(project, platform):
+def _default_breakpoint(project, platform):
+    """The display size the resources of a build are picked for, when size
+    tags are breakpoints: None in a project that is not flexible. A flexible
+    binary's default pack is for the smallest display, a binary for a
+    platform gets what a flexible one would on that platform's display."""
+    if not project["info"].get("flexible"):
+        return None
+    display = pebble_platforms[platform]["DESCRIPTOR"]["display"]
+    return (display.get("width", 0), display.get("height", 0))
+
+
+def _chosen_pack(packs, display, default):
+    """What a display gets of [((min width, min height), pack)]: the pack for
+    the largest width, then height, that the display has, or the default.
+    This is the rule of whatever installs the app."""
+    fits = [p for p in packs if p[0][0] <= display[0] and p[0][1] <= display[1]]
+    return max(fits, key=lambda p: p[0])[1] if fits else default
+
+
+def _resource_breakpoints(project, platform):
+    """The display sizes a flexible binary gets a resource pack of its own
+    for, smallest first: what the size tags of the project's resource files
+    combine to. Not all of them need differ in what they hold."""
+    from resources.find_resource_filename import size_of_tags
+
+    if not project["platforms"][platform].get("flexible"):
+        return []
+    widths, heights = {0}, {0}
+    root = os.path.join(project["project_dir"], project["resources_dir"])
+    for _, dirs, files in os.walk(root):
+        dirs.sort()
+        for name in files:
+            (width, height), _ = size_of_tags(os.path.splitext(name)[0].split("~")[1:])
+            widths.add(width)
+            heights.add(height)
+    return sorted((w, h) for w in widths for h in heights if (w, h) != (0, 0))
+
+
+def _pack_name(breakpoint_size):
+    """app_resources~200w~228h.pbpack"""
+    width, height = breakpoint_size
+    tags = ([f"{width}w"] if width else []) + ([f"{height}h"] if height else [])
+    return "~".join(["app_resources", *tags]) + ".pbpack"
+
+
+def _resource_definitions(project, platform, breakpoint_size=None):
     """The resources the project declares for one platform, as resource
-    definitions, with the per-platform compatibility rewrites applied."""
+    definitions, with the per-platform compatibility rewrites applied. For
+    a flexible binary, those of its pack for displays of at least
+    breakpoint_size."""
     from resources.resource_map import resource_generator
 
     _load_generators()
-    bld = _Bld(project["project_dir"], project["build_dir"], platform)
+    if breakpoint_size is None:
+        breakpoint_size = _default_breakpoint(project, platform)
+    bld = _Bld(project["project_dir"], project["build_dir"], platform, breakpoint_size)
     sdk_version = tuple(project["platforms"][platform]["sdk_version"])
     definitions = []
     for r in project["resources"]:
@@ -314,8 +366,9 @@ def _package_resources(project, platform):
 
 def _resource_inputs(project, platform):
     inputs = []
-    for d in _resource_definitions(project, platform):
-        inputs.extend(os.path.join(project["project_dir"], s) for s in d.sources)
+    for breakpoint_size in [None, *_resource_breakpoints(project, platform)]:
+        for d in _resource_definitions(project, platform, breakpoint_size):
+            inputs.extend(os.path.join(project["project_dir"], s) for s in d.sources)
     inputs.extend(_package_resources(project, platform).values())
     return sorted(set(inputs))
 
@@ -783,7 +836,12 @@ def resources(args):
     is_package = project["type"] == "package"
 
     definitions = _resource_definitions(project, platform)
-    bld = _Bld(project["project_dir"], build_dir, platform)
+    bld = _Bld(
+        project["project_dir"],
+        build_dir,
+        platform,
+        _default_breakpoint(project, platform),
+    )
     if project["type"] == "moddable" and os.path.exists(_mod_path(project, platform)):
         with open(_mod_path(project, platform), "rb") as f:
             error = pebble_project.undeclared_moddable_health_error(
@@ -821,6 +879,8 @@ def resources(args):
     files.update(lib_resos)
 
     reso_paths = [path for _, path in own_resos] + list(lib_resos.values())
+    # What every pack of a flexible binary has after the project's own.
+    shared_resos = list(lib_resos.values())
     published_media = project["published_media"]
     id_mapping = None
     if published_media and not is_package:
@@ -834,6 +894,7 @@ def resources(args):
         lut = os.path.join(out_dir, "timeline_resource_table.reso")
         _timeline_table(project, platform, id_mapping, lut)
         reso_paths.append(lut)
+        shared_resos.append(lut)
         layouts = {
             "resources": {"app://images/" + m["name"]: m["id"] for m in published_media}
         }
@@ -878,7 +939,76 @@ def resources(args):
             json.dumps(own_resos, indent=2),
         )
     else:
-        generators.build_pbpack(ball, os.path.join(out_dir, "app_resources.pbpack"))
+        default_pack = os.path.join(out_dir, "app_resources.pbpack")
+        crcs = [generators.build_pbpack(ball, default_pack)]
+
+        # A flexible binary also gets a pack for each larger display its
+        # resource files have variants for. Every pack has the same
+        # resources under the same IDs, so the binary works with any.
+        packs_dir = os.path.join(out_dir, "packs")
+        shutil.rmtree(packs_dir, ignore_errors=True)
+        packs = []
+        default_sources = [d.sources for d in definitions]
+        built = []
+        for breakpoint_size in _resource_breakpoints(project, platform):
+            pack_definitions = _resource_definitions(project, platform, breakpoint_size)
+            if [d.name for d in pack_definitions] != [d.name for d in definitions]:
+                raise ProjectError(
+                    f"The resources of {platform} for displays of at least "
+                    f"{breakpoint_size[0]} x {breakpoint_size[1]} are not those of the "
+                    "smaller ones: a variant for a display size has to be of a resource "
+                    "every display has"
+                )
+            # The same files as the pack such a display gets without this
+            # one: no pack of its own.
+            sources = [d.sources for d in pack_definitions]
+            if sources == _chosen_pack(built, breakpoint_size, default_sources):
+                continue
+            built.append((breakpoint_size, sources))
+            if published_media:
+                pack_files = {d.name: d.sources[0] for d in pack_definitions}
+                _check_published_media(project, platform, {**files, **pack_files})
+
+            name = _pack_name(breakpoint_size)
+            pack_bld = _Bld(
+                project["project_dir"], build_dir, platform, breakpoint_size
+            )
+            pack_reso_dir = os.path.join(packs_dir, os.path.splitext(name)[0])
+            pack_resos = []
+            for d in pack_definitions:
+                source = d.sources[0]
+                rel = declared.get(d.name) or os.path.basename(source)
+                out = os.path.join(pack_reso_dir, f"{rel}.{d.name}.reso")
+                os.makedirs(os.path.dirname(out), exist_ok=True)
+                task = Task(pack_bld, [Node(source)], [Node(out)], path=pack_bld.path)
+                resource_generator.generate_object(task, d).dump(Node(out))
+                pack_resos.append(out)
+            pack_ball = os.path.join(pack_reso_dir, "resources.resball")
+            generators.build_resource_ball(
+                pack_resos + shared_resos,
+                Node(pack_ball),
+                resource_id_mapping=id_mapping,
+            )
+            pack_path = os.path.join(packs_dir, name)
+            crcs.append(generators.build_pbpack(pack_ball, pack_path))
+            packs.append(
+                {
+                    "name": name,
+                    "file": pack_path,
+                    "minWidth": breakpoint_size[0],
+                    "minHeight": breakpoint_size[1],
+                }
+            )
+
+        if project["platforms"][platform].get("flexible"):
+            # What the binary knows its packs by. Never 0, which is what a
+            # pack of no set has.
+            set_id = zlib.crc32(struct.pack(f"<{len(crcs)}L", *crcs)) or 1
+            for path in [default_pack] + [pack["file"] for pack in packs]:
+                generators.set_pbpack_set_id(path, set_id)
+        _write_if_changed(
+            os.path.join(out_dir, "resource_packs.json"), json.dumps(packs, indent=2)
+        )
 
 
 # --- binaries -----------------------------------------------------------------
@@ -1105,11 +1235,16 @@ def bundle(args):
     for platform, files in manifest["platforms"].items():
         pinfo = project["platforms"][platform]
         layouts = os.path.join(project["build_dir"], platform, "layouts.json")
+        with open(
+            os.path.join(project["build_dir"], platform, "resource_packs.json")
+        ) as f:
+            resource_packs = json.load(f)
         binaries.append(
             {
                 "watchapp": files["app"],
                 "worker_bin": files.get("worker"),
                 "resources": files["resources"],
+                "resource_packs": resource_packs,
                 "layouts": layouts if os.path.exists(layouts) else None,
                 "sdk_version": dict(zip(("major", "minor"), pinfo["sdk_version"])),
                 "subfolder": pinfo["bundle_dir"],

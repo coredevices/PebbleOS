@@ -12,6 +12,7 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
 	};
 
 	soc {
@@ -47,6 +48,11 @@
 			status = "disabled";
 		};
 
+		rtc: rtc@40005000 {
+			compatible = "qemu,pebble-rtc";
+			reg = <0x40005000 0x1000>;
+		};
+
 		gpio: gpio@40006000 {
 			compatible = "qemu,pebble-gpio";
 			reg = <0x40006000 0x1000>;
@@ -57,6 +63,11 @@
 			interrupt-controller;
 			#interrupt-cells = <2>;
 			status = "disabled";
+		};
+
+		sysctrl: syscon@40007000 {
+			compatible = "qemu,pebble-sysctrl", "syscon";
+			reg = <0x40007000 0x1000>;
 		};
 
 		display: display-controller@40008000 {
@@ -93,6 +104,11 @@
 			interrupts = <10>;
 			#sound-dai-cells = <0>;
 			status = "disabled";
+		};
+
+		wdog: watchdog@40013000 {
+			compatible = "qemu,pebble-wdog";
+			reg = <0x40013000 0x1000>;
 		};
 
 		uart3: serial@40014000 {

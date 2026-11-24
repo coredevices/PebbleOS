@@ -9,6 +9,34 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m4";
+			device_type = "cpu";
+			reg = <0>;
+		};
+	};
+
+	sram0: memory@20000000 {
+		device_type = "memory";
+		reg = <0x20000000 0x40000>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		/* Kept across resets */
+		retained_ram: memory@20000000 {
+			reg = <0x20000000 0x100>;
+			no-map;
+		};
+	};
+
 	hfxo: clock-32000000 {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -21,6 +49,7 @@
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
 	};
 
 	soc {
@@ -29,6 +58,16 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+
+		ficr: ficr@10000000 {
+			compatible = "nordic,nrf52840-ficr", "nordic,nrf52832-ficr";
+			reg = <0x10000000 0x1000>;
+		};
+
+		uicr: uicr@10001000 {
+			compatible = "nordic,nrf52840-uicr", "nordic,nrf52832-uicr";
+			reg = <0x10001000 0x1000>;
+		};
 
 		clock: clock-controller@40000000 {
 			compatible = "nordic,nrf52840-clock", "nordic,nrf52832-clock";
@@ -92,18 +131,21 @@
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x40008000 0x1000>;
 			interrupts = <8>;
+			status = "disabled";
 		};
 
 		timer1: timer@40009000 {
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x40009000 0x1000>;
 			interrupts = <9>;
+			status = "disabled";
 		};
 
 		timer2: timer@4000a000 {
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x4000a000 0x1000>;
 			interrupts = <10>;
+			status = "disabled";
 		};
 
 		rtc0: rtc@4000b000 {
@@ -117,9 +159,27 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
+		};
+
+		temp: thermal-sensor@4000c000 {
+			compatible = "nordic,nrf52840-temp", "nordic,nrf52832-temp";
+			reg = <0x4000c000 0x1000>;
+			interrupts = <12>;
+			status = "disabled";
+		};
+
+		rng: rng@4000d000 {
+			compatible = "nordic,nrf52840-rng", "nordic,nrf52832-rng";
+			reg = <0x4000d000 0x1000>;
+			interrupts = <13>;
+		};
+
+		wdt: watchdog@40010000 {
+			compatible = "nordic,nrf52840-wdt", "nordic,nrf52832-wdt";
+			reg = <0x40010000 0x1000>;
+			interrupts = <16>;
 		};
 
 		rtc1: rtc@40011000 {
@@ -133,7 +193,6 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
 		};
@@ -142,12 +201,14 @@
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x4001a000 0x1000>;
 			interrupts = <26>;
+			status = "disabled";
 		};
 
 		timer4: timer@4001b000 {
 			compatible = "nordic,nrf52840-timer", "nordic,nrf52832-timer";
 			reg = <0x4001b000 0x1000>;
 			interrupts = <27>;
+			status = "disabled";
 		};
 
 		pwm0: pwm@4001c000 {
@@ -219,7 +280,6 @@
 				compatible = "nordic,nrf52832-rtc-pwm";
 				#pwm-cells = <3>;
 				nordic,gpiote = <&gpiote>;
-				nordic,ppi = <&ppi>;
 				status = "disabled";
 			};
 		};
@@ -259,7 +319,7 @@
 		};
 
 		spi3: spi@4002f000 {
-			compatible = "nordic,nrf52840-spim", "nordic,nrf52832-spim";
+			compatible = "nordic,nrf52840-spim3", "nordic,nrf52832-spim";
 			reg = <0x4002f000 0x1000>;
 			interrupts = <47>;
 			#address-cells = <1>;

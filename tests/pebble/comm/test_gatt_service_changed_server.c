@@ -27,23 +27,6 @@ uint16_t gaps_get_starting_att_handle(void) {
   return 4;
 }
 
-pbl_bt_service_t gatt_client_att_handle_get_service(GAPLEConnection *connection,
-                                                    uint16_t att_handle,
-                                                    const GATTServiceNode **service_node_out) {
-  return 0;
-}
-
-uint8_t gatt_client_copy_service_refs_by_discovery_generation(
-    const struct pbl_bt_device_internal *device, pbl_bt_service_t services_out[],
-    uint8_t num_services, uint8_t discovery_gen) {
-  return 0;
-}
-
-void gatt_client_service_get_all_characteristics_and_descriptors(
-    GAPLEConnection *connection, struct pbl_bt_gatt_service *service,
-    pbl_bt_characteristic_t *characteristic_hdls_out, pbl_bt_descriptor_t *descriptor_hdls_out) {
-}
-
 void launcher_task_add_callback(void (*callback)(void *data), void *data) {
   callback(data);
 }

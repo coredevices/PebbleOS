@@ -15,10 +15,8 @@
 #include <fakes/fake_pbl_malloc.h>
 #include <fakes/fake_sys_work.h>
 
-typedef void (*CallbackEventCallback)(void *data);
-
 static int s_kernel_main_schedule_count;
-void launcher_task_add_callback(CallbackEventCallback callback, void *data) {
+void pbl_pp_main_call(void (*callback)(void *data), void *data) {
   ++s_kernel_main_schedule_count;
   pbl_sys_work_call(callback, data);
 }

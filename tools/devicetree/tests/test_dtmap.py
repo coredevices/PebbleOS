@@ -230,6 +230,46 @@ def test_pin_states_go_to_the_pin_controller(tmp_path):
     assert "extern const struct pin_state dt_bus_default;" in gen.header()
 
 
+def test_pin_states_from_pinmux_cells(tmp_path):
+    data = {
+        **SPECS["acme,pinctrl"],
+        "pinctrl": {
+            "define": "PIN_STATE",
+            "pinmux": "PINMUX({value:#x})",
+            "flags": {"bias-disable": "NO_PULL"},
+            "values": {"slew-rate": "SLEW_{value}"},
+        },
+    }
+    dts = DTS.replace(
+        """                pins = "PA1";
+                function = "scl";
+                input-enable;
+                drive-strength = <8>;""",
+        """                pinmux = <0x0905>, <0x0a05>;
+                bias-disable;
+                slew-rate = <2>;""",
+        1,
+    )
+    gen = generate(
+        tmp_path, specs={"acme,pinctrl": spec("acme,pinctrl", data)}, dts=dts
+    )
+    pinctrl = instances(gen, "acme_pinctrl")
+    assert (
+        "PIN_STATE(dt_bus_default, PINMUX(0x905) | NO_PULL | SLEW_2, PINMUX(0xa05) | NO_PULL | "
+        "SLEW_2);" in pinctrl
+    )
+
+
+def test_pin_controller_needs_one_pin_format():
+    data = {**SPECS["acme,pinctrl"]}
+    data["pinctrl"] = {**data["pinctrl"], "pinmux": "PINMUX({value})"}
+    with pytest.raises(DtError, match="one of 'pin' and 'pinmux'"):
+        spec("acme,pinctrl", data)
+    data["pinctrl"] = {"define": "PIN_STATE"}
+    with pytest.raises(DtError, match="one of 'pin' and 'pinmux'"):
+        spec("acme,pinctrl", data)
+
+
 def test_unused_pin_states_are_left_out(tmp_path):
     gen = generate(tmp_path)
     assert "PA2" not in body(gen)
@@ -2220,8 +2260,11 @@ def test_board_trees_generate_with_every_driver(tmp_path, dts):
     gen.run()
     assert "_DEFINE(" in "".join(gen.instances().values())
     assert "extern const" in gen.header()
-    roles = yaml.safe_load(((REPO / dts).parent / "roles.yml").read_text())
-    dtmap.partitions_header(tree, roles["flash"])
+    board = Path(dts).parent.name
+    qualifier = Path(dts).stem[len(board) + 1 :] or None
+    roles = dtmap.merge_roles(dtmap.role_files(REPO, board, None, variant=qualifier))
+    if "flash" in roles:
+        dtmap.partitions_header(tree, roles["flash"])
 
 
 def test_every_board_has_its_tree():
@@ -2362,6 +2405,34 @@ REGS_DTS = """/dts-v1/;
 
         rcc: clock-controller@1000 {
             reg = <0x1000 0x400>;
+            acme,num-gates = <12>;
+            #clock-cells = <1>;
+        };
+
+        timer@3000 {
+            compatible = "acme,lptimer";
+            reg = <0x3000 0x400>;
+            interrupts = <7>;
+            clocks = <&rcc 5>;
+
+            timer {
+                compatible = "acme,lptimer-timer";
+            };
+        };
+
+        timer@4000 {
+            compatible = "acme,lptimer";
+            reg = <0x4000 0x400>;
+            status = "disabled";
+
+            timer {
+                compatible = "acme,lptimer-timer";
+            };
+        };
+
+        flash: flash@2000 {
+            reg = <0x2000 0x100>, <0x80000 0x10000>;
+            reg-names = "regs", "mem";
         };
 
         nameless: bus-node {
@@ -2371,22 +2442,56 @@ REGS_DTS = """/dts-v1/;
 """
 
 
-def regs(tmp_path, labels, config="SOC_ACME"):
+def regs(tmp_path, labels, config="SOC_ACME", props=(), compatible=None, dts=REGS_DTS):
     def error(message):
         return DtError(f"acme.regs.yaml: {message}")
 
     path, dtb = tmp_path / "r.dts", tmp_path / "r.dtb"
-    path.write_text(REGS_DTS)
+    path.write_text(dts)
     subprocess.run(
         [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
         check=True,
     )
-    return dtmap.regs_header(fdt.load(dtb), [("SOC_ACME", labels, error)], {config})
+    return dtmap.regs_header(
+        fdt.load(dtb), [("SOC_ACME", labels, list(props), compatible, error)], {config}
+    )
 
 
 def test_regs_are_translated_through_ranges(tmp_path):
     text = regs(tmp_path, ["rcc"])
     assert "#define PBL_DT_REG_RCC 0x40001000UL" in text
+    assert "#define PBL_DT_SIZE_RCC 0x400UL" in text
+
+
+def test_regs_by_name(tmp_path):
+    text = regs(tmp_path, [{"label": "flash", "reg": "mem"}])
+    assert "#define PBL_DT_REG_FLASH_MEM 0x40080000UL" in text
+    assert "#define PBL_DT_SIZE_FLASH_MEM 0x10000UL" in text
+    with pytest.raises(DtError, match="no reg named 'xip'"):
+        regs(tmp_path, [{"label": "flash", "reg": "xip"}])
+
+
+def test_regs_props(tmp_path):
+    text = regs(tmp_path, [], props=[{"label": "rcc", "prop": "acme,num-gates"}])
+    assert "#define PBL_DT_PROP_RCC_ACME_NUM_GATES 12U" in text
+    with pytest.raises(DtError, match="has no 'acme,missing'"):
+        regs(tmp_path, [], props=[{"label": "rcc", "prop": "acme,missing"}])
+
+
+def test_regs_of_the_enabled_node_of_a_compatible(tmp_path):
+    text = regs(tmp_path, [], compatible="acme,lptimer-timer")
+    assert "#define PBL_DT_REG_ACME_LPTIMER_TIMER 0x40003000UL" in text
+    assert "#define PBL_DT_SIZE_ACME_LPTIMER_TIMER 0x400UL" in text
+    assert "#define PBL_DT_IRQ_ACME_LPTIMER_TIMER 7\n" in text
+    assert "#define PBL_DT_CLK_ACME_LPTIMER_TIMER 5U" in text
+
+
+def test_regs_of_a_compatible_need_one_enabled_node(tmp_path):
+    with pytest.raises(DtError, match="0 enabled 'acme,missing' nodes"):
+        regs(tmp_path, [], compatible="acme,missing")
+    both = REGS_DTS.replace('status = "disabled";', "")
+    with pytest.raises(DtError, match="2 enabled 'acme,lptimer' nodes"):
+        regs(tmp_path, [], compatible="acme,lptimer", dts=both)
 
 
 def test_regs_of_disabled_code_are_left_out(tmp_path):
@@ -2470,6 +2575,80 @@ def test_roles_follow_other_labels(tmp_path):
     chosen = {"sensor": "sensor", "aux_bus": "abus"}
     source = roles_c(tmp_path, chosen, dts=DTS + "abus: &bus { };\n")
     assert "const struct bus *const AUX_BUS = &dt_abus;" in source
+
+
+def test_roles_files_of_a_core(tmp_path):
+    paths = dtmap.role_files(tmp_path, "kit", "b", tmp_path / "app", core="m4")
+    names = [path.relative_to(tmp_path).as_posix() for path in paths]
+    assert names == [
+        "boards/kit/roles.yml",
+        "boards/kit/roles.b.yml",
+        "boards/kit/roles.m4.yml",
+        "app/roles.yml",
+        "app/boards/kit.roles.yml",
+        "app/boards/kit_m4.roles.yml",
+    ]
+
+
+def test_roles_files_of_a_core_and_variant(tmp_path):
+    paths = dtmap.role_files(
+        tmp_path, "kit", None, tmp_path / "app", core="m4", variant="r2"
+    )
+    names = [path.relative_to(tmp_path).as_posix() for path in paths]
+    assert names == [
+        "boards/kit/roles.yml",
+        "boards/kit/roles.m4.yml",
+        "boards/kit/roles.r2.yml",
+        "boards/kit/roles.m4_r2.yml",
+        "app/roles.yml",
+        "app/boards/kit.roles.yml",
+        "app/boards/kit_m4.roles.yml",
+        "app/boards/kit_r2.roles.yml",
+        "app/boards/kit_m4_r2.roles.yml",
+    ]
+
+
+@pytest.mark.parametrize(
+    "files, revision, core, variant, found",
+    [
+        (["kit.dts", "kit_m4.dts"], None, "m4", None, "kit_m4.dts"),
+        (["kit.dts", "kit_m4.dts"], None, None, None, "kit.dts"),
+        (["kit_b.dts", "kit_m4.dts", "kit_b_m4.dts"], "b", "m4", None, "kit_b_m4.dts"),
+        (["kit_b.dts", "kit_m4.dts"], "b", "m4", None, "kit_m4.dts"),
+        (["kit_m7.dts"], None, "m4", None, None),
+        (["kit_m4.dts", "kit_m4_r2.dts"], None, "m4", "r2", "kit_m4_r2.dts"),
+        (["kit_m4.dts", "kit_r2.dts"], None, "m4", "r2", "kit_m4.dts"),
+        (["kit_b_m4.dts", "kit_m4_r2.dts"], "b", "m4", "r2", "kit_m4_r2.dts"),
+        (["kit.dts", "kit_wasm.dts"], None, None, "wasm", "kit_wasm.dts"),
+    ],
+)
+def test_tree_of_a_core(tmp_path, files, revision, core, variant, found):
+    board = tmp_path / "boards" / "kit"
+    board.mkdir(parents=True)
+    for name in files:
+        (board / name).write_text("/dts-v1/;\n/ { };\n")
+    dts = dtmap.find_dts(tmp_path, "kit", revision, core, variant)
+    assert (dts.name if dts else None) == found
+
+
+def test_overlays_of_a_core(tmp_path):
+    paths = dtmap.overlay_files("kit", tmp_path, "m4")
+    assert [path.name for path in paths] == [
+        "app.overlay",
+        "kit.overlay",
+        "kit_m4.overlay",
+    ]
+
+
+def test_overlays_of_a_core_and_variant(tmp_path):
+    paths = dtmap.overlay_files("kit", tmp_path, "m4", "r2")
+    assert [path.name for path in paths] == [
+        "app.overlay",
+        "kit.overlay",
+        "kit_m4.overlay",
+        "kit_r2.overlay",
+        "kit_m4_r2.overlay",
+    ]
 
 
 def test_later_roles_files_override(tmp_path):
@@ -2913,3 +3092,145 @@ def test_consumers_size_a_provider(tmp_path):
     out = instances(gen, "acme_mailbox")
     assert "MBOX_DEFINE(dt_mb1, 0x1000, 4);" in out
     assert "MBOX_DEFINE(dt_mb2, 0x2000, 2);" in out
+
+
+DMA_DTS = """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    soc {
+        compatible = "simple-bus";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        dma-ranges = <0x20000000 0x20000000 0x40000000>,
+                     <0x60000000 0x10000000 0x10000000>;
+        dma1: dma@1000 {
+            compatible = "acme,dma";
+            reg = <0x1000 0x100>;
+        };
+    };
+    dma2: dma@2000 {
+        compatible = "acme,dma";
+        reg = <0x2000 0x100>;
+    };
+};
+"""
+
+
+def dma_generate(tmp_path, text=DMA_DTS):
+    path, dtb = tmp_path / "d.dts", tmp_path / "d.dtb"
+    path.write_text(text)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    spec = {
+        "compatible": "acme,dma",
+        "config": "DMA",
+        "class": "sensor",
+        "define": "DMA_DEFINE",
+        "args": [{"reg": 0}, {"dma-window": True, "default": "{}"}],
+    }
+    specs = {"acme,dma": dtmap.Spec("acme,dma", spec, CLASSES)}
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"DMA"})
+    gen.run()
+    return instances(gen, "acme_dma")
+
+
+def test_dma_window_from_the_bus(tmp_path):
+    out = dma_generate(tmp_path)
+    window = "PBL_DMA_WINDOW(0x10000000, 0x60000000, 0x10000000)"
+    assert f"DMA_DEFINE(dt_dma1, 0x1000, {window});" in out
+    assert "DMA_DEFINE(dt_dma2, 0x2000, {});" in out
+
+
+def test_dma_window_must_be_one(tmp_path):
+    text = DMA_DTS.replace(
+        "<0x60000000 0x10000000 0x10000000>;",
+        "<0x60000000 0x10000000 0x10000000>, <0x70000000 0x0 0x1000>;",
+    )
+    with pytest.raises(DtError, match="more than one dma-ranges window"):
+        dma_generate(tmp_path, text)
+
+
+KCONFIG_MEMORY_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    sram0: memory@20000000 {
+        device_type = "memory";
+        reg = <0x20000000 0x80000>;
+    };
+
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+
+        retained: memory@20000000 {
+            reg = <0x20000000 0x100>;
+            no-map;
+        };
+
+        ipc: memory@2007fc00 {
+            reg = <0x2007fc00 0x400>;
+            no-map;
+        };
+
+        unused: memory@2007f000 {
+            reg = <0x2007f000 0x100>;
+            status = "disabled";
+        };
+    };
+
+    soc {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges = <0x0 0x40000000 0x10000>;
+
+        rcc: clock-controller@1000 {
+            reg = <0x1000 0x100>, <0x2000 0x40>;
+        };
+    };
+};
+"""
+
+
+def test_kconfig_functions_read_regs_and_free_memory(tmp_path, monkeypatch):
+    import kconfigfunctions
+
+    path = tmp_path / "board.dts"
+    path.write_text(KCONFIG_MEMORY_DTS)
+    subprocess.run(
+        [
+            dtc(),
+            "-@",
+            "-q",
+            "-I",
+            "dts",
+            "-O",
+            "dtb",
+            "-o",
+            str(tmp_path / "board.dtb"),
+            str(path),
+        ],
+        check=True,
+    )
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path))
+    kconfigfunctions._tree.cache_clear()
+    k = kconfigfunctions
+    assert k.dt_has_nodelabel(None, None, "rcc") == "y"
+    assert k.dt_has_nodelabel(None, None, "nope") == "n"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc") == "0x40001000"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc", "1") == "0x40002000"
+    assert k.dt_nodelabel_reg_size(None, None, "rcc", "1") == "0x40"
+    assert k.dt_nodelabel_reg_addr(None, None, "rcc", "2") == "0x0"
+    assert k.dt_nodelabel_reg_addr(None, None, "nope") == "0x0"
+    assert k.dt_memory_free_addr(None, None, "sram0") == "0x20000100"
+    assert k.dt_memory_free_size(None, None, "sram0") == "0x7fb00"
+    monkeypatch.setenv("DT_BUILD_DIR", str(tmp_path / "none"))
+    assert k.dt_has_nodelabel(None, None, "rcc") == "n"
+    assert k.dt_memory_free_size(None, None, "sram0") == "0x0"

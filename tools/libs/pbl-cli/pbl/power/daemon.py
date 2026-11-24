@@ -25,6 +25,7 @@ import time
 from pbl import lock, power
 
 START_TIMEOUT_S = 15.0
+STOP_TIMEOUT_S = 15.0
 POLL_S = 0.1
 
 
@@ -70,6 +71,18 @@ def running(key):
         return True
     except DaemonError:
         return False
+
+
+def stop(key):
+    """Power off through the daemon, and wait until it has closed the supply
+    and exited; its reply comes before."""
+    reply = request(key, "off")
+    deadline = time.monotonic() + STOP_TIMEOUT_S
+    while lock.holder(key) is not None:
+        if time.monotonic() >= deadline:
+            raise DaemonError(f"the daemon did not exit; see {log_path(key)}")
+        time.sleep(POLL_S)
+    return reply
 
 
 def start(key, type, port, name, voltage_mv=None):

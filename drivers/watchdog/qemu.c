@@ -5,17 +5,17 @@
 
 #include <pbl/drivers/watchdog.h>
 
-#include <hardware/qemu_memorymap.h>
+#include <devicetree/regs.h>
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 
 // ARM CMSDK APB watchdog, clocked from the 1 MHz reference clock. The first
 // expiry raises the timeout line, the second resets the machine, so the load
 // value is half the timeout.
-#define WDOG_LOAD    (QEMU_WDOG_BASE + 0x000)
-#define WDOG_CONTROL (QEMU_WDOG_BASE + 0x008)
-#define WDOG_INTCLR  (QEMU_WDOG_BASE + 0x00C)
-#define WDOG_LOCK    (QEMU_WDOG_BASE + 0xC00)
+#define WDOG_LOAD    (PBL_DT_REG_WDOG + 0x000)
+#define WDOG_CONTROL (PBL_DT_REG_WDOG + 0x008)
+#define WDOG_INTCLR  (PBL_DT_REG_WDOG + 0x00C)
+#define WDOG_LOCK    (PBL_DT_REG_WDOG + 0xC00)
 
 #define WDOG_CONTROL_INTEN (1 << 0)
 #define WDOG_CONTROL_RESEN (1 << 1)
@@ -24,7 +24,7 @@
 #define WDOG_CLK_HZ 1000000
 
 // Reset reason latch in the system controller (write 1 to clear).
-#define SYSCTRL_RESET_REASON (QEMU_SYSCTRL_BASE + 0x14)
+#define SYSCTRL_RESET_REASON (PBL_DT_REG_SYSCTRL + 0x14)
 
 #define RESET_REASON_POR  (1 << 0)
 #define RESET_REASON_SOFT (1 << 1)

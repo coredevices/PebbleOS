@@ -6,3 +6,4 @@ expect:
   - 'accel: \d+ samples, \d+ shakes, \d+ double taps'
   - 'Sample done'
 roles: [accel]
+integration: [qemu_emery, asterix]

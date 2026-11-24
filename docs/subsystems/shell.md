@@ -8,7 +8,7 @@ by any number of shell instances, one per backend.
 ## Commands
 
 A command is a `struct pbl_shell_cmd`: a name, a help string, a handler and
-optionally a table of subcommands, so commands form a tree (`bt disc start`).
+optionally a table of subcommands, so commands form a tree (`bt svc_changed`).
 
 - `PBL_SHELL_CMD_REGISTER()` / `PBL_SHELL_CMD_ARG_REGISTER()` register a root
   command from any file. The entries land in the `shell_root` iterable

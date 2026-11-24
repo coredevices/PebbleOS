@@ -84,6 +84,9 @@ config PLATFORM_RGB_BACKLIGHT
 config PLATFORM_SPEAKER
     bool
 
+config PLATFORM_BAROMETER
+    bool
+
 config PLATFORM_MODDABLE_XS
     bool
     help

@@ -78,6 +78,7 @@ def write_config_cmake(path, kconf, board, deps, dtb, dt_outputs):
         f'set(PBL_BOARD "{board.target}")\n',
         f'set(PBL_BOARD_NAME "{board.name}")\n',
         f'set(PBL_BOARD_REVISION "{board.revision or ""}")\n',
+        f'set(PBL_BOARD_CORE "{board.core or ""}")\n',
         f'set(PBL_BOARD_VARIANT "{board.variant or ""}")\n',
         f'set(PBL_BOARD_NORMALIZED "{board.normalized}")\n',
         'set(PBL_BOARD_RUNNERS "{}")\n'.format(";".join(board.runners)),
@@ -136,10 +137,20 @@ def main():
     # only the active board's Kconfig via `rsource "boards/$(BOARD)/..."`.
     os.environ["BOARD"] = board.name
     os.environ["BOARD_REVISION"] = board.revision or boards.NO_REVISION
+    os.environ["BOARD_CORE"] = board.core or boards.NO_REVISION
+    os.environ["BOARD_VARIANT"] = board.variant or boards.NO_REVISION
 
     try:
         dtb, dt_outputs, dt_deps = dtmap.configure(
-            srcdir, builddir, board.name, board.revision, args.cc, appdir, args.addon
+            srcdir,
+            builddir,
+            board.name,
+            board.revision,
+            args.cc,
+            appdir,
+            args.addon,
+            core=board.core,
+            variant=board.variant,
         )
     except DtError as e:
         sys.exit(f"devicetree: {e}")
@@ -165,22 +176,29 @@ def main():
         kconf.load_config(revision_defconfig, replace=False)
         sources.append(revision_defconfig)
 
-    if board.variant:
-        board_variant_defconfig = os.path.join(
-            srcdir, "boards", board.name, f"defconfig.{board.variant}"
+    # The core's, the variant's, then those of the core with the variant
+    qualifiers = dtmap.qualifiers(board.core, board.variant)
+    for qualifier in qualifiers:
+        qualifier_defconfig = os.path.join(
+            srcdir, "boards", board.name, f"defconfig.{qualifier}"
         )
-        if os.path.exists(board_variant_defconfig):
-            kconf.load_config(board_variant_defconfig, replace=False)
-            sources.append(board_variant_defconfig)
+        if os.path.exists(qualifier_defconfig):
+            kconf.load_config(qualifier_defconfig, replace=False)
+            sources.append(qualifier_defconfig)
 
-    # The application's settings: for every board, then for this one, each
-    # followed by what the variant being built adds.
-    for name in (
+    # The application's settings: for every board, then for this one and its
+    # core and variant, each followed by what the variant being built adds.
+    names = [
         "prj.conf",
         f"prj_{args.variant}.conf",
         os.path.join("boards", f"{board.name}.conf"),
         os.path.join("boards", f"{board.name}_{args.variant}.conf"),
-    ):
+    ]
+    names += [
+        os.path.join("boards", f"{board.name}_{qualifier}.conf")
+        for qualifier in qualifiers
+    ]
+    for name in names:
         app_conf = os.path.join(appdir, name)
         if os.path.exists(app_conf):
             kconf.load_config(app_conf, replace=False)

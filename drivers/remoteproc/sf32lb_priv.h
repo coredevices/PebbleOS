@@ -24,6 +24,8 @@ struct pbl_rproc_sf32lb__rf {
   uintptr_t lpsys_rcc;
   uintptr_t hpsys_cfg;
   uintptr_t pmuc;
+  // Factory calibration record
+  const struct pbl_nvmem_cell *cal;
   // LPSYS SRAM the samples are captured to
   uintptr_t dma_buf;
   // LPSYS SRAM the TX power table is written to, SF32LB57 only

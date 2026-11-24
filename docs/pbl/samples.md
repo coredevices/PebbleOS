@@ -17,6 +17,21 @@ Each sample is built in a directory of its own,
 console of a sample when a line it should print does not come; `--verbose`
 shows it for every sample.
 
+`--integration` checks each sample on the boards its `integration` list
+names, so that it is checked on a few boards that cover it instead of on all
+of them, and only builds those marked `build_only`. The boards come from the
+samples alone: `--board` then keeps the samples that name that board. CI
+checks the samples that way:
+
+```shell
+pbl samples --integration
+pbl samples --integration --board asterix
+pbl samples --integration --list
+```
+
+Without `--integration`, the samples are built for `--board`, `qemu_emery`
+by default.
+
 {doc}`../samples/index` lists the samples and covers writing one.
 
 ## Options

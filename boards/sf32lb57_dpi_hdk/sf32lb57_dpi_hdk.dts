@@ -7,7 +7,7 @@
 #include "sifli/sf32lb57xv6e.dtsi"
 #include "sf32lb57_dpi_hdk-pinctrl.dtsi"
 
-#include <dt-bindings/connector/sifli-lcd-qspi.h>
+#include <dt-bindings/connector/sifli,lcd-qspi-connector.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/interrupt-controller/irq.h>
@@ -75,7 +75,7 @@
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
 	current-speed = <1000000>;
-	dmas = <&gpdma1 6 5 2>;
+	dmas = <&gpdma1 6 SF32LB57_GPDMA1_REQ_USART1_RX SF32LB57_DMA_PRIO_HIGH>;
 	dma-names = "rx";
 	status = "okay";
 };
@@ -99,6 +99,22 @@ lcd_qspi_i2c: &i2c1 {
 };
 
 &gpadc {
+	status = "okay";
+};
+
+&dmac2 {
+	status = "okay";
+};
+
+&mailbox1 {
+	status = "okay";
+};
+
+&mailbox2 {
+	status = "okay";
+};
+
+&lcpu {
 	status = "okay";
 };
 
@@ -143,7 +159,7 @@ lcd_qspi_i2c: &i2c1 {
 	status = "okay";
 
 	flash0: flash@0 {
-		compatible = "puya,py25q128ha", "jedec,spi-nor";
+		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-rx-bus-width = <4>;
 		spi-tx-bus-width = <4>;

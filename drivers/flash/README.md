@@ -9,7 +9,10 @@ start erases through `struct pbl_flash_ops`.
 
 The board defines its flash with the `PBL_FLASH_*_DEFINE()` macro of its driver
 and exports it as `FLASH`. NOR parts are described in `nor.h` and defined in
-their own file.
+their own file. The devicetree only says the flash is a `jedec,spi-nor`: the
+driver identifies the part by its JEDEC ID among the parts the build links in,
+the `FLASH_SPI_NOR_<PART>` options the board enables for the parts it can be
+fitted with.
 
 Real hardware runs the SPI NOR driver, `spi_nor.c`, over a SPI memory
 controller (`drivers/spi_mem`): the controller only runs command, address,

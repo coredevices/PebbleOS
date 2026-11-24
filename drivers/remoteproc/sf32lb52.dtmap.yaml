@@ -43,12 +43,13 @@ args:
   - reg: 0
     of: sifli,bt-mac
   - reg: 0
-    of: sifli,gpadc
+    of: io-channels
   - reg: 0
-    of: sifli,dmac
+    of: dmas
   - reg: 0
     of: sifli,lpsys-rcc
   - reg: 0
     of: sifli,hpsys-cfg
   - reg: 0
     of: sifli,pmuc
+  - nvmem-cell: calibration

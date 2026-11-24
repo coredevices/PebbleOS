@@ -23,7 +23,6 @@
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
-#include <pbl/pp/transports/qemu.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
 #include <pbl/services/clock.h>
@@ -32,6 +31,7 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
+#include <comm/qemu/pp_transport.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <kernel/events.h>
@@ -102,7 +102,6 @@ static void prv_accel_msg_callback(const uint8_t *data, uint32_t len) {
 }
 #endif
 
-#ifdef CONFIG_PP_TRANSPORT_QEMU
 // -----------------------------------------------------------------------------------------
 // Handle incoming Bluetooth connection packet data (QemuProtocol_BluetoothConnection)
 static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t len) {
@@ -113,15 +112,14 @@ static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t 
   }
 
   PBL_LOG_DBG("Got bluetooth connection msg: connected:%d", hdr->connected);
-  bool current_status = pbl_pp_qemu_is_connected();
+  bool current_status = qemu_pp_is_connected();
   bool new_status = (hdr->connected != 0);
 
   if (new_status != current_status && !bt_ctl_is_airplane_mode_on()) {
     // Change to new status if we're not in airplane mode
-    pbl_pp_qemu_set_connected(new_status);
+    qemu_pp_set_connected(new_status);
   }
 }
-#endif
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming compass packet data (QemuProtocol_Compass)
@@ -301,16 +299,12 @@ static void prv_mic_msg_callback(const uint8_t *data, uint32_t len) {
 // -----------------------------------------------------------------------------------------
 // List of incoming message handlers
 static const QemuMessageHandler s_qemu_endpoints[] = {
-// IMPORTANT: These must be in sorted order!!
-#ifdef CONFIG_PP_TRANSPORT_QEMU
-  {QemuProtocol_SPP, pbl_pp_qemu_receive},
-#endif
+  // IMPORTANT: These must be in sorted order!!
+  {QemuProtocol_SPP, qemu_pp_receive},
 #ifdef CONFIG_ACCEL_SIM
   {QemuProtocol_Tap, prv_tap_msg_callback},
 #endif
-#ifdef CONFIG_PP_TRANSPORT_QEMU
   {QemuProtocol_BluetoothConnection, prv_bluetooth_connection_msg_callback},
-#endif
   {QemuProtocol_Compass, prv_compass_msg_callback},
 #ifdef CONFIG_CHARGER_SIM
   {QemuProtocol_Battery, prv_battery_msg_callback},

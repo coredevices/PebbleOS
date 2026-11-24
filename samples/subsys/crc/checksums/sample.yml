@@ -7,3 +7,4 @@ expect:
   - 'crc: after flipping a bit: no'
   - 'crc: legacy checksum: 0x[0-9a-f]{8}, in chunks: the same'
   - 'Sample done'
+integration: [qemu_emery, obelix@pvt]

@@ -54,7 +54,7 @@ config AUDIO_SF32LB52_PDM
 
 config AUDIO_SF32LB52_PDM_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on AUDIO_SF32LB52_PDM
     help
       Priority of the PDM interrupt.
@@ -68,7 +68,7 @@ config AUDIO_QEMU
 
 config AUDIO_QEMU_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on AUDIO_QEMU
     help
       Priority of the device interrupt.
@@ -98,14 +98,14 @@ config AUDIO_NRF5_I2S
 
 config AUDIO_NRF5_PDM_IRQ_PRIO
     int "PDM interrupt priority"
-    default 7
+    default 1
     depends on AUDIO_NRF5_PDM
     help
       Priority of the PDM interrupt.
 
 config AUDIO_NRF5_I2S_IRQ_PRIO
     int "I2S interrupt priority"
-    default 5
+    default 1
     depends on AUDIO_NRF5_I2S
     help
       Priority of the I2S interrupt.

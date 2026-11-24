@@ -43,20 +43,52 @@ jobs:
               - 'requirements.txt'
               - 'rust-toolchain.toml'
 
-  # The samples only need PebbleOS: building them keeps it from depending on
-  # the firmware again.
-  build-samples:
+  # The boards the samples name for integration, from their sample.yml.
+  samples-boards:
     needs: changes-samples
     if: needs.changes-samples.outputs.should-build == 'true'
     runs-on: ubuntu-24.04
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v16
+      image: ghcr.io/coredevices/pebbleos-docker:v17
+
+    outputs:
+      boards: ${{ steps.boards.outputs.boards }}
+
+    steps:
+      - name: Mark Github workspace as safe
+        run: git config --system --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Rebase onto target branch
+        uses: ./.github/actions/rebase
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements.txt
+
+      - name: List the boards
+        id: boards
+        run: echo "boards=$(pbl samples --integration --list-boards)" >> "$GITHUB_OUTPUT"
+
+  # The samples only need PebbleOS: building them keeps it from depending on
+  # the firmware again.
+  build-samples:
+    needs: samples-boards
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/coredevices/pebbleos-docker:v17
 
     strategy:
       fail-fast: false
       matrix:
-        board: ["qemu_emery", "asterix", "obelix@pvt", "sf32lb57_dpi_hdk"]
+        board: ${{ fromJSON(needs.samples-boards.outputs.boards) }}
 
     steps:
       - name: Mark Github workspace as safe
@@ -79,14 +111,16 @@ jobs:
 
       # Runs them too, and checks what they print, on the emulator.
       - name: Build and run
-        run: pbl samples --board ${{ matrix.board }}
+        run: pbl samples --integration --board ${{ matrix.board }}
 
   build-samples-status:
-    needs: [changes-samples, build-samples]
+    needs: [changes-samples, samples-boards, build-samples]
     if: always()
     runs-on: ubuntu-24.04
     steps:
       - if: >-
+          needs.samples-boards.result == 'failure' ||
+          needs.samples-boards.result == 'cancelled' ||
           needs.build-samples.result == 'failure' ||
           needs.build-samples.result == 'cancelled'
         run: exit 1

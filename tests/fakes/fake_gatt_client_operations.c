@@ -8,7 +8,6 @@
 #include <pbl/util/list.h>
 
 #include <clar_asserts.h>
-#include <comm/ble/gatt_client_operations.h>
 
 typedef struct {
   ListNode node;
@@ -33,11 +32,6 @@ enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic) {
     s_read_head = read;
   }
   return PBL_BT_ERRNO_OK;
-}
-
-bool gatt_client_consume_read_response(uintptr_t object_ref, uint8_t value_out[],
-                                       uint16_t value_length) {
-  return true;
 }
 
 typedef struct {
@@ -92,19 +86,6 @@ enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t 
                                                         const uint8_t *value, size_t value_length) {
   return fake_gatt_client_write(characteristic, value, value_length,
                                 false /* is_response_required */);
-}
-
-enum pbl_bt_errno gatt_client_op_write_descriptor(pbl_bt_descriptor_t descriptor,
-                                                  const uint8_t *value, size_t value_length) {
-  return PBL_BT_ERRNO_OK;
-}
-
-enum pbl_bt_errno gatt_client_op_write_descriptor_cccd(pbl_bt_descriptor_t cccd,
-                                                       const uint16_t *value) {
-  return PBL_BT_ERRNO_OK;
-}
-
-void gatt_client_op_cleanup(void) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ handles it, such as Put Bytes or BlobDB.
 | `send.h` | Queueing outbound messages |
 | `endpoint.h` | Handling inbound messages |
 | `transport.h` | Links that carry sessions |
+| `main.h` | The main thread, which the application provides |
 | `transports/*.h` | Entry points of each transport for the code that drives its link |
 
 ```{toctree}
@@ -50,10 +51,11 @@ flowchart TB
     direction LR
     gatt["GATT<br/>(PPoGATT)"]
     console["Console"]
-    qemu["QEMU"]
   end
+  qemu["QEMU<br/>(firmware)"]
   users --> core
   core --> transports
+  core --> qemu
   gatt --- ble["Kernel LE client"]
   console --- cons["Console frames"]
   qemu --- qser["QEMU serial"]
@@ -70,8 +72,9 @@ flowchart TB
 - Sessions parse, dispatch and queue messages, and know nothing about the
   links.
 - Transports move bytes over a link and open and close sessions. The code
-  that drives each link (the kernel LE client, the console, the QEMU serial
-  protocol) calls its transport through the transport's header.
+  that drives each link (the kernel LE client, the console) calls its
+  transport through the transport's header. The firmware adds a transport of
+  its own for the emulator's serial link.
 
 ## Sessions
 
@@ -142,8 +145,16 @@ PBL_PP_SESSION_LISTENER_DEFINE(my_service, prv_session_cb, NULL);
 Data logging, analytics and the cache of the system session's capabilities
 are listeners. Listeners run in the context of the transport,
 which may hold its own lock, so they must not block. Apps learn about
-sessions through `PEBBLE_COMM_SESSION_EVENT`, which the subsystem puts for
-every session that opens or closes.
+sessions through `PEBBLE_COMM_SESSION_EVENT`, which a listener of the firmware
+(`pebble/comm/pp.c`) puts for every session that opens or closes.
+
+## Main thread
+
+The subsystem needs one thread of the application, the main thread: transports
+send from it, and some endpoint handlers run on it. The application implements
+`pbl_pp_main_call()` and `pbl_pp_main_is_current()` (`include/pbl/pp/main.h`)
+for it. In the firmware it is KernelMain. It must not be SysWorkq, where the
+other handlers run and may wait for a transport to make room.
 
 ## Endpoints
 
@@ -162,7 +173,7 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler
 | Macro | Handling |
 |---|---|
 | `PBL_PP_ENDPOINT_DEFINE()` | The default receiver copies the payload to the kernel heap and runs the handler on SysWorkq |
-| `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on KernelMain, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
+| `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on the main thread, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
 | `PBL_PP_ENDPOINT_DEFINE_RECEIVER()` | A receiver of the endpoint's own buffers the message, such as Put Bytes into its download buffer or AppMessage into the app's inbox |
 
 The access level decides who may use the endpoint: `PBL_PP_ACCESS_PRIVATE`
@@ -184,7 +195,7 @@ sequenceDiagram
   participant T as Transport
   participant S as Session
   participant R as Receiver
-  participant H as Handler (SysWorkq or KernelMain)
+  participant H as Handler (SysWorkq or main thread)
   L->>T: bytes
   T->>S: pbl_pp_session_receive()
   Note over S: collect the 4-byte header,<br/>look the endpoint up,<br/>check its access
@@ -226,7 +237,7 @@ Beginning a buffer blocks until there is room or the timeout expires.
 sequenceDiagram
   participant C as Caller
   participant S as Session
-  participant M as KernelMain
+  participant M as Main thread
   participant T as Transport
   participant L as Link
   C->>S: pbl_pp_send_buffer_begin()
@@ -243,11 +254,11 @@ sequenceDiagram
   S->>S: free the buffer, wake waiting senders
 ```
 
-When the caller is KernelMain, which runs `send_next`, waiting would never
+When the caller is the main thread, which runs `send_next`, waiting would never
 end: beginning a buffer then sends the queue right away instead.
 
 Sending may block, so it must not be done while holding a lock the
-transports take, such as `bt_lock()`.
+transports take.
 
 ## Locking
 
@@ -255,8 +266,7 @@ The session layer has one lock. It protects the session list and each
 session's send queue, flags and capabilities, and is never held while calling
 a transport, a receiver's handler or a listener.
 
-Each transport protects its own state with its own lock: `bt_lock()` for
-PPoGATT, a mutex each for the console and QEMU. It may hold that lock while
+Each transport protects its own state with its own lock, a mutex each. It may hold that lock while
 calling into the session, so the lock order is always transport, then
 session.
 

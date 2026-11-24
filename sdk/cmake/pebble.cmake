@@ -115,7 +115,8 @@ function(_pebble_platform p)
   if(PEBBLE_PROJECT_TYPE STREQUAL "package")
     list(APPEND outputs ${build}/${p}/package_resources.json)
   else()
-    list(APPEND outputs ${build}/${p}/app_resources.pbpack)
+    list(APPEND outputs ${build}/${p}/app_resources.pbpack
+                        ${build}/${p}/resource_packs.json)
   endif()
   add_custom_command(
     OUTPUT ${outputs}
@@ -368,7 +369,7 @@ function(_pebble_finalize)
         COMMENT "Generating ${p} ${kind} binary"
         VERBATIM
       )
-      list(APPEND bundle_depends ${bin} ${resources})
+      list(APPEND bundle_depends ${bin} ${resources} ${build}/${p}/resource_packs.json)
     endforeach()
     list(APPEND manifest "\"${p}\": {${entry}}")
   endforeach()

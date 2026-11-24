@@ -296,6 +296,10 @@ pull request, approve the head commit before adding the label: a label
 from anyone other than the author is refused unless they approved the
 commit that would run.
 
+Each run first switches the watch's supply off with `pbl power off`, ending
+any `pbl power` session left on the watch: the tests need the supply to
+themselves.
+
 The markers are in `harness/plugin.py`; they are strict, so a new one must
 be added there.
 

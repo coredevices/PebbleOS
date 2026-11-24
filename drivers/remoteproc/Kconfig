@@ -20,6 +20,14 @@ config REMOTEPROC_SF32LB
       controller from ROM: configuration, ROM patches and radio
       calibration on boot.
 
+config REMOTEPROC_STM32H7_CM4
+    bool "STM32H7 Cortex-M4"
+    default y
+    depends on DT_HAS_ST_STM32H747_M4_ENABLED
+    help
+      The Cortex-M4 of a dual-core STM32H7, as the Cortex-M7 sees it:
+      booted from the address of its option bytes.
+
 config REMOTEPROC_SHELL
     bool "Remote processor shell commands"
     default DRIVER_SHELL

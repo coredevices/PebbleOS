@@ -33,13 +33,21 @@ set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 include(pebbleos_sdk)
 
 # Boards that do not run on ARM bring their own toolchain, and so can
-# their variants (BOARD[@REVISION][/VARIANT]).
+# their cores and variants (BOARD[@REVISION][/CORE][/VARIANT]), the last one
+# that has one winning.
 string(REGEX REPLACE "[@/].*$" "" board_name "${BOARD}")
-string(REGEX MATCH "/.+$" board_variant "${BOARD}")
-string(REPLACE "/" "" board_variant "${board_variant}")
+string(REPLACE "/" ";" board_qualifiers "${BOARD}")
+list(POP_FRONT board_qualifiers)
+list(REVERSE board_qualifiers)
+set(board_toolchain "")
+foreach(qualifier ${board_qualifiers})
+  if(NOT board_toolchain AND EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.${qualifier}.cmake)
+    set(board_toolchain ${PBL_BASE}/boards/${board_name}/toolchain.${qualifier}.cmake)
+  endif()
+endforeach()
 if(NOT CMAKE_TOOLCHAIN_FILE)
-  if(board_variant AND EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.${board_variant}.cmake)
-    set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/boards/${board_name}/toolchain.${board_variant}.cmake)
+  if(board_toolchain)
+    set(CMAKE_TOOLCHAIN_FILE ${board_toolchain})
   elseif(EXISTS ${PBL_BASE}/boards/${board_name}/toolchain.cmake)
     set(CMAKE_TOOLCHAIN_FILE ${PBL_BASE}/boards/${board_name}/toolchain.cmake)
   else()

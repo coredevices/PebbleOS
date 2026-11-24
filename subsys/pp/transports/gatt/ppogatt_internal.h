@@ -5,13 +5,14 @@
 
 #include <stdint.h>
 
+#include <pbl/bluetooth/mtu.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/pp/transports/gatt.h>
 #include <pbl/util/uuid.h>
 
-#include <comm/ble/gatt_client_subscriptions.h>
-#include <mfg/mfg_serials.h>
-
-#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE  (4500 / MAX_ATT_WRITE_PAYLOAD_SIZE)
+#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / (PBL_BT_ATT_MAX_SUPPORTED_MTU - 3))
+//! The smallest ATT MTU: anything below means that the connection is gone.
+#define PPOGATT_MTU_MIN                    (23)
 #define PPOGATT_MIN_VERSION                (0x00)
 #define PPOGATT_MAX_VERSION                (0x01)
 #define PPOGATT_SN_BITS                    (5)
@@ -85,7 +86,7 @@ typedef struct PBL_PACKED {
   uint8_t ppogatt_version;
 
   //! The serial number of the client device.
-  char serial_number[MFG_SERIAL_NUMBER_SIZE];
+  char serial_number[PBL_PP_GATT_SERIAL_NUMBER_SIZE];
 } PPoGATTResetRequestClientIDPayload;
 
 typedef struct PBL_PACKED {

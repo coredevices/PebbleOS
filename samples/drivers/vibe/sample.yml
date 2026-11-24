@@ -6,3 +6,4 @@ expect:
   - 'vibe: (no braking|braked pulse 3, braking at -?\d+)'
   - 'Sample done'
 roles: [vibe]
+integration: [qemu_emery, asterix, obelix@pvt]

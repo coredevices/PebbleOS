@@ -12,3 +12,4 @@ expect:
 boards: [sf32lb57_dpi_hdk]
 roles: [display, gpu]
 addons: [sifli_lcm_1p85]
+integration: [sf32lb57_dpi_hdk]

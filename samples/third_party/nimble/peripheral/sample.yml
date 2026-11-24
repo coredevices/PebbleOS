@@ -2,3 +2,4 @@ description: A connectable peripheral with a GATT service of its own, to read, w
 expect:
   - 'peripheral: address ([0-9a-f]{2}:){5}[0-9a-f]{2} \((public|random)\)'
   - 'peripheral: advertising as PebbleOS'
+integration: [qemu_emery, asterix, obelix@pvt, sf32lb57_dpi_hdk]

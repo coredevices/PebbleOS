@@ -6,3 +6,4 @@ expect:
   - 'backlight: off'
   - 'Sample done'
 roles: [backlight]
+integration: [qemu_emery, asterix, obelix@pvt]

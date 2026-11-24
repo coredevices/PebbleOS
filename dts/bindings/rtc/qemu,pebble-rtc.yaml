@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/rtc/qemu,pebble-rtc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QEMU Pebble RTC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Real-time clock of the QEMU Pebble machines, following the host clock, with a free-running
+  tick counter and sixteen backup registers.
+
+properties:
+  compatible:
+    const: qemu,pebble-rtc
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    rtc@40005000 {
+        compatible = "qemu,pebble-rtc";
+        reg = <0x40005000 0x1000>;
+    };

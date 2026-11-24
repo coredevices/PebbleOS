@@ -27,7 +27,6 @@ PBL_LOG_MODULE_DEFINE(bt, CONFIG_BT_LOG_LEVEL);
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
 
-extern void nimble_discover_init(void);
 extern void nimble_gattc_op_queue_init(void);
 
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
@@ -105,7 +104,6 @@ static void prv_ble_hs_stop_cb(int status, void *arg) {
 void pbl_bt_init(void) {
   bt_lock_init();
 
-  nimble_discover_init();
   nimble_gattc_op_queue_init();
 
   nimble_port_init();

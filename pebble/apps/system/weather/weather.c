@@ -65,12 +65,17 @@ typedef struct WeatherAppData {
   uint8_t tomorrow_hourly_type[24];
   int8_t tomorrow_hourly_temp[24];
   bool tomorrow_hourly_valid;
+  // Chance of precipitation per hour in percent, 255 if unknown: today's hours 0-23, then
+  // tomorrow's (v4 minor 6).
+  uint8_t hourly_precip[48];
+  bool hourly_precip_valid;
   // Active location coordinates (v4; for the 3D globe).
   int16_t latitude_e2;
   int16_t longitude_e2;
   // Active location's timezone, minutes east of UTC (v4.1; for city-local
   // sunset/hourly display). INT16_MIN = unknown → fall back to the watch tz.
   int16_t utc_offset_min;
+  bool globe_from_locations; // the globe was opened from the card's locations page
   // The user's GPS location — ALWAYS the record flagged is_current_location,
   // NEVER the active selection. Feeds the globe's "My Location" entry and the
   // saved-locations Current row, so switching city on the globe can't overwrite
@@ -86,6 +91,7 @@ static WeatherAppData *s_data;
 static void prv_refresh(WeatherAppData *data);
 static void prv_on_list_transition_done(void *ctx);
 static void prv_on_city_select_requested(void *ctx);
+static void prv_open_saved_locations(void *ctx);
 static void prv_push_globe(WeatherAppData *data, bool animated);
 static void prv_push_expanded(WeatherAppData *data, ExpandedViewEntrance entrance);
 static void prv_expanded_select_to_globe(void *ctx);
@@ -211,6 +217,10 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     memcpy(data->tomorrow_hourly_temp, ds->tomorrow_hourly_temp,
            sizeof(data->tomorrow_hourly_temp));
   }
+  data->hourly_precip_valid = ds->has_hourly_precip;
+  if (data->hourly_precip_valid) {
+    memcpy(data->hourly_precip, ds->hourly_precip, sizeof(data->hourly_precip));
+  }
   data->latitude_e2 = ds->latitude_e2;
   data->longitude_e2 = ds->longitude_e2;
   data->utc_offset_min = ds->utc_offset_min;
@@ -266,14 +276,8 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
     // A reading synced during this very hour beats the hourly forecast bucket: it is the
     // fresher value, and it is what the launcher glance shows (it only has the record's
     // current fields), so every view then agrees on the current temperature.
-    bool synced_this_hour = false;
-    if (hour >= 0 && ds->current_temp != WX_DS_UNKNOWN_TEMP && ds->time_updated_utc > 0 &&
-        now_t >= (time_t)ds->time_updated_utc &&
-        now_t - (time_t)ds->time_updated_utc < PBL_SEC_PER_HOUR) {
-      time_t upd_t = ds->time_updated_utc;
-      struct pbl_tm *lt_u = localtime(&upd_t);
-      synced_this_hour = lt_u && lt_u->tm_hour == hour;
-    }
+    const bool synced_this_hour = ds->current_temp != WX_DS_UNKNOWN_TEMP &&
+                                  weather_same_local_hour(now_t, (time_t)ds->time_updated_utc);
     if (!synced_this_hour && ds->hourly_count == WX_DS_HOURLY && hour >= 0 && hour < WX_DS_HOURLY &&
         ds->hourly_type[hour] <= WeatherType_RainAndSnow) {
       data->days[0].current_type_now = (WeatherType)ds->hourly_type[hour];
@@ -356,15 +360,13 @@ static void prv_fill_days_from_ds(WeatherAppData *data, const WxDsForecast *ds) 
   }
 }
 
-// Push the card's glance strings (sunset title, high/low°, location) to the forecast so its
-// hero icon-fly can animate the identical text in, synced to the icon landing.
+// Give the forecast the card's glance, which its hero icon-fly draws
 static void prv_sync_glance_strings(WeatherAppData *data) {
   const WeatherLocationForecast *today = data->days_received >= 1 ? &data->days[0] : nullptr;
-  char sunset[40], temp[16], loc[64];
+  ExpandedViewGlance glance;
   expanded_view_format_glance(today, data->latitude_e2, data->longitude_e2, data->utc_offset_min,
-                              sunset, sizeof(sunset), temp, sizeof(temp), loc, sizeof(loc));
-  forecast_list_set_glance(sunset, temp, today ? today->today_uv : -1,
-                           today ? today->today_precip_mm : -1, today ? today->today_wind_mph : -1);
+                              &glance, data);
+  forecast_list_set_glance(&glance);
 }
 
 // Refresh the GPS ("My Location") identity from the record flagged is_current_location
@@ -485,19 +487,28 @@ static void prv_push_clock(WeatherAppData *data, bool static_push) {
       s_hourly_type[h] = d->current_weather_type;
       s_hourly_temp[h] = (int8_t)(lo + (span * weather_diurnal_curve[h]) / 100);
     }
-    hourly_types = s_hourly_type;
+    // Not for today: its dial falls back to the day's type, and the clock treats a series
+    // passed for today as the phone's forecast.
+    if (di != 0)
+      hourly_types = s_hourly_type;
     have_hourly = true;
   }
 
   if (static_push) {
     clock_face_push_static(data->days, data->days_received, (int)di, hourly_types,
-                           have_hourly ? 24 : 0, false);
+                           hourly_types ? 24 : 0, false);
   } else {
-    clock_face_push(data->days, data->days_received, (int)di, hourly_types, have_hourly ? 24 : 0,
+    clock_face_push(data->days, data->days_received, (int)di, hourly_types, hourly_types ? 24 : 0,
                     false);
   }
   if (have_hourly) {
     clock_face_update_hourly_temps_for_day((int)di, s_hourly_temp, 24);
+  }
+  // Today's dial runs into tomorrow, so it gets both days. Later days have no hourly series, and
+  // without one the clock skips its precipitation mode.
+  if (data->hourly_precip_valid && di <= 1) {
+    clock_face_update_hourly_precip_for_day((int)di, data->hourly_precip + di * 24,
+                                            di == 0 ? 48 : 24);
   }
   // Day 0's dial crosses midnight from early afternoon — hand it tomorrow's
   // hourly series (v4 minor 5) so those positions show real data.
@@ -519,7 +530,8 @@ static void prv_on_clock_burst_requested(void *ctx) {
 static void prv_push_expanded(WeatherAppData *data, ExpandedViewEntrance entrance) {
   const WeatherLocationForecast *today = (data->days_received >= 1) ? &data->days[0] : nullptr;
   expanded_view_push(today, data->latitude_e2, data->longitude_e2, data->utc_offset_min, entrance,
-                     prv_expanded_down_to_main, data, prv_expanded_select_to_globe, data);
+                     prv_expanded_down_to_main, data, prv_expanded_select_to_globe, data,
+                     prv_open_saved_locations, data, data->globe_view);
 }
 
 static void prv_on_list_up_to_expanded(void *ctx) {
@@ -532,11 +544,17 @@ static void prv_on_list_up_to_expanded(void *ctx) {
   prv_push_expanded(data, ExpandedViewEntranceStatic);
 }
 
+// The lift has cleared the locations page. Its masks are freed while the globe is open, and
+// are captured again on the way back.
+static void prv_drop_card_body(void *ctx) {
+  (void)ctx;
+  expanded_view_drop_body();
+}
+
 static void prv_expanded_select_to_globe(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
-  // SELECT on the card: the card has already slid out to the LEFT (expanded_view fired us on the
-  // slide-out completion). Push the globe sliding in from the RIGHT on top, then dismiss the
-  // now-hidden card underneath (its white slide-out already covered the base — no flash).
+  // Fired by the locations page's city-select box, or on black and white displays by SELECT on
+  // the card once it has slid out to the left.
   if (!data->globe_view) {
     expanded_view_dismiss(false);
     return;
@@ -547,6 +565,20 @@ static void prv_expanded_select_to_globe(void *ctx) {
   }
   // Open hovering the ACTIVE location's pin — the city last selected to look at.
   globe_view_focus_coords(data->globe_view, data->latitude_e2, data->longitude_e2);
+  GPoint origin8;
+  int32_t scale_q8;
+  if (expanded_view_get_page() == 1 &&
+      expanded_view_locations_globe_placement(&origin8, &scale_q8)) {
+    // The card stays on the stack beneath: it draws the backdrop, and BACK returns to it.
+    data->globe_from_locations = true;
+    expanded_view_drop_card_mask();
+    globe_view_push_unwrap(data->globe_view, origin8, scale_q8,
+                           expanded_view_draw_locations_backdrop, prv_drop_card_body, nullptr);
+    return;
+  }
+  // Black and white displays, or the box's globe art failed to load. BACK pushes the card again
+  // from the left.
+  data->globe_from_locations = false;
   globe_view_push_slide_in_right(data->globe_view);
   expanded_view_dismiss(false); // remove the card, now hidden beneath the globe
 }
@@ -601,10 +633,7 @@ static void prv_on_list_transition_done(void *ctx) {
 }
 
 // ---- Globe (3D earth) ----
-// The globe renders + touch-spins and is reachable from the forecast list's
-// city-select and from the clock's wrap gesture. Actually changing the active
-// location from the globe (location_select) is not yet wired up — for now
-// selecting a location just returns to the main screen.
+// Selecting a location on the globe makes it the active location (prv_globe_location_selected).
 
 static void prv_push_globe(WeatherAppData *data, bool animated) {
   if (!data->globe_view) {
@@ -615,6 +644,7 @@ static void prv_push_globe(WeatherAppData *data, bool animated) {
                                     data->current_lon_e2);
   }
   globe_view_focus_coords(data->globe_view, data->latitude_e2, data->longitude_e2);
+  data->globe_from_locations = false; // opened from the forecast, not the locations page
   globe_view_push_animated(data->globe_view, animated);
 }
 
@@ -626,6 +656,13 @@ static void prv_on_city_select_requested(void *ctx) {
 
 static void prv_globe_back_to_expanded(void *ctx) {
   WeatherAppData *data = (WeatherAppData *)ctx;
+  if (data->globe_from_locations) {
+    // The globe art is back in the card's box, and the card beneath shows the same picture.
+    if (data->globe_view) {
+      globe_view_dismiss(data->globe_view, false);
+    }
+    return;
+  }
   // BACK on the globe cradle: the globe has already slid out to the RIGHT (globe_view fired us on
   // the slide-out completion). Dismiss it (revealing the forecast base) and bring the whole card
   // back in from the LEFT — the exact mirror of the SELECT slide-out-left that got us here.
@@ -657,8 +694,9 @@ static void prv_globe_location_selected(int ds_index, bool force, void *ctx) {
   (void)force;
   // IMPORTANT: do NOT dismiss the globe here. The globe pops itself right after
   // this callback returns (commit_hovered_location() → globe_view_pop() pops the
-  // top window); its self-pop lands on the forecast base — the mainscreen.
+  // top window), so dismiss only the card beneath it, and the pop lands on the forecast base.
   prv_select_ds_location((WeatherAppData *)ctx, ds_index);
+  expanded_view_dismiss(false);
 }
 
 // ---- Saved-locations list ----
@@ -726,6 +764,8 @@ static PBL_NOINLINE void prv_init(void) {
   clock_face_reset();
   expanded_view_reset();
   weather_report_reset();
+  forecast_list_reset();
+  saved_locations_reset();
 
   WeatherAppData *data = app_zalloc_check(sizeof(WeatherAppData));
   app_state_set_user_data(data);

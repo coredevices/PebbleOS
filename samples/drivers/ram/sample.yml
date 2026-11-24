@@ -6,3 +6,4 @@ expect:
   - 'ram: all words match'
   - 'Sample done'
 roles: [extram]
+integration: [qemu_emery, obelix@pvt, sf32lb57_dpi_hdk]

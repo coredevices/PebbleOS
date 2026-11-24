@@ -48,7 +48,10 @@ typedef struct CurrentWorkoutData {
   int32_t steps;
   int32_t distance_m;
   // Pace
+  // Active calories estimated from distance and from heart rate; the larger is reported, since
+  // steps miss non-stepping effort and heart rate can be missing.
   int32_t active_calories;
+  int32_t hr_active_calories;
   int32_t current_bpm;
   time_t current_bpm_timestamp_ts; // Time since boot
   HRZone current_hr_zone;
@@ -109,6 +112,10 @@ static int32_t prv_get_avg_hr(void) {
 
   return PBL_DIV_ROUND_CLOSEST(s_workout_data.current_workout->hr_samples_sum,
                                s_workout_data.current_workout->hr_samples_count);
+}
+
+static int32_t prv_get_active_calories(const CurrentWorkoutData *wrkt) {
+  return PBL_MAX(wrkt->active_calories, wrkt->hr_active_calories);
 }
 
 static void prv_update_duration(void) {
@@ -222,6 +229,7 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
     prv_reset_hr_data();
   } else {
     const int prev_bpm_timestamp_ts = wrkt_data->current_bpm_timestamp_ts;
+    const int32_t prev_bpm = wrkt_data->current_bpm;
     const uint8_t raw_bpm = event->current_bpm;
 
     // Every reading the algorithm outputs is used: confidence tends to stay low during motion,
@@ -252,6 +260,16 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
           wrkt_data->current_bpm_timestamp_ts - prev_bpm_timestamp_ts;
       wrkt_data->hr_samples_count++;
       wrkt_data->hr_samples_sum += raw_bpm;
+
+      // Credit the interval since the previous reading at that reading's rate. Skip it after a
+      // reset (no previous reading) and cap it so a gap in readings isn't extrapolated.
+      if (prev_bpm != 0) {
+        const time_t interval_s =
+            PBL_MIN(wrkt_data->current_bpm_timestamp_ts - prev_bpm_timestamp_ts,
+                    WORKOUT_HR_READING_TS_EXPIRE);
+        wrkt_data->hr_active_calories += activity_private_compute_active_calories_from_hr(
+            prev_bpm, interval_s * PBL_MSEC_PER_SEC);
+      }
     }
   }
   return;
@@ -547,7 +565,7 @@ bool workout_service_stop_workout(void) {
         .step_data.steps = wrkt->steps,
         .step_data.distance_meters = wrkt->distance_m,
         .step_data.active_kcalories =
-            PBL_DIV_ROUND_CLOSEST(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+            PBL_DIV_ROUND_CLOSEST(prv_get_active_calories(wrkt), ACTIVITY_CALORIES_PER_KCAL),
         .step_data.resting_kcalories = PBL_DIV_ROUND_CLOSEST(
             activity_private_compute_resting_calories(len_min), ACTIVITY_CALORIES_PER_KCAL),
       };
@@ -625,6 +643,8 @@ bool workout_service_takeover_activity_session(ActivitySession *session) {
     s_workout_data.current_workout->distance_m = session_copy.step_data.distance_meters;
     s_workout_data.current_workout->active_calories =
         session_copy.step_data.active_kcalories * ACTIVITY_CALORIES_PER_KCAL;
+    s_workout_data.current_workout->hr_active_calories =
+        s_workout_data.current_workout->active_calories;
   }
 unlock:
   prv_unlock();
@@ -701,7 +721,8 @@ bool workout_service_get_current_workout_metrics(WorkoutServiceMetrics *metrics_
       .current_hr_zone = wrkt->current_hr_zone,
       .hr_samples = wrkt->hr_samples_count,
       .avg_bpm = prv_get_avg_hr(),
-      .active_kcal = PBL_DIV_ROUND_CLOSEST(wrkt->active_calories, ACTIVITY_CALORIES_PER_KCAL),
+      .active_kcal =
+          PBL_DIV_ROUND_CLOSEST(prv_get_active_calories(wrkt), ACTIVITY_CALORIES_PER_KCAL),
     };
     memcpy(metrics_out->hr_zone_time_s, wrkt->hr_zone_time_s, sizeof(wrkt->hr_zone_time_s));
   }
@@ -737,7 +758,7 @@ bool workout_service_get_current_workout_hr_zone_time(int32_t *hr_zone_time_s_ou
 
 void workout_service_get_active_kcalories(int32_t *active) {
   if (workout_service_is_workout_ongoing()) {
-    *active = PBL_DIV_ROUND_CLOSEST(s_workout_data.current_workout->active_calories,
+    *active = PBL_DIV_ROUND_CLOSEST(prv_get_active_calories(s_workout_data.current_workout),
                                     ACTIVITY_CALORIES_PER_KCAL);
   }
 }

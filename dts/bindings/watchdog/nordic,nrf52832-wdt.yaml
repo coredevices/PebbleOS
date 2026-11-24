@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/watchdog/nordic,nrf52832-wdt.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 watchdog
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Watchdog timer on LFCLK, with eight reload request registers.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-wdt
+      - items:
+          - enum:
+              - nordic,nrf52833-wdt
+              - nordic,nrf52840-wdt
+          - const: nordic,nrf52832-wdt
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    watchdog@40010000 {
+        compatible = "nordic,nrf52840-wdt", "nordic,nrf52832-wdt";
+        reg = <0x40010000 0x1000>;
+        interrupts = <16>;
+    };

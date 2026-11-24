@@ -7,31 +7,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/util/uuid.h>
-
-#include <comm/ble/gatt_client_subscriptions.h>
 
 /**
  * @defgroup pp_transport_gatt GATT transport
  * @ingroup pp_transport
  * @brief Pebble protocol over GATT (PPoGATT), a client of the phone's PPoGATT service.
  *
- * The kernel LE client dispatches the GATT events of the service to these functions.
+ * The application starts it when the phone connects, and stops it when the phone goes. Unless
+ * told otherwise, its functions are for the main thread, see pbl_pp_main_call().
  * @{
  */
 
-/** @brief Characteristics of the PPoGATT service, in discovery order. */
+/** @brief Length of the serial number sent to the phone, in characters. */
+#define PBL_PP_GATT_SERIAL_NUMBER_SIZE 12
+
+/** @brief Characteristics of the PPoGATT service. */
 enum pbl_pp_gatt_characteristic {
   PBL_PP_GATT_CHARACTERISTIC_DATA,
   PBL_PP_GATT_CHARACTERISTIC_META,
   PBL_PP_GATT_CHARACTERISTIC_NUM
 };
-
-/** @brief UUID of the phone's PPoGATT service. */
-extern const Uuid pbl_pp_gatt_service_uuid;
-
-/** @brief UUIDs of the service's characteristics, indexed by @ref pbl_pp_gatt_characteristic. */
-extern const Uuid pbl_pp_gatt_characteristic_uuids[PBL_PP_GATT_CHARACTERISTIC_NUM];
 
 /** @brief Start, once the Bluetooth stack is up. */
 void pbl_pp_gatt_create(void);
@@ -40,56 +37,78 @@ void pbl_pp_gatt_create(void);
 void pbl_pp_gatt_destroy(void);
 
 /**
- * @brief Handle a discovered PPoGATT service.
+ * @brief Look for the PPoGATT services of the phone, and open a session with each.
  *
- * @param characteristics Handles of the characteristics, indexed by
- *                        @ref pbl_pp_gatt_characteristic.
+ * The Pebble app hosts one, and so may other apps.
+ *
+ * @param conn_handle The connection of the phone.
  */
-void pbl_pp_gatt_handle_service_discovered(pbl_bt_characteristic_t *characteristics);
+void pbl_pp_gatt_discover(uint16_t conn_handle);
 
 /**
- * @brief Handle a removed PPoGATT service.
+ * @brief The services of the phone changed: look for its PPoGATT services again.
  *
- * @param characteristics Handles of the removed characteristics.
- * @param num_characteristics Number of handles.
+ * A service that is where it was keeps its session; the session of one that moved or is gone
+ * is closed.
  */
-void pbl_pp_gatt_handle_service_removed(pbl_bt_characteristic_t *characteristics,
-                                        uint8_t num_characteristics);
+void pbl_pp_gatt_handle_services_changed(void);
 
-/** @brief Forget every characteristic handle, e.g. on disconnection. */
+/** @brief Close the sessions with the PPoGATT services of the phone. */
 void pbl_pp_gatt_invalidate_all_references(void);
 
 /**
- * @brief Check whether a characteristic belongs to a PPoGATT service.
+ * @brief Handle a PPoGATT service found on the phone.
  *
- * @param characteristic Characteristic handle.
- * @return true if the transport handles @p characteristic.
+ * @param instance Which of the phone's PPoGATT services, counting from 0.
  */
-bool pbl_pp_gatt_can_handle_characteristic(pbl_bt_characteristic_t characteristic);
+void pbl_pp_gatt_handle_service_discovered(uint8_t instance);
 
 /**
- * @brief Handle a subscription confirmation.
+ * @brief Handle the answer to subscribing to, or unsubscribing from, the data characteristic.
  *
- * @param characteristic Characteristic handle.
- * @param subscription_type Subscription now in effect.
- * @param error GATT error, if any.
+ * @param instance Which of the phone's PPoGATT services.
+ * @param is_subscribed true for a subscription.
+ * @param error 0, the ATT error code (positive) or a negative errno.
  */
-void pbl_pp_gatt_handle_subscribe(pbl_bt_characteristic_t characteristic,
-                                  BLESubscription subscription_type, enum pbl_bt_gatt_error error);
+void pbl_pp_gatt_handle_subscribe(uint8_t instance, bool is_subscribed, int error);
 
 /**
- * @brief Handle a read response or a notification.
+ * @brief Handle the meta characteristic read, or a notification of the data characteristic.
  *
- * @param characteristic Characteristic handle.
+ * @param instance Which of the phone's PPoGATT services.
+ * @param characteristic The characteristic.
  * @param value Value read or notified.
  * @param value_length Length of @p value in bytes.
- * @param error GATT error, if any.
+ * @param error 0, the ATT error code (positive) or a negative errno.
  */
-void pbl_pp_gatt_handle_read_or_notification(pbl_bt_characteristic_t characteristic,
-                                             const uint8_t *value, size_t value_length,
-                                             enum pbl_bt_gatt_error error);
+void pbl_pp_gatt_handle_read_or_notification(uint8_t instance,
+                                             enum pbl_pp_gatt_characteristic characteristic,
+                                             const uint8_t *value, size_t value_length, int error);
 
 /** @brief Clear the count of disconnections caused by repeated resets. */
 void pbl_pp_gatt_reset_disconnect_counter(void);
+
+/**
+ * @brief Get the serial number of the device, sent to the phone when a session starts.
+ * Implemented by the application.
+ *
+ * @return @ref PBL_PP_GATT_SERIAL_NUMBER_SIZE characters; a terminator is not needed.
+ */
+const char *pbl_pp_gatt_cb_get_serial_number(void);
+
+/**
+ * @brief Apply a connection response time, see pbl_pp_session_set_responsiveness(). Implemented
+ * by the application, and called from any thread.
+ *
+ * @param conn_handle The connection of the phone.
+ * @param consumer Consumer making the request.
+ * @param state Requested response time state.
+ * @param max_period_secs Maximum time to stay in @p state.
+ * @param granted To call on the main thread once @p state is in effect. May be NULL.
+ */
+void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+                                       enum pbl_bt_response_time_state state,
+                                       uint16_t max_period_secs,
+                                       pbl_bt_responsiveness_granted_cb_t granted);
 
 /** @} */

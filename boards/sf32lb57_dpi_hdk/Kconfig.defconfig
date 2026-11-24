@@ -7,3 +7,10 @@ config FLASH_BASE
 
 config FLASH_SIZE
     default 0x1000000
+
+if FLASH_SPI_NOR
+
+config FLASH_SPI_NOR_PY25Q128HA
+    default y
+
+endif

@@ -9,3 +9,4 @@ expect:
   - 'profiler: bubble sort \d+ us, insertion sort \d+ us'
   - 'profiler: insertion sort took fewer cycles: yes'
   - 'Sample done'
+integration: [qemu_emery]

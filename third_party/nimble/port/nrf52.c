@@ -13,20 +13,21 @@ static void (*rtc0_irq)(void);
 static void (*rng_irq)(void);
 #endif
 
-PBL_IRQ_DIRECT(RADIO, 5, 0) {
+// The radio preempts every other interrupt; the link layer timer and RNG run as drivers do
+PBL_IRQ_DIRECT(RADIO, 0, 0) {
   if (radio_irq != NULL) {
     radio_irq();
   }
 }
 
-PBL_IRQ_DIRECT(RTC0, 7, 0) {
+PBL_IRQ_DIRECT(RTC0, 1, 0) {
   if (rtc0_irq != NULL) {
     rtc0_irq();
   }
 }
 
 #ifndef CONFIG_NIMBLE_TRNG
-PBL_IRQ_DIRECT(RNG, 7, 0) {
+PBL_IRQ_DIRECT(RNG, 1, 0) {
   if (rng_irq != NULL) {
     rng_irq();
   }

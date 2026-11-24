@@ -36,6 +36,10 @@ typedef struct {
 
 void saved_locations_push(const SavedLocationsConfig *config);
 
+//! Clear the launch-persistent statics; call once from the app's init (a crashed
+//! run never reaches unload, so the next launch would read stale pointers).
+void saved_locations_reset(void);
+
 //! Snapshot the phone's synced locations into `entries` (current location
 //! first, then the rest in the phone's own order).
 //! @return the number of entries written (0 if the phone has synced none).

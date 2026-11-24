@@ -67,6 +67,17 @@ jobs:
             done
             if $skip; then continue; fi
 
+            # dt-bindings headers carry the license of the devicetree bindings
+            case "$file" in
+              include/dt-bindings/*)
+                if ! head -10 "$file" | grep -qF "SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)"; then
+                  echo "::error file=$file::Missing 'SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)' header"
+                  failed_files+=("$file")
+                fi
+                continue
+                ;;
+            esac
+
             if ! head -10 "$file" | grep -q "SPDX-License-Identifier: Apache-2.0"; then
               # Resolve the file's pre-PR identity: either same path or the
               # source of a rename, followed commit by commit so a file moved

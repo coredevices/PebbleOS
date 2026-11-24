@@ -20,7 +20,7 @@ config MBOX_SF32LB
 
 config MBOX_SF32LB_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on MBOX_SF32LB
     help
       Priority of the interrupt of the blocks rung by the remote.

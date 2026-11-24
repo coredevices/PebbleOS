@@ -1,11 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SOC_QEMU_PEBBLE
+config SOC_FAMILY_QEMU
     bool
-    select QEMU
-    select TIMER_ARM_SYSTICK
-    select TIMER_QEMU
     help
-      Pebble QEMU machine, a custom machine emulating Pebble hardware,
-      selected by its cores.
+      QEMU machines, selected by the machine.
+
+rsource "*/Kconfig"

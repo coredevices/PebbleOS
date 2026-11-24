@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_STM32
+    bool
+    help
+      ST STM32 family, selected by its series.
+
+rsource "*/Kconfig"

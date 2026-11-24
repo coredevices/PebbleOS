@@ -4,6 +4,7 @@
 #include "saved_locations.h"
 
 #include "weather_data_source.h"
+#include "weather_math.h"
 #include "weather_types.h"
 
 #include <pbl/i18n/i18n.h>
@@ -41,6 +42,14 @@ static int s_entry_count;
 
 #define GLANCE_WEATHER_TYPES 9 // WeatherType_PartlyCloudy(0) .. WeatherType_RainAndSnow(8)
 static GBitmap *s_glance_icons[GLANCE_WEATHER_TYPES];
+
+void saved_locations_reset(void) {
+  // No destroy: after a crashed run these point into the previous app heap.
+  s_view = nullptr;
+  for (int i = 0; i < GLANCE_WEATHER_TYPES; i++) {
+    s_glance_icons[i] = nullptr;
+  }
+}
 
 static void prv_glance_destroy_icons(void) {
   for (int i = 0; i < GLANCE_WEATHER_TYPES; i++) {
@@ -99,8 +108,7 @@ int saved_locations_get_entries(SavedLocationEntry *entries, int max_entries) {
         .temp = (int16_t)ds->current_temp,
         .weather_type = ds->current_weather_type,
       };
-      strncpy(e->label, ds->location_name, sizeof(e->label) - 1);
-      e->label[sizeof(e->label) - 1] = '\0';
+      weather_copy_text(e->label, sizeof(e->label), ds->location_name);
     }
   }
   free(ds);
@@ -214,8 +222,7 @@ static void prv_draw_glance_row(GContext *ctx, const Layer *cell_layer,
   // which truncates to an unreadable "New York, Un..." in a row this wide. The
   // globe label still carries the full region/country.
   char city[SAVED_LOCATION_LABEL_SIZE];
-  strncpy(city, title, sizeof(city) - 1);
-  city[sizeof(city) - 1] = 0;
+  weather_copy_text(city, sizeof(city), title);
   char *comma = strchr(city, ',');
   if (comma)
     *comma = 0;

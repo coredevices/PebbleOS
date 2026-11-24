@@ -27,11 +27,6 @@ PBL_LOG_MODULE_DECLARE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
 #define LCDC_XRST_DELAY_US  35U
 #define LCDC_START_DELAY_US 1U
 
-// Flash addresses on the code bus, seen by the controller on the system bus
-#define LCDC_MPI_CBUS_START  0x10000000U
-#define LCDC_MPI_CBUS_END    0x20000000U
-#define LCDC_MPI_SBUS_OFFSET 0x50000000U
-
 static const struct pbl_display_sf32lb_lcdc *prv_lcdc(const struct pbl_display *disp) {
   return PBL_CONTAINER_OF(disp, const struct pbl_display_sf32lb_lcdc, disp);
 }
@@ -197,14 +192,8 @@ static void prv_rows_convert(const struct pbl_display_sf32lb_lcdc *lcdc,
   }
 }
 
-static uint32_t prv_bus_addr(const uint8_t *p) {
-  uint32_t addr = (uint32_t)(uintptr_t)p;
-
-  if (addr >= LCDC_MPI_CBUS_START && addr < LCDC_MPI_CBUS_END) {
-    addr += LCDC_MPI_SBUS_OFFSET;
-  }
-
-  return addr;
+static uint32_t prv_bus_addr(const struct pbl_display_sf32lb_lcdc *lcdc, const uint8_t *p) {
+  return (uint32_t)pbl_dma_window_addr(&lcdc->window, (uintptr_t)p);
 }
 
 static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
@@ -213,7 +202,7 @@ static int prv_update_start(const struct pbl_display_sf32lb_lcdc *lcdc) {
   uint16_t width = lcdc->disp.props.width;
   uint16_t height = lcdc->disp.props.height;
   uint8_t *first = &state->fb[state->y0 * state->pitch];
-  uint32_t src = prv_bus_addr(first);
+  uint32_t src = prv_bus_addr(lcdc, first);
   uint32_t layer;
   int ret;
 

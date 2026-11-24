@@ -136,9 +136,8 @@ uint32_t activity_private_compute_active_calories(uint32_t distance_mm, uint32_t
 }
 
 // --------------------------------------------------------------------------------------------
-uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
-  // This computes resting metabolic rate in calories based on the MD Mifflin and ST St jeor
-  // formula. This formula gives the number of kcalories expended per day
+// Resting metabolic rate in calories per day, from the MD Mifflin and ST St Jeor formula.
+static uint32_t prv_resting_calories_per_day(void) {
   uint32_t calories_per_day;
   ActivityGender gender = activity_prefs_get_gender();
   uint64_t weight_dag = activity_prefs_get_weight_dag();
@@ -156,10 +155,57 @@ uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
     // midpoint of 5000 and -161000
     calories_per_day -= 78000;
   }
+  return calories_per_day;
+}
+
+// --------------------------------------------------------------------------------------------
+uint32_t activity_private_compute_resting_calories(uint32_t elapsed_minutes) {
+  const uint32_t calories_per_day = prv_resting_calories_per_day();
 
   // Scale by the requested number of minutes
   uint32_t resting_calories =
       PBL_DIV_ROUND_CLOSEST(calories_per_day * elapsed_minutes, PBL_MIN_PER_DAY);
   PBL_LOG_DBG("resting_calories: %" PRIu32 "", resting_calories);
   return resting_calories;
+}
+
+// --------------------------------------------------------------------------------------------
+// Compute active calories from heart rate, using the Keytel et al. (2005) energy expenditure
+// prediction (https://doi.org/10.1080/02640410470001730089), which gives gross kJ/min:
+//   men:   -55.0969 + 0.6309 * HR + 0.1988 * weight(kg) + 0.2017 * age(y)
+//   women: -20.4022 + 0.4472 * HR - 0.1263 * weight(kg) + 0.0740 * age(y)
+// The resting metabolic rate is subtracted so the result is comparable to the distance-based
+// active calories. Coefficients are scaled by 1e6; weight is in dag, so its coefficients are
+// scaled by 1e4.
+uint32_t activity_private_compute_active_calories_from_hr(uint32_t bpm, uint32_t ms) {
+  if ((bpm == 0) || (ms == 0)) {
+    return 0;
+  }
+
+  const int64_t bpm_64 = bpm;
+  const int64_t weight_dag = activity_prefs_get_weight_dag();
+  const int64_t age_years = activity_prefs_get_age_years();
+  const ActivityGender gender = activity_prefs_get_gender();
+
+  const int64_t male_kj_per_min_x1e6 =
+      -55096900 + (630900 * bpm_64) + (1988 * weight_dag) + (201700 * age_years);
+  const int64_t female_kj_per_min_x1e6 =
+      -20402200 + (447200 * bpm_64) - (1263 * weight_dag) + (74000 * age_years);
+
+  int64_t kj_per_min_x1e6;
+  if (gender == ActivityGenderMale) {
+    kj_per_min_x1e6 = male_kj_per_min_x1e6;
+  } else if (gender == ActivityGenderFemale) {
+    kj_per_min_x1e6 = female_kj_per_min_x1e6;
+  } else {
+    kj_per_min_x1e6 = (male_kj_per_min_x1e6 + female_kj_per_min_x1e6) / 2;
+  }
+
+  // kJ/min -> cal/ms: 1000 cal/kcal / (4.184 kJ/kcal * 60000 ms/min)
+  const int64_t gross_calories = (kj_per_min_x1e6 * (int64_t)ms) / 251040000;
+  const int64_t resting_calories = ((int64_t)prv_resting_calories_per_day() * (int64_t)ms) /
+                                   ((int64_t)PBL_SEC_PER_DAY * PBL_MSEC_PER_SEC);
+
+  const int64_t active_calories = gross_calories - resting_calories;
+  return (active_calories > 0) ? (uint32_t)active_calories : 0;
 }

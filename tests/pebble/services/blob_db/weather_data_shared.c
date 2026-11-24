@@ -139,6 +139,7 @@ static WeatherDBEntry *prv_create_entry(const WeatherDBEntry *base_entry, char *
   // The strings are appended after the FULL current struct, so the record must
   // carry the current minor — a lower minor moves the strings offset forward.
   entry->minor_version = WEATHER_DB_CURRENT_MINOR_VERSION;
+  entry->fixed_size = WEATHER_DB_V4_FIXED_SIZE;
   entry->pstring16s.data_size = data_size;
   entry->last_update_time_utc = pbl_realtime();
 

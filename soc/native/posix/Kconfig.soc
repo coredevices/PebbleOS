@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_POSIX
+    bool "POSIX host"
+    select SOC_FAMILY_NATIVE
+    select ARCH_POSIX
+    select SOC_HAS_RESET
+    select TIMER_POSIX
+    help
+      Run the firmware as a native application on a POSIX host
+      (Linux, macOS), with emulated peripherals.

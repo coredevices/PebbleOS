@@ -36,7 +36,8 @@ event device programs its compare register.
 `pbl_tick_t` remains for relative timeouts only.
 
 `pbl_cycle_get_32()` reads the CPU cycle counter (DWT `CYCCNT` on Cortex-M) at
-`pbl_cycles_per_sec()`, the current CPU clock. Use it to time short sections:
+`pbl_cycles_per_sec()`, the current CPU clock, which the SoC and its clock
+driver report with `pbl_cycles_per_sec_set()`. Use it to time short sections:
 it wraps within seconds and stops while the CPU sleeps.
 
 ## Wall clock

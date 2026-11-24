@@ -1,0 +1,35 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <pbl/kernel/init.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/kernel/sched.h>
+
+#include <pbl_arch_posix.h>
+#include <posix_host.h>
+
+#ifdef CONFIG_ARCH_POSIX_FIBERS
+// One host thread: the main loop runs the kernel until it idles.
+static void prv_kernel_poll(void) {
+  pbl_posix_run();
+}
+
+POSIX_HOST_HOOK(.poll = prv_kernel_poll)
+#endif
+
+void pbl_soc_early_init(void) {
+}
+
+[[noreturn]] void pbl_soc_reset(void) {
+  posix_host_reboot();
+}
+
+void posix_fw_start(void) {
+  extern int pbl_app_main(void);
+  pbl_posix_start(pbl_app_main);
+}
+
+#ifndef CONFIG_SAMSA
+// Third-party apps are ARM binaries, which a native build cannot load.
+const void *const g_pbl_system_tbl[] = {0};
+#endif

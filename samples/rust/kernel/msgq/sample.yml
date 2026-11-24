@@ -11,3 +11,4 @@ expect:
   - 'main: put on a full queue returns Err\(EBUSY\)'
   - 'main: sample 999 was put last and comes out first'
   - 'Sample done'
+integration: [qemu_emery, qemu_flint]

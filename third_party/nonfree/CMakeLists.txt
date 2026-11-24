@@ -11,7 +11,7 @@ if(CONFIG_NRF_FUEL_GAUGE)
   endif()
   if(CONFIG_CPU_CORTEX_M4)
     set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m4/${fuel_gauge_float})
-  elseif(CONFIG_CPU_CORTEX_M33)
+  elseif(CONFIG_ARMV8_M_MAINLINE)
     set(fuel_gauge_lib ${nonfree}/npm1300/nrf_fuel_gauge/lib/cortex-m33/${fuel_gauge_float})
   endif()
   pbl_include_directories(

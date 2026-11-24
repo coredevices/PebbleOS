@@ -1,0 +1,3 @@
+# stm32h747i_disco board configuration
+
+CONFIG_UART=y

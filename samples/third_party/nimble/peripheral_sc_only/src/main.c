@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/fs/fs.h>
-#include <pbl/fs/pfs.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 
@@ -17,8 +15,7 @@
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 
-#define NAME      "PebbleOS SC"
-#define MAX_BONDS 4
+#define NAME "PebbleOS SC"
 
 /* 5e1a0100-7c3b-4f0e-9d2a-6b8c1f4e0a37, and its characteristic. */
 #define SAMPLE_UUID(n)                                                                        \
@@ -28,7 +25,6 @@
 static const ble_uuid128_t s_svc_uuid = SAMPLE_UUID(0x00);
 static const ble_uuid128_t s_secret_uuid = SAMPLE_UUID(0x01);
 
-static struct pbl_fs_mount s_mount = {.mnt_point = "/", .ops = &pbl_fs_pfs_ops};
 static PBL_SEM_DEFINE(s_synced, 0, 1);
 static uint8_t s_own_addr_type;
 
@@ -195,16 +191,7 @@ static void prv_on_reset(int reason) {
 }
 
 int main(void) {
-  ble_addr_t bonds[MAX_BONDS];
-  int num_bonds;
   int rc;
-
-  /* The store keeps the bonds in a settings file. */
-  rc = pbl_fs_mount(&s_mount);
-  if (rc != 0) {
-    printf("peripheral_sc_only: mount failed (%d)\n", rc);
-    return rc;
-  }
 
   nimble_port_init();
   ble_hs_cfg.sync_cb = prv_on_sync;
@@ -226,17 +213,6 @@ int main(void) {
   if (rc != 0) {
     printf("peripheral_sc_only: adding the services failed (%d)\n", rc);
     return rc;
-  }
-
-  rc = ble_store_util_bonded_peers(bonds, &num_bonds, MAX_BONDS);
-  if (rc != 0) {
-    printf("peripheral_sc_only: reading the bonds failed (%d)\n", rc);
-    return rc;
-  }
-
-  printf("peripheral_sc_only: %d bonded peer%s\n", num_bonds, num_bonds == 1 ? "" : "s");
-  for (int i = 0; i < num_bonds; i++) {
-    prv_print_addr("bonded with", &bonds[i]);
   }
 
   nimble_port_pebble_init();

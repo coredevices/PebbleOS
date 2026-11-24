@@ -89,4 +89,14 @@ static PBL_ALWAYS_INLINE uint32_t pbl_cycle_get_32(void) {
  */
 uint32_t pbl_cycles_per_sec(void);
 
+/**
+ * @brief Set the rate of the CPU cycle counter.
+ *
+ * For the code that knows the CPU clock, the SoC and its clock driver: at boot, before anything
+ * waits, then whenever the CPU clock changes.
+ *
+ * @param hz Cycles per second.
+ */
+void pbl_cycles_per_sec_set(uint32_t hz);
+
 /** @} */

@@ -7,18 +7,7 @@ choice
       SoC. Real boards pick their SoC line; QEMU boards pick the core of
       the Pebble QEMU machine.
 
-rsource "nrf/Kconfig.soc"
-rsource "sf32lb/Kconfig.soc"
-rsource "qemu/Kconfig.soc"
-
-config SOC_POSIX
-    bool "POSIX host"
-    select ARCH_POSIX
-    select SOC_HAS_RESET
-    select TIMER_POSIX
-    help
-      Run the firmware as a native application on a POSIX host
-      (Linux, macOS), with emulated peripherals.
+rsource "*/Kconfig.soc"
 
 endchoice
 
@@ -51,32 +40,10 @@ config SOC
     default "NRF52" if SOC_NRF52
     default "SF32LB52" if SOC_SF32LB52
     default "SF32LB57" if SOC_SF32LB57
+    default "STM32H747" if SOC_STM32H747_M7 || SOC_STM32H747_M4
     help
       Stringified SoC name, for places that need the name as a token
       (e.g. sftool -c). Empty on QEMU and POSIX boards.
-
-config POSIX_EMSCRIPTEN
-    bool "Emscripten"
-    depends on SOC_POSIX
-    select ARCH_POSIX_FIBERS
-    help
-      The host is a browser, running the firmware as WebAssembly built
-      with Emscripten. Kernel threads are fibers on the browser's single
-      thread, and the browser's event loop drives the host side.
-
-config POSIX_EMSCRIPTEN_FRAME
-    string
-    help
-      The watch the Emscripten page draws around the display: a directory of
-      soc/posix/emscripten/frames and an entry of the page's table of
-      frames. Set per board in boards/<board>/Kconfig.defconfig.
-
-config SDL
-    bool
-    depends on SOC_POSIX
-    help
-      SDL, for the host halves of the drivers of a native build that
-      need a window or its input. Selected by those drivers.
 
 config QEMU
     bool
@@ -84,6 +51,4 @@ config QEMU
       Derived alias for SOC_QEMU_PEBBLE. Gates features that don't make
       sense under emulation.
 
-rsource "nrf/Kconfig"
-rsource "qemu/Kconfig"
-rsource "sf32lb/Kconfig"
+rsource "*/Kconfig"

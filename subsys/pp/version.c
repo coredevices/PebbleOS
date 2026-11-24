@@ -6,10 +6,8 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
+#include <pbl/pp/main.h>
 #include <pbl/util/byteorder.h>
-
-#include <kernel/event_loop.h>
-#include <kernel/events.h>
 
 PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
 
@@ -45,7 +43,7 @@ static void prv_request_cb(void *data) {
 }
 
 void pbl_pp__version_request(struct pbl_pp_session *session) {
-  launcher_task_add_callback(prv_request_cb, session);
+  pbl_pp_main_call(prv_request_cb, session);
 }
 
 static void prv_handle_response(struct pbl_pp_session *session, const uint8_t *data,
@@ -75,16 +73,8 @@ static void prv_handle_response(struct pbl_pp_session *session, const uint8_t *d
   PBL_LOG_INFO("Phone app: is_system=%u, plf=0x%" PRIx32 ", capabilities=0x%" PRIx32, is_system,
                platform_bits, capabilities);
 
-  if (is_system) {
-    PebbleEvent event = {
-      .type = PEBBLE_REMOTE_APP_INFO_EVENT,
-      .bluetooth.app_info_event = {
-        .os = (enum pbl_pp_remote_os)(platform_bits & PBL_PP_REMOTE_OS_MASK),
-      },
-    };
-
-    event_put(&event);
-  }
+  pbl_pp__session_set_remote_os(session,
+                                (enum pbl_pp_remote_os)(platform_bits & PBL_PP_REMOTE_OS_MASK));
 }
 
 static void prv_version_handler(struct pbl_pp_session *session, const uint8_t *data,

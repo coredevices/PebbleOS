@@ -20,7 +20,7 @@ config GPU_SF32LB57_EPIC
 
 config GPU_SF32LB57_EPIC_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 0
     depends on GPU_SF32LB57_EPIC
     help
       Priority of the accelerator interrupt.

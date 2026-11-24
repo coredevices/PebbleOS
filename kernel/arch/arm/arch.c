@@ -17,9 +17,6 @@
 
 #include <kernel.h>
 
-// Kept up to date by the SoC clock code
-extern uint32_t SystemCoreClock;
-
 #ifdef CONFIG_CPU_HAS_FPU
 #define HAS_FPU 1
 #else
@@ -207,12 +204,8 @@ bool arch_in_isr(void) {
   return mcu_state_is_isr();
 }
 
-PBL_SECTION_RAM uint32_t arch_cycles_per_sec(void) {
-  return SystemCoreClock;
-}
-
-// Faults and the most urgent interrupts stay enabled.
-#define HEAP_LOCK_BASEPRI (2 << (8 - CONFIG_NUM_IRQ_PRIO_BITS))
+// Faults and zero-latency interrupts stay enabled.
+#define HEAP_LOCK_BASEPRI ARCH_IRQ_PRIO_LOCK_HW
 
 static bool s_heap_locked;
 static uint32_t s_heap_basepri;
@@ -306,7 +299,7 @@ PBL_NAKED void PendSV_Handler(void) {
       "  msr psp, r0 \n"
       "  isb \n"
       "  bx r14 \n"
-      "  .ltorg \n" ::[mask] "i"(PBL_IRQ_PRIO_MAX_SYSCALL),
+      "  .ltorg \n" ::[mask] "i"(ARCH_IRQ_PRIO_LOCK_HW),
       [user] "i"(USER_OFFSET));
 }
 
@@ -448,9 +441,9 @@ void arch_early_init(void) {
 }
 
 void arch_init(void) {
-  arm_shpr_set(ARM_EXC_MEMMANAGE, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
-  arm_shpr_set(ARM_EXC_BUSFAULT, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
-  arm_shpr_set(ARM_EXC_USAGEFAULT, (uint8_t)PBL_IRQ_PRIO_MAX_SYSCALL);
+  arm_shpr_set(ARM_EXC_MEMMANAGE, (uint8_t)ARCH_IRQ_PRIO_FAULT_HW);
+  arm_shpr_set(ARM_EXC_BUSFAULT, (uint8_t)ARCH_IRQ_PRIO_FAULT_HW);
+  arm_shpr_set(ARM_EXC_USAGEFAULT, (uint8_t)ARCH_IRQ_PRIO_FAULT_HW);
 
   arch_writel(arch_readl(ARM_SCB_SHCSR) | ARM_SCB_SHCSR_MEMFAULTENA | ARM_SCB_SHCSR_BUSFAULTENA |
                   ARM_SCB_SHCSR_USGFAULTENA,

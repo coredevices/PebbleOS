@@ -14,9 +14,9 @@ module-str = Pebble protocol
 source "subsys/logging/Kconfig.template.log_level"
 
 config PP_TRANSPORT_GATT
-    bool
-    default y
-    depends on BT
+    bool "PPoGATT"
+    depends on NIMBLE
+    select BT_GATT_CLIENT
     help
       Pebble protocol over GATT (PPoGATT), the transport phones use.
 
@@ -28,17 +28,9 @@ config PP_TRANSPORT_GATT_SYSTEM_ONLY
       those of third-party phone apps.
 
 config PP_TRANSPORT_CONSOLE
-    bool
-    default y
+    bool "Console frames"
     depends on CONSOLE
     help
       Pebble protocol over serial console frames, for development tools.
-
-config PP_TRANSPORT_QEMU
-    bool
-    default y
-    depends on QEMU_SERIAL
-    help
-      Pebble protocol over the emulator's serial link.
 
 endif

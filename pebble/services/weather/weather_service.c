@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
@@ -168,14 +170,21 @@ static void prv_update_default_location_cache(void) {
     goto cleanup;
   }
 
-  const int entry_len =
-      weather_db_get_len((uint8_t *)&default_location_key, sizeof(default_location_key));
-  if (entry_len == 0) {
-    goto cleanup;
+  // The read refuses a record that has grown since its length was taken, so ask again once.
+  WeatherDBEntry *entry = nullptr;
+  int rv = -EINVAL;
+  for (int attempt = 0; attempt < 2 && rv == -EINVAL; attempt++) {
+    pbl_free(entry);
+    entry = nullptr;
+    const int entry_len =
+        weather_db_get_len((uint8_t *)&default_location_key, sizeof(default_location_key));
+    if (entry_len == 0) {
+      goto cleanup;
+    }
+    entry = pbl_zalloc_check(entry_len);
+    rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
+                         (uint8_t *)entry, entry_len);
   }
-  WeatherDBEntry *entry = pbl_zalloc_check(entry_len);
-  int rv = weather_db_read((uint8_t *)&default_location_key, sizeof(default_location_key),
-                           (uint8_t *)entry, entry_len);
   if (rv != 0) {
     goto free_entry;
   }

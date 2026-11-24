@@ -6,7 +6,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
-#include <hardware/nrf52_memorymap.h>
+#include <devicetree/regs.h>
 #include <hardware/nrf52_rtc.h>
 
 #define CC_EVENT 0U
@@ -19,11 +19,11 @@ static const struct pbl_clk s_lfclk = PBL_CLK(NRF52_CLOCK, NRF52_CLK_LFCLK);
 static uint32_t s_rate_hz;
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(NRF52_RTC1_BASE + offset);
+  return pbl_readl(PBL_DT_REG_RTC1 + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, NRF52_RTC1_BASE + offset);
+  pbl_writel(value, PBL_DT_REG_RTC1 + offset);
 }
 
 static uint32_t prv_read(const struct pbl_clocksource *cs) {
@@ -75,8 +75,7 @@ static void prv_isr(void) {
   pbl_clockevent_handler(&s_rtc1_ce);
 }
 
-// Lowest priority, as the kernel's own interrupts.
-PBL_IRQ_CONNECT(RTC1, (1U << CONFIG_NUM_IRQ_PRIO_BITS) - 1U, prv_isr, , 0);
+PBL_IRQ_CONNECT(RTC1, CONFIG_TIMER_NRF5_RTC_IRQ_PRIO, prv_isr, , 0);
 
 // Both devices share the timer.
 static int prv_init(const struct pbl_device *dev) {

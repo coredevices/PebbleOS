@@ -4,6 +4,7 @@
 #include <dt-bindings/clock/sifli,sf32lb52-lpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb57-hpsys-rcc.h>
 #include <dt-bindings/clock/sifli,sf32lb57-pmuc.h>
+#include <dt-bindings/dma/sifli,sf32lb57-gpdma.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/power/sifli,sf32lb57-pmuc.h>
 #include <dt-bindings/reset/sifli,sf32lb57-hpsys-rcc.h>
@@ -17,7 +18,7 @@
 		#size-cells = <0>;
 
 		cpu0: cpu@0 {
-			compatible = "arm,cortex-m33";
+			compatible = "armchina,star-mc1";
 			device_type = "cpu";
 			reg = <0>;
 			cpu-idle-states = <&deepsleep>;
@@ -33,12 +34,18 @@
 		};
 	};
 
+	sram0: memory@20000000 {
+		device_type = "memory";
+		reg = <0x20000000 0x80000>;
+	};
+
 	nvic: interrupt-controller@e000e100 {
 		compatible = "arm,v8m-nvic";
 		reg = <0xe000e100 0xc00>;
 		interrupt-controller;
 		#interrupt-cells = <1>;
 		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
 	};
 
 	reserved-memory {
@@ -46,6 +53,13 @@
 		#size-cells = <1>;
 		ranges;
 
+		/* Buffers of the other HCPU to LCPU and ACPU mailbox channels */
+		ipc_bufs: memory@2007f800 {
+			reg = <0x2007f800 0x600>;
+			no-map;
+		};
+
+		/* Buffer of HCPU to LCPU mailbox channel 1, the HCI ring */
 		lcpu_ipc: memory@2007fe00 {
 			reg = <0x2007fe00 0x200>;
 			no-map;
@@ -84,6 +98,9 @@
 		#size-cells = <1>;
 		interrupt-parent = <&nvic>;
 		ranges;
+		/* SRAM and peripherals as the CPU sees them, the MPI code bus windows through the system bus */
+		dma-ranges = <0x20000000 0x20000000 0x40000000>,
+			     <0x60000000 0x10000000 0x10000000>;
 
 		lpsys_sram: sram@20400000 {
 			compatible = "mmio-sram";
@@ -108,7 +125,7 @@
 		};
 
 		dmac2: dma-controller@40001000 {
-			compatible = "sifli,sf32lb57-dmac";
+			compatible = "sifli,sf32lb57-dmac", "sifli,sf32lb52-dmac";
 			reg = <0x40001000 0x1000>;
 			interrupts = <2>, <3>, <4>, <5>, <6>, <7>, <8>, <9>;
 			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>;
@@ -146,11 +163,15 @@
 			sifli,bt-rfc = <&bt_rfc>;
 			sifli,bt-phy = <&bt_phy>;
 			sifli,bt-mac = <&bt_mac>;
-			sifli,gpadc = <&gpadc>;
-			sifli,dmac = <&dmac2>;
+			io-channels = <&gpadc 0>;
+			io-channel-names = "rfcal";
+			dmas = <&dmac2 7 0 0>;
+			dma-names = "rfcal";
 			sifli,lpsys-rcc = <&lpsys_rcc>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,pmuc = <&pmuc>;
+			nvmem-cells = <&factory_calibration>;
+			nvmem-cell-names = "calibration";
 			status = "disabled";
 		};
 
@@ -235,6 +256,14 @@
 				compatible = "fixed-layout";
 				#address-cells = <1>;
 				#size-cells = <1>;
+
+				unique_id: unique-id@0 {
+					reg = <0x0 0x10>;
+				};
+
+				factory_calibration: calibration@20 {
+					reg = <0x20 0x20>;
+				};
 
 				gpadc_calibration: gpadc-calibration@24 {
 					reg = <0x24 0x8>;

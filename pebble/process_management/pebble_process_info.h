@@ -189,9 +189,10 @@ typedef enum {
 // sdk.major:0x5 .minor:0x71 -- Apps using health must declare Health (rev 114, no API change)
 // sdk.major:0x5 .minor:0x72 -- Add notification count service (rev 115)
 // sdk.major:0x5 .minor:0x73 -- Add platform_has_feature() (rev 116)
+// sdk.major:0x5 .minor:0x74 -- Add the pressure service (rev 117)
 
 #define PROCESS_INFO_CURRENT_SDK_VERSION_MAJOR 0x5
-#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x73
+#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x74
 
 // The first SDK to ship with 2.x APIs
 #define PROCESS_INFO_FIRST_2X_SDK_VERSION_MAJOR 0x4
@@ -305,6 +306,11 @@ typedef struct PBL_PACKED {
 //! The process is built for every display of its shape and colour depth: it has no display size,
 //! and its features are those it cannot run without.
 #define PROCESS_PLATFORM_INFO_FLAG_FLEXIBLE (1 << 0)
+
+//! The process works with any of a set of resource packs, which whatever installs it picks from
+//! by the watch's display. Its resource_timestamp is the ID of the set, which each pack of it has
+//! for a timestamp, and its resource_crc is that of one of them only.
+#define PROCESS_PLATFORM_INFO_FLAG_RESOURCE_SET (1 << 1)
 
 //! The app CRC runs from here to the end of the image. It is the end of the 0x10.0x00 header, so
 //! the CRC takes in load_size_hi and virtual_size_hi, and every struct version checks the same

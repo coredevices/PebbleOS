@@ -1,0 +1,12 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+#include "stm32h747xi.dtsi"
+
+/ {
+	// AXI SRAM, which every bus master reaches
+	sram0: memory@24000000 {
+		device_type = "memory";
+		reg = <0x24000000 0x80000>;
+	};
+};

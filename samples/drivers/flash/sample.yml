@@ -8,3 +8,4 @@ expect:
   - 'flash: last subsector erased: (yes|no)'
   - 'Sample done'
 roles: [flash]
+integration: [qemu_emery, asterix, obelix@pvt, sf32lb57_dpi_hdk]

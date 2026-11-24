@@ -44,6 +44,7 @@ FEATURES = {
     "touch": ("PBL_TOUCH", "touch"),
     "rgb_backlight": ("PBL_RGB_BACKLIGHT", None),
     "speaker": ("PBL_SPEAKER", "speaker"),
+    "barometer": ("PBL_BAROMETER", "barometer"),
 }
 
 # limit: the key the builds read it by, and the Kconfig symbol less PLATFORM_

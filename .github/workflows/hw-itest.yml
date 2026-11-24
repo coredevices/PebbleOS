@@ -60,7 +60,7 @@ jobs:
       contents: read
 
     container:
-      image: ghcr.io/coredevices/pebbleos-docker:v16
+      image: ghcr.io/coredevices/pebbleos-docker:v17
 
     strategy:
       fail-fast: false
@@ -203,6 +203,9 @@ jobs:
         with:
           name: itest-build-${{ matrix.watch }}-normal
           path: build-main
+
+      - name: Take the power supply
+        run: pbl power off --lab "$HOME/pebble-lab.yaml"
 
       - name: Integration tests
         env:

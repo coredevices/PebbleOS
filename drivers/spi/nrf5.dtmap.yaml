@@ -9,6 +9,10 @@ args:
   - name: true
   - reg: 0
   - irq: 0
+  - compatible: true
+    values:
+      nordic,nrf52840-spim3: true
+    default: false
   - gpio: sck
   - gpio: mosi
     default: PBL_GPIO(nullptr, 0, 0)

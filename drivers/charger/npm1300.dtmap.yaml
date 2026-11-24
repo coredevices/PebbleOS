@@ -20,4 +20,3 @@ args:
     default: 0
   - prop: nordic,startup-input-current-limit-microamp
     default: 0
-  - flag: system-power-controller

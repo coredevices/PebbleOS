@@ -18,7 +18,7 @@ config SPI_MEM_NRF5_QSPI
 
 config SPI_MEM_NRF5_QSPI_IRQ_PRIO
     int "Interrupt priority"
-    default 5
+    default 1
     depends on SPI_MEM_NRF5_QSPI
     help
       Priority of the controller interrupt.

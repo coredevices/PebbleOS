@@ -133,7 +133,7 @@
 	pinctrl-0 = <&i2c1_default>;
 	pinctrl-names = "default";
 	clock-frequency = <400000>;
-	dmas = <&dmac1 5 22 2>;
+	dmas = <&dmac1 5 SF32LB52_DMAC1_REQ_I2C1 SF32LB52_DMA_PRIO_HIGH>;
 	dma-names = "rx";
 	status = "okay";
 
@@ -266,7 +266,7 @@
 	assigned-clock-parents = <&hpsys_rcc SF32LB52_HPSYS_RCC_CLK_DLL2>;
 
 	flash0: flash@0 {
-		compatible = "gigadevice,gd25q256e", "jedec,spi-nor";
+		compatible = "jedec,spi-nor";
 		reg = <0>;
 		spi-max-frequency = <72000000>;
 		spi-rx-bus-width = <4>;
@@ -331,7 +331,7 @@
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
 	current-speed = <1000000>;
-	dmas = <&dmac1 0 5 1>;
+	dmas = <&dmac1 0 SF32LB52_DMAC1_REQ_USART1_RX SF32LB52_DMA_PRIO_MEDIUM>;
 	dma-names = "rx";
 	status = "okay";
 };
@@ -379,7 +379,7 @@
 &pdm1 {
 	pinctrl-0 = <&pdm1_default>;
 	pinctrl-names = "default";
-	dmas = <&dmac1 4 36 0>;
+	dmas = <&dmac1 4 SF32LB52_DMAC1_REQ_PDM1_L SF32LB52_DMA_PRIO_LOW>;
 	dma-names = "rx";
 	status = "okay";
 };

@@ -40,8 +40,9 @@ notifications it receives to the listeners with `pbl_bt_gattc_notify_rx()`,
 which is how the clients get them. The clients call back on the NimBLE host
 thread.
 
-The bond is kept by NimBLE's config store in a settings file: the board
-overlays give each board a filesystem partition.
+The bond is kept by NimBLE's config store in RAM, its default without
+settings: it is lost when the watch resets, and the iOS device, which keeps
+its own, then has to forget the watch and pair again.
 
 ```{pebbleos-sample}
 :path: samples/subsys/bluetooth/ios_clients
