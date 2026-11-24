@@ -75,10 +75,21 @@ struct gate {
   uint16_t reg;
   uint8_t bit;
   uint8_t parent;
+  // Bit in D3AMR of a D3 peripheral working in Stop, which keeps its clocks while the CPU that
+  // enabled it is stopped
+  bool autonomous;
+  uint8_t amen;
 };
 
 #define GATE(_reg, _bit, _parent) \
   {.reg = STM32H7_RCC_##_reg##_OFFSET, .bit = (_bit), .parent = STM32H7_CLK_##_parent}
+
+#define GATE_AUTONOMOUS(_reg, _bit, _parent, _amen) \
+  {.reg = STM32H7_RCC_##_reg##_OFFSET,              \
+   .bit = (_bit),                                   \
+   .parent = STM32H7_CLK_##_parent,                 \
+   .autonomous = true,                              \
+   .amen = (_amen)}
 
 static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOA_CK] = GATE(AHB4ENR, 0, HCLK),
@@ -99,7 +110,7 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_USB1OTG_CK] = GATE(AHB1ENR, 25, HCLK),
   [STM32H7_CLK_USB1ULPI_CK] = GATE(AHB1ENR, 26, HCLK),
   [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
-  [STM32H7_CLK_LPTIM2_CK] = GATE(APB4ENR, 9, PCLK4),
+  [STM32H7_CLK_LPTIM2_CK] = GATE_AUTONOMOUS(APB4ENR, 9, PCLK4, 9),
   [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
   [STM32H7_CLK_RTCAPB_CK] = GATE(APB4ENR, 16, PCLK4),
   [STM32H7_CLK_RNG_CK] = GATE(AHB2ENR, 6, RC48_CK),
@@ -265,6 +276,9 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
     return 0;
   }
 
+  if (s_gates[id].autonomous) {
+    pbl_modifyl(0U, PBL_BIT(s_gates[id].amen), rcc->base + STM32H7_RCC_D3AMR_OFFSET);
+  }
   pbl_modifyl(0U, PBL_BIT(s_gates[id].bit), rcc->base + s_gates[id].reg);
   // The clock runs two cycles after the write; the read back waits for them
   (void)prv_getreg(rcc, s_gates[id].reg);
@@ -290,6 +304,9 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
 
   if (prv_is_gate(id)) {
     pbl_modifyl(PBL_BIT(s_gates[id].bit), 0U, rcc->base + s_gates[id].reg);
+    if (s_gates[id].autonomous) {
+      pbl_modifyl(PBL_BIT(s_gates[id].amen), 0U, rcc->base + STM32H7_RCC_D3AMR_OFFSET);
+    }
   }
 
   return 0;
