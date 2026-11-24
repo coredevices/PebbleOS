@@ -73,9 +73,9 @@ struct pbl_charger_ops {
   int (*is_online)(const struct pbl_charger *charger, bool *online);
   /** Get the charge status. */
   int (*get_status)(const struct pbl_charger *charger, enum pbl_charger_status *status);
-  /** Measure the battery. */
+  /** Optional. Measure the battery. */
   int (*get_measurements)(const struct pbl_charger *charger, struct pbl_charger_measurements *meas);
-  /** Allow charging or not. */
+  /** Optional. Allow charging or not. */
   int (*enable)(const struct pbl_charger *charger, bool enable);
   /** Optional. Let the battery supply a high current or not. */
   int (*set_high_load)(const struct pbl_charger *charger, bool high_load);
@@ -165,7 +165,7 @@ int pbl_charger_is_charging(const struct pbl_charger *charger, bool *charging);
  *
  * @param charger Charger.
  * @param[out] meas Measurements.
- * @return 0 or a negative errno.
+ * @return 0, @c -ENOTSUP if the charger measures nothing, or another negative errno.
  */
 int pbl_charger_get_measurements(const struct pbl_charger *charger,
                                  struct pbl_charger_measurements *meas);
@@ -175,7 +175,8 @@ int pbl_charger_get_measurements(const struct pbl_charger *charger,
  *
  * @param charger Charger.
  * @param enable True to allow charging.
- * @return 0 or a negative errno.
+ * @return 0, @c -ENOTSUP if the charger does not let software control charging, or another
+ *         negative errno.
  */
 int pbl_charger_enable(const struct pbl_charger *charger, bool enable);
 

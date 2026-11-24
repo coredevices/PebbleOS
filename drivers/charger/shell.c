@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <inttypes.h>
 
 #include <pbl/drivers/charger.h>
@@ -32,14 +33,18 @@ static int prv_cmd_charger(const struct pbl_shell *sh, size_t argc, char **argv)
     return ret;
   }
 
+  pbl_shell_print(sh, "online: %s", online ? "yes" : "no");
+  pbl_shell_print(sh, "status: %s", s_status_names[status]);
+
   ret = pbl_charger_get_measurements(CHARGER, &meas);
+  if (ret == -ENOTSUP) {
+    return 0;
+  }
   if (ret != 0) {
     pbl_shell_error(sh, "measurement failed (%d)", ret);
     return ret;
   }
 
-  pbl_shell_print(sh, "online: %s", online ? "yes" : "no");
-  pbl_shell_print(sh, "status: %s", s_status_names[status]);
   pbl_shell_print(sh, "voltage: %" PRId32 " mV", meas.voltage_mv);
   pbl_shell_print(sh, "current: %" PRId32 " uA", meas.current_ua);
   pbl_shell_print(sh, "temperature: %" PRId32 " mC", meas.temp_mc);

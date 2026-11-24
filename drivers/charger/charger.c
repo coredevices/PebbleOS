@@ -76,6 +76,10 @@ int pbl_charger_get_measurements(const struct pbl_charger *charger,
                                  struct pbl_charger_measurements *meas) {
   int ret;
 
+  if (charger->ops->get_measurements == nullptr) {
+    return -ENOTSUP;
+  }
+
   prv_lock(charger);
   ret = charger->ops->get_measurements(charger, meas);
   prv_unlock(charger);
@@ -85,6 +89,10 @@ int pbl_charger_get_measurements(const struct pbl_charger *charger,
 
 int pbl_charger_enable(const struct pbl_charger *charger, bool enable) {
   int ret;
+
+  if (charger->ops->enable == nullptr) {
+    return -ENOTSUP;
+  }
 
   prv_lock(charger);
   ret = charger->ops->enable(charger, enable);
