@@ -4,7 +4,7 @@
 pbl_clar_test(test_bonding
   SOURCES
     pebble/services/bluetooth/bonding.c
-    third_party/nimble/store/prf.c
+    third_party/nimble/store/prf_legacy.c
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
@@ -28,7 +28,7 @@ pbl_clar_test(test_bt_settings
 
 pbl_clar_test(test_prf_store
   SOURCES
-    third_party/nimble/store/prf.c
+    third_party/nimble/store/prf_legacy.c
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES

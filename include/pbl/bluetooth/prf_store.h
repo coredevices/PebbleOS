@@ -13,11 +13,10 @@ struct ble_store_value_sec;
  * @ingroup bluetooth
  * @brief The bonding and root keys the recovery firmware (PRF) and the normal firmware share.
  *
- * Kept in a flash partition of its own, as a rolling list of 256-byte entries that recovery
- * firmware already in the field reads: the layout cannot change, and is private to the store. Each
- * field carries its own CRC; changing a field invalidates the current entry and rewrites the data
- * into the next one, and the partition is erased once it fills up. All functions are serialized by
- * a mutex.
+ * Kept in a flash partition of its own. How the partition is laid out is a build choice
+ * (@c NIMBLE_STORE_PRF_LAYOUT) and private to the store, whose layout headers describe it. Both
+ * firmwares of a device have to agree on it, and it cannot change once a device is in the field:
+ * the recovery firmware there is not updated. All functions are serialized by a mutex.
  *
  * Implemented by the NimBLE store (@c NIMBLE_STORE_PRF), which can also persist in it
  * (@c NIMBLE_STORE_BACKEND_PRF).
@@ -84,8 +83,8 @@ void pbl_bt_prf_store_wipe(void);
 /**
  * @brief Initialize the PRF store.
  *
- * Finds the valid entry, and erases the region, keeping that entry, when more than 75% of the
- * region is used so that later writes are unlikely to block on an erase.
+ * Finds what is stored, and erases the partition, keeping it, when more than 75% of the partition
+ * is used so that later writes are unlikely to block on an erase.
  */
 void pbl_bt_prf_store_init(void);
 
