@@ -20,6 +20,8 @@
 #define STRING_PRODUCT      2U
 #define STRING_FUNCTIONS    3U
 
+#define MAX_IFACES 16U
+
 // Bus-powered, at most 100 mA
 #define USB_CFG_ATTRIBUTES 0x80U
 #define USB_CFG_MAX_POWER  50U
@@ -41,6 +43,7 @@ static struct {
   enum prv_stage stage;
   bool zlp;
   uint8_t config;
+  uint8_t alt[MAX_IFACES];
   // The function an OUT data stage is for, and where its data goes
   const struct pbl_usbd_function *out_fn;
   uint8_t *out_data;
@@ -236,28 +239,109 @@ static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
   return *len != 0U ? 0 : -ENOTSUP;
 }
 
-static void prv_set_configured(bool on) {
-  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
-      uint8_t ep;
-      enum pbl_udc_ep_type type;
-      uint16_t mps;
-      uint8_t interval;
+static uint8_t prv_alt(uint8_t iface) {
+  return iface < MAX_IFACES ? s_ctrl.alt[iface] : 0U;
+}
 
-      if (!prv_endpoint(&fn->desc[i], &ep, &type, &mps, &interval)) {
-        continue;
-      }
-      if (on) {
-        (void)pbl_udc_ep_enable(UDC, ep, type, mps);
-      } else {
-        (void)pbl_udc_ep_disable(UDC, ep);
-      }
+// Enables or disables the endpoints of the current alternate setting of an interface of a
+// function, or of all its interfaces
+static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
+  int cur = -1;
+  uint8_t alt = 0U;
+
+  for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
+    const uint8_t *d = &fn->desc[i];
+    uint8_t ep;
+    enum pbl_udc_ep_type type;
+    uint16_t mps;
+    uint8_t interval;
+
+    if (d[1] == PBL_USB_DESC_INTERFACE) {
+      cur = d[2];
+      alt = d[3];
+      continue;
+    }
+    if (cur < 0 || (iface >= 0 && cur != iface) || alt != prv_alt((uint8_t)cur)) {
+      continue;
+    }
+    if (!prv_endpoint(d, &ep, &type, &mps, &interval)) {
+      continue;
     }
 
+    if (on) {
+      (void)pbl_udc_ep_enable(UDC, ep, type, mps);
+    } else {
+      (void)pbl_udc_ep_disable(UDC, ep);
+    }
+  }
+}
+
+// Every interface is at its alternate setting 0 when not configured
+static void prv_set_configured(bool on) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    prv_ifaces_switch(fn, -1, on);
     if (fn->configured != nullptr) {
       fn->configured(on);
     }
   }
+
+  memset(s_ctrl.alt, 0, sizeof(s_ctrl.alt));
+}
+
+static const struct pbl_usbd_function *prv_function(uint8_t iface) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    if (iface >= fn->first_iface && iface < fn->first_iface + fn->num_ifaces) {
+      return fn;
+    }
+  }
+
+  return nullptr;
+}
+
+static bool prv_alt_exists(const struct pbl_usbd_function *fn, uint8_t iface, uint8_t alt) {
+  for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
+    const uint8_t *d = &fn->desc[i];
+
+    if (d[1] == PBL_USB_DESC_INTERFACE && d[2] == iface && d[3] == alt) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static int prv_get_interface(uint16_t iface, uint8_t **data, uint16_t *len) {
+  if (s_ctrl.config == 0U || iface >= MAX_IFACES || prv_function((uint8_t)iface) == nullptr) {
+    return -EINVAL;
+  }
+
+  s_ctrl.buf[0] = s_ctrl.alt[iface];
+  *data = s_ctrl.buf;
+  *len = 1U;
+
+  return 0;
+}
+
+static int prv_set_interface(uint16_t iface, uint16_t alt) {
+  const struct pbl_usbd_function *fn;
+
+  if (s_ctrl.config == 0U || iface >= MAX_IFACES || alt > UINT8_MAX) {
+    return -EINVAL;
+  }
+
+  fn = prv_function((uint8_t)iface);
+  if (fn == nullptr || !prv_alt_exists(fn, (uint8_t)iface, (uint8_t)alt)) {
+    return -EINVAL;
+  }
+
+  prv_ifaces_switch(fn, iface, false);
+  s_ctrl.alt[iface] = (uint8_t)alt;
+  prv_ifaces_switch(fn, iface, true);
+  if (fn->set_alt != nullptr) {
+    fn->set_alt((uint8_t)iface, (uint8_t)alt);
+  }
+
+  return 0;
 }
 
 static int prv_standard(uint8_t **data, uint16_t *len) {
@@ -294,12 +378,15 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       *len = 2U;
       return 0;
     case PBL_USB_REQ_GET_INTERFACE:
-      s_ctrl.buf[0] = 0U;
-      *data = s_ctrl.buf;
-      *len = 1U;
-      return 0;
+      if (recip != PBL_USB_RECIP_INTERFACE) {
+        return -ENOTSUP;
+      }
+      return prv_get_interface(setup->wIndex, data, len);
     case PBL_USB_REQ_SET_INTERFACE:
-      return setup->wValue == 0U ? 0 : -EINVAL;
+      if (recip != PBL_USB_RECIP_INTERFACE) {
+        return -ENOTSUP;
+      }
+      return prv_set_interface(setup->wIndex, setup->wValue);
     case PBL_USB_REQ_CLEAR_FEATURE:
     case PBL_USB_REQ_SET_FEATURE:
       if (recip != PBL_USB_RECIP_ENDPOINT || setup->wValue != PBL_USB_FEATURE_ENDPOINT_HALT) {
@@ -310,16 +397,6 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
     default:
       return -ENOTSUP;
   }
-}
-
-static const struct pbl_usbd_function *prv_function(uint8_t iface) {
-  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    if (iface >= fn->first_iface && iface < fn->first_iface + fn->num_ifaces) {
-      return fn;
-    }
-  }
-
-  return nullptr;
 }
 
 static void prv_stall(void) {

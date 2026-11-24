@@ -46,6 +46,36 @@ numbers in the configuration descriptor as it sends it, so the descriptors
 stay constant and functions do not have to know about each other. Indices in
 class-specific descriptors are left as they are.
 
+### Alternate settings
+
+An interface can have alternate settings, each an interface descriptor with
+the same `bInterfaceNumber`, its own `bAlternateSetting` and the endpoint
+descriptors that follow it. Settings of an interface may use the same
+endpoint addresses, with other types or packet sizes. Configuring the device
+selects setting 0 of every interface and enables its endpoints. On
+`SET_INTERFACE`, the stack disables the endpoints of the current setting,
+which ends their transfers with `-ECONNABORTED`, enables those of the new
+one, and calls the function's `set_alt(iface, alt)`, where the function
+starts its transfers on them. A setting the interface does not have is
+stalled, and so are both requests while the device is not configured.
+`GET_INTERFACE` answers with the current setting. The stack keeps the
+settings of the first 16 interfaces; the others only have setting 0.
+
+```c
+static const char *const s_strings[] = {"Loopback off", "Loopback"};
+
+PBL_USBD_FUNCTION_DEFINE(loopback) = {
+  .desc = s_desc, /* iInterface 1 for setting 0, 2 for setting 1 */
+  .desc_len = sizeof(s_desc),
+  .strings = s_strings,
+  .num_strings = PBL_ARRAY_SIZE(s_strings),
+  .first_iface = 0U,
+  .num_ifaces = 1U,
+  .set_alt = prv_set_alt,
+  .xfer_done = prv_xfer_done,
+};
+```
+
 ## Serial port
 
 `CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:

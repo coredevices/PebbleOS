@@ -23,6 +23,12 @@
  * class requests to their interfaces and the end of the transfers on their endpoints. Everything
  * the stack calls runs from the controller's interrupt.
  *
+ * An interface can have alternate settings: its interface descriptor is followed by others with the
+ * same interface number and a higher bAlternateSetting, each with its own endpoints. Two settings
+ * may use the same endpoint addresses. Configuring the device selects setting 0 of every
+ * interface; SET_INTERFACE then disables the endpoints of the current setting, enables those of
+ * the new one and calls @ref pbl_usbd_function.set_alt.
+ *
  * A function names its strings with its own indices, from 1, in the iInterface field of its
  * interface descriptors and the iFunction field of its interface association descriptor: index n
  * is @ref pbl_usbd_function.strings[n - 1]. The stack gives them indices of the device when it
@@ -49,6 +55,12 @@ struct pbl_usbd_function {
    * configuration, at a reset or a disconnection.
    */
   void (*configured)(bool on);
+  /**
+   * Optional. The host selected alternate setting @p alt of interface @p iface, the endpoints of
+   * the previous setting now disabled, their transfers ended with @c -ECONNABORTED, and those of
+   * @p alt enabled. Not called when the host configures the device.
+   */
+  void (*set_alt)(uint8_t iface, uint8_t alt);
   /**
    * Optional. A class request to an interface of the function. For an IN request, point @p data
    * at what to send, @p len bytes; for an OUT one, at room for @p len bytes, which then arrive
