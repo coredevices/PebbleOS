@@ -53,12 +53,25 @@ typedef struct SystemThemeLauncherStyle {
 #endif
 } SystemThemeLauncherStyle;
 
+//! Fonts of the system dialogs for one content size
+typedef struct SystemThemeDialogStyle {
+  //! Message of a simple dialog
+  const char *text_font_key;
+  //! Most lines of a simple dialog message under an icon
+  int16_t text_max_lines;
+  //! Body of expandable and actionable dialogs
+  const char *body_font_key;
+  //! Header of expandable dialogs
+  const char *header_font_key;
+} SystemThemeDialogStyle;
+
 //! Everything the system UI draws differently for each preferred content size
 typedef struct SystemThemeStyle {
   //! Font keys for each text style
   const char *fonts[TextStyleFontCount];
   SystemThemeMenuCellStyle menu_cell;
   SystemThemeOptionMenuStyle option_menu;
+  SystemThemeDialogStyle dialog;
 #if !defined(CONFIG_RECOVERY_FW)
   SystemThemeLauncherStyle launcher;
 #endif

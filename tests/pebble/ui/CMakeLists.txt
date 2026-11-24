@@ -358,6 +358,7 @@ pbl_clar_test(test_simple_dialog
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_system_theme.c
     pebble/applib/ui/dialogs/simple_dialog.c
     pebble/applib/ui/dialogs/dialog.c
