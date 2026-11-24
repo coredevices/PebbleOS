@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/iio/adc/nordic,nrf52832-saadc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52 SAADC
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Successive approximation ADC of the nRF52 series, with EasyDMA. Its inputs,
+  AIN0 to AIN7 on fixed pins and the supplies, are the channels of
+  dt-bindings/iio/adc/nordic,nrf52832-saadc.h.
+
+properties:
+  compatible:
+    oneOf:
+      - const: nordic,nrf52832-saadc
+      - items:
+          - enum:
+              - nordic,nrf52833-saadc
+              - nordic,nrf52840-saadc
+          - const: nordic,nrf52832-saadc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  "#io-channel-cells":
+    const: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - "#io-channel-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    adc@40007000 {
+        compatible = "nordic,nrf52840-saadc", "nordic,nrf52832-saadc";
+        reg = <0x40007000 0x1000>;
+        interrupts = <7>;
+        #io-channel-cells = <1>;
+    };
