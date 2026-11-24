@@ -34,6 +34,7 @@ sudo apt install \
     libncurses-dev \
     librsvg2-bin \
     libsdl2-dev \
+    libusb-1.0-0 \
     make \
     nodejs \
     openocd \

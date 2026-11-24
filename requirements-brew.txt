@@ -4,6 +4,7 @@ llvm
 cmake
 dtc
 lcov
+libusb
 ninja
 node
 librsvg
