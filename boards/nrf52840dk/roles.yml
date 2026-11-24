@@ -5,6 +5,7 @@ console_uart: uart0
 status_led: led1
 flash: flash0
 die_temp: temp
+udc: usbd
 rtc:
   symbol: RETAINED_RTC
   include: pbl/drivers/rtc/retained.h
