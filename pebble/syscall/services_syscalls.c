@@ -69,7 +69,7 @@ PBL_SYSCALL(bool, sys_timer_cancel, (VAL, TimerServiceId, id)) {
 PBL_SYSCALL(uint32_t, sys_timer_cancel_all) {
 #ifdef CONFIG_SERVICE_TIMERS
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
-  if (!md || !app_db_timer_granted(&md->uuid)) {
+  if (!md) {
     return 0;
   }
 

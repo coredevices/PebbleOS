@@ -49,7 +49,7 @@ typedef struct PBL_PACKED {
 //! Without it health is allowed, as it is for a phone that never sends permissions.
 #define APP_DB_PERMISSION_HEALTH_ENFORCED (1u << 1)
 #define APP_DB_PERMISSION_HEALTH_GRANTED  (1u << 2)
-//! Allows creating timers through the TimerService applib API.
+//! Allows managing timers through the TimerService applib API.
 #define APP_DB_PERMISSION_TIMER (1u << 4)
 
 bool app_db_microphone_granted(const Uuid *uuid);

@@ -7,12 +7,12 @@
 
 #include <syscall/syscall.h>
 
-_Static_assert(TIMER_MAX_DURATION_S == TIMER_SERVICE_MAX_DURATION_S, "max duration mismatch");
-_Static_assert(TIMER_MAX_COUNT == TIMER_SERVICE_MAX_TIMERS, "max timer count mismatch");
-_Static_assert(TIMER_DESCRIPTION_SIZE == TIMER_SERVICE_DESCRIPTION_SIZE,
-               "description size mismatch");
-_Static_assert(sizeof(TimerId) == sizeof(TimerServiceId), "TimerServiceId size mismatch");
-_Static_assert(TIMER_INVALID_ID == TIMER_SERVICE_INVALID_ID, "invalid ID mismatch");
+static_assert(TIMER_MAX_DURATION_S == TIMER_SERVICE_MAX_DURATION_S, "max duration mismatch");
+static_assert(TIMER_MAX_COUNT == TIMER_SERVICE_MAX_TIMERS, "max timer count mismatch");
+static_assert(TIMER_DESCRIPTION_SIZE == TIMER_SERVICE_DESCRIPTION_SIZE,
+              "description size mismatch");
+static_assert(sizeof(TimerId) == sizeof(TimerServiceId), "TimerServiceId size mismatch");
+static_assert(TIMER_INVALID_ID == TIMER_SERVICE_INVALID_ID, "invalid ID mismatch");
 
 bool timer_service_can_create(void) {
   return sys_timer_can_create();

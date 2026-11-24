@@ -45,10 +45,10 @@ left at the moment of the call. Timers being cancelled are not returned.
 
 Timers live in memory only. A reset clears them, and they do not appear in the
 Alarms app. Each timer records the UUID of the app that created it, so
-`timer_service_cancel_all()` only stops that app's timers. Listing and
-cancelling by ID need the `Timers` permission; an app with the permission sees
-every timer and can cancel any of them. Uninstalling the app does not cancel
-its timers.
+`timer_service_cancel_all()` only stops that app's timers; it does not need the
+`Timers` permission. Listing and cancelling by ID need the permission; an app
+with it sees every timer and can cancel any of them. Uninstalling the app does
+not cancel its timers.
 
 Declare `manifestVersion: 2` and `usesPermissions: ["Timers"]` in the
 `pebble` block of `package.json`:
@@ -61,13 +61,17 @@ The phone app shows the permission at install time and syncs the user's
 decision in the AppDB permission field (bit 4). The grant is stored on the
 watch, keyed by the app UUID, so it survives disconnecting from the phone or
 rebooting the watch. An app without the grant gets
-`TimerServiceCreateErrPermissionDenied` and cannot list or cancel timers; the
-watch never prompts on its own.
+`TimerServiceCreateErrPermissionDenied` and cannot list or cancel timers;
+`timer_service_cancel_all()` still works on its own timers. The watch never
+prompts on its own.
 
 The phone app must know the `Timers` permission before it can show or grant
 it. Until CoreApp ships that support, the watch treats every app as denied.
-The SDK build checks that an app linking `timer_service_create()` declares the
+The SDK build checks that an app linking `timer_service_create()`,
+`timer_service_get_timers()` or `timer_service_cancel()` declares the
 permission, the same way it checks the Health and Alarms APIs.
+`timer_service_cancel_all()` is exempt because it only touches the caller's
+own timers.
 
 ## Expiry popup
 
@@ -75,6 +79,11 @@ The popup reuses the alarm popup's layout and vibration cadence, on the timer
 app's `GColorPictonBlue` background (`GColorWhite` on black-and-white
 platforms). Any button dismisses it, and it dismisses itself after one minute
 of ringing. It shows the timer's original duration, not the remaining time.
+
+Expiries that arrive while the popup is already visible, while an alarm is
+active, or while modal popups are disabled are queued and shown in turn. If
+an alarm takes over the screen, the timer popup is dismissed and its expiry is
+queued to show after the alarm.
 
 The popup uses the existing `ALARM_CLOCK_LARGE` resource, the animated
 alarm-clock PDC (`Pebble_80x80_Alarm_clock.pdc`) that the timer app also plays

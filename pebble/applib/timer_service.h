@@ -26,8 +26,10 @@
 //! The phone app shows the permission at install time and syncs the user's
 //! decision to the watch. Apps without the permission get
 //! @ref TimerServiceCreateErrPermissionDenied. The permission also lets an
-//! app list and cancel every running timer. Timers live in memory only and do
-//! not survive a reset.
+//! app list every running timer and cancel any timer by ID;
+//! timer_service_cancel_all() only stops the calling app's timers and works
+//! without the permission. Timers live in memory only and do not survive a
+//! reset.
 //!   @{
 
 //! @brief Maximum timer duration, in seconds.
@@ -118,8 +120,10 @@ bool timer_service_cancel(TimerServiceId id);
 
 //! Cancel every timer the calling app created.
 //!
-//! This only affects the calling app's timers. Use timer_service_cancel()
-//! with IDs from timer_service_get_timers() to stop another app's timer.
+//! This only affects the calling app's timers and does not need the `Timers`
+//! permission, so an app can always clean up after itself. Use
+//! timer_service_cancel() with IDs from timer_service_get_timers() to stop
+//! another app's timer.
 //!
 //! @return Number of timers cancelled.
 uint32_t timer_service_cancel_all(void);

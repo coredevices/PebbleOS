@@ -12,3 +12,6 @@
 #endif
 
 void alarm_popup_push_window(PebbleAlarmClockEvent *e);
+
+//! Whether the alarm popup is currently shown.
+bool alarm_popup_is_active(void);

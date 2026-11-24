@@ -39,26 +39,36 @@ class TestUndeclaredHealthError(unittest.TestCase):
 
 
 class TestUndeclaredTimerError(unittest.TestCase):
-    SYMBOLS = ("main", "timer_service_create", "app_event_loop")
+    SYMBOLS = ("timer_service_create", "timer_service_get_timers", "timer_service_cancel")
 
-    def test_only_apps_using_create_need_it(self):
+    def test_only_management_apis_need_it(self):
         self.assertIsNone(undeclared_timer_error({}, ["main", "app_event_loop"]))
         self.assertIsNone(undeclared_timer_error({}, ["timer_service_can_create"]))
-        self.assertIsNone(undeclared_timer_error({}, ["timer_service_cancel"]))
+        self.assertIsNone(undeclared_timer_error({}, ["timer_service_cancel_all"]))
+
+    def test_each_management_api_needs_it(self):
+        for symbol in self.SYMBOLS:
+            error = undeclared_timer_error({}, ["main", symbol])
+            self.assertIn(symbol, error)
+            self.assertIn("'Timers'", error)
 
     def test_declaring_timers_allows_it(self):
-        self.assertIsNone(undeclared_timer_error({"usesPermissions": ["Timers"]}, self.SYMBOLS))
-        info = {"usesPermissions": [{"name": "Timers", "reason": "Starts a timer"}]}
+        for symbol in self.SYMBOLS:
+            self.assertIsNone(undeclared_timer_error({"usesPermissions": ["Timers"]}, [symbol]))
+        info = {"usesPermissions": [{"name": "Timers", "reason": "Manages timers"}]}
         self.assertIsNone(undeclared_timer_error(info, self.SYMBOLS))
 
-    def test_using_create_without_declaring_it_is_an_error(self):
-        error = undeclared_timer_error({"usesPermissions": ["Health"]}, self.SYMBOLS)
-        self.assertIn("timer_service_create", error)
+    def test_using_get_timers_without_declaring_it_is_an_error(self):
+        error = undeclared_timer_error(
+            {"usesPermissions": ["Health"]}, ["timer_service_get_timers"]
+        )
+        self.assertIn("timer_service_get_timers", error)
         self.assertIn("'Timers'", error)
 
-    def test_a_legacy_manifest_cannot_create_timers(self):
+    def test_a_legacy_manifest_cannot_manage_timers(self):
         info = {"manifestVersion": 1, "usesPermissions": ["Timers"]}
-        self.assertIn("manifestVersion 1", undeclared_timer_error(info, self.SYMBOLS))
+        for symbol in self.SYMBOLS:
+            self.assertIn("manifestVersion 1", undeclared_timer_error(info, [symbol]))
 
 
 class TestUndeclaredModdableHealthError(unittest.TestCase):

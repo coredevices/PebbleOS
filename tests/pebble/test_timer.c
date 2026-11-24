@@ -3,26 +3,34 @@
 
 #include <string.h>
 
-#include <pbl/cron/cron.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/timers/timer.h>
 #include <pbl/util/units.h>
 #include <pbl/util/uuid.h>
 
 #include <clar.h>
-#include <fake_rtc.h>
 #include <fake_work.h>
 #include <kernel/events.h>
 
 static const Uuid s_owner_a = UuidMake(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 static const Uuid s_owner_b = UuidMake(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
 
+static uint64_t s_uptime_ms;
+static time_t s_wall_time;
 static int s_num_timer_events;
 static PebbleTimerEvent s_last_timer_event;
 
 // The test harness's uuid helper always returns false; compare for real here.
 bool uuid_equal(const Uuid *uu1, const Uuid *uu2) {
   return uu1 && uu2 && memcmp(uu1, uu2, sizeof(Uuid)) == 0;
+}
+
+uint64_t pbl_uptime_ms(void) {
+  return s_uptime_ms;
+}
+
+time_t pbl_realtime(void) {
+  return s_wall_time;
 }
 
 void event_put(PebbleEvent *event) {
@@ -34,22 +42,26 @@ void event_put(PebbleEvent *event) {
 
 void test_timer__initialize(void) {
   fake_work_cleanup();
-  fake_rtc_init(0, 1447286400);
-  pbl_cron_init();
+  s_uptime_ms = 0;
+  s_wall_time = 1447286400;
   timer_init();
   s_num_timer_events = 0;
   s_last_timer_event = (PebbleTimerEvent){};
 }
 
 void test_timer__cleanup(void) {
-  pbl_cron_deinit();
   fake_work_cleanup();
   timer_init();
 }
 
 static void prv_advance_time(uint32_t seconds) {
-  fake_rtc_increment_time(seconds);
-  pbl_cron_wakeup();
+  s_uptime_ms += (uint64_t)seconds * 1000U;
+}
+
+static void prv_fire_next(void) {
+  struct pbl_delayed_work *next = fake_work_get_next();
+  cl_assert(next != nullptr);
+  fake_work_fire(next);
 }
 
 void test_timer__create_and_fire(void) {
@@ -62,14 +74,25 @@ void test_timer__create_and_fire(void) {
   cl_assert_equal_i(s_num_timer_events, 0);
 
   prv_advance_time(1);
+  prv_fire_next();
   cl_assert_equal_i(s_num_timer_events, 1);
   cl_assert_equal_i(s_last_timer_event.duration_s, 60);
+}
+
+void test_timer__schedules_a_full_duration_from_now(void) {
+  s_uptime_ms = 999;
+  const TimerId id = timer_start(1, &s_owner_a);
+  cl_assert(id != TIMER_INVALID_ID);
+
+  struct pbl_delayed_work *work = fake_work_get_next();
+  cl_assert(work != nullptr);
+  cl_assert_equal_i(fake_work_timeout_ms(work), 1000);
 }
 
 void test_timer__rejects_invalid_arguments(void) {
   cl_assert_equal_i(timer_start(0, &s_owner_a), TIMER_INVALID_ID);
   cl_assert_equal_i(timer_start(TIMER_MAX_DURATION_S + 1, &s_owner_a), TIMER_INVALID_ID);
-  cl_assert_equal_i(timer_start(60, NULL), TIMER_INVALID_ID);
+  cl_assert_equal_i(timer_start(60, nullptr), TIMER_INVALID_ID);
   cl_assert_equal_i(s_num_timer_events, 0);
 }
 
@@ -78,6 +101,7 @@ void test_timer__cancel(void) {
   cl_assert(id != TIMER_INVALID_ID);
   cl_assert(timer_cancel(id));
   cl_assert(!timer_cancel(id));
+  cl_assert(fake_work_get_next() == nullptr);
 
   prv_advance_time(60);
   cl_assert_equal_i(s_num_timer_events, 0);
@@ -94,6 +118,7 @@ void test_timer__cancel_all_only_affects_the_owner(void) {
   cl_assert(!timer_cancel(a2));
 
   prv_advance_time(60);
+  prv_fire_next();
   cl_assert_equal_i(s_num_timer_events, 1);
   cl_assert_equal_i(s_last_timer_event.duration_s, 60);
 }
@@ -169,7 +194,7 @@ void test_timer__lists_all_timers_soonest_first(void) {
   cl_assert_equal_i(timers[1].id, short_timer);
 
   cl_assert_equal_i(timer_get_timers(timers, 0), 0);
-  cl_assert_equal_i(timer_get_timers(NULL, 1), 0);
+  cl_assert_equal_i(timer_get_timers(nullptr, 1), 0);
 }
 
 void test_timer__remaining_time_counts_down(void) {
@@ -180,6 +205,24 @@ void test_timer__remaining_time_counts_down(void) {
   TimerInfo timers[1];
   cl_assert_equal_i(timer_get_timers(timers, 1), 1);
   cl_assert_equal_i(timers[0].id, id);
+  cl_assert_equal_i(timers[0].remaining_s, 50);
+}
+
+void test_timer__wall_clock_changes_do_not_affect_remaining(void) {
+  const TimerId id = timer_start(60, &s_owner_a);
+  cl_assert(id != TIMER_INVALID_ID);
+
+  prv_advance_time(10);
+  TimerInfo timers[1];
+  cl_assert_equal_i(timer_get_timers(timers, 1), 1);
+  cl_assert_equal_i(timers[0].remaining_s, 50);
+
+  s_wall_time -= 3600;
+  cl_assert_equal_i(timer_get_timers(timers, 1), 1);
+  cl_assert_equal_i(timers[0].remaining_s, 50);
+
+  s_wall_time += 2 * 3600;
+  cl_assert_equal_i(timer_get_timers(timers, 1), 1);
   cl_assert_equal_i(timers[0].remaining_s, 50);
 }
 
@@ -194,5 +237,6 @@ void test_timer__list_is_empty_after_fire_or_cancel(void) {
   cl_assert_equal_i(timers[0].id, fired);
 
   prv_advance_time(10);
+  prv_fire_next();
   cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 0);
 }

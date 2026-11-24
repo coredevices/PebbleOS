@@ -395,7 +395,7 @@
                   "type": "function",
                   "name": "timer_service_create",
                   "addedRevision": "119",
-                  "stubReturn": "TimerServiceCreateErrUnavailable"
+                  "stubDefinition": "static inline TimerServiceCreateResult timer_service_create(uint32_t duration_s, TimerServiceId *id_out) { (void)duration_s; if (id_out) { *id_out = TIMER_SERVICE_INVALID_ID; } return TimerServiceCreateErrUnavailable; }"
                 }, {
                   "type": "function",
                   "name": "timer_service_cancel",

@@ -3,6 +3,8 @@
 
 #include "alarm_popup.h"
 
+#include "timer_popup.h"
+
 #include <stdio.h>
 
 #include <pbl/i18n/i18n.h>
@@ -329,6 +331,10 @@ static void prv_setup_action_bar(void) {
   action_bar_layer_set_click_config_provider(action_bar, prv_click_provider);
 }
 
+static void prv_push_pending_timer_cb(void *callback_context) {
+  timer_popup_push_pending();
+}
+
 static void prv_cleanup_alarm_popup(void *callback_context) {
   if (s_alarm_popup_data) {
     prv_stop_vibes();
@@ -345,16 +351,27 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
     pbl_free(s_alarm_popup_data);
     s_alarm_popup_data = nullptr;
+    // Let a timer that expired during the alarm show now that it is gone.
+    launcher_task_add_callback(prv_push_pending_timer_cb, nullptr);
   }
 }
 
 // ----------------------------------------------------------------------------------------------
 //! API
 void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
+  if (!modal_manager_is_priority_enabled(ALARM_PRIORITY)) {
+    // Battery-critical and other modal lockouts disable the alarm stack; do
+    // not allocate a popup that cannot be pushed.
+    return;
+  }
   if (s_alarm_popup_data) {
     // The window is already visible, don't show another one
     return;
   }
+
+  // An active timer popup owns the vibration and backlight; hand them over to
+  // the alarm instead of letting both alerts tear each other down.
+  timer_popup_abort();
 
   s_alarm_popup_data = pbl_malloc_check(sizeof(AlarmPopupData));
   *s_alarm_popup_data = (AlarmPopupData){};
@@ -413,4 +430,8 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 #endif
 
   light_enable(true);
+}
+
+bool alarm_popup_is_active(void) {
+  return s_alarm_popup_data != nullptr;
 }

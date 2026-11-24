@@ -89,6 +89,11 @@ void modal_manager_set_min_priority(ModalPriority priority);
 // @returns boolean indicating if modals are enabled
 bool modal_manager_get_enabled(void);
 
+//! Gets whether windows at this priority are currently shown and accept pushes.
+//! @param priority The \ref ModalPriority to check.
+//! @returns true if windows at this priority are enabled.
+bool modal_manager_is_priority_enabled(ModalPriority priority);
+
 //! Returns the ClickManager for the modal windows.
 //! @returns pointer to a \ref ClickManager
 ClickManager *modal_manager_get_click_manager(void);

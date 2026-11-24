@@ -3,9 +3,9 @@
 
 #include <string.h>
 
-#include <pbl/cron/cron.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/timers/timer.h>
 #include <pbl/util/misc.h>
@@ -27,12 +27,12 @@ typedef struct Timer {
   TimerState state;
   Uuid owner;
   uint32_t duration_s;
-  time_t deadline;
-  struct pbl_cron_job job;
+  uint64_t deadline_ms;
+  struct pbl_delayed_work work;
 } Timer;
 
 static Timer s_timers[TIMER_MAX_COUNT];
-static TimerId s_next_id = 1;
+static uint32_t s_next_id = 1;
 
 static PBL_MUTEX_DEFINE(s_mutex);
 
@@ -48,21 +48,26 @@ static Timer *prv_find_locked(TimerId id) {
       return timer;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 static TimerId prv_next_id(void) {
-  const TimerId id = s_next_id++;
-  if (s_next_id <= 0) {
-    s_next_id = 1;
+  for (;;) {
+    const TimerId id = (TimerId)s_next_id;
+    s_next_id++;
+    if (s_next_id == 0 || s_next_id > INT32_MAX) {
+      s_next_id = 1;
+    }
+    if (id != TIMER_INVALID_ID && prv_find_locked(id) == nullptr) {
+      return id;
+    }
   }
-  return id;
 }
 
 // Runs on the system work queue. The slot may already have been reused by the
 // time this returns, so copy everything needed before releasing it.
-static void prv_timer_cb(struct pbl_cron_job *job, void *data) {
-  Timer *timer = PBL_CONTAINER_OF(job, Timer, job);
+static void prv_timer_cb(struct pbl_work *work) {
+  Timer *timer = PBL_CONTAINER_OF(work, Timer, work.work);
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (timer->state == TimerState_Free) {
@@ -113,7 +118,7 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner) {
     return TIMER_INVALID_ID;
   }
 
-  Timer *timer = NULL;
+  Timer *timer = nullptr;
   TimerId id = TIMER_INVALID_ID;
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
@@ -129,11 +134,8 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner) {
     timer->state = TimerState_Creating;
     timer->owner = *owner;
     timer->duration_s = duration_s;
-    timer->deadline = pbl_realtime() + duration_s;
-    timer->job = (struct pbl_cron_job){
-      .cb = prv_timer_cb,
-      .cb_data = NULL,
-    };
+    timer->deadline_ms = pbl_uptime_ms() + (uint64_t)duration_s * 1000U;
+    pbl_delayed_work_init(&timer->work, prv_timer_cb);
   }
   pbl_mutex_unlock(&s_mutex);
 
@@ -141,18 +143,16 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner) {
     return TIMER_INVALID_ID;
   }
 
-  // Not under the lock: the cron callback can run as soon as the job is
-  // scheduled and it takes the same lock.
-  pbl_cron_job_schedule_at(&timer->job, timer->deadline);
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &timer->work, PBL_MSEC(duration_s * 1000U));
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   if (timer->id == id) {
     if (timer->state == TimerState_Creating) {
       timer->state = TimerState_Running;
     } else if (timer->state == TimerState_Cancelled) {
-      // A cancel slipped in before the job was scheduled. If the job is
-      // already running, the callback releases the slot itself.
-      if (pbl_cron_job_unschedule(&timer->job)) {
+      // A cancel slipped in before the work was scheduled. If the callback is
+      // already running, it releases the slot itself.
+      if (pbl_delayed_work_cancel(&timer->work)) {
         prv_release(timer);
       }
     }
@@ -169,9 +169,9 @@ bool timer_cancel(TimerId id) {
   Timer *timer = prv_find_locked(id);
   if (timer) {
     timer->state = TimerState_Cancelled;
-    // False when the callback is already running or the job is not scheduled
+    // False when the callback is already running or the work is not scheduled
     // yet; both paths release the slot themselves.
-    if (pbl_cron_job_unschedule(&timer->job)) {
+    if (pbl_delayed_work_cancel(&timer->work)) {
       prv_release(timer);
     }
     cancelled = true;
@@ -193,7 +193,7 @@ uint32_t timer_cancel_all(const Uuid *owner) {
       continue;
     }
     timer->state = TimerState_Cancelled;
-    if (pbl_cron_job_unschedule(&timer->job)) {
+    if (pbl_delayed_work_cancel(&timer->work)) {
       prv_release(timer);
     }
     count++;
@@ -209,7 +209,7 @@ uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
 
   TimerInfo entries[TIMER_MAX_COUNT];
   uint8_t count = 0;
-  const time_t now = pbl_realtime();
+  const uint64_t now_ms = pbl_uptime_ms();
 
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   for (int i = 0; i < TIMER_MAX_COUNT; ++i) {
@@ -220,8 +220,8 @@ uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
     TimerInfo *entry = &entries[count++];
     entry->id = timer->id;
     entry->duration_s = timer->duration_s;
-    const time_t remaining = timer->deadline - now;
-    entry->remaining_s = remaining > 0 ? (uint32_t)remaining : 0;
+    const uint64_t remaining_ms = timer->deadline_ms > now_ms ? timer->deadline_ms - now_ms : 0;
+    entry->remaining_s = (uint32_t)(remaining_ms / 1000U);
     timer_format_duration(entry->description, sizeof(entry->description), timer->duration_s);
   }
   pbl_mutex_unlock(&s_mutex);

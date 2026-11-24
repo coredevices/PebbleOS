@@ -29,6 +29,13 @@ WATCH_MICROPHONE = "WatchMicrophone"
 HEALTH = "Health"
 # And creating timers.
 TIMERS = "Timers"
+# The timer APIs the Timers permission covers. cancel_all() only cleans up the
+# caller's own timers and can_create() is advisory, so neither needs the grant.
+_TIMER_PERMISSION_SYMBOLS = (
+    "timer_service_create",
+    "timer_service_get_timers",
+    "timer_service_cancel",
+)
 _MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
 
 # Message keys are numbered from here, in the order they are declared.
@@ -235,21 +242,22 @@ def _health_error(project_info, used):
 
 
 def undeclared_timer_error(project_info, symbols):
-    """An error when a linked app uses timer_service_create() without declaring
-    the permission, or None.
+    """An error when a linked app uses a timer API that needs the permission
+    without declaring it, or None.
 
     symbols: the names of the symbols in the linked binary."""
-    if "timer_service_create" not in symbols:
+    used = next((name for name in _TIMER_PERMISSION_SYMBOLS if name in symbols), None)
+    if used is None:
         return None
     if project_info.get("manifestVersion", 2) < 2:
         return (
-            "The app uses timer_service_create(), but manifestVersion 1 apps can't create "
-            f"timers: remove '\"manifestVersion\": 1' and declare '{TIMERS}' in usesPermissions"
+            f"The app uses {used}(), but manifestVersion 1 apps can't manage timers: "
+            f"remove '\"manifestVersion\": 1' and declare '{TIMERS}' in usesPermissions"
         )
     if TIMERS in _declared_permissions(project_info):
         return None
     return (
-        "The app uses timer_service_create(), but package.json doesn't declare "
+        f"The app uses {used}(), but package.json doesn't declare "
         f"'{TIMERS}' in usesPermissions"
     )
 

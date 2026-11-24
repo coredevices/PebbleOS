@@ -16,6 +16,7 @@
 #include <apps/system_app_ids.h>
 #include <kernel/low_power.h>
 #include <kernel/ui/modals/modal_manager.h>
+#include <popups/timer_popup.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/watchface.h>
 
@@ -181,6 +182,7 @@ static void prv_enter_critical(void *ignored) {
 static void prv_exit_critical(void) {
   app_manager_close_current_app(true);
   modal_manager_set_min_priority(ModalPriorityMin);
+  timer_popup_push_pending();
 }
 
 static void prv_display_plugged(void *data) {

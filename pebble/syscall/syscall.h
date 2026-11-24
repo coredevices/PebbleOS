@@ -323,11 +323,11 @@ bool sys_timer_can_create(void);
 //! Create a countdown timer for the calling app.
 TimerServiceCreateResult sys_timer_create(uint32_t duration_s, TimerServiceId *id_out);
 
-//! Cancel a timer created by the calling app.
+//! Cancel a timer. The caller needs the Timers permission.
 bool sys_timer_cancel(TimerServiceId id);
 
-//! Cancel all timers created by the calling app.
+//! Cancel all timers created by the calling app, without the Timers permission.
 uint32_t sys_timer_cancel_all(void);
 
-//! Copy the calling app's timers, soonest expiry first.
+//! Copy every running timer, soonest expiry first. The caller needs the Timers permission.
 uint8_t sys_timer_get_timers(TimerServiceInfo *timers, uint8_t max_timers);

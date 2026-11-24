@@ -3,6 +3,8 @@
 
 #include "timer_popup.h"
 
+#include "alarm_popup.h"
+
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
@@ -29,10 +31,13 @@
 #define TIMER_VIBE_REPEAT_INTERVAL_MS (1000)
 #define TIMER_LPM_VIBES_PER_MINUTE    (10)
 
+#define TIMER_POPUP_QUEUE_SIZE (TIMER_MAX_COUNT * 2)
+
 typedef struct {
   ActionableDialog *timer_popup;
   GBitmap *action_bar_dismiss;
   ActionBarLayer action_bar;
+  uint32_t duration_s;
 
   int max_vibes;
   int vibe_count;
@@ -41,7 +46,14 @@ typedef struct {
 
 static TimerPopupData *s_timer_popup_data = nullptr;
 
+// Expiries that arrived while another alert or a locked modal stack owned the
+// screen. They are shown in order as the popup becomes available.
+static uint32_t s_pending_durations[TIMER_POPUP_QUEUE_SIZE];
+static uint8_t s_pending_head;
+static uint8_t s_pending_count;
+
 static void prv_vibe(struct pbl_work *work);
+static void prv_vibe_kernel_main_cb(void *callback_context);
 
 // Outside the popup data: stopping must not wait for prv_vibe, which can stall on the event queue
 // that KernelMain drains. Cleared before canceling, so a running prv_vibe does not re-arm.
@@ -51,6 +63,26 @@ static PBL_DELAYED_WORK_DEFINE(s_vibe_timer, prv_vibe);
 
 static WindowStack *prv_get_window_stack(void) {
   return modal_manager_get_window_stack(TIMER_PRIORITY);
+}
+
+static void prv_enqueue(uint32_t duration_s) {
+  if (s_pending_count == TIMER_POPUP_QUEUE_SIZE) {
+    PBL_LOG_WRN("Dropping timer expiry: popup queue full");
+    return;
+  }
+  const uint8_t tail = (s_pending_head + s_pending_count) % TIMER_POPUP_QUEUE_SIZE;
+  s_pending_durations[tail] = duration_s;
+  s_pending_count++;
+}
+
+static bool prv_take_pending(uint32_t *duration_s) {
+  if (s_pending_count == 0) {
+    return false;
+  }
+  *duration_s = s_pending_durations[s_pending_head];
+  s_pending_head = (s_pending_head + 1) % TIMER_POPUP_QUEUE_SIZE;
+  s_pending_count--;
+  return true;
 }
 
 static void prv_stop_vibes(void) {
@@ -63,31 +95,6 @@ static void prv_stop_vibes(void) {
     }
   }
   vibes_cancel();
-}
-
-static void prv_vibe_kernel_main_cb(void *callback_context) {
-  if (!s_timer_popup_data) {
-    return;
-  }
-  if (s_timer_popup_data->vibe_count < s_timer_popup_data->max_vibes) {
-    s_timer_popup_data->vibe_count++;
-    vibes_cancel();
-    if (s_timer_popup_data->vibe_score) {
-      vibe_score_do_vibe(s_timer_popup_data->vibe_score);
-    } else {
-      vibes_long_pulse();
-    }
-  } else {
-    prv_stop_vibes();
-    actionable_dialog_pop(s_timer_popup_data->timer_popup);
-  }
-}
-
-static void prv_vibe(struct pbl_work *work) {
-  launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);
-  if (s_vibe_repeating) {
-    pbl_delayed_work_schedule_next(&s_vibe_timer, s_vibe_period_ticks);
-  }
 }
 
 static void prv_start_vibes(void) {
@@ -119,10 +126,53 @@ static void prv_start_vibes(void) {
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_vibe_timer, PBL_TICKS(s_vibe_period_ticks));
 }
 
-static void prv_dismiss_click_handler(ClickRecognizerRef recognizer, void *data) {
-  if (s_timer_popup_data) {
+static void prv_update_popup(uint32_t duration_s) {
+  s_timer_popup_data->duration_s = duration_s;
+  char display_time[TIMER_DESCRIPTION_SIZE];
+  timer_format_duration(display_time, sizeof(display_time), duration_s);
+  dialog_set_text(actionable_dialog_get_dialog(s_timer_popup_data->timer_popup), display_time);
+  prv_stop_vibes();
+  prv_start_vibes();
+}
+
+static void prv_show_next_or_pop(void) {
+  if (!s_timer_popup_data) {
+    return;
+  }
+  uint32_t duration_s;
+  if (prv_take_pending(&duration_s)) {
+    prv_update_popup(duration_s);
+  } else {
     actionable_dialog_pop(s_timer_popup_data->timer_popup);
   }
+}
+
+static void prv_vibe_kernel_main_cb(void *callback_context) {
+  if (!s_timer_popup_data) {
+    return;
+  }
+  if (s_timer_popup_data->vibe_count < s_timer_popup_data->max_vibes) {
+    s_timer_popup_data->vibe_count++;
+    vibes_cancel();
+    if (s_timer_popup_data->vibe_score) {
+      vibe_score_do_vibe(s_timer_popup_data->vibe_score);
+    } else {
+      vibes_long_pulse();
+    }
+  } else {
+    prv_show_next_or_pop();
+  }
+}
+
+static void prv_vibe(struct pbl_work *work) {
+  launcher_task_add_callback(prv_vibe_kernel_main_cb, nullptr);
+  if (s_vibe_repeating) {
+    pbl_delayed_work_schedule_next(&s_vibe_timer, s_vibe_period_ticks);
+  }
+}
+
+static void prv_dismiss_click_handler(ClickRecognizerRef recognizer, void *data) {
+  prv_show_next_or_pop();
 }
 
 static void prv_click_provider(void *context) {
@@ -157,16 +207,9 @@ static void prv_cleanup_timer_popup(void *callback_context) {
   }
 }
 
-// ----------------------------------------------------------------------------------------------
-//! API
-void timer_popup_push_window(const PebbleTimerEvent *event) {
-  if (s_timer_popup_data) {
-    // The window is already visible, don't show another one.
-    return;
-  }
-
+static void prv_show_popup(uint32_t duration_s) {
   s_timer_popup_data = pbl_malloc_check(sizeof(TimerPopupData));
-  *s_timer_popup_data = (TimerPopupData){};
+  *s_timer_popup_data = (TimerPopupData){.duration_s = duration_s};
 
   prv_setup_action_bar();
 
@@ -176,7 +219,7 @@ void timer_popup_push_window(const PebbleTimerEvent *event) {
 
   Dialog *dialog = actionable_dialog_get_dialog(s_timer_popup_data->timer_popup);
   char display_time[TIMER_DESCRIPTION_SIZE];
-  timer_format_duration(display_time, sizeof(display_time), event->duration_s);
+  timer_format_duration(display_time, sizeof(display_time), duration_s);
   dialog_set_text(dialog, display_time);
   if (PBL_DISPLAY_HEIGHT > 180) {
     actionable_dialog_set_text_font(s_timer_popup_data->timer_popup,
@@ -196,4 +239,52 @@ void timer_popup_push_window(const PebbleTimerEvent *event) {
 
   prv_start_vibes();
   light_enable(true);
+}
+
+// ----------------------------------------------------------------------------------------------
+//! API
+bool timer_popup_is_active(void) {
+  return s_timer_popup_data != nullptr;
+}
+
+void timer_popup_push_window(const PebbleTimerEvent *event) {
+  if (!event) {
+    return;
+  }
+
+  if (s_timer_popup_data || alarm_popup_is_active() ||
+      !modal_manager_is_priority_enabled(TIMER_PRIORITY)) {
+    prv_enqueue(event->duration_s);
+    return;
+  }
+
+  prv_enqueue(event->duration_s);
+  uint32_t duration_s;
+  if (prv_take_pending(&duration_s)) {
+    prv_show_popup(duration_s);
+  }
+}
+
+void timer_popup_push_pending(void) {
+  if (s_timer_popup_data || alarm_popup_is_active() ||
+      !modal_manager_is_priority_enabled(TIMER_PRIORITY)) {
+    return;
+  }
+
+  uint32_t duration_s;
+  if (prv_take_pending(&duration_s)) {
+    prv_show_popup(duration_s);
+  }
+}
+
+void timer_popup_abort(void) {
+  if (!s_timer_popup_data) {
+    return;
+  }
+
+  const uint32_t duration_s = s_timer_popup_data->duration_s;
+  ActionableDialog *dialog = s_timer_popup_data->timer_popup;
+  prv_enqueue(duration_s);
+  prv_cleanup_timer_popup(nullptr);
+  actionable_dialog_pop(dialog);
 }
