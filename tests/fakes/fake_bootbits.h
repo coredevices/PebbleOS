@@ -6,3 +6,5 @@
 #include <system/bootbits.h>
 
 void fake_boot_bit_set(BootBitValue bit);
+uint32_t fake_boot_bits_get(void);
+void fake_boot_bits_reset(void);

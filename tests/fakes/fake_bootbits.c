@@ -18,3 +18,15 @@ bool boot_bit_test(BootBitValue bit) {
 void fake_boot_bit_set(BootBitValue bit) {
   s_bootbits |= bit;
 }
+
+void boot_bit_set(BootBitValue bit) {
+  s_bootbits |= bit;
+}
+
+uint32_t fake_boot_bits_get(void) {
+  return s_bootbits;
+}
+
+void fake_boot_bits_reset(void) {
+  s_bootbits = 0;
+}
