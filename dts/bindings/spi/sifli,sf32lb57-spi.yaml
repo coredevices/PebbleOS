@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/spi/sifli,sf32lb57-spi.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB57 SPI controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  SPI controller of the SF32LB57, shifting frames most significant bit first.
+  Chip selects are GPIOs, from cs-gpios.
+
+allOf:
+  - $ref: /schemas/spi/spi-controller.yaml#
+
+properties:
+  compatible:
+    const: sifli,sf32lb57-spi
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+  dmas:
+    maxItems: 1
+
+  dma-names:
+    const: tx
+
+  pinctrl-0: true
+
+  pinctrl-names:
+    const: default
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    spi@50095000 {
+        compatible = "sifli,sf32lb57-spi";
+        reg = <0x50095000 0x1000>;
+        interrupts = <60>;
+        clocks = <&hpsys_rcc 19>;
+        dmas = <&gpdma1 1 28 0>;
+        dma-names = "tx";
+        cs-gpios = <&gpio1 3 0>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
