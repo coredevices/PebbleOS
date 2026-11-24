@@ -16,6 +16,7 @@
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
@@ -37,6 +38,10 @@
 
 // Room a double-buffered FIFO leaves for the endpoints enabled after it: two of the largest packets
 #define FIFO_RESERVE (2U * EP_MPS_MAX)
+
+// Remote wakeup: the bus idle that long before, then resume signalled that long, within 1-15 ms
+#define WAKEUP_IDLE_MS   5U
+#define WAKEUP_RESUME_MS 10U
 
 // SiFli: the USB PHY, in the system configuration block, which also has the analog bandgap
 #define SIFLI_HPSYS_CFG_USBCR   0x3c
@@ -91,7 +96,11 @@ struct pbl_udc_musb_state {
   // The FIFO RAM past the FIFOs given out
   uint16_t fifo_end;
   enum prv_ep0 ep0;
-  // SiFli: clk_hpsys kept running in deep WFI while connected
+  bool connected;
+  bool suspended;
+  uint64_t suspend_ms;
+  // SiFli: clk_hpsys kept running in deep WFI while the bus is active, else deep WFI blocked
+  bool active;
   bool deepwfi_held;
   // The address the status stage applies
   int16_t address;
@@ -327,8 +336,62 @@ static void prv_fifo_reset(const struct pbl_udc_musb *m) {
   m->state->fifo_end = EP0_MPS;
 }
 
+// SiFli: deep sleep stops the controller, and in deep WFI it needs clk_hpsys kept running to
+// move packets. While the bus is suspended it only has to see the host resume or reset it, which
+// it does on HRC48 too.
+static void prv_sifli_active(const struct pbl_udc_musb *m, bool on) {
+  struct pbl_udc_musb_state *st = m->state;
+
+  if ((m->quirks & MUSB_SIFLI) == 0U || on == st->active) {
+    return;
+  }
+
+  st->active = on;
+  if (on) {
+    st->deepwfi_held = pbl_clk_sf32lb_deepwfi_hold() == 0;
+    if (!st->deepwfi_held) {
+      pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPWFI);
+    }
+  } else if (st->deepwfi_held) {
+    pbl_clk_sf32lb_deepwfi_release();
+  } else {
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
+  }
+}
+
+static void prv_suspend(const struct pbl_udc_musb *m) {
+  struct pbl_udc_musb_state *st = m->state;
+
+  if (st->suspended) {
+    return;
+  }
+
+  st->suspended = true;
+  st->suspend_ms = pbl_uptime_ms();
+  prv_sifli_active(m, false);
+  pbl_udc_event(&m->udc, PBL_UDC_EVENT_SUSPEND, nullptr);
+}
+
+static void prv_resume(const struct pbl_udc_musb *m) {
+  struct pbl_udc_musb_state *st = m->state;
+
+  if (!st->suspended) {
+    return;
+  }
+
+  st->suspended = false;
+  prv_sifli_active(m, true);
+  pbl_udc_event(&m->udc, PBL_UDC_EVENT_RESUME, nullptr);
+}
+
 static void prv_bus_reset(const struct pbl_udc_musb *m) {
   struct pbl_udc_musb_state *st = m->state;
+
+  // A reset ends a suspend too
+  if (st->suspended) {
+    st->suspended = false;
+    prv_sifli_active(m, true);
+  }
 
   prv_wb(m, MUSB_FADDR, 0U);
   st->address = -1;
@@ -406,11 +469,11 @@ static void prv_isr(const struct pbl_udc_musb *m) {
   if ((usb & MUSB_INTRUSB_RESET) != 0U) {
     prv_bus_reset(m);
   }
-  if ((usb & MUSB_INTRUSB_SUSPEND) != 0U) {
-    pbl_udc_event(&m->udc, PBL_UDC_EVENT_SUSPEND, nullptr);
-  }
   if ((usb & MUSB_INTRUSB_RESUME) != 0U) {
-    pbl_udc_event(&m->udc, PBL_UDC_EVENT_RESUME, nullptr);
+    prv_resume(m);
+  }
+  if ((usb & MUSB_INTRUSB_SUSPEND) != 0U) {
+    prv_suspend(m);
   }
 
   if ((tx & PBL_BIT(0)) != 0U) {
@@ -722,41 +785,111 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
   return ret;
 }
 
+// The controller is clocked while connected only
 static int prv_enable(const struct pbl_udc *udc) {
   const struct pbl_udc_musb *m = prv_musb(udc);
-  uint8_t power = prv_rb(m, MUSB_POWER);
+  struct pbl_udc_musb_state *st = m->state;
+  int ret;
 
-  if ((power & MUSB_POWER_SOFTCONN) != 0U) {
+  pbl_irq_lock();
+  if (st->connected) {
+    pbl_irq_unlock();
     return 0;
   }
 
-  // SiFli: in deep WFI the controller needs clk_hpsys kept running, and deep sleep stops it
-  if ((m->quirks & MUSB_SIFLI) != 0U) {
-    m->state->deepwfi_held = pbl_clk_sf32lb_deepwfi_hold() == 0;
-    pbl_idle_state_block(m->state->deepwfi_held ? SOC_SF32LB_IDLE_DEEPSLEEP
-                                                : SOC_SF32LB_IDLE_DEEPWFI);
+  ret = pbl_clk_enable(&m->clk);
+  if (ret != 0) {
+    pbl_irq_unlock();
+    return ret;
   }
-  prv_wb(m, MUSB_POWER, power | MUSB_POWER_SOFTCONN);
+
+  st->connected = true;
+  st->suspended = false;
+  if ((m->quirks & MUSB_SIFLI) != 0U) {
+    pbl_idle_state_block(SOC_SF32LB_IDLE_DEEPSLEEP);
+  }
+  prv_sifli_active(m, true);
+  prv_wb(m, MUSB_POWER, prv_rb(m, MUSB_POWER) | MUSB_POWER_SOFTCONN);
+  pbl_irq_unlock();
 
   return 0;
 }
 
 static int prv_disable(const struct pbl_udc *udc) {
   const struct pbl_udc_musb *m = prv_musb(udc);
-  uint8_t power = prv_rb(m, MUSB_POWER);
+  struct pbl_udc_musb_state *st = m->state;
+  int ret;
 
-  if ((power & MUSB_POWER_SOFTCONN) == 0U) {
+  pbl_irq_lock();
+  if (!st->connected) {
+    pbl_irq_unlock();
     return 0;
   }
 
-  prv_wb(m, MUSB_POWER, power & ~MUSB_POWER_SOFTCONN);
+  prv_wb(m, MUSB_POWER, prv_rb(m, MUSB_POWER) & ~(MUSB_POWER_SOFTCONN | MUSB_POWER_RESUME));
+  st->connected = false;
+  st->suspended = false;
+  prv_sifli_active(m, false);
   if ((m->quirks & MUSB_SIFLI) != 0U) {
-    pbl_idle_state_release(m->state->deepwfi_held ? SOC_SF32LB_IDLE_DEEPSLEEP
-                                                  : SOC_SF32LB_IDLE_DEEPWFI);
-    if (m->state->deepwfi_held) {
-      pbl_clk_sf32lb_deepwfi_release();
-    }
+    pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPSLEEP);
   }
+  // Nothing may stay latched for the ISR to read with the clock gated
+  (void)prv_rb(m, MUSB_INTRUSB);
+  (void)prv_rw(m, MUSB_INTRTX);
+  (void)prv_rw(m, MUSB_INTRRX);
+  pbl_irq_clear_pending(m->irq);
+  ret = pbl_clk_disable(&m->clk);
+  pbl_irq_unlock();
+
+  return ret;
+}
+
+// Resume signalling, once the bus has been idle long enough, then the bus is active again
+static int prv_wakeup(const struct pbl_udc *udc) {
+  const struct pbl_udc_musb *m = prv_musb(udc);
+  struct pbl_udc_musb_state *st = m->state;
+  uint64_t since;
+
+  pbl_irq_lock();
+  if (!st->connected) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
+  if (!st->suspended) {
+    pbl_irq_unlock();
+    return -EALREADY;
+  }
+  since = pbl_uptime_ms() - st->suspend_ms;
+  pbl_irq_unlock();
+
+  if (since < WAKEUP_IDLE_MS) {
+    pbl_sleep_ms((uint32_t)(WAKEUP_IDLE_MS - since));
+  }
+
+  pbl_irq_lock();
+  if (!st->connected) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
+  if (!st->suspended) {
+    pbl_irq_unlock();
+    return 0;
+  }
+  prv_sifli_active(m, true);
+  prv_wb(m, MUSB_POWER, prv_rb(m, MUSB_POWER) | MUSB_POWER_RESUME);
+  pbl_irq_unlock();
+
+  pbl_sleep_ms(WAKEUP_RESUME_MS);
+
+  // Disconnected meanwhile: disabling cleared RESUME and gated the clock
+  pbl_irq_lock();
+  if (!st->connected) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
+  prv_wb(m, MUSB_POWER, prv_rb(m, MUSB_POWER) & ~MUSB_POWER_RESUME);
+  prv_resume(m);
+  pbl_irq_unlock();
 
   return 0;
 }
@@ -834,7 +967,7 @@ static int prv_init(const struct pbl_udc *udc) {
 
   pbl_irq_enable(m->irq);
 
-  return 0;
+  return pbl_clk_disable(&m->clk);
 }
 
 static const struct pbl_udc_ops s_ops = {
@@ -847,6 +980,7 @@ static const struct pbl_udc_ops s_ops = {
   .ep_disable = prv_ep_disable,
   .ep_set_halt = prv_ep_set_halt,
   .ep_queue = prv_ep_queue,
+  .wakeup = prv_wakeup,
 };
 
 // SiFli: endpoint 0 and seven others
