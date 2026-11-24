@@ -13,15 +13,15 @@
 #define EP0_MPS     64U
 #define EP0_BUF_LEN 128U
 
-#define CONFIG_VALUE 1U
+#define USB_CFG_VALUE 1U
 
 #define STRING_LANGID       0U
 #define STRING_MANUFACTURER 1U
 #define STRING_PRODUCT      2U
 
 // Bus-powered, at most 100 mA
-#define CONFIG_ATTRIBUTES 0x80U
-#define CONFIG_MAX_POWER  50U
+#define USB_CFG_ATTRIBUTES 0x80U
+#define USB_CFG_MAX_POWER  50U
 
 #define BULK_MPS_FS 64U
 #define BULK_MPS_HS 512U
@@ -112,10 +112,10 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
   out[1] = PBL_USB_DESC_CONFIGURATION;
   pbl_put_le16(len, &out[2]);
   out[4] = ifaces;
-  out[5] = CONFIG_VALUE;
+  out[5] = USB_CFG_VALUE;
   out[6] = 0U;
-  out[7] = CONFIG_ATTRIBUTES;
-  out[8] = CONFIG_MAX_POWER;
+  out[7] = USB_CFG_ATTRIBUTES;
+  out[8] = USB_CFG_MAX_POWER;
 
   return len;
 }
@@ -241,7 +241,7 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
     case PBL_USB_REQ_SET_ADDRESS:
       return pbl_udc_set_address(UDC, (uint8_t)setup->wValue);
     case PBL_USB_REQ_SET_CONFIGURATION:
-      if (setup->wValue > CONFIG_VALUE) {
+      if (setup->wValue > USB_CFG_VALUE) {
         return -EINVAL;
       }
       if (s_ctrl.config != 0U) {
