@@ -67,8 +67,8 @@ class Console(PblCommand):
             self.die("no console to attach to: pass --tty, or add the watch to a lab")
 
         python = shlex.quote(sys.executable)
-        terminal = self.script("tools", "console.py")
-        console = f"{python} {terminal} {tty} --baudrate {baudrate}"
+        terminal = shlex.quote(self.script("tools", "console.py"))
+        console = f"{python} {terminal} {shlex.quote(tty)} --baudrate {baudrate}"
         log_dict = os.path.join(build.path, "log.dict.json")
         if os.path.exists(log_dict):
             console += f" --dict {shlex.quote(log_dict)}"
@@ -79,8 +79,8 @@ class Console(PblCommand):
             console += f" --keep-input-from {vid:04x}:{pid:04x}"
 
         if args.reconnect:
-            keepalive = self.script("tools", "console_keepalive.py")
-            console = f"{python} {keepalive} -t {tty} -- {console}"
+            keepalive = shlex.quote(self.script("tools", "console_keepalive.py"))
+            console = f"{python} {keepalive} -t {shlex.quote(tty)} -- {console}"
 
         with self.holding([(lock.serial_key(tty), f"serial port {tty}")]):
             return self.run_shell(console)

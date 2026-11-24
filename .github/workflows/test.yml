@@ -97,6 +97,9 @@ jobs:
       - name: Run console host tests
         run: python -m pytest tools/libs/pbl-console/tests
 
+      - name: Run pbl host tests
+        run: python -m pytest tools/libs/pbl-cli/tests
+
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v6
         if: (!cancelled())

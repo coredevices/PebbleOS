@@ -1,8 +1,11 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import errno
 import os
 import platform
+import socket
+import stat
 import sys
 
 from pbl import emulator, lock
@@ -127,6 +130,9 @@ class QemuRunner(Runner):
                 raise RunnerError("--bt-addr needs a build with CONFIG_NIMBLE_ID_ADDR_QEMU=y")
             self.bt_addr = bt_address(self.bt_addr)
 
+        # Before the images are rebuilt, which would pull them from under a
+        # running emulator.
+        self._claim_sockets(build)
         return self.run_program(
             self._command_line(build, decoration, self._flash_images(build)),
             cwd=build.topdir,
@@ -146,6 +152,29 @@ class QemuRunner(Runner):
         ]  # fmt: skip
         images = self._flash_images(build)
         return argv + self._machine_args(build, images, audio=False), {}
+
+    def _claim_sockets(self, build):
+        """Remove the control sockets a previous emulator left, refusing if
+        one is still being served, or is not a socket."""
+        for name in (emulator.MONITOR_SOCKET, emulator.QMP_SOCKET):
+            path = build.join(name)
+            if not os.path.lexists(path):
+                continue
+            if not stat.S_ISSOCK(os.lstat(path).st_mode):
+                raise RunnerError(
+                    f"{path} is in the way of the emulator, and not a socket"
+                )
+            with socket.socket(socket.AF_UNIX) as probe:
+                result = probe.connect_ex(path)
+            if result == 0:
+                raise RunnerError(
+                    f"an emulator is already running from {build.path} ({path}); "
+                    "quit it first"
+                )
+            if result not in (errno.ECONNREFUSED, errno.ENOENT):
+                raise RunnerError(f"cannot check {path}: {os.strerror(result)}")
+            if not self.cfg.dry_run:
+                os.unlink(path)
 
     def _flash_images(self, build):
         """Build the flash images, which are build artifacts, and return the
@@ -223,10 +252,6 @@ class QemuRunner(Runner):
         # Both control sockets are recreated on every launch.
         monitor = build.join(emulator.MONITOR_SOCKET)
         qmp = build.join(emulator.QMP_SOCKET)
-        if not self.cfg.dry_run:
-            for socket in (monitor, qmp):
-                if os.path.exists(socket):
-                    os.unlink(socket)
 
         launch = [
             qemu,
