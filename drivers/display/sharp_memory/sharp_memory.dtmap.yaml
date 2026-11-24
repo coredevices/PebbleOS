@@ -1,0 +1,54 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The panels with up to 255 lines, a whole number of bytes wide, addressed with 8 bits
+compatible:
+  - sharp,ls010b7dh04
+  - sharp,ls011b7dh03
+  - sharp,ls012b7dd01
+  - sharp,ls013b7dh01
+  - sharp,ls013b7dh03
+  - sharp,ls013b7dh05
+  - sharp,ls027b7dh01
+  - sharp,ls027b7dh01a
+  - sharp,ls044q7dh01
+config: DISPLAY_SHARP_MEMORY
+class: display
+define: PBL_DISPLAY_SHARP_MEMORY_DEFINE
+header: pbl/drivers/display/sharp_memory.h
+args:
+  - name: true
+  - compatible: true
+    values:
+      sharp,ls010b7dh04: 128
+      sharp,ls011b7dh03: 160
+      sharp,ls012b7dd01: 184
+      sharp,ls013b7dh01: 144
+      sharp,ls013b7dh03: 128
+      sharp,ls013b7dh05: 144
+      sharp,ls027b7dh01: 400
+      sharp,ls027b7dh01a: 400
+      sharp,ls044q7dh01: 320
+  - compatible: true
+    values:
+      sharp,ls010b7dh04: 128
+      sharp,ls011b7dh03: 68
+      sharp,ls012b7dd01: 38
+      sharp,ls013b7dh01: 168
+      sharp,ls013b7dh03: 128
+      sharp,ls013b7dh05: 168
+      sharp,ls027b7dh01: 240
+      sharp,ls027b7dh01a: 240
+      sharp,ls044q7dh01: 240
+  - parent: spi
+  - reg: 0
+  - prop: spi-max-frequency
+  - flags:
+      spi-cpha: PBL_SPI_CPHA
+      spi-cpol: PBL_SPI_CPOL
+      spi-cs-high: PBL_SPI_CS_HIGH
+      spi-lsb-first: PBL_SPI_LSB_FIRST
+  - gpio: enable
+  - prop: rotation
+    default: 0
+  - pwm: 0
