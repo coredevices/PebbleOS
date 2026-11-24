@@ -61,6 +61,7 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
 #endif
     .attr = PBL_MPU_P_RO_U_RO | PBL_MPU_NORMAL_WT | PBL_MPU_EXEC,
   },
+#ifdef CONFIG_USERSPACE
   {
     // Written through the default memory map, which it has to stay coherent with.
     .name = "ro bss",
@@ -68,6 +69,7 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
     .size = (size_t)__unpriv_ro_bss_size__,
     .attr = PBL_MPU_P_RW_U_RO | PBL_MPU_NORMAL_WB,
   },
+#endif
 #if CONFIG_KERNEL_STACK_GUARD_SIZE > 0
   {
     .name = "isr guard",
