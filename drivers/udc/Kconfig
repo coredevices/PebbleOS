@@ -51,8 +51,9 @@ config UDC_DWC2
     select REGULATOR
     help
       Device mode of the DesignWare USB 2.0 OTG controller, as the USB OTG
-      HS of the STM32F7 and STM32H7, through its FIFOs, with an external
-      ULPI PHY at high speed or its internal PHY at full speed.
+      HS of the STM32F7 and STM32H7, by DMA, or through its FIFOs on cores
+      without it, with an external ULPI PHY at high speed or its internal PHY
+      at full speed.
 
 config UDC_DWC2_IRQ_PRIO
     int "Interrupt priority"
