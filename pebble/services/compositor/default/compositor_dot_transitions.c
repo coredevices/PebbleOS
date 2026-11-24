@@ -16,7 +16,9 @@
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/animation_interpolate.h>
 #include <applib/ui/animation_timing.h>
+#include <apps/system/app_fetch_ui.h>
 #include <apps/system/timeline/common.h>
+#include <shell/system_theme.h>
 
 static CompositorTransitionDirection prv_flip_transition_direction(
     CompositorTransitionDirection direction) {
@@ -314,8 +316,8 @@ static void prv_dot_transition_from_timeline_future_animation_init(Animation *an
 }
 
 static void prv_dot_transition_from_app_fetch_animation_init(Animation *animation) {
-  prv_configure_dot_transition_animation(animation, GColorWhite, GColorWhite, GColorLightGray,
-                                         CompositorTransitionDirectionNone,
+  prv_configure_dot_transition_animation(animation, GColorWhite, GColorWhite,
+                                         APP_FETCH_UI_FILL_COLOR, CompositorTransitionDirectionNone,
                                          STATIC_DOT_ANIMATION_DURATION_MS, false);
 }
 
