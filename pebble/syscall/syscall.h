@@ -27,6 +27,7 @@
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/tick_timer_service.h>
+#include <applib/timer_service.h>
 #include <applib/ui/window_stack_animation.h>
 #include <kernel/events.h>
 #include <logging/logging_private.h>
@@ -315,3 +316,15 @@ bool sys_dark_mode_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+//! Check whether a timer slot is free.
+bool sys_timer_can_create(void);
+
+//! Create a countdown timer for the calling app.
+TimerServiceCreateResult sys_timer_create(uint32_t duration_s, TimerServiceId *id_out);
+
+//! Cancel a timer created by the calling app.
+bool sys_timer_cancel(TimerServiceId id);
+
+//! Cancel all timers created by the calling app.
+uint32_t sys_timer_cancel_all(void);

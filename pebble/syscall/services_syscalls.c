@@ -5,14 +5,77 @@
 
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/alarms/alarm.h>
+#include <pbl/services/blob_db/app_db.h>
 #include <pbl/services/notifications/notification_storage.h>
+#include <pbl/services/timers/timer.h>
 
 #ifdef CONFIG_PRESSURE
 #include <pbl/drivers/pressure.h>
 #endif
 
+#include <process_management/pebble_process_md.h>
+#include <syscall/syscall.h>
+
 PBL_SYSCALL(bool, sys_alarm_get_next_enabled, (OUT, time_t *, timestamp_out)) {
   return alarm_get_next_enabled_alarm(timestamp_out);
+}
+
+PBL_SYSCALL(bool, sys_timer_can_create) {
+#ifdef CONFIG_SERVICE_TIMERS
+  return timer_can_create();
+#else
+  return false;
+#endif
+}
+
+PBL_SYSCALL(TimerServiceCreateResult, sys_timer_create, (VAL, uint32_t, duration_s),
+            (OUT, TimerServiceId *, id_out)) {
+#ifdef CONFIG_SERVICE_TIMERS
+  const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
+  if (!md || !app_db_timer_granted(&md->uuid)) {
+    return TimerServiceCreateErrPermissionDenied;
+  }
+
+  if (duration_s == 0 || duration_s > TIMER_SERVICE_MAX_DURATION_S) {
+    return TimerServiceCreateErrInvalidArgument;
+  }
+
+  const TimerId id = timer_start(duration_s, &md->uuid);
+  if (id == TIMER_INVALID_ID) {
+    return TimerServiceCreateErrNoSpace;
+  }
+
+  *id_out = id;
+  return TimerServiceCreateOk;
+#else
+  return TimerServiceCreateErrUnavailable;
+#endif
+}
+
+PBL_SYSCALL(bool, sys_timer_cancel, (VAL, TimerServiceId, id)) {
+#ifdef CONFIG_SERVICE_TIMERS
+  const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
+  if (!md) {
+    return false;
+  }
+
+  return timer_cancel(id, &md->uuid);
+#else
+  return false;
+#endif
+}
+
+PBL_SYSCALL(uint32_t, sys_timer_cancel_all) {
+#ifdef CONFIG_SERVICE_TIMERS
+  const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
+  if (!md) {
+    return 0;
+  }
+
+  return timer_cancel_all(&md->uuid);
+#else
+  return 0;
+#endif
 }
 
 PBL_SYSCALL(bool, sys_hrm_manager_is_hrm_present) {
