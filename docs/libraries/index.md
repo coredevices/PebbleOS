@@ -8,12 +8,12 @@ tests link against directly.
   {apidoc}`the API reference <util>`.
 - **Kraepelin**: `lib/kraepelin`, the step, sleep and activity session
   detection algorithm the activity service runs, included as
-  `pbl/kraepelin/kraepelin.h`; see {apidoc}`the API reference <kraepelin>`.
+  `pbl/kraepelin/kraepelin.h`; see [Kraepelin](kraepelin.md).
 - **Fuel gauge**: `lib/fuel_gauge`, battery state-of-charge estimation,
   included as `pbl/fuel_gauge/fuel_gauge.h`; see [Fuel gauge](fuel_gauge/index.md).
 - **van Hees**: `lib/vanhees`, the wrist angle sleep classifier the
   activity service tells sleep minutes apart with, included as
-  `pbl/vanhees/vanhees.h`; see {apidoc}`the API reference <vanhees>`.
+  `pbl/vanhees/vanhees.h`; see [van Hees](vanhees.md).
 - **Shared definitions**: headers under `include/pebbleos/` describe data
   exchanged with the bootloader and host tooling, so their layout is fixed;
   see {apidoc}`the API reference <pebbleos>`.
@@ -22,4 +22,6 @@ tests link against directly.
 :hidden:
 
 fuel_gauge/index.md
+kraepelin.md
+vanhees.md
 ```
