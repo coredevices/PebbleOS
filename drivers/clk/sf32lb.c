@@ -548,6 +548,31 @@ static int prv_set_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t ma
   return 0;
 }
 
+// The USB controller clock: clk_hpsys or DLL2, then divided
+static int prv_set_usbc_parent(const struct pbl_clk_controller *ctrl,
+                               const struct pbl_clk *parent) {
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case SF32LB_HPSYS_CLK_SYS:
+      sel = 0U;
+      break;
+    case SF32LB_HPSYS_CLK_DLL2:
+      sel = HPSYS_RCC_CSR_SEL_USBC;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  prv_modify(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET, HPSYS_RCC_CSR_SEL_USBC, sel);
+
+  return 0;
+}
+
 static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                               const struct pbl_clk *parent) {
   const struct pbl_clk_sf32lb *rcc = prv_rcc(ctrl);
@@ -565,6 +590,8 @@ static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id
         return -EINVAL;
       }
       return prv_set_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI3_MASK, parent);
+    case SF32LB_HPSYS_CLK_USBC_K:
+      return prv_set_usbc_parent(ctrl, parent);
     case SF32LB_HPSYS_CLK_PERI:
       break;
     default:
@@ -674,6 +701,13 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
       prv_modify(ctrl, SF32LB52_HPSYS_RCC_CFGR_OFFSET, mask, PBL_FIELD_PREP(mask, pdiv));
       return 0;
     }
+    case SF32LB_HPSYS_CLK_USBC_K:
+      if (div > PBL_FIELD_GET(HPSYS_RCC_USBCR_DIV_MASK, HPSYS_RCC_USBCR_DIV_MASK)) {
+        return -EINVAL;
+      }
+      prv_modify(ctrl, SF32LB52_HPSYS_RCC_USBCR_OFFSET, HPSYS_RCC_USBCR_DIV_MASK,
+                 PBL_FIELD_PREP(HPSYS_RCC_USBCR_DIV_MASK, div));
+      return 0;
     default:
       return -EINVAL;
   }
