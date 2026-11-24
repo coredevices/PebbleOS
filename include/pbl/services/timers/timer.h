@@ -17,9 +17,9 @@
  * @brief Disposable countdown timers created by apps.
  *
  * Timers live in memory only: they are gone after a reset. Each timer records
- * the UUID of the app that created it so only that app can cancel it. When a
- * timer expires a @c PEBBLE_TIMER_EVENT is put and the timer popup shows the
- * timer's duration.
+ * the UUID of the app that created it so timer_cancel_all() can stop that
+ * app's timers. When a timer expires a @c PEBBLE_TIMER_EVENT is put and the
+ * timer popup shows the timer's duration.
  *
  * @{
  */
@@ -74,7 +74,7 @@ bool timer_can_create(void);
  * @brief Start a countdown timer.
  *
  * @param duration_s Duration, in seconds.
- * @param owner App that owns the timer, which is the only one allowed to cancel it.
+ * @param owner App that created the timer, used by timer_cancel_all().
  * @return The timer ID, or @ref TIMER_INVALID_ID if the duration is invalid or no slot is free.
  */
 TimerId timer_start(uint32_t duration_s, const Uuid *owner);
@@ -82,30 +82,31 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner);
 /**
  * @brief Cancel a timer.
  *
+ * The syscall layer checks the caller's Timers permission.
+ *
  * @param id Timer ID.
- * @param owner App that owns the timer.
- * @return true if the timer was cancelled, false if it was not found or belongs to another app.
+ * @return true if the timer was cancelled, false if it was not found.
  */
-bool timer_cancel(TimerId id, const Uuid *owner);
+bool timer_cancel(TimerId id);
 
 /**
- * @brief Cancel every timer owned by an app.
+ * @brief Cancel every timer created by an app.
  *
- * @param owner App that owns the timers.
+ * @param owner App that created the timers.
  * @return Number of timers cancelled.
  */
 uint32_t timer_cancel_all(const Uuid *owner);
 
 /**
- * @brief Copy an app's running timers, soonest expiry first.
+ * @brief Copy every running timer, soonest expiry first.
  *
- * Timers being cancelled are not returned.
+ * The syscall layer checks the caller's Timers permission. Timers being
+ * cancelled are not returned.
  *
- * @param owner App that owns the timers.
  * @param[out] out Buffer for the timers.
  * @param max Maximum number of timers to write.
  * @return Number of timers written.
  */
-uint8_t timer_get_timers(const Uuid *owner, TimerInfo *out, uint8_t max);
+uint8_t timer_get_timers(TimerInfo *out, uint8_t max);
 
 /** @} // group services_timers */

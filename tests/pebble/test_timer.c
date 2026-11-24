@@ -76,18 +76,11 @@ void test_timer__rejects_invalid_arguments(void) {
 void test_timer__cancel(void) {
   const TimerId id = timer_start(60, &s_owner_a);
   cl_assert(id != TIMER_INVALID_ID);
-  cl_assert(timer_cancel(id, &s_owner_a));
-  cl_assert(!timer_cancel(id, &s_owner_a));
+  cl_assert(timer_cancel(id));
+  cl_assert(!timer_cancel(id));
 
   prv_advance_time(60);
   cl_assert_equal_i(s_num_timer_events, 0);
-}
-
-void test_timer__cancel_requires_owner(void) {
-  const TimerId id = timer_start(60, &s_owner_a);
-  cl_assert(id != TIMER_INVALID_ID);
-  cl_assert(!timer_cancel(id, &s_owner_b));
-  cl_assert(timer_cancel(id, &s_owner_a));
 }
 
 void test_timer__cancel_all_only_affects_the_owner(void) {
@@ -97,8 +90,8 @@ void test_timer__cancel_all_only_affects_the_owner(void) {
   cl_assert(a1 != TIMER_INVALID_ID && a2 != TIMER_INVALID_ID && b1 != TIMER_INVALID_ID);
 
   cl_assert_equal_i(timer_cancel_all(&s_owner_a), 2);
-  cl_assert(!timer_cancel(a1, &s_owner_a));
-  cl_assert(!timer_cancel(a2, &s_owner_a));
+  cl_assert(!timer_cancel(a1));
+  cl_assert(!timer_cancel(a2));
 
   prv_advance_time(60);
   cl_assert_equal_i(s_num_timer_events, 1);
@@ -115,7 +108,7 @@ void test_timer__capacity(void) {
   cl_assert(!timer_can_create());
   cl_assert_equal_i(timer_start(3600, &s_owner_a), TIMER_INVALID_ID);
 
-  cl_assert(timer_cancel(ids[0], &s_owner_a));
+  cl_assert(timer_cancel(ids[0]));
   cl_assert(timer_can_create());
   cl_assert(timer_start(3600, &s_owner_a) != TIMER_INVALID_ID);
 }
@@ -123,7 +116,7 @@ void test_timer__capacity(void) {
 void test_timer__ids_are_not_reused(void) {
   const TimerId first = timer_start(60, &s_owner_a);
   cl_assert(first != TIMER_INVALID_ID);
-  cl_assert(timer_cancel(first, &s_owner_a));
+  cl_assert(timer_cancel(first));
 
   const TimerId second = timer_start(60, &s_owner_a);
   cl_assert(second != TIMER_INVALID_ID);
@@ -140,7 +133,7 @@ void test_timer__formats_duration(void) {
   cl_assert_equal_s(buffer, "1:00:00");
 }
 
-void test_timer__lists_only_own_timers_soonest_first(void) {
+void test_timer__lists_all_timers_soonest_first(void) {
   const TimerId long_timer = timer_start(3600, &s_owner_a);
   const TimerId short_timer = timer_start(30, &s_owner_a);
   const TimerId medium_timer = timer_start(120, &s_owner_a);
@@ -149,31 +142,34 @@ void test_timer__lists_only_own_timers_soonest_first(void) {
             medium_timer != TIMER_INVALID_ID && other_timer != TIMER_INVALID_ID);
 
   TimerInfo timers[TIMER_MAX_COUNT];
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, TIMER_MAX_COUNT), 3);
-  cl_assert_equal_i(timers[0].id, short_timer);
-  cl_assert_equal_i(timers[0].duration_s, 30);
-  cl_assert_equal_i(timers[0].remaining_s, 30);
-  cl_assert_equal_s(timers[0].description, "0:30");
+  cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 4);
 
-  cl_assert_equal_i(timers[1].id, medium_timer);
-  cl_assert_equal_i(timers[1].duration_s, 120);
-  cl_assert_equal_i(timers[1].remaining_s, 120);
-  cl_assert_equal_s(timers[1].description, "2:00");
-
-  cl_assert_equal_i(timers[2].id, long_timer);
-  cl_assert_equal_i(timers[2].duration_s, 3600);
-  cl_assert_equal_i(timers[2].remaining_s, 3600);
-  cl_assert_equal_s(timers[2].description, "1:00:00");
-
-  cl_assert_equal_i(timer_get_timers(&s_owner_b, timers, TIMER_MAX_COUNT), 1);
   cl_assert_equal_i(timers[0].id, other_timer);
+  cl_assert_equal_i(timers[0].duration_s, 10);
+  cl_assert_equal_i(timers[0].remaining_s, 10);
+  cl_assert_equal_s(timers[0].description, "0:10");
 
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, 2), 2);
-  cl_assert_equal_i(timers[0].id, short_timer);
-  cl_assert_equal_i(timers[1].id, medium_timer);
+  cl_assert_equal_i(timers[1].id, short_timer);
+  cl_assert_equal_i(timers[1].duration_s, 30);
+  cl_assert_equal_i(timers[1].remaining_s, 30);
+  cl_assert_equal_s(timers[1].description, "0:30");
 
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, 0), 0);
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, NULL, 1), 0);
+  cl_assert_equal_i(timers[2].id, medium_timer);
+  cl_assert_equal_i(timers[2].duration_s, 120);
+  cl_assert_equal_i(timers[2].remaining_s, 120);
+  cl_assert_equal_s(timers[2].description, "2:00");
+
+  cl_assert_equal_i(timers[3].id, long_timer);
+  cl_assert_equal_i(timers[3].duration_s, 3600);
+  cl_assert_equal_i(timers[3].remaining_s, 3600);
+  cl_assert_equal_s(timers[3].description, "1:00:00");
+
+  cl_assert_equal_i(timer_get_timers(timers, 2), 2);
+  cl_assert_equal_i(timers[0].id, other_timer);
+  cl_assert_equal_i(timers[1].id, short_timer);
+
+  cl_assert_equal_i(timer_get_timers(timers, 0), 0);
+  cl_assert_equal_i(timer_get_timers(NULL, 1), 0);
 }
 
 void test_timer__remaining_time_counts_down(void) {
@@ -182,7 +178,7 @@ void test_timer__remaining_time_counts_down(void) {
 
   prv_advance_time(10);
   TimerInfo timers[1];
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, 1), 1);
+  cl_assert_equal_i(timer_get_timers(timers, 1), 1);
   cl_assert_equal_i(timers[0].id, id);
   cl_assert_equal_i(timers[0].remaining_s, 50);
 }
@@ -191,12 +187,12 @@ void test_timer__list_is_empty_after_fire_or_cancel(void) {
   const TimerId fired = timer_start(10, &s_owner_a);
   const TimerId cancelled = timer_start(20, &s_owner_a);
   cl_assert(fired != TIMER_INVALID_ID && cancelled != TIMER_INVALID_ID);
-  cl_assert(timer_cancel(cancelled, &s_owner_a));
+  cl_assert(timer_cancel(cancelled));
 
   TimerInfo timers[TIMER_MAX_COUNT];
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, TIMER_MAX_COUNT), 1);
+  cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 1);
   cl_assert_equal_i(timers[0].id, fired);
 
   prv_advance_time(10);
-  cl_assert_equal_i(timer_get_timers(&s_owner_a, timers, TIMER_MAX_COUNT), 0);
+  cl_assert_equal_i(timer_get_timers(timers, TIMER_MAX_COUNT), 0);
 }

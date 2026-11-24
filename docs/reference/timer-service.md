@@ -1,8 +1,8 @@
 # Timer service
 
 SDK revision 119 adds the `TimerService` to the Foundation API. An app can
-start a disposable countdown timer, list the timers it created, and cancel
-them. When a timer expires the watch shows a popup with the timer's duration
+start a disposable countdown timer, list every running timer, and cancel
+timers. When a timer expires the watch shows a popup with the timer's duration
 and vibrates, whether or not the app is still running.
 
 ```c
@@ -25,8 +25,8 @@ does not check the permission and is advisory.
 
 ## Listing timers
 
-An app can recover the timers it created earlier, for example after being
-relaunched:
+An app can recover timers created earlier, including timers created by other
+apps, for example after being relaunched:
 
 ```c
 TimerServiceInfo timers[TIMER_SERVICE_MAX_TIMERS];
@@ -38,18 +38,17 @@ for (uint8_t i = 0; i < count; i++) {
 }
 ```
 
-Only the calling app's timers are returned, soonest expiry first. The
-`description` field is the original duration formatted for display, so an app
-can show a timer list and let the wearer pick one to cancel. `remaining_s` is
-the time left at the moment of the call. Timers being cancelled are not
-returned.
+Every running timer is returned, soonest expiry first. The `description` field
+is the original duration formatted for display, so an app can show the shared
+timer list and let the wearer pick one to cancel. `remaining_s` is the time
+left at the moment of the call. Timers being cancelled are not returned.
 
 Timers live in memory only. A reset clears them, and they do not appear in the
 Alarms app. Each timer records the UUID of the app that created it, so
-`timer_service_cancel()`, `timer_service_cancel_all()` and
-`timer_service_get_timers()` only affect that app's timers. Cancelling and
-listing do not need the `Timers` permission, so an app can always manage the
-timers it created. Uninstalling the app does not cancel its timers.
+`timer_service_cancel_all()` only stops that app's timers. Listing and
+cancelling by ID need the `Timers` permission; an app with the permission sees
+every timer and can cancel any of them. Uninstalling the app does not cancel
+its timers.
 
 Declare `manifestVersion: 2` and `usesPermissions: ["Timers"]` in the
 `pebble` block of `package.json`:
@@ -62,7 +61,8 @@ The phone app shows the permission at install time and syncs the user's
 decision in the AppDB permission field (bit 4). The grant is stored on the
 watch, keyed by the app UUID, so it survives disconnecting from the phone or
 rebooting the watch. An app without the grant gets
-`TimerServiceCreateErrPermissionDenied`; the watch never prompts on its own.
+`TimerServiceCreateErrPermissionDenied` and cannot list or cancel timers; the
+watch never prompts on its own.
 
 The phone app must know the `Timers` permission before it can show or grant
 it. Until CoreApp ships that support, the watch treats every app as denied.

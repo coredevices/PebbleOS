@@ -163,15 +163,11 @@ TimerId timer_start(uint32_t duration_s, const Uuid *owner) {
   return id;
 }
 
-bool timer_cancel(TimerId id, const Uuid *owner) {
-  if (!owner) {
-    return false;
-  }
-
+bool timer_cancel(TimerId id) {
   bool cancelled = false;
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   Timer *timer = prv_find_locked(id);
-  if (timer && uuid_equal(&timer->owner, owner)) {
+  if (timer) {
     timer->state = TimerState_Cancelled;
     // False when the callback is already running or the job is not scheduled
     // yet; both paths release the slot themselves.
@@ -206,8 +202,8 @@ uint32_t timer_cancel_all(const Uuid *owner) {
   return count;
 }
 
-uint8_t timer_get_timers(const Uuid *owner, TimerInfo *out, uint8_t max) {
-  if (!owner || !out || max == 0) {
+uint8_t timer_get_timers(TimerInfo *out, uint8_t max) {
+  if (!out || max == 0) {
     return 0;
   }
 
@@ -218,7 +214,7 @@ uint8_t timer_get_timers(const Uuid *owner, TimerInfo *out, uint8_t max) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   for (int i = 0; i < TIMER_MAX_COUNT; ++i) {
     Timer *timer = &s_timers[i];
-    if (timer->state != TimerState_Running || !uuid_equal(&timer->owner, owner)) {
+    if (timer->state != TimerState_Running) {
       continue;
     }
     TimerInfo *entry = &entries[count++];

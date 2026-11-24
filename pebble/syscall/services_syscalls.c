@@ -56,11 +56,11 @@ PBL_SYSCALL(TimerServiceCreateResult, sys_timer_create, (VAL, uint32_t, duration
 PBL_SYSCALL(bool, sys_timer_cancel, (VAL, TimerServiceId, id)) {
 #ifdef CONFIG_SERVICE_TIMERS
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
-  if (!md) {
+  if (!md || !app_db_timer_granted(&md->uuid)) {
     return false;
   }
 
-  return timer_cancel(id, &md->uuid);
+  return timer_cancel(id);
 #else
   return false;
 #endif
@@ -69,7 +69,7 @@ PBL_SYSCALL(bool, sys_timer_cancel, (VAL, TimerServiceId, id)) {
 PBL_SYSCALL(uint32_t, sys_timer_cancel_all) {
 #ifdef CONFIG_SERVICE_TIMERS
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
-  if (!md) {
+  if (!md || !app_db_timer_granted(&md->uuid)) {
     return 0;
   }
 
@@ -86,12 +86,12 @@ PBL_SYSCALL(uint8_t, sys_timer_get_timers, (OUT_ARRAY, TimerServiceInfo *, timer
   }
 #ifdef CONFIG_SERVICE_TIMERS
   const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
-  if (!md) {
+  if (!md || !app_db_timer_granted(&md->uuid)) {
     return 0;
   }
 
   TimerInfo infos[TIMER_MAX_COUNT];
-  const uint8_t count = timer_get_timers(&md->uuid, infos, TIMER_MAX_COUNT);
+  const uint8_t count = timer_get_timers(infos, TIMER_MAX_COUNT);
   const uint8_t written = count < max_timers ? count : max_timers;
   for (uint8_t i = 0; i < written; ++i) {
     timers[i] = (TimerServiceInfo){

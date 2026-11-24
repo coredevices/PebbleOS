@@ -11,8 +11,8 @@
 //!   @addtogroup TimerService
 //! \brief Disposable countdown timers.
 //!
-//! The TimerService lets an app start a countdown timer, list the timers it
-//! created, and cancel them. When the timer expires a popup shows the timer's
+//! The TimerService lets an app start a countdown timer, list every running
+//! timer, and cancel timers. When the timer expires a popup shows the timer's
 //! duration and vibrates, whether or not the app is still running. The system
 //! keeps up to @ref TIMER_SERVICE_MAX_TIMERS timers at once.
 //!
@@ -25,8 +25,9 @@
 //!
 //! The phone app shows the permission at install time and syncs the user's
 //! decision to the watch. Apps without the permission get
-//! @ref TimerServiceCreateErrPermissionDenied. An app can only cancel the
-//! timers it created. Timers live in memory only and do not survive a reset.
+//! @ref TimerServiceCreateErrPermissionDenied. The permission also lets an
+//! app list and cancel every running timer. Timers live in memory only and do
+//! not survive a reset.
 //!   @{
 
 //! @brief Maximum timer duration, in seconds.
@@ -90,11 +91,12 @@ bool timer_service_can_create(void);
 //! @return The result of the operation.
 TimerServiceCreateResult timer_service_create(uint32_t duration_s, TimerServiceId *id_out);
 
-//! Copy the calling app's running timers into a buffer, soonest expiry first.
+//! Copy every running timer into a buffer, soonest expiry first.
 //!
-//! This is how an app discovers the timers it created earlier, for example
-//! after being relaunched. Timers being cancelled are not returned. Each
-//! entry's @ref TimerServiceInfo::description is the original duration
+//! The app needs the `Timers` permission. This is how an app discovers
+//! timers created earlier, including timers created by other apps, for
+//! example after being relaunched. Timers being cancelled are not returned.
+//! Each entry's @ref TimerServiceInfo::description is the original duration
 //! formatted for display, which the app can show to help the wearer pick the
 //! timer to cancel.
 //!
@@ -106,15 +108,18 @@ uint8_t timer_service_get_timers(TimerServiceInfo *timers, uint8_t max_timers);
 
 //! Cancel a timer.
 //!
-//! Only the app that created the timer can cancel it. Cancelling does not
-//! require the `Timers` permission, so an app can always stop its own timers.
+//! The app needs the `Timers` permission. Any app with the permission can
+//! cancel any timer, including one created by another app.
 //!
-//! @param id ID returned by timer_service_create().
-//! @return true if the timer was cancelled, false if it was not found or
-//!         belongs to another app.
+//! @param id ID returned by timer_service_create() or
+//!        timer_service_get_timers().
+//! @return true if the timer was cancelled, false if it was not found.
 bool timer_service_cancel(TimerServiceId id);
 
 //! Cancel every timer the calling app created.
+//!
+//! This only affects the calling app's timers. Use timer_service_cancel()
+//! with IDs from timer_service_get_timers() to stop another app's timer.
 //!
 //! @return Number of timers cancelled.
 uint32_t timer_service_cancel_all(void);
