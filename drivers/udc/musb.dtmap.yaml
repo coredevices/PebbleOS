@@ -17,5 +17,8 @@ args:
   - reg: 0
     of: sifli,hpsys-cfg
   - prop: sifli,fifo-size
+  - phandle: vbus-charger
+    as: charger
+    default: nullptr
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true

@@ -12,10 +12,56 @@ static const struct pbl_udc *prv_udc(const struct pbl_device *dev) {
   return PBL_CONTAINER_OF(dev, const struct pbl_udc, dev);
 }
 
+#ifdef CONFIG_UDC_VBUS_CHARGER
+static void prv_vbus_changed(const struct pbl_charger *charger,
+                             struct pbl_charger_listener *listener) {
+  struct pbl_udc_state *state = PBL_CONTAINER_OF(listener, struct pbl_udc_state, vbus_listener);
+  bool online = false;
+
+  (void)pbl_charger_is_online(charger, &online);
+  if (online == state->vbus) {
+    return;
+  }
+
+  state->vbus = online;
+  pbl_udc_event(state->udc, online ? PBL_UDC_EVENT_VBUS_READY : PBL_UDC_EVENT_VBUS_REMOVED,
+                nullptr);
+}
+
+static int prv_vbus_init(const struct pbl_udc *udc) {
+  struct pbl_udc_state *state = udc->state;
+  int ret;
+
+  ret = pbl_device_init(&udc->vbus_charger->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  state->udc = udc;
+  state->vbus_listener.online_changed = prv_vbus_changed;
+  pbl_charger_add_listener(udc->vbus_charger, &state->vbus_listener);
+
+  return pbl_charger_is_online(udc->vbus_charger, &state->vbus);
+}
+#endif
+
 int pbl_udc_dev_init(const struct pbl_device *dev) {
   const struct pbl_udc *udc = prv_udc(dev);
+  int ret;
 
-  return udc->ops->init(udc);
+  ret = udc->ops->init(udc);
+  if (ret != 0) {
+    return ret;
+  }
+
+  udc->state->vbus = true;
+#ifdef CONFIG_UDC_VBUS_CHARGER
+  if (udc->vbus_charger != nullptr) {
+    return prv_vbus_init(udc);
+  }
+#endif
+
+  return 0;
 }
 
 static bool prv_ep_valid(const struct pbl_udc *udc, uint8_t ep) {
@@ -37,6 +83,18 @@ int pbl_udc_enable(const struct pbl_udc *udc) {
 
 int pbl_udc_disable(const struct pbl_udc *udc) {
   return udc->ops->disable(udc);
+}
+
+bool pbl_udc_vbus_present(const struct pbl_udc *udc) {
+  return udc->state->vbus;
+}
+
+int pbl_udc_wakeup(const struct pbl_udc *udc) {
+  if (udc->ops->wakeup == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return udc->ops->wakeup(udc);
 }
 
 enum pbl_udc_speed pbl_udc_speed(const struct pbl_udc *udc) {

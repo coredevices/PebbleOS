@@ -644,19 +644,19 @@ static const struct pbl_udc_ops s_ops = {
   .ep_queue = prv_ep_queue,
 };
 
-#define PBL_UDC_NRF5_DEFINE(sym, _name, _base, _irq, _clk, _power, _power_irq)         \
-  PBL_UDC_STATE_DEFINE(sym);                                                           \
-  static struct pbl_udc_nrf5_state sym##_nrf5_state;                                   \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_nrf5, struct pbl_udc, udc){                  \
-    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, NUM_EPS, PBL_UDC_SPEED_FULL, 0U), \
-    .base = (_base),                                                                   \
-    .irq = (_irq),                                                                     \
-    .clk = _clk,                                                                       \
-    .power = (_power),                                                                 \
-    .power_irq = (_power_irq),                                                         \
-    .state = &sym##_nrf5_state,                                                        \
-  };                                                                                   \
-  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_NRF5_IRQ_PRIO, prv_isr, &sym##_inst, 0);        \
+#define PBL_UDC_NRF5_DEFINE(sym, _name, _base, _irq, _clk, _power, _power_irq)                  \
+  PBL_UDC_STATE_DEFINE(sym);                                                                    \
+  static struct pbl_udc_nrf5_state sym##_nrf5_state;                                            \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_nrf5, struct pbl_udc, udc){                           \
+    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, NUM_EPS, PBL_UDC_SPEED_FULL, 0U, nullptr), \
+    .base = (_base),                                                                            \
+    .irq = (_irq),                                                                              \
+    .clk = _clk,                                                                                \
+    .power = (_power),                                                                          \
+    .power_irq = (_power_irq),                                                                  \
+    .state = &sym##_nrf5_state,                                                                 \
+  };                                                                                            \
+  PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_NRF5_IRQ_PRIO, prv_isr, &sym##_inst, 0);                 \
   PBL_IRQ_CONNECT_NUM(_power_irq, CONFIG_UDC_NRF5_IRQ_PRIO, prv_power_isr, &sym##_inst, 0)
 
 #include PBL_DT_INSTANCES(nordic_nrf52840_usbd)

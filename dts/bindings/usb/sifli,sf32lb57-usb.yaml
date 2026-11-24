@@ -37,6 +37,13 @@ properties:
       The SF32LB57 corrupts packets past its first 512 bytes, though the
       controller's RAMINFO register gives 1 KiB.
 
+  vbus-charger:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description:
+      Charger whose input is the VBUS of the connector, which tells whether
+      USB power is present. Without it, the controller connects whenever the
+      device stack asks.
+
   dr_mode:
     enum: [peripheral]
 

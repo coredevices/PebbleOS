@@ -852,24 +852,25 @@ static const struct pbl_udc_ops s_ops = {
 // SiFli: endpoint 0 and seven others
 #define SIFLI_NUM_EPS 8U
 
-#define PBL_UDC_MUSB_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _pinctrl, _syscfg, _fifo, ...) \
-  PBL_UDC_STATE_DEFINE(sym);                                                                       \
-  static struct pbl_udc_musb_state sym##_musb_state;                                               \
-  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                            \
-  static const struct pbl_pinctrl sym##_musb_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_musb, struct pbl_udc, udc){                              \
-    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL,            \
-                        PBL_UDC_CAP_EP_ONE_DIR),                                                   \
-    .base = (_base),                                                                               \
-    .irq = (_irq),                                                                                 \
-    .quirks = (_quirks),                                                                           \
-    .clk = _clk,                                                                                   \
-    .assigned = sym##_assigned,                                                                    \
-    .pinctrl = &sym##_musb_pins,                                                                   \
-    .syscfg = (_syscfg),                                                                           \
-    .fifo_size = (_fifo),                                                                          \
-    .state = &sym##_musb_state,                                                                    \
-  };                                                                                               \
+#define PBL_UDC_MUSB_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _pinctrl, _syscfg, _fifo, \
+                            _vbus, ...)                                                       \
+  PBL_UDC_STATE_DEFINE(sym);                                                                  \
+  static struct pbl_udc_musb_state sym##_musb_state;                                          \
+  PBL_CLK_ASSIGNED_DEFINE(sym##_assigned, __VA_ARGS__);                                       \
+  static const struct pbl_pinctrl sym##_musb_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);        \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_musb, struct pbl_udc, udc){                         \
+    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops, SIFLI_NUM_EPS, PBL_UDC_SPEED_FULL,       \
+                        PBL_UDC_CAP_EP_ONE_DIR, _vbus),                                       \
+    .base = (_base),                                                                          \
+    .irq = (_irq),                                                                            \
+    .quirks = (_quirks),                                                                      \
+    .clk = _clk,                                                                              \
+    .assigned = sym##_assigned,                                                               \
+    .pinctrl = &sym##_musb_pins,                                                              \
+    .syscfg = (_syscfg),                                                                      \
+    .fifo_size = (_fifo),                                                                     \
+    .state = &sym##_musb_state,                                                               \
+  };                                                                                          \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_MUSB_IRQ_PRIO, prv_isr, &sym##_inst, 0)
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_usb)
