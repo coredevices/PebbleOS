@@ -273,6 +273,7 @@ static const uint8_t TG_NAME_COLORS[7] = {
 #define CHAT_FLAG_GROUP 0x01
 #define CHAT_FLAG_MUTED 0x02
 #define CHAT_FLAG_PINNED 0x04
+#define CHAT_FLAG_CONTACT 0x08  // a search result: a person with no conversation yet
 // Scrolls ease out over CHAT_SCROLL_MS, however long a frame takes to draw.
 #define CHAT_SCROLL_MS 220
 #define CHAT_SCROLL_FRAME_MS 16
@@ -302,9 +303,57 @@ static const uint8_t TG_NAME_COLORS[7] = {
 #define STATUS_CLEAR_MS 1000
 #define VIEW_TRANSITION_MS 120
 #define TOUCH_KEYBOARD_ENABLED 1
-// Message actions (React, Edit, Delete) depend on the phone's Beeper connection: gomuks has them,
-// Beeper's Android provider doesn't. The phone says which in the "settings" message's Text.
+// Chats come from several networks (chat_db.h ChatDbNetwork); each has its own features, sent
+// by the phone, and a look. Adding a network is an entry here plus its phone side.
+#define CHAT_NETWORK_BEEPER 0
+#define CHAT_NETWORK_SMS 1
+#define CHAT_NETWORKS 2
+static const struct {
+  const char *badge;     // shown on its chat rows; NULL for none
+  uint8_t out_bubble;    // ARGB8 of my bubbles, 0 for the theme's
+} s_network_look[CHAT_NETWORKS] = {
+  [CHAT_NETWORK_BEEPER] = {NULL, 0},
+  [CHAT_NETWORK_SMS] = {"SMS", GColorIslamicGreenARGB8},
+};
+static char s_network_features[CHAT_NETWORKS][96];
+static uint8_t s_current_chat_network;
+// Message actions (React, Edit) depend on the open chat's network: gomuks has them, SMS and
+// Beeper's Android provider don't. Set from s_network_features when a chat opens.
 static bool s_message_actions;
+
+// Whether a network's comma separated features include name.
+static bool network_has_feature(uint8_t network, const char *name) {
+  if (network >= CHAT_NETWORKS) {
+    return false;
+  }
+  const size_t n = strlen(name);
+  for (const char *f = s_network_features[network]; *f;) {
+    const char *end = strchr(f, ',');
+    const size_t len = end ? (size_t)(end - f) : strlen(f);
+    if (len == n && strncmp(f, name, n) == 0) {
+      return true;
+    }
+    if (!end) {
+      break;
+    }
+    f = end + 1;
+  }
+  return false;
+}
+
+static void refresh_message_actions(void) {
+  s_message_actions = network_has_feature(s_current_chat_network, "react") &&
+                      network_has_feature(s_current_chat_network, "edit");
+}
+
+// Favourites, for Send Message in the chat list's menu (chat_ds answers get_favorites).
+#define MAX_FAVORITES 8
+static struct {
+  char id[24];
+  char name[32];
+  uint8_t network;
+} s_favorites[MAX_FAVORITES];
+static int s_favorite_count;
 // Neither connection archives, mutes or marks chats unread yet; 1 brings Pebblegram's chat menu back.
 #define BEEPER_CHAT_ACTIONS 1  // hold a chat: archive it, mark it read or unread
 #define TOUCH_KEYBOARD_MAX_TEXT 400
@@ -368,7 +417,9 @@ typedef enum {
   ActionItemEmojiGrid,
   ActionItemReplyEmojiGrid,
   ActionItemSearch,
-  ActionItemShowInbox
+  ActionItemShowInbox,
+  ActionItemFavorite,
+  ActionItemOpenChat
 } ActionItem;
 
 typedef enum {
@@ -388,6 +439,7 @@ typedef struct {
   char *title;
   char *preview;
   bool unread;
+  uint8_t network;
   int unread_count;
   GBitmap *avatar_bitmap;
   uint8_t *avatar_data;  // pixels behind avatar_bitmap when it came as a ready bitmap
@@ -1326,6 +1378,7 @@ static void parse_chat_meta(Chat *chat, const char *meta) {
     if (*f == 'g') chat->flags |= CHAT_FLAG_GROUP;
     else if (*f == 'm') chat->flags |= CHAT_FLAG_MUTED;
     else if (*f == 'p') chat->flags |= CHAT_FLAG_PINNED;
+    else if (*f == 'c') chat->flags |= CHAT_FLAG_CONTACT;
     else if (*f == '1' || *f == '2') chat->receipt = (uint8_t)(*f - '0');
   }
 }
@@ -2312,6 +2365,14 @@ static void chat_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, 
     draw_ticks(ctx, right - meta_w, line1_y + 8, chat->receipt,
                selected ? on_selected : TG_OUT_ACCENT);
   }
+  const char *badge = chat->network < CHAT_NETWORKS ? s_network_look[chat->network].badge : NULL;
+  if (badge) {
+    int badge_text_w = text_width(badge, font_14());
+    meta_w += badge_text_w + 4;
+    graphics_context_set_text_color(ctx, selected ? on_selected : TG_LINK);
+    graphics_draw_text(ctx, badge, font_14(), GRect(right - meta_w - 1, line1_y + 3, badge_text_w + 2, 16),
+                       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  }
   int title_w = PG_MAX(0, right - text_x - (meta_w ? meta_w + 4 : 0));
   graphics_context_set_text_color(ctx, title_color);
   graphics_draw_text(ctx, chat->title, font_bold18(), GRect(text_x, line1_y - 2, title_w, 22),
@@ -2389,6 +2450,8 @@ static void chat_menu_select_callback(struct MenuLayer *menu_layer, MenuIndex *c
   copy_cstr(s_current_chat_id, sizeof(s_current_chat_id), s_chats[s_selected_chat].id);
   copy_cstr(s_current_chat_title, sizeof(s_current_chat_title), s_chats[s_selected_chat].title);
   s_current_chat_flags = s_chats[s_selected_chat].flags;
+  s_current_chat_network = s_chats[s_selected_chat].network;
+  refresh_message_actions();
   request_messages(s_current_chat_id);
 }
 
@@ -5294,7 +5357,11 @@ static void draw_bubble(GContext *ctx, GRect r, bool outgoing, bool tail, bool s
     draw_bubble_shape(ctx, GRect(r.origin.x - 2, r.origin.y - 2, r.size.w + 4, r.size.h + 4), outgoing, tail,
                       TG_SELECT_RING);
   }
-  draw_bubble_shape(ctx, r, outgoing, tail, outgoing ? TG_OUT_BUBBLE : TG_IN_BUBBLE);
+  GColor out = TG_OUT_BUBBLE;
+  if (s_current_chat_network < CHAT_NETWORKS && s_network_look[s_current_chat_network].out_bubble) {
+    out = (GColor){.argb = s_network_look[s_current_chat_network].out_bubble};
+  }
+  draw_bubble_shape(ctx, r, outgoing, tail, outgoing ? out : TG_IN_BUBBLE);
 #else
   draw_bubble_shape(ctx, r, outgoing, false, TG_IN_BUBBLE);
   graphics_context_set_stroke_color(ctx, TG_TEXT);
@@ -6780,9 +6847,37 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
 
   if (strcmp(type, "settings") == 0) {
     update_canned_replies(tuple_cstring(iter, MESSAGE_KEY_CannedReplies));
-    const char *features = tuple_cstring(iter, MESSAGE_KEY_Text);
-    s_message_actions = features && strstr(features, "react") && strstr(features, "edit") &&
-                        strstr(features, "delete");
+    return;
+  }
+
+  if (strcmp(type, "features") == 0) {
+    int network = tuple_int(iter, MESSAGE_KEY_Network, -1);
+    if (network >= 0 && network < CHAT_NETWORKS) {
+      copy_cstr(s_network_features[network], sizeof(s_network_features[network]),
+                tuple_cstring(iter, MESSAGE_KEY_Text));
+      refresh_message_actions();
+    }
+    return;
+  }
+
+  if (strcmp(type, "favorite") == 0) {
+    int index = tuple_int(iter, MESSAGE_KEY_Index, -1);
+    if (index == 0) {
+      s_favorite_count = 0;
+    }
+    if (index >= 0 && index < MAX_FAVORITES) {
+      copy_cstr(s_favorites[index].id, sizeof(s_favorites[index].id),
+                tuple_cstring(iter, MESSAGE_KEY_ChatId));
+      copy_cstr(s_favorites[index].name, sizeof(s_favorites[index].name),
+                tuple_cstring(iter, MESSAGE_KEY_Sender));
+      s_favorites[index].network = (uint8_t)tuple_int(iter, MESSAGE_KEY_Network, 0);
+      s_favorite_count = PG_MAX(s_favorite_count, index + 1);
+    }
+    return;
+  }
+
+  if (strcmp(type, "favorites_done") == 0) {
+    s_favorite_count = PG_MIN(s_favorite_count, tuple_int(iter, MESSAGE_KEY_Count, 0));
     return;
   }
 
@@ -6829,6 +6924,7 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
   s_expected_rows = count;
 
   if (strcmp(type, "chats_done") == 0) {
+    send_command_with_status("get_favorites", NULL, NULL, NULL, NULL, false);
     cancel_message_timeout();
     cancel_timer(&s_chat_retry_timer);
     char selected_id[MAX_ID];
@@ -7279,8 +7375,11 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
     chat->unread = tuple_int(iter, MESSAGE_KEY_IsUnread, 0) != 0;
     chat->unread_count = tuple_int(iter, MESSAGE_KEY_UnreadCount, chat->unread ? 1 : 0);
     parse_chat_meta(chat, tuple_cstring(iter, MESSAGE_KEY_MessageMeta));
+    chat->network = (uint8_t)tuple_int(iter, MESSAGE_KEY_Network, CHAT_NETWORK_BEEPER);
     if (strcmp(chat->id, s_current_chat_id) == 0) {
       s_current_chat_flags = chat->flags;
+      s_current_chat_network = chat->network;
+      refresh_message_actions();
     }
     bool list_grew = index + 1 > s_chat_count;
     if (list_grew) {
@@ -7994,8 +8093,29 @@ static ActionMenuLevel *native_build_main_level(void) {
     native_add_action(level, "Delete Message", ActionItemDelete, -1);
   }
   native_add_action(level, "Go to Bottom", ActionItemGoToBottom, -1);
-  native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
-  native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
+  if (network_has_feature(s_current_chat_network, "archive")) {
+    native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
+  }
+  if (network_has_feature(s_current_chat_network, "mark_unread")) {
+    native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
+  }
+  return level;
+}
+
+// Send Message: a favourite, whose chat opens ready to write (an empty one if it has no messages).
+static ActionMenuLevel *native_create_favorites_level(void) {
+  ActionMenuLevel *level = action_menu_level_create((uint16_t)PG_MAX(1, s_favorite_count));
+  if (!level) {
+    return NULL;
+  }
+  if (s_favorite_count == 0) {
+    native_add_action(level, "Add favorites in the Pebble app", ActionItemConfirmCancel, -1);
+    return level;
+  }
+  for (int i = 0; i < s_favorite_count; i++) {
+    native_add_action(level, s_favorites[i].name[0] ? s_favorites[i].name : "Favorite",
+                      ActionItemFavorite, i);
+  }
   return level;
 }
 
@@ -8005,6 +8125,7 @@ static ActionMenuLevel *native_build_chat_level(void) {
     return NULL;
   }
   if (s_list_menu) {
+    native_add_child(level, native_create_favorites_level(), "Send Message");
     native_add_action(level, "Search", ActionItemSearch, -1);
     if (s_search_query[0]) {
       native_add_action(level, "Show Inbox", ActionItemShowInbox, -1);
@@ -8012,9 +8133,17 @@ static ActionMenuLevel *native_build_chat_level(void) {
     return level;
   }
   int index = action_chat_index();
-  native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
-  native_add_action(level, index >= 0 && chat_is_unread(&s_chats[index]) ? "Mark as Read" : "Mark as Unread",
-                    ActionItemMarkUnread, -1);
+  uint8_t network = index >= 0 ? s_chats[index].network : CHAT_NETWORK_BEEPER;
+  if (network_has_feature(network, "archive")) {
+    native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
+  }
+  if (network_has_feature(network, "mark_unread")) {
+    native_add_action(level, index >= 0 && chat_is_unread(&s_chats[index]) ? "Mark as Read" : "Mark as Unread",
+                      ActionItemMarkUnread, -1);
+  }
+  if (network == CHAT_NETWORK_SMS || !network_has_feature(network, "archive")) {
+    native_add_action(level, "Open Chat", ActionItemOpenChat, -1);  // never an empty menu
+  }
   return level;
 }
 
@@ -8169,6 +8298,40 @@ static bool show_native_action_menu(ActionMenuMode mode) {
     return false;
   }
   return true;
+}
+
+// Once the menu has closed: open a favourite's chat (index >= 0), or chat -1 - index of the list.
+// A favourite missing from the list gets a row of its own, so its chat opens empty.
+static void open_favorite(void *data) {
+  int index = (int)(intptr_t)data;
+  if (!s_chat_menu || s_view_state != ViewStateChatList) {
+    return;
+  }
+  int row;
+  if (index < 0) {
+    row = -1 - index;
+  } else {
+    row = find_chat_index_by_id(s_favorites[index].id);
+    if (row < 0 && s_chat_count < MAX_CHATS) {
+      row = s_chat_count++;
+      Chat *chat = &s_chats[row];
+      copy_cstr(chat->id, sizeof(chat->id), s_favorites[index].id);
+      set_chat_strings(chat, s_favorites[index].name, "");
+      chat->network = s_favorites[index].network;
+      chat->unread = false;
+      chat->unread_count = 0;
+      chat->flags = 0;
+      chat->time[0] = '\0';
+      chat->receipt = 0;
+      menu_layer_reload_data(s_chat_menu);
+    }
+  }
+  if (row < 0 || row >= s_chat_count) {
+    return;
+  }
+  MenuIndex cell = {.section = 0, .row = row};
+  select_chat_row(row, false);
+  chat_menu_select_callback(s_chat_menu, &cell, NULL);
 }
 
 static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem *action,
@@ -8358,6 +8521,18 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
     case ActionItemShowInbox:
       end_search();
       break;
+    case ActionItemFavorite:
+      if (index >= 0 && index < s_favorite_count) {
+        app_timer_register(0, open_favorite, (void *)(intptr_t)index);
+      }
+      break;
+    case ActionItemOpenChat: {
+      int chat = action_chat_index();
+      if (chat >= 0) {
+        app_timer_register(0, open_favorite, (void *)(intptr_t)(-1 - chat));
+      }
+      break;
+    }
     case ActionItemGoBack:
       break;
   }
