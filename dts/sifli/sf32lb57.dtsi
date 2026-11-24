@@ -435,6 +435,12 @@
 			interrupts = <46>;
 			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
 			status = "disabled";
+
+			lptim1_pwm: pwm {
+				compatible = "sifli,sf32lb57-lptim-pwm", "sifli,sf32lb52-lptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
 		};
 
 		lptim2: timer@500c2000 {
@@ -443,6 +449,12 @@
 			interrupts = <47>;
 			clocks = <&pmuc SF32LB57_PMUC_CLK_RTC>;
 			status = "disabled";
+
+			lptim2_pwm: pwm {
+				compatible = "sifli,sf32lb57-lptim-pwm", "sifli,sf32lb52-lptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
 		};
 
 		pmuc: power-management@500ca000 {
