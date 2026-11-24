@@ -9,6 +9,7 @@ config SOC_NRF52
     select CRC
     select FLASH_IDLE_PM if FLASH && CPU_IDLE
     select SOC_HAS_POWER_OFF
+    select SOC_HAS_UNIQUE_ID
     select TIMER_NRF5_RTC
     help
       Nordic nRF52 series, selected by its lines.
