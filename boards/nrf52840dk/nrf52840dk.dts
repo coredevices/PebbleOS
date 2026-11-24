@@ -5,6 +5,7 @@
 
 #include "nordic/nrf52840-qiaa.dtsi"
 
+#include <dt-bindings/connector/arduino,uno-r3-header.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 #include <dt-bindings/leds/common.h>
@@ -80,11 +81,45 @@
 			debounce-interval = <40>;
 		};
 	};
+
+	arduino_header: arduino-header {
+		compatible = "arduino,uno-r3-header";
+		#gpio-cells = <2>;
+		gpio-map-mask = <0xffffffff 0x0>;
+		gpio-map-pass-thru = <0x0 0xffffffff>;
+		gpio-map = <ARDUINO_UNO_R3_A0 0 &gpio0 3 0>,
+			   <ARDUINO_UNO_R3_A1 0 &gpio0 4 0>,
+			   <ARDUINO_UNO_R3_A2 0 &gpio0 28 0>,
+			   <ARDUINO_UNO_R3_A3 0 &gpio0 29 0>,
+			   <ARDUINO_UNO_R3_A4 0 &gpio0 30 0>,
+			   <ARDUINO_UNO_R3_A5 0 &gpio0 31 0>,
+			   <ARDUINO_UNO_R3_D0 0 &gpio1 1 0>,
+			   <ARDUINO_UNO_R3_D1 0 &gpio1 2 0>,
+			   <ARDUINO_UNO_R3_D2 0 &gpio1 3 0>,
+			   <ARDUINO_UNO_R3_D3 0 &gpio1 4 0>,
+			   <ARDUINO_UNO_R3_D4 0 &gpio1 5 0>,
+			   <ARDUINO_UNO_R3_D5 0 &gpio1 6 0>,
+			   <ARDUINO_UNO_R3_D6 0 &gpio1 7 0>,
+			   <ARDUINO_UNO_R3_D7 0 &gpio1 8 0>,
+			   <ARDUINO_UNO_R3_D8 0 &gpio1 10 0>,
+			   <ARDUINO_UNO_R3_D9 0 &gpio1 11 0>,
+			   <ARDUINO_UNO_R3_D10 0 &gpio1 12 0>,
+			   <ARDUINO_UNO_R3_D11 0 &gpio1 13 0>,
+			   <ARDUINO_UNO_R3_D12 0 &gpio1 14 0>,
+			   <ARDUINO_UNO_R3_D13 0 &gpio1 15 0>,
+			   <ARDUINO_UNO_R3_D14 0 &gpio0 26 0>,
+			   <ARDUINO_UNO_R3_D15 0 &gpio0 27 0>;
+	};
 };
 
 &clock {
 	clocks = <&hfxo>, <&lfxo>;
 	clock-names = "hfxo", "lfxo";
+};
+
+arduino_i2c: &i2c0 {
+	scl-gpios = <&gpio0 27 GPIO_PULL_UP>;
+	sda-gpios = <&gpio0 26 GPIO_PULL_UP>;
 };
 
 &internal_flash {
@@ -122,6 +157,19 @@
 	rx-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
 	nordic,timer = <&timer2>;
 	status = "okay";
+};
+
+arduino_serial: &uart1 {
+	tx-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+	nordic,timer = <&timer3>;
+};
+
+arduino_spi: &spi3 {
+	sck-gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
+	mosi-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+	miso-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
 
 &temp {
