@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "prf_layout.h"
+#include "prf_legacy_layout.h"
 
 #include <string.h>
 
