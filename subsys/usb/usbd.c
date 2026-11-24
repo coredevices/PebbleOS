@@ -11,7 +11,7 @@
 #include <pbl/util/math.h>
 
 #define EP0_MPS     64U
-#define EP0_BUF_LEN 128U
+#define EP0_BUF_LEN 512U
 
 #define USB_CFG_VALUE 1U
 
