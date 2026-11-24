@@ -1,11 +1,18 @@
 # van Hees
 
-`lib/vanhees` tells sleep minutes apart with the method of van Hees et al.,
+van Hees tells sleep minutes apart with the method of van Hees et al.,
 _A Novel, Open Access Method to Assess Sleep Duration Using a Wrist-Worn
 Accelerometer_ (PLOS ONE, 2015). It looks at the posture of the wrist rather
-than at how much it moves, unlike the sleep threshold of
-{doc}`kraepelin`. It depends on nothing but the utility library; its API is
-`pbl/vanhees/vanhees.h`, see {apidoc}`the API reference <vanhees>`.
+than at how much it moves, unlike the sleep threshold of {doc}`kraepelin`.
+
+| | |
+| --- | --- |
+| Directory | `lib/vanhees` |
+| Header | `pbl/vanhees/vanhees.h` |
+| Kconfig | `CONFIG_VANHEES`, selected by the code that uses it |
+| API | {apidoc}`API reference <vanhees>` |
+
+## Classification
 
 For each 5 second epoch, the median of each axis gives the angle of the Z
 axis, perpendicular to the skin, to the horizontal plane. A _posture

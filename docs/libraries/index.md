@@ -1,27 +1,19 @@
 # Libraries
 
-Generic support code shared by the firmware, the bootloader and host builds
-lives under `lib/`. It depends on no OS service, so it is also what the unit
-tests link against directly.
-
-- **Utilities**: `lib/util`, included as `pbl/util/<module>.h`; see
-  {apidoc}`the API reference <util>`.
-- **Kraepelin**: `lib/kraepelin`, the step, sleep and activity session
-  detection algorithm the activity service runs, included as
-  `pbl/kraepelin/kraepelin.h`; see [Kraepelin](kraepelin.md).
-- **Fuel gauge**: `lib/fuel_gauge`, battery state-of-charge estimation,
-  included as `pbl/fuel_gauge/fuel_gauge.h`; see [Fuel gauge](fuel_gauge/index.md).
-- **van Hees**: `lib/vanhees`, the wrist angle sleep classifier the
-  activity service tells sleep minutes apart with, included as
-  `pbl/vanhees/vanhees.h`; see [van Hees](vanhees.md).
-- **Shared definitions**: headers under `include/pebbleos/` describe data
-  exchanged with the bootloader and host tooling, so their layout is fixed;
-  see {apidoc}`the API reference <pebbleos>`.
+Libraries are generic code under `lib/`, with their API in `include/pbl/`.
+They depend on no OS service, so the kernel, subsystems, drivers and
+applications can all use them, and so can the bootloader, host tools and
+unit tests, which link them directly. A library is built when the
+application enables it, or when the code that uses it selects it.
 
 ```{toctree}
-:hidden:
+:maxdepth: 1
 
+c.md
+util.md
+btutil.md
 fuel_gauge/index.md
 kraepelin.md
 vanhees.md
+shared.md
 ```
