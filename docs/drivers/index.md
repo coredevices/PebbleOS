@@ -1,27 +1,41 @@
 # Drivers
 
-Drivers live under `drivers/`, one directory per driver class, with the
-class interface in `include/pbl/drivers/`. Newer classes are built on the
-{doc}`device model <device_model>`; board and SoC specific implementations
-document their own definitions in the API reference under their class.
+A driver class is the interface of one kind of device, such as a display, an
+I2C bus or an accelerometer: its API in `include/pbl/drivers/`, its core and
+its drivers in `drivers/<class>/`. Code that uses a device goes through its
+class, whatever the part behind it. Classes are built on the
+{doc}`device model <device_model>`, which gives every device its
+initialization, dependencies and power management.
 
-Two classes carry design notes worth reading before changing them:
+A board declares its devices in C, or has them generated from its
+devicetree, in which case a driver is built when the board, an add-on or the
+application has an enabled node with its compatible (see
+{ref}`device-model-devicetree`). The class itself is enabled by the
+application, such as `CONFIG_DISPLAY=y`, or selected by the drivers and code
+that use it. Code reaches the devices it needs by their role, such as
+`DISPLAY` or `FLASH` (see {ref}`device-model-roles`).
 
-- **Accelerometer** — `include/pbl/drivers/accel.h` explains the split
-  between the dumb low-level driver and the accel service that owns
-  buffering, clients and subsampling, so the same service code runs on any
-  accel part.
-- **Flash** — `drivers/flash/README.md` documents the two flash APIs:
-  the main one, and a coredump-only path that must work without OS services.
+{doc}`Simulators <simulators>` are drivers with no hardware behind them, which
+tests and emulated boards use in place of a device.
 
 ```{toctree}
-:maxdepth: 1
+:hidden:
 
 device_model.md
 simulators.md
-crc/index.md
-crypto/index.md
-clk/index.md
 ```
 
-The {apidoc}`API reference <drivers>` documents every driver class.
+## Classes
+
+```{toctree}
+:maxdepth: 2
+
+bus.md
+clocks_power.md
+memory.md
+graphics.md
+sensors.md
+sound.md
+supply.md
+system.md
+```
