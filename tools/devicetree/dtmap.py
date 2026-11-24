@@ -211,7 +211,11 @@ class Spec:
         self.symbols = symbol
         # A SoC singleton defined from the tree keeps the name C code knows it by
         self.singleton = symbol[self.classes[0]] if self.define and fixed else None
-        self.file = c_ident(self.compatibles[0])
+        # A spec for several compatibles names its instance file after itself
+        if len(self.compatibles) > 1:
+            self.file = c_ident(Path(path).name.removesuffix(".dtmap.yaml"))
+        else:
+            self.file = c_ident(self.compatibles[0])
         self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
         trailing = [

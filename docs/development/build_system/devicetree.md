@@ -518,7 +518,8 @@ args:
 Several drivers may bind to one compatible, each with its own spec, class and
 instance file `<compatible>_<class>.inc`, as the clock and the reset drivers
 of a clock controller that also resets. The instance file of a spec with
-several compatibles is named after the first.
+several compatibles is named after the spec, e.g. `sharp_memory.inc` for
+`sharp_memory.dtmap.yaml`, or after its first compatible when it shares one.
 
 An argument takes its value from one place:
 
