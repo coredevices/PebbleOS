@@ -206,9 +206,7 @@ extern const struct pbl_gpu *const GPU;
 #define PBL_GPU_INIT(sym, _name, _parent, _ops, ...)                                     \
   {                                                                                      \
     .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_dev_init, _parent, &pbl_gpu_class), \
-    .ops = (_ops), .state = &sym##_gpu_state, .caps = {                                  \
-      __VA_ARGS__                                                                        \
-    }                                                                                    \
+    .ops = (_ops), .state = &sym##_gpu_state, .caps = {__VA_ARGS__}                      \
   }
 
 /**
