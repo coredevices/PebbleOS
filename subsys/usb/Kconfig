@@ -62,4 +62,14 @@ config USB_DFU_TRANSFER_SIZE
       Largest block of a download or an upload, in bytes. The function
       keeps three blocks: the one it writes and two to upload from.
 
+config USB_TEST
+    bool "Test function"
+    depends on !USB_CDC_ACM && !USB_DFU
+    help
+      A vendor-class function, to test the stack and the controller from a
+      host: bulk loopback, source and sink, an interrupt endpoint, and
+      vendor requests on endpoint 0. It takes interface 0 and endpoints
+      0x01, 0x82, 0x03, 0x84 and 0x85. The integration tests in
+      tests/integration/usb drive it.
+
 endif # USB_DEVICE
