@@ -166,6 +166,17 @@ struct pbl_usbd_listener {
 int pbl_usbd_enable(void);
 
 /**
+ * @brief Resume the bus the host suspended, a remote wakeup, from thread context.
+ *
+ * The device must advertise it, with @c CONFIG_USB_DEVICE_REMOTE_WAKEUP, and the host must have
+ * allowed it.
+ *
+ * @return 0, @c -EACCES if the host did not allow it, @c -EALREADY if the bus is not suspended,
+ *         or another negative errno.
+ */
+int pbl_usbd_wakeup(void);
+
+/**
  * @brief Maximum packet size of the bulk endpoints, at the speed the bus runs.
  *
  * @return 64 at full speed, 512 at high speed.

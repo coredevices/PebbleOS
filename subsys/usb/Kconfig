@@ -69,6 +69,12 @@ config USB_DEVICE_SERIAL_NUMBER
       in hexadecimal, so that hosts tell devices apart and keep their
       names across connections.
 
+config USB_DEVICE_REMOTE_WAKEUP
+    bool "Remote wakeup"
+    help
+      Tell the host the device can resume a bus it suspended, which
+      pbl_usbd_wakeup() does once the host allows it.
+
 config USB_CDC_ACM
     bool "Serial ports"
     select UART
