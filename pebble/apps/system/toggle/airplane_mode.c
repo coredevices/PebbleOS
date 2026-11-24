@@ -21,6 +21,7 @@ static const ActionToggleImpl s_airplane_mode_action_toggle_impl = {
   .window_name = "Airplane Mode Toggle",
   .prompt_icon = RESOURCE_ID_AIRPLANE,
   .result_icon = RESOURCE_ID_AIRPLANE,
+  .disable_icon = RESOURCE_ID_AIRPLANE_LANDING,
   // Toggling airplane mode involves locks which can block animation, don't animate
   .result_icon_static = true,
   .prompt_enable_message = pbl_i18n_noop("Turn On Airplane Mode?"),
