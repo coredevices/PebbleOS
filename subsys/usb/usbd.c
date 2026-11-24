@@ -49,8 +49,17 @@
 #define EP_NONE 0xffU
 
 // Bus-powered, at most 100 mA
-#define USB_CFG_ATTRIBUTES 0x80U
-#define USB_CFG_MAX_POWER  50U
+#define USB_CFG_ATTR_ONE           0x80U
+#define USB_CFG_ATTR_REMOTE_WAKEUP 0x20U
+#define USB_CFG_MAX_POWER          50U
+
+#define STATUS_REMOTE_WAKEUP 0x02U
+
+#ifdef CONFIG_USB_DEVICE_REMOTE_WAKEUP
+#define REMOTE_WAKEUP true
+#else
+#define REMOTE_WAKEUP false
+#endif
 
 #define BULK_MPS_FS 64U
 #define BULK_MPS_HS 512U
@@ -96,6 +105,7 @@ static struct {
   bool reset;
   bool connected;
   bool suspended;
+  bool remote_wakeup;
 } s_bus;
 
 static atomic_bool s_enabled;
@@ -323,7 +333,7 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room, enum pbl_udc_speed 
     .wTotalLength = pbl_cpu_to_le16(len),
     .bNumInterfaces = ifaces,
     .bConfigurationValue = USB_CFG_VALUE,
-    .bmAttributes = USB_CFG_ATTRIBUTES,
+    .bmAttributes = USB_CFG_ATTR_ONE | (REMOTE_WAKEUP ? USB_CFG_ATTR_REMOTE_WAKEUP : 0U),
     .bMaxPower = USB_CFG_MAX_POWER,
   };
 
@@ -674,10 +684,14 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       *len = 1U;
       return 0;
     case PBL_USB_REQ_GET_STATUS:
-      s_ctrl.buf[0] = (recip == PBL_USB_RECIP_ENDPOINT &&
-                       (s_ctrl.halted & prv_ep_bit((uint8_t)setup->wIndex)) != 0U)
-                          ? 1U
-                          : 0U;
+      if (recip == PBL_USB_RECIP_DEVICE) {
+        s_ctrl.buf[0] = s_bus.remote_wakeup ? STATUS_REMOTE_WAKEUP : 0U;
+      } else {
+        s_ctrl.buf[0] = (recip == PBL_USB_RECIP_ENDPOINT &&
+                         (s_ctrl.halted & prv_ep_bit((uint8_t)setup->wIndex)) != 0U)
+                            ? 1U
+                            : 0U;
+      }
       s_ctrl.buf[1] = 0U;
       *data = s_ctrl.buf;
       *len = 2U;
@@ -694,6 +708,11 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       return prv_set_interface(setup->wIndex, setup->wValue);
     case PBL_USB_REQ_CLEAR_FEATURE:
     case PBL_USB_REQ_SET_FEATURE:
+      if (REMOTE_WAKEUP && recip == PBL_USB_RECIP_DEVICE &&
+          setup->wValue == PBL_USB_FEATURE_DEVICE_REMOTE_WAKEUP) {
+        s_bus.remote_wakeup = setup->bRequest == PBL_USB_REQ_SET_FEATURE;
+        return 0;
+      }
       if (recip != PBL_USB_RECIP_ENDPOINT || setup->wValue != PBL_USB_FEATURE_ENDPOINT_HALT) {
         return -ENOTSUP;
       }
@@ -848,6 +867,7 @@ static void prv_unconfigure(void) {
   }
   s_ctrl.stage = STAGE_IDLE;
   s_bus.suspended = false;
+  s_bus.remote_wakeup = false;
 }
 
 // With the IRQ lock held
@@ -1011,4 +1031,12 @@ int pbl_usbd_enable(void) {
   }
 
   return ret;
+}
+
+int pbl_usbd_wakeup(void) {
+  if (!s_bus.remote_wakeup) {
+    return -EACCES;
+  }
+
+  return pbl_udc_wakeup(UDC);
 }

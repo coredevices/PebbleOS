@@ -72,6 +72,10 @@ bool pbl_udc_vbus_present(const struct pbl_udc *udc) {
   return true;
 }
 
+int pbl_udc_wakeup(const struct pbl_udc *udc) {
+  return 0;
+}
+
 enum pbl_udc_speed pbl_udc_speed(const struct pbl_udc *udc) {
   return s_speed;
 }

@@ -58,8 +58,11 @@ struct PBL_PACKED pbl_usb_setup {
 #define PBL_USB_REQ_SET_INTERFACE     0x0bU
 /** @} */
 
-/** Feature selector of a halted endpoint. */
-#define PBL_USB_FEATURE_ENDPOINT_HALT 0x00U
+/** @name Feature selectors */
+/** @{ */
+#define PBL_USB_FEATURE_ENDPOINT_HALT        0x00U
+#define PBL_USB_FEATURE_DEVICE_REMOTE_WAKEUP 0x01U
+/** @} */
 
 /** @name Descriptor types */
 /** @{ */
