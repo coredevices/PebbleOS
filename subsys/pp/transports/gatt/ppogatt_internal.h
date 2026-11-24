@@ -5,12 +5,13 @@
 
 #include <stdint.h>
 
-#include <pbl/bluetooth/mtu.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/util/uuid.h>
 
-#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / (PBL_BT_ATT_MAX_SUPPORTED_MTU - 3))
+//! The largest ATT MTU: what the host stack is configured to prefer.
+#define PPOGATT_MTU_MAX                   (247)
+#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / (PPOGATT_MTU_MAX - 3))
 //! The smallest ATT MTU: anything below means that the connection is gone.
 #define PPOGATT_MTU_MIN                    (23)
 #define PPOGATT_MIN_VERSION                (0x00)
