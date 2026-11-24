@@ -47,5 +47,5 @@ pyusb
 clang-format==23.1.5
 
 -e tools/libs/pbl-cli
--e tools/libs/pbl-console[protocol]
+-e tools/libs/pbl-console[protocol,usb]
 -e tools/libs/pebble-loghash
