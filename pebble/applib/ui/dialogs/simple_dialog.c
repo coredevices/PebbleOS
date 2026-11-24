@@ -42,8 +42,7 @@
 #define ICON_TEXT_SPACING_PX (PBL_IF_ROUND_ELSE(2, 4))
 #endif
 // The lines + some space for descenders
-#define TEXT_MAX_HEIGHT_PX \
-  ((dialog_get_style()->text_max_lines * TEXT_LINE_HEIGHT_PX) + 8)
+#define TEXT_MAX_HEIGHT_PX ((dialog_get_style()->text_max_lines * TEXT_LINE_HEIGHT_PX) + 8)
 
 static int prv_get_rendered_text_height(const char *text, const GRect *text_box) {
   GContext *ctx = graphics_context_get_current_context();
