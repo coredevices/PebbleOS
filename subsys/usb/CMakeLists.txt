@@ -3,5 +3,7 @@
 
 pbl_library()
 pbl_iterable_section(usbd_functions)
+pbl_iterable_section(usb_dfu_regions)
 pbl_library_sources(usbd.c)
 pbl_library_sources_ifdef(CONFIG_USB_CDC_ACM cdc_acm.c)
+pbl_library_sources_ifdef(CONFIG_USB_DFU dfu.c)

@@ -6,7 +6,7 @@ enumerates it. Its public API is `include/pbl/usb/usbd.h`. It is built with
 
 ```{mermaid}
 flowchart TD
-  fn["Functions<br/>CDC ACM, ..."]
+  fn["Functions<br/>CDC ACM, DFU, ..."]
   usbd["Device stack<br/>subsys/usb/usbd.c"]
   udc["USB device controller<br/>pbl/drivers/udc.h"]
   drv["Controller driver<br/>MUSB, ..."]
@@ -52,6 +52,56 @@ Received bytes go to the UART's receive callback, from the interrupt, without
 flow control: a callback that cannot keep up loses them. Bytes sent before the
 host configures the device, or that do not fit while it does not read, are
 dropped.
+
+## Firmware upgrade
+
+`CONFIG_USB_DFU` adds a Device Firmware Upgrade 1.1 interface in DFU mode
+(`include/pbl/usb/dfu.h`): the host downloads an image to a flash partition
+and uploads it back, with a standard tool such as `dfu-util`. The function
+takes the interface after the serial port's, or interface 0 without it, and
+uses endpoint 0 only.
+
+The partition is a region the application defines, by the label of a
+partition of the flash serving the `flash` role:
+
+```c
+PBL_USB_DFU_REGION_DEFINE(image, PART_DFU);
+```
+
+The region is alternate setting 0 of the interface; only one region is
+supported for now. A download starts at the beginning of the partition: each
+block is written once the subsectors it reaches are erased, and a block that
+would go past the end of the partition fails with `errADDRESS`, before
+anything is written. An upload reads the partition from its beginning and
+ends with a short block at its end.
+
+The flash is not accessed from the controller's interrupt. A downloaded block
+is erased and written by a work item on the system work queue, and the
+device answers `DFU_GETSTATUS` with `dfuDNBUSY` and a poll timeout from the
+flash's subsector erase time until it is done. Upload blocks are read ahead
+by the same work item, into one of two buffers while the host reads the
+other. The device is manifestation tolerant: once a download ends it goes
+back to `dfuIDLE`, ready for another one.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `CONFIG_USB_DFU_TRANSFER_SIZE` | `2048` | Largest block, `wTransferSize`; the function keeps three |
+
+### Flashing with dfu-util
+
+With the device connected, `dfu-util` lists its interface, downloads an
+image and uploads it back (`brew install dfu-util` on macOS, the `dfu-util`
+package on Linux distributions):
+
+```shell
+dfu-util -l
+dfu-util -d 1209:0001 -a 0 -D image.bin
+dfu-util -d 1209:0001 -a 0 -U readback.bin -Z $(stat -f %z image.bin)
+cmp image.bin readback.bin
+```
+
+`-Z` stops the upload at the size of the image; without it the whole
+partition is read. On Linux, `stat -c %s` gives the size.
 
 ## Controllers
 
