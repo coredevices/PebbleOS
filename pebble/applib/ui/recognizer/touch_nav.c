@@ -98,6 +98,7 @@ void touch_nav_registry_remove(TouchNavState *state, TouchNavWidgetType type,
   // widget's (now torn-down) apply logic.
   if (state->latched_target == node) {
     state->latched_target = nullptr;
+    state->press_active = false;  // its owner ends a held press itself (swap_layer_touch_release)
   }
   TouchNavWidgetNode **head = prv_registry_head(state, type);
   TouchNavWidgetNode *prev = nullptr;
@@ -316,6 +317,17 @@ static void prv_widget_recognizer_event(const Recognizer *recognizer, Recognizer
   }
 }
 
+#define TOUCH_NAV_PRESS_SLOP_PX 8
+
+// Tell the latched widget its press is over, once
+static void prv_end_press(TouchNavState *state) {
+  const TouchNavWidgetNode *target = state->latched_target;
+  if (state->press_active && target && target->ops->release) {
+    target->ops->release(target->widget);
+  }
+  state->press_active = false;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Routing
 
@@ -478,6 +490,8 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
   RecognizerManager *manager = state->manager;
 
   if (touch_event->type == TouchEvent_Touchdown) {
+    // A gesture can be cut short without a liftoff; its press ends before a new one starts
+    prv_end_press(state);
     // Live gate re-check: the navigational/gated decision is read from the touch EVENT itself
     // (event-time), not cached from the last focus-change event. The dispatcher runs per touch
     // event, so a delayed/missed PEBBLE_APP_DID_CHANGE_FOCUS_EVENT cannot stale this decision.
@@ -494,7 +508,8 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
       // pre-emption (gated or navigational) -- exactly as the per-widget sets behaved before this
       // refactor. Synthesising a pan_cancel here would be a new side effect (Ф1 is a
       // no-behaviour-change rebuild), so a mid-pan wake/DnD tap unwinds the gesture silently, as it
-      // always has.
+      // always has. A press the widget was told about does end, though.
+      prv_end_press(state);
       state->latched_target = nullptr;
       state->declined = false;
       prv_log_push(state, TouchNavLog_Gated, 0);
@@ -534,6 +549,11 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
       if (state->latched_target->ops->touchdown) {
         state->latched_target->ops->touchdown(state->latched_target->widget);
       }
+      if (state->latched_target->ops->press) {
+        state->press_point = GPoint(touch_event->x, touch_event->y);
+        state->press_active = true;
+        state->latched_target->ops->press(state->latched_target->widget, state->press_point);
+      }
     } else {
       // The gesture belongs to the bridge or an un-migrated widget's own set, not the unified set:
       // fail the unified tap/pan/swipe now, symmetrically to the bridge exclusion. On a fresh
@@ -546,6 +566,15 @@ void touch_nav_dispatch(const TouchEvent *touch_event, void *context) {
     }
 
   } else {
+    // Before the manager: a tap completing on this liftoff clears the latch. A press also ends
+    // once the finger wanders off it, in any direction (the pan is vertical-only).
+    if (touch_event->type == TouchEvent_Liftoff ||
+        (state->press_active &&
+         PBL_ABS(touch_event->x - state->press_point.x) +
+                 PBL_ABS(touch_event->y - state->press_point.y) >
+             TOUCH_NAV_PRESS_SLOP_PX)) {
+      prv_end_press(state);
+    }
     recognizer_manager_handle_touch_event(touch_event, manager);
   }
 }

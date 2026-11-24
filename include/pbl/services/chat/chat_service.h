@@ -70,4 +70,14 @@ void chat_service_set_hint_handler(ChatServiceHintHandler handler);
  */
 bool chat_service_take_launch_hint(char *out, size_t out_size);
 
+/**
+ * @brief Ask the phone to archive the newest chat with this title.
+ *
+ * For a notification's Archive button: notifications name their chat only by title.
+ *
+ * @param title Chat title.
+ * @return true if a chat matched and the request was queued.
+ */
+bool chat_service_archive_chat_titled(const char *title);
+
 /** @} */

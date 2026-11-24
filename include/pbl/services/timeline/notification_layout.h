@@ -123,6 +123,20 @@ typedef struct {
   bool show_notification_timestamp;
 } NotificationLayoutInfo;
 
+/** @brief A press-and-hold button under the notification text, on touch watches. */
+typedef enum {
+  NotificationPillNone,
+  /** Reply by voice. */
+  NotificationPillReply,
+  /** Archive the chat on the phone and dismiss (Beeper). */
+  NotificationPillArchive,
+  /** Dismiss the notification. */
+  NotificationPillDismiss,
+} NotificationPill;
+
+/** @brief Most pills a notification shows. */
+#define NOTIFICATION_MAX_PILLS 2
+
 /** @brief Notification and reminder layout; can be cast to a LayoutLayer. */
 typedef struct {
   /** Base layout. */
@@ -143,6 +157,19 @@ typedef struct {
   GTextNode *view_node;
   /** Size of the card view. */
   GSize view_size;
+  /** Pills shown, in order. */
+  NotificationPill pills[NOTIFICATION_MAX_PILLS];
+  /** Where each pill was last laid out, in layer coordinates. */
+  GRect pill_rects[NOTIFICATION_MAX_PILLS];
+  /** Number of pills. */
+  uint8_t num_pills;
+  /** The pill being held, or NotificationPillNone. */
+  NotificationPill held_pill;
+  /** How far the held pill has filled, 0 to 100. */
+  uint8_t held_percent;
+  /** The system's microphone and cross icons, loaded for the pills that need them. */
+  struct GDrawCommandImage *mic_icon;
+  GBitmap *x_icon;
 } NotificationLayout;
 
 /** @brief Default notification background color. */
@@ -188,6 +215,25 @@ static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIF
  * @return New layout, allocated on the calling task's heap.
  */
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config);
+
+/**
+ * @brief The pill under a point.
+ *
+ * @param layout_ref Notification layout.
+ * @param point Point in the layout layer's coordinates.
+ * @return The pill, or NotificationPillNone.
+ */
+NotificationPill notification_layout_pill_at(const LayoutLayer *layout_ref, GPoint point);
+
+/**
+ * @brief Show a pill filling up while it is held.
+ *
+ * @param layout_ref Notification layout.
+ * @param pill The pill held, or NotificationPillNone to empty them all.
+ * @param percent How full, 0 to 100.
+ */
+void notification_layout_set_held_pill(LayoutLayer *layout_ref, NotificationPill pill,
+                                       uint8_t percent);
 
 /**
  * @brief Check the attributes of a notification or reminder.

@@ -14,6 +14,8 @@
 #include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
+#include <applib/graphics/gdraw_command_image.h>
+#include <applib/graphics/gdraw_command_list.h>
 #include <applib/graphics/gtypes.h>
 #include <kernel/ui/kernel_ui.h>
 #include <resource/resource_ids.auto.h>
@@ -322,6 +324,193 @@ bool notification_layout_get_image_size(const LayoutLayer *layout_ref, GSize *si
 }
 #endif
 
+#ifdef CONFIG_TOUCH
+#define PILL_HEIGHT 30
+#define PILL_GAP 6
+#define PILL_TOP 8
+
+static void prv_add_pill(NotificationLayout *layout, NotificationPill pill) {
+  layout->pills[layout->num_pills++] = pill;
+}
+
+// Reply when the phone can reply; Archive for a Beeper chat, else Dismiss. Tapping the text opens
+// a Beeper chat.
+static void prv_init_pills(NotificationLayout *layout) {
+  const TimelineItem *item = layout->info.item;
+  layout->num_pills = 0;
+  if (prv_is_reminder(layout)) {
+    return;
+  }
+  if (timeline_item_find_reply_action(item)) {
+    prv_add_pill(layout, NotificationPillReply);
+  }
+  if (timeline_item_find_action_by_type(item, TimelineItemActionTypeOpenChat)) {
+    prv_add_pill(layout, NotificationPillArchive);
+  } else if (timeline_item_find_dismiss_action(item)) {
+    prv_add_pill(layout, NotificationPillDismiss);
+  }
+}
+
+static bool prv_recolor_mic(GDrawCommand *command, uint32_t index, void *context) {
+  gdraw_command_set_stroke_color(command, *(GColor *)context);
+  gdraw_command_set_fill_color(command, GColorClear);
+  return true;
+}
+
+// The system's microphone and cross, and an archive box drawn to match them, in one color so the
+// icon can change as a pill fills
+static void prv_draw_pill_icon(GContext *ctx, NotificationLayout *layout, NotificationPill pill,
+                               GPoint c, GColor color) {
+  switch (pill) {
+    case NotificationPillReply:
+      if (layout->mic_icon) {
+        gdraw_command_list_iterate(gdraw_command_image_get_command_list(layout->mic_icon),
+                                   prv_recolor_mic, &color);
+        const GSize size = gdraw_command_image_get_bounds_size(layout->mic_icon);
+        gdraw_command_image_draw(ctx, layout->mic_icon,
+                                 GPoint(c.x - size.w / 2, c.y - size.h / 2));
+      }
+      break;
+    case NotificationPillDismiss:
+      if (layout->x_icon) {
+        const GSize size = layout->x_icon->bounds.size;
+        graphics_context_set_compositing_mode(ctx, GCompOpTint);
+        graphics_context_set_tint_color(ctx, color);
+        graphics_draw_bitmap_in_rect(
+            ctx, layout->x_icon, &GRect(c.x - size.w / 2, c.y - size.h / 2, size.w, size.h));
+        graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+      }
+      break;
+    case NotificationPillArchive: {
+      // The mic's 2 px strokes and round joins, on a 25 px grid
+      graphics_context_set_stroke_color(ctx, color);
+      graphics_context_set_stroke_width(ctx, 2);
+      const GRect lid = GRect(c.x - 10, c.y - 9, 21, 6);
+      graphics_draw_round_rect(ctx, &lid, 1);
+      const GRect box = GRect(c.x - 8, c.y - 3, 17, 13);
+      graphics_draw_round_rect(ctx, &box, 1);
+      graphics_draw_line(ctx, GPoint(c.x - 3, c.y + 2), GPoint(c.x + 3, c.y + 2));
+      break;
+    }
+    case NotificationPillNone:
+      break;
+  }
+}
+
+// One row of pills under the text, so they share the first screen with a short message
+static void prv_pills_node_callback(GContext *ctx, const GRect *box,
+                                    const GTextNodeDrawConfig *config, bool render, GSize *size_out,
+                                    void *user_data) {
+  NotificationLayout *layout = user_data;
+  const int16_t row_h = PILL_TOP + PILL_HEIGHT;
+  int16_t band_h = row_h;
+  int16_t y = box->origin.y + PILL_TOP;
+#if PBL_ROUND
+  // Keep the row on one page: paging only knows how to break text
+  if (config && config->paging && config->page_frame->size.h > 0) {
+    const int16_t page_h = config->page_frame->size.h;
+    const int16_t page_y =
+        config->origin_on_screen->y + box->origin.y - config->page_frame->origin.y;
+    const int16_t into_page = (page_y > 0) ? (page_y % page_h) : 0;
+    if (into_page && into_page + row_h > page_h) {
+      band_h += page_h - into_page;
+      y += page_h - into_page;
+    }
+  }
+#endif
+  // Together the pills span the card; on round, the circle's width at their edge farthest from
+  // the middle of the screen
+  int16_t row_w = box->size.w;
+#if PBL_ROUND
+  if (config && config->paging && config->page_frame->size.h > 0) {
+    const int16_t page_h = config->page_frame->size.h;
+    const int16_t top = config->page_frame->origin.y +
+                        (config->origin_on_screen->y + y - config->page_frame->origin.y) % page_h;
+    const int16_t center = PBL_DISPLAY_HEIGHT / 2;
+    const int16_t dy = PBL_MAX(PBL_ABS(top - center), PBL_ABS(top + PILL_HEIGHT - center));
+    const int16_t radius = PBL_DISPLAY_WIDTH / 2;
+    if (dy < radius) {
+      row_w = PBL_MIN(row_w, 2 * integer_sqrt(radius * radius - dy * dy) - 2 * PILL_GAP);
+    }
+  }
+#endif
+  const int16_t pill_w = (row_w - (layout->num_pills - 1) * PILL_GAP) / layout->num_pills;
+  int16_t x = box->origin.x + (box->size.w - row_w) / 2;
+  const GColor bg = layout->colors.bg_color;
+  for (int i = 0; i < layout->num_pills; i++) {
+    const GRect pill = GRect(x, y, pill_w, PILL_HEIGHT);
+    layout->pill_rects[i] = pill;
+    x += pill_w + PILL_GAP;
+    if (render) {
+      // An outline that fills from the left while held; it acts once full
+      const int16_t fill_w = (layout->held_pill == layout->pills[i])
+                                 ? (pill.size.w * layout->held_percent) / 100
+                                 : 0;
+      graphics_context_set_stroke_color(ctx, bg);
+      graphics_context_set_stroke_width(ctx, 2);
+      graphics_draw_round_rect(ctx, &pill, PILL_HEIGHT / 2);
+      const GPoint center = grect_center_point(&pill);
+      prv_draw_pill_icon(ctx, layout, layout->pills[i], center, bg);
+      if (fill_w > 0) {
+        // The whole pill shape, clipped to how far it has filled
+        const GRect saved_clip = ctx->draw_state.clip_box;
+        GRect clip = GRect(pill.origin.x, pill.origin.y, fill_w, PILL_HEIGHT);
+        clip.origin.x += ctx->draw_state.drawing_box.origin.x;
+        clip.origin.y += ctx->draw_state.drawing_box.origin.y;
+        grect_clip(&clip, &saved_clip);
+        ctx->draw_state.clip_box = clip;
+        graphics_context_set_fill_color(ctx, bg);
+        graphics_fill_round_rect(ctx, &pill, PILL_HEIGHT / 2, GCornersAll);
+        prv_draw_pill_icon(ctx, layout, layout->pills[i], center, gcolor_legible_over(bg));
+        ctx->draw_state.clip_box = saved_clip;
+      }
+    }
+  }
+  if (size_out) {
+    *size_out = GSize(box->size.w, band_h);
+  }
+}
+
+static GTextNode *prv_create_pills_node(const LayoutLayer *layout_ref,
+                                        const LayoutNodeConstructorConfig *config) {
+  NotificationLayout *layout = (NotificationLayout *)layout_ref;
+  prv_init_pills(layout);
+  if (!layout->num_pills) {
+    return nullptr;
+  }
+  for (int i = 0; i < layout->num_pills; i++) {
+    if (layout->pills[i] == NotificationPillReply && !layout->mic_icon) {
+      // A copy in RAM: the resource may be mapped read-only, and prv_draw_pill_icon recolors it
+      GDrawCommandImage *mapped =
+          gdraw_command_image_create_with_resource_system(SYSTEM_APP, RESOURCE_ID_MIC_BANNER_ICON);
+      layout->mic_icon = mapped ? gdraw_command_image_clone(mapped) : nullptr;
+      gdraw_command_image_destroy(mapped);
+    } else if (layout->pills[i] == NotificationPillDismiss && !layout->x_icon) {
+      layout->x_icon = gbitmap_create_with_resource_system(SYSTEM_APP, RESOURCE_ID_ACTION_BAR_ICON_X);
+    }
+  }
+  return &graphics_text_node_create_custom(prv_pills_node_callback, layout)->node;
+}
+
+NotificationPill notification_layout_pill_at(const LayoutLayer *layout_ref, GPoint point) {
+  const NotificationLayout *layout = (const NotificationLayout *)layout_ref;
+  for (int i = 0; i < layout->num_pills; i++) {
+    if (grect_contains_point(&layout->pill_rects[i], &point)) {
+      return layout->pills[i];
+    }
+  }
+  return NotificationPillNone;
+}
+
+void notification_layout_set_held_pill(LayoutLayer *layout_ref, NotificationPill pill,
+                                       uint8_t percent) {
+  NotificationLayout *layout = (NotificationLayout *)layout_ref;
+  layout->held_pill = pill;
+  layout->held_percent = percent;
+  layer_mark_dirty(&layout_ref->layer);
+}
+#endif
+
 static PreferredContentSize prv_content_size(void) {
   const PreferredContentSize size = alerts_preferences_get_notification_content_size();
   return (size == NotificationContentSizeSystem) ? system_theme_get_content_size() : size;
@@ -425,6 +614,13 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
     .extent.margin.h = 2 * NOTIFICATION_IMAGE_PADDING,
   };
 #endif
+#ifdef CONFIG_TOUCH
+  const LayoutNodeConstructorConfig pills_config = {
+    .extent.node.type = LayoutNodeType_Constructor,
+    .constructor = prv_create_pills_node,
+    .extent.margin.h = PILL_GAP,
+  };
+#endif
   const LayoutNodeConfig *reminder_timestamp_node_config = nullptr;
   const LayoutNodeConfig *notification_timestamp_node_config = nullptr;
   const LayoutNodeConfig *header_node_config = nullptr;
@@ -452,6 +648,9 @@ static PBL_NOINLINE GTextNode *prv_create_view(NotificationLayout *layout, bool 
     &image_config.extent.node,
 #endif
     notification_timestamp_node_config,
+#ifdef CONFIG_TOUCH
+    &pills_config.extent.node,
+#endif
   };
   const LayoutNodeVerticalConfig vertical_config = {
     .container.extent.node.type = LayoutNodeType_Vertical,
@@ -746,6 +945,10 @@ static GSize prv_layout_get_content_size(GContext *ctx, LayoutLayer *layout_ref)
 static void prv_layout_destroy(LayoutLayer *layout) {
   NotificationLayout *notification_layout = (NotificationLayout *)layout;
   prv_destroy_view(notification_layout);
+#ifdef CONFIG_TOUCH
+  gdraw_command_image_destroy(notification_layout->mic_icon);
+  gbitmap_destroy(notification_layout->x_icon);
+#endif
   kino_layer_deinit(&notification_layout->icon_layer);
   // Every other layout deinits its base layer before freeing (see timeline_layout_deinit);
   // skipping it leaks attached recognizers and frees a layer the touch system may still

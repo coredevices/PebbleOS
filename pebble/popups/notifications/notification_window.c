@@ -36,6 +36,7 @@
 #include <pbl/services/time.h>
 #include <pbl/services/timeline/actions_endpoint.h>
 #include <pbl/services/timeline/attribute.h>
+#include <pbl/services/chat/chat_service.h>
 #include <pbl/services/timeline/notification_layout.h>
 #include <pbl/services/timeline/swap_layer.h>
 #include <pbl/services/timeline/timeline.h>
@@ -188,6 +189,9 @@ static void prv_cleanup_timers(NotificationWindowData *data) {
   prv_cleanup_timer(&data->pop_timer_id);
   prv_cancel_reminder_watchdog(data);
   prv_cleanup_timer(&data->peek_layer_timer);
+#ifdef CONFIG_TOUCH
+  prv_cleanup_timer(&data->pill_hold_timer);
+#endif
 }
 
 static void prv_pop_notification_window(NotificationWindowData *data) {
@@ -1037,6 +1041,138 @@ static void prv_select_single_click_handler(ClickRecognizerRef recognizer, void 
                                alerts_preferences_get_notification_content_size());
 }
 
+#ifdef CONFIG_TOUCH
+#define PILL_HOLD_MS 600
+#define PILL_HOLD_STEP_MS 40
+
+static void prv_reply_menu_did_close(ActionMenu *action_menu, const ActionMenuItem *item,
+                                     void *context) {
+  prv_action_menu_did_close(action_menu, item, context);
+  timeline_item_destroy(context);  // the copy prv_perform_pill made
+}
+
+static GPoint prv_point_in_layout(LayoutLayer *layout, GPoint point_on_screen) {
+  const GPoint origin = layer_convert_point_to_screen(&layout->layer, GPointZero);
+  return GPoint(point_on_screen.x - origin.x, point_on_screen.y - origin.y);
+}
+
+static void prv_perform_pill(NotificationWindowData *data, NotificationPill pill) {
+  LayoutLayer *layout = swap_layer_get_current_layout(&data->swap_layer);
+  TimelineItem *item = prv_get_current_notification(data);
+  if (!layout || !item || data->action_menu) {
+    return;
+  }
+  TimelineItemAction *action = timeline_item_find_dismiss_action(item);
+  switch (pill) {
+    case NotificationPillReply: {
+      // The reply works on its own copy: the notification can be removed while dictating, and an
+      // ANCS reply's type is changed below
+      TimelineItem *copy = timeline_item_copy(item);
+      TimelineItemAction *reply = copy ? timeline_item_find_reply_action(copy) : nullptr;
+      if (!reply) {
+        timeline_item_destroy(copy);
+        return;
+      }
+      // An ANCS reply first asks the phone whether it can still reply, then shows this same menu
+      // (prv_handle_do_response_response, which also changes a copy); go straight to it
+      reply->type = TimelineItemActionTypeResponse;
+      data->action_menu = timeline_actions_push_voice_reply(
+          copy, reply, layout_get_notification_colors(layout)->bg_color, prv_reply_menu_did_close,
+          window_manager_get_window_stack(NOTIFICATION_PRIORITY),
+          data->is_modal ? TimelineItemActionSourceModalNotification
+                         : TimelineItemActionSourceNotificationApp);
+      if (!data->action_menu) {
+        timeline_item_destroy(copy);
+      }
+      return;
+    }
+    case NotificationPillArchive:
+      // Notifications name the chat only by title, as opening it does
+      chat_service_archive_chat_titled(attribute_get_string(&item->attr_list, AttributeIdTitle, ""));
+      break;
+    case NotificationPillDismiss:
+      break;
+    case NotificationPillNone:
+      return;
+  }
+  if (action) {
+    timeline_actions_invoke_action(action, item, nullptr, nullptr);
+  }
+}
+
+static void prv_stop_hold(NotificationWindowData *data) {
+  prv_cleanup_timer(&data->pill_hold_timer);
+  data->pill_hold_ms = 0;
+  LayoutLayer *layout = swap_layer_get_current_layout(&data->swap_layer);
+  if (layout) {
+    notification_layout_set_held_pill(layout, NotificationPillNone, 0);
+  }
+}
+
+static void prv_hold_step(void *context) {
+  NotificationWindowData *data = context;
+  LayoutLayer *layout = swap_layer_get_current_layout(&data->swap_layer);
+  if (!layout) {
+    prv_stop_hold(data);
+    return;
+  }
+  data->pill_hold_ms += PILL_HOLD_STEP_MS;
+  const NotificationPill pill = ((NotificationLayout *)layout)->held_pill;
+  if (data->pill_hold_ms < PILL_HOLD_MS) {
+    notification_layout_set_held_pill(layout, pill, data->pill_hold_ms * 100 / PILL_HOLD_MS);
+    return;
+  }
+  // Stay full while the action takes over: dismissing removes the card, a reply covers it (and
+  // prv_window_disappear empties the pill)
+  prv_cleanup_timer(&data->pill_hold_timer);
+  data->pill_hold_ms = 0;
+  notification_layout_set_held_pill(layout, pill, 100);
+  prv_perform_pill(data, pill);
+}
+
+// Pills act only after a hold, so a stray touch while reading can't reply or dismiss
+static void prv_press_handler(SwapLayer *swap_layer, bool pressed, GPoint point_on_screen,
+                              void *context) {
+  NotificationWindowData *data = context;
+  if (!pressed) {
+    // Lifting after the pill acted leaves it full (prv_hold_step); only an unfinished hold empties
+    if (data->pill_hold_timer != EVENTED_TIMER_INVALID_ID) {
+      prv_stop_hold(data);
+    }
+    return;
+  }
+  prv_stop_hold(data);
+  LayoutLayer *layout = swap_layer_get_current_layout(swap_layer);
+  if (!layout || data->action_menu) {
+    return;
+  }
+  const NotificationPill pill =
+      notification_layout_pill_at(layout, prv_point_in_layout(layout, point_on_screen));
+  if (pill != NotificationPillNone) {
+    notification_layout_set_held_pill(layout, pill, 0);
+    data->pill_hold_timer =
+        evented_timer_register(PILL_HOLD_STEP_MS, true /* repeating */, prv_hold_step, data);
+  }
+}
+
+// Tapping the text of a Beeper notification opens its chat; a tap on a pill does nothing
+static void prv_tap_handler(SwapLayer *swap_layer, GPoint point_on_screen, void *context) {
+  NotificationWindowData *data = context;
+  LayoutLayer *layout = swap_layer_get_current_layout(swap_layer);
+  TimelineItem *item = prv_get_current_notification(data);
+  if (!layout || !item || data->action_menu ||
+      notification_layout_pill_at(layout, prv_point_in_layout(layout, point_on_screen)) !=
+          NotificationPillNone) {
+    return;
+  }
+  TimelineItemAction *open_chat =
+      timeline_item_find_action_by_type(item, TimelineItemActionTypeOpenChat);
+  if (open_chat) {
+    timeline_actions_invoke_action(open_chat, item, nullptr, nullptr);
+  }
+}
+#endif
+
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {
   prv_dismiss_all(data, nullptr);
 }
@@ -1102,6 +1238,7 @@ static void prv_window_disappear(Window *window) {
   NotificationWindowData *data = window_get_user_data(window);
   prv_cleanup_timer(&data->pop_timer_id);
 #ifdef CONFIG_TOUCH
+  prv_stop_hold(data);  // a covered notification's pill must not act
   // A higher modal (e.g. the action menu opened via SELECT) has covered this window. Release the
   // swap layer's touch participation so the now-focused modal owns touch and events cannot leak
   // into this hidden notification body. The click-config-provider re-registers it on re-show.
@@ -1382,6 +1519,10 @@ static void prv_init_notification_window(bool is_modal, bool allow_dismiss_all) 
                              .update_colors_handler = prv_update_colors_handler,
 #endif
                              .interaction_handler = prv_interaction_handler,
+#ifdef CONFIG_TOUCH
+                             .tap_handler = prv_tap_handler,
+                             .press_handler = prv_press_handler,
+#endif
                              .click_config_provider = prv_click_config_provider,
                            });
   swap_layer_set_click_config_onto_window(swap_layer, window);

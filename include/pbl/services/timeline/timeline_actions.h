@@ -91,6 +91,24 @@ ActionMenu *timeline_actions_push_response_menu(TimelineItem *item,
                                                 bool standalone_reply);
 
 /**
+ * @brief Push the reply menu and start voice dictation on top of it.
+ *
+ * Without a microphone this is timeline_actions_push_response_menu().
+ *
+ * @param item Item replied to.
+ * @param reply_action Its reply action, of type TimelineItemActionTypeResponse.
+ * @param bg_color Background color of the menu.
+ * @param did_close_cb Called when the menu closes, may be NULL.
+ * @param window_stack Window stack to push to.
+ * @param source Window or app pushing the menu.
+ * @return Action menu, or NULL if out of memory.
+ */
+ActionMenu *timeline_actions_push_voice_reply(TimelineItem *item, TimelineItemAction *reply_action,
+                                              GColor bg_color, ActionMenuDidCloseCb did_close_cb,
+                                              WindowStack *window_stack,
+                                              TimelineItemActionSource source);
+
+/**
  * @brief Called when an action or batch of actions completes.
  *
  * @param succeeded Whether it succeeded.

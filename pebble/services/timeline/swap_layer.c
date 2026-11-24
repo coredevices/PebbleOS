@@ -990,8 +990,23 @@ static bool prv_swap_ops_can_start(void *w) {
   return ((SwapLayer *)w)->current != nullptr;
 }
 
+static void prv_swap_ops_press(void *w, GPoint point_on_screen) {
+  SwapLayer *swap_layer = w;
+  if (swap_layer->current && swap_layer->callbacks.press_handler) {
+    swap_layer->callbacks.press_handler(swap_layer, true, point_on_screen, swap_layer->context);
+  }
+}
+
+static void prv_swap_ops_release(void *w) {
+  SwapLayer *swap_layer = w;
+  if (swap_layer->callbacks.press_handler) {
+    swap_layer->callbacks.press_handler(swap_layer, false, GPointZero, swap_layer->context);
+  }
+}
+
 static void prv_swap_ops_pan_started(void *w) {
   SwapLayer *swap_layer = w;
+  prv_swap_ops_release(w);  // scrolling, not holding
   // Stop any running swap/scroll animation so the finger takes over, and refresh the auto-close
   // timer so a long notification cannot close under the finger while it is being dragged. The base
   // offset is latched by the core via get_base_offset next.
@@ -1033,12 +1048,15 @@ static void prv_swap_ops_pan_cancel(void *w) {
 }
 
 static void prv_swap_ops_tap(void *w, GPoint point_on_screen) {
-  // A tap on the notification body intentionally does nothing. The action menu is opened by a left
-  // swipe (prv_swap_ops_swipe -> SELECT); a bare tap must not open it by accident. The handler is
+  // A tap on the notification body only reaches the owner's tap handler (its buttons); it never
+  // opens the action menu, which a left swipe does (prv_swap_ops_swipe -> SELECT). The handler is
   // kept in the vtable (rather than NULL) so the tap gesture is still consumed here instead of
   // leaking to another handler.
-  (void)w;
-  (void)point_on_screen;
+  SwapLayer *swap_layer = w;
+  if (swap_layer->current && swap_layer->callbacks.tap_handler) {
+    swap_layer->callbacks.tap_handler(swap_layer, point_on_screen, swap_layer->context);
+    prv_announce_interaction(swap_layer);
+  }
 }
 
 static void prv_swap_ops_swipe(void *w, SwipeDirection dir) {
@@ -1057,6 +1075,8 @@ static void prv_swap_ops_swipe(void *w, SwipeDirection dir) {
 }
 
 static const TouchNavWidgetOps s_swap_touch_nav_ops = {
+  .press = prv_swap_ops_press,
+  .release = prv_swap_ops_release,
   .can_start = prv_swap_ops_can_start,
   .pan_started = prv_swap_ops_pan_started,
   .get_base_offset = prv_swap_ops_get_base_offset,
@@ -1117,6 +1137,7 @@ void swap_layer_touch_release(SwapLayer *swap_layer) {
   // touch-service system handler and the unified widget set is owned by TouchNavState, so removing
   // the widget from the registry is what stops touch from routing into the now-hidden notification
   // body; the now-focused modal owns touch through the same system-slot bridge.
+  prv_swap_ops_release(swap_layer);  // a press held as it was covered ends here
   swap_layer_touch_deregister(swap_layer);
 }
 #endif // CONFIG_TOUCH

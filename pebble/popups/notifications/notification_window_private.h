@@ -40,6 +40,10 @@ typedef struct NotificationWindowData {
 
   // Handles the multiple layers
   SwapLayer swap_layer;
+#ifdef CONFIG_TOUCH
+  EventedTimerID pill_hold_timer; //!< Fills the held pill; it acts when full
+  uint16_t pill_hold_ms;
+#endif
   StatusBarLayer status_layer;
   ActionMenu *action_menu;
 

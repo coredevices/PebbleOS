@@ -9,8 +9,11 @@
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/blob_db/chat_db.h>
 #include <pbl/services/chat/chat_service.h>
 
+#include <applib/dict.h>
+#include <apps/system/chat/chat_keys.h>
 #include <kernel/pebble_tasks.h>
 #include <process_management/process_manager.h>
 
@@ -101,4 +104,56 @@ bool chat_service_take_launch_hint(char *out, size_t out_size) {
   out[out_size - 1] = '\0';
   s_launch_hint[0] = '\0';
   return has;
+}
+
+typedef struct {
+  const char *title;
+  uint32_t newest;
+  uint8_t key[CHAT_DB_CHAT_KEY_LEN];
+  bool found;
+} TitleMatch;
+
+static bool prv_match_title(const uint8_t *key, int key_len, const uint8_t *val, int val_len,
+                            void *context) {
+  TitleMatch *match = context;
+  ChatDbChat chat;
+  if (key_len != 1 + CHAT_DB_CHAT_KEY_LEN || key[0] != CHAT_DB_KIND_CHAT ||
+      !chat_db_parse_chat(val, val_len, &chat)) {
+    return true;
+  }
+  // Two chats can share a name (one person on two networks): the newest is the one notifying
+  if (chat.title.len == strlen(match->title) &&
+      memcmp(chat.title.str, match->title, chat.title.len) == 0 &&
+      (!match->found || chat.last_activity >= match->newest)) {
+    match->found = true;
+    match->newest = chat.last_activity;
+    memcpy(match->key, key + 1, CHAT_DB_CHAT_KEY_LEN);
+  }
+  return true;
+}
+
+bool chat_service_archive_chat_titled(const char *title) {
+  if (!title || !title[0]) {
+    return false;
+  }
+  TitleMatch match = {.title = title};
+  chat_db_each(prv_match_title, &match);
+  if (!match.found) {
+    return false;
+  }
+  // The Chat app's chat id: the chat key in lowercase hex
+  static const char digits[] = "0123456789abcdef";
+  char id[CHAT_DB_CHAT_KEY_LEN * 2 + 1];
+  for (int i = 0; i < CHAT_DB_CHAT_KEY_LEN; i++) {
+    id[i * 2] = digits[match.key[i] >> 4];
+    id[i * 2 + 1] = digits[match.key[i] & 0xF];
+  }
+  id[CHAT_DB_CHAT_KEY_LEN * 2] = '\0';
+
+  uint8_t buf[64];
+  DictionaryIterator iter;
+  dict_write_begin(&iter, buf, sizeof(buf));
+  dict_write_cstring(&iter, MESSAGE_KEY_Command, "archive_chat");
+  dict_write_cstring(&iter, MESSAGE_KEY_ChatId, id);
+  return chat_service_send(buf, dict_write_end(&iter));
 }

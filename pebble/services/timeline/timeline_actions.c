@@ -1135,6 +1135,24 @@ ActionMenu *timeline_actions_push_response_menu(TimelineItem *item,
   return timeline_actions_push_action_menu(&config, window_stack);
 }
 
+ActionMenu *timeline_actions_push_voice_reply(TimelineItem *item, TimelineItemAction *reply_action,
+                                              GColor bg_color, ActionMenuDidCloseCb did_close_cb,
+                                              WindowStack *window_stack,
+                                              TimelineItemActionSource source) {
+  const bool standalone_reply = true;
+  ActionMenu *menu = timeline_actions_push_response_menu(item, reply_action, bg_color, did_close_cb,
+                                                         window_stack, source, standalone_reply);
+#ifdef CONFIG_MIC
+  // Voice is the first option; the reply menu stays under the voice window, so a cancelled
+  // dictation lands on the other ways to reply
+  if (menu) {
+    const ActionMenuLevel *root_level = action_menu_get_root_level(menu);
+    prv_start_voice_reply(menu, &root_level->items[0], action_menu_get_context(menu));
+  }
+#endif
+  return menu;
+}
+
 typedef struct {
   ActionResultData *data;
   int num_notifications;

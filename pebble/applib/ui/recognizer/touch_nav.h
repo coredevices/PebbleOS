@@ -65,6 +65,11 @@ typedef struct TouchNavWidgetOps {
   //! before any recognizer triggers. Lets the widget stop a coasting fling at finger-down instead
   //! of at the pan threshold (catch-to-stop). NULL means nothing to do.
   void (*touchdown)(void *w);
+  //! Optional. The finger landed on the widget, at this point; NULL means nothing to do. Paired
+  //! with \ref release, for press-and-hold controls.
+  void (*press)(void *w, GPoint point_on_screen);
+  //! Optional. The finger that \ref press reported left the screen.
+  void (*release)(void *w);
   //! Pan Started: cancel any of the widget's own running animation so the finger takes over.
   void (*pan_started)(void *w);
   //! @return the widget's content offset at pan Start, latched as the base for the whole gesture.
@@ -180,6 +185,9 @@ typedef struct TouchNavState {
   GPoint gesture_base;
   uint64_t last_update_ticks;
   bool declined;
+  //! Where the widget's \ref TouchNavWidgetOps::press landed, while that press is still held.
+  GPoint press_point;
+  bool press_active;
 
   //! Route latched on the most recent Touchdown.
   TouchNavRoute route;

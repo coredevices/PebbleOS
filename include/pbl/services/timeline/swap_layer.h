@@ -86,6 +86,28 @@ typedef void (*SwapLayerUpdateColorsHandler)(struct SwapLayer *swap_layer, GColo
 typedef void (*SwapLayerInteractionHandler)(struct SwapLayer *swap_layer, void *context);
 
 /**
+ * @brief Called for a tap on the current layout, on touch watches.
+ *
+ * @param swap_layer Swap layer.
+ * @param point_on_screen Where the tap landed, in screen coordinates.
+ * @param context Callback context.
+ */
+typedef void (*SwapLayerTapHandler)(struct SwapLayer *swap_layer, GPoint point_on_screen,
+                                    void *context);
+
+/**
+ * @brief Called when a finger lands on the current layout (press, with the point) and when it
+ * lifts or starts scrolling (release, point unused), on touch watches.
+ *
+ * @param swap_layer Swap layer.
+ * @param pressed true for a press, false for a release.
+ * @param point_on_screen Where the finger landed, in screen coordinates.
+ * @param context Callback context.
+ */
+typedef void (*SwapLayerPressHandler)(struct SwapLayer *swap_layer, bool pressed,
+                                      GPoint point_on_screen, void *context);
+
+/**
  * @brief Callbacks of a SwapLayer.
  *
  * @note The context set with swap_layer_set_callbacks() is passed to all of them.
@@ -103,6 +125,10 @@ typedef struct {
   SwapLayerUpdateColorsHandler update_colors_handler;
   /** Reports user interaction. */
   SwapLayerInteractionHandler interaction_handler;
+  /** Handles a tap on the current layout, may be NULL. */
+  SwapLayerTapHandler tap_handler;
+  /** Handles a finger landing and lifting, may be NULL. */
+  SwapLayerPressHandler press_handler;
   /** Adds click handlers on top of the swap layer's own, may be NULL. */
   ClickConfigProvider click_config_provider;
 } SwapLayerCallbacks;
