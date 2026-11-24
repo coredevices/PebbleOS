@@ -25,6 +25,9 @@ description: |
   - RTC, clk_rtc, LRC10 or LXT32, which the RTC and the low-power timers
     count.
 
+  Its charger senses the power on the VBUS input of the package, which
+  interrupts tell coming and going.
+
 properties:
   compatible:
     const: sifli,sf32lb57-pmuc
@@ -63,6 +66,10 @@ properties:
   sifli,hpsys-rcc:
     $ref: /schemas/types.yaml#/definitions/phandle
     description: HPSYS RCC, whose RC10CAL counter measures LRC10 against the 48 MHz crystal.
+
+  sifli,hpsys-aon:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS always-on block, whose CHG wake source lets the charger wake HPSYS.
 
   regulators:
     type: object

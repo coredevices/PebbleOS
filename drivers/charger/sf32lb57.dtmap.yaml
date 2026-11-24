@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-pmuc
+config: CHARGER_SF32LB57
+class: charger
+symbol: "{sym}_charger"
+define: PBL_CHARGER_SF32LB57_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - reg: 0
+    of: sifli,hpsys-aon

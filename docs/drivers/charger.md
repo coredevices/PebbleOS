@@ -20,4 +20,5 @@ that does neither returns `-ENOTSUP`. Every listener added with
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
 | Nordic nPM1300 | `nordic,npm1300` | `CONFIG_CHARGER_NPM1300` |
+| SiFli SF32LB57 PMU, external power and charge status only | `sifli,sf32lb57-pmuc` | `CONFIG_CHARGER_SF32LB57` |
 | Simulator | — | `CONFIG_CHARGER_SIM` |
