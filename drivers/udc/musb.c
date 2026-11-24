@@ -117,18 +117,53 @@ static void prv_index(const struct pbl_udc_musb *m, uint8_t n) {
 
 static void prv_write_fifo(const struct pbl_udc_musb *m, uint8_t n, const uint8_t *buf,
                            size_t len) {
-  for (size_t i = 0U; i < len; i++) {
-    pbl_writeb(buf[i], m->base + MUSB_FIFO(n));
+  uintptr_t fifo = m->base + MUSB_FIFO(n);
+  size_t i = 0U;
+
+  for (; i + 4U <= len; i += 4U) {
+    uint32_t w;
+
+    memcpy(&w, &buf[i], sizeof(w));
+    pbl_writel(w, fifo);
+  }
+  if (len - i >= 2U) {
+    uint16_t h;
+
+    memcpy(&h, &buf[i], sizeof(h));
+    pbl_writew(h, fifo);
+    i += 2U;
+  }
+  if (i < len) {
+    pbl_writeb(buf[i], fifo);
   }
 }
 
+// The bytes past keep are drained from the FIFO
 static void prv_read_fifo(const struct pbl_udc_musb *m, uint8_t n, uint8_t *buf, size_t len,
                           size_t keep) {
-  for (size_t i = 0U; i < len; i++) {
-    uint8_t byte = pbl_readb(m->base + MUSB_FIFO(n));
+  uintptr_t fifo = m->base + MUSB_FIFO(n);
+  size_t i = 0U;
+
+  for (; i + 4U <= len; i += 4U) {
+    uint32_t w = pbl_readl(fifo);
 
     if (i < keep) {
-      buf[i] = byte;
+      memcpy(&buf[i], &w, PBL_MIN(sizeof(w), keep - i));
+    }
+  }
+  if (len - i >= 2U) {
+    uint16_t h = pbl_readw(fifo);
+
+    if (i < keep) {
+      memcpy(&buf[i], &h, PBL_MIN(sizeof(h), keep - i));
+    }
+    i += 2U;
+  }
+  if (i < len) {
+    uint8_t b = pbl_readb(fifo);
+
+    if (i < keep) {
+      buf[i] = b;
     }
   }
 }
