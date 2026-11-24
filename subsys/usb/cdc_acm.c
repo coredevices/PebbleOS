@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/usb/cdc_acm.h>
 #include <pbl/usb/usbd.h>
@@ -198,8 +199,8 @@ struct prv_port {
   uint16_t tx_tail;
   uint8_t line_coding[7];
   uint8_t tx_ring[TX_RING];
-  uint8_t tx_buf[BUF_LEN];
-  uint8_t rx_buf[BUF_LEN];
+  uint8_t tx_buf[BUF_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
+  uint8_t rx_buf[BUF_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
 };
 
 struct pbl_usb_cdc_acm {
