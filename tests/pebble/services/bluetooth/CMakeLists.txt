@@ -8,8 +8,11 @@ pbl_clar_test(test_bonding
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
+    third_party/nimble/store
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/nimble/host/include
+    third_party/nimble/mynewt-nimble/nimble/transport/include
     third_party/nimble/mynewt-nimble/porting/nimble/include
   PLATFORMS emery
 )
@@ -29,8 +32,11 @@ pbl_clar_test(test_prf_store
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
+    third_party/nimble/store
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/nimble/host/include
+    third_party/nimble/mynewt-nimble/nimble/transport/include
     third_party/nimble/mynewt-nimble/porting/nimble/include
   PLATFORMS emery
 )

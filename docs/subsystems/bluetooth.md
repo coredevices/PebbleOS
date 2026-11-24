@@ -83,7 +83,9 @@ peers and their CCCDs where its backend, `NIMBLE_STORE_BACKEND`, says:
 The PRF store (`pbl/bluetooth/prf_store.h`, `NIMBLE_STORE_PRF`) is a flash
 partition of its own with the one bonding and the root keys the recovery
 firmware and the normal firmware share. Recovery firmware in the field reads
-it, so its layout is fixed.
+it, so its layout is fixed. The types that describe the layout are the
+store's own: a bonding goes in and comes out as the keys NimBLE stores for a
+peer, `struct ble_store_value_sec`.
 
 The Bluetooth subsystem uses that store too, and it is the only place bonds
 are kept. `pbl/bluetooth/bond.h` lists them by the peer's identity address,

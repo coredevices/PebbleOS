@@ -22,52 +22,34 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 static bool prv_get_prf_pairing(struct pbl_bt_bond_keys *keys, char *name) {
   memset(keys, 0, sizeof(*keys));
 
-  return pbl_bt_prf_store_get_pairing(&keys->info, name, &keys->flags);
+  return pbl_bt_prf_store_get_pairing(&keys->peer, &keys->our, name);
 }
 
-static bool prv_encryption_equal(const struct pbl_bt_bond_keys *a,
-                                 const struct pbl_bt_bond_keys *b) {
-  const struct pbl_bt_sm_pairing_info *ia = &a->info;
-  const struct pbl_bt_sm_pairing_info *ib = &b->info;
-
-  if (ia->is_local_encryption_info_valid != ib->is_local_encryption_info_valid ||
-      ia->is_remote_encryption_info_valid != ib->is_remote_encryption_info_valid) {
+static bool prv_ltk_equal(const struct ble_store_value_sec *a,
+                          const struct ble_store_value_sec *b) {
+  if (a->ltk_present != b->ltk_present) {
     return false;
   }
 
-  if (ia->is_local_encryption_info_valid &&
-      (ia->local_encryption_info.ediv != ib->local_encryption_info.ediv ||
-       ia->local_encryption_info.rand != ib->local_encryption_info.rand ||
-       memcmp(&ia->local_encryption_info.ltk, &ib->local_encryption_info.ltk,
-              sizeof(struct pbl_bt_sm_key)) != 0)) {
-    return false;
-  }
-
-  if (ia->is_remote_encryption_info_valid &&
-      (ia->remote_encryption_info.ediv != ib->remote_encryption_info.ediv ||
-       ia->remote_encryption_info.rand != ib->remote_encryption_info.rand ||
-       memcmp(&ia->remote_encryption_info.ltk, &ib->remote_encryption_info.ltk,
-              sizeof(struct pbl_bt_sm_key)) != 0)) {
-    return false;
-  }
-
-  return true;
+  return !a->ltk_present || (a->ediv == b->ediv && a->rand_num == b->rand_num &&
+                             memcmp(a->ltk, b->ltk, sizeof(a->ltk)) == 0);
 }
 
+// Of what the PRF store keeps.
 static bool prv_keys_equal(const struct pbl_bt_bond_keys *a, const struct pbl_bt_bond_keys *b) {
-  const struct pbl_bt_sm_pairing_info *ia = &a->info;
-  const struct pbl_bt_sm_pairing_info *ib = &b->info;
+  const struct ble_store_value_sec *pa = &a->peer;
+  const struct ble_store_value_sec *pb = &b->peer;
 
-  if (a->flags != b->flags || ble_addr_cmp(&ia->identity, &ib->identity) != 0 ||
-      ia->is_remote_identity_info_valid != ib->is_remote_identity_info_valid) {
+  if (ble_addr_cmp(&pa->peer_addr, &pb->peer_addr) != 0 || pa->sc != pb->sc ||
+      pa->authenticated != pb->authenticated || pa->irk_present != pb->irk_present) {
     return false;
   }
 
-  if (ia->is_remote_identity_info_valid && memcmp(&ia->irk, &ib->irk, sizeof(ia->irk)) != 0) {
+  if (pa->irk_present && memcmp(pa->irk, pb->irk, sizeof(pa->irk)) != 0) {
     return false;
   }
 
-  return prv_encryption_equal(a, b);
+  return prv_ltk_equal(pa, pb) && prv_ltk_equal(&a->our, &b->our);
 }
 
 static void prv_copy_to_prf_store(const ble_addr_t *addr) {
@@ -84,12 +66,12 @@ static void prv_copy_to_prf_store(const ble_addr_t *addr) {
     }
 
     // The name there is another peer's.
-    if (ble_addr_cmp(&keys.info.identity, &stored.info.identity) != 0) {
+    if (ble_addr_cmp(&keys.peer.peer_addr, &stored.peer.peer_addr) != 0) {
       pbl_bt_prf_store_erase_pairing();
     }
   }
 
-  pbl_bt_prf_store_set_pairing(&keys.info, nullptr, keys.flags);
+  pbl_bt_prf_store_set_pairing(&keys.peer, &keys.our, nullptr);
 }
 
 struct others {
@@ -138,7 +120,7 @@ void bt_bonding_init(void) {
   struct pbl_bt_bond_keys keys;
 
   if (prv_get_prf_pairing(&keys, nullptr)) {
-    prv_delete_others(&keys.info.identity);
+    prv_delete_others(&keys.peer.peer_addr);
     if (pbl_bt_bond_set_keys(&keys) != 0) {
       PBL_LOG_ERR("Could not take the bond of the PRF store");
     }
@@ -182,7 +164,7 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
 bool bt_bonding_get_peer_name(const ble_addr_t *addr, char *name) {
   struct pbl_bt_bond_keys stored;
 
-  return prv_get_prf_pairing(&stored, name) && ble_addr_cmp(&stored.info.identity, addr) == 0 &&
+  return prv_get_prf_pairing(&stored, name) && ble_addr_cmp(&stored.peer.peer_addr, addr) == 0 &&
          name[0] != '\0';
 }
 
@@ -191,7 +173,7 @@ void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name) {
   struct pbl_bt_bond_keys stored;
 
   if (!prv_get_prf_pairing(&stored, stored_name) ||
-      ble_addr_cmp(&stored.info.identity, addr) != 0 ||
+      ble_addr_cmp(&stored.peer.peer_addr, addr) != 0 ||
       strncmp(stored_name, name, sizeof(stored_name)) == 0) {
     return;
   }
@@ -227,7 +209,7 @@ void pbl_bt_cb_bond_deleted(const ble_addr_t *addr) {
     return;
   }
 
-  if (prv_get_prf_pairing(&stored, nullptr) && ble_addr_cmp(&stored.info.identity, addr) == 0) {
+  if (prv_get_prf_pairing(&stored, nullptr) && ble_addr_cmp(&stored.peer.peer_addr, addr) == 0) {
     pbl_bt_prf_store_erase_pairing();
   }
 

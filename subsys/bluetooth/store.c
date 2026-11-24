@@ -281,89 +281,38 @@ int pbl_bt_bond_get(const ble_addr_t *addr, struct pbl_bt_bond_info *info) {
 }
 
 int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys) {
-  struct pbl_bt_sm_pairing_info *info = &keys->info;
-  struct ble_store_value_sec peer;
   union ble_store_value our;
   union ble_store_key key;
   int ret;
 
-  ret = prv_read_peer_sec(addr, 0U, &peer);
+  memset(keys, 0, sizeof(*keys));
+
+  ret = prv_read_peer_sec(addr, 0U, &keys->peer);
   if (ret != 0) {
     return ret;
   }
 
-  memset(keys, 0, sizeof(*keys));
-  info->identity = peer.peer_addr;
-
-  if (peer.ltk_present) {
-    info->is_remote_encryption_info_valid = true;
-    info->remote_encryption_info.ediv = peer.ediv;
-    info->remote_encryption_info.rand = peer.rand_num;
-    memcpy(info->remote_encryption_info.ltk.data, peer.ltk, KEY_SIZE);
-  }
-
-  if (peer.irk_present) {
-    info->is_remote_identity_info_valid = true;
-    memcpy(info->irk.data, peer.irk, KEY_SIZE);
-  }
-
-  ble_store_key_from_value_sec(&key.sec, &peer);
-  if (prv_read(BLE_STORE_OBJ_TYPE_OUR_SEC, &key, &our) == 0 && our.sec.ltk_present) {
-    info->is_local_encryption_info_valid = true;
-    info->local_encryption_info.ediv = our.sec.ediv;
-    info->local_encryption_info.rand = our.sec.rand_num;
-    memcpy(info->local_encryption_info.ltk.data, our.sec.ltk, KEY_SIZE);
-  }
-
-  if (peer.sc) {
-    keys->flags |= PBL_BT_BOND_FLAG_SECURE_CONNECTIONS;
-  }
-  if (peer.authenticated) {
-    keys->flags |= PBL_BT_BOND_FLAG_AUTHENTICATED;
+  ble_store_key_from_value_sec(&key.sec, &keys->peer);
+  if (prv_read(BLE_STORE_OBJ_TYPE_OUR_SEC, &key, &our) == 0) {
+    keys->our = our.sec;
   }
 
   return 0;
 }
 
-static void prv_keys_to_value_sec(const struct pbl_bt_bond_keys *keys, bool local,
-                                  struct ble_store_value_sec *value_sec) {
-  const struct pbl_bt_sm_pairing_info *info = &keys->info;
-
-  memset(value_sec, 0, sizeof(*value_sec));
-  value_sec->key_size = KEY_SIZE;
-  value_sec->sc = (keys->flags & PBL_BT_BOND_FLAG_SECURE_CONNECTIONS) != 0U;
-  value_sec->authenticated = (keys->flags & PBL_BT_BOND_FLAG_AUTHENTICATED) != 0U;
-  value_sec->peer_addr = info->identity;
-
-  if (local && info->is_local_encryption_info_valid) {
-    value_sec->ediv = info->local_encryption_info.ediv;
-    value_sec->rand_num = info->local_encryption_info.rand;
-    value_sec->ltk_present = 1;
-    memcpy(value_sec->ltk, info->local_encryption_info.ltk.data, KEY_SIZE);
-  }
-
-  if (!local && info->is_remote_encryption_info_valid) {
-    value_sec->ediv = info->remote_encryption_info.ediv;
-    value_sec->rand_num = info->remote_encryption_info.rand;
-    value_sec->ltk_present = 1;
-    memcpy(value_sec->ltk, info->remote_encryption_info.ltk.data, KEY_SIZE);
-  }
-
-  if (!local && info->is_remote_identity_info_valid) {
-    value_sec->irk_present = 1;
-    memcpy(value_sec->irk, info->irk.data, KEY_SIZE);
-  }
-}
-
 int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys) {
   union ble_store_value value;
 
-  prv_keys_to_value_sec(keys, false, &value.sec);
+  value.sec = keys->peer;
   if (prv_write_if_changed(BLE_STORE_OBJ_TYPE_PEER_SEC, &value) != 0) {
     return -EIO;
   }
 
-  prv_keys_to_value_sec(keys, true, &value.sec);
+  if (!keys->our.ltk_present) {
+    return 0;
+  }
+
+  value.sec = keys->our;
   if (prv_write_if_changed(BLE_STORE_OBJ_TYPE_OUR_SEC, &value) != 0) {
     return -EIO;
   }

@@ -1,8 +1,11 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "prf_layout.h"
+
+#include <string.h>
+
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/bluetooth/prf_store_layout.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
@@ -11,7 +14,15 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 
+#include <host/ble_store.h>
+
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
+
+#define KEY_SIZE 16
+
+static_assert(SPRF_NAME_SIZE == PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+static_assert(SPRF_NUM_ROOT_KEYS == PBL_BT_SM_ROOT_KEY_TYPE_NUM);
+static_assert(sizeof(struct sprf_key) == sizeof(struct pbl_bt_sm_key));
 
 #define SPRF_NUM_PAGES (PART_SHARED_PRF_STORAGE_SIZE / sizeof(SharedPRFData))
 
@@ -360,8 +371,18 @@ void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
 //! BLE Pairing Data APIs
 //!
 
-bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_out, char *name_out,
-                                  uint8_t *flags) {
+static void prv_fill_sec(struct ble_store_value_sec *sec, const SprfBlePairingData *data) {
+  memset(sec, 0, sizeof(*sec));
+  sec->peer_addr.type =
+      (data->identity_flags & SPRF_IDENTITY_FLAG_RANDOM) != 0U ? BLE_ADDR_RANDOM : BLE_ADDR_PUBLIC;
+  memcpy(sec->peer_addr.val, data->identity_addr.octets, sizeof(sec->peer_addr.val));
+  sec->key_size = KEY_SIZE;
+  sec->sc = (data->flags & SPRF_PAIRING_FLAG_SECURE_CONNECTIONS) != 0U;
+  sec->authenticated = (data->flags & SPRF_PAIRING_FLAG_AUTHENTICATED) != 0U;
+}
+
+bool pbl_bt_prf_store_get_pairing(struct ble_store_value_sec *peer, struct ble_store_value_sec *our,
+                                  char *name) {
   bool rv;
   prv_lock();
   {
@@ -377,50 +398,38 @@ bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_ou
       goto unlock;
     }
 
-    if (pairing_info_out) {
-      *pairing_info_out = (struct pbl_bt_sm_pairing_info){
-        .local_encryption_info.ltk = data.l_ltk,
-        .local_encryption_info.ediv = data.l_ediv,
-        .local_encryption_info.rand = data.l_rand,
-
-        .remote_encryption_info.ltk = data.r_ltk,
-        .remote_encryption_info.ediv = data.r_ediv,
-        .remote_encryption_info.rand = data.r_rand,
-
-        .irk = data.irk,
-        .identity.type = (data.identity_flags & SPRF_IDENTITY_FLAG_RANDOM) != 0U ? BLE_ADDR_RANDOM
-                                                                                 : BLE_ADDR_PUBLIC,
-        .csrk = data.csrk,
-
-        .is_mitm_protection_enabled = data.is_mitm_protection_enabled,
-
-        .is_local_encryption_info_valid =
-            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_LocalEncryptionInfoValid),
-        .is_remote_encryption_info_valid =
-            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteEncryptionInfoValid),
-        .is_remote_identity_info_valid =
-            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteIdentityInfoValid),
-        .is_remote_signing_info_valid =
-            SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteSigningInfoValid),
-      };
+    if (peer) {
+      prv_fill_sec(peer, &data);
+      if (SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteEncryptionInfoValid)) {
+        peer->ediv = data.r_ediv;
+        peer->rand_num = data.r_rand;
+        peer->ltk_present = 1;
+        memcpy(peer->ltk, data.r_ltk.data, KEY_SIZE);
+      }
+      if (SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteIdentityInfoValid)) {
+        peer->irk_present = 1;
+        memcpy(peer->irk, data.irk.data, KEY_SIZE);
+      }
     }
 
-    if (pairing_info_out) {
-      memcpy(pairing_info_out->identity.val, data.identity_addr, sizeof(data.identity_addr));
+    if (our) {
+      prv_fill_sec(our, &data);
+      if (SPRF_FLAG_IS_SET(data.fields, SprfValidFields_LocalEncryptionInfoValid)) {
+        our->ediv = data.l_ediv;
+        our->rand_num = data.l_rand;
+        our->ltk_present = 1;
+        memcpy(our->ltk, data.l_ltk.data, KEY_SIZE);
+      }
     }
 
-    if (flags) {
-      *flags = data.flags;
-    }
-
-    if (name_out) {
+    if (name) {
       SprfBlePairingName name_data = {};
       const bool name_rv = SPRF_FETCH_FIELD(name_data, ble_pairing_name);
       // Should we return a failure on a failed name get?
       if (name_rv) {
-        strncpy(name_out, name_data.name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+        strncpy(name, name_data.name, SPRF_NAME_SIZE);
       } else {
-        name_out[0] = '\0';
+        name[0] = '\0';
       }
     }
     rv = true;
@@ -431,48 +440,41 @@ unlock:
   return rv;
 }
 
-void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_info,
-                                  const char *name, uint8_t flags) {
-  if (!pairing_info || !(pairing_info->is_local_encryption_info_valid ||
-                         pairing_info->is_remote_encryption_info_valid ||
-                         pairing_info->is_remote_identity_info_valid ||
-                         pairing_info->is_remote_signing_info_valid)) {
+void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
+                                  const struct ble_store_value_sec *our, const char *name) {
+  const bool has_our_ltk = (our != nullptr) && our->ltk_present;
+
+  if (!peer || !(peer->ltk_present || peer->irk_present || has_our_ltk)) {
     PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
     return;
   }
 
   prv_lock();
   {
-    SprfBlePairingData data = (SprfBlePairingData){
-      .l_ediv = pairing_info->local_encryption_info.ediv,
-      .l_ltk = pairing_info->local_encryption_info.ltk,
-      .l_rand = pairing_info->local_encryption_info.rand,
-
-      .r_ediv = pairing_info->remote_encryption_info.ediv,
-      .r_ltk = pairing_info->remote_encryption_info.ltk,
-      .r_rand = pairing_info->remote_encryption_info.rand,
-
-      .irk = pairing_info->irk,
-      .identity_flags =
-          pairing_info->identity.type == BLE_ADDR_RANDOM ? SPRF_IDENTITY_FLAG_RANDOM : 0U,
-
-      .csrk = pairing_info->csrk,
-
-      .is_mitm_protection_enabled = pairing_info->is_mitm_protection_enabled,
-
-      .flags = flags,
-
-      .fields = SPRF_FLAG_GET_BIT(pairing_info->is_local_encryption_info_valid,
-                                  SprfValidFields_LocalEncryptionInfoValid) |
-                SPRF_FLAG_GET_BIT(pairing_info->is_remote_encryption_info_valid,
-                                  SprfValidFields_RemoteEncryptionInfoValid) |
-                SPRF_FLAG_GET_BIT(pairing_info->is_remote_identity_info_valid,
-                                  SprfValidFields_RemoteIdentityInfoValid) |
-                SPRF_FLAG_GET_BIT(pairing_info->is_remote_signing_info_valid,
-                                  SprfValidFields_RemoteSigningInfoValid),
+    SprfBlePairingData data = {
+      .identity_flags = peer->peer_addr.type == BLE_ADDR_RANDOM ? SPRF_IDENTITY_FLAG_RANDOM : 0U,
+      .flags = (peer->sc ? SPRF_PAIRING_FLAG_SECURE_CONNECTIONS : 0U) |
+               (peer->authenticated ? SPRF_PAIRING_FLAG_AUTHENTICATED : 0U),
+      .fields = SPRF_FLAG_GET_BIT(has_our_ltk, SprfValidFields_LocalEncryptionInfoValid) |
+                SPRF_FLAG_GET_BIT(peer->ltk_present, SprfValidFields_RemoteEncryptionInfoValid) |
+                SPRF_FLAG_GET_BIT(peer->irk_present, SprfValidFields_RemoteIdentityInfoValid),
     };
 
-    memcpy(data.identity_addr, pairing_info->identity.val, sizeof(data.identity_addr));
+    memcpy(data.identity_addr.octets, peer->peer_addr.val, sizeof(data.identity_addr.octets));
+
+    if (has_our_ltk) {
+      data.l_ediv = our->ediv;
+      data.l_rand = our->rand_num;
+      memcpy(data.l_ltk.data, our->ltk, KEY_SIZE);
+    }
+    if (peer->ltk_present) {
+      data.r_ediv = peer->ediv;
+      data.r_rand = peer->rand_num;
+      memcpy(data.r_ltk.data, peer->ltk, KEY_SIZE);
+    }
+    if (peer->irk_present) {
+      memcpy(data.irk.data, peer->irk, KEY_SIZE);
+    }
 
     SPRF_PERSIST_FIELD(data, ble_pairing_data);
 
