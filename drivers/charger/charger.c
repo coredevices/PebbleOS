@@ -137,20 +137,32 @@ int pbl_charger_high_load_release(const struct pbl_charger *charger) {
   return ret;
 }
 
-void pbl_charger_set_listener(const struct pbl_charger *charger,
-                              const struct pbl_charger_listener *listener) {
+void pbl_charger_add_listener(const struct pbl_charger *charger,
+                              struct pbl_charger_listener *listener) {
   prv_lock(charger);
-  charger->state->listener = listener;
+  listener->next = charger->state->listeners;
+  charger->state->listeners = listener;
+  prv_unlock(charger);
+}
+
+void pbl_charger_remove_listener(const struct pbl_charger *charger,
+                                 struct pbl_charger_listener *listener) {
+  struct pbl_charger_listener **it;
+
+  prv_lock(charger);
+  for (it = &charger->state->listeners; *it != nullptr; it = &(*it)->next) {
+    if (*it == listener) {
+      *it = listener->next;
+      break;
+    }
+  }
   prv_unlock(charger);
 }
 
 void pbl_charger_report_online_changed(const struct pbl_charger *charger) {
-  const struct pbl_charger_listener *listener;
-
   prv_lock(charger);
-  listener = charger->state->listener;
-  if (listener != nullptr && listener->online_changed != nullptr) {
-    listener->online_changed(charger);
+  for (struct pbl_charger_listener *l = charger->state->listeners; l != nullptr; l = l->next) {
+    l->online_changed(charger, l);
   }
   prv_unlock(charger);
 }
