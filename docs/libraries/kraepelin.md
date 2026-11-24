@@ -1,11 +1,16 @@
 # Kraepelin
 
-`lib/kraepelin` counts steps and tracks sleep from accelerometer data. It
-depends on nothing but the utility library, and originates from open source
-code provided by the Stanford Wearables Lab. Its API is
-`pbl/kraepelin/kraepelin.h`; see {apidoc}`the API reference <kraepelin>`.
-In the Pebble firmware, the activity service (`pebble/services/activity/`)
-runs it. The plots below are drawn from the step samples the unit tests use.
+Kraepelin counts steps and tracks sleep from accelerometer data. It
+originates from open source code provided by the Stanford Wearables Lab. In
+the Pebble firmware, the activity service (`pebble/services/activity/`) runs
+it. The plots below are drawn from the step samples the unit tests use.
+
+| | |
+| --- | --- |
+| Directory | `lib/kraepelin` |
+| Header | `pbl/kraepelin/kraepelin.h` |
+| Kconfig | `CONFIG_KRAEPELIN`, selected by the code that uses it |
+| API | {apidoc}`API reference <kraepelin>` |
 
 ## Step counting
 
