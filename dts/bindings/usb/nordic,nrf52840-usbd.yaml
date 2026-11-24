@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/usb/nordic,nrf52840-usbd.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF52840 USB device controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Full-speed USB device controller with its PHY, on the dedicated D+ and D-
+  pins, which moves packets through EasyDMA. It runs from the HFXO, and from
+  the USB regulator that VBUS powers, whose events come from the POWER block.
+
+properties:
+  compatible:
+    const: nordic,nrf52840-usbd
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  nordic,power:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: POWER block, which reports VBUS and the USB regulator.
+
+  dr_mode:
+    enum: [peripheral]
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - nordic,power
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/clock/nordic,nrf52832-clock.h>
+    usb@40027000 {
+        compatible = "nordic,nrf52840-usbd";
+        reg = <0x40027000 0x1000>;
+        interrupts = <39>;
+        clocks = <&clock NRF52_CLOCK_HFCLK>;
+        nordic,power = <&clock>;
+    };

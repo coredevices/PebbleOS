@@ -308,6 +308,15 @@
 			status = "disabled";
 		};
 
+		usbd: usb@40027000 {
+			compatible = "nordic,nrf52840-usbd";
+			reg = <0x40027000 0x1000>;
+			interrupts = <39>;
+			clocks = <&clock NRF52_CLOCK_HFCLK>;
+			nordic,power = <&clock>;
+			status = "disabled";
+		};
+
 		qspi: spi@40029000 {
 			compatible = "nordic,nrf52840-qspi";
 			reg = <0x40029000 0x1000>, <0x12000000 0x8000000>;
