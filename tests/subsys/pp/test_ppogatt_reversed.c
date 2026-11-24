@@ -74,14 +74,12 @@ int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr
 }
 
 int pbl_bt_gattc_service_read(struct pbl_bt_gattc_service *svc, uint8_t chr) {
-  return (gatt_client_op_read(s_characteristics[chr]) == PBL_BT_ERRNO_OK) ? 0 : -EIO;
+  return gatt_client_op_read(s_characteristics[chr]);
 }
 
 int pbl_bt_gattc_service_write_no_rsp(struct pbl_bt_gattc_service *svc, uint8_t chr,
                                       const void *data, uint16_t len) {
-  const enum pbl_bt_errno e =
-      gatt_client_op_write_without_response(s_characteristics[chr], data, len);
-  return (e == PBL_BT_ERRNO_OK) ? 0 : -EIO;
+  return gatt_client_op_write_without_response(s_characteristics[chr], data, len);
 }
 
 bool pbl_bt_gattc_service_notify_rx(struct pbl_bt_gattc_service *svc, uint16_t conn_handle,
@@ -89,9 +87,8 @@ bool pbl_bt_gattc_service_notify_rx(struct pbl_bt_gattc_service *svc, uint16_t c
   return false;
 }
 
-enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
-                                              uint16_t len) {
-  return PBL_BT_ERRNO_OK;
+int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+  return 0;
 }
 
 void pbl_pp_main_call(void (*callback)(void *data), void *data) {

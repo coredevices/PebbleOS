@@ -1661,36 +1661,26 @@ static void prv_finalize_queued_packet(PPoGATTClient *client, uint16_t payload_s
 // -------------------------------------------------------------------------------------------------
 
 //! Hands a packet to NimBLE, releasing the lock for the call.
-static enum pbl_bt_errno prv_write_packet(PPoGATTClient *client, const PPoGATTPacket *packet,
-                                          uint16_t length) {
+static int prv_write_packet(PPoGATTClient *client, const PPoGATTPacket *packet, uint16_t length) {
   pbl_mutex_assert_held(&s_lock, true);
 
-  enum pbl_bt_errno e;
+  int ret;
 #ifdef CONFIG_BT_SERVICE_PPOG_REVERSED
   if (client->role == PPoGATTRoleReversed) {
     prv_unlock();
-    e = pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
+    ret = pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
   } else
 #endif
   {
     struct pbl_bt_gattc_service *svc = &s_forward_services[client->fwd.instance];
     // If the connection goes away meanwhile, NimBLE fails the conn_handle lookup.
     prv_unlock();
-    const int rc =
-        pbl_bt_gattc_service_write_no_rsp(svc, PBL_PP_GATT_CHARACTERISTIC_DATA, packet, length);
-    if (rc == 0) {
-      e = PBL_BT_ERRNO_OK;
-    } else if (rc == -ENOMEM) {
-      // Usually nothing was sent. Rarely, the first ACL fragments of a PDU that
-      // spans several went out; the peer discards that PDU at the next start
-      // fragment.
-      e = PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
-    } else {
-      e = PBL_BT_ERRNO_INVALID_PARAMETER;
-    }
+    // On -ENOMEM usually nothing was sent. Rarely, the first ACL fragments of a PDU that spans
+    // several went out; the peer discards that PDU at the next start fragment.
+    ret = pbl_bt_gattc_service_write_no_rsp(svc, PBL_PP_GATT_CHARACTERISTIC_DATA, packet, length);
   }
   prv_lock();
-  return e;
+  return ret;
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -1715,14 +1705,13 @@ static void prv_send_next_packets(PPoGATTClient *client) {
   while ((packet = prv_prepare_next_packet(client, &heap_packet, &payload_size))) {
     ++loop_count;
 
-    const enum pbl_bt_errno e =
-        prv_write_packet(client, packet, sizeof(PPoGATTPacket) + payload_size);
-    if (e == PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES) {
+    const int ret = prv_write_packet(client, packet, sizeof(PPoGATTPacket) + payload_size);
+    if (ret == -ENOMEM) {
       prv_retry_send_later(client);
       break;
-    } else if (e != PBL_BT_ERRNO_OK) {
+    } else if (ret != 0) {
       // Most likely the LE connection got busted, don't think retrying will help.
-      PBL_LOG_ERR("Write failed %i", e);
+      PBL_LOG_ERR("Write failed %i", ret);
       break;
     }
     if (client->send_retry_count) {

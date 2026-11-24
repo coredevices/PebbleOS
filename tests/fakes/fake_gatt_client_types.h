@@ -22,13 +22,13 @@ typedef enum {
   BLESubscriptionAny = BLESubscriptionNotifications | BLESubscriptionIndications,
 } BLESubscription;
 
-enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic);
+int gatt_client_op_read(pbl_bt_characteristic_t characteristic);
 
-enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                       size_t value_length);
+int gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                         size_t value_length);
 
-enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
-                                                        const uint8_t *value, size_t value_length);
+int gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
+                                          const uint8_t *value, size_t value_length);
 
-enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
-                                                      BLESubscription subscription_type);
+int gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
+                                        BLESubscription subscription_type);
