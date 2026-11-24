@@ -649,7 +649,7 @@ static PBL_NOINLINE void prv_launcher_main_loop_init(void) {
 #ifdef CONFIG_QEMU_SERIAL
   qemu_serial_notify_ready();
 #endif
-#ifdef CONFIG_CONSOLE
+#ifdef CONFIG_CONSOLE_INPUT
   pbl_console_enable_prompt();
 #endif
 }

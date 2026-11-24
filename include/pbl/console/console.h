@@ -17,9 +17,6 @@
 //! output of pbl_print(). Called by the kernel.
 void pbl_console_early_init(void);
 
-//! Start taking input, once the system can handle commands.
-void pbl_console_enable_prompt(void);
-
 //! Hold other users of the port back, recursively. Does nothing in interrupt context, or with
 //! interrupts or the scheduler locked.
 void pbl_console_lock(void);
@@ -44,7 +41,13 @@ void pbl_console_log_begin(void);
 //! End a log line, bringing the shell's input line back.
 void pbl_console_log_end(void);
 
+#ifdef CONFIG_CONSOLE_INPUT
+//! Start taking input, once the system can handle commands.
+void pbl_console_enable_prompt(void);
+
+//! Take input or not, e.g. while the port is used for something else.
 void pbl_console_set_rx_enabled(bool enabled);
+#endif
 
 /**
  * @brief Largest frame payload, in bytes.
