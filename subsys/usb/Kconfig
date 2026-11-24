@@ -38,4 +38,20 @@ config USB_CDC_ACM
     help
       A serial port over USB, CDC ACM, as a UART (pbl/usb/cdc_acm.h).
 
+config USB_DFU
+    bool "Firmware upgrade"
+    depends on FLASH
+    help
+      Device Firmware Upgrade 1.1, in DFU mode (pbl/usb/dfu.h): the host
+      downloads an image to a flash partition and uploads it back.
+
+config USB_DFU_TRANSFER_SIZE
+    int "Transfer size"
+    depends on USB_DFU
+    default 2048
+    range 64 4096
+    help
+      Largest block of a download or an upload, in bytes. The function
+      keeps three blocks: the one it writes and two to upload from.
+
 endif # USB_DEVICE
