@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/drivers/sensor.h>
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/vibe_pattern.h>
@@ -76,10 +77,12 @@ int pbl_vibe_stop(const struct pbl_vibe *vibe) {
   return 0;
 }
 
-const struct pbl_accel *const ACCEL = nullptr;
+const struct pbl_sensor *const ACCEL = nullptr;
 
-uint32_t pbl_accel_get_max_num_samples(const struct pbl_accel *accel) {
-  return 32;
+int pbl_sensor_attr_get(const struct pbl_sensor *sensor, enum pbl_sensor_type type,
+                        enum pbl_sensor_attr attr, int32_t *val) {
+  *val = 32;
+  return 0;
 }
 
 // helpers

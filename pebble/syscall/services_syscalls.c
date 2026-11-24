@@ -8,7 +8,7 @@
 #include <pbl/services/notifications/notification_storage.h>
 
 #ifdef CONFIG_PRESSURE
-#include <pbl/drivers/pressure.h>
+#include <pbl/drivers/sensor.h>
 #endif
 
 PBL_SYSCALL(bool, sys_alarm_get_next_enabled, (OUT, time_t *, timestamp_out)) {
@@ -33,7 +33,17 @@ PBL_SYSCALL(uint16_t, sys_notification_service_get_count) {
 
 PBL_SYSCALL(int, sys_pressure_read, (OUT, uint32_t *, pa)) {
 #ifdef CONFIG_PRESSURE
-  return pbl_pressure_read(PRESSURE, pa);
+  int32_t mpa;
+  int ret;
+
+  ret = pbl_sensor_read(PRESSURE, PBL_SENSOR_PRESSURE, &mpa, nullptr);
+  if (ret != 0) {
+    return ret;
+  }
+
+  *pa = (uint32_t)(mpa / 1000);
+
+  return 0;
 #else
   return -ENODEV;
 #endif

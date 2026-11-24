@@ -30,6 +30,10 @@ PBL_WEAK uint64_t pbl_uptime_ms(void) {
   return 0;
 }
 
+PBL_WEAK uint64_t pbl_uptime_us(void) {
+  return 0;
+}
+
 // Timezone storage
 ///////////////////////////////////////////////////////////////////////////////
 

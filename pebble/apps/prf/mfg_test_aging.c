@@ -8,11 +8,10 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <pbl/drivers/accel.h>
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/backlight.h>
 #include <pbl/drivers/charger.h>
-#include <pbl/drivers/mag.h>
+#include <pbl/drivers/sensor.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/idle_watchdog.h>
@@ -142,7 +141,7 @@ static void prv_format_time(char *buffer, size_t size, uint32_t seconds) {
 static void prv_cleanup_component(AppData *data) {
 #ifdef CONFIG_MAG
   if (data->component == ComponentMag) {
-    (void)pbl_mag_set_sampling_interval(MAG, 0U, nullptr);
+    (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){0});
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -173,7 +172,7 @@ static void prv_drain_light_enable(AppData *data, bool enable) {
 static void prv_start_component(AppData *data) {
 #ifdef CONFIG_MAG
   if (data->component == ComponentMag) {
-    (void)pbl_mag_set_sampling_interval(MAG, 200000U, nullptr);
+    (void)pbl_sensor_attr_set(MAG, PBL_SENSOR_MAGN, PBL_SENSOR_ATTR_INTERVAL, &(int32_t){200000});
   }
 #endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
@@ -253,20 +252,20 @@ static void prv_run_component_display(AppData *data) {
   char comp_detail[48] = "";
   switch (data->component) {
     case ComponentAccel: {
-      struct pbl_accel_sample sample;
-      pbl_accel_peek(ACCEL, &sample);
+      int32_t ug[3] = {0};
+      (void)pbl_sensor_read(ACCEL, PBL_SENSOR_ACCEL, ug, nullptr);
       comp_name = "Accel";
-      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16, sample.x,
-               sample.y, sample.z);
+      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi32 " Y:%" PRIi32 " Z:%" PRIi32,
+               ug[0] / 1000, ug[1] / 1000, ug[2] / 1000);
       break;
     }
 #ifdef CONFIG_MAG
     case ComponentMag: {
-      MagData mag_sample = {};
-      (void)pbl_mag_peek(MAG, &mag_sample);
+      int32_t nt[3] = {0};
+      (void)pbl_sensor_read(MAG, PBL_SENSOR_MAGN, nt, nullptr);
       comp_name = "Mag";
-      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi16 " Y:%" PRIi16 " Z:%" PRIi16,
-               mag_sample.x, mag_sample.y, mag_sample.z);
+      snprintf(comp_detail, sizeof(comp_detail), "X:%" PRIi32 " Y:%" PRIi32 " Z:%" PRIi32,
+               nt[0] / 100, nt[1] / 100, nt[2] / 100);
       break;
     }
 #endif
