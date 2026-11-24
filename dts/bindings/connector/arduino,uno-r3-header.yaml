@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/connector/arduino,uno-r3-header.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Arduino Uno R3 header
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  The Arduino Uno R3 header of a development kit, which shields plug into:
+  analog pins A0 to A5 and digital pins D0 to D15, as numbered in
+  dt-bindings/connector/arduino,uno-r3-header.h, an I2C bus on D14 (SDA) and
+  D15 (SCL), a SPI bus on D10 (CS) to D13 (SCK), and a UART on D0 (RX) and
+  D1 (TX).
+
+  The node maps the pins to those of the board, so that a shield refers to
+  the header alone; its interrupt-map, when the board gives one, has an entry
+  for each trigger a pin takes. The board labels the I2C controller
+  arduino_i2c, the SPI controller arduino_spi and the UART arduino_serial,
+  with their pins set and left disabled for shields to enable.
+
+allOf:
+  - $ref: /schemas/gpio/gpio-nexus-node.yaml#
+
+properties:
+  compatible:
+    const: arduino,uno-r3-header
+
+  '#address-cells':
+    const: 0
+
+  '#interrupt-cells':
+    const: 2
+
+  interrupt-map: true
+
+  io-channels:
+    maxItems: 6
+    description: ADC channels of A0 to A5, in that order.
+
+  io-channel-names:
+    items:
+      - const: a0
+      - const: a1
+      - const: a2
+      - const: a3
+      - const: a4
+      - const: a5
+
+required:
+  - compatible
+  - '#gpio-cells'
+  - gpio-map
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/connector/arduino,uno-r3-header.h>
+    connector {
+        compatible = "arduino,uno-r3-header";
+        #gpio-cells = <2>;
+        gpio-map-mask = <0xffffffff 0x0>;
+        gpio-map-pass-thru = <0x0 0xffffffff>;
+        gpio-map = <ARDUINO_UNO_R3_A0 0 &gpio0 3 0>,
+                   <ARDUINO_UNO_R3_D0 0 &gpio1 1 0>;
+    };
