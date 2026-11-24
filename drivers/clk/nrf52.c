@@ -17,8 +17,9 @@
 #define LFCLKSTAT_MASK         (CLOCK_LFCLKSTAT_SRC_MASK | CLOCK_LFCLKSTAT_STATE)
 #define LFCLKSTAT_XTAL_RUNNING (CLOCK_LFCLKSTAT_SRC_XTAL | CLOCK_LFCLKSTAT_STATE)
 
-// What runs on HFXO, as the radio or audio, is served within this long of its interrupts
-#define HFXO_WAKE_LATENCY_US 1000U
+// What runs on HFXO is served within this long of its interrupts. The radio replies 150 us after
+// a reception, most of which its handler needs, so nothing is left for an idle hook to undo.
+#define HFXO_WAKE_LATENCY_US 10U
 
 static struct pbl_idle_latency_request s_hfxo_latency;
 
