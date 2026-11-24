@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/sifli_lcm_1p85.webp
-:alt: SiFli 1.85" AMOLED module, front and back
+```{thumbnail} images/sifli_lcm_1p85.webp
 ```
 
 :Add-on: `sifli_lcm_1p85`
