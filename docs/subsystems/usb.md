@@ -343,6 +343,11 @@ Its vendor requests, to its interface:
 A controller driver implements `struct pbl_udc_ops` and reports bus events,
 setup packets among them, and the end of transfers from its interrupt.
 
+Drivers may move transfers by DMA, so the buffers given to
+`pbl_udc_ep_queue()` are aligned to `PBL_UDC_BUF_ALIGN`, a data cache line,
+in memory the controller reaches. OUT ones, but for endpoint 0, take whole
+packets and share no cache line with other data.
+
 | Driver | Controllers |
 | --- | --- |
 | `drivers/udc/musb.c` | Mentor Graphics MUSB, as the full-speed USB controller of the SF32LB57, with its internal PHY; each endpoint number serves one direction at a time (`PBL_UDC_CAP_EP_ONE_DIR`), with a FIFO its packet size rounded up to a power of two, given out as endpoints are enabled from the FIFO RAM the devicetree gives (`sifli,fifo-size`); a bulk OUT endpoint gets room for two packets while 128 bytes are left for the endpoints after it, so the host can send the next packet while the CPU reads one |

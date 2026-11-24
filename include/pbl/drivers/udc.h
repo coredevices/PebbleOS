@@ -8,6 +8,8 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/kernel/cache.h>
+#include <pbl/util/math.h>
 
 /**
  * @defgroup drivers_udc USB device controller
@@ -24,6 +26,10 @@
  * events, setup packets among them, with pbl_udc_event(), both from its interrupt: the stack's
  * callbacks run there.
  *
+ * Controllers may move transfers by DMA. Buffers are then in memory the controller reaches and
+ * aligned to @ref PBL_UDC_BUF_ALIGN; OUT ones, but for endpoint 0, take whole packets and share no
+ * data cache line with other data.
+ *
  * The driver takes the address as soon as the stack sets it, before the status stage of the
  * SET_ADDRESS request, as controllers that apply it in hardware need.
  * @{
@@ -37,6 +43,9 @@
  * or OUT, not both.
  */
 #define PBL_UDC_CAP_EP_ONE_DIR 0x01U
+
+/** Alignment of transfer buffers: a data cache line, a word at least. */
+#define PBL_UDC_BUF_ALIGN PBL_MAX(PBL_DCACHE_LINE_SIZE, 4U)
 
 /** @brief Endpoint transfer types, as the endpoint descriptor gives them. */
 enum pbl_udc_ep_type {
@@ -244,9 +253,11 @@ int pbl_udc_ep_set_halt(const struct pbl_udc *udc, uint8_t ep, bool halt);
  *
  * @param udc Controller.
  * @param ep Endpoint address.
- * @param buf Data to send, or room for what arrives, until the transfer ends.
+ * @param buf Data to send, or room for what arrives, until the transfer ends, aligned to
+ *            @ref PBL_UDC_BUF_ALIGN.
  * @param len Its length, in bytes.
- * @return 0, @c -EBUSY if a transfer is under way on the endpoint, or another negative errno.
+ * @return 0, @c -EBUSY if a transfer is under way on the endpoint, @c -EINVAL if the buffer does
+ *         not suit the controller's DMA, or another negative errno.
  */
 int pbl_udc_ep_queue(const struct pbl_udc *udc, uint8_t ep, void *buf, size_t len);
 
