@@ -9,3 +9,10 @@ args:
   - parent: i2c
   - reg: 0
   - gpio: enable
+  - prop: mode
+    default: 0
+  - prop: vib-rated-mv
+    default: 1384
+  - prop: vib-overdrive-mv
+    default: 3009
+  - flag: ti,lra-open-loop
