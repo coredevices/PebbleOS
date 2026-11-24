@@ -33,6 +33,10 @@
  * interface descriptors and the iFunction field of its interface association descriptor: index n
  * is @ref pbl_usbd_function.strings[n - 1]. The stack gives them indices of the device when it
  * sends the configuration descriptor. Strings in class-specific descriptors are not mapped.
+ *
+ * With @c CONFIG_USB_DEVICE_MS_OS_20 or @c CONFIG_USB_DEVICE_WEBUSB, the device is USB 2.1 and
+ * has a BOS descriptor, with their platform capabilities, and the stack answers their vendor
+ * requests to the device.
  * @{
  */
 
@@ -75,6 +79,12 @@ struct pbl_usbd_function {
   /** Optional. A transfer on an endpoint of the function ended: bytes moved, or a negative errno.
    */
   void (*xfer_done)(uint8_t ep, int ret);
+  /**
+   * Optional, with @c CONFIG_USB_DEVICE_MS_OS_20. Device interface GUID of the function, as
+   * "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}": Windows binds the function to WinUSB, and
+   * applications find it by this GUID.
+   */
+  const char *winusb_guid;
 };
 
 /**

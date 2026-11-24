@@ -70,7 +70,15 @@ struct PBL_PACKED pbl_usb_setup {
 #define PBL_USB_DESC_ENDPOINT         0x05U
 #define PBL_USB_DESC_DEVICE_QUALIFIER 0x06U
 #define PBL_USB_DESC_IAD              0x0bU
+#define PBL_USB_DESC_BOS              0x0fU
+#define PBL_USB_DESC_DEVICE_CAP       0x10U
 #define PBL_USB_DESC_CS_INTERFACE     0x24U
+/** @} */
+
+/** @name Device capability types, in the BOS descriptor */
+/** @{ */
+#define PBL_USB_CAP_USB20_EXT 0x02U
+#define PBL_USB_CAP_PLATFORM  0x05U
 /** @} */
 
 /** @brief The first two fields of every descriptor. */
@@ -213,6 +221,44 @@ struct PBL_PACKED pbl_usb_desc_ep {
   uint8_t bInterval;
 };
 
+/** @brief BOS descriptor, which device capability descriptors follow. */
+struct PBL_PACKED pbl_usb_desc_bos {
+  /** Length, 5. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_BOS. */
+  uint8_t bDescriptorType;
+  /** Length of the BOS and the capabilities that follow it. */
+  uint16_t wTotalLength;
+  /** Number of capabilities. */
+  uint8_t bNumDeviceCaps;
+};
+
+/** @brief USB 2.0 extension capability. */
+struct PBL_PACKED pbl_usb_desc_usb20_ext {
+  /** Length, 7. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_DEVICE_CAP. */
+  uint8_t bDescriptorType;
+  /** @ref PBL_USB_CAP_USB20_EXT. */
+  uint8_t bDevCapabilityType;
+  /** Attributes, as link power management support. */
+  uint32_t bmAttributes;
+};
+
+/** @brief Platform capability, which data of the platform follows. */
+struct PBL_PACKED pbl_usb_desc_platform {
+  /** Length, with the data of the platform. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_DEVICE_CAP. */
+  uint8_t bDescriptorType;
+  /** @ref PBL_USB_CAP_PLATFORM. */
+  uint8_t bDevCapabilityType;
+  /** Reserved, 0. */
+  uint8_t bReserved;
+  /** UUID of the platform, as the bytes of its little-endian form. */
+  uint8_t PlatformCapabilityUUID[16];
+};
+
 /** @cond INTERNAL_HIDDEN */
 static_assert(sizeof(struct pbl_usb_setup) == 8U);
 static_assert(sizeof(struct pbl_usb_desc_header) == 2U);
@@ -222,6 +268,9 @@ static_assert(sizeof(struct pbl_usb_desc_config) == 9U);
 static_assert(sizeof(struct pbl_usb_desc_iad) == 8U);
 static_assert(sizeof(struct pbl_usb_desc_iface) == 9U);
 static_assert(sizeof(struct pbl_usb_desc_ep) == 7U);
+static_assert(sizeof(struct pbl_usb_desc_bos) == 5U);
+static_assert(sizeof(struct pbl_usb_desc_usb20_ext) == 7U);
+static_assert(sizeof(struct pbl_usb_desc_platform) == 20U);
 /** @endcond */
 
 /** @} */

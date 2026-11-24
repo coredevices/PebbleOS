@@ -32,6 +32,33 @@ config USB_DEVICE_PRODUCT
     string "Product"
     default "PebbleOS device"
 
+config USB_DEVICE_BOS
+    bool
+    help
+      The device is USB 2.1, with a BOS descriptor.
+
+config USB_DEVICE_MS_OS_20
+    bool "Microsoft OS 2.0 descriptors"
+    select USB_DEVICE_BOS
+    help
+      Microsoft OS 2.0 descriptors, for Windows to bind the functions that
+      give a WinUSB device interface GUID to WinUSB, without a driver
+      package.
+
+config USB_DEVICE_WEBUSB
+    bool "WebUSB"
+    select USB_DEVICE_BOS
+    help
+      The WebUSB platform capability, for browsers to let web pages reach
+      the device.
+
+config USB_DEVICE_WEBUSB_LANDING_PAGE
+    string "WebUSB landing page"
+    depends on USB_DEVICE_WEBUSB
+    help
+      URL, with its http:// or https:// scheme, of the page browsers may
+      offer to open when the device connects. Empty for none.
+
 config USB_CDC_ACM
     bool "Serial port"
     select UART

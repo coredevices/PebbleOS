@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "usbd_private.h"
+
 #include <errno.h>
 #include <stdatomic.h>
 #include <string.h>
@@ -14,7 +16,11 @@
 #define EP0_MPS     64U
 #define EP0_BUF_LEN 512U
 
+#ifdef CONFIG_USB_DEVICE_BOS
+#define BCD_USB 0x0210U
+#else
 #define BCD_USB 0x0200U
+#endif
 
 #define USB_CFG_VALUE 1U
 
@@ -258,6 +264,17 @@ static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
     case PBL_USB_DESC_STRING:
       *len = prv_string_desc(s_ctrl.buf, sizeof(s_ctrl.buf), index);
       break;
+#ifdef CONFIG_USB_DEVICE_BOS
+    case PBL_USB_DESC_BOS: {
+      int ret = pbl_usbd__bos_desc(s_ctrl.buf, sizeof(s_ctrl.buf));
+
+      if (ret < 0) {
+        return ret;
+      }
+      *len = (uint16_t)ret;
+      break;
+    }
+#endif
     default:
       return -ENOTSUP;
   }
@@ -469,6 +486,22 @@ static int prv_function_request(const struct pbl_usbd_function **fn, uint8_t **d
   return (*fn)->class_request(setup, data, len);
 }
 
+static int prv_device_vendor(uint8_t **data, uint16_t *len) {
+#ifdef CONFIG_USB_DEVICE_BOS
+  int ret = pbl_usbd__bos_vendor(&s_ctrl.setup, s_ctrl.buf, sizeof(s_ctrl.buf));
+
+  if (ret < 0) {
+    return ret;
+  }
+  *data = s_ctrl.buf;
+  *len = (uint16_t)ret;
+
+  return 0;
+#else
+  return -ENOTSUP;
+#endif
+}
+
 static void prv_stall(void) {
   (void)pbl_udc_ep_set_halt(UDC, PBL_UDC_EP_IN, true);
   (void)pbl_udc_ep_set_halt(UDC, 0U, true);
@@ -500,11 +533,12 @@ static void prv_setup(const uint8_t *packet) {
       ret = prv_function_request(&fn, &data, &len);
       break;
     case PBL_USB_TYPE_VENDOR:
-      // To the device, a request of the device's own, of which there is none; to an interface, its
-      // function's
-      ret = ((setup->bmRequestType & PBL_USB_RECIP_MASK) == PBL_USB_RECIP_DEVICE)
-                ? -ENOTSUP
-                : prv_function_request(&fn, &data, &len);
+      // To the device, a request of the device's own; to an interface, its function's
+      if ((setup->bmRequestType & PBL_USB_RECIP_MASK) != PBL_USB_RECIP_DEVICE) {
+        ret = prv_function_request(&fn, &data, &len);
+        break;
+      }
+      ret = prv_device_vendor(&data, &len);
       break;
     default:
       ret = -ENOTSUP;

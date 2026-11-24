@@ -127,6 +127,41 @@ PBL_USBD_FUNCTION_DEFINE(loopback) = {
 
 {doc}`../samples/subsys/usb/loopback` is a complete function.
 
+## BOS, WinUSB and WebUSB
+
+`CONFIG_USB_DEVICE_MS_OS_20` and `CONFIG_USB_DEVICE_WEBUSB` make the device
+USB 2.1 (`bcdUSB` 0x0210), with a BOS descriptor: a USB 2.0 extension without
+link power management, and the platform capability of each. The stack answers
+their vendor requests to the device itself.
+
+A function that gives a device interface GUID in `winusb_guid` is bound to
+WinUSB on Windows hosts, without a driver package, and applications find it by
+that GUID:
+
+```c
+PBL_USBD_FUNCTION_DEFINE(vendor) = {
+  ...
+  .winusb_guid = "{DE07B10A-24B5-440C-A638-F3855BEB7979}",
+};
+```
+
+With `CONFIG_USB_DEVICE_MS_OS_20`, the stack builds the Microsoft OS 2.0
+descriptor set from those functions: the WINUSB compatible ID and a
+`DeviceInterfaceGUIDs` registry property for each. When the device has more
+than one interface, each of those functions goes in a function subset, from its
+first interface, within a subset of the configuration. The set is sent for
+vendor code 0x01, and the BOS platform capability leaves it out when no
+function gives a GUID.
+
+`CONFIG_USB_DEVICE_WEBUSB` adds the WebUSB platform capability, vendor code
+0x02. `CONFIG_USB_DEVICE_WEBUSB_LANDING_PAGE` is the URL browsers may offer to
+open when the device connects, sent for `GET_URL`; empty, the device has none.
+Browsers reach interfaces that no driver of the host has claimed, as a vendor
+interface bound to WinUSB.
+
+`samples/subsys/usb/webusb` is a vendor interface that echoes what the host
+sends, with both.
+
 ## Serial port
 
 `CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:
