@@ -212,6 +212,9 @@ extern const struct pbl_flash_nor_part pbl_flash_nor_gd25q256e;
 /** @brief Micron MT25QL512A. */
 extern const struct pbl_flash_nor_part pbl_flash_nor_mt25ql512a;
 
+/** @brief Macronix MX25R6435F. */
+extern const struct pbl_flash_nor_part pbl_flash_nor_mx25r6435f;
+
 /** @brief Puya PY25Q128HA. */
 extern const struct pbl_flash_nor_part pbl_flash_nor_py25q128ha;
 
