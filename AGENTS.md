@@ -34,7 +34,9 @@ CLI, one page per command, and `extending.md` for how to extend it),
 
 ## Code style
 
-- clang-format for C code
+- clang-format for C code: run clang-format 22 (the version CI uses, see
+  `.github/workflows/compliance.yml`) on every changed `.c`/`.h` before
+  committing. Other versions format some lines differently.
 - ruff for Python code
 - Keep code comments short and concise. Extended descriptions can be kept in
   the Git commit message.
