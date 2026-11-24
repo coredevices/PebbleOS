@@ -2511,6 +2511,11 @@
     },
     {
       "type": "pdc",
+      "name": "AIRPLANE_LANDING",
+      "file": "normal/base/images/Pebble_80x80_Airplane_landing.svg"
+    },
+    {
+      "type": "pdc",
       "name": "TOUCH",
       "file": "normal/base/images/Pebble_80x80_Touch.svg"
     },
