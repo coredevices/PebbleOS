@@ -1,0 +1,5 @@
+description: Pebble protocol sessions over USB, and over the console, with ping, version, app log and benchmark endpoints
+expect:
+  - 'pp_usb: USB device up'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk]
