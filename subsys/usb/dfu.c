@@ -427,10 +427,24 @@ static void prv_configured(bool on) {
   }
 }
 
+// A reset or a disconnection ends the transfer under way: the host starts over. A block being
+// written still completes, before the next download may start.
+static void prv_event(enum pbl_usbd_event evt) {
+  if (evt != PBL_USBD_EVENT_RESET && evt != PBL_USBD_EVENT_DISCONNECTED) {
+    return;
+  }
+
+  s_dfu.rd_seq++;
+  s_dfu.rd_pending = false;
+  s_dfu.state = STATE_DFU_IDLE;
+  s_dfu.status = STATUS_OK;
+}
+
 PBL_USBD_FUNCTION_DEFINE(dfu) = {
   .desc = &s_desc,
   .desc_len = sizeof(s_desc),
   .configured = prv_configured,
   .class_request = prv_class_request,
   .control_out = prv_control_out,
+  .event = prv_event,
 };
