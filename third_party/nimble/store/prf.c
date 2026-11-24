@@ -388,7 +388,8 @@ bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_ou
         .remote_encryption_info.rand = data.r_rand,
 
         .irk = data.irk,
-        .identity = data.identity,
+        .identity.type = (data.identity_flags & SPRF_IDENTITY_FLAG_RANDOM) != 0U ? BLE_ADDR_RANDOM
+                                                                                 : BLE_ADDR_PUBLIC,
         .csrk = data.csrk,
 
         .is_mitm_protection_enabled = data.is_mitm_protection_enabled,
@@ -402,6 +403,10 @@ bool pbl_bt_prf_store_get_pairing(struct pbl_bt_sm_pairing_info *pairing_info_ou
         .is_remote_signing_info_valid =
             SPRF_FLAG_IS_SET(data.fields, SprfValidFields_RemoteSigningInfoValid),
       };
+    }
+
+    if (pairing_info_out) {
+      memcpy(pairing_info_out->identity.val, data.identity_addr, sizeof(data.identity_addr));
     }
 
     if (flags) {
@@ -448,7 +453,8 @@ void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_i
       .r_rand = pairing_info->remote_encryption_info.rand,
 
       .irk = pairing_info->irk,
-      .identity = pairing_info->identity,
+      .identity_flags =
+          pairing_info->identity.type == BLE_ADDR_RANDOM ? SPRF_IDENTITY_FLAG_RANDOM : 0U,
 
       .csrk = pairing_info->csrk,
 
@@ -465,6 +471,8 @@ void pbl_bt_prf_store_set_pairing(const struct pbl_bt_sm_pairing_info *pairing_i
                 SPRF_FLAG_GET_BIT(pairing_info->is_remote_signing_info_valid,
                                   SprfValidFields_RemoteSigningInfoValid),
     };
+
+    memcpy(data.identity_addr, pairing_info->identity.val, sizeof(data.identity_addr));
 
     SPRF_PERSIST_FIELD(data, ble_pairing_data);
 

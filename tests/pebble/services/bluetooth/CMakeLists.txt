@@ -6,6 +6,11 @@ pbl_clar_test(test_bonding
     pebble/services/bluetooth/bonding.c
     third_party/nimble/store/prf.c
     tests/fakes/fake_spi_flash.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
   PLATFORMS emery
 )
 
@@ -22,5 +27,10 @@ pbl_clar_test(test_prf_store
   SOURCES
     third_party/nimble/store/prf.c
     tests/fakes/fake_spi_flash.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
   PLATFORMS emery
 )

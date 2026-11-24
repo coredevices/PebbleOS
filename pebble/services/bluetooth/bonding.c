@@ -19,12 +19,6 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 #define MAX_BONDS 4U
 
-static bool prv_addr_equal(const struct pbl_bt_device_internal *a,
-                           const struct pbl_bt_device_internal *b) {
-  return a->is_random_address == b->is_random_address &&
-         memcmp(&a->address, &b->address, sizeof(a->address)) == 0;
-}
-
 static bool prv_get_prf_pairing(struct pbl_bt_bond_keys *keys, char *name) {
   memset(keys, 0, sizeof(*keys));
 
@@ -64,7 +58,7 @@ static bool prv_keys_equal(const struct pbl_bt_bond_keys *a, const struct pbl_bt
   const struct pbl_bt_sm_pairing_info *ia = &a->info;
   const struct pbl_bt_sm_pairing_info *ib = &b->info;
 
-  if (a->flags != b->flags || !prv_addr_equal(&ia->identity, &ib->identity) ||
+  if (a->flags != b->flags || ble_addr_cmp(&ia->identity, &ib->identity) != 0 ||
       ia->is_remote_identity_info_valid != ib->is_remote_identity_info_valid) {
     return false;
   }
@@ -76,7 +70,7 @@ static bool prv_keys_equal(const struct pbl_bt_bond_keys *a, const struct pbl_bt
   return prv_encryption_equal(a, b);
 }
 
-static void prv_copy_to_prf_store(const struct pbl_bt_device_internal *addr) {
+static void prv_copy_to_prf_store(const ble_addr_t *addr) {
   struct pbl_bt_bond_keys keys;
   struct pbl_bt_bond_keys stored;
 
@@ -90,7 +84,7 @@ static void prv_copy_to_prf_store(const struct pbl_bt_device_internal *addr) {
     }
 
     // The name there is another peer's.
-    if (!prv_addr_equal(&keys.info.identity, &stored.info.identity)) {
+    if (ble_addr_cmp(&keys.info.identity, &stored.info.identity) != 0) {
       pbl_bt_prf_store_erase_pairing();
     }
   }
@@ -99,20 +93,21 @@ static void prv_copy_to_prf_store(const struct pbl_bt_device_internal *addr) {
 }
 
 struct others {
-  const struct pbl_bt_device_internal *keep;
-  struct pbl_bt_device_internal addrs[MAX_BONDS];
+  const ble_addr_t *keep;
+  ble_addr_t addrs[MAX_BONDS];
   size_t count;
 };
 
 static void prv_collect_others_cb(const struct pbl_bt_bond_info *info, void *user_data) {
   struct others *others = user_data;
 
-  if (others->count < PBL_ARRAY_SIZE(others->addrs) && !prv_addr_equal(&info->addr, others->keep)) {
+  if (others->count < PBL_ARRAY_SIZE(others->addrs) &&
+      ble_addr_cmp(&info->addr, others->keep) != 0) {
     others->addrs[others->count++] = info->addr;
   }
 }
 
-static void prv_delete_others(const struct pbl_bt_device_internal *keep) {
+static void prv_delete_others(const ble_addr_t *keep) {
   struct others others = {
     .keep = keep,
   };
@@ -125,7 +120,7 @@ static void prv_delete_others(const struct pbl_bt_device_internal *keep) {
 }
 
 struct first_bond {
-  struct pbl_bt_device_internal addr;
+  ble_addr_t addr;
   bool found;
 };
 
@@ -184,18 +179,19 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
   pbl_bt_prf_store_set_root_keys(keys);
 }
 
-bool bt_bonding_get_peer_name(const struct pbl_bt_device_internal *addr, char *name) {
+bool bt_bonding_get_peer_name(const ble_addr_t *addr, char *name) {
   struct pbl_bt_bond_keys stored;
 
-  return prv_get_prf_pairing(&stored, name) && prv_addr_equal(&stored.info.identity, addr) &&
+  return prv_get_prf_pairing(&stored, name) && ble_addr_cmp(&stored.info.identity, addr) == 0 &&
          name[0] != '\0';
 }
 
-void bt_bonding_set_peer_name(const struct pbl_bt_device_internal *addr, const char *name) {
+void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name) {
   char stored_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   struct pbl_bt_bond_keys stored;
 
-  if (!prv_get_prf_pairing(&stored, stored_name) || !prv_addr_equal(&stored.info.identity, addr) ||
+  if (!prv_get_prf_pairing(&stored, stored_name) ||
+      ble_addr_cmp(&stored.info.identity, addr) != 0 ||
       strncmp(stored_name, name, sizeof(stored_name)) == 0) {
     return;
   }
@@ -223,7 +219,7 @@ void pbl_bt_cb_bond_changed(const struct pbl_bt_bond_info *info) {
   prv_copy_to_prf_store(&info->addr);
 }
 
-void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
+void pbl_bt_cb_bond_deleted(const ble_addr_t *addr) {
   struct pbl_bt_bond_keys stored;
 
   // The peer paired again since.
@@ -231,7 +227,7 @@ void pbl_bt_cb_bond_deleted(const struct pbl_bt_device_internal *addr) {
     return;
   }
 
-  if (prv_get_prf_pairing(&stored, nullptr) && prv_addr_equal(&stored.info.identity, addr)) {
+  if (prv_get_prf_pairing(&stored, nullptr) && ble_addr_cmp(&stored.info.identity, addr) == 0) {
     pbl_bt_prf_store_erase_pairing();
   }
 

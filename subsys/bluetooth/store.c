@@ -30,18 +30,6 @@ static struct pbl_bt_sm_key s_local_irk;
 // threads.
 static PBL_MUTEX_DEFINE(s_lock);
 
-static void prv_addr_to_device(const ble_addr_t *addr, struct pbl_bt_device_internal *device) {
-  *device = (struct pbl_bt_device_internal){
-    .is_random_address = (addr->type == BLE_ADDR_RANDOM),
-  };
-  memcpy(device->address.octets, addr->val, BLE_DEV_ADDR_LEN);
-}
-
-static void prv_device_to_addr(const struct pbl_bt_device_internal *device, ble_addr_t *addr) {
-  addr->type = device->is_random_address ? BLE_ADDR_RANDOM : BLE_ADDR_PUBLIC;
-  memcpy(addr->val, device->address.octets, BLE_DEV_ADDR_LEN);
-}
-
 static int prv_read(int obj_type, const union ble_store_key *key, union ble_store_value *value) {
   int rc;
 
@@ -101,10 +89,10 @@ static int prv_write_if_changed(int obj_type, const union ble_store_value *value
 static void prv_value_to_info(const struct ble_store_value_sec *value_sec,
                               struct pbl_bt_bond_info *info) {
   *info = (struct pbl_bt_bond_info){
+    .addr = value_sec->peer_addr,
     .irk_valid = value_sec->irk_present,
   };
 
-  prv_addr_to_device(&value_sec->peer_addr, &info->addr);
   if (value_sec->irk_present) {
     memcpy(info->irk.data, value_sec->irk, KEY_SIZE);
   }
@@ -166,7 +154,7 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
   ctx->is_new = is_new;
   prv_value_to_info(&peer.sec, &ctx->info);
   if (is_new) {
-    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(ctx->info.addr.address));
+    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(ctx->info.addr.val));
   }
   (void)pbl_sys_work_call(prv_sec_written_cb, ctx);
 
@@ -174,7 +162,7 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
 }
 
 static void prv_bond_deleted_cb(void *data) {
-  struct pbl_bt_device_internal *addr = data;
+  ble_addr_t *addr = data;
 
   pbl_bt_cb_bond_deleted(addr);
 
@@ -182,7 +170,7 @@ static void prv_bond_deleted_cb(void *data) {
 }
 
 static int prv_store_delete(int obj_type, const union ble_store_key *key) {
-  struct pbl_bt_device_internal *addr;
+  ble_addr_t *addr;
   union ble_store_value value;
   int rc;
 
@@ -200,8 +188,8 @@ static int prv_store_delete(int obj_type, const union ble_store_key *key) {
   }
 
   addr = pbl_malloc_check(sizeof(*addr));
-  prv_addr_to_device(&value.sec.peer_addr, addr);
-  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(addr->address));
+  *addr = value.sec.peer_addr;
+  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(addr->val));
   (void)pbl_sys_work_call(prv_bond_deleted_cb, addr);
 
   return 0;
@@ -236,17 +224,13 @@ void pbl_bt__store_set_local_irk(const struct pbl_bt_sm_key *irk) {
   s_local_irk = *irk;
 }
 
-static int prv_read_peer_sec(const struct pbl_bt_device_internal *addr, uint8_t idx,
+static int prv_read_peer_sec(const ble_addr_t *addr, uint8_t idx,
                              struct ble_store_value_sec *value_sec) {
   union ble_store_key key = {};
   union ble_store_value value;
   int rc;
 
-  if (addr != nullptr) {
-    prv_device_to_addr(addr, &key.sec.peer_addr);
-  } else {
-    key.sec.peer_addr = *BLE_ADDR_ANY;
-  }
+  key.sec.peer_addr = (addr != nullptr) ? *addr : *BLE_ADDR_ANY;
   key.sec.idx = idx;
 
   rc = prv_read(BLE_STORE_OBJ_TYPE_PEER_SEC, &key, &value);
@@ -280,7 +264,7 @@ size_t pbl_bt_bond_count(void) {
   return count;
 }
 
-int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info) {
+int pbl_bt_bond_get(const ble_addr_t *addr, struct pbl_bt_bond_info *info) {
   struct ble_store_value_sec value_sec;
   int ret;
 
@@ -296,7 +280,7 @@ int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bon
   return 0;
 }
 
-int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_keys *keys) {
+int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys) {
   struct pbl_bt_sm_pairing_info *info = &keys->info;
   struct ble_store_value_sec peer;
   union ble_store_value our;
@@ -309,7 +293,7 @@ int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_b
   }
 
   memset(keys, 0, sizeof(*keys));
-  prv_addr_to_device(&peer.peer_addr, &info->identity);
+  info->identity = peer.peer_addr;
 
   if (peer.ltk_present) {
     info->is_remote_encryption_info_valid = true;
@@ -349,7 +333,7 @@ static void prv_keys_to_value_sec(const struct pbl_bt_bond_keys *keys, bool loca
   value_sec->key_size = KEY_SIZE;
   value_sec->sc = (keys->flags & PBL_BT_BOND_FLAG_SECURE_CONNECTIONS) != 0U;
   value_sec->authenticated = (keys->flags & PBL_BT_BOND_FLAG_AUTHENTICATED) != 0U;
-  prv_device_to_addr(&info->identity, &value_sec->peer_addr);
+  value_sec->peer_addr = info->identity;
 
   if (local && info->is_local_encryption_info_valid) {
     value_sec->ediv = info->local_encryption_info.ediv;
@@ -400,7 +384,7 @@ static int prv_unpair(const ble_addr_t *peer_addr) {
   return 0;
 }
 
-int pbl_bt_unpair(const struct pbl_bt_device_internal *addr) {
+int pbl_bt_unpair(const ble_addr_t *addr) {
   struct ble_store_value_sec value_sec;
   ble_addr_t peers[MAX_BONDS];
   size_t count = 0U;

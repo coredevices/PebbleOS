@@ -8,6 +8,8 @@
 #include <pbl/bluetooth/types.h>
 #include <pbl/kernel/compiler.h>
 
+#include <nimble/ble.h>
+
 /**
  * @defgroup bluetooth_sm_types Security Manager types
  * @ingroup bluetooth
@@ -72,7 +74,7 @@ struct PBL_PACKED pbl_bt_sm_pairing_info {
   /** Identity Resolving Key of the remote device. */
   struct pbl_bt_sm_key irk;
   /** Identity address of the remote device. */
-  struct pbl_bt_device_internal identity;
+  ble_addr_t identity;
 
   /** Connection Signature Resolving Key of the remote device. */
   struct pbl_bt_sm_key csrk;

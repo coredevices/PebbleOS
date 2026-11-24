@@ -72,6 +72,9 @@ typedef struct PBL_PACKED SprfRootKeys {
 } SprfRootKeys;
 static_assert(offsetof(SprfRootKeys, crc) == 0, "crc must be the first field");
 
+/** @brief Identity flag: the identity address is a random one, a public one otherwise. */
+#define SPRF_IDENTITY_FLAG_RANDOM 0x02U
+
 /** @brief BLE pairing field, for the device most recently paired. */
 typedef struct PBL_PACKED SprfBlePairingData {
   /** Field CRC. */
@@ -95,8 +98,12 @@ typedef struct PBL_PACKED SprfBlePairingData {
   struct pbl_bt_sm_key irk;
   /** Remote CSRK. */
   struct pbl_bt_sm_key csrk;
-  /** Remote identity address. */
-  struct pbl_bt_device_internal identity;
+  /** Remote identity address, least significant octet first. */
+  uint8_t identity_addr[6];
+  /** @c SPRF_IDENTITY_FLAG_* values. */
+  uint8_t identity_flags;
+  /** Reserved, zero. */
+  uint8_t identity_rsvd;
 
   /** Valid parts, @ref SprfValidFields bits. 0 means no pairing. */
   SprfValidFields fields : 8;
