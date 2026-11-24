@@ -1,0 +1,47 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define NRF52_SAADC_TASKS_START_OFFSET           0x0000
+#define NRF52_SAADC_TASKS_SAMPLE_OFFSET          0x0004
+#define NRF52_SAADC_TASKS_STOP_OFFSET            0x0008
+#define NRF52_SAADC_TASKS_CALIBRATEOFFSET_OFFSET 0x000C
+#define NRF52_SAADC_EVENTS_STARTED_OFFSET        0x0100
+#define NRF52_SAADC_EVENTS_END_OFFSET            0x0104
+#define NRF52_SAADC_EVENTS_CALIBRATEDONE_OFFSET  0x0110
+#define NRF52_SAADC_EVENTS_STOPPED_OFFSET        0x0114
+#define NRF52_SAADC_INTENCLR_OFFSET              0x0308
+#define NRF52_SAADC_ENABLE_OFFSET                0x0500
+#define NRF52_SAADC_CH_PSELP_OFFSET(n)           (0x0510 + ((n) * 0x10))
+#define NRF52_SAADC_CH_PSELN_OFFSET(n)           (0x0514 + ((n) * 0x10))
+#define NRF52_SAADC_CH_CONFIG_OFFSET(n)          (0x0518 + ((n) * 0x10))
+#define NRF52_SAADC_RESOLUTION_OFFSET            0x05F0
+#define NRF52_SAADC_OVERSAMPLE_OFFSET            0x05F4
+#define NRF52_SAADC_SAMPLERATE_OFFSET            0x05F8
+#define NRF52_SAADC_RESULT_PTR_OFFSET            0x062C
+#define NRF52_SAADC_RESULT_MAXCNT_OFFSET         0x0630
+
+#define NRF52_SAADC_NUM_CH 8U
+
+/* Register bit definitions */
+
+#define SAADC_ENABLE_ENABLE 1U
+
+#define SAADC_PSEL_NC       0U
+#define SAADC_PSEL_AIN(n)   ((n) + 1U)
+#define SAADC_PSEL_VDD      9U
+#define SAADC_PSEL_VDDHDIV5 13U
+
+#define SAADC_CH_CONFIG_GAIN_MASK PBL_GENMASK(10, 8)
+#define SAADC_CH_CONFIG_GAIN_1_6  0U
+#define SAADC_CH_CONFIG_REFSEL    PBL_BIT(12)
+#define SAADC_CH_CONFIG_TACQ_MASK PBL_GENMASK(18, 16)
+#define SAADC_CH_CONFIG_TACQ_10US 2U
+#define SAADC_CH_CONFIG_MODE_DIFF PBL_BIT(20)
+
+#define SAADC_RESOLUTION_12BIT 2U
