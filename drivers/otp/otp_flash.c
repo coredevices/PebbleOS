@@ -33,7 +33,7 @@ static const struct pbl_flash_otp_cell *prv_cell(const uint8_t index) {
   return cell;
 }
 
-char *otp_get_slot(const uint8_t index) {
+static char *prv_read_cell(const uint8_t index) {
   const struct pbl_flash_otp_cell *cell = prv_cell(index);
 
   if (cell == nullptr || pbl_flash_otp_read(FLASH, cell->offset, s_slot[index], cell->len) != 0) {
@@ -43,12 +43,28 @@ char *otp_get_slot(const uint8_t index) {
   return s_slot[index];
 }
 
+// A cell holds a value once written with its terminator: an erased one has none
+static bool prv_cell_is_set(const char *value) {
+  return value != nullptr && memchr(value, '\0', OTP_SLOT_SIZE) != nullptr;
+}
+
+char *otp_get_slot(const uint8_t index) {
+  char *value = prv_read_cell(index);
+
+  return prv_cell_is_set(value) ? value : nullptr;
+}
+
 bool otp_is_locked(const uint8_t index) {
   const struct pbl_flash_otp_cell *cell = prv_cell(index);
   struct pbl_flash_otp_info info;
   bool locked;
 
   if (cell == nullptr || pbl_flash_otp_get_info(FLASH, &info) != 0) {
+    return false;
+  }
+
+  // The lock covers a whole region, including cells never written
+  if (!prv_cell_is_set(prv_read_cell(index))) {
     return false;
   }
 
@@ -73,7 +89,7 @@ int otp_write_slot(const uint8_t index, const char *value) {
     return -EINVAL;
   }
 
-  existing_val = otp_get_slot(index);
+  existing_val = prv_read_cell(index);
   if (existing_val == nullptr) {
     return -EIO;
   }
@@ -88,7 +104,7 @@ int otp_write_slot(const uint8_t index, const char *value) {
     return -EIO;
   }
 
-  existing_val = otp_get_slot(index);
+  existing_val = prv_read_cell(index);
   if ((existing_val == nullptr) || (memcmp(existing_val, value, len + 1U) != 0)) {
     return -EIO;
   }

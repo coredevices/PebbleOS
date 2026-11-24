@@ -79,7 +79,8 @@ void test_mfg_serials__pcba_serial_number(void) {
 
 void test_mfg_serials__serial_number_fails(void) {
   const char *sn;
-  uint8_t index;
+  // Left alone by failed writes
+  uint8_t index = 0;
   MfgSerialsResult r;
 
   // Initially, return bunch of XXs:
