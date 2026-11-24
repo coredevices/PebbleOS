@@ -19,6 +19,8 @@
 #include <applib/ui/text_layer.h>
 #include <applib/ui/window.h>
 
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 /*
  *  Incremental STM CRC32 implemented in software
  */
@@ -152,7 +154,7 @@ static void click_config_provider(void *context) {
 }
 
 static void handle_deinit(void) {
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
                                     PBL_BT_RESPONSE_TIME_MAX, PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
@@ -180,7 +182,7 @@ static void handle_init(void) {
 
   start_logging();
 
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_APP,
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
                                     PBL_BT_RESPONSE_TIME_MAX, PBL_BT_RESPONSE_TIME_FOREVER);
 }
 

@@ -25,6 +25,9 @@
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
+static struct pbl_bt_responsiveness_req s_reduced_latency_req;
+static struct pbl_bt_responsiveness_req s_low_latency_req;
+
 // -------------------------------------------------------------------------------------------------
 // Function prototypes
 
@@ -113,12 +116,12 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
   return !music_has_now_playing();
 }
 
-static void prv_request_response_time(enum pbl_bt_consumer consumer,
+static void prv_request_response_time(struct pbl_bt_responsiveness_req *req,
                                       enum pbl_bt_response_time_state state,
                                       uint16_t max_period_secs) {
   PBL_ASSERT_TASK(PebbleTask_KernelMain);
   if (s_ams_client && s_ams_client->discovered) {
-    pbl_bt_responsiveness_request(s_ams_client->conn_handle, consumer, state, max_period_secs);
+    pbl_bt_responsiveness_request(s_ams_client->conn_handle, req, state, max_period_secs);
   }
 }
 
@@ -126,13 +129,12 @@ static void prv_request_reduced_latency_cb(void *data) {
   const bool reduced_latency = (uintptr_t)data;
   const enum pbl_bt_response_time_state state =
       reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
-  prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
-                            PBL_BT_RESPONSE_TIME_FOREVER);
+  prv_request_response_time(&s_reduced_latency_req, state, PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
 static void prv_request_low_latency_for_period_cb(void *data) {
   const uint32_t period_ms = (uintptr_t)data;
-  prv_request_response_time(PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY, PBL_BT_RESPONSE_TIME_MIN,
+  prv_request_response_time(&s_low_latency_req, PBL_BT_RESPONSE_TIME_MIN,
                             period_ms / PBL_MSEC_PER_SEC);
 }
 

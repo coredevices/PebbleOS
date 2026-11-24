@@ -35,6 +35,7 @@ PBL_BT_GATTC_SERVICE_DEFINE(s_gatt_service, &s_gatt_svc_uuid.u, s_gatt_chr_uuids
 
 //! Tells the indications of a gateway that is gone from those of the current one.
 static uint32_t s_generation;
+static struct pbl_bt_responsiveness_req s_response_time_req;
 static bool s_is_connected;
 
 static void prv_services_changed_kernel_main_cb(void *data) {
@@ -107,8 +108,8 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
 
     PBL_LOG_DBG("Connected to Gateway!");
 
-    pbl_bt_responsiveness_request(conn_handle, PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
-                                  PBL_BT_RESPONSE_TIME_MIN, DISCOVERY_RESPONSE_TIME_SECS);
+    pbl_bt_responsiveness_request(conn_handle, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                  DISCOVERY_RESPONSE_TIME_SECS);
 
     ++s_generation;
     s_is_connected = true;

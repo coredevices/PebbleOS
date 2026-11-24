@@ -22,6 +22,10 @@
 
 PBL_LOG_MODULE_DEFINE(service_get_bytes, CONFIG_SERVICE_GET_BYTES_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 // Internal state used by the protocol handler.
 typedef struct {
   struct pbl_pp_session *session;
@@ -173,13 +177,11 @@ static void prv_protocol_send_next_chunk(void *raw_state) {
 
     s_get_bytes_in_progress = false;
     prv_put_status_event(DebugInfoStateFinished);
-    pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_GET_BYTES,
-                                      PBL_BT_RESPONSE_TIME_MAX, 0);
+    pbl_pp_session_set_responsiveness(session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MAX, 0);
     return;
   } else {
-    pbl_pp_session_set_responsiveness(state->session, PBL_BT_CONSUMER_PP_GET_BYTES,
-                                      PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS);
+    pbl_pp_session_set_responsiveness(state->session, &s_response_time_req,
+                                      PBL_BT_RESPONSE_TIME_MIN, FAST_LINK_TIMEOUT_S);
   }
 
   pbl_sys_work_call(prv_protocol_send_next_chunk, state);

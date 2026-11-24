@@ -50,6 +50,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 typedef struct {
   void *action_data;
   void *context;
@@ -102,15 +106,13 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
 
 static void prv_request_responsive_session(void) {
   // In anticipation of having to communicate with the phone, request the minimum latency for 10s:
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
-                                    PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
+                                    PBL_BT_RESPONSE_TIME_MIN, FAST_LINK_TIMEOUT_S);
 }
 
 static void prv_reset_session_responsiveness(void) {
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
-                                    PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MAX,
-                                    0);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0);
 }
 
 static WindowStack *prv_get_window_stack(ActionResultData *data) {

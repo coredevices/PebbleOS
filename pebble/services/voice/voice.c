@@ -118,11 +118,7 @@ static void prv_release_encoder(void) {
 
 static void prv_teardown_session(void) {
   // Reset communication session responsiveness to default after voice session ends
-  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
-  if (comm_session) {
-    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                      PBL_BT_RESPONSE_TIME_MAX, 0);
-  }
+  voice_endpoint_set_fast_link(false);
 }
 
 static void prv_stop_recording(void) {
@@ -426,12 +422,7 @@ VoiceSessionId voice_start_dictation(VoiceEndpointSessionType session_type) {
   }
 
   // Set up communication session responsiveness for voice session
-  struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
-  if (comm_session) {
-    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-                                      PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS);
-  }
+  voice_endpoint_set_fast_link(true);
 
   // Get Speex transfer info
   AudioTransferInfoSpeex transfer_info;

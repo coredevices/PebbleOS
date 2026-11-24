@@ -191,12 +191,12 @@ void pbl_pp_session_reset(struct pbl_pp_session *session);
  * Does nothing on transports without a notion of response time.
  *
  * @param session Session; ignored if not open.
- * @param consumer Consumer making the request.
+ * @param req Request of who asks, see struct pbl_bt_responsiveness_req.
  * @param state Requested response time state.
  * @param max_period_secs Maximum time to stay in @p state.
  */
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs);
 

@@ -16,6 +16,11 @@
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 
+#define SEND_FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_send_response_time_req;
+static struct pbl_bt_responsiveness_req s_app_response_time_req;
+
 static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
   return (endpoint_id == APP_MESSAGE_ENDPOINT_ID);
 }
@@ -46,9 +51,8 @@ PBL_SYSCALL(bool, sys_app_pp_send_data, (VAL, struct pbl_pp_session *, session),
   app_install_mark_prioritized(app_id, true /* can_expire */);
 
   // TODO: use a heuristic to decide whether to put the connection in fast mode
-  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS);
+  pbl_pp_session_set_responsiveness(session, &s_send_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                    SEND_FAST_LINK_TIMEOUT_S);
 
   // FIXME: Let the app task wait indefinitely for now
   const uint32_t timeout_ms = ~0;
@@ -64,11 +68,12 @@ PBL_SYSCALL(void, sys_app_comm_set_responsiveness, (VAL, SniffInterval, interval
 
   switch (interval) {
     case SNIFF_INTERVAL_REDUCED:
-      pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MIDDLE,
-                                        PBL_BT_RESPONSE_TIME_FOREVER);
+      pbl_pp_session_set_responsiveness(session, &s_app_response_time_req,
+                                        PBL_BT_RESPONSE_TIME_MIDDLE, PBL_BT_RESPONSE_TIME_FOREVER);
       return;
     case SNIFF_INTERVAL_NORMAL:
-      pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_APP, PBL_BT_RESPONSE_TIME_MAX, 0);
+      pbl_pp_session_set_responsiveness(session, &s_app_response_time_req, PBL_BT_RESPONSE_TIME_MAX,
+                                        0);
       return;
   }
   PBL_LOG_WRN("Invalid sniff interval");

@@ -152,8 +152,10 @@ static void prv_handle_connect(const struct ble_gap_event *event) {
   pbl_mutex_unlock(&s_lock);
 
 #ifdef CONFIG_RECOVERY_FW
+  static struct pbl_bt_responsiveness_req s_response_time_req;
+
   /* Power matters little, and firmware updates are to be quick. */
-  pbl_bt_responsiveness_request(desc.conn_handle, PBL_BT_CONSUMER_PRF, PBL_BT_RESPONSE_TIME_MIN,
+  pbl_bt_responsiveness_request(desc.conn_handle, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
                                 PBL_BT_RESPONSE_TIME_FOREVER);
 #endif
 
@@ -294,9 +296,9 @@ bool bt_link_is_connected_to(const struct pbl_bt_device_internal *identity) {
          memcmp(&peer.address, &identity->address, sizeof(peer.address)) == 0;
 }
 
-void bt_link_set_response_time(enum pbl_bt_consumer consumer, enum pbl_bt_response_time_state state,
-                               uint16_t max_period_secs) {
-  pbl_bt_responsiveness_request(bt_link_get_conn_handle(), consumer, state, max_period_secs);
+void bt_link_set_response_time(struct pbl_bt_responsiveness_req *req,
+                               enum pbl_bt_response_time_state state, uint16_t max_period_secs) {
+  pbl_bt_responsiveness_request(bt_link_get_conn_handle(), req, state, max_period_secs);
 }
 
 static void prv_peer_name_changed_cb(void *data) {
