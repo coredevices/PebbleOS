@@ -66,11 +66,15 @@ static void prv_protocol_msg_callback(struct pbl_pp_session *session, const uint
 void app_message_inbox_handle_dropped_messages(uint32_t num_drops) {
 }
 
+static int s_fast_connection_requests;
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        enum pbl_bt_consumer consumer,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs,
                                        pbl_bt_responsiveness_granted_cb_t granted) {
+  if (state == PBL_BT_RESPONSE_TIME_MIN) {
+    ++s_fast_connection_requests;
+  }
 }
 
 static bool s_kernel_receiver_available;
@@ -151,6 +155,7 @@ void test_app_message_receiver__initialize(void) {
   fake_kernel_malloc_init();
   fake_kernel_malloc_enable_stats(true);
   RESET_FAKE(app_install_mark_prioritized);
+  s_fast_connection_requests = 0;
 }
 
 void test_app_message_receiver__cleanup(void) {
@@ -192,6 +197,24 @@ void test_app_message_receiver__receive_push_but_inbox_not_opened(void) {
   prv_process_events();
   cl_assert_equal_b(false, s_kernel_receiver_is_receiving);
   cl_assert_equal_b(true, s_kernel_receiver_finish_called);
+}
+
+void test_app_message_receiver__small_push_keeps_connection_relaxed(void) {
+  struct pbl_pp_receiver *r =
+      s_rcv_imp->prepare(s_session, &s_app_message_endpoint, sizeof(AppMessagePush));
+  s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
+  s_rcv_imp->finish(r);
+  prv_process_events();
+  cl_assert_equal_i(s_fast_connection_requests, 0);
+}
+
+void test_app_message_receiver__large_push_requests_fast_connection(void) {
+  struct pbl_pp_receiver *r = s_rcv_imp->prepare(s_session, &s_app_message_endpoint,
+                                                 APP_MESSAGE_FAST_CONNECTION_MIN_SIZE + 1);
+  cl_assert_equal_i(s_fast_connection_requests, 1);
+  s_rcv_imp->write(r, (const uint8_t *)&s_push, sizeof(s_push));
+  cl_assert_equal_i(s_fast_connection_requests, 2);
+  s_rcv_imp->cleanup(r);
 }
 
 void test_app_message_receiver__receive_push_but_inbox_not_opened_then_cleanup(void) {

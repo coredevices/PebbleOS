@@ -20,13 +20,6 @@ PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL)
 // -------------------------------------------------------------------------------------------------
 // Misc helpers:
 
-static void prv_request_fast_connection(struct pbl_pp_session *session) {
-  // TODO: use a heuristic to decide whether to put the connection in fast mode
-  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
-}
-
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
     AppMessageSendJob *app_message_send_job) {
   const size_t offset = offsetof(AppOutboxMessage, consumer_data);
@@ -35,6 +28,17 @@ static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(
 
 static AppOutboxMessage *prv_outbox_message_from_send_job(struct pbl_pp_send_job *send_job) {
   return prv_outbox_message_from_app_message_send_job((AppMessageSendJob *)send_job);
+}
+
+static void prv_request_fast_connection_if_large(AppMessageSendJob *app_message_send_job) {
+  const AppOutboxMessage *outbox_message =
+      prv_outbox_message_from_app_message_send_job(app_message_send_job);
+  const size_t payload_size = outbox_message->length - offsetof(AppMessageAppOutboxData, payload);
+  if (payload_size > APP_MESSAGE_FAST_CONNECTION_MIN_SIZE) {
+    pbl_pp_session_set_responsiveness(app_message_send_job->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
+                                      PBL_BT_RESPONSE_TIME_MIN,
+                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+  }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -92,7 +96,7 @@ static size_t prv_send_job_impl_get_length(const struct pbl_pp_send_job *send_jo
 static size_t prv_send_job_impl_copy(const struct pbl_pp_send_job *send_job, size_t start_offset,
                                      size_t length, uint8_t *data_out) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
-  prv_request_fast_connection(app_message_send_job->session);
+  prv_request_fast_connection_if_large(app_message_send_job);
 
   const size_t length_available = prv_get_length(app_message_send_job);
   const size_t length_after_offset = (length_available - start_offset);
@@ -116,7 +120,7 @@ static size_t prv_send_job_impl_copy(const struct pbl_pp_send_job *send_job, siz
 static size_t prv_send_job_impl_get_read_pointer(const struct pbl_pp_send_job *send_job,
                                                  const uint8_t **data_out) {
   AppMessageSendJob *app_message_send_job = (AppMessageSendJob *)send_job;
-  prv_request_fast_connection(app_message_send_job->session);
+  prv_request_fast_connection_if_large(app_message_send_job);
 
   return prv_get_read_pointer(app_message_send_job, app_message_send_job->consumed_length,
                               data_out);
@@ -206,7 +210,7 @@ static void prv_handle_outbox_message(AppOutboxMessage *message) {
     return;
   }
 
-  prv_request_fast_connection(app_message_send_job->session);
+  prv_request_fast_connection_if_large(app_message_send_job);
   pbl_pp_send_job_submit(app_message_send_job->session,
                          (struct pbl_pp_send_job **)&app_message_send_job);
 }
