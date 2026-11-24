@@ -282,7 +282,7 @@ static int prv_write_sr1(const struct pbl_flash_spi_nor *nor, uint8_t sr1) {
   int ret;
 
   if (nor->data->qer == QER_SR2_BIT1_V6 || nor->data->qer == QER_SR1_BIT6 ||
-      (nor->data->part->flags & PBL_FLASH_NOR_F_FSR) != 0U) {
+      (nor->data->part->flags & (PBL_FLASH_NOR_F_FSR | PBL_FLASH_NOR_F_SECR)) != 0U) {
     return prv_write_reg(nor, PBL_FLASH_NOR_CMD_WRSR, sr, 1U);
   }
 
@@ -1204,6 +1204,17 @@ static int prv_erase_status(const struct pbl_flash *flash) {
     }
 
     return ((fsr & PBL_FLASH_NOR_FSR_ERASE_SUS) != 0U) ? -EAGAIN : 0;
+  }
+
+  if ((nor->data->part->flags & PBL_FLASH_NOR_F_SECR) != 0U) {
+    uint8_t secr;
+
+    ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSECR, &secr, sizeof(secr));
+    if (ret != 0) {
+      return ret;
+    }
+
+    return ((secr & PBL_FLASH_NOR_SECR_ESB) != 0U) ? -EAGAIN : 0;
   }
 
   ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSR2, &sr2, sizeof(sr2));
