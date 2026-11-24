@@ -26,6 +26,9 @@ typedef enum BootBitValue {
   BOOT_BIT_NEW_PRF_AVAILABLE = 0x1 << 18,
   BOOT_BIT_SHUTDOWN_REQUESTED = 0x1 << 19, //!< Bootloader hard power-off instead of jumping to fw.
   BOOT_BIT_FORCE_DFU = 0x1 << 20,          //!< Bootloader USB DFU mode instead of jumping to fw.
+  //! Failed copies of the pending recovery firmware, counted to give it up after three tries.
+  BOOT_BIT_PRF_UPDATE_FAIL_STRIKE_ONE = 0x1 << 21,
+  BOOT_BIT_PRF_UPDATE_FAIL_STRIKE_TWO = 0x1 << 22,
 } BootBitValue;
 
 void boot_bit_init();

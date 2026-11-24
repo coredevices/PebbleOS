@@ -488,3 +488,12 @@ pbl_clar_test(test_voice_speex
   INCLUDES third_party/speex third_party/speex/speex/include
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_prf_update
+  SOURCES
+    pebble/services/prf_update/service.c
+    tests/fakes/fake_bootbits.c
+    tests/fakes/fake_spi_flash.c
+  DEFINES CONFIG_SERVICE_PRF_UPDATE_LOG_LEVEL=4
+  OVERRIDES dummy_board
+)
