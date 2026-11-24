@@ -14,6 +14,7 @@ the phone apps.
 blob-db.md
 language-packs.md
 local-microphone.md
+timer-service.md
 ```
 
 ## Binary formats
