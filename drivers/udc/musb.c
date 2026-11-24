@@ -26,6 +26,9 @@
 
 #define EP0_MPS 64U
 
+// Direction bit of a setup packet's bmRequestType
+#define SETUP_DIR_IN 0x80U
+
 // Packets of the other endpoints, each number with one FIFO for the direction it serves
 #define EP_FIFO_LEN 64U
 
@@ -433,8 +436,9 @@ static int prv_ep0_queue(const struct pbl_udc_musb *m, bool in, struct prv_ep *e
   prv_index(m, 0U);
   switch (st->ep0) {
     case EP0_SETUP:
-      // An IN data stage may be empty, a zero-length packet, when the request has data
-      if (ep->len == 0U && !(in && (st->setup[6] != 0U || st->setup[7] != 0U))) {
+      // An IN request always has an IN data stage for the controller: one with no data, or none
+      // at all, gets a zero-length packet
+      if (ep->len == 0U && (st->setup[0] & SETUP_DIR_IN) == 0U) {
         prv_ww(m, MUSB_CSR0, MUSB_CSR0_SERVICEDRXPKTRDY | MUSB_CSR0_DATAEND);
         st->ep0 = EP0_STATUS;
       } else if (in) {
