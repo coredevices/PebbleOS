@@ -8,6 +8,7 @@ A transport carries sessions over a link. It implements
 |---|---|---|---|---|---|
 | GATT (PPoGATT) | `PP_TRANSPORT_GATT` | The phone's PPoGATT service over BLE | The kernel LE client | 2 | no |
 | Console | `PP_TRANSPORT_CONSOLE` | Frames on the serial console | The console | 1 | yes |
+| USB | `PP_TRANSPORT_USB` | Bulk endpoints of a USB device function | The USB device stack | 1 | yes |
 
 An application enables the ones it uses; the firmware enables each with the
 link it uses. The code that drives the link calls the transport through its
@@ -263,3 +264,59 @@ Frames from the watch carry a sequence number and are sent one at a time:
 the watch sends a frame again every 200 ms until the host acknowledges it,
 and closes the session after 25 tries. A data frame for a session the watch
 does not have, after a restart for instance, gets a close back.
+
+## USB
+
+The USB transport carries the Pebble protocol over USB, for host tools on a
+cable instead of the debug port. It is a function of the USB device
+({doc}`../usb`). Its sessions are hybrid and shared, and its priority is the
+console's, so the phone's system session stays the preferred one: a host
+that sleeps or is unplugged keeps its session until the next bus reset.
+
+The function is one interface of class `0xff` (vendor-specific), subclass
+`0x50` and protocol `0x01`, by which hosts find it, with a bulk OUT and a bulk
+IN endpoint. The stack numbers the interface and gives the endpoints
+controller endpoints along with the other functions of the device (see
+{doc}`../usb`); the transport describes them as interface 0 and endpoints
+0x01 and 0x82, its own numbers. Each endpoint takes one of the controller's:
+on the SF32LB57, whose MUSB has 7 besides endpoint 0, the transport fits next
+to one serial port, the firmware upgrade, or the test function, but not next
+to two serial ports.
+
+| Request | `bRequest` | Effect |
+|---|---|---|
+| Open | `0x01` | Open a session, closing the one open before |
+| Close | `0x02` | Close the session |
+
+Both are vendor requests to the interface (`bmRequestType` `0x41`) without
+data. The interface is named `Pebble protocol`, and with
+`CONFIG_USB_DEVICE_MS_OS_20` it carries a WinUSB device interface GUID, so
+that Windows binds it without a driver install.
+
+Each bulk endpoint carries the Pebble protocol messages as a byte stream,
+without framing of its own: USB delivers packets in order and retries the ones
+it loses, and the messages give their own length. A transfer ends with a short
+packet, or a zero-length one when it fills its last packet, so that neither
+side waits for more. The watch moves the bytes from the send queue to the
+endpoint as it sends them; a session the host closes drops what it had not
+read.
+
+```{mermaid}
+sequenceDiagram
+  participant H as Host
+  participant W as Watch
+  H->>W: Close (control)
+  H->>W: read until nothing comes
+  H->>W: Open (control)
+  Note over W: open a hybrid session
+  H->>W: bulk OUT: Pebble protocol
+  W->>H: bulk IN: Pebble protocol
+  H->>W: Close (control)
+```
+
+The host closes the session and reads what the IN endpoint still holds
+before it opens its own, so that it does not take the end of a former
+session's messages for the start of its own. The host side is
+`pblconsole.usb` (`tools/libs/pbl-console`), a libpebble2 transport, which
+`pbl-watch` offers as `--usb`.
+
