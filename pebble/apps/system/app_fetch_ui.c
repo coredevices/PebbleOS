@@ -59,13 +59,18 @@ static void prv_set_progress(AppFetchUIData *data, int16_t progress) {
   progress_window_set_progress(&data->window, progress);
 }
 
+//! @return whether a finished fetch buzzes the watch
+static bool prv_should_buzz(const AppFetchUIData *data) {
+  // if this was launched by the phone, it's probably a new install
+  return (data->next_app_args.common.reason == APP_LAUNCH_PHONE) && !battery_is_usb_connected();
+}
+
 // Launch the desired app
 static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   // Let's launch the application we just fetched.
   PBL_LOG_DBG("App Fetch: Putting launch event");
 
-  // if this was launched by the phone, it's probably a new install
-  if ((data->next_app_args.common.reason == APP_LAUNCH_PHONE) && !battery_is_usb_connected()) {
+  if (prv_should_buzz(data)) {
     vibes_short_pulse();
   }
 
@@ -88,6 +93,19 @@ static void prv_app_fetch_launch_app(AppFetchUIData *data) {
   };
 
   event_put(&launch_event);
+}
+
+//! Launches the fetched app, unless it is gone
+static void prv_launch_fetched_app(AppFetchUIData *data) {
+  AppInstallEntry entry;
+  if (!app_install_get_entry_for_install_id(data->next_app_args.app_id, &entry)) {
+    PBL_LOG_WRN("App Fetch: entry %" PRId32 " gone after fetch, not launching",
+                data->next_app_args.app_id);
+    app_window_stack_pop(true);
+    return;
+  }
+
+  prv_app_fetch_launch_app(data);
 }
 
 ///////////////////////////////
@@ -149,20 +167,9 @@ static void prv_set_progress_failure(AppFetchUIData *data) {
 }
 
 static void prv_progress_window_finished(ProgressWindow *window, bool success, void *context) {
-  AppFetchUIData *data = context;
-  if (!success) {
-    return;
+  if (success) {
+    prv_launch_fetched_app(context);
   }
-
-  AppInstallEntry entry;
-  if (!app_install_get_entry_for_install_id(data->next_app_args.app_id, &entry)) {
-    PBL_LOG_WRN("App Fetch: entry %" PRId32 " gone after fetch, not launching",
-                data->next_app_args.app_id);
-    app_window_stack_pop(true);
-    return;
-  }
-
-  prv_app_fetch_launch_app(data);
 }
 
 ////////////////////////////
