@@ -400,7 +400,7 @@ pbl configure --board sf32lb57_dpi_hdk --addon <addon> samples/demos/logo
   board's.
 
 Its overlays apply after the board's tree, and before the application's.
-Each add-on has a page in {doc}`/boards/addons/index`.
+Each add-on has a page in {doc}`/addons/index`.
 
 (devicetree-overlays)=
 
