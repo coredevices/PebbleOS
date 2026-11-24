@@ -17,13 +17,17 @@
 #define DWC2_GRXFSIZ    0x0024
 #define DWC2_DIEPTXF0   0x0028
 #define DWC2_GGPIO      0x0038
+#define DWC2_GHWCFG2    0x0048
 #define DWC2_GHWCFG3    0x004c
 #define DWC2_DIEPTXF(n) (0x0104 + 4U * ((n) - 1U))
 
 #define GOTGCTL_BVALOEN  PBL_BIT(6)
 #define GOTGCTL_BVALOVAL PBL_BIT(7)
 
-#define GAHBCFG_GINTMSK PBL_BIT(0)
+#define GAHBCFG_GINTMSK       PBL_BIT(0)
+#define GAHBCFG_HBSTLEN_MASK  PBL_GENMASK(4, 1)
+#define GAHBCFG_HBSTLEN_INCR4 3U
+#define GAHBCFG_DMAEN         PBL_BIT(5)
 
 #define GUSBCFG_PHYSEL     PBL_BIT(6)
 #define GUSBCFG_TRDT_MASK  PBL_GENMASK(13, 10)
@@ -58,6 +62,9 @@
 #define GRXSTSP_PKTSTS_MASK  PBL_GENMASK(20, 17)
 #define GRXSTSP_PKTSTS_OUT   2U
 #define GRXSTSP_PKTSTS_SETUP 6U
+
+#define GHWCFG2_OTGARCH_MASK PBL_GENMASK(4, 3)
+#define GHWCFG2_OTGARCH_DMA  2U
 
 /* The vendor register of the STM32 cores: the transceiver power and the VBUS detection */
 #define STM32_GCCFG_PWRDWN PBL_BIT(16)
@@ -96,10 +103,12 @@
 #define DWC2_DIEPCTL(n)  (0x0900 + 0x20U * (n))
 #define DWC2_DIEPINT(n)  (0x0908 + 0x20U * (n))
 #define DWC2_DIEPTSIZ(n) (0x0910 + 0x20U * (n))
+#define DWC2_DIEPDMA(n)  (0x0914 + 0x20U * (n))
 #define DWC2_DTXFSTS(n)  (0x0918 + 0x20U * (n))
 #define DWC2_DOEPCTL(n)  (0x0b00 + 0x20U * (n))
 #define DWC2_DOEPINT(n)  (0x0b08 + 0x20U * (n))
 #define DWC2_DOEPTSIZ(n) (0x0b10 + 0x20U * (n))
+#define DWC2_DOEPDMA(n)  (0x0b14 + 0x20U * (n))
 #define DWC2_FIFO(n)     (0x1000 + 0x1000U * (n))
 
 #define DEPCTL_MPSIZ_MASK  PBL_GENMASK(10, 0)
@@ -114,11 +123,12 @@
 #define DEPCTL_EPDIS       PBL_BIT(30)
 #define DEPCTL_EPENA       PBL_BIT(31)
 
-#define DEPINT_XFRC    PBL_BIT(0)
-#define DEPINT_EPDIS   PBL_BIT(1)
-#define DOEPINT_STUP   PBL_BIT(3)
-#define DIEPINT_INEPNE PBL_BIT(6)
-#define DIEPINT_TXFE   PBL_BIT(7)
+#define DEPINT_XFRC     PBL_BIT(0)
+#define DEPINT_EPDIS    PBL_BIT(1)
+#define DOEPINT_STUP    PBL_BIT(3)
+#define DIEPINT_INEPNE  PBL_BIT(6)
+#define DIEPINT_TXFE    PBL_BIT(7)
+#define DOEPINT_STPKTRX PBL_BIT(15)
 
 #define DEPTSIZ_XFRSIZ_MASK   PBL_GENMASK(18, 0)
 #define DEPTSIZ_PKTCNT_MASK   PBL_GENMASK(28, 19)
