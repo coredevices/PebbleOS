@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52840-usbd
+config: UDC_NRF5
+class: udc
+define: PBL_UDC_NRF5_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - clock: 0
+  - reg: 0
+    of: nordic,power
+  - irq: 0
+    of: nordic,power
