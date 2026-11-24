@@ -96,11 +96,12 @@ Bluetooth, logging, input, the shell and the other OS subsystems.
 The device model and every hardware driver class.
 :::
 
-:::{grid-item-card} 📡 Services
-:link: services/index
+:::{grid-item-card} ⌚ Pebble Firmware
+:link: pebble/index
 :link-type: doc
 
-System services between drivers and apps, from activity to timeline.
+The watch firmware built on PebbleOS: services, the application SDK and a
+playground.
 :::
 
 :::{grid-item-card} ⌚ Boards
@@ -117,7 +118,6 @@ Supported watches and emulated boards, and how to program them.
 :caption: Start here
 
 getting_started/index.md
-playground.md
 ```
 
 ```{toctree}
@@ -141,10 +141,18 @@ architecture/index.md
 kernel/index.md
 subsystems/index.md
 drivers/index.md
-services/index.md
 libraries/index.md
 third_party/index.md
+```
+
+```{toctree}
+:hidden:
+:caption: Pebble Firmware
+
+Overview <pebble/index.md>
+services/index.md
 sdk/index.md
+playground.md
 ```
 
 ```{toctree}
