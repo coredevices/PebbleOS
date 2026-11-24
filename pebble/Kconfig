@@ -178,6 +178,12 @@ rsource "apps/Kconfig"
 rsource "kernel/Kconfig"
 rsource "services/Kconfig"
 
+config BOOTLOADER_DFU
+    bool "Bootloader USB DFU"
+    help
+      The bootloader enters its USB DFU mode when it finds the force DFU
+      boot bit set, so the `sys dfu` shell command can reset into it.
+
 menu "Software Features"
 
 config SETTINGS_ICONS
