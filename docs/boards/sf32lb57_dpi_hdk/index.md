@@ -10,7 +10,6 @@
 
 :Board: `sf32lb57_dpi_hdk`
 :SoC: SiFli SF32LB57
-:Platform: none, samples only
 :::
 
 The SF32LB57x-DPI-HDK is the SiFli development kit for the SF32LB57, with
