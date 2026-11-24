@@ -309,3 +309,18 @@ html.dark {
 .pbl-playground select[hidden] {
   display: none;
 }
+
+.yue .board-list th:last-child,
+.yue .board-list td:last-child {
+  text-align: center;
+}
+.yue .board-list td:last-child img {
+  display: block;
+  height: 3.5rem;
+  width: auto;
+  margin: 0 auto;
+  cursor: zoom-in;
+}
+.yue .board-card img {
+  cursor: zoom-in;
+}

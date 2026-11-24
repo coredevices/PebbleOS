@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/asterix.webp
-:alt: Pebble 2 Duo
+```{thumbnail} images/asterix.webp
 ```
 
 :Board: `asterix`

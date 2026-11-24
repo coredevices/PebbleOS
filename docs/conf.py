@@ -27,6 +27,7 @@ extensions = [
     "myst_parser",
     "sphinx_copybutton",
     "sphinx_design",
+    "sphinxcontrib.images",
     "sphinxcontrib.mermaid",
     "matplotlib.sphinxext.plot_directive",
     "pbl_docs",
@@ -38,6 +39,8 @@ extensions = [
 exclude_patterns = ["_build", "_apidoc", "_ext", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
+
+images_config = {"cache_path": "_build/images", "download": False}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

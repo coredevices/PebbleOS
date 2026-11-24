@@ -4,8 +4,7 @@
 
 :::{div} board-card
 
-```{image} images/getafix.webp
-:alt: Pebble Round 2
+```{thumbnail} images/getafix.webp
 ```
 
 :Board: `getafix`
