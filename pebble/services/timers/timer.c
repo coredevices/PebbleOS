@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/cron/cron.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
@@ -202,4 +204,44 @@ uint32_t timer_cancel_all(const Uuid *owner) {
   }
   pbl_mutex_unlock(&s_mutex);
   return count;
+}
+
+uint8_t timer_get_timers(const Uuid *owner, TimerInfo *out, uint8_t max) {
+  if (!owner || !out || max == 0) {
+    return 0;
+  }
+
+  TimerInfo entries[TIMER_MAX_COUNT];
+  uint8_t count = 0;
+  const time_t now = pbl_realtime();
+
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  for (int i = 0; i < TIMER_MAX_COUNT; ++i) {
+    Timer *timer = &s_timers[i];
+    if (timer->state != TimerState_Running || !uuid_equal(&timer->owner, owner)) {
+      continue;
+    }
+    TimerInfo *entry = &entries[count++];
+    entry->id = timer->id;
+    entry->duration_s = timer->duration_s;
+    const time_t remaining = timer->deadline - now;
+    entry->remaining_s = remaining > 0 ? (uint32_t)remaining : 0;
+    timer_format_duration(entry->description, sizeof(entry->description), timer->duration_s);
+  }
+  pbl_mutex_unlock(&s_mutex);
+
+  // Soonest first.
+  for (int i = 1; i < count; ++i) {
+    const TimerInfo key = entries[i];
+    int j = i - 1;
+    while (j >= 0 && entries[j].remaining_s > key.remaining_s) {
+      entries[j + 1] = entries[j];
+      --j;
+    }
+    entries[j + 1] = key;
+  }
+
+  const uint8_t written = count < max ? count : max;
+  memcpy(out, entries, written * sizeof(*out));
+  return written;
 }

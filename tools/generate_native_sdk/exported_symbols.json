@@ -367,8 +367,20 @@
                   "name": "TIMER_SERVICE_INVALID_ID",
                   "addedRevision": "119"
                 }, {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_MAX_TIMERS",
+                  "addedRevision": "119"
+                }, {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_DESCRIPTION_SIZE",
+                  "addedRevision": "119"
+                }, {
                   "type": "type",
                   "name": "TimerServiceId",
+                  "addedRevision": "119"
+                }, {
+                  "type": "type",
+                  "name": "TimerServiceInfo",
                   "addedRevision": "119"
                 }, {
                   "type": "type",
@@ -392,6 +404,11 @@
                 }, {
                   "type": "function",
                   "name": "timer_service_cancel_all",
+                  "addedRevision": "119",
+                  "stubReturn": "0"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_get_timers",
                   "addedRevision": "119",
                   "stubReturn": "0"
                 }

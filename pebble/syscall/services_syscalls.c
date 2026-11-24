@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <string.h>
 
 #include <pbl/kernel/syscall.h>
 #include <pbl/services/alarms/alarm.h>
@@ -73,6 +74,34 @@ PBL_SYSCALL(uint32_t, sys_timer_cancel_all) {
   }
 
   return timer_cancel_all(&md->uuid);
+#else
+  return 0;
+#endif
+}
+
+PBL_SYSCALL(uint8_t, sys_timer_get_timers, (OUT_ARRAY, TimerServiceInfo *, timers, max_timers),
+            (VAL, uint8_t, max_timers)) {
+  if (!timers || max_timers == 0) {
+    return 0;
+  }
+#ifdef CONFIG_SERVICE_TIMERS
+  const PebbleProcessMd *md = sys_process_manager_get_current_process_md();
+  if (!md) {
+    return 0;
+  }
+
+  TimerInfo infos[TIMER_MAX_COUNT];
+  const uint8_t count = timer_get_timers(&md->uuid, infos, TIMER_MAX_COUNT);
+  const uint8_t written = count < max_timers ? count : max_timers;
+  for (uint8_t i = 0; i < written; ++i) {
+    timers[i] = (TimerServiceInfo){
+      .id = infos[i].id,
+      .duration_s = infos[i].duration_s,
+      .remaining_s = infos[i].remaining_s,
+    };
+    memcpy(timers[i].description, infos[i].description, sizeof(infos[i].description));
+  }
+  return written;
 #else
   return 0;
 #endif

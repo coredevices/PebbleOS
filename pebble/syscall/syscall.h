@@ -328,3 +328,6 @@ bool sys_timer_cancel(TimerServiceId id);
 
 //! Cancel all timers created by the calling app.
 uint32_t sys_timer_cancel_all(void);
+
+//! Copy the calling app's timers, soonest expiry first.
+uint8_t sys_timer_get_timers(TimerServiceInfo *timers, uint8_t max_timers);

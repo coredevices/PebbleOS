@@ -3,12 +3,11 @@
 
 #include "timer_popup.h"
 
-#include <stdio.h>
-
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/light.h>
+#include <pbl/services/timers/timer.h>
 #include <pbl/services/vibes/vibe_client.h>
 #include <pbl/services/vibes/vibe_score.h>
 #include <pbl/util/units.h>
@@ -158,18 +157,6 @@ static void prv_cleanup_timer_popup(void *callback_context) {
   }
 }
 
-static void prv_format_duration(char *buffer, size_t buffer_size, uint32_t duration_s) {
-  const uint32_t hours = duration_s / PBL_SEC_PER_HOUR;
-  const uint32_t minutes = (duration_s % PBL_SEC_PER_HOUR) / PBL_SEC_PER_MIN;
-  const uint32_t seconds = duration_s % PBL_SEC_PER_MIN;
-  if (hours > 0) {
-    snprintf(buffer, buffer_size, "%u:%02u:%02u", (unsigned int)hours, (unsigned int)minutes,
-             (unsigned int)seconds);
-  } else {
-    snprintf(buffer, buffer_size, "%u:%02u", (unsigned int)minutes, (unsigned int)seconds);
-  }
-}
-
 // ----------------------------------------------------------------------------------------------
 //! API
 void timer_popup_push_window(const PebbleTimerEvent *event) {
@@ -188,8 +175,8 @@ void timer_popup_push_window(const PebbleTimerEvent *event) {
                                         &s_timer_popup_data->action_bar);
 
   Dialog *dialog = actionable_dialog_get_dialog(s_timer_popup_data->timer_popup);
-  char display_time[16];
-  prv_format_duration(display_time, sizeof(display_time), event->duration_s);
+  char display_time[TIMER_DESCRIPTION_SIZE];
+  timer_format_duration(display_time, sizeof(display_time), event->duration_s);
   dialog_set_text(dialog, display_time);
   if (PBL_DISPLAY_HEIGHT > 180) {
     actionable_dialog_set_text_font(s_timer_popup_data->timer_popup,

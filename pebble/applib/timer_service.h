@@ -11,9 +11,10 @@
 //!   @addtogroup TimerService
 //! \brief Disposable countdown timers.
 //!
-//! The TimerService lets an app start a countdown timer. When the timer
-//! expires a popup shows the timer's duration and vibrates, whether or not
-//! the app is still running. The system keeps up to 8 timers at once.
+//! The TimerService lets an app start a countdown timer, list the timers it
+//! created, and cancel them. When the timer expires a popup shows the timer's
+//! duration and vibrates, whether or not the app is still running. The system
+//! keeps up to @ref TIMER_SERVICE_MAX_TIMERS timers at once.
 //!
 //! Creating a timer requires the `Timers` permission. Declare it in the
 //! `pebble` block of `package.json`:
@@ -31,11 +32,29 @@
 //! @brief Maximum timer duration, in seconds.
 #define TIMER_SERVICE_MAX_DURATION_S (24 * 60 * 60)
 
+//! @brief Maximum number of timers that can run at once.
+#define TIMER_SERVICE_MAX_TIMERS 8
+
+//! @brief Size of a timer duration description buffer.
+#define TIMER_SERVICE_DESCRIPTION_SIZE 16
+
 //! @brief Invalid timer ID.
 #define TIMER_SERVICE_INVALID_ID (-1)
 
 //! @brief Unique ID of a running timer.
 typedef int32_t TimerServiceId;
+
+//! @brief A running timer, as returned by timer_service_get_timers().
+typedef struct TimerServiceInfo {
+  //! Timer ID.
+  TimerServiceId id;
+  //! Original duration, in seconds.
+  uint32_t duration_s;
+  //! Seconds left until the timer fires.
+  uint32_t remaining_s;
+  //! Original duration formatted for display, e.g. "5:00" or "1:00:00".
+  char description[TIMER_SERVICE_DESCRIPTION_SIZE];
+} TimerServiceInfo;
 
 //! @brief Result of timer_service_create().
 typedef enum TimerServiceCreateResult {
@@ -70,6 +89,20 @@ bool timer_service_can_create(void);
 //!             @ref TIMER_SERVICE_INVALID_ID on failure.
 //! @return The result of the operation.
 TimerServiceCreateResult timer_service_create(uint32_t duration_s, TimerServiceId *id_out);
+
+//! Copy the calling app's running timers into a buffer, soonest expiry first.
+//!
+//! This is how an app discovers the timers it created earlier, for example
+//! after being relaunched. Timers being cancelled are not returned. Each
+//! entry's @ref TimerServiceInfo::description is the original duration
+//! formatted for display, which the app can show to help the wearer pick the
+//! timer to cancel.
+//!
+//! @param[out] timers Buffer for the timers.
+//! @param max_timers Maximum number of timers to write, usually
+//!        @ref TIMER_SERVICE_MAX_TIMERS.
+//! @return Number of timers written.
+uint8_t timer_service_get_timers(TimerServiceInfo *timers, uint8_t max_timers);
 
 //! Cancel a timer.
 //!
