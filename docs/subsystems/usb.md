@@ -34,6 +34,17 @@ from the controller's interrupt.
 | `CONFIG_USB_DEVICE_PID` | `0x0001` | Product ID, pid.codes' test one |
 | `CONFIG_USB_DEVICE_MANUFACTURER` | `PebbleOS` | Manufacturer string |
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
+| `CONFIG_USB_DEVICE_SERIAL_NUMBER` | `y` | Serial number string, from the SoC's unique ID |
+
+The serial number is the unique ID of the SoC, from `mcu_get_serial()`
+({doc}`../drivers/mcu`), folded to 48 bits by XOR and written as 12 uppercase
+hexadecimal digits, so that a host tells devices apart and names each the same
+every time it connects: macOS names the serial port
+`/dev/cu.usbmodem<serial><n>` instead of after the USB port it is plugged in,
+which it does for a 12-character serial number but not for one of 16 or more,
+hence the folding. The option is there on SoCs with a unique ID
+(`CONFIG_SOC_HAS_UNIQUE_ID`); a part whose ID is not programmed, as an
+SF32LB5x that has not been through factory test, has no serial number.
 
 ### Descriptors
 
@@ -136,9 +147,10 @@ A function names its strings with indices of its own, from 1, in the
 `iInterface` field of its interface descriptors and the `iFunction` field of
 its interface association descriptor, and lists them in `strings`: index `n`
 is `strings[n - 1]`. The stack numbers the strings of the device, after the
-manufacturer and the product, in the order of the functions, and puts those
-numbers in the configuration descriptor as it sends it, so the descriptors
-stay constant and functions do not have to know about each other. Indices in
+manufacturer, the product and the serial number when it is built in, in the
+order of the functions, and puts those numbers in the configuration descriptor
+as it sends it, so the descriptors stay constant and functions do not have to
+know about each other. Indices in
 class-specific descriptors are left as they are.
 
 ### Alternate settings

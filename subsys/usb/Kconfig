@@ -59,6 +59,16 @@ config USB_DEVICE_WEBUSB_LANDING_PAGE
       URL, with its http:// or https:// scheme, of the page browsers may
       offer to open when the device connects. Empty for none.
 
+config USB_DEVICE_SERIAL_NUMBER
+    bool "Serial number"
+    default y
+    depends on SOC_HAS_UNIQUE_ID
+    select MCU
+    help
+      A serial number string, the unique ID of the SoC folded to 48 bits,
+      in hexadecimal, so that hosts tell devices apart and keep their
+      names across connections.
+
 config USB_CDC_ACM
     bool "Serial port"
     select UART
