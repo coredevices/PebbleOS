@@ -1,0 +1,5 @@
+# nrf52840dk board configuration
+
+CONFIG_SOC_NRF52840=y
+
+CONFIG_UART=y

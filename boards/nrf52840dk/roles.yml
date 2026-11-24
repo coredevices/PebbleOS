@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+console_uart: uart0
+status_led: led1
+flash: flash0
+die_temp: temp
+rtc:
+  symbol: RETAINED_RTC
+  include: pbl/drivers/rtc/retained.h
