@@ -18,8 +18,8 @@
 Welcome to the PebbleOS documentation site!
 ```
 
-PebbleOS is a lightweight, power-efficient operating system originally developed for Pebble smartwatches and now [released open source](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html).
-Optimized for memory-in-pixel (MIP) displays and long battery life, it features Bluetooth sync, a timeline interface, and a strong developer ecosystem through an open SDK.
+PebbleOS is a lightweight, power-efficient general purpose RTOS for embedded devices, grown out of the [open-sourced](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html) Pebble smartwatch firmware.
+It is built with CMake and Kconfig, supports devicetree, and offers many device classes on top of a robust device model, along with subsystems such as Bluetooth LE, file systems and logging.
 
 ````{div} home-actions
 
