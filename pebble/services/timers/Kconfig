@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SERVICE_TIMERS
+    bool "Timers"
+    help
+      Disposable countdown timers created by apps.
+
+if SERVICE_TIMERS
+
+module = SERVICE_TIMERS
+module-str = Timers
+source "subsys/logging/Kconfig.template.log_level"
+
+endif
