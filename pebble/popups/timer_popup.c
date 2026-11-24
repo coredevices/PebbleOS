@@ -31,8 +31,6 @@
 #define TIMER_VIBE_REPEAT_INTERVAL_MS (1000)
 #define TIMER_LPM_VIBES_PER_MINUTE    (10)
 
-#define TIMER_POPUP_QUEUE_SIZE (TIMER_MAX_COUNT * 2)
-
 typedef struct {
   ActionableDialog *timer_popup;
   GBitmap *action_bar_dismiss;
@@ -44,13 +42,18 @@ typedef struct {
   VibeScore *vibe_score;
 } TimerPopupData;
 
+typedef struct PendingExpiry {
+  uint32_t duration_s;
+  struct PendingExpiry *next;
+} PendingExpiry;
+
 static TimerPopupData *s_timer_popup_data = nullptr;
 
 // Expiries that arrived while another alert or a locked modal stack owned the
-// screen. They are shown in order as the popup becomes available.
-static uint32_t s_pending_durations[TIMER_POPUP_QUEUE_SIZE];
-static uint8_t s_pending_head;
-static uint8_t s_pending_count;
+// screen. They are shown in order as the popup becomes available. The list is
+// heap-backed so it is not limited by the number of live timer slots.
+static PendingExpiry *s_pending_head;
+static PendingExpiry *s_pending_tail;
 
 static void prv_vibe(struct pbl_work *work);
 static void prv_vibe_kernel_main_cb(void *callback_context);
@@ -66,22 +69,31 @@ static WindowStack *prv_get_window_stack(void) {
 }
 
 static void prv_enqueue(uint32_t duration_s) {
-  if (s_pending_count == TIMER_POPUP_QUEUE_SIZE) {
-    PBL_LOG_WRN("Dropping timer expiry: popup queue full");
+  PendingExpiry *pending = pbl_malloc(sizeof(*pending));
+  if (!pending) {
+    PBL_LOG_WRN("Dropping timer expiry: out of memory");
     return;
   }
-  const uint8_t tail = (s_pending_head + s_pending_count) % TIMER_POPUP_QUEUE_SIZE;
-  s_pending_durations[tail] = duration_s;
-  s_pending_count++;
+  *pending = (PendingExpiry){.duration_s = duration_s};
+  if (s_pending_tail) {
+    s_pending_tail->next = pending;
+  } else {
+    s_pending_head = pending;
+  }
+  s_pending_tail = pending;
 }
 
 static bool prv_take_pending(uint32_t *duration_s) {
-  if (s_pending_count == 0) {
+  PendingExpiry *pending = s_pending_head;
+  if (!pending) {
     return false;
   }
-  *duration_s = s_pending_durations[s_pending_head];
-  s_pending_head = (s_pending_head + 1) % TIMER_POPUP_QUEUE_SIZE;
-  s_pending_count--;
+  s_pending_head = pending->next;
+  if (!s_pending_head) {
+    s_pending_tail = nullptr;
+  }
+  *duration_s = pending->duration_s;
+  pbl_free(pending);
   return true;
 }
 
@@ -193,6 +205,10 @@ static void prv_setup_action_bar(void) {
   action_bar_layer_set_click_config_provider(action_bar, prv_click_provider);
 }
 
+static void prv_push_pending_timer_cb(void *callback_context) {
+  timer_popup_push_pending();
+}
+
 static void prv_cleanup_timer_popup(void *callback_context) {
   if (s_timer_popup_data) {
     prv_stop_vibes();
@@ -204,6 +220,8 @@ static void prv_cleanup_timer_popup(void *callback_context) {
     gbitmap_destroy(s_timer_popup_data->action_bar_dismiss);
     pbl_free(s_timer_popup_data);
     s_timer_popup_data = nullptr;
+    // An expiry may have arrived while the popup was animating away.
+    launcher_task_add_callback(prv_push_pending_timer_cb, nullptr);
   }
 }
 

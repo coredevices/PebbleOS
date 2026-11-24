@@ -116,6 +116,30 @@ typedef struct {
 
 AlarmPopupData *s_alarm_popup_data = nullptr;
 
+typedef struct PendingAlarm {
+  PebbleAlarmClockEvent event;
+  struct PendingAlarm *next;
+} PendingAlarm;
+
+// Alarms that fired while a modal lockout kept the popup stack closed.
+static PendingAlarm *s_pending_alarms;
+static PendingAlarm *s_pending_alarms_tail;
+
+static void prv_enqueue_alarm(const PebbleAlarmClockEvent *event) {
+  PendingAlarm *pending = pbl_malloc(sizeof(*pending));
+  if (!pending) {
+    PBL_LOG_WRN("Dropping alarm alert: out of memory");
+    return;
+  }
+  *pending = (PendingAlarm){.event = *event};
+  if (s_pending_alarms_tail) {
+    s_pending_alarms_tail->next = pending;
+  } else {
+    s_pending_alarms = pending;
+  }
+  s_pending_alarms_tail = pending;
+}
+
 static void prv_vibe(struct pbl_work *work);
 
 // Outside the popup data: stopping must not wait for prv_vibe, which can stall on the event queue
@@ -331,7 +355,8 @@ static void prv_setup_action_bar(void) {
   action_bar_layer_set_click_config_provider(action_bar, prv_click_provider);
 }
 
-static void prv_push_pending_timer_cb(void *callback_context) {
+static void prv_push_pending_alerts_cb(void *callback_context) {
+  alarm_popup_push_pending();
   timer_popup_push_pending();
 }
 
@@ -351,17 +376,21 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
     pbl_free(s_alarm_popup_data);
     s_alarm_popup_data = nullptr;
-    // Let a timer that expired during the alarm show now that it is gone.
-    launcher_task_add_callback(prv_push_pending_timer_cb, nullptr);
+    // Let an alarm that fired during the alarm show now, then a timer.
+    launcher_task_add_callback(prv_push_pending_alerts_cb, nullptr);
   }
 }
 
 // ----------------------------------------------------------------------------------------------
 //! API
 void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
+  if (!event) {
+    return;
+  }
   if (!modal_manager_is_priority_enabled(ALARM_PRIORITY)) {
-    // Battery-critical and other modal lockouts disable the alarm stack; do
-    // not allocate a popup that cannot be pushed.
+    // Battery-critical and other modal lockouts disable the alarm stack; defer
+    // the alarm until the lockout ends instead of losing it.
+    prv_enqueue_alarm(event);
     return;
   }
   if (s_alarm_popup_data) {
@@ -434,4 +463,20 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 
 bool alarm_popup_is_active(void) {
   return s_alarm_popup_data != nullptr;
+}
+
+void alarm_popup_push_pending(void) {
+  if (s_alarm_popup_data || !s_pending_alarms ||
+      !modal_manager_is_priority_enabled(ALARM_PRIORITY)) {
+    return;
+  }
+
+  PendingAlarm *pending = s_pending_alarms;
+  s_pending_alarms = pending->next;
+  if (!s_pending_alarms) {
+    s_pending_alarms_tail = nullptr;
+  }
+  PebbleAlarmClockEvent event = pending->event;
+  pbl_free(pending);
+  alarm_popup_push_window(&event);
 }
