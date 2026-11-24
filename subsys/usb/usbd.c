@@ -230,6 +230,9 @@ static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
       *len = prv_device_desc(s_ctrl.buf, true);
       break;
     case PBL_USB_DESC_CONFIGURATION:
+      if (index != 0U) {
+        return -ENOTSUP;
+      }
       *len = prv_config_desc(s_ctrl.buf, sizeof(s_ctrl.buf));
       break;
     case PBL_USB_DESC_STRING:
