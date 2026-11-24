@@ -26,7 +26,7 @@
 
 #define EP0_MPS 64U
 
-// Packets of the other endpoints, each with a FIFO of its own in each direction
+// Packets of the other endpoints, each number with one FIFO for the direction it serves
 #define EP_FIFO_LEN 64U
 
 // SiFli: the USB PHY, in the system configuration block, which also has the analog bandgap
@@ -545,7 +545,9 @@ static int prv_disable(const struct pbl_udc *udc) {
   return 0;
 }
 
-// Endpoint 0 has the first 64 bytes of the FIFO RAM, then each endpoint a FIFO in each direction
+// Endpoint 0 has the first 64 bytes of the FIFO RAM, then each endpoint number one FIFO for the
+// direction it serves. The SF32LB57 garbles packets past the first 512 bytes, though RAMINFO gives
+// 1 KiB.
 static int prv_fifo_init(const struct pbl_udc_musb *m) {
   uint32_t ram = 4U << PBL_FIELD_GET(MUSB_RAMINFO_RAMBITS_MASK, prv_rb(m, MUSB_RAMINFO));
   uint32_t addr = EP0_MPS;
@@ -555,7 +557,7 @@ static int prv_fifo_init(const struct pbl_udc_musb *m) {
     sz++;
   }
 
-  if (addr + 2U * EP_FIFO_LEN * (m->udc.num_eps - 1U) > ram) {
+  if (addr + EP_FIFO_LEN * (m->udc.num_eps - 1U) > ram) {
     return -ENOMEM;
   }
 
@@ -563,7 +565,6 @@ static int prv_fifo_init(const struct pbl_udc_musb *m) {
     prv_index(m, n);
     prv_wb(m, MUSB_TXFIFOSZ, sz);
     prv_ww(m, MUSB_TXFIFOADD, (uint16_t)(addr / 8U));
-    addr += EP_FIFO_LEN;
     prv_wb(m, MUSB_RXFIFOSZ, sz);
     prv_ww(m, MUSB_RXFIFOADD, (uint16_t)(addr / 8U));
     addr += EP_FIFO_LEN;
