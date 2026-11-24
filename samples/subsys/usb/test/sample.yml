@@ -1,0 +1,5 @@
+description: The USB test function, for the integration tests in tests/integration/usb
+expect:
+  - 'usb: test function up'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk]
