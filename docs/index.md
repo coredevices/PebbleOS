@@ -100,8 +100,7 @@ The device model and every hardware driver class.
 :link: pebble/index
 :link-type: doc
 
-The watch firmware built on PebbleOS: services, the application SDK and a
-playground.
+The watch firmware built on PebbleOS: a playground and the application SDK.
 :::
 
 :::{grid-item-card} ⌚ Boards
@@ -118,6 +117,15 @@ Supported watches and emulated boards, and how to program them.
 :caption: Start here
 
 getting_started/index.md
+```
+
+```{toctree}
+:hidden:
+:caption: Pebble Firmware
+
+Overview <pebble/index.md>
+playground.md
+sdk/index.md
 ```
 
 ```{toctree}
@@ -143,16 +151,6 @@ subsystems/index.md
 drivers/index.md
 libraries/index.md
 third_party/index.md
-```
-
-```{toctree}
-:hidden:
-:caption: Pebble Firmware
-
-Overview <pebble/index.md>
-services/index.md
-sdk/index.md
-playground.md
 ```
 
 ```{toctree}

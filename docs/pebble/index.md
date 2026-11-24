@@ -5,8 +5,8 @@ on PebbleOS. It is built like any other application (see
 {doc}`../development/build_system/applications`), and adds on top of
 PebbleOS:
 
-{doc}`Services <../services/index>`
-: The watch's features: they own shared resources, persist state, talk to
+Services
+: `pebble/services`, the watch's features: they own shared resources, persist state, talk to
   the phone and feed events to apps.
 
 Application framework
