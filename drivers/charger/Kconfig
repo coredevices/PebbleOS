@@ -35,6 +35,20 @@ config CHARGER_NPM1300
     help
       Support for the charger of the Nordic nPM1300 PMIC.
 
+config CHARGER_SF32LB57
+    bool "SiFli SF32LB57"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_PMUC_ENABLED
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Support for the charger of the SiFli SF32LB57 PMU: whether power is
+      present on its VBUS input, and the charge status.
+
+config CHARGER_SF32LB57_IRQ_PRIO
+    int "SiFli SF32LB57 interrupt priority"
+    default 0
+    depends on CHARGER_SF32LB57
+
 config CHARGER_SIM
     bool "Simulator"
     default y

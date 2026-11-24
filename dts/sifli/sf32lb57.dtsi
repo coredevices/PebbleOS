@@ -534,6 +534,7 @@
 			operating-points-v2 = <&hpsys_opp_table>;
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,hpsys-rcc = <&hpsys_rcc>;
+			sifli,hpsys-aon = <&hpsys_aon>;
 
 			regulators {
 				ldo18: LDO18 {
