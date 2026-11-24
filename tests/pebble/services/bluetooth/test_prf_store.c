@@ -327,8 +327,6 @@ void test_prf_store__ble_pairing(void) {
                     pairing_info_out.is_local_encryption_info_valid);
   cl_assert_equal_i(PAIRING_INFO.local_encryption_info.ediv,
                     pairing_info_out.local_encryption_info.ediv);
-  cl_assert_equal_i(PAIRING_INFO.local_encryption_info.div,
-                    pairing_info_out.local_encryption_info.div);
   cl_assert_equal_i(ble_addr_cmp(&PAIRING_INFO.identity, &pairing_info_out.identity), 0);
   cl_assert(PAIRING_INFO.remote_encryption_info.rand ==
             pairing_info_out.remote_encryption_info.rand);

@@ -33,18 +33,10 @@
 /** @brief PPoGATT meta characteristic. */
 #define PBL_BT_PEBBLE_PPOGATT_META_CHARACTERISTIC_UUID_32BIT (0x10000002)
 
-/**
- * @brief Service UUID of the V1 watch-as-server PPoGATT, as shipped on Pebble 2 (DA1468x).
- *
- * Reserved so new allocations don't collide.
+/*
+ * 0x30000003 to 0x30000006 are taken: an earlier PPoGATT service hosted by the watch, and its
+ * characteristics, used them.
  */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_SERVICE_UUID_32BIT (0x30000003)
-/** @brief V1 watch-as-server PPoGATT data characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_DATA_CHARACTERISTIC_UUID_32BIT (0x30000004)
-/** @brief V1 watch-as-server PPoGATT meta characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_META_CHARACTERISTIC_UUID_32BIT (0x30000005)
-/** @brief V1 watch-as-server PPoGATT data write characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x30000006)
 
 /**
  * @brief Service UUID of the V2 "reversed" PPoGATT, see @ref bluetooth_ppog_reversed.

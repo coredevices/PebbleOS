@@ -38,9 +38,6 @@ struct PBL_PACKED pbl_bt_sm_local_encryption_info {
   /** Encrypted Diversifier. */
   uint16_t ediv;
 
-  /** Diversifier. Only used by the legacy cc2564x/Bluetopia backend. */
-  uint16_t div;
-
   /** Long Term Key. */
   struct pbl_bt_sm_key ltk;
 

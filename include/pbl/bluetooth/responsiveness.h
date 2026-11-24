@@ -26,8 +26,6 @@
 
 /** @brief Connection response time. */
 enum pbl_bt_response_time_state {
-  /** Invalid. */
-  PBL_BT_RESPONSE_TIME_INVALID = -1,
   /** Slowest response, lowest throughput and power. */
   PBL_BT_RESPONSE_TIME_MAX = 0,
   /** Intermediate response time. */
