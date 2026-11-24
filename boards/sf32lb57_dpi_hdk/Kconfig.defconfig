@@ -14,3 +14,6 @@ config FLASH_SPI_NOR_PY25Q128HA
     default y
 
 endif
+
+config CHARGER
+    default y if UDC

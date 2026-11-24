@@ -7,3 +7,4 @@ gpu: epic
 extram: psram
 bt_controller: lcpu
 udc: usbc
+charger: pmuc
