@@ -72,7 +72,7 @@ Small applications showing the kernel, subsystems and drivers in use.
 :link: architecture/index
 :link-type: doc
 
-How the firmware is layered: tasks, boot, processes and memory.
+How PebbleOS is layered, configured and booted, and how applications sit on top.
 :::
 
 :::{grid-item-card} ⚙️ Kernel
