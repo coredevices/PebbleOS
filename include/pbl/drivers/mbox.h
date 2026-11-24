@@ -60,9 +60,9 @@ struct pbl_mbox_chan {
  * @param _ctrl Controller.
  * @param ... Specifier cells.
  */
-#define PBL_MBOX_CHAN(_ctrl, ...)             \
-  {                                           \
-    .ctrl = (_ctrl), .cells = { __VA_ARGS__ } \
+#define PBL_MBOX_CHAN(_ctrl, ...)           \
+  {                                         \
+    .ctrl = (_ctrl), .cells = {__VA_ARGS__} \
   }
 
 /** @brief Channel client. */

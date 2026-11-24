@@ -122,7 +122,7 @@ static void prv_phone_sends_reversed_reset_complete(void) {
       (PPoGATTResetCompleteClientIDPayloadV1){
         .ppogatt_max_rx_window = 25,
         .ppogatt_max_tx_window = 25
-      };
+  };
   ppogatt_reversed_handle_data(CONN_HANDLE, reset_complete, sizeof(reset_complete));
 }
 

@@ -16,7 +16,7 @@ typedef enum AlertType {
   AlertType_Hourly = 1 << 4,
   AlertType_OnDisconnect = 1 << 5,
   AlertType_All = AlertType_Notifications | AlertType_Calls | AlertType_Alarms | AlertType_Hourly |
-                  AlertType_OnDisconnect,
+      AlertType_OnDisconnect,
 } AlertType;
 
 typedef struct {

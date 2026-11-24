@@ -521,7 +521,7 @@ void activity_algorithm_handle_accel(AccelRawData *data, uint32_t num_samples, u
               .start_utc = now_secs,
               .length_min = 0,
               .ongoing = true,
-            };
+        };
         break;
 
       case ActivitySleepStateUnknown:

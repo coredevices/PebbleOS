@@ -52,7 +52,7 @@ void bitblt_bitmap_into_bitmap_tiled(GBitmap *dest_bitmap, const GBitmap *src_bi
         .src_origin_offset = src_origin_offset,
         .compositing_mode = compositing_mode,
         .tint_color = tint_color,
-      };
+  };
 }
 
 // Helpers
@@ -234,7 +234,7 @@ static void prv_post_function_called_even_if_pre_function_causes_nothing_to_be_d
         .processor.pre = pre_func,
         .processor.post =
             post_function_called_even_if_pre_function_causes_nothing_to_be_drawn__post,
-      };
+  };
   graphics_draw_bitmap_in_rect_processed(&s_ctx, &bitmap, &rect, &processor.processor);
 
   // Check that the bitmap was not drawn

@@ -206,14 +206,14 @@ typedef enum {
   /** First key of the weekday step averages, @ref ACTIVITY_STEP_AVERAGES_PER_KEY uint16_t each. */
   ActivitySettingsKeyStepAveragesWeekdayFirst,
   /** Last key of the weekday step averages. */
-  ActivitySettingsKeyStepAveragesWeekdayLast =
-      ActivitySettingsKeyStepAveragesWeekdayFirst + ACTIVITY_STEP_AVERAGES_KEYS_PER_DAY - 1,
+  ActivitySettingsKeyStepAveragesWeekdayLast = ActivitySettingsKeyStepAveragesWeekdayFirst +
+      ACTIVITY_STEP_AVERAGES_KEYS_PER_DAY - 1,
 
   /** First key of the weekend step averages, @ref ACTIVITY_STEP_AVERAGES_PER_KEY uint16_t each. */
   ActivitySettingsKeyStepAveragesWeekendFirst,
   /** Last key of the weekend step averages. */
-  ActivitySettingsKeyStepAveragesWeekendLast =
-      ActivitySettingsKeyStepAveragesWeekendFirst + ACTIVITY_STEP_AVERAGES_KEYS_PER_DAY - 1,
+  ActivitySettingsKeyStepAveragesWeekendLast = ActivitySettingsKeyStepAveragesWeekendFirst +
+      ACTIVITY_STEP_AVERAGES_KEYS_PER_DAY - 1,
   /** uint16_t: age, in years. */
   ActivitySettingsKeyAgeYears,
 

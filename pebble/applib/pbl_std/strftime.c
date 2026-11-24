@@ -272,22 +272,24 @@ size_t localized_strftime(char *restrict dest_str, size_t maxsize, const char *r
         break;
       case 'C': // SU
         FMT_INTCOPY(year / 100, 2, INTFMT_PADZERO);
-      _fmt_intcopy: {
-        const char *intfmt;
-        if (pad != '\0' || cpyint_flag == INTFMT_PADZERO) {
-          intfmt = "%0*d";
-        } else {
-          intfmt = "%*d";
+      _fmt_intcopy:
+        {
+          const char *intfmt;
+          if (pad != '\0' || cpyint_flag == INTFMT_PADZERO) {
+            intfmt = "%0*d";
+          } else {
+            intfmt = "%*d";
+          }
+          width = PBL_MAX(width, cpyint_len);
+          length = snprintf(nullptr, 0, intfmt, width, cpyint_val);
+          if (left <= length) {
+            goto _out_of_size;
+          }
+          sprintf(dest_str, intfmt, width, cpyint_val);
+          dest_str += length;
+          left -= length;
         }
-        width = PBL_MAX(width, cpyint_len);
-        length = snprintf(nullptr, 0, intfmt, width, cpyint_val);
-        if (left <= length) {
-          goto _out_of_size;
-        }
-        sprintf(dest_str, intfmt, width, cpyint_val);
-        dest_str += length;
-        left -= length;
-      } break;
+        break;
       case 'd':
         FMT_INTCOPY(t->tm_mday, 2, INTFMT_PADZERO);
         break;

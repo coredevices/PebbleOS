@@ -26,8 +26,8 @@ typedef enum AlertMask {
   /** All alerts as stored by older firmware; migrated to AlertMaskAllOn when read. */
   AlertMaskAllOnLegacy = NotificationMobile | NotificationPhoneCall | NotificationOther,
   /** All alerts, including reminders. */
-  AlertMaskAllOn =
-      NotificationMobile | NotificationPhoneCall | NotificationOther | NotificationReminder
+  AlertMaskAllOn = NotificationMobile | NotificationPhoneCall | NotificationOther |
+      NotificationReminder
 } AlertMask;
 
 /**

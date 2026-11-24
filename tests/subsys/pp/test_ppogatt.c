@@ -284,7 +284,7 @@ static void prv_create_expected_reset_complete(void) {
         (const PPoGATTResetCompleteClientIDPayloadV1){
           .ppogatt_max_rx_window = s_rx_window_size,
           .ppogatt_max_tx_window = s_tx_window_size,
-        };
+    };
   }
 }
 
