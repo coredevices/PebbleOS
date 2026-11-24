@@ -1,0 +1,133 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "nordic/nrf52840-qiaa.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
+/ {
+	model = "Nordic nRF52840 DK";
+	compatible = "nordic,nrf52840-dk", "nordic,nrf52840";
+
+	lfxo: clock-32768 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led1: led-1 {
+			label = "LED1";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led2: led-2 {
+			label = "LED2";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+		};
+
+		led3: led-3 {
+			label = "LED3";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		};
+
+		led4: led-4 {
+			label = "LED4";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 16 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	// Buttons 1 to 4, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Button1";
+			gpios = <&gpio0 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <40>;
+			wakeup-source;
+		};
+
+		button-up {
+			label = "Button2";
+			gpios = <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <40>;
+		};
+
+		button-select {
+			label = "Button3";
+			gpios = <&gpio0 24 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <40>;
+		};
+
+		button-down {
+			label = "Button4";
+			gpios = <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <40>;
+		};
+	};
+};
+
+&clock {
+	clocks = <&hfxo>, <&lfxo>;
+	clock-names = "hfxo", "lfxo";
+};
+
+&internal_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "code";
+			reg = <0x0 0x100000>;
+		};
+	};
+};
+
+&qspi {
+	sck-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+	io-gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>, <&gpio0 21 GPIO_ACTIVE_HIGH>, <&gpio0 22 GPIO_ACTIVE_HIGH>, <&gpio0 23 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};
+
+// The interface MCU's virtual COM port
+&uart0 {
+	current-speed = <1000000>;
+	tx-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+	nordic,timer = <&timer2>;
+	status = "okay";
+};
+
+&temp {
+	status = "okay";
+};
+
+&timer2 {
+	status = "okay";
+};
