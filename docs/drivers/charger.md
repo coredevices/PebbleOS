@@ -2,8 +2,9 @@
 
 A charger reports whether external power is present, the charge status and
 the battery voltage, current and temperature, and turns charging on and off.
-Every listener added with `pbl_charger_add_listener()` hears external power
-come and go.
+Measuring the battery and turning charging on and off are optional: a charger
+that does neither returns `-ENOTSUP`. Every listener added with
+`pbl_charger_add_listener()` hears external power come and go.
 
 | | |
 | --- | --- |
