@@ -7,6 +7,7 @@
 #include <stdatomic.h>
 #include <string.h>
 
+#include <pbl/drivers/mcu.h>
 #include <pbl/drivers/udc.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/bits.h>
@@ -27,7 +28,16 @@
 #define STRING_LANGID       0U
 #define STRING_MANUFACTURER 1U
 #define STRING_PRODUCT      2U
-#define STRING_FUNCTIONS    3U
+#if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)
+#define STRING_SERIAL    3U
+#define STRING_FUNCTIONS 4U
+#else
+#define STRING_FUNCTIONS 3U
+#endif
+
+#define SERIAL_ID_MAX 16U
+// Hosts name serial ports after 12-character serial numbers, not after 16-character ones
+#define SERIAL_LEN 6U
 
 #define MAX_IFACES    16U
 #define MAX_FUNCTIONS 8U
@@ -103,6 +113,11 @@ uint8_t pbl_usbd_ep(const struct pbl_usbd_function *fn, uint8_t ep) {
 
   return EP_NONE;
 }
+
+#if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)
+// The unique ID folded to SERIAL_LEN bytes, in hex, empty without one
+static char s_serial[2U * SERIAL_LEN + 1U];
+#endif
 
 uint16_t pbl_usbd_bulk_mps(void) {
   return pbl_udc_speed(UDC) == PBL_UDC_SPEED_HIGH ? BULK_MPS_HS : BULK_MPS_FS;
@@ -286,8 +301,8 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
   return len;
 }
 
-// Miscellaneous, with interface association descriptors
-static const struct pbl_usb_desc_device s_device_desc = {
+// Miscellaneous, with interface association descriptors; iSerialNumber is set with the ID
+static struct pbl_usb_desc_device s_device_desc = {
   .bLength = sizeof(struct pbl_usb_desc_device),
   .bDescriptorType = PBL_USB_DESC_DEVICE,
   .bcdUSB = PBL_CPU_TO_LE16(BCD_USB),
@@ -322,6 +337,11 @@ static const char *prv_string(uint8_t index) {
   if (index == STRING_PRODUCT) {
     return CONFIG_USB_DEVICE_PRODUCT;
   }
+#if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)
+  if (index == STRING_SERIAL) {
+    return (s_serial[0] != '\0') ? s_serial : nullptr;
+  }
+#endif
 
   index -= STRING_FUNCTIONS;
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
@@ -801,12 +821,40 @@ static int prv_enable(void) {
   return pbl_udc_enable(UDC);
 }
 
+#if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)
+static void prv_serial_init(void) {
+  static const char hex[] = "0123456789ABCDEF";
+  uint8_t id[SERIAL_ID_MAX];
+  uint8_t folded[SERIAL_LEN] = {0};
+  size_t len = sizeof(id);
+
+  if (mcu_get_serial(id, &len) != 0) {
+    return;
+  }
+
+  for (size_t i = 0U; i < len; i++) {
+    folded[i % SERIAL_LEN] ^= id[i];
+  }
+
+  for (size_t i = 0U; i < SERIAL_LEN; i++) {
+    s_serial[2U * i] = hex[folded[i] >> 4];
+    s_serial[2U * i + 1U] = hex[folded[i] & 0xfU];
+  }
+
+  s_device_desc.iSerialNumber = STRING_SERIAL;
+}
+#endif
+
 int pbl_usbd_enable(void) {
   int ret;
 
   if (atomic_exchange(&s_enabled, true)) {
     return 0;
   }
+
+#if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)
+  prv_serial_init();
+#endif
 
   ret = prv_enable();
   if (ret != 0) {
