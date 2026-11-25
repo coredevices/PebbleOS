@@ -21,3 +21,16 @@ static PBL_ALWAYS_INLINE void arch_cpu_idle_deep(void) {
   arch_cpu_idle();
   arch_writel(arch_readl(ARCH_SCB_SCR) & ~ARCH_SCB_SCR_SLEEPDEEP, ARCH_SCB_SCR);
 }
+
+static PBL_ALWAYS_INLINE void arch_cpu_wait_event_deep(void) {
+  arch_writel(arch_readl(ARCH_SCB_SCR) | ARCH_SCB_SCR_SLEEPDEEP, ARCH_SCB_SCR);
+  __asm volatile("dsb 0xf" ::: "memory");
+  __asm volatile("wfe" ::: "memory");
+  __asm volatile("isb 0xf" ::: "memory");
+  arch_writel(arch_readl(ARCH_SCB_SCR) & ~ARCH_SCB_SCR_SLEEPDEEP, ARCH_SCB_SCR);
+}
+
+static PBL_ALWAYS_INLINE void arch_cpu_send_event(void) {
+  __asm volatile("dsb 0xf" ::: "memory");
+  __asm volatile("sev" ::: "memory");
+}

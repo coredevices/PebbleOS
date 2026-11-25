@@ -76,6 +76,23 @@ static PBL_ALWAYS_INLINE void pbl_cpu_idle_deep(void) {
 }
 
 /**
+ * @brief Wait for an event in the CPU's deep sleep.
+ *
+ * As pbl_cpu_idle_deep(), but ended by an event, as another CPU sends with
+ * pbl_cpu_send_event(), rather than by an interrupt. Always inlined.
+ */
+static PBL_ALWAYS_INLINE void pbl_cpu_wait_event_deep(void) {
+  arch_cpu_wait_event_deep();
+}
+
+/**
+ * @brief Send an event to the other CPUs of the SoC, which ends their wait for one.
+ */
+static PBL_ALWAYS_INLINE void pbl_cpu_send_event(void) {
+  arch_cpu_send_event();
+}
+
+/**
  * @brief Idle states, shallowest first.
  *
  * Defined by SoCs that select @c CONFIG_SOC_HAS_IDLE_STATES; for the others the kernel defines a
