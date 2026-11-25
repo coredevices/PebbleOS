@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -37,6 +38,10 @@ static bool s_connected;
 static bool s_enabled_eps[2][16];
 // Length of the last transfer queued on each endpoint, by number, OUT then IN; -1 for none
 static int s_queued[2][16];
+// What the last transfer queued on each endpoint holds, up to 64 bytes
+static uint8_t s_queued_data[2][16][64];
+// An endpoint whose transfers fail to queue with -EBUSY, or 0 for none
+static uint8_t s_fail_ep;
 
 int pbl_device_init(const struct pbl_device *dev) {
   return 0;
@@ -83,8 +88,17 @@ int pbl_udc_ep_set_halt(const struct pbl_udc *udc, uint8_t ep, bool halt) {
 }
 
 int pbl_udc_ep_queue(const struct pbl_udc *udc, uint8_t ep, void *buf, size_t len) {
+  if (ep == s_fail_ep && ep != 0U) {
+    return -EBUSY;
+  }
   if ((ep & ~PBL_UDC_EP_IN) != 0U) {
-    s_queued[(ep & PBL_UDC_EP_IN) != 0U][ep & ~PBL_UDC_EP_IN] = (int)len;
+    bool in = (ep & PBL_UDC_EP_IN) != 0U;
+    uint8_t n = ep & ~PBL_UDC_EP_IN;
+
+    s_queued[in][n] = (int)len;
+    if (buf != nullptr) {
+      memcpy(s_queued_data[in][n], buf, len < 64U ? len : 64U);
+    }
   }
   if (ep == PBL_UDC_EP_IN && len != 0U) {
     cl_assert(len <= sizeof(s_in));

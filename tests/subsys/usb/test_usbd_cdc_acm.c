@@ -118,3 +118,24 @@ void test_usbd_cdc_acm__dtr(void) {
   cl_assert_equal_i(s_queued[1][6], 3);
   cl_assert_equal_i(s_queued[1][3], -1);
 }
+
+void test_usbd_cdc_acm__queue_fails(void) {
+  uint8_t type = PBL_USB_TYPE_CLASS | PBL_USB_RECIP_INTERFACE;
+
+  memset(s_queued, 0xff, sizeof(s_queued));
+  cl_assert_equal_i(prv_request(PBL_USB_TYPE_STANDARD, PBL_USB_REQ_SET_CONFIGURATION, 1U, 0U, 0U),
+                    0);
+  pbl_uart_poll_out(USB_CDC_ACM_UART(0), 'a');
+  pbl_uart_poll_out(USB_CDC_ACM_UART(0), 'b');
+
+  // The transfer DTR starts, from endpoint 0, fails to queue: the bytes stay in the ring
+  s_fail_ep = 0x83U;
+  cl_assert_equal_i(prv_request(type, 0x22, 0x0001U, 0U, 0U), 0);
+  cl_assert_equal_i(s_queued[1][3], -1);
+
+  // The next write sends them, with what it adds
+  s_fail_ep = 0U;
+  pbl_uart_poll_out(USB_CDC_ACM_UART(0), 'c');
+  cl_assert_equal_i(s_queued[1][3], 3);
+  cl_assert_equal_m(s_queued_data[1][3], "abc", 3U);
+}
