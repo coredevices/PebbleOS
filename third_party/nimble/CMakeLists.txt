@@ -8,15 +8,10 @@ set(includes
   port/include
   ${nimble}/nimble/include
   ${nimble}/nimble/host/include
-  ${nimble}/nimble/host/services/ans/include
   ${nimble}/nimble/host/services/bas/include
-  ${nimble}/nimble/host/services/bleuart/include
   ${nimble}/nimble/host/services/gap/include
   ${nimble}/nimble/host/services/gatt/include
-  ${nimble}/nimble/host/services/ias/include
   ${nimble}/nimble/host/services/dis/include
-  ${nimble}/nimble/host/services/lls/include
-  ${nimble}/nimble/host/services/tps/include
   ${nimble}/nimble/host/util/include
   ${nimble}/nimble/transport/include
   ${nimble}/nimble/transport/common/hci_h4/include
@@ -55,7 +50,6 @@ if(CONFIG_NIMBLE_CONTROLLER)
   file(GLOB controller_sources CONFIGURE_DEPENDS ${nimble}/nimble/controller/src/*.c)
   list(APPEND sources ${controller_sources})
   list(PREPEND includes ${nimble}/nimble/controller/include)
-  list(APPEND defines NIMBLE_CFG_CONTROLLER=1)
   pbl_compile_definitions(NIMBLE_CFG_CONTROLLER=1)
 endif()
 
