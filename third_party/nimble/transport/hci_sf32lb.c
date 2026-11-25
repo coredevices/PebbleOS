@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "hci_alloc.h"
+
 #include <errno.h>
 #include <string.h>
 
@@ -10,9 +12,11 @@
 #include <pbl/drivers/remoteproc/sf32lb.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/barrier.h>
+#include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
@@ -30,11 +34,10 @@
 #include <nimble/transport.h>
 #include <nimble/transport/hci_h4.h>
 #include <nimble/transport_impl.h>
-#include <os/os_mempool.h>
 
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
-#define HCI_WRITE_TIMEOUT_MS 10U
+#define HCI_WRITE_TIMEOUT_MS 100U
 
 #define BLE_HCI_EXT_SF32LB52_BLE_READY 0xFC11U
 
@@ -51,11 +54,7 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 #define NVDS_TAG_WAKEUP_TIME 0x0dU
 #define NVDS_BD_ADDR_LEN     6U
 
-#ifdef SF32LB52_USE_LXT
-#define NVDS_WAKEUP_TIME_US 3500U
-#else
 #define NVDS_WAKEUP_TIME_US 4500U
-#endif
 
 // Maximum sleep duration (10 s), controller logs off, scheduling
 static const uint8_t s_nvds_defaults[] = {0x12U, 0x01U, 0x01U, 0x2fU, 0x04U, 0x20U,
@@ -90,61 +89,14 @@ static_assert(sizeof(struct ring) == 20U);
 static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_NIMBLE_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
-/* Given by prv_acl_put_signal() whenever an LL-direction ACL mbuf is returned
- * to the transport pool; taken by the HCI RX task when an alloc fails so we
- * unblock as soon as the host has freed something instead of polling.
- */
-static PBL_SEM_DEFINE(s_acl_pool_avail, 0, 1);
+// Held while a packet is written, so that packets of two threads do not mix.
+static PBL_MUTEX_DEFINE(s_tx_lock);
 static struct hci_h4_sm s_hci_h4sm;
 
-static bool s_open;
 // Written data the LCPU has yet to take; sleep is blocked meanwhile
 static bool s_busy;
 // Data from the LCPU yet to read; it may sleep once there is none, so its RAM stays untouched
 static volatile uint32_t s_rx_pending;
-
-static struct os_mbuf *prv_alloc_acl_from_ll(void) {
-  struct os_mbuf *om = ble_transport_alloc_acl_from_ll();
-  if (om != NULL) {
-    return om;
-  }
-
-  /* ACL pool exhausted. Block instead of returning NULL (which the H4 state
-   * machine would treat as a fatal, unrecoverable framing error). While we
-   * wait we stop draining the LCPU->HCPU HCI ring; it fills and backpressures
-   * the controller, i.e. transport-level flow control. prv_acl_put_signal()
-   * wakes us when the host returns a buffer to the pool; the timeout guards
-   * the give-before-wait race and the fact that the from_hs TX path shares
-   * mpool_acl, so a freed buffer may be taken before we retry.
-   */
-  PBL_LOG_DBG("ACL pool empty, waiting for buffer");
-  do {
-    (void)pbl_sem_take(&s_acl_pool_avail, PBL_MSEC(100));
-    om = ble_transport_alloc_acl_from_ll();
-  } while (om == NULL);
-
-  return om;
-}
-
-static os_error_t prv_acl_put_signal(struct os_mempool_ext *mpe, void *data, void *arg) {
-  os_error_t err = os_memblock_put_from_cb(&mpe->mpe_mp, data);
-  pbl_sem_give(&s_acl_pool_avail);
-  return err;
-}
-
-static void *prv_alloc_evt(int discardable) {
-  void *buf = ble_transport_alloc_evt(discardable);
-  if (!buf) {
-    PBL_LOG_ERR("EVT alloc failed (discardable=%d)", discardable);
-  }
-
-  return buf;
-}
-
-static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
-  .acl = prv_alloc_acl_from_ll,
-  .evt = prv_alloc_evt,
-};
 
 static inline volatile struct ring *prv_tx(void) {
   return (volatile struct ring *)pbl_rproc_sf32lb_get_ipc_mem(BT_CONTROLLER)->base;
@@ -281,9 +233,9 @@ static void prv_mbox_rx(const struct pbl_mbox_client *cl, const void *msg) {
 
 static void prv_mbox_tx_done(const struct pbl_mbox_client *cl, const void *msg, int ret) {
   pbl_irq_lock();
-  if (s_open && prv_ring_empty(prv_tx())) {
+  if (prv_ring_empty(prv_tx())) {
     prv_set_busy(false);
-  } else if (s_open) {
+  } else {
     // the LCPU took the doorbell before draining the ring
     (void)pbl_mbox_send(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), nullptr);
   }
@@ -295,36 +247,45 @@ static const struct pbl_mbox_client s_mbox_cl = {
   .tx_done = prv_mbox_tx_done,
 };
 
-static int prv_write(const void *data, size_t len) {
-  const uint8_t *buf = data;
-  uint64_t start;
+// Nothing of a packet is written until all of it fits: one that times out half written would
+// leave the controller out of frame for good.
+static int prv_tx_begin(size_t len) {
+  volatile struct ring *tx = prv_tx();
+  uint32_t size = (uint32_t)tx->size;
+  uint64_t start = pbl_uptime_ms();
 
-  if (!s_open) {
-    return -EINVAL;
+  if (len > size) {
+    return -EMSGSIZE;
   }
 
-  start = pbl_uptime_ms();
-  while (len > 0U) {
-    size_t written = prv_ring_put(prv_tx(), buf, len);
+  pbl_mutex_lock(&s_tx_lock, PBL_FOREVER);
 
-    if (written > 0U) {
-      buf += written;
-      len -= written;
-
-      pbl_irq_lock();
-      prv_set_busy(true);
-      pbl_irq_unlock();
-
-      (void)pbl_mbox_send(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), nullptr);
-      continue;
-    }
-
+  while (size - prv_ring_used(tx->rd_idx, tx->wr_idx, size) < len) {
     if (pbl_uptime_ms() - start >= HCI_WRITE_TIMEOUT_MS) {
+      pbl_mutex_unlock(&s_tx_lock);
       return -ETIMEDOUT;
     }
+
+    pbl_sleep_ms(1U);
   }
 
   return 0;
+}
+
+static void prv_tx_put(const void *data, size_t len) {
+  size_t written = prv_ring_put(prv_tx(), data, len);
+
+  PBL_ASSERTN(written == len);
+}
+
+static void prv_tx_end(void) {
+  pbl_irq_lock();
+  prv_set_busy(true);
+  pbl_irq_unlock();
+
+  (void)pbl_mbox_send(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), nullptr);
+
+  pbl_mutex_unlock(&s_tx_lock);
 }
 
 static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
@@ -365,10 +326,7 @@ static void prv_hci_task_main(void *unused) {
     while ((len = prv_ring_peek(&data)) > 0U) {
       int consumed;
 
-      /* prv_alloc_acl_from_ll() blocks until a buffer is available, so the
-       * H4 state machine never reports an OOM on the ACL path; any
-       * non-positive return here is unexpected.
-       */
+      // The allocators wait for a buffer, so this is not expected to fail.
       consumed = hci_h4_sm_rx(&s_hci_h4sm, data, len);
       if (consumed <= 0) {
         PBL_LOG_ERR("hci_h4_sm_rx returned %d", consumed);
@@ -426,10 +384,14 @@ static void prv_controller_config(void) {
 #endif
 }
 
-void ble_transport_ll_reinit(void) {
+void ble_transport_ll_init(void) {
   int ret;
 
-  hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
+  // The role may name any remote processor; the getters below take the SF32LB driver's
+  PBL_ASSERTN(BT_CONTROLLER->ops == &pbl_rproc_sf32lb_ops);
+
+  nimble_hci__alloc_init();
+  hci_h4_sm_init(&s_hci_h4sm, &nimble_hci__allocs_from_ll, prv_hci_frame_cb);
 
   prv_ring_reset_tx();
 
@@ -439,21 +401,10 @@ void ble_transport_ll_reinit(void) {
   ret = pbl_mbox_request(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), &s_mbox_cl);
   PBL_ASSERT(ret == 0, "LCPU TX doorbell request failed (%d)", ret);
 
-  s_open = true;
-
   prv_controller_config();
 
   ret = pbl_rproc_boot(BT_CONTROLLER);
   PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
-}
-
-void ble_transport_ll_init(void) {
-  // The role may name any remote processor; the getters below take the SF32LB driver's
-  PBL_ASSERTN(BT_CONTROLLER->ops == &pbl_rproc_sf32lb_ops);
-
-  ble_transport_ll_reinit();
-
-  ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
 
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
@@ -467,34 +418,21 @@ void ble_transport_ll_init(void) {
   PBL_ASSERTN(pbl_thread_create(&s_hci_thread, &attr) == 0);
 }
 
-void ble_transport_ll_deinit(void) {
-  pbl_mbox_free(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER));
-  pbl_mbox_free(pbl_rproc_sf32lb_get_rx_chan(BT_CONTROLLER));
-
-  pbl_irq_lock();
-  s_open = false;
-  prv_set_busy(false);
-  pbl_irq_unlock();
-
-  pbl_rproc_shutdown(BT_CONTROLLER);
-}
-
 static int prv_write_mbuf(uint8_t h4_type, struct os_mbuf *om) {
   int ret;
 
-  ret = prv_write(&h4_type, 1U);
-  if (ret != 0) {
-    return ret;
-  }
-
-  for (struct os_mbuf *x = om; x != NULL; x = SLIST_NEXT(x, om_next)) {
-    ret = prv_write(x->om_data, x->om_len);
-    if (ret != 0) {
-      return ret;
+  ret = prv_tx_begin(1U + OS_MBUF_PKTLEN(om));
+  if (ret == 0) {
+    prv_tx_put(&h4_type, 1U);
+    for (struct os_mbuf *x = om; x != NULL; x = SLIST_NEXT(x, om_next)) {
+      prv_tx_put(x->om_data, x->om_len);
     }
+    prv_tx_end();
   }
 
-  return 0;
+  os_mbuf_free_chain(om);
+
+  return ret;
 }
 
 /* APIs to be implemented by HS/LL side of transports */
@@ -503,9 +441,11 @@ int ble_transport_to_ll_cmd_impl(void *buf) {
   uint8_t h4_cmd = HCI_H4_CMD;
   int ret;
 
-  ret = prv_write(&h4_cmd, 1U);
+  ret = prv_tx_begin(1U + sizeof(*cmd) + cmd->length);
   if (ret == 0) {
-    ret = prv_write(cmd, sizeof(*cmd) + cmd->length);
+    prv_tx_put(&h4_cmd, 1U);
+    prv_tx_put(cmd, sizeof(*cmd) + cmd->length);
+    prv_tx_end();
   }
 
   ble_transport_free(buf);
@@ -522,7 +462,6 @@ int ble_transport_to_ll_acl_impl(struct os_mbuf *om) {
   int ret;
 
   ret = prv_write_mbuf(HCI_H4_ACL, om);
-  os_mbuf_free_chain(om);
 
   if (ret != 0) {
     PBL_LOG_ERR("Failed to write HCI ACL (%d)", ret);
@@ -536,7 +475,6 @@ int ble_transport_to_ll_iso_impl(struct os_mbuf *om) {
   int ret;
 
   ret = prv_write_mbuf(HCI_H4_ISO, om);
-  os_mbuf_free_chain(om);
 
   if (ret != 0) {
     PBL_LOG_ERR("Failed to write HCI ISO (%d)", ret);
