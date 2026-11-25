@@ -4,6 +4,8 @@
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/pairability.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/advertising.h>
@@ -14,95 +16,126 @@
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
-static int s_allow_ble_pairing_refcount = 0;
-static bool s_last_ble_discoverable_state = false;
+static void prv_period_fn(struct pbl_work *work);
 
-static struct pbl_wallclock_work s_pairability_work;
+// Guards what follows: references come from apps and from more than one work queue.
+static PBL_MUTEX_DEFINE(s_lock);
+static unsigned int s_refcount;
+// The references of the period and of having no bonding, held at most once each.
+static bool s_period_ref;
+static bool s_unbonded_ref;
+static uint64_t s_period_end_ticks;
 
-static void evaluate_pairing_refcount(void *data) {
+static PBL_DELAYED_WORK_DEFINE(s_period_work, prv_period_fn);
+
+// Only SysWorkq touches it.
+static bool s_discoverable;
+
+static void prv_evaluate(void *data) {
+  bool pairable;
+
   PBL_ASSERT_TASK(PebbleTask_SysWorkq);
 
   if (!bt_ctl_is_bluetooth_running()) {
     return;
   }
 
-  PBL_LOG_DBG("Pairabilty state: LE=%u", s_allow_ble_pairing_refcount);
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  pairable = (s_refcount > 0U);
+  pbl_mutex_unlock(&s_lock);
 
-  bool is_ble_pairable_and_discoverable = (s_allow_ble_pairing_refcount > 0);
+  PBL_LOG_DBG("Pairable: %d", (int)pairable);
 
-  pbl_bt_le_pairability_set_enabled(is_ble_pairable_and_discoverable);
-  if (s_last_ble_discoverable_state != is_ble_pairable_and_discoverable) {
-    bt_advertising_set_discoverable(is_ble_pairable_and_discoverable);
-    s_last_ble_discoverable_state = is_ble_pairable_and_discoverable;
+  pbl_bt_le_pairability_set_enabled(pairable);
+  if (s_discoverable != pairable) {
+    bt_advertising_set_discoverable(pairable);
+    s_discoverable = pairable;
   }
 }
 
+// Always evaluate, even if the state might not have changed: this pretty much only happens in
+// response to user input, and skipping evaluations has caused bugs before.
 static void prv_schedule_evaluation(void) {
-  // Always evaluate, even if the state might not have changed: this pretty much only happens in
-  // response to user input, and skipping evaluations has caused bugs before.
-  pbl_sys_work_call(evaluate_pairing_refcount, nullptr);
+  pbl_sys_work_call(prv_evaluate, nullptr);
 }
 
 void bt_pairability_use(void) {
-  ++s_allow_ble_pairing_refcount;
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_refcount++;
+  pbl_mutex_unlock(&s_lock);
+
   prv_schedule_evaluation();
-}
-
-void bt_pairability_use_ble(void) {
-  ++s_allow_ble_pairing_refcount;
-  prv_schedule_evaluation();
-}
-
-static void prv_pairability_fn(struct pbl_work *work) {
-  pbl_wallclock_work_stop(&s_pairability_work);
-  bt_pairability_release_ble();
-}
-
-void bt_pairability_use_ble_for_period(uint16_t duration_secs) {
-  if (!pbl_wallclock_work_is_running(&s_pairability_work)) {
-    pbl_wallclock_work_init(&s_pairability_work, prv_pairability_fn);
-    // If this function is called multiple times before the timer is unscheduled, limit to calling
-    // "use" only once:
-    bt_pairability_use_ble();
-  }
-  // Always reschedule, even if the duration is shorter than the one that might already be
-  // scheduled:
-  pbl_wallclock_work_start(&pbl_sys_workq_high, &s_pairability_work, 1, duration_secs);
 }
 
 void bt_pairability_release(void) {
-  PBL_ASSERT(s_allow_ble_pairing_refcount != 0, "");
-  --s_allow_ble_pairing_refcount;
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  PBL_ASSERTN(s_refcount != 0U);
+  s_refcount--;
+  pbl_mutex_unlock(&s_lock);
+
   prv_schedule_evaluation();
 }
 
-void bt_pairability_release_ble(void) {
-  PBL_ASSERT(s_allow_ble_pairing_refcount != 0, "");
-  --s_allow_ble_pairing_refcount;
-  prv_schedule_evaluation();
-}
+static void prv_period_fn(struct pbl_work *work) {
+  uint64_t now = pbl_uptime_ticks();
 
-//! Call this whenever we modify the number of saved bondings we have.
-void bt_pairability_update_due_to_bonding_change(void) {
-  static bool s_pairable_due_to_no_gateway_bondings = false;
-
-  if (pbl_bt_bond_count() == 0) {
-    if (!s_pairable_due_to_no_gateway_bondings) {
-      bt_pairability_use();
-      s_pairable_due_to_no_gateway_bondings = true;
-    }
-  } else {
-    if (s_pairable_due_to_no_gateway_bondings) {
-      bt_pairability_release();
-      s_pairable_due_to_no_gateway_bondings = false;
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_period_ref) {
+    if (now < s_period_end_ticks) {
+      // The period was extended after this was queued.
+      pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_period_work,
+                                  PBL_TICKS(s_period_end_ticks - now));
+    } else {
+      s_period_ref = false;
+      s_refcount--;
     }
   }
+  pbl_mutex_unlock(&s_lock);
+
+  prv_schedule_evaluation();
+}
+
+void bt_pairability_use_for_period(uint16_t duration_secs) {
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (s_period_ref || duration_secs != 0U) {
+    if (!s_period_ref) {
+      s_period_ref = true;
+      s_refcount++;
+    }
+
+    s_period_end_ticks = pbl_uptime_ticks() + pbl_ms_to_ticks(duration_secs * 1000U);
+    pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_period_work,
+                                PBL_MSEC(duration_secs * 1000U));
+  }
+  pbl_mutex_unlock(&s_lock);
+
+  prv_schedule_evaluation();
+}
+
+void bt_pairability_update_due_to_bonding_change(void) {
+  const bool unbonded = (pbl_bt_bond_count() == 0);
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  if (unbonded != s_unbonded_ref) {
+    s_unbonded_ref = unbonded;
+    if (unbonded) {
+      s_refcount++;
+    } else {
+      s_refcount--;
+    }
+  }
+  pbl_mutex_unlock(&s_lock);
+
+  prv_schedule_evaluation();
+}
+
+static void prv_init(void *data) {
+  // Advertising was torn down before this, so it has to be told again.
+  s_discoverable = false;
+  prv_evaluate(nullptr);
 }
 
 void bt_pairability_init(void) {
-  // Reset cached discoverable state: the advertising infrastructure was torn down
-  // before this init, so we must re-drive bt_advertising_set_discoverable() if needed.
-  s_last_ble_discoverable_state = false;
   bt_pairability_update_due_to_bonding_change();
-  prv_schedule_evaluation();
+  pbl_sys_work_call(prv_init, nullptr);
 }

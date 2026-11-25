@@ -10,56 +10,32 @@
  * @ingroup services_bluetooth
  * @brief Reference-counted requests to be discoverable and pairable over BLE.
  *
- * The watch is discoverable and pairable while the count is non-zero; address cycling is
- * paused meanwhile. Changes are applied from SysWorkq.
+ * The watch is discoverable and pairable while the count is non-zero. The service itself holds a
+ * reference while the watch has no bonding, so that an unpaired watch can be found. References may
+ * be taken and released from any thread; changes are applied from SysWorkq.
  * @{
  */
 
-/**
- * @brief Take a pairability reference.
- *
- * Same as bt_pairability_use_ble().
- */
+/** @brief Take a pairability reference. */
 void bt_pairability_use(void);
 
-/**
- * @brief Take a BLE pairability reference.
- */
-void bt_pairability_use_ble(void);
+/** @brief Release a pairability reference. */
+void bt_pairability_release(void);
 
 /**
  * @brief Be pairable for a period.
  *
- * Takes one reference, released automatically when the period ends. Calling again before then
- * restarts the period without taking another reference.
+ * Takes one reference, released when the period ends. Calling again before then restarts the
+ * period without taking another reference.
  *
- * @param duration_secs Period in seconds.
+ * @param duration_secs Period in seconds; 0 ends a period that is running.
  */
-void bt_pairability_use_ble_for_period(uint16_t duration_secs);
+void bt_pairability_use_for_period(uint16_t duration_secs);
 
-/**
- * @brief Release a pairability reference.
- *
- * Same as bt_pairability_release_ble().
- */
-void bt_pairability_release(void);
-
-/**
- * @brief Release a BLE pairability reference.
- */
-void bt_pairability_release_ble(void);
-
-/**
- * @brief Re-evaluate pairability after the bondings changed.
- *
- * Holds a reference while there is no gateway or ANCS bonding, so an unpaired watch can be
- * found.
- */
+/** @brief Re-evaluate the reference held while there is no bonding, after the bondings changed. */
 void bt_pairability_update_due_to_bonding_change(void);
 
-/**
- * @brief Initialize pairability when the stack starts.
- */
+/** @brief Initialize pairability when the stack starts. */
 void bt_pairability_init(void);
 
 /** @} */
