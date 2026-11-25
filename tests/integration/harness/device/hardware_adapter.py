@@ -7,8 +7,9 @@ import shlex
 import subprocess
 import time
 
+from harness.connections import Capability
 from harness.device import DeviceAdapter
-from harness.errors import HarnessError
+from harness.errors import HarnessError, PromptError, Unsupported
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ SLOT_HEADER_SIZE = 0x1000
 # How long a USB console may take to come back after the watch resets.
 CONSOLE_RETURN_S = 15.0
 CONSOLE_RETRY_S = 0.25
+# The dialog a watch booting on a charger raises, and how long it may take to.
+CHARGING_DIALOG = "Battery Status"
+CHARGING_DIALOG_S = 5.0
+CHARGING_POLL_S = 0.25
 
 
 class HardwareAdapter(DeviceAdapter):
@@ -70,6 +75,35 @@ class HardwareAdapter(DeviceAdapter):
                 if time.monotonic() > deadline:
                     raise
                 time.sleep(CONSOLE_RETRY_S)
+
+    def wait_ready(self, timeout=None):
+        super().wait_ready(timeout)
+        self._close_charging_dialog()
+
+    def _is_plugged(self):
+        try:
+            lines = self.prompt("battery status")
+        except (PromptError, Unsupported):
+            return False
+        return any(line.strip() == "plugged: YES" for line in lines)
+
+    def _close_charging_dialog(self):
+        """A watch charging from the harness' cable, as one whose console is
+        its USB port, raises the charging dialog as it boots. Its animation
+        keeps the screen changing and the CPU busy, so it is closed as a user
+        would."""
+        if not self.has(Capability.PROMPT) or not self._is_plugged():
+            return
+        from harness.helpers.ui import Button, Ui
+
+        ui = Ui(self)
+        deadline = time.monotonic() + CHARGING_DIALOG_S
+        while time.monotonic() < deadline:
+            if CHARGING_DIALOG in ui.modal_stack():
+                ui.press(Button.BACK)
+                logger.info("closed the charging dialog")
+                return
+            time.sleep(CHARGING_POLL_S)
 
     def _hold_console(self):
         """Keep the debug port open, RTS released, while the harness runs.
