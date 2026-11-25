@@ -46,7 +46,7 @@ static void prv_evaluate(void *data) {
 
   PBL_LOG_DBG("Pairable: %d", (int)pairable);
 
-  pbl_bt_le_pairability_set_enabled(pairable);
+  pbl_bt_pairability_set_enabled(pairable);
   if (s_discoverable != pairable) {
     bt_advertising_set_discoverable(pairable);
     s_discoverable = pairable;

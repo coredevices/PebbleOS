@@ -51,14 +51,10 @@ static int prv_cmd_prefs_wipe(const struct pbl_shell *sh, size_t argc, char **ar
 PBL_SHELL_SUBCMD_ADD(sub_bt, prefs_wipe, nullptr, "Delete all pairings", prv_cmd_prefs_wipe, 0, 0);
 
 static int prv_cmd_status(const struct pbl_shell *sh, size_t argc, char **argv) {
-  char chip_info[64];
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   const bool connected = bt_link_is_connected();
 
   pbl_shell_print(sh, "Alive: %s", bt_ctl_is_bluetooth_running() ? "yes" : "no");
-
-  pbl_bt_id_copy_chip_info_string(chip_info, sizeof(chip_info));
-  pbl_shell_print(sh, "BT Chip Info: %s", chip_info);
 
   pbl_shell_print(sh, "Connected: %s", connected ? "yes" : "no");
   if (connected) {

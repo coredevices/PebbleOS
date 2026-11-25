@@ -225,15 +225,13 @@ typedef enum {
   PebbleBluetoothPairEventTypePairingComplete,
 } PebbleBluetoothPairEventType;
 
-struct pbl_bt_pairing_confirm_ctx;
-
 typedef struct {
   char *device_name;
   char *confirmation_token;
 } PebbleBluetoothPairingConfirmationInfo;
 
 typedef struct PBL_PACKED { // 9 bytes
-  const struct pbl_bt_pairing_confirm_ctx *ctx;
+  uint16_t conn_handle;
   union {
     //! Valid if type is PebbleBluetoothPairEventTypePairingUserConfirmation
     PebbleBluetoothPairingConfirmationInfo *confirmation_info;

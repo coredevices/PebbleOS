@@ -7,10 +7,10 @@
 
 static bool s_pairable;
 
-void pbl_bt_le_pairability_set_enabled(bool enabled) {
+void pbl_bt_pairability_set_enabled(bool enabled) {
   s_pairable = enabled;
 }
 
-bool pairability_is_enabled(void) {
+bool pbl_bt__pairability_is_enabled(void) {
   return s_pairable;
 }
