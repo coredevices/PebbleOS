@@ -24,7 +24,8 @@ config NVMEM_STM32_ROMEM
     depends on DT_HAS_ST_STM32F4_OTP_ENABLED
     help
       Read access to the read-only memory an STM32 holds its factory data
-      in, as the calibration of the analog blocks of the STM32H7.
+      in, as the unique ID and the calibration of the analog blocks of the
+      STM32H7.
 
 config NVMEM_SHELL
     bool "Non-volatile memory shell commands"

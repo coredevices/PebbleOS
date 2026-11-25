@@ -4,6 +4,7 @@
 compatible: st,stm32f4-otp
 config: NVMEM_STM32_ROMEM
 class: nvmem
+symbol: pbl_nvmem_stm32_romem
 define: PBL_NVMEM_STM32_ROMEM_DEFINE
 args:
   - name: true
