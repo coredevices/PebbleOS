@@ -13,6 +13,7 @@ spi.md
 spi_mem.md
 hyperbus.md
 uart.md
+can.md
 mipi_dbi.md
 adc.md
 pwm.md
