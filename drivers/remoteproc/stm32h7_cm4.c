@@ -5,16 +5,25 @@
 #include <stdint.h>
 
 #include <pbl/devicetree.h>
+#include <pbl/drivers/clk.h>
+#include <pbl/drivers/clk/stm32h7.h>
 #include <pbl/drivers/mbox.h>
 #include <pbl/drivers/remoteproc.h>
+#include <pbl/kernel/delay.h>
+#include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
+#include <hardware/stm32_wwdg.h>
+#include <hardware/stm32h7_rcc.h>
+
 // Long enough for the Cortex-M4 to take the request from its interrupt
 #define SHUTDOWN_ACK_TIMEOUT_MS 200U
+// The watchdog resets at once, through a few clock domains
+#define RESET_TIMEOUT_US 100U
 
 struct pbl_rproc_stm32h7_cm4_state {
   struct pbl_sem acked;
@@ -32,6 +41,8 @@ struct pbl_rproc_stm32h7_cm4 {
   uint32_t boot_address_mask;
   uintptr_t flash;
   uint32_t flash_mask;
+  uintptr_t wwdg;
+  struct pbl_clk wwdg_clk;
   bool auto_boot;
   struct pbl_rproc_stm32h7_cm4_state *state;
 };
@@ -47,14 +58,41 @@ static void prv_tx_done(const struct pbl_mbox_client *cl, const void *msg, int r
   pbl_sem_give(&cm4->state->acked);
 }
 
+// Its window watchdog resets the Cortex-M4 alone, as the RCC leaves it, written without bit 6 of
+// its counter: at once, the watchdog with it, once the event wakes a Cortex-M4 stopped waiting for
+// one.
+static int prv_reset(const struct pbl_rproc_stm32h7_cm4 *cm4) {
+  const struct pbl_clk_controller *rcc = cm4->wwdg_clk.ctrl;
+  bool flagged = (pbl_clk_stm32h7_reset_flags(rcc, false) & RCC_RSR_WWDG2RSTF) != 0U;
+  int ret;
+
+  ret = pbl_clk_enable(&cm4->wwdg_clk);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_writel(WWDG_CR_WDGA | WWDG_CR_T_RESET, cm4->wwdg + STM32_WWDG_CR_OFFSET);
+  pbl_cpu_send_event();
+  if (flagged) {
+    pbl_busy_wait_us(RESET_TIMEOUT_US);
+  } else {
+    (void)PBL_POLL_BUSY_US((pbl_clk_stm32h7_reset_flags(rcc, false) & RCC_RSR_WWDG2RSTF) != 0U, 1U,
+                           RESET_TIMEOUT_US);
+  }
+
+  return pbl_clk_disable(&cm4->wwdg_clk);
+}
+
 // Without an image at its boot address, as a reset vector there tells, the Cortex-M4 would lock up
 // and keep the system out of Stop mode
 static int prv_start(const struct pbl_rproc *rproc) {
   const struct pbl_rproc_stm32h7_cm4 *cm4 = prv_cm4(rproc);
+  struct pbl_rproc_stm32h7_cm4_state *st = cm4->state;
   uintptr_t image = PBL_FIELD_GET(cm4->boot_address_mask, pbl_readl(cm4->boot_address)) << 16;
   uint32_t reset = pbl_readl(image + sizeof(uint32_t));
+  int ret;
 
-  if (cm4->state->shutdown_sent) {
+  if (st->shutdown_sent && cm4->wwdg == 0U) {
     return -ESHUTDOWN;
   }
 
@@ -64,13 +102,26 @@ static int prv_start(const struct pbl_rproc *rproc) {
 
   // It runs from the flash at once: the domain of the flash must not stop under it
   pbl_modifyl(0U, cm4->flash_mask, cm4->flash);
+
+  // Booting takes the hold boot setting going from clear to set: a stopped Cortex-M4 is held
+  // again and reset, then let boot
+  if (st->shutdown_sent) {
+    pbl_modifyl(cm4->holdboot_mask, 0U, cm4->holdboot);
+    ret = prv_reset(cm4);
+    if (ret != 0) {
+      return ret;
+    }
+    st->shutdown_sent = false;
+  }
+
   pbl_modifyl(0U, cm4->holdboot_mask, cm4->holdboot);
-  cm4->state->booted = true;
+
+  st->booted = true;
 
   return 0;
 }
 
-// The Cortex-M4 powers off, with nothing to wake it until the system starts again
+// The Cortex-M4 stops, with nothing to wake it until it is reset or the system starts again
 static void prv_shutdown(const struct pbl_rproc_stm32h7_cm4 *cm4, bool wait) {
   struct pbl_rproc_stm32h7_cm4_state *st = cm4->state;
 
@@ -124,27 +175,29 @@ static int prv_init(const struct pbl_device *dev) {
   return 0;
 }
 
-#define PBL_RPROC_STM32H7_CM4_DEFINE(sym, _name, _holdboot, _holdboot_off, _holdboot_mask,         \
-                                     _boot_address, _boot_address_off, _boot_address_mask, _flash, \
-                                     _flash_off, _flash_mask, _shutdown, _auto_boot)               \
-  PBL_RPROC_STATE_DEFINE(sym);                                                                     \
-  static struct pbl_rproc_stm32h7_cm4_state sym##_cm4_state;                                       \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_stm32h7_cm4, struct pbl_rproc, rproc){                 \
-    .rproc = PBL_RPROC_INIT(sym, _name, prv_init, nullptr, &s_ops),                                \
-    .cl = {.tx_done = prv_tx_done},                                                                \
-    .shutdown = _shutdown,                                                                         \
-    .holdboot = (_holdboot) + (_holdboot_off),                                                     \
-    .holdboot_mask = (_holdboot_mask),                                                             \
-    .boot_address = (_boot_address) + (_boot_address_off),                                         \
-    .boot_address_mask = (_boot_address_mask),                                                     \
-    .flash = (_flash) + (_flash_off),                                                              \
-    .flash_mask = (_flash_mask),                                                                   \
-    .auto_boot = (_auto_boot),                                                                     \
-    .state = &sym##_cm4_state,                                                                     \
-  };                                                                                               \
-  PBL_SYS_OFF_HANDLER_DEFINE(sym##_prepare, PBL_SYS_OFF_POWER_OFF_PREPARE,                         \
-                             PBL_SYS_OFF_PRIO_DEFAULT, prv_sys_off, (void *)&sym##_inst);          \
-  PBL_SYS_OFF_HANDLER_DEFINE(sym##_power_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_HIGH,        \
+#define PBL_RPROC_STM32H7_CM4_DEFINE(                                                             \
+    sym, _name, _holdboot, _holdboot_off, _holdboot_mask, _boot_address, _boot_address_off,       \
+    _boot_address_mask, _flash, _flash_off, _flash_mask, _shutdown, _wwdg, _wwdg_clk, _auto_boot) \
+  PBL_RPROC_STATE_DEFINE(sym);                                                                    \
+  static struct pbl_rproc_stm32h7_cm4_state sym##_cm4_state;                                      \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_stm32h7_cm4, struct pbl_rproc, rproc){                \
+    .rproc = PBL_RPROC_INIT(sym, _name, prv_init, nullptr, &s_ops),                               \
+    .cl = {.tx_done = prv_tx_done},                                                               \
+    .shutdown = _shutdown,                                                                        \
+    .holdboot = (_holdboot) + (_holdboot_off),                                                    \
+    .holdboot_mask = (_holdboot_mask),                                                            \
+    .boot_address = (_boot_address) + (_boot_address_off),                                        \
+    .boot_address_mask = (_boot_address_mask),                                                    \
+    .flash = (_flash) + (_flash_off),                                                             \
+    .flash_mask = (_flash_mask),                                                                  \
+    .wwdg = (_wwdg),                                                                              \
+    .wwdg_clk = _wwdg_clk,                                                                        \
+    .auto_boot = (_auto_boot),                                                                    \
+    .state = &sym##_cm4_state,                                                                    \
+  };                                                                                              \
+  PBL_SYS_OFF_HANDLER_DEFINE(sym##_prepare, PBL_SYS_OFF_POWER_OFF_PREPARE,                        \
+                             PBL_SYS_OFF_PRIO_DEFAULT, prv_sys_off, (void *)&sym##_inst);         \
+  PBL_SYS_OFF_HANDLER_DEFINE(sym##_power_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_HIGH,       \
                              prv_sys_off, (void *)&sym##_inst)
 
 #include PBL_DT_INSTANCES(st_stm32h747_m4_rproc)
