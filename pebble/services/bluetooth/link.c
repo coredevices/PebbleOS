@@ -151,6 +151,7 @@ static void prv_handle_connect(const struct ble_gap_event *event) {
                                 PBL_BT_RESPONSE_TIME_FOREVER);
 #endif
 
+  prv_start_interval_timers(&desc);
   bt_advertising_handle_connect();
   prv_put_connection_event(true);
 }
