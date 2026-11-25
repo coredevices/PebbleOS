@@ -18,7 +18,8 @@ config RTC_SHELL
 
 config RTC_RETAINED
     bool "Retained RAM"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52_RETAINED_RAM
     help
       The time last set, kept in retained RAM, for SoCs without a calendar
       RTC. It survives resets but not power loss, and does not count while
