@@ -12,6 +12,7 @@
 
 #include <devicetree/regs.h>
 #include <hardware/stm32_lptim.h>
+#include <hardware/stm32h7_exti.h>
 
 // A few cycles of the counter clock
 #define SYNC_TIMEOUT_US 1000U
@@ -29,7 +30,8 @@
  */
 
 #define LPTIM_BASE PBL_DT_REG_ST_STM32_LPTIMER_TIMER
-#define LPTIM_IRQN PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER
+// Its interrupt comes through its line of the EXTI, which wakes the CPU from Stop
+#define LPTIM_IRQN STM32H7_EXTI_IRQ(PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER)
 
 static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, PBL_DT_CLK_ST_STM32_LPTIMER_TIMER);
 static uint64_t s_rate_mhz;
