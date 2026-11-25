@@ -12,6 +12,19 @@ ACTIONS = ("on", "off", "cycle", "status", "measure", "start", "stop")
 DEFAULT_MEASURE_S = 10.0
 
 
+def start_voltage(voltage, supply, device):
+    """The voltage to start the supply called ``supply`` at: ``voltage``,
+    else the voltage of the ``device`` it powers in the lab."""
+    if voltage is None and device is not None:
+        voltage = device.voltage
+    if voltage is None:
+        raise power.PowerError(
+            f"supply {supply} powers no device with a voltage in the lab: "
+            "pass --voltage"
+        )
+    return voltage
+
+
 class Power(PblCommand):
     group = "device"
 
@@ -42,7 +55,8 @@ class Power(PblCommand):
             "--voltage",
             type=int,
             metavar="MV",
-            help="Voltage to supply, in millivolts (default: leave it as is)",
+            help="Voltage to supply, in millivolts (default: the device's from "
+            "the lab when on or cycle starts the supply, else leave it as is)",
         )
         parser.add_argument(
             "--off-time",
@@ -80,7 +94,7 @@ class Power(PblCommand):
         if args.supply:
             if args.supply not in lab.supplies:
                 self.die(f"{lab.path}: no supply {args.supply!r}")
-            return lab.supplies[args.supply], None
+            return lab.supplies[args.supply], lab.powered_by(args.supply)
 
         name = getattr(args, "watch", None)
         if name is not None:
@@ -104,6 +118,8 @@ class Power(PblCommand):
             what = f"supply {entry.name} ({entry.type}, {entry.port})"
             if watch is not None:
                 what += f", powering watch {watch.name}"
+                if watch.voltage is not None:
+                    what += f" at {watch.voltage} mV"
             self.inf(f"lab: {what}")
         if self.dry_run:
             return 0
@@ -111,8 +127,14 @@ class Power(PblCommand):
         self.wait_for_supply(entry)
         key = power.lock_key(entry.type, entry.port)
         try:
-            if args.action in ("on", "cycle"):
-                daemon.start(key, entry.type, entry.port, entry.name, args.voltage)
+            if args.action in ("on", "cycle") and not daemon.running(key):
+                daemon.start(
+                    key,
+                    entry.type,
+                    entry.port,
+                    entry.name,
+                    start_voltage(args.voltage, entry.name, watch),
+                )
             elif not daemon.running(key):
                 if args.action == "status":
                     return self._print({"supply": entry.name, "running": False}, args)

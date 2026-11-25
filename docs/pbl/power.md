@@ -5,7 +5,7 @@ draws, with the supply the lab (see {doc}`lab`) wires to its battery
 terminals.
 
 ```shell
-pbl power on --voltage 3800
+pbl power on
 pbl run --resources
 pbl power measure --seconds 30
 pbl power start --name sync
@@ -23,7 +23,10 @@ Its log is next to the locks (see {ref}`pbl-lab-locks`).
 
 The supply is the one of the lab's watch for the build, the one of the
 watch given with `--watch`, or the one given with `--supply`. `--voltage`
-sets what it supplies; without it the supply keeps its voltage.
+sets what it supplies. Without it, `on` and `cycle` start the supply at
+the device's voltage in the lab (see {ref}`pbl-lab-file`), and a supply
+already on keeps its own. A supply that powers no device in the lab only
+starts with `--voltage`: nothing picks a voltage for it.
 
 `measure` measures for `--seconds` and prints the mean, maximum and 99th
 percentile of the current. `start` and `stop` measure everything in

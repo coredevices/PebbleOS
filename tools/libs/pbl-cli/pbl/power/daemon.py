@@ -85,7 +85,7 @@ def stop(key):
     return reply
 
 
-def start(key, type, port, name, voltage_mv=None):
+def start(key, type, port, name, voltage_mv):
     """Start the daemon for a supply, unless one runs already."""
     if running(key):
         return False
@@ -96,9 +96,17 @@ def start(key, type, port, name, voltage_mv=None):
     except lock.LockError as e:
         raise DaemonError(str(e)) from None
     os.makedirs(lock.lock_dir(), exist_ok=True)
-    cmd = [sys.executable, "-m", "pbl.power.daemon", key, type, port, name]
-    if voltage_mv is not None:
-        cmd += ["--voltage", str(voltage_mv)]
+    cmd = [
+        sys.executable,
+        "-m",
+        "pbl.power.daemon",
+        key,
+        type,
+        port,
+        name,
+        "--voltage",
+        str(voltage_mv),
+    ]
     env = dict(os.environ)
     env["PYTHONPATH"] = os.pathsep.join(
         filter(
@@ -246,7 +254,7 @@ def main():
     parser.add_argument("type")
     parser.add_argument("port")
     parser.add_argument("name")
-    parser.add_argument("--voltage", type=int)
+    parser.add_argument("--voltage", type=int, required=True)
     args = parser.parse_args()
 
     # What the lock records as its holder.
