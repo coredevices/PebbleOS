@@ -45,6 +45,14 @@
 	};
 
 	soc {
+		// The window watchdog of the Cortex-M4
+		wwdg2: watchdog@40002c00 {
+			compatible = "st,stm32h743-wwdg";
+			reg = <0x40002c00 0x400>;
+			clocks = <&rcc WWDG2_CK>;
+			status = "disabled";
+		};
+
 		pwr: power-config@58024800 {
 			compatible = "st,stm32h747-pwr";
 			reg = <0x58024800 0x400>;

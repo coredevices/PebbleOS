@@ -296,6 +296,13 @@
 			status = "disabled";
 		};
 
+		wwdg1: watchdog@50003000 {
+			compatible = "st,stm32h743-wwdg";
+			reg = <0x50003000 0x400>;
+			clocks = <&rcc WWDG1_CK>;
+			status = "disabled";
+		};
+
 		iwdg: watchdog@58004800 {
 			compatible = "st,stm32-iwdg";
 			reg = <0x58004800 0x400>;
