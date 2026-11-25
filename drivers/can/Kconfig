@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CAN
+    bool "CAN"
+    help
+      CAN controller class (pbl/drivers/can.h) and its drivers.
+
+if CAN
+
+config CAN_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL && DEVICE_NAMES
+    help
+      The can shell command, to list the controllers, configure and start
+      them, send frames and show the frames received.
+
+endif # CAN

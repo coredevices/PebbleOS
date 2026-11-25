@@ -336,6 +336,7 @@ class header, as `SPEAKER`:
 | `rtc` | `rtc` | `RTC` |
 | `battery` | `battery` | |
 | `charger` | `charger` | `CHARGER` |
+| `can_bus` | `can` | |
 
 A board gives each role it has a device in `boards/<board>/roles.yml`, and
 a revision changes them in `roles.<revision>.yml`, then a core in
