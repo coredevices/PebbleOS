@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig HWSPINLOCK
+    bool "Hardware spinlocks"
+    help
+      Hardware spinlock class (pbl/drivers/hwspinlock.h), selected by the
+      drivers that share registers with other processors.
+
+if HWSPINLOCK
+
+config HWSPINLOCK_TIMEOUT_US
+    int "Timeout, in microseconds"
+    default 1000
+    help
+      How long a processor waits for a lock another one holds before giving
+      up, which only happens when the holder stopped with it.
+
+endif # HWSPINLOCK

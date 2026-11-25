@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32-hwspinlock
+config: HWSPINLOCK_STM32_HSEM
+class: hwspinlock
+symbol: "{sym}_hwlock"
+define: PBL_HWSPINLOCK_STM32_HSEM_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
