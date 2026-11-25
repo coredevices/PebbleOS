@@ -34,6 +34,8 @@ typedef struct {
   Window *result_window;
   PreferredContentSize content_size;
   bool frozen;
+  bool crumbs_background_follows_theme;
+  bool crumbs_foreground_follows_theme;
 } ActionMenuData;
 
 // ActionMenuItem is a union of two types:

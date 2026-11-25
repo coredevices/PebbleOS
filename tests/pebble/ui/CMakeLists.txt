@@ -222,6 +222,7 @@ pbl_clar_test(test_action_menu_layer
   MODULES gtypes
   SOURCES
     pebble/applib/ui/action_menu_layer.c
+    pebble/applib/ui/action_menu_theme.c
     pebble/applib/ui/layer.c
     pebble/applib/ui/scroll_layer.c
     pebble/applib/ui/menu_layer.c
@@ -284,6 +285,7 @@ pbl_clar_test(test_action_menu_window
     tests/stubs/stubs_system_theme.c
     pebble/applib/ui/action_menu_hierarchy.c
     pebble/applib/ui/action_menu_layer.c
+    pebble/applib/ui/action_menu_theme.c
     pebble/applib/ui/action_menu_window.c
     pebble/applib/ui/crumbs_layer.c
     pebble/applib/ui/window.c

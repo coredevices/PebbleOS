@@ -20,6 +20,7 @@
 #include <applib/ui/app_window_stack.h>
 #include <applib/ui/content_indicator.h>
 #include <applib/ui/content_indicator_private.h>
+#include <applib/ui/crumbs_layer.h>
 #include <apps/system/settings/notifications_private.h>
 #include <clar.h>
 #include <resource/resource.h>
@@ -120,6 +121,7 @@ void test_action_menu_window__cleanup(void) {
   gbitmap_destroy(s_dest_bitmap);
   s_dest_bitmap = nullptr;
   s_content_size_override = NumPreferredContentSizes;
+  system_theme_set_dark_mode(false);
 }
 
 // Helpers
@@ -337,12 +339,26 @@ static void prv_render_emoji_picker(unsigned int selected_index, bool glyph_grid
 
 static void prv_check_emoji_picker(unsigned int selected_index, const char *filename) {
 #if !PBL_COLOR
-  // The glyph grid must fall back to the legacy thin rendering on monochrome displays.
+  // The glyph grid must fall back to the legacy thin rendering on monochrome displays. The crumb
+  // strip keeps each window's configured colors, so compare the menu area of every size.
   prv_render_emoji_picker(selected_index, false);
   GBitmap *legacy = s_dest_bitmap;
   s_dest_bitmap = nullptr;
   prv_render_emoji_picker(selected_index, true);
-  cl_check(gbitmap_eq(s_dest_bitmap, legacy, filename));
+  const GRect bounds = s_dest_bitmap->bounds;
+  const int16_t strip_width = 20; // past the crumb strip inside each frame
+  bool equal = true;
+  for (int i = 0; i < SettingsContentSizeCount; ++i) {
+    const int16_t frame_x =
+        GRID_CELL_PADDING + i * (PBL_DISPLAY_WIDTH + GRID_CELL_PADDING) + strip_width;
+    const GRect menu_area = GRect(frame_x, 0, PBL_DISPLAY_WIDTH - strip_width, bounds.size.h);
+    GBitmap *glyph_area = gbitmap_create_as_sub_bitmap(s_dest_bitmap, menu_area);
+    GBitmap *legacy_area = gbitmap_create_as_sub_bitmap(legacy, menu_area);
+    equal = gbitmap_eq(glyph_area, legacy_area, filename) && equal;
+    gbitmap_destroy(glyph_area);
+    gbitmap_destroy(legacy_area);
+  }
+  cl_check(equal);
   gbitmap_destroy(legacy);
 #else
   prv_render_emoji_picker(selected_index, true);
@@ -665,4 +681,56 @@ void test_action_menu_window__frozen_ignores_tap(void) {
   action_menu_unfreeze(action_menu);
   menu_layer->callbacks.select_click(menu_layer, &index, menu_layer->callback_context);
   cl_assert_equal_i(s_freezing_action_count, 2);
+}
+
+void test_action_menu_window__crumbs_follow_theme(void) {
+  system_theme_set_dark_mode(false);
+  ActionMenuLevel *root_level = action_menu_level_create(1);
+  action_menu_level_add_action(root_level, "Dismiss", prv_noop_action_callback, nullptr);
+  ActionMenuConfig config = {
+    .root_level = root_level,
+    .did_close = prv_action_menu_did_close_cb,
+  };
+  ActionMenu *action_menu = app_action_menu_open(&config);
+  window_set_on_screen(&action_menu->window, true, true);
+
+  ActionMenuData *data = window_get_user_data(&action_menu->window);
+  cl_assert_equal_i(data->crumbs_layer.bg_color.argb, GColorWhite.argb);
+  cl_assert_equal_i(data->crumbs_layer.fg_color.argb, GColorBlack.argb);
+
+  system_theme_set_dark_mode(true);
+  data->action_menu.window.layer.update_proc(&data->action_menu.window.layer, &s_ctx);
+
+  cl_assert_equal_i(data->crumbs_layer.bg_color.argb, GColorBlack.argb);
+  cl_assert_equal_i(data->crumbs_layer.fg_color.argb, GColorWhite.argb);
+
+  action_menu_close(action_menu, false /* animated */);
+}
+
+void test_action_menu_window__custom_crumb_colors_do_not_follow_theme(void) {
+  system_theme_set_dark_mode(false);
+  ActionMenuLevel *root_level = action_menu_level_create(1);
+  action_menu_level_add_action(root_level, "Dismiss", prv_noop_action_callback, nullptr);
+  ActionMenuConfig config = {
+    .root_level = root_level,
+    .did_close = prv_action_menu_did_close_cb,
+    .colors = {
+      .background = GColorChromeYellow,
+      .foreground = GColorBlack,
+    },
+  };
+  ActionMenu *action_menu = app_action_menu_open(&config);
+  window_set_on_screen(&action_menu->window, true, true);
+
+  ActionMenuData *data = window_get_user_data(&action_menu->window);
+  cl_assert_equal_i(data->crumbs_layer.bg_color.argb, GColorChromeYellow.argb);
+  cl_assert_equal_i(data->crumbs_layer.fg_color.argb, GColorBlack.argb);
+
+  system_theme_set_dark_mode(true);
+  data->action_menu.window.layer.update_proc(&data->action_menu.window.layer, &s_ctx);
+
+  cl_assert_equal_i(data->crumbs_layer.bg_color.argb, GColorChromeYellow.argb);
+  cl_assert_equal_i(data->crumbs_layer.fg_color.argb, GColorBlack.argb);
+
+  action_menu_close(action_menu, false /* animated */);
 }
