@@ -23,6 +23,21 @@ config UART_NRF5_IRQ_PRIO
     help
       Priority of the port interrupts.
 
+config UART_NRF54L
+    bool "Nordic nRF54L UART controller"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_UARTE_ENABLED
+    select GPIO
+    help
+      Support for the Nordic nRF54L UART controller.
+
+config UART_NRF54L_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on UART_NRF54L
+    help
+      Priority of the port interrupts.
+
 config UART_SF32LB
     bool "SiFli SF32LB UART controller"
     default y
