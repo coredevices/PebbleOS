@@ -590,12 +590,22 @@ void test_action_menu_layer__glyph_grid_touch_dispatch_reaches_bottom_row(void) 
   action_menu_layer_deinit(&s_aml);
 }
 
+static void prv_assert_theme_colors(bool dark_mode) {
+  const GColor background = dark_mode ? GColorBlack : GColorWhite;
+  const GColor foreground =
+      PBL_IF_COLOR_ELSE(GColorDarkGray, dark_mode ? GColorWhite : GColorBlack);
+  const GColor highlight_background =
+      PBL_IF_COLOR_ELSE(background, dark_mode ? GColorWhite : GColorBlack);
+  // The menu layer keeps its row fill out of the way; the cell renderer draws the highlight.
+  prv_assert_menu_layer_colors(background, foreground, background,
+                               gcolor_legible_over(highlight_background));
+}
+
 void test_action_menu_layer__system_ui_light_theme_colors(void) {
   prv_set_theme(true /* system_ui */, false /* dark_mode */);
   prv_init_aml_with_wide_items();
 
-  prv_assert_menu_layer_colors(GColorWhite, GColorBlack, s_highlight_color,
-                               gcolor_legible_over(s_highlight_color));
+  prv_assert_theme_colors(false /* dark_mode */);
 
   action_menu_layer_deinit(&s_aml);
 }
@@ -604,8 +614,7 @@ void test_action_menu_layer__system_ui_dark_theme_colors(void) {
   prv_set_theme(true /* system_ui */, true /* dark_mode */);
   prv_init_aml_with_wide_items();
 
-  prv_assert_menu_layer_colors(GColorBlack, GColorWhite, s_highlight_color,
-                               gcolor_legible_over(s_highlight_color));
+  prv_assert_theme_colors(true /* dark_mode */);
 
   action_menu_layer_deinit(&s_aml);
 }
@@ -614,7 +623,7 @@ void test_action_menu_layer__third_party_light_theme_colors(void) {
   prv_set_theme(false /* system_ui */, false /* dark_mode */);
   prv_init_aml_with_wide_items();
 
-  prv_assert_menu_layer_colors(GColorWhite, GColorBlack, GColorWhite, GColorWhite);
+  prv_assert_theme_colors(false /* dark_mode */);
 
   action_menu_layer_deinit(&s_aml);
 }
@@ -623,7 +632,7 @@ void test_action_menu_layer__third_party_dark_theme_colors(void) {
   prv_set_theme(false /* system_ui */, true /* dark_mode */);
   prv_init_aml_with_wide_items();
 
-  prv_assert_menu_layer_colors(GColorBlack, GColorWhite, GColorBlack, GColorBlack);
+  prv_assert_theme_colors(true /* dark_mode */);
 
   action_menu_layer_deinit(&s_aml);
 }
@@ -631,12 +640,12 @@ void test_action_menu_layer__third_party_dark_theme_colors(void) {
 void test_action_menu_layer__third_party_theme_change_refreshes_colors(void) {
   prv_set_theme(false /* system_ui */, false /* dark_mode */);
   prv_init_aml_with_wide_items();
-  prv_assert_menu_layer_colors(GColorWhite, GColorBlack, GColorWhite, GColorWhite);
+  prv_assert_theme_colors(false /* dark_mode */);
 
   s_global_dark_mode = true;
   s_aml.layer.update_proc(&s_aml.layer, &s_gcontext);
 
-  prv_assert_menu_layer_colors(GColorBlack, GColorWhite, GColorBlack, GColorBlack);
+  prv_assert_theme_colors(true /* dark_mode */);
 
   action_menu_layer_deinit(&s_aml);
 }

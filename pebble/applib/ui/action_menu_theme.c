@@ -17,15 +17,17 @@ GColor action_menu_theme__background_color(void) {
 }
 
 GColor action_menu_theme__foreground_color(void) {
-  return action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack;
+  // Keep the action menu's muted, unselected text on color displays. On black and white
+  // displays the theme foreground is already the only readable option.
+  return PBL_IF_COLOR_ELSE(GColorDarkGray,
+                           action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack);
 }
 
 GColor action_menu_theme__highlight_background_color(void) {
-  if (system_theme_is_system_ui()) {
-    return system_theme_get_highlight_color();
-  }
-  // Third-party apps keep their own palette, so invert the theme for the highlight.
-  return action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack;
+  // The selected item only changes its text color on color displays. Invert the theme on
+  // black and white displays so the selection stays visible.
+  return PBL_IF_COLOR_ELSE(action_menu_theme__background_color(),
+                           action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack);
 }
 
 GColor action_menu_theme__highlight_foreground_color(void) {
