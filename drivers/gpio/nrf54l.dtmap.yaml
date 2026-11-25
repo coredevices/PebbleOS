@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-gpio
+config: GPIO_NRF54L
+class: [gpio, intc]
+define: PBL_GPIO_NRF54L_DEFINE
+symbol:
+  gpio: "{sym}"
+  intc: "{sym}_intc"
+args:
+  - name: true
+  - reg: 0
+  - prop: nordic,port
+  - prop: ngpios
+    default: 32
+  - reg: 0
+    of: nordic,gpiote
+    optional: true
+  - irq: 0
+    of: nordic,gpiote
+    optional: true
+  - prop: nordic,num-channels
+    of: nordic,gpiote
+    optional: true
