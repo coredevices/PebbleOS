@@ -35,6 +35,8 @@ static bool s_stalled;
 static bool s_connected;
 // Enabled endpoints, by number, OUT then IN
 static bool s_enabled_eps[2][16];
+// Length of the last transfer queued on each endpoint, by number, OUT then IN; -1 for none
+static int s_queued[2][16];
 
 int pbl_device_init(const struct pbl_device *dev) {
   return 0;
@@ -81,6 +83,9 @@ int pbl_udc_ep_set_halt(const struct pbl_udc *udc, uint8_t ep, bool halt) {
 }
 
 int pbl_udc_ep_queue(const struct pbl_udc *udc, uint8_t ep, void *buf, size_t len) {
+  if ((ep & ~PBL_UDC_EP_IN) != 0U) {
+    s_queued[(ep & PBL_UDC_EP_IN) != 0U][ep & ~PBL_UDC_EP_IN] = (int)len;
+  }
   if (ep == PBL_UDC_EP_IN && len != 0U) {
     cl_assert(len <= sizeof(s_in));
     memcpy(s_in, buf, len);

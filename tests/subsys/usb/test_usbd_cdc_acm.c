@@ -96,3 +96,25 @@ void test_usbd_cdc_acm__receive(void) {
   s_cb->xfer_done(UDC, 0x02, 2, nullptr);
   cl_assert_equal_i(s_rx_count, 3);
 }
+
+void test_usbd_cdc_acm__dtr(void) {
+  uint8_t type = PBL_USB_TYPE_CLASS | PBL_USB_RECIP_INTERFACE;
+
+  memset(s_queued, 0xff, sizeof(s_queued));
+  cl_assert_equal_i(prv_request(PBL_USB_TYPE_STANDARD, PBL_USB_REQ_SET_CONFIGURATION, 1U, 0U, 0U),
+                    0);
+  cl_assert(!pbl_usb_cdc_acm_dtr(USB_CDC_ACM_UART(1)));
+
+  // Held while the host has not opened the port
+  pbl_uart_poll_out(USB_CDC_ACM_UART(1), 'a');
+  pbl_uart_poll_out(USB_CDC_ACM_UART(1), 'b');
+  pbl_uart_poll_out(USB_CDC_ACM_UART(1), 'c');
+  cl_assert_equal_i(s_queued[1][6], -1);
+
+  // DTR on port 1 sends what it held, on its own IN endpoint
+  cl_assert_equal_i(prv_request(type, 0x22, 0x0001U, 2U, 0U), 0);
+  cl_assert(pbl_usb_cdc_acm_dtr(USB_CDC_ACM_UART(1)));
+  cl_assert(!pbl_usb_cdc_acm_dtr(USB_CDC_ACM_UART(0)));
+  cl_assert_equal_i(s_queued[1][6], 3);
+  cl_assert_equal_i(s_queued[1][3], -1);
+}

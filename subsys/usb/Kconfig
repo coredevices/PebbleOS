@@ -84,6 +84,15 @@ config USB_CDC_ACM_NAME
       interface string. With several ports, port n is named after it,
       followed by n, as "Serial port 0".
 
+config USB_CDC_ACM_TX_BUF_SIZE
+    int "Transmit buffer size"
+    default 1024
+    range 64 16384
+    depends on USB_CDC_ACM
+    help
+      Bytes each port keeps to send, while the host does not read or has
+      not opened the port. Bytes that do not fit are dropped.
+
 config USB_DFU
     bool "Firmware upgrade"
     depends on FLASH

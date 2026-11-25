@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include <pbl/drivers/uart.h>
 #include <pbl/util/listify.h>
 
@@ -14,9 +16,13 @@
  * There are @c CONFIG_USB_CDC_ACM_COUNT ports, in one function of the device. Each port is an
  * interface association of two interfaces, with three endpoints, which the stack numbers. The
  * host shows @c CONFIG_USB_CDC_ACM_NAME as the name of a single port, followed by @c n for port
- * @c n of several. The device connects to the bus when a port comes up. Bytes sent before the
- * host configures the device are dropped, as are those that do not fit while the host does not
- * read.
+ * @c n of several. The device connects to the bus when a port comes up.
+ *
+ * A port sends only while the host has the device configured and holds DTR, as a terminal does
+ * while it has the port open. Until then it keeps what is written, the output of an early console
+ * included, in a buffer of @c CONFIG_USB_CDC_ACM_TX_BUF_SIZE bytes. Bytes that do not fit are
+ * dropped; writing never waits. The line coding the host sets is kept for it to read back, and
+ * does not change the port; breaks are ignored.
  * @{
  */
 
@@ -31,5 +37,13 @@ PBL_LISTIFY(CONFIG_USB_CDC_ACM_COUNT, PBL_USB_CDC_ACM_DECLARE)
  * @param n Port, a decimal literal below @c CONFIG_USB_CDC_ACM_COUNT.
  */
 #define USB_CDC_ACM_UART(n) (&pbl_usb_cdc_acm_##n)
+
+/**
+ * @brief Whether the host has a port open: the device configured, and DTR held.
+ *
+ * @param uart Port, from USB_CDC_ACM_UART().
+ * @return true while the host has the port open.
+ */
+bool pbl_usb_cdc_acm_dtr(const struct pbl_uart *uart);
 
 /** @} */
