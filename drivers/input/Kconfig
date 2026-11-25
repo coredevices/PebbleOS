@@ -24,6 +24,16 @@ config INPUT_GPIO_KEYS
     help
       Keys on GPIOs with interrupts, debounced in software.
 
+config INPUT_ROTARY_ENCODER
+    bool "Rotary encoder"
+    default y
+    depends on DT_HAS_ROTARY_ENCODER_ENABLED
+    depends on INPUT
+    select GPIO
+    help
+      Gray-coded quadrature encoder on two GPIOs with interrupts,
+      reporting relative axis steps.
+
 config INPUT_SDL
     bool "SDL keyboard"
     default y
