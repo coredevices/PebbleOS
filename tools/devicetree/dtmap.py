@@ -59,6 +59,8 @@ SPEC_KEYS = {
     "drives",
 }
 CHILDREN_KEYS = {"node", "names", "property"}
+# A GPIO list entry with a 0 phandle
+UNCONNECTED_GPIO = "PBL_GPIO(nullptr, 0, 0)"
 CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
 ROLE_KEYS = {"symbol", "include"}
 PINCTRL_KEYS = {"define", "pin", "pinmux", "flags", "values"}
@@ -1355,15 +1357,20 @@ class Generator:
             prop = f"{key}-gpios" if key else "gpios"
             if not node.has(prop):
                 return None
-            entries = self._phandles(src, prop, "#gpio-cells")
+            # A 0 phandle is a line left unconnected, as a chip select without a GPIO
+            entries = self._phandles(src, prop, "#gpio-cells", empty=True)
             if arg.get("all"):
                 return ", ".join(
-                    self._provided(src, target, "gpio", cells)
-                    for target, cells in entries
+                    UNCONNECTED_GPIO
+                    if entry is None
+                    else self._provided(src, entry[0], "gpio", entry[1])
+                    for entry in entries
                 )
             index = arg.get("index", 0)
             if index >= len(entries):
                 raise src.error(f"no entry {index} in '{prop}'")
+            if entries[index] is None:
+                return UNCONNECTED_GPIO
             target, cells = entries[index]
             return self._provided(src, target, "gpio", cells)
         if kind == "pinctrl":
