@@ -1607,6 +1607,11 @@ def _compatible_defines(tree, compatible, error):
         if len(clocks) < 2:
             raise error(f"{node.path} has a clock without a specifier")
         defines[f"PBL_DT_CLK_{name}"] = f"{clocks[1]}U"
+    if node.has("resets"):
+        resets = node.u32s("resets")
+        if len(resets) < 2:
+            raise error(f"{node.path} has a reset without a specifier")
+        defines[f"PBL_DT_RST_{name}"] = f"{resets[1]}U"
     return defines
 
 
