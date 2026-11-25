@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <string.h>
+
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/logging/logging.h>
 
@@ -13,107 +15,121 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-#define TRIGGER_PAIRING_NO_SEC_REQ    (1U << 1U)
-#define TRIGGER_PAIRING_FORCE_SEC_REQ (1U << 2U)
+static const ble_uuid128_t s_status_uuid =
+    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PPS_CONNECTION_STATUS_UUID_32BIT);
+static const ble_uuid128_t s_trigger_uuid =
+    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PPS_TRIGGER_PAIRING_UUID_32BIT);
 
-static int pebble_pairing_service_get_connectivity_status(
-    uint16_t conn_handle, struct pbl_bt_pps_connectivity_status *status) {
-  struct ble_gap_conn_desc desc;
-  int rc = ble_gap_conn_find(conn_handle, &desc);
-  if (rc != 0) {
-    PBL_LOG_ERR(
-        "Failed to find connection descriptor for %d when reading connection status, code: %d",
-        conn_handle, rc);
-    return -1;
-  }
-
-  struct ble_store_key_sec key_sec = {
-    .peer_addr = desc.peer_id_addr,
-  };
+static int prv_get_status(uint16_t conn_handle, uint8_t *status) {
   struct ble_store_value_sec value_sec;
-  bool is_bonded = (ble_store_read_peer_sec(&key_sec, &value_sec) == 0);
-
-  int bond_count = 0;
-  ble_store_util_count(BLE_STORE_OBJ_TYPE_PEER_SEC, &bond_count);
-
-  memset(status, 0, sizeof(*status));
-  status->ble_is_connected = true;
-  status->ble_is_bonded = is_bonded;
-  status->ble_is_encrypted = desc.sec_state.encrypted;
-  status->has_bonded_gateway = (bond_count > 0);
-  status->supports_pinning_without_security_request = true;
-
-  return 0;
-}
-
-static int prv_notify_connectivity_status(uint16_t conn_handle, uint16_t attr_handle) {
-  struct pbl_bt_pps_connectivity_status status;
-  int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
-  if (rc != 0) {
-    PBL_LOG_ERR("pebble_pairing_service_get_connectivity_status failed: %d", rc);
-    return rc;
-  }
-
-  struct os_mbuf *om = ble_hs_mbuf_from_flat(&status, sizeof(status));
-  rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
-  if (rc != 0) {
-    PBL_LOG_ERR("ble_gatts_notify_custom failed for attr %d: 0x%04x", attr_handle, (uint16_t)rc);
-    return rc;
-  }
-
-  return 0;
-}
-
-static int prv_access_connection_status(uint16_t conn_handle, uint16_t attr_handle,
-                                        struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR)
-    return 0;
-
-  struct pbl_bt_pps_connectivity_status status;
-  int rc = pebble_pairing_service_get_connectivity_status(conn_handle, &status);
-  if (rc != 0) {
-    PBL_LOG_ERR("prv_access_connection_status failed: %d", rc);
-    return 0;
-  }
-
-  os_mbuf_append(ctxt->om, &status, sizeof(status));
-  return 0;
-}
-
-static int prv_access_trigger_pairing(uint16_t conn_handle, uint16_t attr_handle,
-                                      struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  int rc;
+  struct ble_store_key_sec key_sec = {};
   struct ble_gap_conn_desc desc;
+  int bond_count = 0;
+  int rc;
 
   rc = ble_gap_conn_find(conn_handle, &desc);
   if (rc != 0) {
     return rc;
   }
 
-  if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR && !desc.sec_state.encrypted) {
-    rc = ble_gap_security_initiate(conn_handle);
-    if (rc != 0) {
-      return rc;
-    }
-  } else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
-    uint8_t flags;
+  key_sec.peer_addr = desc.peer_id_addr;
+  (void)ble_store_util_count(BLE_STORE_OBJ_TYPE_PEER_SEC, &bond_count);
 
-    rc = ble_hs_mbuf_to_flat(ctxt->om, &flags, sizeof(flags), nullptr);
-    if (rc != 0) {
-      return rc;
-    }
+  memset(status, 0, PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE);
+  status[0] = PBL_BT_PPS_STATUS_CONNECTED | PBL_BT_PPS_STATUS_NO_SECURITY_REQUEST_SUPPORTED;
+  if (ble_store_read_peer_sec(&key_sec, &value_sec) == 0) {
+    status[0] |= PBL_BT_PPS_STATUS_BONDED;
+  }
+  if (desc.sec_state.encrypted) {
+    status[0] |= PBL_BT_PPS_STATUS_ENCRYPTED;
+  }
+  if (bond_count > 0) {
+    status[0] |= PBL_BT_PPS_STATUS_HAS_BONDED_GATEWAY;
+  }
 
-    PBL_LOG_DBG("Trigger pairing flags 0x%x", flags);
+  return 0;
+}
 
-    if ((((flags & TRIGGER_PAIRING_NO_SEC_REQ) == 0U) && !desc.sec_state.encrypted) ||
-        ((flags & TRIGGER_PAIRING_FORCE_SEC_REQ) != 0U)) {
-      rc = ble_gap_security_initiate(conn_handle);
-      if (rc != 0) {
-        return rc;
-      }
-    }
-  } else {
+static void prv_notify_status(uint16_t conn_handle, uint16_t attr_handle) {
+  uint8_t status[PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE];
+  struct os_mbuf *om;
+  int rc;
+
+  if (prv_get_status(conn_handle, status) != 0) {
+    return;
+  }
+
+  om = ble_hs_mbuf_from_flat(status, sizeof(status));
+  if (om == nullptr) {
+    PBL_LOG_ERR("No buffer for the connectivity status");
+    return;
+  }
+
+  rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
+  if (rc != 0) {
+    PBL_LOG_ERR("Connectivity status notification failed: %d", rc);
+  }
+}
+
+static int prv_access_status(uint16_t conn_handle, uint16_t attr_handle,
+                             struct ble_gatt_access_ctxt *ctxt, void *arg) {
+  uint8_t status[PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE];
+
+  if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR || prv_get_status(conn_handle, status) != 0) {
     return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  if (os_mbuf_append(ctxt->om, status, sizeof(status)) != 0) {
+    return BLE_ATT_ERR_INSUFFICIENT_RES;
+  }
+
+  return 0;
+}
+
+// What is returned is an ATT error, not one of the host.
+static int prv_ask_security(uint16_t conn_handle) {
+  int rc = ble_gap_security_initiate(conn_handle);
+
+  // A pairing that is already running is what was asked for.
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    PBL_LOG_ERR("Security request failed: %d", rc);
+    return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  return 0;
+}
+
+static int prv_access_trigger(uint16_t conn_handle, uint16_t attr_handle,
+                              struct ble_gatt_access_ctxt *ctxt, void *arg) {
+  struct ble_gap_conn_desc desc;
+  uint8_t flags;
+
+  if (ble_gap_conn_find(conn_handle, &desc) != 0) {
+    return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
+    return desc.sec_state.encrypted ? 0 : prv_ask_security(conn_handle);
+  }
+
+  if (ctxt->op != BLE_GATT_ACCESS_OP_WRITE_CHR) {
+    return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  // Only the first byte of a longer write is looked at.
+  if (OS_MBUF_PKTLEN(ctxt->om) == 0U) {
+    return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+  }
+
+  if (ble_hs_mbuf_to_flat(ctxt->om, &flags, sizeof(flags), nullptr) != 0) {
+    return BLE_ATT_ERR_UNLIKELY;
+  }
+
+  PBL_LOG_DBG("Trigger pairing flags 0x%x", flags);
+
+  if ((((flags & PBL_BT_PPS_TRIGGER_NO_SECURITY_REQUEST) == 0U) && !desc.sec_state.encrypted) ||
+      ((flags & PBL_BT_PPS_TRIGGER_FORCE_SECURITY_REQUEST) != 0U)) {
+    return prv_ask_security(conn_handle);
   }
 
   return 0;
@@ -126,14 +142,14 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
     .characteristics =
         (struct ble_gatt_chr_def[]){
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)),
+            .uuid = &s_status_uuid.u,
             .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_NOTIFY,
-            .access_cb = prv_access_connection_status,
+            .access_cb = prv_access_status,
           },
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_TRIGGER_PAIRING_UUID)),
+            .uuid = &s_trigger_uuid.u,
             .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE,
-            .access_cb = prv_access_trigger_pairing,
+            .access_cb = prv_access_trigger,
           },
           {
             0, /* No more characteristics in this service */
@@ -145,7 +161,7 @@ static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
   },
 };
 
-/* A central that subscribed is told when the link gets encrypted. */
+/* The central is told when its link gets encrypted, subscribed or not. */
 static int prv_gap_event(struct ble_gap_event *event, void *arg) {
   uint16_t attr_handle;
 
@@ -153,10 +169,9 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
     return 0;
   }
 
-  if (ble_gatts_find_chr(pebble_pairing_svc[0].uuid,
-                         BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PPS_CONNECTION_STATUS_UUID)),
-                         nullptr, &attr_handle) == 0) {
-    (void)prv_notify_connectivity_status(event->enc_change.conn_handle, attr_handle);
+  if (ble_gatts_find_chr(pebble_pairing_svc[0].uuid, &s_status_uuid.u, nullptr, &attr_handle) ==
+      0) {
+    prv_notify_status(event->enc_change.conn_handle, attr_handle);
   }
 
   return 0;
