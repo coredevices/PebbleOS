@@ -5,7 +5,6 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/pinctrl/stm32.h>
-#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
@@ -53,7 +52,11 @@ static int prv_configure_pin(const struct pbl_pinctrl_stm32 *ctrl, uint32_t pin)
 
   base = ctrl->base + port * STM32_GPIO_PORT_SIZE;
 
-  pbl_irq_lock();
+  ret = pbl_hwspinlock_lock(&ctrl->hwlock);
+  if (ret != 0) {
+    return ret;
+  }
+
   if (moder == GPIO_MODER_AF) {
     prv_field(base + STM32_GPIO_AFR_OFFSET(line), GPIO_AFR_MASK(line), mode - MODE_AF0);
   }
@@ -64,7 +67,7 @@ static int prv_configure_pin(const struct pbl_pinctrl_stm32 *ctrl, uint32_t pin)
   prv_field(base + STM32_GPIO_PUPDR_OFFSET, GPIO_PUPDR_MASK(line),
             PBL_FIELD_GET(PBL_PINCTRL_STM32_PUPD_MSK, pin));
   prv_field(base + STM32_GPIO_MODER_OFFSET, GPIO_MODER_MASK(line), moder);
-  pbl_irq_unlock();
+  pbl_hwspinlock_unlock(&ctrl->hwlock);
 
   // The clock stays on: the port keeps the pin configured
   return 0;

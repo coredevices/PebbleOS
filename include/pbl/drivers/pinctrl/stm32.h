@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
+#include <pbl/drivers/hwspinlock.h>
 #include <pbl/drivers/pinctrl.h>
 
 /**
@@ -66,6 +67,8 @@ struct pbl_pinctrl_stm32 {
   struct pbl_pinctrl_controller ctrl;
   /** Registers of port A, the others following at 1 KiB steps. */
   uintptr_t base;
+  /** Lock of the port registers, shared with the other cores. */
+  struct pbl_hwspinlock hwlock;
   /** Clocks of the ports. */
   struct pbl_clk clks[PBL_PINCTRL_STM32_NUM_PORTS];
 };
@@ -84,14 +87,15 @@ extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_stm32_ops;
  * @param sym Symbol of the controller.
  * @param _name Name.
  * @param _base Registers of port A.
+ * @param _hwlock Lock of the port registers, from PBL_HWSPINLOCK(), or PBL_HWSPINLOCK_NONE.
  * @param ... Clocks of ports A to K, from PBL_CLK().
  */
-#define PBL_PINCTRL_STM32_DEFINE(sym, _name, _base, ...)                                    \
+#define PBL_PINCTRL_STM32_DEFINE(sym, _name, _base, _hwlock, ...)                           \
   PBL_DEVICE_STATE_DEFINE(sym);                                                             \
   PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_stm32, struct pbl_pinctrl_controller, ctrl) { \
     .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_stm32_ops,        \
                                         PBL_PINCTRL_STM32_NUM_PORTS * 16U),                 \
-    .base = (_base), .clks = {__VA_ARGS__},                                                 \
+    .base = (_base), .hwlock = _hwlock, .clks = {__VA_ARGS__},                              \
   }
 
 /** @} */
