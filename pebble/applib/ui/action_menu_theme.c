@@ -33,3 +33,14 @@ GColor action_menu_theme__highlight_background_color(void) {
 GColor action_menu_theme__highlight_foreground_color(void) {
   return gcolor_legible_over(action_menu_theme__highlight_background_color());
 }
+
+GColor action_menu_theme__short_highlight_background_color(void) {
+  // Color emoji ignore the text color, so short and glyph grids need a tile behind the
+  // selection. Keep it neutral and theme-derived.
+  return PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode() ? GColorDarkGray : GColorLightGray,
+                           action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack);
+}
+
+GColor action_menu_theme__short_highlight_foreground_color(void) {
+  return gcolor_legible_over(action_menu_theme__short_highlight_background_color());
+}

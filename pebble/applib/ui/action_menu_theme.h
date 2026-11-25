@@ -19,3 +19,9 @@ GColor action_menu_theme__highlight_background_color(void);
 
 //! @return the highlight foreground color for the current theme.
 GColor action_menu_theme__highlight_foreground_color(void);
+
+//! @return the selection tile color for emoji and thin-grid items.
+GColor action_menu_theme__short_highlight_background_color(void);
+
+//! @return the selection tile foreground color for emoji and thin-grid items.
+GColor action_menu_theme__short_highlight_foreground_color(void);
