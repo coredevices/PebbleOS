@@ -1464,7 +1464,18 @@ def test_disabled_remote_fails(tmp_path):
         graph_generate(tmp_path, text)
 
 
-def test_flags_and_all_gpios(tmp_path):
+@pytest.mark.parametrize(
+    ("cs_gpios", "expected"),
+    [
+        ("<&gpio 1 0>, <&gpio 2 1>", "PIN(&dt_gpio, 1, 0), PIN(&dt_gpio, 2, 1)"),
+        # A 0 phandle leaves a chip select without a GPIO
+        (
+            "<&gpio 1 0>, <0>, <&gpio 2 1>",
+            "PIN(&dt_gpio, 1, 0), PBL_GPIO(nullptr, 0, 0), PIN(&dt_gpio, 2, 1)",
+        ),
+    ],
+)
+def test_flags_and_all_gpios(tmp_path, cs_gpios, expected):
     specs = dict(GRAPH_SPECS)
     specs["acme,lcdc"] = {
         "compatible": "acme,lcdc",
@@ -1485,7 +1496,7 @@ def test_flags_and_all_gpios(tmp_path):
     text = GRAPH_DTS.replace(
         'compatible = "acme,lcdc";',
         'compatible = "acme,lcdc";\n        spi-cs-high;\n        spi-lsb-first;\n'
-        "        cs-gpios = <&gpio 1 0>, <&gpio 2 1>;",
+        f"        cs-gpios = {cs_gpios};",
     )
     path, dtb = tmp_path / "f.dts", tmp_path / "f.dtb"
     path.write_text(text)
@@ -1498,10 +1509,7 @@ def test_flags_and_all_gpios(tmp_path):
     }
     gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
     gen.run()
-    assert (
-        "LCDC_DEFINE(dt_lcdc, CS_HIGH | LSB, PIN(&dt_gpio, 1, 0), PIN(&dt_gpio, 2, 1));"
-        in body(gen)
-    )
+    assert f"LCDC_DEFINE(dt_lcdc, CS_HIGH | LSB, {expected});" in body(gen)
 
 
 def test_spec_provides_of_a_driver_defined_device(tmp_path):
