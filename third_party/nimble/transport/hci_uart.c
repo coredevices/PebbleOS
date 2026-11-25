@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "hci_alloc.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -24,13 +26,11 @@
 
 PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
-#define RX_RING_SIZE     1024U
-#define EVT_POOL_POLL_MS 5U
+#define RX_RING_SIZE 1024U
 
 static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_NIMBLE_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_rx_ready, 0, 1);
-static PBL_SEM_DEFINE(s_acl_pool_avail, 0, 1);
 static PBL_MUTEX_DEFINE(s_tx_mutex);
 static struct hci_h4_sm s_hci_h4sm;
 
@@ -39,41 +39,6 @@ static uint8_t s_rx_ring[RX_RING_SIZE];
 static volatile uint32_t s_rx_head;
 static volatile uint32_t s_rx_tail;
 static volatile bool s_rx_paused;
-
-static struct os_mbuf *prv_alloc_acl_from_ll(void) {
-  struct os_mbuf *om;
-
-  // A NULL return is a fatal framing error for the H4 state machine, so wait
-  // for the host to free a buffer. The UART backpressures meanwhile.
-  while ((om = ble_transport_alloc_acl_from_ll()) == NULL) {
-    (void)pbl_sem_take(&s_acl_pool_avail, PBL_MSEC(100));
-  }
-
-  return om;
-}
-
-static os_error_t prv_acl_put_signal(struct os_mempool_ext *mpe, void *data, void *arg) {
-  os_error_t err = os_memblock_put_from_cb(&mpe->mpe_mp, data);
-  pbl_sem_give(&s_acl_pool_avail);
-  return err;
-}
-
-static void *prv_alloc_evt(int discardable) {
-  void *buf;
-
-  // The H4 state machine drops a discardable event without a buffer, but takes
-  // NULL for any other as a fatal framing error: wait for the host to free one.
-  while ((buf = ble_transport_alloc_evt(discardable)) == NULL && !discardable) {
-    pbl_thread_sleep(PBL_MSEC(EVT_POOL_POLL_MS));
-  }
-
-  return buf;
-}
-
-static const struct hci_h4_allocators s_hci_h4_allocs_from_ll = {
-  .acl = prv_alloc_acl_from_ll,
-  .evt = prv_alloc_evt,
-};
 
 static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   switch (pkt_type) {
@@ -147,8 +112,8 @@ static void prv_write_mbuf(uint8_t type, struct os_mbuf *om) {
 }
 
 void ble_transport_ll_init(void) {
-  hci_h4_sm_init(&s_hci_h4sm, &s_hci_h4_allocs_from_ll, prv_hci_frame_cb);
-  ble_transport_register_put_acl_from_ll_cb(prv_acl_put_signal);
+  nimble_hci__alloc_init();
+  hci_h4_sm_init(&s_hci_h4sm, &nimble_hci__allocs_from_ll, prv_hci_frame_cb);
 
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
