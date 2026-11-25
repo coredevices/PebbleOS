@@ -476,6 +476,21 @@ void test_prf_store__write_ble_data_and_ble_name_separately(void) {
   cl_assert_equal_i(pbl_bt_prf_store__get_page(), 0);
 }
 
+// Test that a pairing stored without a name keeps the name of the same peer only
+void test_prf_store__name_of_another_peer_is_dropped(void) {
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
+  struct ble_store_value_sec other = PEER;
+
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, nullptr);
+  prv_assert_pairing();
+
+  other.peer_addr.val[0] ^= 0xff;
+  pbl_bt_prf_store_set_pairing(&other, nullptr, nullptr);
+  cl_assert(pbl_bt_prf_store_get_pairing(nullptr, nullptr, name));
+  cl_assert_equal_s(name, "");
+}
+
 // Test that when deleting the ble_data, both the data and name are deleted.
 // Test that when rewriting the ble_data, the same page is used (since they were previously
 // marked with 0xFF's

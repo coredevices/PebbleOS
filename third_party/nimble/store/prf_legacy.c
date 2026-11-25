@@ -476,6 +476,15 @@ void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
       memcpy(data.irk.data, peer->irk, KEY_SIZE);
     }
 
+    // The name there is another peer's.
+    SprfBlePairingData stored;
+    if (SPRF_FETCH_FIELD(stored, ble_pairing_data) && stored.fields &&
+        (((stored.identity_flags ^ data.identity_flags) & SPRF_IDENTITY_FLAG_RANDOM) != 0U ||
+         memcmp(stored.identity_addr.octets, data.identity_addr.octets,
+                sizeof(stored.identity_addr.octets)) != 0)) {
+      SPRF_ERASE_FIELD(ble_pairing_name);
+    }
+
     SPRF_PERSIST_FIELD(data, ble_pairing_data);
 
     if (name) {
