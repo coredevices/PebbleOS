@@ -44,6 +44,10 @@
 #define STM32H7_EXTI_CORE_EMR3_OFFSET (STM32H7_EXTI_C1EMR3_OFFSET + STM32H7_EXTI_CORE_OFFSET)
 #define STM32H7_EXTI_CORE_PR3_OFFSET  (STM32H7_EXTI_C1PR3_OFFSET + STM32H7_EXTI_CORE_OFFSET)
 
+/* The first interrupt mask register of the other core */
+#define STM32H7_EXTI_OTHER_IMR1_OFFSET \
+  (STM32H7_EXTI_C1IMR1_OFFSET + (0x0040 - STM32H7_EXTI_CORE_OFFSET))
+
 /* The interrupt mask register of a line, of the core running the code */
 #define STM32H7_EXTI_CORE_IMR_OFFSET(line) (STM32H7_EXTI_CORE_IMR1_OFFSET + ((line) / 32U) * 0x10U)
 

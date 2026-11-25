@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/clk.h>
 #include <pbl/drivers/gpio.h>
+#include <pbl/drivers/hwspinlock.h>
 #include <pbl/drivers/intc.h>
 
 /**
@@ -37,6 +38,10 @@ struct pbl_gpio_stm32 {
   uintptr_t syscfg;
   /** SYSCFG clock. */
   struct pbl_clk syscfg_clk;
+  /** Lock of the port registers, shared with the other cores. */
+  struct pbl_hwspinlock hwlock;
+  /** Lock of the EXTI registers and of its routing in the SYSCFG, shared with the other cores. */
+  struct pbl_hwspinlock exti_hwlock;
 };
 
 /** @cond INTERNAL_HIDDEN */
@@ -60,8 +65,11 @@ int pbl_gpio_stm32_init(const struct pbl_device *dev);
  * @param _exti EXTI registers.
  * @param _syscfg SYSCFG registers.
  * @param _syscfg_clk SYSCFG clock, from PBL_CLK().
+ * @param _hwlock Lock of the port registers, from PBL_HWSPINLOCK(), or PBL_HWSPINLOCK_NONE.
+ * @param _exti_hwlock Lock of the EXTI, from PBL_HWSPINLOCK(), or PBL_HWSPINLOCK_NONE.
  */
-#define PBL_GPIO_STM32_DEFINE(sym, _name, _base, _clk, _exti, _syscfg, _syscfg_clk)               \
+#define PBL_GPIO_STM32_DEFINE(sym, _name, _base, _clk, _exti, _syscfg, _syscfg_clk, _hwlock,      \
+                              _exti_hwlock)                                                       \
   extern const struct pbl_intc sym##_intc;                                                        \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                   \
   PBL_INTC_STATE_DEFINE(sym##_intc, 16);                                                          \
@@ -73,6 +81,8 @@ int pbl_gpio_stm32_init(const struct pbl_device *dev);
     .exti = (_exti),                                                                              \
     .syscfg = (_syscfg),                                                                          \
     .syscfg_clk = _syscfg_clk,                                                                    \
+    .hwlock = _hwlock,                                                                            \
+    .exti_hwlock = _exti_hwlock,                                                                  \
   };                                                                                              \
   PBL_DEVICE_INSTANCE(sym##_intc, struct pbl_gpio_stm32_intc, struct pbl_intc, intc) {            \
     .intc = PBL_INTC_INIT(sym##_intc, _name "_intc", nullptr, &sym##_inst.port.dev,               \

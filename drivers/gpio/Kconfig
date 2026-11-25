@@ -47,6 +47,7 @@ config GPIO_STM32
     default y
     depends on DT_HAS_ST_STM32H743_PINCTRL_ENABLED
     select CLK
+    select HWSPINLOCK
     select INTC
     help
       Support for the ST STM32 GPIO ports, and their interrupts through
