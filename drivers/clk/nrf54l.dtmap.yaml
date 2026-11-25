@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-clock
+config: CLK_NRF54L
+class: clk
+symbol: pbl_clk_nrf54l
+define: PBL_CLK_NRF54L_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - reg: 0
+    of: nordic,oscillators
+  - nvmem-cell: hfxo-trim
+  - nvmem-cell: lfxo-trim
+  - clock: hfxo
+  - clock: lfxo
+  - prop: nordic,hfxo-load-capacitance-femtofarads
+    default: 0
+  - prop: nordic,lfxo-load-capacitance-femtofarads
+    default: 0
+ids:
+  clock:
+    cell: 0
+    header: dt-bindings/clock/nordic,nrf54l15-clock.h
+    prefix: NRF54L_CLOCK_
+    values:
+      header: pbl/drivers/clk/nrf54l.h
+      prefix: NRF54L_CLK_

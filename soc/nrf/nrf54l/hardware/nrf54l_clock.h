@@ -1,0 +1,27 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define NRF54L_CLOCK_TASKS_XOSTART_OFFSET       0x0000
+#define NRF54L_CLOCK_TASKS_XOSTOP_OFFSET        0x0004
+#define NRF54L_CLOCK_TASKS_LFCLKSTART_OFFSET    0x0010
+#define NRF54L_CLOCK_TASKS_LFCLKSTOP_OFFSET     0x0014
+#define NRF54L_CLOCK_EVENTS_XOSTARTED_OFFSET    0x0100
+#define NRF54L_CLOCK_EVENTS_LFCLKSTARTED_OFFSET 0x0108
+#define NRF54L_CLOCK_XO_STAT_OFFSET             0x040c
+#define NRF54L_CLOCK_LFCLK_SRC_OFFSET           0x0440
+#define NRF54L_CLOCK_LFCLK_STAT_OFFSET          0x044c
+
+/* Register bit definitions */
+
+#define CLOCK_XO_STAT_STATE PBL_BIT(16)
+
+#define CLOCK_LFCLK_SRC_LFXO 1U
+
+#define CLOCK_LFCLK_STAT_SRC_MASK PBL_GENMASK(1, 0)
+#define CLOCK_LFCLK_STAT_STATE    PBL_BIT(16)
