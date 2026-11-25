@@ -20,6 +20,9 @@ POWER_OFF_S = 1.0
 REPOWERED_ATTEMPTS = 3
 # The smallest erasable unit, all a slot header needs.
 SLOT_HEADER_SIZE = 0x1000
+# How long a USB console may take to come back after the watch resets.
+CONSOLE_RETURN_S = 15.0
+CONSOLE_RETRY_S = 0.25
 
 
 class HardwareAdapter(DeviceAdapter):
@@ -52,16 +55,37 @@ class HardwareAdapter(DeviceAdapter):
         return command
 
     def connect(self):
-        self._hold_console()
-        super().connect()
+        """Open the connections. A USB console goes away while the watch
+        resets and comes back as it boots: it is retried meanwhile."""
+        import serial
+
+        deadline = time.monotonic() + CONSOLE_RETURN_S
+        while True:
+            try:
+                self._hold_console()
+                super().connect()
+                return
+            except (OSError, serial.SerialException):
+                self._release_console()
+                if time.monotonic() > deadline:
+                    raise
+                time.sleep(CONSOLE_RETRY_S)
 
     def _hold_console(self):
         """Keep the debug port open, RTS released, while the harness runs.
         RTS resets the watch, and the OS asserts it whenever the port is
         first opened: without this, every reconnect restarted the watch."""
-        if self._console_holder is not None or not self.config.serial:
+        if not self.config.serial:
             return
         import serial
+
+        if self._console_holder is not None:
+            try:
+                # A USB console that went away leaves the port dead
+                _ = self._console_holder.in_waiting
+                return
+            except (OSError, serial.SerialException):
+                self._release_console()
 
         holder = serial.Serial()
         holder.port = self.config.serial[0]
@@ -71,7 +95,10 @@ class HardwareAdapter(DeviceAdapter):
 
     def _release_console(self):
         if self._console_holder is not None:
-            self._console_holder.close()
+            try:
+                self._console_holder.close()
+            except OSError:
+                pass
             self._console_holder = None
 
     def _run_repowered(self, command, what):
