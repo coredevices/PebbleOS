@@ -100,8 +100,8 @@ def test_standard_requests(usb_function):
 
 
 def test_device_qualifier(usb_function):
-    """A device running at high speed tells how it would be at full speed; a
-    full-speed one may stall."""
+    """A device running at high speed tells how it would be at full speed, its
+    device and its configuration; a full-speed one may stall both."""
     import usb.core
     import usb.util
 
@@ -111,6 +111,9 @@ def test_device_qualifier(usb_function):
     except usb.core.USBError as e:
         assert dev.speed != usb.util.SPEED_HIGH
         assert husb.is_stall(e), e
+        with pytest.raises(usb.core.USBError) as e:
+            dev.ctrl_transfer(0x80, 0x06, 0x0700, 0, 255)
+        assert husb.is_stall(e.value), e.value
         return
     assert data == bytes(
         [
@@ -126,6 +129,23 @@ def test_device_qualifier(usb_function):
             0,
         ]
     )
+
+    cfg = bytes(dev.ctrl_transfer(0x80, 0x06, 0x0200, 0, 255))
+    other = bytes(dev.ctrl_transfer(0x80, 0x06, 0x0700, 0, 255))
+    assert other[1] == 0x07
+    assert len(other) == len(cfg)
+    assert other[2:9] == cfg[2:9]
+    other_mps = 64 if dev.speed == usb.util.SPEED_HIGH else 512
+    eps = []
+    off = 9
+    while off < len(other):
+        if other[off + 1] == 0x05:
+            eps.append(other[off : off + 7])
+        off += other[off]
+    for ep, name in zip(eps, husb.ENDPOINTS, strict=True):
+        assert ep[2] == usb_function.ep(name)
+        mps = int.from_bytes(ep[4:6], "little")
+        assert mps == (husb.INT_MPS if name == "int" else other_mps)
 
 
 @pytest.mark.parametrize(

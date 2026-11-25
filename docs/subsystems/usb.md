@@ -24,7 +24,9 @@ interface and endpoint descriptors, numbered on its own (see
 requests on endpoint 0, builds the configuration descriptor from the
 functions, setting the maximum packet size of bulk endpoints and the interval
 of interrupt ones for the bus speed, and enables the endpoints when the host
-configures the device. Class and vendor requests to an interface go to its
+configures the device. On a high-speed controller it also gives the device
+qualifier and the other-speed configuration, the device and its
+configuration as they would be at the other speed. Class and vendor requests to an interface go to its
 function, and so do the ends of the transfers on its endpoints. All of it runs
 from the controller's interrupt.
 

@@ -53,6 +53,13 @@ pbl_clar_test(test_usbd_numbering_overflow
     ${usbd_defines}
 )
 
+pbl_clar_test(test_usbd_other_speed
+  SOURCES
+    subsys/usb/usbd.c
+  DEFINES
+    ${usbd_defines}
+)
+
 pbl_clar_test(test_usbd_cdc_acm
   SOURCES
     subsys/usb/usbd.c

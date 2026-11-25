@@ -69,6 +69,7 @@ struct PBL_PACKED pbl_usb_setup {
 #define PBL_USB_DESC_INTERFACE        0x04U
 #define PBL_USB_DESC_ENDPOINT         0x05U
 #define PBL_USB_DESC_DEVICE_QUALIFIER 0x06U
+#define PBL_USB_DESC_OTHER_SPEED      0x07U
 #define PBL_USB_DESC_IAD              0x0bU
 #define PBL_USB_DESC_BOS              0x0fU
 #define PBL_USB_DESC_DEVICE_CAP       0x10U
@@ -147,7 +148,7 @@ struct PBL_PACKED pbl_usb_desc_qualifier {
 struct PBL_PACKED pbl_usb_desc_config {
   /** Length, 9. */
   uint8_t bLength;
-  /** @ref PBL_USB_DESC_CONFIGURATION. */
+  /** @ref PBL_USB_DESC_CONFIGURATION, or @ref PBL_USB_DESC_OTHER_SPEED. */
   uint8_t bDescriptorType;
   /** Length of the configuration and the descriptors that follow it. */
   uint16_t wTotalLength;
