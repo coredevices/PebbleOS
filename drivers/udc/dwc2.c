@@ -586,9 +586,19 @@ static int prv_core_init(const struct pbl_udc_dwc2 *d) {
   return 0;
 }
 
-static void prv_fifo_init(const struct pbl_udc_dwc2 *d) {
+// The FIFOs share the controller's FIFO RAM: the receive FIFO, then the IN endpoints' FIFOs
+static int prv_fifo_init(const struct pbl_udc_dwc2 *d) {
+  uint32_t depth = PBL_FIELD_GET(GHWCFG3_DFIFODEPTH_MASK, prv_getreg(d, DWC2_GHWCFG3));
   uint32_t addr = d->rx_fifo;
 
+  for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
+    addr += d->tx_fifo[n];
+  }
+  if (addr > depth) {
+    return -ENOSPC;
+  }
+
+  addr = d->rx_fifo;
   prv_putreg(d, DWC2_GRXFSIZ, d->rx_fifo);
   for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
     uint32_t value = ((uint32_t)d->tx_fifo[n] << 16) | addr;
@@ -599,6 +609,8 @@ static void prv_fifo_init(const struct pbl_udc_dwc2 *d) {
 
   prv_flush_tx(d, GRSTCTL_TXFNUM_ALL);
   prv_flush_rx(d);
+
+  return 0;
 }
 
 static int prv_init(const struct pbl_udc *udc) {
@@ -645,7 +657,10 @@ static int prv_init(const struct pbl_udc *udc) {
   prv_modify(d, DWC2_DCFG, DCFG_DSPD_MASK,
              PBL_FIELD_PREP(DCFG_DSPD_MASK, d->ulpi ? DCFG_DSPD_HS : DCFG_DSPD_FS));
 
-  prv_fifo_init(d);
+  ret = prv_fifo_init(d);
+  if (ret != 0) {
+    return ret;
+  }
 
   prv_putreg(d, DWC2_DIEPMSK, 0U);
   prv_putreg(d, DWC2_DOEPMSK, 0U);
