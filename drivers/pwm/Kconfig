@@ -34,6 +34,15 @@ config PWM_SF32LB_LPTIM
     help
       Support for PWM outputs of the SiFli SF32LB low-power timers.
 
+config PWM_SF32LB_GPTIM
+    bool "SiFli SF32LB GPTIM"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_GPTIM_PWM_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for PWM outputs of the SiFli SF32LB general-purpose timers.
+
 config PWM_SHELL
     bool "Shell commands"
     default DRIVER_SHELL
