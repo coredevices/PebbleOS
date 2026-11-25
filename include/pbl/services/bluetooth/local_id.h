@@ -33,9 +33,8 @@ void bt_local_id_set_device_name(const char *device_name);
  * @brief Copy the device name.
  *
  * @param[out] name_out Destination buffer.
- * @param is_le Meant to select the LE name on dual mode devices; currently ignored.
  */
-void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE], bool is_le);
+void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE]);
 
 /**
  * @brief Copy the local identity address.
@@ -59,12 +58,5 @@ void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FM
  * @param[out] addr_mac_str_out Destination buffer.
  */
 void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]);
-
-/**
- * @brief Derive a static random address from the watch serial number.
- *
- * @param[out] addr_out Generated address.
- */
-void bt_local_id_generate_address_from_serial(struct pbl_bt_addr *addr_out);
 
 /** @} */

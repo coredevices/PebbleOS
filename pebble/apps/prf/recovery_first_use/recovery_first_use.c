@@ -144,7 +144,7 @@ static void prv_update_name_text(RecoveryFUAppData *data) {
   } else {
     // If we aren't connected and/or don't have a session, display the name of the device
     // so it's easier for a user to figure out what they should be trying to connect to
-    bt_local_id_copy_device_name(data->name_text_buffer, false);
+    bt_local_id_copy_device_name(data->name_text_buffer);
 
     // For debugging purposes, we are going to add -'s to the beginning and end of the name
     // if we are connected to a BLE device but don't have a session

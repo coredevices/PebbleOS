@@ -5,33 +5,16 @@
 #include <string.h>
 
 #include <pbl/bluetooth/id.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/util/hash.h>
-#include <pbl/util/size.h>
-#include <pbl/util/string.h>
-#include <pbl/util/testing.h>
 
-#include <mfg/mfg_serials.h>
-
-// Caches of the local address and device name.
-// Some clients (i.e. Settings app) make a lot of calls to this module. By caching this info,
-// we avoid having to reach out to the BT driver every time.
+// Cached: some clients, such as the Settings app, ask often.
 static struct pbl_bt_addr s_local_address;
 static char s_local_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-static char s_local_le_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 
-static void prv_populate_name(char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE], const char *name_fmt) {
-  sprintf(name, name_fmt, s_local_address.octets[1], s_local_address.octets[0]);
-}
-
+// "Pebble" and the last two bytes of the address.
 static void prv_set_default_device_name(void) {
-  const char *s_local_default_device_name_format = "Pebble %02X%02X";
-  const char *s_local_default_le_device_name_format = "Pebble-LE %02X%02X";
-
-  // Pebble + hex last 2 bytes of the device address:
-  prv_populate_name(s_local_device_name, s_local_default_device_name_format);
-  prv_populate_name(s_local_le_device_name, s_local_default_le_device_name_format);
+  snprintf(s_local_device_name, sizeof(s_local_device_name), "Pebble %02X%02X",
+           s_local_address.octets[1], s_local_address.octets[0]);
 }
 
 static bool prv_has_device_name(void) {
@@ -59,7 +42,7 @@ void bt_local_id_set_device_name(const char *device_name) {
   prv_configure_device_name();
 }
 
-void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE], bool is_le) {
+void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE]) {
   strncpy(name_out, s_local_device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
@@ -70,63 +53,14 @@ void bt_local_id_copy_address(struct pbl_bt_addr *addr_out) {
 void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]) {
   static const struct pbl_bt_addr null_addr = {};
   if (0 != memcmp(&null_addr, &s_local_address, sizeof(s_local_address))) {
-    snprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
+    snprintf(addr_hex_str_out, PBL_BT_BD_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
              PBL_BT_ADDR_XPLODE(s_local_address));
   } else {
-    snprintf(addr_hex_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, "Unknown");
+    snprintf(addr_hex_str_out, PBL_BT_BD_ADDR_FMT_BUFFER_SIZE, "Unknown");
   }
 }
 
 void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]) {
   snprintf(addr_mac_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
            PBL_BT_ADDR_XPLODE(s_local_address));
-}
-
-PBL_T_STATIC void prv_generate_address(struct pbl_bt_addr *addr_out) {
-  const char *serial = mfg_get_serial_number();
-  const uint32_t full_len = strlen(serial);
-
-  // Hash of the normal serial
-  const uint32_t serial_hash = hash((uint8_t *)serial, full_len);
-
-  // Hash of the serial reversed
-  char tmp[full_len + 1];
-  strncpy(tmp, serial, sizeof(tmp));
-  string_reverse(tmp);
-  const uint32_t reverse_hash = hash((uint8_t *)tmp, full_len);
-
-  struct PBL_PACKED {
-    union {
-      struct pbl_bt_addr bt_addr;
-      struct PBL_PACKED {
-        uint16_t a;
-        uint32_t b;
-      };
-    };
-  } addr = {
-    .a = (uint16_t)reverse_hash,
-    .b = (serial_hash ^ reverse_hash),
-  };
-
-  *addr_out = addr.bt_addr;
-}
-
-void bt_local_id_generate_address_from_serial(struct pbl_bt_addr *addr_out) {
-  prv_generate_address(addr_out);
-  addr_out->octets[PBL_ARRAY_SIZE(addr_out->octets) - 1] |= 0b11000000;
-
-  // Addresses with all 0's or 1's
-  const struct pbl_bt_addr zero_addr = {.octets = {0x00, 0x00, 0x00, 0x00, 0x00, 0xC0}};
-  const struct pbl_bt_addr one_addr = {.octets = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}};
-  // NOTE: It already has the two most sig. bits set.
-  const struct pbl_bt_addr fallback_addr = {.octets = {0x3c, 0x08, 0x55, 0xaf, 0xd3, 0xc4}};
-
-  // Compare (the first 5 bytes) the generated one with the invalid ones. If they are equal,
-  // fall back to this address.
-  if (!memcmp(addr_out, &zero_addr, sizeof(struct pbl_bt_addr)) ||
-      !memcmp(addr_out, &one_addr, sizeof(struct pbl_bt_addr))) {
-    *addr_out = fallback_addr;
-  }
-
-  /* memcpy(addr_out, (uint8_t *)addr_out, sizeof(*addr_out)); */
 }
