@@ -1,0 +1,5 @@
+# nrf54l15dk board configuration
+
+CONFIG_SOC_NRF54L15=y
+
+CONFIG_UART=y
