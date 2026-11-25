@@ -32,6 +32,7 @@ config ACCEL_LSM6DSO
     bool "ST LSM6DSO"
     default y
     depends on DT_HAS_ST_LSM6DSO_ENABLED
+    select GPIO
     select I2C
     select KERNEL_SYS_WORKQ_HIGH
     help
