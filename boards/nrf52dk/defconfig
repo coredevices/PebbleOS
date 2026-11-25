@@ -1,0 +1,5 @@
+# nrf52dk board configuration
+
+CONFIG_SOC_NRF52832=y
+
+CONFIG_UART=y
