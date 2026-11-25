@@ -32,6 +32,23 @@
 		};
 	};
 
+	// H59, to a CAN transceiver
+	can1_default: can1-default-state {
+		tx-pins {
+			pins = "PA08";
+			function = "can1_txd";
+			bias-pull-up;
+			drive-strength = <8>;
+		};
+
+		rx-pins {
+			pins = "PA09";
+			function = "can1_rxd";
+			input-enable;
+			bias-pull-up;
+		};
+	};
+
 	// The module NOR U2. U6, on the SB pads, can be MPI3 instead.
 	mpi3_default: mpi3-default-state {
 		cs-pins {
