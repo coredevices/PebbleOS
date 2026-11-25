@@ -12,3 +12,5 @@ args:
   - consumers: mboxes
     default: "1"
   - irq: 0
+  - prop: interrupts
+    index: 0
