@@ -21,7 +21,7 @@ config SERVICE_CLOCK_RTC_SAVE_INTERVAL
 
 choice SERVICE_CLOCK_TZ_STORAGE
     prompt "Timezone storage"
-    default SERVICE_CLOCK_TZ_STORAGE_RETAINED if SOC_NRF52
+    default SERVICE_CLOCK_TZ_STORAGE_RETAINED if SOC_NRF52_RETAINED_RAM
     default SERVICE_CLOCK_TZ_STORAGE_FLASH
 
 config SERVICE_CLOCK_TZ_STORAGE_FLASH
@@ -31,7 +31,7 @@ config SERVICE_CLOCK_TZ_STORAGE_FLASH
 
 config SERVICE_CLOCK_TZ_STORAGE_RETAINED
     bool "Retained registers"
-    depends on SOC_NRF52
+    depends on SOC_NRF52_RETAINED_RAM
     help
       Keep the timezone in retained RAM, which survives resets.
 
