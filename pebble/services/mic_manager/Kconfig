@@ -10,6 +10,27 @@ config SERVICE_MIC_MANAGER
 
 if SERVICE_MIC_MANAGER
 
+config SERVICE_MIC_MANAGER_QUEUE_MAX_MS
+    int "Longest microphone queue, in milliseconds"
+    range 32 320
+    default 320
+    help
+      The queue between the microphone and its clients takes this much of
+      samples when the heap has room for it beside what the Bluetooth
+      packets carrying the audio need. A board with a small kernel heap
+      keeps it shorter, leaving the packets more.
+
+config SERVICE_MIC_MANAGER_QUEUE_MIN_MS
+    int "Shortest microphone queue, in milliseconds"
+    range 32 320
+    default 128
+    help
+      The queue between the microphone and its clients takes less than its
+      longest, in 32 ms steps, down to this when the heap is short.
+      Below it, the microphone does not start. A short queue drops samples
+      while Bluetooth stalls, which degrades transcription, but lets a board
+      with a small kernel heap record at all.
+
 module = SERVICE_MIC_MANAGER
 module-str = Mic manager
 source "subsys/logging/Kconfig.template.log_level"

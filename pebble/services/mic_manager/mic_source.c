@@ -24,11 +24,13 @@ PBL_LOG_MODULE_DECLARE(service_mic_manager, CONFIG_SERVICE_MIC_MANAGER_LOG_LEVEL
 #define PERIODS       2U
 
 // Queue between the device interrupt and the clients. The heap fragments, so a smaller one is
-// taken when needed; transcription degrades below the minimum.
-#define FIFO_MS        320U
-#define FIFO_MIN_MS    128U
+// taken when needed, down to the minimum; transcription degrades as it shrinks.
+#define FIFO_MS        CONFIG_SERVICE_MIC_MANAGER_QUEUE_MAX_MS
+#define FIFO_MIN_MS    CONFIG_SERVICE_MIC_MANAGER_QUEUE_MIN_MS
 #define FIFO_STEP_MS   32U
 #define FIFO_BYTES(ms) ((ms) * SAMPLES_PER_MS * MIC_MANAGER_CHANNELS * sizeof(int16_t))
+
+static_assert(FIFO_MIN_MS <= FIFO_MS, "mic queue minimum exceeds its maximum");
 
 #ifdef CONFIG_SCRATCH_HEAP_SHARED
 // Heap left for the Bluetooth packets that carry the audio
