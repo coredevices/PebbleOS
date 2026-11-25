@@ -205,21 +205,33 @@ interface bound to WinUSB.
 `samples/subsys/usb/webusb` is a vendor interface that echoes what the host
 sends, with both.
 
-## Serial port
+## Serial ports
 
-`CONFIG_USB_CDC_ACM` adds a serial port, CDC ACM, as a UART:
-`USB_CDC_ACM_UART` in `include/pbl/usb/cdc_acm.h`. The device connects to the
-bus when the port comes up. A board or an application can give it a role, as
+`CONFIG_USB_CDC_ACM` adds serial ports, CDC ACM, as UARTs:
+`USB_CDC_ACM_UART(n)` in `include/pbl/usb/cdc_acm.h`, for the
+`CONFIG_USB_CDC_ACM_COUNT` ports, 1 by default. The device connects to the bus
+when a port comes up. A board or an application can give a port a role, as
 the console's:
 
 ```yaml
 console_uart:
-  symbol: USB_CDC_ACM_UART
+  symbol: USB_CDC_ACM_UART(0)
   include: pbl/usb/cdc_acm.h
 ```
 
 `CONFIG_USB_CDC_ACM_NAME` (default `Serial port`) is the name the host
-shows for it, its function and interface string.
+shows for a port, its function and interface string. With several ports,
+port `n` is named after it, followed by `n`: `Serial port 0`,
+`Serial port 1`.
+
+The ports are one function of the device. Port `n` is an interface
+association of the function's interfaces `2n` and `2n+1`, with its endpoints
+`0x81 + 2n` (notifications), `0x01 + n` (OUT) and `0x82 + 2n` (IN); the stack
+numbers them, as it does for any function (see [](#usb-numbers)), so the
+functions after the serial ports take the interfaces after theirs. On the
+MUSB of the SF32LB57, whose seven endpoints besides endpoint 0 each serve
+one direction, two ports take six of them; with more ports than the
+controller has endpoints for, `pbl_usbd_enable()` fails with `-ENOSPC`.
 
 Received bytes go to the UART's receive callback, from the interrupt, without
 flow control: a callback that cannot keep up loses them. Bytes sent before the

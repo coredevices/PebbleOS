@@ -52,3 +52,14 @@ pbl_clar_test(test_usbd_numbering_overflow
   DEFINES
     ${usbd_defines}
 )
+
+pbl_clar_test(test_usbd_cdc_acm
+  SOURCES
+    subsys/usb/usbd.c
+    subsys/usb/cdc_acm.c
+    drivers/uart/uart.c
+  DEFINES
+    ${usbd_defines}
+    CONFIG_USB_CDC_ACM_COUNT=2
+    "CONFIG_USB_CDC_ACM_NAME=\"Serial port\""
+)

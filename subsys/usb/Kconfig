@@ -60,18 +60,29 @@ config USB_DEVICE_WEBUSB_LANDING_PAGE
       offer to open when the device connects. Empty for none.
 
 config USB_CDC_ACM
-    bool "Serial port"
+    bool "Serial ports"
     select UART
     help
-      A serial port over USB, CDC ACM, as a UART (pbl/usb/cdc_acm.h).
+      Serial ports over USB, CDC ACM, as UARTs (pbl/usb/cdc_acm.h).
+
+config USB_CDC_ACM_COUNT
+    int "Number of serial ports"
+    default 1
+    range 1 5
+    depends on USB_CDC_ACM
+    help
+      Each port takes two interfaces and three endpoints, which the stack
+      gives it from those of the controller: the device fails to come up
+      when the controller has too few.
 
 config USB_CDC_ACM_NAME
     string "Serial port name"
     depends on USB_CDC_ACM
     default "Serial port"
     help
-      The name the host shows for the serial port, as its function and
-      interface string.
+      The name the host shows for a serial port, as its function and
+      interface string. With several ports, port n is named after it,
+      followed by n, as "Serial port 0".
 
 config USB_DFU
     bool "Firmware upgrade"

@@ -26,7 +26,7 @@ int main(void) {
   int ret;
 
   /* The device connects to the bus as the port comes up, with the other devices. */
-  ret = pbl_uart_rx_enable(USB_CDC_ACM_UART, prv_rx, nullptr);
+  ret = pbl_uart_rx_enable(USB_CDC_ACM_UART(0), prv_rx, nullptr);
   if (ret != 0) {
     fprintf(stderr, "usb: serial port failed (%d)\n", ret);
     return ret;
@@ -38,7 +38,7 @@ int main(void) {
     if (pbl_msgq_get(&s_rx, &c, PBL_MSEC(100)) != 0) {
       continue;
     }
-    pbl_uart_poll_out(USB_CDC_ACM_UART, c);
+    pbl_uart_poll_out(USB_CDC_ACM_UART(0), c);
     count++;
   }
 
