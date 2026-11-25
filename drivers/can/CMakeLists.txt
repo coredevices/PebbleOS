@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources(can.c)
+pbl_library_sources_ifdef(CONFIG_CAN_IPMS_CANFD ipms_canfd.c)
 pbl_library_sources_ifdef(CONFIG_CAN_SHELL shell.c)
