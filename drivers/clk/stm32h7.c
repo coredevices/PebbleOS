@@ -959,4 +959,4 @@ int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
 }
 #endif
 
-#include PBL_DT_INSTANCES(st_stm32h743_rcc)
+#include PBL_DT_INSTANCES(st_stm32h743_rcc_clk)
