@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/time.h>
 #include <pbl/usb/usbd.h>
@@ -121,7 +122,7 @@ static PBL_MSGQ_DEFINE(s_alts, sizeof(uint8_t), 8);
 PBL_USBD_FUNCTION_DECLARE(loopback);
 
 static uint8_t s_alt;
-static uint8_t s_buf[512];
+static uint8_t s_buf[512] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
 static atomic_uint s_looped;
 
 static uint16_t prv_mps(void) {

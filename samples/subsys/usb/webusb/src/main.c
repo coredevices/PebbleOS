@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/byteorder.h>
@@ -53,7 +54,7 @@ PBL_USBD_FUNCTION_DECLARE(webusb);
 
 static atomic_bool s_configured;
 static atomic_uint s_count;
-static uint8_t s_buf[BUF_LEN];
+static uint8_t s_buf[BUF_LEN] PBL_ALIGNED(PBL_UDC_BUF_ALIGN);
 
 static uint8_t prv_ep(uint8_t ep) {
   return pbl_usbd_ep(PBL_USBD_FUNCTION(webusb), ep);
