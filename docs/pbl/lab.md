@@ -46,7 +46,8 @@ that a supply powers in place of its regulator. A device with a supply
 must give one: nothing guesses a voltage, and a lab file without it does
 not load. It belongs to the device rather than the supply, so that moving
 a supply to another device cannot carry over a voltage wrong for it.
-{doc}`power` starts the supply at it.
+{doc}`power` starts the supply at it and {doc}`itest` tests at it; both
+take `--voltage` instead.
 
 Commands that reach a watch take the ports the command line leaves out
 from the lab's watch for the build: {doc}`run`, {doc}`erase`,

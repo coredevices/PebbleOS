@@ -63,7 +63,7 @@ the build first (with `pbl run --resources`, or `--flash-command`):
 
 ```shell
 pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
-    --ppk2 auto --flash-before
+    --ppk2 auto --voltage 3800 --flash-before
 ```
 
 The device type follows the board (`qemu` for emulated boards, `hardware`
@@ -378,13 +378,17 @@ pixels.
 Power tests use a Nordic Power Profiler Kit II as a source meter: it
 replaces the battery and supplies VBAT, so the harness can also power the
 watch on and off. Connect the PPK2's VOUT and GND to the battery terminals,
-and pass its port and the voltage to supply. A PPK2 shows up as two serial
-ports of which only one answers; `auto` finds it:
+and give it as the device's supply in the lab, or pass its port with
+`--ppk2`. A PPK2 shows up as two serial ports of which only one answers;
+`auto` finds it:
 
 ```shell
 pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
-    --ppk2 auto --ppk2-voltage 3800 power
+    --ppk2 auto --voltage 3800 power
 ```
+
+The supply supplies `--voltage`, else the device's `voltage` in the lab;
+with neither, the session fails rather than pick one.
 
 With a PPK2 the harness powers the watch on before the session, and
 `dut.reset()` power-cycles it. `power.measure_idle(name)` measures the watch
