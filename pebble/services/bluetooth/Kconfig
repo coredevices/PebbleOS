@@ -14,7 +14,26 @@ config BT_ANCS_CLIENT
 config BT_AMS_CLIENT
     default y if !RECOVERY_FW
 
+# What the phone app talks to.
+config BT_SERVICE_PPS
+    default y
+
+config BT_SERVICE_PPOG_REVERSED
+    default y
+
 if SERVICE_BLUETOOTH
+
+config SERVICE_BLUETOOTH_VENDOR_ID
+    hex "Vendor ID"
+    default 0x0EEA
+    help
+      Company identifier in the manufacturer data of advertisements.
+
+config SERVICE_BLUETOOTH_VENDOR_NAME
+    string "Vendor name"
+    default "Core Devices LLC"
+    help
+      Manufacturer name in the Device Information Service.
 
 module = SERVICE_BLUETOOTH
 module-str = Bluetooth

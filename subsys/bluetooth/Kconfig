@@ -9,24 +9,11 @@ config BT
     select KERNEL_SYS_WORKQ
     select NIMBLE
     select NIMBLE_STORE_CONFIG
-    select TASK_WDT
     help
       The Bluetooth subsystem: the pbl_bt API, implemented on the NimBLE
       host.
 
 if BT
-
-config BT_VENDOR_ID
-    hex "Vendor ID"
-    default 0x0EEA
-    help
-      Company identifier in the manufacturer data of advertisements.
-
-config BT_VENDOR_NAME
-    string "Vendor name"
-    default "Core Devices LLC"
-    help
-      Manufacturer name in the Device Information Service.
 
 module = BT
 module-str = Bluetooth
