@@ -112,8 +112,8 @@ struct pbl_uart_ops {
   /** Set the port up. Returns 0 or a negative errno. */
   int (*init)(const struct pbl_uart *uart);
   /**
-   * Set the port up for polled transmission, before the device model is initialized. Returns 0 or
-   * a negative errno.
+   * Optional. Set the port up for polled transmission, before the device model is initialized.
+   * Returns 0 or a negative errno. Without it, the port sends nothing until its device is ready.
    */
   int (*early_init)(const struct pbl_uart *uart);
   /** Apply line settings. Returns 0 or a negative errno. */
@@ -194,7 +194,7 @@ bool pbl_uart_receive(const struct pbl_uart *uart, uint8_t c);
  *
  * @param uart Port.
  * @param cfg Line settings, kept once the device init takes over.
- * @return 0 or a negative errno.
+ * @return 0, -ENOTSUP if the port has no early mode, or another negative errno.
  */
 int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_config *cfg);
 

@@ -57,6 +57,10 @@ int pbl_uart_early_init(const struct pbl_uart *uart, const struct pbl_uart_confi
     return -EINVAL;
   }
 
+  if (uart->ops->early_init == nullptr) {
+    return -ENOTSUP;
+  }
+
   ret = uart->ops->early_init(uart);
   if (ret != 0) {
     return ret;
