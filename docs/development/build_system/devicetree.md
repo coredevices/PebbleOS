@@ -531,7 +531,7 @@ An argument takes its value from one place:
 | `size: <index or name>` | Size of a `reg` entry |
 | `memory: <property>` | The RAM the region this phandle property points to is in, absent when it is no device; see [](#devicetree-reserved-memory) |
 | `irq: <index or name>` | An interrupt, from `interrupts` or `interrupts-extended` |
-| `clock`, `reset`, `mbox`, `pwm`, `power-domain` | A specifier of `clocks`, `resets`, `mboxes`, `pwms`, `power-domains`, by index or by name; a `clock` name missing from `clock-names` is absent, for an input a node may lack |
+| `clock`, `reset`, `mbox`, `hwlock`, `pwm`, `power-domain` | A specifier of `clocks`, `resets`, `mboxes`, `hwlocks`, `pwms`, `power-domains`, by index or by name; a `clock` name missing from `clock-names` is absent, for an input a node may lack |
 | `assigned-clocks: <macro>` | The macro of each clock of `assigned-clocks`, with its parent from `assigned-clock-parents`, `{}` for none, and its rate in Hz from `assigned-clock-rates`, 0 for none |
 | `dma: <name>` | A specifier of `dmas`, by name |
 | `gpio: <name>` | `<name>-gpios`, or `gpios` for an empty name |

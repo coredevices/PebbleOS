@@ -88,6 +88,7 @@ ARG_KINDS = {
     "size",
     "list",
     "mbox",
+    "hwlock",
     "power-domain",
     "pwm",
     "supply",
@@ -1300,6 +1301,15 @@ class Generator:
                 raise src.error(f"no mbox {index}")
             target, cells = entries[index]
             return self._provided(src, target, "mbox", cells)
+        if kind == "hwlock":
+            if not node.has("hwlocks"):
+                return None
+            index = self._index(src, key, "hwlock-names")
+            entries = self._phandles(src, "hwlocks", "#hwlock-cells")
+            if index >= len(entries):
+                raise src.error(f"no hwlock {index}")
+            target, cells = entries[index]
+            return self._provided(src, target, "hwlock", cells)
         if kind == "pwm":
             if not node.has("pwms"):
                 return None

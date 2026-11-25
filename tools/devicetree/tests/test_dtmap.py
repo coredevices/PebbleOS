@@ -3276,6 +3276,87 @@ def test_consumers_size_a_provider(tmp_path):
     assert "MBOX_DEFINE(dt_mb2, 0x2000, 2);" in out
 
 
+HWLOCK_DTS = """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    hsem: hwspinlock@1000 {
+        compatible = "acme,hwspinlock";
+        reg = <0x1000 0x100>;
+        #hwlock-cells = <1>;
+    };
+    pinctrl@2000 {
+        compatible = "acme,pinctrl";
+        reg = <0x2000 0x100>;
+        #address-cells = <1>;
+        #size-cells = <1>;
+        hwlocks = <&hsem 2>;
+        gpio@2000 {
+            compatible = "acme,gpio";
+            reg = <0x2000 0x40>;
+        };
+    };
+    pinctrl@3000 {
+        compatible = "acme,pinctrl";
+        reg = <0x3000 0x100>;
+    };
+};
+"""
+
+
+def test_hwlocks_of_a_node_and_of_its_parent(tmp_path):
+    path, dtb = tmp_path / "h.dts", tmp_path / "h.dtb"
+    path.write_text(HWLOCK_DTS)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    classes = {
+        **CLASSES,
+        "hwspinlock": {
+            "class": "hwspinlock",
+            "type": "struct hwspinlock",
+            "include": "hwspinlock.h",
+            "provides": {"hwlock": "HWLOCK(&{sym}, {0})"},
+        },
+    }
+    raw = {
+        "acme,hwspinlock": {
+            "compatible": "acme,hwspinlock",
+            "config": "HWLOCK",
+            "class": "hwspinlock",
+            "define": "HWLOCK_DEFINE",
+            "args": [{"reg": 0}],
+        },
+        "acme,pinctrl": {
+            "compatible": "acme,pinctrl",
+            "config": "PINCTRL",
+            "class": "pinctrl",
+            "define": "PINCTRL_DEFINE",
+            "args": [{"reg": 0}, {"hwlock": 0, "default": "NONE"}],
+        },
+        "acme,gpio": {
+            "compatible": "acme,gpio",
+            "config": "GPIO",
+            "class": "gpio",
+            "define": "GPIO_DEFINE",
+            "args": [{"reg": 0}, {"hwlock": 0, "up": True, "default": "NONE"}],
+        },
+    }
+    specs = {name: dtmap.Spec(name, data, classes) for name, data in raw.items()}
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"HWLOCK", "PINCTRL", "GPIO"})
+    gen.run()
+    out = instances(gen, "acme_pinctrl")
+    assert "PINCTRL_DEFINE(dt_node_pinctrl_2000, 0x2000, HWLOCK(&dt_hsem, 2));" in out
+    assert "&dt_node_pinctrl_2000.dev, &dt_hsem.dev);" in out
+    assert "PINCTRL_DEFINE(dt_node_pinctrl_3000, 0x3000, NONE);" in out
+    assert (
+        "GPIO_DEFINE(dt_node_pinctrl_2000_gpio_2000, 0x2000, HWLOCK(&dt_hsem, 2));"
+        in instances(gen, "acme_gpio")
+    )
+
+
 DMA_DTS = """
 /dts-v1/;
 / {
