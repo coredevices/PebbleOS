@@ -49,6 +49,23 @@ pbl_clar_test(test_pairability
   PLATFORMS emery
 )
 
+pbl_clar_test(test_prf_backend
+  SOURCES
+    third_party/nimble/store/prf_backend.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/nimble/host/include
+    third_party/nimble/mynewt-nimble/nimble/host/store/config/src
+    third_party/nimble/mynewt-nimble/nimble/transport/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
+  DEFINES
+    CONFIG_NIMBLE_LOG_LEVEL=0
+    CONFIG_NIMBLE_BLE_STORE_CONFIG_PERSIST=1
+  PLATFORMS emery
+)
+
 pbl_clar_test(test_bt_settings
   MODULES settings
   SOURCES
