@@ -9,6 +9,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/soc/st/exti.h>
 #include <pbl/util/math.h>
 
@@ -136,6 +137,16 @@ static void prv_isr(void) {
   atomic_store(&s_armed, false);
   pbl_clockevent_handler(&s_lptim_ce);
 }
+
+// Stopped for good, as only a reset stops it safely: its interrupt would stay raised and keep the
+// system out of Stop, should this core stop before the other
+static void prv_sys_off(enum pbl_sys_off_mode mode, void *user_data) {
+  pbl_irq_disable(LPTIM_IRQN);
+  (void)pbl_reset_reset(&s_rst);
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(s_lptim_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW, prv_sys_off,
+                           nullptr);
 
 PBL_IRQ_CONNECT_NUM(LPTIM_IRQN, CONFIG_TIMER_STM32_LPTIM_IRQ_PRIO, prv_isr, , 0);
 
