@@ -105,9 +105,9 @@ Serial ports are locked by their device path, whether given with `--tty` or
 taken from the lab, so a `pbl console` on the debug UART blocks the `sftool`
 runner, which needs the same port, but not an `openocd` flash over the
 probe. Debug probes are locked per lab watch. An {doc}`itest` session on a
-watch holds all of its ports, its supply and its dongles for as long as it
-runs; the commands it runs itself go through, and do not wait for the
-supply.
+watch holds all of its ports, its supply (unless a {doc}`power` session
+holds it, which it then uses) and its dongles for as long as it runs; the
+commands it runs itself go through, and do not wait for the supply.
 
 The locks are `flock`s on files in `$PBL_LOCK_DIR` (default: a `pbl-<uid>`
 directory in the system's temporary directory). The kernel drops them when
