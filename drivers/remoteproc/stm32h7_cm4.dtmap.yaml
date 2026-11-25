@@ -27,6 +27,8 @@ args:
     index: 2
   - mbox: shutdown
     default: "{}"
+  - mbox: clocks
+    default: "{}"
   - reg: 0
     of: st,wwdg
     default: 0

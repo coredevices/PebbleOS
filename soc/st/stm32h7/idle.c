@@ -18,6 +18,10 @@
 #include <hardware/stm32h7_pwr.h>
 #include <hardware/stm32h7_rcc.h>
 
+#ifdef CONFIG_SOC_STM32H7_CM4_MBOX
+#include "cm4.h"
+#endif
+
 #define RCC(reg) (PBL_DT_REG_RCC + STM32H7_RCC_##reg##_OFFSET)
 #define PWR(reg) (PBL_DT_REG_PWR + STM32H7_PWR_##reg##_OFFSET)
 
@@ -66,8 +70,25 @@ static void prv_clocks_restore(uint32_t cr, uint32_t sw, uint32_t vos) {
 
 #endif
 
+#ifdef CONFIG_CPU_CORTEX_M4
+static void prv_clocks_wait(uint32_t sws) {
+  if (PBL_FIELD_GET(RCC_CFGR_SWS_MASK, pbl_readl(RCC(CFGR))) == sws) {
+    return;
+  }
+
+#ifdef CONFIG_SOC_STM32H7_CM4_MBOX
+  pbl_soc_stm32h7_cm4_clocks_request();
+#endif
+  (void)PBL_POLL_BUSY_US(PBL_FIELD_GET(RCC_CFGR_SWS_MASK, pbl_readl(RCC(CFGR))) == sws, 1U,
+                         OSC_TIMEOUT_US);
+}
+#endif
+
 static void prv_enter_stop(void) {
-#ifndef CONFIG_CPU_CORTEX_M4
+#ifdef CONFIG_CPU_CORTEX_M4
+  // What the system runs on: Stop is only entered with the clock tree up
+  uint32_t sws = PBL_FIELD_GET(RCC_CFGR_SWS_MASK, pbl_readl(RCC(CFGR)));
+#else
   uint32_t cr = pbl_readl(RCC(CR)) & RCC_CR_STOP_OFF;
   uint32_t sw = PBL_FIELD_GET(RCC_CFGR_SW_MASK, pbl_readl(RCC(CFGR)));
   uint32_t vos = pbl_readl(PWR(D3CR)) & PWR_D3CR_VOS_MASK;
@@ -91,8 +112,11 @@ static void prv_enter_stop(void) {
 
   pbl_cpu_idle_deep();
 
-  // The system leaves Stop on the HSI, and the clock tree is the Cortex-M7's: it brings it back
-#ifndef CONFIG_CPU_CORTEX_M4
+  // The system leaves Stop on the HSI, and the clock tree is the Cortex-M7's: it brings it back,
+  // woken by the Cortex-M4 when only that one woke
+#ifdef CONFIG_CPU_CORTEX_M4
+  prv_clocks_wait(sws);
+#else
   prv_clocks_restore(cr, sw, vos);
 #endif
 

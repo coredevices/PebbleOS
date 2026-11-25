@@ -18,12 +18,14 @@ config SOC_STM32H7
     help
       ST STM32H7 series, selected by its SoCs.
 
-config SOC_STM32H7_CM4_SHUTDOWN
-    bool "Power-off requests of the Cortex-M7"
+config SOC_STM32H7_CM4_MBOX
+    bool "Doorbells with the Cortex-M7"
     default y
     depends on CPU_CORTEX_M4 && DT_HAS_ST_STM32H747_M4_ENABLED
     select KERNEL_SYS_WORKQ
     select MBOX
     help
       Power this core off when the Cortex-M7 asks, before it powers the
-      system off: Standby needs both cores stopped.
+      system off, Standby needing both cores stopped, or to stop this core;
+      and ask the Cortex-M7 for the clock tree when this core alone wakes
+      from Stop.
