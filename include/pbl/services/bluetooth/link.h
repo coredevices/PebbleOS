@@ -29,7 +29,7 @@
 /** @brief Start following the link. Call once the stack runs. */
 void bt_link_init(void);
 
-/** @brief Drop the link, with no gateway disconnection reported. Call before the stack stops. */
+/** @brief Drop the link, reporting its gateway as lost. Call before the stack stops. */
 void bt_link_deinit(void);
 
 /**

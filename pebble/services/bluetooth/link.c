@@ -250,11 +250,18 @@ void bt_link_init(void) {
 
 void bt_link_deinit(void) {
   uint16_t conn_handle;
+  bool was_gateway;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   conn_handle = s_conn_handle;
+  was_gateway = s_is_gateway;
   s_is_gateway = false;
   pbl_mutex_unlock(&s_lock);
+
+  /* The disconnection may not be reported once the stack stops. */
+  if (was_gateway) {
+    prv_put_gateway_event(conn_handle, BLE_ERR_CONN_TERM_LOCAL, false);
+  }
 
   if (conn_handle != BLE_HS_CONN_HANDLE_NONE) {
     (void)ble_gap_terminate(conn_handle, BLE_ERR_REM_USER_CONN_TERM);

@@ -97,7 +97,6 @@ static void prv_comm_stop(void) {
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
 #endif
-  bt_gateway_deinit();
   bt_link_deinit();
   bt_advertising_deinit();
 

@@ -154,33 +154,12 @@ void bt_gateway_handle_event(const PebbleEvent *e) {
 }
 
 // -------------------------------------------------------------------------------------------------
-static void prv_cleanup_clients_kernel_main_cb(void *unused) {
-#if defined(CONFIG_BT_ANCS_CLIENT)
-  ancs_destroy();
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-  ams_destroy();
-#endif
-}
-
-// -------------------------------------------------------------------------------------------------
 void bt_gateway_init(void) {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
   pbl_pp_gatt_reset_disconnect_counter();
 #endif
 
   bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
-}
-
-// -------------------------------------------------------------------------------------------------
-void bt_gateway_deinit(void) {
-  // Cleanup clients: their code must execute on KernelMain, so add callback:
-  launcher_task_add_callback(prv_cleanup_clients_kernel_main_cb, nullptr);
-
-  pbl_bt_gattc_service_stop(&s_gatt_service);
-#if defined(CONFIG_PP_TRANSPORT_GATT)
-  pbl_pp_gatt_destroy();
-#endif
 }
 
 #ifdef CONFIG_SHELL

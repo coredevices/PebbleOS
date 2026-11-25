@@ -16,9 +16,6 @@
 /** @brief Start with the stack. */
 void bt_gateway_init(void);
 
-/** @brief Stop the clients, before the stack stops. */
-void bt_gateway_deinit(void);
-
 /**
  * @brief Handle the gateway being connected or lost, on KernelMain.
  *
