@@ -324,3 +324,7 @@ html.dark {
 .yue .board-card img {
   cursor: zoom-in;
 }
+
+#ethical-ad-placement {
+  display: none !important;
+}
