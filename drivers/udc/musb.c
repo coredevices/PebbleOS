@@ -34,6 +34,9 @@
 
 #define FIFO_MIN 8U
 
+// Room a double-buffered FIFO leaves for the endpoints enabled after it: two of the largest packets
+#define FIFO_RESERVE (2U * EP_MPS_MAX)
+
 // SiFli: the USB PHY, in the system configuration block, which also has the analog bandgap
 #define SIFLI_HPSYS_CFG_USBCR   0x3c
 #define SIFLI_USBCR_USB_EN      PBL_BIT(0)
@@ -72,7 +75,12 @@ struct prv_ep {
 // The FIFO of an endpoint number, for the direction it serves
 struct prv_fifo {
   uint16_t addr;
+  // Of a packet
   uint16_t size;
+  // Room for two packets
+  bool two;
+  // Double-buffered, for a bulk OUT endpoint
+  bool dpb;
 };
 
 struct pbl_udc_musb_state {
@@ -423,29 +431,47 @@ static int prv_set_address(const struct pbl_udc *udc, uint8_t addr) {
   return 0;
 }
 
-// The FIFO of an endpoint number is the size of its packets, rounded up to a power of two, and
-// stays its own until no endpoint is enabled, or one the number serves next needs more
-static int prv_fifo_alloc(const struct pbl_udc_musb *m, uint8_t n, uint16_t mps) {
+// The FIFO of an endpoint number is the size of its packets, rounded up to a power of two, twice
+// that for a bulk OUT endpoint if room is left, and stays its own until no endpoint is enabled, or
+// one the number serves next needs more. An IN endpoint gains nothing from a second packet: the
+// interrupt that frees the first comes as the host takes it, and the next one is in the FIFO long
+// before the host asks again.
+static int prv_fifo_alloc(const struct pbl_udc_musb *m, uint8_t n, uint16_t mps, bool two) {
   struct pbl_udc_musb_state *st = m->state;
+  struct prv_fifo *fifo = &st->fifo[n];
+  uint16_t room = m->fifo_size - st->fifo_end;
   uint16_t size = FIFO_MIN;
 
   while (size < mps) {
     size *= 2U;
   }
 
-  if (st->fifo[n].size >= size) {
-    return 0;
+  if (fifo->size < size) {
+    if (size > room) {
+      return -ENOSPC;
+    }
+
+    fifo->addr = st->fifo_end;
+    fifo->size = size;
+    fifo->two = two && 2U * size + FIFO_RESERVE <= room;
+    st->fifo_end += fifo->two ? 2U * size : size;
   }
 
-  if (st->fifo_end + size > m->fifo_size) {
-    return -ENOSPC;
-  }
-
-  st->fifo[n].addr = st->fifo_end;
-  st->fifo[n].size = size;
-  st->fifo_end += size;
+  fifo->dpb = two && fifo->two;
 
   return 0;
+}
+
+static void prv_rx_dpb_set(const struct pbl_udc_musb *m) {
+  uint16_t dis = (uint16_t)~PBL_BIT(0);
+
+  for (uint8_t n = 1U; n < MAX_EPS; n++) {
+    if (m->state->fifo[n].dpb) {
+      dis &= ~PBL_BIT(n);
+    }
+  }
+
+  prv_ww(m, MUSB_RXDPKTBUFDIS, dis);
 }
 
 static void prv_fifo_set(const struct pbl_udc_musb *m, uint8_t n) {
@@ -458,8 +484,9 @@ static void prv_fifo_set(const struct pbl_udc_musb *m, uint8_t n) {
 
   prv_wb(m, MUSB_TXFIFOSZ, sz);
   prv_ww(m, MUSB_TXFIFOADD, (uint16_t)(fifo->addr / 8U));
-  prv_wb(m, MUSB_RXFIFOSZ, sz);
+  prv_wb(m, MUSB_RXFIFOSZ, sz | (fifo->dpb ? MUSB_FIFOSZ_DPB : 0U));
   prv_ww(m, MUSB_RXFIFOADD, (uint16_t)(fifo->addr / 8U));
+  prv_rx_dpb_set(m);
 }
 
 static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_ep_type type,
@@ -485,7 +512,7 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
   }
 
   pbl_irq_lock();
-  ret = prv_fifo_alloc(m, n, mps);
+  ret = prv_fifo_alloc(m, n, mps, type == PBL_UDC_EP_BULK && !in);
   if (ret != 0) {
     pbl_irq_unlock();
     return ret;
@@ -517,6 +544,18 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
   return 0;
 }
 
+// A flush per packet the FIFO holds, two in a double-buffered one
+static void prv_rx_flush(const struct pbl_udc_musb *m) {
+  for (uint8_t i = 0U; i < 2U; i++) {
+    uint16_t csr = prv_rw(m, MUSB_RXCSR);
+
+    if ((csr & MUSB_RXCSR_RXPKTRDY) == 0U) {
+      return;
+    }
+    prv_ww(m, MUSB_RXCSR, csr | MUSB_RXCSR_FLUSHFIFO);
+  }
+}
+
 static bool prv_eps_disabled(const struct pbl_udc_musb *m) {
   for (uint8_t n = 1U; n < MAX_EPS; n++) {
     if (m->state->in[n].mps != 0U || m->state->out[n].mps != 0U) {
@@ -541,7 +580,7 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
       prv_ww(m, MUSB_TXCSR, MUSB_TXCSR_MODE | MUSB_TXCSR_FLUSHFIFO);
     } else {
       prv_ww(m, MUSB_INTRRXE, prv_rw(m, MUSB_INTRRXE) & ~PBL_BIT(n));
-      prv_ww(m, MUSB_RXCSR, MUSB_RXCSR_FLUSHFIFO);
+      prv_rx_flush(m);
     }
   }
   if (ep->busy) {
