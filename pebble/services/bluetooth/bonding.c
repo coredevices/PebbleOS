@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
@@ -15,9 +16,9 @@
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/size.h>
 
-PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+#include <syscfg/syscfg.h>
 
-#define MAX_BONDS 4U
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 static bool prv_get_prf_pairing(struct pbl_bt_bond_keys *keys, char *name) {
   memset(keys, 0, sizeof(*keys));
@@ -60,15 +61,8 @@ static void prv_copy_to_prf_store(const ble_addr_t *addr) {
     return;
   }
 
-  if (prv_get_prf_pairing(&stored, nullptr)) {
-    if (prv_keys_equal(&keys, &stored)) {
-      return;
-    }
-
-    // The name there is another peer's.
-    if (ble_addr_cmp(&keys.peer.peer_addr, &stored.peer.peer_addr) != 0) {
-      pbl_bt_prf_store_erase_pairing();
-    }
+  if (prv_get_prf_pairing(&stored, nullptr) && prv_keys_equal(&keys, &stored)) {
+    return;
   }
 
   pbl_bt_prf_store_set_pairing(&keys.peer, &keys.our, nullptr);
@@ -76,7 +70,7 @@ static void prv_copy_to_prf_store(const ble_addr_t *addr) {
 
 struct others {
   const ble_addr_t *keep;
-  ble_addr_t addrs[MAX_BONDS];
+  ble_addr_t addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
   size_t count;
 };
 
@@ -136,12 +130,12 @@ void bt_bonding_init(void) {
   prv_copy_to_prf_store(&first.addr);
 }
 
-void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
+int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
   if (pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
                                     &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
       pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
                                     &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
-    return;
+    return 0;
   }
 
   for (size_t i = 0U; i < PBL_BT_SM_ROOT_KEY_TYPE_NUM; i++) {
@@ -149,9 +143,7 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
       uint32_t word;
 
       if (rng_rand(&word) != 0) {
-        PBL_LOG_ERR("Could not generate the root keys");
-        memset(keys, 0, PBL_BT_SM_ROOT_KEY_TYPE_NUM * sizeof(*keys));
-        return;
+        return -EIO;
       }
 
       memcpy(&keys[i].data[j], &word, sizeof(word));
@@ -159,6 +151,8 @@ void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
   }
 
   pbl_bt_prf_store_set_root_keys(keys);
+
+  return 0;
 }
 
 bool bt_bonding_get_peer_name(const ble_addr_t *addr, char *name) {

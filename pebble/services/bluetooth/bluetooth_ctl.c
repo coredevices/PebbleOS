@@ -7,7 +7,6 @@
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
-#include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/advertising.h>
@@ -71,9 +70,11 @@ static void prv_comm_start(void) {
   // Heap allocated to reduce stack usage
   struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
-  bt_bonding_get_root_keys(config->root_keys);
 
-  s_comm_is_running = pbl_bt_start(config);
+  // Without root keys the stack would run with an identity anyone can resolve.
+  if (bt_bonding_get_root_keys(config->root_keys) == 0) {
+    s_comm_is_running = pbl_bt_start(config);
+  }
   pbl_free(config);
 
   if (s_comm_is_running) {
@@ -86,7 +87,7 @@ static void prv_comm_start(void) {
 #endif
     bt_pairability_init();
   } else {
-    PBL_LOG_ERR("BT driver failed to start!");
+    PBL_LOG_ERR("Bluetooth failed to start");
   }
 }
 
@@ -170,25 +171,12 @@ void bt_ctl_set_override_mode(BtCtlModeOverride override) {
   prv_comm_state_change(nullptr);
 }
 
-static void prv_track_quick_airplane_mode_toggles(bool is_airplane_mode_currently_on) {
-  // Track when coming out of airplane mode and we've gone into airplane mode less than 30 secs ago:
-  static uint64_t s_airplane_mode_last_toggle_ticks;
-  const uint64_t now_ticks = pbl_uptime_ticks();
-  const uint64_t max_interval_secs = 30;
-  if (((now_ticks - s_airplane_mode_last_toggle_ticks) < (max_interval_secs * PBL_TICK_HZ)) &&
-      is_airplane_mode_currently_on) {
-    PBL_LOG_DBG("Quick airplane mode toggle detected!");
-  }
-  s_airplane_mode_last_toggle_ticks = now_ticks;
-}
-
 void bt_ctl_set_airplane_mode_async(bool enabled) {
   if (!s_comm_initialized) {
     PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
     return;
   }
   pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
-  prv_track_quick_airplane_mode_toggles(!enabled);
   bt_settings_set_airplane_mode(enabled);
   s_comm_airplane_mode_on = enabled;
   bool should_schedule_eval = false;

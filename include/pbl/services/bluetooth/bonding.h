@@ -33,8 +33,10 @@ void bt_bonding_init(void);
  * @brief Get the root keys, generating them the first time.
  *
  * @param[out] keys Array of @c PBL_BT_SM_ROOT_KEY_TYPE_NUM keys, indexed by key type.
+ * @retval 0 on success.
+ * @retval -EIO if they could not be generated.
  */
-void bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys);
+int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys);
 
 /**
  * @brief Get the name of a bonded peer.
