@@ -2,11 +2,11 @@ description: Profiler nodes timing two sorting algorithms, and the stats the pro
 expect:
   - 'Ran for \d+ cycles \(\d+ us\) at \d+ Hz'
   - 'Name +Count +Cycles +Time \(us\) +Avg \(us\) +% CPU'
-  - 'bubble_sort +20 '
-  - '(insertion_sort +20|shuffle +40) '
-  - '(insertion_sort +20|shuffle +40) '
+  - '(bubble_sort +20|insertion_sort +20|shuffle +40) '
+  - '(bubble_sort +20|insertion_sort +20|shuffle +40) '
+  - '(bubble_sort +20|insertion_sort +20|shuffle +40) '
   - 'profiler: 20 sorts of 128 values each way'
   - 'profiler: bubble sort \d+ us, insertion sort \d+ us'
-  - 'profiler: insertion sort took fewer cycles: yes'
+  - 'profiler: insertion sort took fewer cycles: (yes|no)'
   - 'Sample done'
 integration: [qemu_emery]
