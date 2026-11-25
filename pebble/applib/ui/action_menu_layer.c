@@ -68,13 +68,15 @@ static GFont prv_get_item_font(const ActionMenuLayer *aml) {
 
 #if PBL_RECT
 static GFont prv_get_unselected_item_font(const ActionMenuLayer *aml) {
-  return action_menu_theme__is_dark_mode() ? aml->layout_cache.font
-                                           : prv_get_font(aml, TextStyleFont_MenuCellTitleRegular);
+  // Black and white displays keep the heavier weight; only color displays use the regular cut.
+  return PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode(), true)
+             ? aml->layout_cache.font
+             : prv_get_font(aml, TextStyleFont_MenuCellTitleRegular);
 }
 #endif
 
 static GColor prv_glyph_foreground_color(bool selected) {
-  return selected ? action_menu_theme__highlight_foreground_color()
+  return selected ? action_menu_theme__short_highlight_foreground_color()
                   : action_menu_theme__foreground_color();
 }
 
@@ -260,7 +262,7 @@ static void prv_draw_glyph_columns(GContext *ctx, const GRect *bounds, GFont fon
     if (is_selected) {
       const GRect highlight = GRect(cell.origin.x + (column_width - GLYPH_CELL_SIZE) / 2,
                                     cell.origin.y, GLYPH_CELL_SIZE, GLYPH_CELL_SIZE);
-      graphics_context_set_fill_color(ctx, action_menu_theme__highlight_background_color());
+      graphics_context_set_fill_color(ctx, action_menu_theme__short_highlight_background_color());
       graphics_fill_round_rect(ctx, &highlight, 8, GCornersAll);
     }
     const GColor text_color = prv_glyph_foreground_color(is_selected);
@@ -285,12 +287,6 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
   const GFont font = aml->layout_cache.font;
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
-  // MenuLayers fill the whole highlighted cell with the inverted highlight background on black
-  // and white displays, which would hide this row's other columns. Restore the themed
-  // background so only the per-column selection tiles highlight.
-  GRect bg_fill = r;
-  graphics_context_set_fill_color(ctx, action_menu_theme__background_color());
-  graphics_fill_rect(ctx, &bg_fill);
   if (prv_is_glyph_grid(aml)) {
     uint8_t *pixels = applib_malloc(GLYPH_SCRATCH_SIZE * GLYPH_SCRATCH_SIZE);
     if (prv_is_honeycomb(aml)) {
@@ -340,9 +336,9 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
     r.origin.y = layer_bounds->origin.y + (r.size.h - fonts_get_font_height(label_font)) / 2 - 4;
 
     if (sel_idx == i) {
-      graphics_context_set_text_color(ctx, action_menu_theme__highlight_foreground_color());
+      graphics_context_set_text_color(ctx, action_menu_theme__short_highlight_foreground_color());
       // Color emoji ignore the text color, so the selection needs a background too
-      graphics_context_set_fill_color(ctx, action_menu_theme__highlight_background_color());
+      graphics_context_set_fill_color(ctx, action_menu_theme__short_highlight_background_color());
 
       const int16_t y_offset = 1;
       const int16_t padding = r.size.w / 6;
