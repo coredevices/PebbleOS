@@ -164,8 +164,6 @@ bool sys_activity_is_initialized(void);
 //! Whether the current process may read health data.
 bool sys_activity_health_allowed(void);
 
-void sys_app_comm_set_responsiveness(SniffInterval interval);
-
 bool sys_light_is_on(void);
 void sys_light_enable_interaction(void);
 void sys_light_enable(bool enable);

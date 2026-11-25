@@ -525,14 +525,6 @@ void music_command_send(MusicCommand command) {
   }
 }
 
-void music_request_reduced_latency(bool reduced_latency) {
-  const off_t o = offsetof(typeof(*s_music_ctx.implementation), request_reduced_latency);
-  void (*request_reduced_latency)(bool) = prv_implementation_function_for_offset(o);
-  if (request_reduced_latency) {
-    request_reduced_latency(reduced_latency);
-  }
-}
-
 void music_request_low_latency_for_period(uint32_t period_ms) {
   const off_t o = offsetof(typeof(*s_music_ctx.implementation), request_low_latency_for_period);
   void (*request_low_latency_for_period)(uint32_t) = prv_implementation_function_for_offset(o);

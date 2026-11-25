@@ -11,7 +11,6 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/app_session.h>
 
-#include <applib/app_comm.h>
 #include <applib/app_message/app_message_internal.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
@@ -19,7 +18,6 @@
 #define SEND_FAST_LINK_TIMEOUT_S 10
 
 static struct pbl_bt_responsiveness_req s_send_response_time_req;
-static struct pbl_bt_responsiveness_req s_app_response_time_req;
 
 static bool prv_is_endpoint_allowed(uint16_t endpoint_id) {
   return (endpoint_id == APP_MESSAGE_ENDPOINT_ID);
@@ -61,23 +59,6 @@ PBL_SYSCALL(bool, sys_app_pp_send_data, (VAL, struct pbl_pp_session *, session),
 
 PBL_SYSCALL(bool, sys_app_pp_has_capability, (VAL, enum pbl_pp_capability, capability)) {
   return app_session_has_capability(capability);
-}
-
-PBL_SYSCALL(void, sys_app_comm_set_responsiveness, (VAL, SniffInterval, interval)) {
-  struct pbl_pp_session *session = app_session_get_current();
-
-  switch (interval) {
-    case SNIFF_INTERVAL_REDUCED:
-      pbl_pp_session_set_responsiveness(session, &s_app_response_time_req,
-                                        PBL_BT_RESPONSE_TIME_MIDDLE, PBL_BT_RESPONSE_TIME_FOREVER);
-      return;
-    case SNIFF_INTERVAL_NORMAL:
-      pbl_pp_session_set_responsiveness(session, &s_app_response_time_req, PBL_BT_RESPONSE_TIME_MAX,
-                                        0);
-      return;
-  }
-  PBL_LOG_WRN("Invalid sniff interval");
-  pbl_syscall_fail();
 }
 
 PBL_SYSCALL(bool, sys_system_pp_has_capability, (VAL, enum pbl_pp_capability, capability)) {

@@ -535,17 +535,6 @@ void test_music_endpoint__skip_seeks_within_track(void) {
   cl_assert_equal_b(music_skip_seeks_within_track(), false);
 }
 
-void test_music_endpoint__reduced_latency(void) {
-  // Android app connects:
-  prv_receive_app_info_event(true /* is_android */);
-
-  cl_assert_equal_b(fake_comm_session_is_latency_reduced(), false);
-  music_request_reduced_latency(true);
-  cl_assert_equal_b(fake_comm_session_is_latency_reduced(), true);
-  music_request_reduced_latency(false);
-  cl_assert_equal_b(fake_comm_session_is_latency_reduced(), false);
-}
-
 void test_music_endpoint__low_latency_for_period(void) {
   // Android app connects:
   prv_receive_app_info_event(true /* is_android */);

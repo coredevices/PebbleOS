@@ -40,7 +40,6 @@ int fake_comm_session_close_call_count(void);
 void fake_comm_session_process_send_next(void);
 
 uint32_t fake_comm_session_get_responsiveness_max_period(void);
-uint32_t fake_comm_session_is_latency_reduced(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Transport mock

@@ -370,9 +370,6 @@ static void handle_init(void) {
   app_message_open(64, 16);
   push_window(&s_data);
 
-  // overall reduce the sniff-mode latency at the expense of some power...
-  app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
-
   ConnectionHandlers handlers = {
     .pebble_app_connection_handler = NULL,
     .pebblekit_connection_handler = bluetooth_status_callback

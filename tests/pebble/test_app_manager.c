@@ -133,9 +133,6 @@ size_t prv_get_stack_guard_size(const PebbleProcessMd *app_md) {
 void _REENT_INIT_PTR(void) {
 }
 
-void app_comm_set_sniff_interval(const SniffInterval interval) {
-}
-
 void app_idle_timeout_start(uint32_t timeout_ms) {
 }
 

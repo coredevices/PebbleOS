@@ -50,8 +50,6 @@ typedef struct {
   bool (*needs_user_to_start_playback_on_phone)(void);
   /** Get the supported MusicServerCapability bits. */
   MusicServerCapability (*get_capability_bitset)(void);
-  /** Enable or disable reduced connection latency. */
-  void (*request_reduced_latency)(bool reduced_latency);
   /** Request the lowest connection latency for @c period_ms milliseconds. */
   void (*request_low_latency_for_period)(uint32_t period_ms);
 } MusicServerImplementation;

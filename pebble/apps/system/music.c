@@ -1830,9 +1830,6 @@ static void prv_handle_init(void) {
   event_service_client_subscribe(&data->event_info);
   prv_push_window(data);
 
-  // Overall reduce the latency at the expense of some power...
-  music_request_reduced_latency(true);
-
   // Give us a super responsive initial period:
   music_request_low_latency_for_period(5000);
 
@@ -1845,7 +1842,6 @@ static void prv_handle_init(void) {
 static void prv_handle_deinit(void) {
   tick_timer_service_unsubscribe();
   accel_tap_service_unsubscribe();
-  music_request_reduced_latency(false);
 
   MusicAppData *data = app_state_get_user_data();
   event_service_client_unsubscribe(&data->pref_change_event_info);

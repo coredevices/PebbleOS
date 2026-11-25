@@ -126,29 +126,26 @@ void test_responsiveness__waits_after_connecting(void) {
   cl_assert_equal_i(s_requested.latency, 0);
 }
 
-void test_responsiveness__fastest_wins_and_expires(void) {
+void test_responsiveness__lasts_as_long_as_the_longest_request(void) {
   prv_spend_seconds(2);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIDDLE, 30);
-  cl_assert_equal_i(s_requested.latency, 4);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 30);
+  cl_assert_equal_i(s_requested.latency, 0);
+  prv_update(0, FAST, 0);
 
-  /* The request with the central is answered before the next is made. */
+  /* Nothing is asked of the central for a request already granted. */
   pbl_bt_responsiveness_request(CONN_HANDLE, &s_other_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
   cl_assert_equal_i(s_num_requests, 1);
-  prv_update(0, SLOW, 4);
-  cl_assert_equal_i(s_num_requests, 2);
-  cl_assert_equal_i(s_requested.itvl_max, FAST);
-  prv_update(0, FAST, 0);
 
   prv_spend_seconds(11);
-  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIDDLE);
-  cl_assert_equal_i(s_requested.latency, 4);
-  prv_update(0, SLOW, 4);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
+  cl_assert_equal_i(s_num_requests, 1);
 
   prv_spend_seconds(20);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MAX);
-  cl_assert_equal_i(s_num_requests, 3);
+  cl_assert_equal_i(s_num_requests, 2);
+  cl_assert_equal_i(s_requested.latency, 4);
 }
 
 void test_responsiveness__release_is_delayed(void) {
@@ -166,6 +163,22 @@ void test_responsiveness__release_is_delayed(void) {
   prv_spend_seconds(2);
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MAX);
   cl_assert_equal_i(s_requested.latency, 4);
+}
+
+void test_responsiveness__period_of_zero_ends_at_once(void) {
+  prv_spend_seconds(2);
+
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN,
+                                PBL_BT_RESPONSE_TIME_FOREVER);
+  prv_update(0, FAST, 0);
+
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 0);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MAX);
+  cl_assert_equal_i(s_requested.latency, 4);
+
+  /* The request can be made again. */
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 60);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
 }
 
 void test_responsiveness__gives_up_after_three_requests(void) {
@@ -228,6 +241,6 @@ void test_responsiveness__requests_end_with_the_connection(void) {
   prv_connect();
   cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MAX);
 
-  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIDDLE, 30);
-  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIDDLE);
+  pbl_bt_responsiveness_request(CONN_HANDLE, &s_req, PBL_BT_RESPONSE_TIME_MIN, 30);
+  cl_assert_equal_i(pbl_bt_responsiveness_get(CONN_HANDLE), PBL_BT_RESPONSE_TIME_MIN);
 }
