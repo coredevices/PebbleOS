@@ -25,6 +25,9 @@ MIN_SAMPLE_RATIO = 0.95
 # How far, and how often, the supply is lowered at a time.
 VOLTAGE_STEP_DOWN_MV = 50
 VOLTAGE_STEP_S = 0.05
+# The source voltages a PPK2 gives; it clamps others without telling.
+SOURCE_MIN_MV = 800
+SOURCE_MAX_MV = 5000
 # How long to wait for the PPK2 to come back on USB, and how often to look.
 APPEAR_TIMEOUT_S = 15.0
 APPEAR_POLL_S = 0.5
@@ -47,10 +50,19 @@ def _aligned(data):
     return data[best:]
 
 
+def _check_source_voltage(voltage_mv):
+    if not SOURCE_MIN_MV <= voltage_mv <= SOURCE_MAX_MV:
+        raise PowerError(
+            f"a PPK2 sources {SOURCE_MIN_MV}-{SOURCE_MAX_MV} mV, not {voltage_mv} mV"
+        )
+
+
 class Ppk2(Supply):
     measures = True
 
     def __init__(self, port="auto", voltage_mv=None):
+        if voltage_mv is not None:
+            _check_source_voltage(voltage_mv)
         super().__init__(port)
         # The PPK2 resets when its port closes: it drops off USB and comes
         # back a few seconds later, so the session before may have just left.
@@ -112,6 +124,7 @@ class Ppk2(Supply):
         return ports, errors, None
 
     def set_voltage(self, voltage_mv):
+        _check_source_voltage(voltage_mv)
         # A large step down resets the PPK2 (it drops off USB); small ones do not.
         with self._lock:
             current = self.voltage_mv or voltage_mv
