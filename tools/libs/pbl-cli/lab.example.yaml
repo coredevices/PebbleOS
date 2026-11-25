@@ -8,7 +8,8 @@
 
 # Watches, by name. `board` may leave out the revision to match any.
 # `serial` is the debug serial port (console, sftool, serial debuggers),
-# `probe` the debug probe as the probe-rs runner names it, `supply` the one
+# `probe` the debug probe as the probe-rs runner names it, VID:PID[:SERIAL]
+# (the nrfutil runner takes its serial number), `supply` the one
 # wired to its battery terminals, `usb` where the board's own USB device
 # sits on the host's bus, as <bus>-<port>[.<port>...] (pyusb's bus and
 # port_numbers), for the USB tests to tell it from other boards with the

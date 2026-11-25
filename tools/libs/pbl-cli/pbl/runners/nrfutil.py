@@ -30,8 +30,18 @@ class NrfUtilRunner(Runner):
         prefix = "nrfutil device "
         if ext_mem:
             prefix += f"--x-ext-mem-config-file {self.quote(self._ext_mem_config)} "
-        # Only debug probes: other Nordic USB devices, e.g. a PPK2, enumerate too
-        self.call(f"{prefix}{command} --traits jlink")
+        # Only debug probes: other Nordic USB devices, e.g. a PPK2, enumerate too.
+        # Without a serial number, nrfutil acts on every probe attached.
+        selector = "--traits jlink"
+        serial = self._probe_serial()
+        if serial:
+            selector += f" --serial-number {self.quote(serial)}"
+        self.call(f"{prefix}{command} {selector}")
+
+    def _probe_serial(self):
+        # The lab names a probe VID:PID[:SERIAL]
+        fields = (self.cfg.probe or "").split(":")
+        return fields[2] if len(fields) > 2 else None
 
     def _program(self, hex_file):
         self._nrfutil(
