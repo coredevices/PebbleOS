@@ -20,7 +20,7 @@
  *
  * // Once the stack is up, be discoverable and pairable for a minute.
  * if (bt_ctl_is_bluetooth_running()) {
- *   bt_pairability_use_ble_for_period(60);
+ *   bt_pairability_use_for_period(60);
  * }
  * @endcode
  */
