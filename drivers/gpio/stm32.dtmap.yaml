@@ -23,3 +23,10 @@ args:
   - clock: 0
     of: st,syscfg
     up: true
+  - hwlock: 0
+    up: true
+    default: PBL_HWSPINLOCK_NONE
+  - hwlock: 0
+    of: interrupt-parent
+    up: true
+    default: PBL_HWSPINLOCK_NONE

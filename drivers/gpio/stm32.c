@@ -38,6 +38,7 @@ static void prv_field(const struct pbl_gpio_stm32 *gpio, uint32_t offset, uint32
 static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
   const struct pbl_gpio_stm32 *gpio = prv_port(port);
   uint32_t pupd = GPIO_PUPDR_NONE;
+  int ret;
 
   if ((flags & (PBL_GPIO_INPUT | PBL_GPIO_OUTPUT)) == 0U) {
     return -EINVAL;
@@ -49,7 +50,11 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
     pupd = GPIO_PUPDR_DOWN;
   }
 
-  pbl_irq_lock();
+  ret = pbl_hwspinlock_lock(&gpio->hwlock);
+  if (ret != 0) {
+    return ret;
+  }
+
   prv_field(gpio, STM32_GPIO_PUPDR_OFFSET, GPIO_PUPDR_MASK(pin), pupd);
   if ((flags & PBL_GPIO_OUTPUT) != 0U) {
     if ((flags & PBL_GPIO_OUTPUT_INIT_HIGH) != 0U) {
@@ -63,7 +68,7 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
   } else {
     prv_field(gpio, STM32_GPIO_MODER_OFFSET, GPIO_MODER_MASK(pin), GPIO_MODER_INPUT);
   }
-  pbl_irq_unlock();
+  pbl_hwspinlock_unlock(&gpio->hwlock);
 
   return 0;
 }
@@ -85,18 +90,31 @@ const struct pbl_gpio_port_ops pbl_gpio_stm32_ops = {
   .set = prv_set,
 };
 
-// A line serves the port that configures it, unless another port holds it enabled
+static bool prv_routed(const struct pbl_gpio_stm32 *gpio, uint32_t hwirq) {
+  uint32_t exticr = pbl_readl(gpio->syscfg + STM32H7_SYSCFG_EXTICR_OFFSET(hwirq));
+
+  return PBL_FIELD_GET(SYSCFG_EXTICR_MASK(hwirq), exticr) == PORT_INDEX(gpio->base);
+}
+
+// A line serves the port that configures it, unless another port holds it enabled, on this core
+// or on the other
 static int prv_intc_configure(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   const struct pbl_gpio_stm32 *gpio = prv_intc_port(intc);
   uint32_t bit = PBL_BIT(hwirq);
-  int ret = 0;
+  int ret;
 
   if ((type & (PBL_IRQ_TYPE_LEVEL_HIGH | PBL_IRQ_TYPE_LEVEL_LOW)) != 0U) {
     return -ENOTSUP;
   }
 
-  pbl_irq_lock();
-  if (s_owners[hwirq] != nullptr && s_owners[hwirq] != gpio) {
+  ret = pbl_hwspinlock_lock(&gpio->exti_hwlock);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if ((s_owners[hwirq] != nullptr && s_owners[hwirq] != gpio) ||
+      (!prv_routed(gpio, hwirq) &&
+       (pbl_readl(gpio->exti + STM32H7_EXTI_OTHER_IMR1_OFFSET) & bit) != 0U)) {
     ret = -EBUSY;
   } else {
     pbl_modifyl(SYSCFG_EXTICR_MASK(hwirq),
@@ -107,24 +125,29 @@ static int prv_intc_configure(const struct pbl_intc *intc, uint32_t hwirq, uint3
     pbl_modifyl(bit, (type & PBL_IRQ_TYPE_EDGE_FALLING) != 0U ? bit : 0U,
                 gpio->exti + STM32H7_EXTI_FTSR1_OFFSET);
   }
-  pbl_irq_unlock();
+  pbl_hwspinlock_unlock(&gpio->exti_hwlock);
 
   return ret;
 }
 
+// The other core may have taken the line since it was configured
 static int prv_intc_enable(const struct pbl_intc *intc, uint32_t hwirq) {
   const struct pbl_gpio_stm32 *gpio = prv_intc_port(intc);
-  int ret = 0;
+  int ret;
 
-  pbl_irq_lock();
-  if (s_owners[hwirq] != nullptr && s_owners[hwirq] != gpio) {
+  ret = pbl_hwspinlock_lock(&gpio->exti_hwlock);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if ((s_owners[hwirq] != nullptr && s_owners[hwirq] != gpio) || !prv_routed(gpio, hwirq)) {
     ret = -EBUSY;
   } else {
     s_owners[hwirq] = gpio;
     pbl_writel(PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_CORE_PR1_OFFSET);
     pbl_modifyl(0U, PBL_BIT(hwirq), gpio->exti + STM32H7_EXTI_CORE_IMR1_OFFSET);
   }
-  pbl_irq_unlock();
+  pbl_hwspinlock_unlock(&gpio->exti_hwlock);
 
   return ret;
 }
