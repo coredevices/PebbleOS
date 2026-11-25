@@ -92,7 +92,9 @@ PBL_LOG_MODULE_DECLARE(driver_audio, CONFIG_DRIVER_AUDIO_LOG_LEVEL);
 #define REFERENCES_MS 30U
 #define PLL_LOCK_MS   40U
 #define CALIB_POLL_MS 2U
-#define CALIB_MS      20U
+#define CALIB_MS      100U
+// Before the capture path set up again after a system mode submit holds
+#define MODE_SUBMIT_MS 50U
 
 #define RATE 16000U
 
@@ -128,10 +130,13 @@ static const struct prv_reg_seq s_common[] = {
 
 // DAI to the right DAC, mixer and line output
 static const struct prv_reg_seq s_playback[] = {
-  {DA7212_DIG_ROUTING_DAC, 0xbaU, 0U},     {DA7212_DAC_R_CTRL, 0x80U, 0U},
-  {DA7212_MIXOUT_R_SELECT, 0x08U, 0U},     {DA7212_MIXOUT_R_CTRL, 0x90U, 0U},
-  {DA7212_LINE_GAIN, 0x30U, 0U},           {DA7212_LINE_CTRL, 0x80U, 0U},
-  {DA7212_SYSTEM_MODES_OUTPUT, 0x89U, 0U},
+  {DA7212_DIG_ROUTING_DAC, 0xbaU, 0U},
+  {DA7212_DAC_R_CTRL, 0x80U, 0U},
+  {DA7212_MIXOUT_R_SELECT, 0x08U, 0U},
+  {DA7212_MIXOUT_R_CTRL, 0x90U, 0U},
+  {DA7212_LINE_GAIN, 0x30U, 0U},
+  {DA7212_LINE_CTRL, 0x80U, 0U},
+  {DA7212_SYSTEM_MODES_OUTPUT, 0x89U, MODE_SUBMIT_MS},
 };
 
 static const struct prv_reg_seq s_playback_off[] = {
@@ -325,23 +330,6 @@ static int prv_power_up(const struct pbl_audio_da7212 *dev) {
   return prv_write_seq(dev, s_common, PBL_ARRAY_SIZE(s_common));
 }
 
-static int prv_playback_up(const struct pbl_audio_da7212 *dev,
-                           const struct pbl_audio_codec_cfg *cfg) {
-  int ret;
-
-  ret = prv_write_seq(dev, s_playback, PBL_ARRAY_SIZE(s_playback));
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = prv_set_gain(&dev->codec, PBL_AUDIO_PLAYBACK, cfg->gain_mdb);
-  if (ret != 0) {
-    return ret;
-  }
-
-  return prv_set_mute(&dev->codec, PBL_AUDIO_PLAYBACK, cfg->mute);
-}
-
 static bool prv_calibrated(const struct pbl_audio_da7212 *dev) {
   uint8_t val;
 
@@ -350,8 +338,8 @@ static bool prv_calibrated(const struct pbl_audio_da7212 *dev) {
          (val & DA7212_ALC_CTRL1_AUTO_CALIB_EN) == 0U;
 }
 
-static int prv_capture_up(const struct pbl_audio_da7212 *dev,
-                          const struct pbl_audio_codec_cfg *cfg) {
+// Microphone to the ADCs, with their offset calibrated, the ADCs muted at their last gain
+static int prv_capture_path_up(const struct pbl_audio_da7212 *dev) {
   int ret;
 
   if (dev->micbias1_mv == 0U) {
@@ -379,7 +367,14 @@ static int prv_capture_up(const struct pbl_audio_da7212 *dev,
     PBL_LOG_WRN("ADC calibration timed out");
   }
 
-  ret = prv_write(dev, DA7212_MIC_1_CTRL, DA7212_MIC_1_CTRL_EN | DA7212_MIC_1_CTRL_IN_MIC_P);
+  return prv_write(dev, DA7212_MIC_1_CTRL, DA7212_MIC_1_CTRL_EN | DA7212_MIC_1_CTRL_IN_MIC_P);
+}
+
+static int prv_capture_up(const struct pbl_audio_da7212 *dev,
+                          const struct pbl_audio_codec_cfg *cfg) {
+  int ret;
+
+  ret = prv_capture_path_up(dev);
   if (ret != 0) {
     return ret;
   }
@@ -390,6 +385,51 @@ static int prv_capture_up(const struct pbl_audio_da7212 *dev,
   }
 
   return prv_set_mute(&dev->codec, PBL_AUDIO_CAPTURE, cfg->mute);
+}
+
+// ADC gain and mute, kept while the capture path is set up again
+static const uint8_t s_capture_regs[] = {
+  DA7212_ADC_L_GAIN,
+  DA7212_ADC_R_GAIN,
+  DA7212_ADC_L_CTRL,
+  DA7212_ADC_R_CTRL,
+};
+
+static int prv_playback_up(const struct pbl_audio_da7212 *dev,
+                           const struct pbl_audio_codec_cfg *cfg) {
+  const bool capturing = (cfg->streaming & PBL_BIT(PBL_AUDIO_CAPTURE)) != 0U;
+  uint8_t saved[PBL_ARRAY_SIZE(s_capture_regs)];
+  int ret;
+
+  for (size_t i = 0U; capturing && i < PBL_ARRAY_SIZE(s_capture_regs); i++) {
+    ret = pbl_i2c_reg_read_byte(&dev->i2c, s_capture_regs[i], &saved[i]);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_write_seq(dev, s_playback, PBL_ARRAY_SIZE(s_playback));
+  if (ret != 0) {
+    return ret;
+  }
+
+  // Submitting the output system mode powers the capture path down: bring it up again
+  if (capturing) {
+    ret = prv_capture_path_up(dev);
+    for (size_t i = 0U; ret == 0 && i < PBL_ARRAY_SIZE(s_capture_regs); i++) {
+      ret = prv_write(dev, s_capture_regs[i], saved[i]);
+    }
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_set_gain(&dev->codec, PBL_AUDIO_PLAYBACK, cfg->gain_mdb);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_set_mute(&dev->codec, PBL_AUDIO_PLAYBACK, cfg->mute);
 }
 
 // The DAI drives its data output while recording
@@ -434,18 +474,23 @@ static int prv_enable_path(const struct pbl_audio_da7212 *dev,
     }
   }
 
+  // The DAI, then its bit and frame clocks as master, run before the ADC offset calibration,
+  // which needs them
+  ret = prv_dai_update(dev, dirs);
+  if (ret == 0 && first && (cfg->fmt & PBL_AUDIO_FMT_CODEC_MASTER) != 0U) {
+    ret = prv_write(dev, DA7212_DAI_CLK_MODE, DA7212_DAI_CLK_MODE_MASTER_64BCLK);
+  }
+  if (ret != 0) {
+    return ret;
+  }
+
   ret = cfg->dir == PBL_AUDIO_PLAYBACK ? prv_playback_up(dev, cfg) : prv_capture_up(dev, cfg);
   if (ret != 0) {
     return ret;
   }
 
-  ret = prv_dai_update(dev, dirs);
-  if (ret != 0 || !first || (cfg->fmt & PBL_AUDIO_FMT_CODEC_MASTER) == 0U) {
-    return ret;
-  }
-
-  // The DAI starts as clock master, driving the bit and frame clocks
-  return prv_write(dev, DA7212_DAI_CLK_MODE, DA7212_DAI_CLK_MODE_MASTER_64BCLK);
+  // Again, as submitting the output system mode may have changed it
+  return prv_dai_update(dev, dirs);
 }
 
 static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audio_codec_cfg *cfg) {
