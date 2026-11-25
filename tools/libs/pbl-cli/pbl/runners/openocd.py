@@ -6,12 +6,37 @@ import os
 import re
 import socket
 import subprocess
+import time
 
 from .core import Runner, RunnerCaps, RunnerError, UnsupportedOperation
 
 OPENOCD_TELNET_PORT = 4444
 OPENOCD_GDB_PORT = 3333
 OPENOCD_LOG = ".openocd.log"
+
+
+# How long the daemon may take to answer each expectation
+DAEMON_EXPECT_S = 40
+
+
+def _expect(sock, received, regex, timeout):
+    """Read from ``sock`` until ``regex`` matches what came; returns what came
+    after the match, and whether it matched, as telnetlib's expect did."""
+    pattern = re.compile(regex.encode())
+    deadline = time.monotonic() + timeout
+    while (match := pattern.search(received)) is None:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return received, False
+        sock.settimeout(remaining)
+        try:
+            data = sock.recv(4096)
+        except TimeoutError:
+            return received, False
+        if not data:
+            return received, False
+        received += data
+    return received[match.end() :], True
 
 
 def _is_openocd_running():
@@ -112,16 +137,15 @@ class OpenOcdRunner(Runner):
         self, cmd, ignore_fail=False, expect=(), shutdown=True, enforce_expect=False
     ):
         if _is_openocd_running():
-            import telnetlib
-
-            t = telnetlib.Telnet("", OPENOCD_TELNET_PORT)
             print(f"Sending commands to OpenOCD daemon:\n{cmd}\n...")
-            t.write(b"%s\n" % cmd.encode())
-            for regex in expect:
-                idx, _match, _text = t.expect([regex.encode()], 40)
-                if enforce_expect and idx == -1:
-                    raise RunnerError(f"OpenOCD expectation '{regex}' unfulfilled")
-            t.close()
+            with socket.create_connection(("localhost", OPENOCD_TELNET_PORT)) as sock:
+                sock.sendall(b"%s\n" % cmd.encode())
+                received = b""
+                # The daemon keeps running: it never shuts down
+                for regex in (r for r in expect if r != "shutdown"):
+                    received, found = _expect(sock, received, regex, DAEMON_EXPECT_S)
+                    if enforce_expect and not found:
+                        raise RunnerError(f"OpenOCD expectation '{regex}' unfulfilled")
             return
 
         if shutdown:
