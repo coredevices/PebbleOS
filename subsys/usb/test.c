@@ -100,6 +100,8 @@ static const struct PBL_PACKED {
   },
 };
 
+PBL_USBD_FUNCTION_DECLARE(test);
+
 static struct {
   bool configured;
   // Sequence number of the next packet, which its bytes count up from
@@ -117,12 +119,16 @@ static struct {
   uint8_t intr[INT_MPS];
 } s_test;
 
+static uint8_t prv_ep(uint8_t ep) {
+  return pbl_usbd_ep(PBL_USBD_FUNCTION(test), ep);
+}
+
 static void prv_loop_rx(void) {
-  (void)pbl_udc_ep_queue(UDC, EP_LOOP_OUT, s_test.loop, sizeof(s_test.loop));
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_LOOP_OUT), s_test.loop, sizeof(s_test.loop));
 }
 
 static void prv_sink_rx(void) {
-  (void)pbl_udc_ep_queue(UDC, EP_SINK, s_test.sink, sizeof(s_test.sink));
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_SINK), s_test.sink, sizeof(s_test.sink));
 }
 
 static void prv_source_tx(void) {
@@ -135,12 +141,12 @@ static void prv_source_tx(void) {
     s_test.source_seq++;
   }
 
-  (void)pbl_udc_ep_queue(UDC, EP_SOURCE, s_test.source, sizeof(s_test.source));
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_SOURCE), s_test.source, sizeof(s_test.source));
 }
 
 static void prv_int_tx(void) {
   pbl_put_le32(s_test.int_seq, s_test.intr);
-  (void)pbl_udc_ep_queue(UDC, EP_INT, s_test.intr, sizeof(s_test.intr));
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_INT), s_test.intr, sizeof(s_test.intr));
 }
 
 static void prv_sink_check(size_t len) {
@@ -227,13 +233,13 @@ static void prv_xfer_done(uint8_t ep, int ret) {
     case EP_LOOP_OUT:
       s_test.loop_len = (size_t)ret;
       s_test.stats[STAT_LOOP_BYTES] += (uint32_t)ret;
-      (void)pbl_udc_ep_queue(UDC, EP_LOOP_IN, s_test.loop, s_test.loop_len);
+      (void)pbl_udc_ep_queue(UDC, prv_ep(EP_LOOP_IN), s_test.loop, s_test.loop_len);
       break;
     case EP_LOOP_IN:
       // A transfer of full packets ends with a zero-length one
       if (s_test.loop_len != 0U && (s_test.loop_len % pbl_usbd_bulk_mps()) == 0U) {
         s_test.loop_len = 0U;
-        (void)pbl_udc_ep_queue(UDC, EP_LOOP_IN, nullptr, 0U);
+        (void)pbl_udc_ep_queue(UDC, prv_ep(EP_LOOP_IN), nullptr, 0U);
         break;
       }
       prv_loop_rx();
@@ -259,8 +265,6 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 PBL_USBD_FUNCTION_DEFINE(test) = {
   .desc = &s_desc,
   .desc_len = sizeof(s_desc),
-  .first_iface = IFACE,
-  .num_ifaces = 1U,
   .configured = prv_configured,
   .class_request = prv_request,
   .xfer_done = prv_xfer_done,

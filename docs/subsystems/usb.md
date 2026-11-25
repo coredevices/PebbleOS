@@ -18,9 +18,9 @@ flowchart TD
 ## The device
 
 The device has one configuration, made of the functions defined with
-`PBL_USBD_FUNCTION_DEFINE()`. Each gives its interface and endpoint
-descriptors with its own interface numbers and endpoint addresses, so the
-functions of a device take different ones. The stack answers the standard
+`PBL_USBD_FUNCTION_DEFINE()`, in the order of their names. Each gives its
+interface and endpoint descriptors, numbered on its own (see
+[](#usb-numbers)). The stack answers the standard
 requests on endpoint 0, builds the configuration descriptor from the
 functions, setting the maximum packet size of bulk endpoints and the interval
 of interrupt ones for the bus speed, and enables the endpoints when the host
@@ -67,7 +67,7 @@ static const struct PBL_PACKED {
   .in = {
     .bLength = sizeof(struct pbl_usb_desc_ep),
     .bDescriptorType = PBL_USB_DESC_ENDPOINT,
-    .bEndpointAddress = 0x82U,
+    .bEndpointAddress = 0x81U,
     .bmAttributes = PBL_UDC_EP_BULK,
     .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
   },
@@ -76,13 +76,59 @@ static const struct PBL_PACKED {
 PBL_USBD_FUNCTION_DEFINE(vendor) = {
   .desc = &s_desc,
   .desc_len = sizeof(s_desc),
-  .first_iface = 0U,
-  .num_ifaces = 1U,
 };
 ```
 
 The descriptors stay constant: the stack fixes up the copy it sends, as the
-packet size of bulk endpoints for the bus speed.
+interface numbers and endpoint addresses of the device and the packet size of
+bulk endpoints for the bus speed.
+
+(usb-numbers)=
+
+### Interface and endpoint numbers
+
+A function numbers its interfaces from 0 and its endpoints from 1 in each
+direction, as if it were the only function of the device: a function with one
+bulk endpoint in each direction has `0x01` and `0x81`. When the device
+connects, the stack walks the functions in order and gives each the next
+interface numbers of the device and, for each of its endpoints, the first
+endpoint of the controller that is free in that direction. On a controller
+whose endpoint numbers each serve one direction (`PBL_UDC_CAP_EP_ONE_DIR`, as
+the MUSB), an endpoint number taken in one direction is not given in the
+other. The same endpoint in several alternate settings of an interface keeps
+one endpoint of the controller. When the functions need more endpoints than
+the controller has, more than 16 interfaces or more than 8 functions,
+`pbl_usbd_enable()` fails with `-ENOSPC` and the device does not connect.
+
+The stack puts the numbers of the device in the configuration descriptor as
+it sends it: `bFirstInterface` of interface association descriptors,
+`bInterfaceNumber` of interface descriptors and `bEndpointAddress` of
+endpoint descriptors, and in the function subsets of the Microsoft OS 2.0
+descriptor set. A class-specific descriptor that names interfaces is the
+function's to patch, in its `desc_fixup(desc, first_iface)`, called on the
+copy of each descriptor the stack does not know, as the serial port does for
+its union and call management descriptors.
+
+Everything the stack hands a function uses the function's own numbers: the
+interface of `set_alt()`, the low byte of `wIndex` in `class_request()` and
+`control_out()`, and the endpoint of `xfer_done()`. To start a transfer, a
+function asks for the endpoint of the controller with `pbl_usbd_ep()`:
+
+```c
+#define EP_OUT 0x01U
+
+PBL_USBD_FUNCTION_DECLARE(vendor);
+
+static void prv_rx_start(void) {
+  (void)pbl_udc_ep_queue(UDC, pbl_usbd_ep(PBL_USBD_FUNCTION(vendor), EP_OUT), s_buf,
+                         sizeof(s_buf));
+}
+```
+
+`PBL_USBD_FUNCTION_DECLARE()` lets code refer to the function before
+`PBL_USBD_FUNCTION_DEFINE()`. The host reads the numbers of the device from
+the descriptors; tools that select an endpoint should look it up there
+rather than assume one.
 
 ### Strings
 
@@ -107,8 +153,7 @@ which ends their transfers with `-ECONNABORTED`, enables those of the new
 one, and calls the function's `set_alt(iface, alt)`, where the function
 starts its transfers on them. A setting the interface does not have is
 stalled, and so are both requests while the device is not configured.
-`GET_INTERFACE` answers with the current setting. The stack keeps the
-settings of the first 16 interfaces; the others only have setting 0.
+`GET_INTERFACE` answers with the current setting.
 
 ```c
 static const char *const s_strings[] = {"Loopback off", "Loopback"};
@@ -118,8 +163,6 @@ PBL_USBD_FUNCTION_DEFINE(loopback) = {
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),
-  .first_iface = 0U,
-  .num_ifaces = 1U,
   .set_alt = prv_set_alt,
   .xfer_done = prv_xfer_done,
 };
@@ -188,8 +231,8 @@ dropped.
 `CONFIG_USB_DFU` adds a Device Firmware Upgrade 1.1 interface in DFU mode
 (`include/pbl/usb/dfu.h`): the host downloads an image to a flash partition
 and uploads it back, with a standard tool such as `dfu-util`. The function
-takes the interface after the serial port's, or interface 0 without it, and
-uses endpoint 0 only.
+has one interface, numbered among the other functions', and uses endpoint 0
+only.
 
 The partition is a region the application defines, by the label of a
 partition of the flash serving the `flash` role:
@@ -238,9 +281,9 @@ partition is read. On Linux, `stat -c %s` gives the size.
 `CONFIG_USB_TEST` adds a vendor-class function for testing the stack and the
 controller from a host, which the integration tests in `tests/integration/usb`
 drive (see [](../development/tests/integration.md)), with the
-`samples/subsys/usb/test` sample. It takes interface 0, so it goes with neither
-the serial port nor the firmware upgrade, and five endpoints, each number in
-one direction:
+`samples/subsys/usb/test` sample. It has one interface and five endpoints,
+whose own addresses below are also those of the device when it is the only
+function on a controller whose endpoint numbers each serve one direction:
 
 | Endpoint | Type | What it does |
 | --- | --- | --- |
@@ -249,7 +292,7 @@ one direction:
 | `0x84` | Bulk | Source: sends packets whose bytes count up from their sequence number |
 | `0x85` | Interrupt | A 16-byte packet every frame the host polls, its first four bytes its sequence number |
 
-Its vendor requests, to interface 0:
+Its vendor requests, to its interface:
 
 | Request | Direction | What it does |
 | --- | --- | --- |
@@ -266,4 +309,4 @@ setup packets among them, and the end of transfers from its interrupt.
 
 | Driver | Controllers |
 | --- | --- |
-| `drivers/udc/musb.c` | Mentor Graphics MUSB, as the full-speed USB controller of the SF32LB57, with its internal PHY; each endpoint number serves one direction at a time, with a FIFO its packet size rounded up to a power of two, given out as endpoints are enabled from the FIFO RAM the devicetree gives (`sifli,fifo-size`); a bulk OUT endpoint gets room for two packets while 128 bytes are left for the endpoints after it, so the host can send the next packet while the CPU reads one |
+| `drivers/udc/musb.c` | Mentor Graphics MUSB, as the full-speed USB controller of the SF32LB57, with its internal PHY; each endpoint number serves one direction at a time (`PBL_UDC_CAP_EP_ONE_DIR`), with a FIFO its packet size rounded up to a power of two, given out as endpoints are enabled from the FIFO RAM the devicetree gives (`sifli,fifo-size`); a bulk OUT endpoint gets room for two packets while 128 bytes are left for the endpoints after it, so the host can send the next packet while the CPU reads one |

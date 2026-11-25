@@ -18,7 +18,7 @@
 #define IFACE 0U
 
 #define EP_OUT 0x01U
-#define EP_IN  (PBL_UDC_EP_IN | 2U)
+#define EP_IN  (PBL_UDC_EP_IN | 1U)
 
 #define ALT_OFF  0U
 #define ALT_BULK 1U
@@ -118,6 +118,8 @@ static const char *const s_strings[] = {
 /* The stack's callbacks run in the controller's interrupt: they queue, the main thread prints. */
 static PBL_MSGQ_DEFINE(s_alts, sizeof(uint8_t), 8);
 
+PBL_USBD_FUNCTION_DECLARE(loopback);
+
 static uint8_t s_alt;
 static uint8_t s_buf[512];
 static atomic_uint s_looped;
@@ -127,7 +129,7 @@ static uint16_t prv_mps(void) {
 }
 
 static void prv_rx_start(void) {
-  (void)pbl_udc_ep_queue(UDC, EP_OUT, s_buf, prv_mps());
+  (void)pbl_udc_ep_queue(UDC, pbl_usbd_ep(PBL_USBD_FUNCTION(loopback), EP_OUT), s_buf, prv_mps());
 }
 
 static void prv_set_alt(uint8_t iface, uint8_t alt) {
@@ -150,7 +152,8 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 
   if (ep == EP_OUT) {
     atomic_fetch_add(&s_looped, (unsigned int)ret);
-    (void)pbl_udc_ep_queue(UDC, EP_IN, s_buf, (size_t)ret);
+    (void)pbl_udc_ep_queue(UDC, pbl_usbd_ep(PBL_USBD_FUNCTION(loopback), EP_IN), s_buf,
+                           (size_t)ret);
   } else {
     prv_rx_start();
   }
@@ -161,8 +164,6 @@ PBL_USBD_FUNCTION_DEFINE(loopback) = {
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),
-  .first_iface = IFACE,
-  .num_ifaces = 1U,
   .configured = prv_configured,
   .set_alt = prv_set_alt,
   .xfer_done = prv_xfer_done,

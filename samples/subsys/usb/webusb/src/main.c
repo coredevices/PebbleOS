@@ -15,7 +15,7 @@
 
 #define IFACE  0U
 #define EP_OUT 1U
-#define EP_IN  (PBL_UDC_EP_IN | 2U)
+#define EP_IN  (PBL_UDC_EP_IN | 1U)
 
 #define VENDOR_CLASS 0xffU
 
@@ -49,13 +49,19 @@ static const struct PBL_PACKED {
   },
 };
 
+PBL_USBD_FUNCTION_DECLARE(webusb);
+
 static atomic_bool s_configured;
 static atomic_uint s_count;
 static uint8_t s_buf[BUF_LEN];
 
+static uint8_t prv_ep(uint8_t ep) {
+  return pbl_usbd_ep(PBL_USBD_FUNCTION(webusb), ep);
+}
+
 /* A transfer ends with a short packet or a full buffer, and goes back as it came. */
 static void prv_rx_start(void) {
-  (void)pbl_udc_ep_queue(UDC, EP_OUT, s_buf, sizeof(s_buf));
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_OUT), s_buf, sizeof(s_buf));
 }
 
 static void prv_configured(bool on) {
@@ -72,7 +78,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 
   if (ep == EP_OUT && ret > 0) {
     atomic_fetch_add(&s_count, (unsigned int)ret);
-    (void)pbl_udc_ep_queue(UDC, EP_IN, s_buf, (size_t)ret);
+    (void)pbl_udc_ep_queue(UDC, prv_ep(EP_IN), s_buf, (size_t)ret);
     return;
   }
 
@@ -82,8 +88,6 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 PBL_USBD_FUNCTION_DEFINE(webusb) = {
   .desc = &s_desc,
   .desc_len = sizeof(s_desc),
-  .first_iface = IFACE,
-  .num_ifaces = 1U,
   .configured = prv_configured,
   .xfer_done = prv_xfer_done,
   .winusb_guid = "{DE07B10A-24B5-440C-A638-F3855BEB7979}",

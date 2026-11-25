@@ -19,8 +19,8 @@
 #define STRING_NAME 1U
 
 #define EP_NOTIFY   (PBL_UDC_EP_IN | 1U)
-#define EP_DATA_OUT 2U
-#define EP_DATA_IN  (PBL_UDC_EP_IN | 3U)
+#define EP_DATA_OUT 1U
+#define EP_DATA_IN  (PBL_UDC_EP_IN | 2U)
 
 #define CDC_CLASS            0x02U
 #define CDC_SUBCLASS_ACM     0x02U
@@ -171,6 +171,8 @@ static const char *const s_strings[] = {
   CONFIG_USB_CDC_ACM_NAME,
 };
 
+PBL_USBD_FUNCTION_DECLARE(cdc_acm);
+
 static struct {
   atomic_bool configured;
   bool tx_busy;
@@ -186,6 +188,10 @@ static struct {
   .line_coding = {0x00, 0xc2, 0x01, 0x00, 0, 0, 8},
 };
 
+static uint8_t prv_ep(uint8_t ep) {
+  return pbl_usbd_ep(PBL_USBD_FUNCTION(cdc_acm), ep);
+}
+
 static uint16_t prv_ring_used(void) {
   return (uint16_t)((s_acm.tx_head - s_acm.tx_tail) % TX_RING);
 }
@@ -200,11 +206,11 @@ static void prv_tx_start(void) {
   }
 
   s_acm.tx_len = len;
-  s_acm.tx_busy = pbl_udc_ep_queue(UDC, EP_DATA_IN, s_acm.tx_buf, len) == 0;
+  s_acm.tx_busy = pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_IN), s_acm.tx_buf, len) == 0;
 }
 
 static void prv_rx_start(void) {
-  (void)pbl_udc_ep_queue(UDC, EP_DATA_OUT, s_acm.rx_buf, pbl_usbd_bulk_mps());
+  (void)pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_OUT), s_acm.rx_buf, pbl_usbd_bulk_mps());
 }
 
 static void prv_configured(bool on) {
@@ -237,6 +243,24 @@ static int prv_class_request(const struct pbl_usb_setup *setup, uint8_t **data, 
   }
 }
 
+// The interfaces the call management and union descriptors name
+static void prv_desc_fixup(struct pbl_usb_desc_header *desc, uint8_t first_iface) {
+  const struct pbl_usb_cdc__desc_header *cdc = (const struct pbl_usb_cdc__desc_header *)desc;
+
+  if (desc->bDescriptorType != PBL_USB_DESC_CS_INTERFACE) {
+    return;
+  }
+
+  if (cdc->bDescriptorSubtype == CDC_FUNC_CALL_MGMT) {
+    ((struct pbl_usb_cdc__desc_call_mgmt *)desc)->bDataInterface += first_iface;
+  } else if (cdc->bDescriptorSubtype == CDC_FUNC_UNION) {
+    struct pbl_usb_cdc__desc_union *u = (struct pbl_usb_cdc__desc_union *)desc;
+
+    u->bControlInterface += first_iface;
+    u->bSubordinateInterface0 += first_iface;
+  }
+}
+
 // A transfer that fills its packets ends with a zero-length one, for the host to take it now
 static void prv_xfer_done(uint8_t ep, int ret) {
   if (ep == EP_DATA_OUT) {
@@ -262,7 +286,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
     prv_tx_start();
   } else if (s_acm.tx_len != 0U && (s_acm.tx_len % pbl_usbd_bulk_mps()) == 0U) {
     s_acm.tx_len = 0U;
-    s_acm.tx_busy = pbl_udc_ep_queue(UDC, EP_DATA_IN, nullptr, 0U) == 0;
+    s_acm.tx_busy = pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_IN), nullptr, 0U) == 0;
   }
 }
 
@@ -271,8 +295,7 @@ PBL_USBD_FUNCTION_DEFINE(cdc_acm) = {
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),
-  .first_iface = IFACE_COMM,
-  .num_ifaces = 2U,
+  .desc_fixup = prv_desc_fixup,
   .configured = prv_configured,
   .class_request = prv_class_request,
   .xfer_done = prv_xfer_done,
