@@ -34,8 +34,6 @@ PHONE_BUMBLE = "bumble"
 PHONE_COREAPP = "coreapp"
 PHONE_TYPES = (PHONE_BUMBLE, PHONE_COREAPP)
 
-DEFAULT_VOLTAGE_MV = 3800
-
 
 def load(path):
     try:
@@ -67,7 +65,9 @@ class Setup:
     #: The supply powering the watch: a :mod:`pbl.power` type, and its port.
     supply_type: str = None
     supply_port: str = None
-    voltage_mv: int = DEFAULT_VOLTAGE_MV
+    #: What the supply supplies, in millivolts, and where that comes from.
+    voltage_mv: int = None
+    voltage_from: str = None
     #: An emulated watch's Bluetooth: VIRTUAL, or a dongle's serial port
     #: (for QEMU, any -serial spec).
     bt_hci: str = None
@@ -125,8 +125,9 @@ class Setup:
 def resolve(build, device_type, options, lab=None):
     """The setup for ``build``, from the command line's ``options`` and the
     lab's wiring: ``serial`` (list), ``serial_baud``, ``ppk2``,
-    ``voltage_mv``, ``bt_hci`` (VIRTUAL, FROM_LAB or a serial port), ``ble_controller``, ``phone`` (a PHONE_* type) and ``watch`` (the
-    lab's name for it)."""
+    ``voltage_mv``, ``bt_hci`` (VIRTUAL, FROM_LAB or a serial port),
+    ``ble_controller``, ``phone`` (a PHONE_* type) and ``watch`` (the lab's
+    name for it)."""
     lab = lab or Lab()
     setup = Setup(device_type=device_type)
     phone_type = options.get("phone") or PHONE_BUMBLE
@@ -147,6 +148,9 @@ def resolve(build, device_type, options, lab=None):
             if watch.supply is not None:
                 supply = lab.supplies[watch.supply]
                 setup.supply_type, setup.supply_port = supply.type, supply.port
+            if watch.voltage is not None:
+                setup.voltage_mv = watch.voltage
+                setup.voltage_from = f"device {watch.name} in the lab"
         phone_controller = dongles[0] if dongles else None
     elif device_type in ("qemu", "native") and build is not None:
         if build.config.get("CONFIG_NIMBLE_HCI_UART"):
@@ -167,6 +171,12 @@ def resolve(build, device_type, options, lab=None):
         setup.supply_type, setup.supply_port = "ppk2", options["ppk2"]
     if options.get("voltage_mv"):
         setup.voltage_mv = options["voltage_mv"]
+        setup.voltage_from = "--voltage"
+    if setup.supply_port is not None and setup.voltage_mv is None:
+        what = f"device {setup.watch}'s supply" if setup.watch else "the supply"
+        raise HarnessError(
+            f"{what} has no voltage in the lab; add `voltage:` or pass --voltage"
+        )
     phone_controller = options.get("ble_controller") or phone_controller
     if device_type == "hardware" or setup.bt_hci:
         setup.phone = PhoneSetup(

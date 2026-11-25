@@ -184,10 +184,12 @@ def pytest_addoption(parser):
         help="Power the watch from a PPK2 on PORT ('auto' to find it)",
     )
     group.addoption(
-        "--ppk2-voltage",
+        "--voltage",
+        dest="voltage_mv",
         type=int,
         metavar="MV",
-        help="VBAT the PPK2 supplies, in millivolts (default: 3800)",
+        help="The voltage the supply gives the device, in millivolts "
+        "(default: the device's in the lab)",
     )
 
 
@@ -238,7 +240,7 @@ def _resolve_setup(config, build, board, device_type):
             "serial": config.getoption("device_serial"),
             "serial_baud": config.getoption("device_serial_baud"),
             "ppk2": config.getoption("ppk2"),
-            "voltage_mv": config.getoption("ppk2_voltage"),
+            "voltage_mv": config.getoption("voltage_mv"),
             "bt_hci": config.getoption("bt_hci"),
             "ble_controller": config.getoption("ble_controller"),
             "watch": config.getoption("lab_watch"),
