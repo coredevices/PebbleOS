@@ -43,7 +43,9 @@ static void prv_factory_reset_non_pfs_data() {
   worker_manager_disable();
   event_service_clear_process_subscriptions(PebbleTask_App);
 
-  pbl_bt_prf_store_wipe();
+  if (pbl_bt_prf_store_wipe() != 0) {
+    PBL_LOG_ERR("Could not wipe the PRF store");
+  }
 
   services_set_runlevel(RunLevel_BareMinimum);
   app_idle_timeout_stop();
