@@ -147,7 +147,7 @@ int pbl_gpio_nrf5_gpiote_alloc(uint8_t *channel) {
   return 0;
 }
 
-// The channel of a pin stays allocated once the line is first requested
+// The channel of a pin stays allocated from the line's request until it is freed
 static int prv_intc_configure(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   const struct pbl_gpio_nrf5 *gpio = prv_intc_port(intc);
   uint8_t abs_pin = (uint8_t)(gpio->index * 32U + hwirq);
@@ -229,11 +229,26 @@ static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool o
   return 0;
 }
 
+// GPIOTE has few channels, so one a line no longer needs goes back to the others
+static void prv_intc_free(const struct pbl_intc *intc, uint32_t hwirq) {
+  const struct pbl_gpio_nrf5 *gpio = prv_intc_port(intc);
+  int ch = prv_channel_find((uint8_t)(gpio->index * 32U + hwirq));
+
+  s_wake[gpio->index] &= ~PBL_BIT(hwirq);
+  if (ch < 0) {
+    return;
+  }
+
+  prv_gpiote_putreg(NRF52_GPIOTE_CONFIG_OFFSET(ch), 0U);
+  s_channels[ch] = CHANNEL_FREE;
+}
+
 const struct pbl_intc_ops pbl_gpio_nrf5_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
   .set_wake = prv_intc_set_wake,
+  .free = prv_intc_free,
 };
 
 // Only SENSE wakes from System OFF; sensing the level opposite to the current
