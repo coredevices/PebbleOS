@@ -226,21 +226,18 @@ static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_conf
   return 0;
 }
 
-// Waits for room in the ring, as long as the host keeps the port configured
+// The UART class sends with interrupts locked, so the controller cannot empty the ring meanwhile:
+// a byte that does not fit is dropped
 static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
-  while (atomic_load(&s_acm.configured)) {
-    pbl_irq_lock();
-    if (prv_ring_used() < TX_RING - 1U) {
-      s_acm.tx_ring[s_acm.tx_head] = c;
-      s_acm.tx_head = (uint16_t)((s_acm.tx_head + 1U) % TX_RING);
-      if (!s_acm.tx_busy) {
-        prv_tx_start();
-      }
-      pbl_irq_unlock();
-      return;
+  pbl_irq_lock();
+  if (atomic_load(&s_acm.configured) && prv_ring_used() < TX_RING - 1U) {
+    s_acm.tx_ring[s_acm.tx_head] = c;
+    s_acm.tx_head = (uint16_t)((s_acm.tx_head + 1U) % TX_RING);
+    if (!s_acm.tx_busy) {
+      prv_tx_start();
     }
-    pbl_irq_unlock();
   }
+  pbl_irq_unlock();
 }
 
 static int prv_rx_enable(const struct pbl_uart *uart) {
