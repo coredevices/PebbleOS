@@ -228,18 +228,23 @@ static bool prv_open(const struct prv_port *p) {
   return atomic_load(&p->configured) && p->dtr;
 }
 
-// With the IRQ lock held: what the ring holds goes out, in one transfer of up to a buffer
+// With the IRQ lock held: what the ring holds goes out, in one transfer of up to a buffer. The
+// bytes leave the ring only once the transfer is queued, so a failed queue keeps them for later.
 static void prv_tx_start(uint8_t n) {
   struct prv_port *p = &s_ports[n];
   size_t len = PBL_MIN((size_t)prv_ring_used(p), sizeof(p->tx_buf));
 
   for (size_t i = 0U; i < len; i++) {
-    p->tx_buf[i] = p->tx_ring[p->tx_tail];
-    p->tx_tail = (uint16_t)((p->tx_tail + 1U) % TX_RING);
+    p->tx_buf[i] = p->tx_ring[(p->tx_tail + i) % TX_RING];
+  }
+
+  p->tx_busy = pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_IN(n)), p->tx_buf, len) == 0;
+  if (!p->tx_busy) {
+    return;
   }
 
   p->tx_len = len;
-  p->tx_busy = pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_IN(n)), p->tx_buf, len) == 0;
+  p->tx_tail = (uint16_t)((p->tx_tail + len) % TX_RING);
 }
 
 static void prv_rx_start(uint8_t n) {
