@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: rotary-encoder
+config: INPUT_ROTARY_ENCODER
+class: input
+define: PBL_ROTARY_ENCODER_DEFINE
+args:
+  - name: true
+  - gpio: ""
+    index: 0
+  - gpio: ""
+    index: 1
+  - prop: linux,axis
+    default: 0
+  - prop: rotary-encoder,steps-per-period
+    default: 1
+  - flag: wakeup-source
