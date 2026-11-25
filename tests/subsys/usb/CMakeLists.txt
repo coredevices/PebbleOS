@@ -61,5 +61,6 @@ pbl_clar_test(test_usbd_cdc_acm
   DEFINES
     ${usbd_defines}
     CONFIG_USB_CDC_ACM_COUNT=2
+    CONFIG_USB_CDC_ACM_TX_BUF_SIZE=1024
     "CONFIG_USB_CDC_ACM_NAME=\"Serial port\""
 )

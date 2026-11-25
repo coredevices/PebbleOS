@@ -233,10 +233,20 @@ MUSB of the SF32LB57, whose seven endpoints besides endpoint 0 each serve
 one direction, two ports take six of them; with more ports than the
 controller has endpoints for, `pbl_usbd_enable()` fails with `-ENOSPC`.
 
+A port sends only while the host has it open: the device configured, and DTR
+held by the host, as a terminal does while it has the port open
+(`pbl_usb_cdc_acm_dtr()`). Until then, the port keeps what is written, an
+early console's boot output included, in a buffer of
+`CONFIG_USB_CDC_ACM_TX_BUF_SIZE` bytes, 1024 by default, and sends it once
+the host opens the port. Bytes that do not fit in the buffer are dropped,
+whether the port is open or not: the UART's writes run with interrupts
+locked, so they cannot wait for the controller to send.
+
+The line coding the host sets is kept and read back as set; it does not
+change the port. Breaks the host sends are ignored.
+
 Received bytes go to the UART's receive callback, from the interrupt, without
-flow control: a callback that cannot keep up loses them. Bytes sent before the
-host configures the device, or that do not fit while it does not read, are
-dropped.
+flow control: a callback that cannot keep up loses them.
 
 ## Firmware upgrade
 

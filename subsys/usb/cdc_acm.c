@@ -38,10 +38,11 @@
 #define CDC_GET_LINE_CODING  0x21U
 #define CDC_SET_CONTROL_LINE 0x22U
 #define CDC_SEND_BREAK       0x23U
+#define CDC_LINE_DTR         0x01U
 
 // Largest bulk packet, of high speed
 #define BUF_LEN 512U
-#define TX_RING 1024U
+#define TX_RING CONFIG_USB_CDC_ACM_TX_BUF_SIZE
 
 struct PBL_PACKED pbl_usb_cdc__desc_header {
   uint8_t bFunctionLength;
@@ -190,6 +191,7 @@ PBL_USBD_FUNCTION_DECLARE(cdc_acm);
 
 struct prv_port {
   atomic_bool configured;
+  bool dtr;
   bool tx_busy;
   size_t tx_len;
   uint16_t tx_head;
@@ -219,7 +221,11 @@ static uint8_t prv_ep(uint8_t ep) {
 }
 
 static uint16_t prv_ring_used(const struct prv_port *p) {
-  return (uint16_t)((p->tx_head - p->tx_tail) % TX_RING);
+  return (uint16_t)((p->tx_head + TX_RING - p->tx_tail) % TX_RING);
+}
+
+static bool prv_open(const struct prv_port *p) {
+  return atomic_load(&p->configured) && p->dtr;
 }
 
 // With the IRQ lock held: what the ring holds goes out, in one transfer of up to a buffer
@@ -245,12 +251,10 @@ static void prv_configured(bool on) {
     struct prv_port *p = &s_ports[n];
 
     atomic_store(&p->configured, on);
+    p->dtr = false;
     p->tx_busy = false;
     if (on) {
       prv_rx_start(n);
-      if (prv_ring_used(p) != 0U) {
-        prv_tx_start(n);
-      }
     }
   }
 }
@@ -270,6 +274,11 @@ static int prv_class_request(const struct pbl_usb_setup *setup, uint8_t **data, 
       *len = sizeof(p->line_coding);
       return 0;
     case CDC_SET_CONTROL_LINE:
+      p->dtr = (setup->wValue & CDC_LINE_DTR) != 0U;
+      if (prv_open(p) && !p->tx_busy && prv_ring_used(p) != 0U) {
+        prv_tx_start(n);
+      }
+      return 0;
     case CDC_SEND_BREAK:
       return 0;
     default:
@@ -327,7 +336,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
   }
 
   p->tx_busy = false;
-  if (ret < 0 || !atomic_load(&p->configured)) {
+  if (ret < 0 || !prv_open(p)) {
     return;
   }
 
@@ -350,6 +359,11 @@ PBL_USBD_FUNCTION_DEFINE(cdc_acm) = {
   .xfer_done = prv_xfer_done,
 };
 
+// The ring is ready from the start: an early console fills it until the host opens the port
+static int prv_early_init(const struct pbl_uart *uart) {
+  return 0;
+}
+
 static int prv_init(const struct pbl_uart *uart) {
   // 115200 baud, 8N1, until the host sets its own
   static const uint8_t line_coding[] = {0x00, 0xc2, 0x01, 0x00, 0, 0, 8};
@@ -364,16 +378,16 @@ static int prv_configure(const struct pbl_uart *uart, const struct pbl_uart_conf
 }
 
 // The UART class sends with interrupts locked, so the controller cannot empty the ring meanwhile:
-// a byte that does not fit is dropped
+// a byte that does not fit is dropped. Until the host opens the port, the ring keeps what fits.
 static void prv_poll_out(const struct pbl_uart *uart, uint8_t c) {
   uint8_t n = prv_port_of(uart);
   struct prv_port *p = &s_ports[n];
 
   pbl_irq_lock();
-  if (atomic_load(&p->configured) && prv_ring_used(p) < TX_RING - 1U) {
+  if (prv_ring_used(p) < TX_RING - 1U) {
     p->tx_ring[p->tx_head] = c;
     p->tx_head = (uint16_t)((p->tx_head + 1U) % TX_RING);
-    if (!p->tx_busy) {
+    if (prv_open(p) && !p->tx_busy) {
       prv_tx_start(n);
     }
   }
@@ -389,11 +403,23 @@ static void prv_rx_disable(const struct pbl_uart *uart) {
 
 static const struct pbl_uart_ops s_ops = {
   .init = prv_init,
+  .early_init = prv_early_init,
   .configure = prv_configure,
   .poll_out = prv_poll_out,
   .rx_enable = prv_rx_enable,
   .rx_disable = prv_rx_disable,
 };
+
+bool pbl_usb_cdc_acm_dtr(const struct pbl_uart *uart) {
+  const struct prv_port *p = &s_ports[prv_port_of(uart)];
+  bool open;
+
+  pbl_irq_lock();
+  open = prv_open(p);
+  pbl_irq_unlock();
+
+  return open;
+}
 
 #define PRV_PORT_DEFINE(n)                                                                 \
   PBL_UART_STATE_DEFINE(pbl_usb_cdc_acm_##n);                                              \
