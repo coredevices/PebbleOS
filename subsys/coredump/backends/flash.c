@@ -11,6 +11,7 @@
 #include <pbl/coredump/format.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/drivers/flash/partition.h>
+#include <pbl/kernel/compiler.h>
 
 #ifdef PART_CD_OFFSET
 #define STORAGE_START PART_CD_OFFSET
@@ -81,7 +82,8 @@ static int prv_latest_slot(const struct pbl_coredump__flash_hdr *flash_hdr, bool
   return (*last_used > 0) ? 0 : -ENOENT;
 }
 
-static int prv_keep_stored_image(uint32_t slot, uint32_t timestamp) {
+// Not inlined: the image header would stay on the stack while the slot is erased and written.
+static PBL_NOINLINE int prv_keep_stored_image(uint32_t slot, uint32_t timestamp) {
   struct pbl_coredump__slot_hdr slot_hdr;
   struct pbl_coredump_image_hdr image_hdr;
 

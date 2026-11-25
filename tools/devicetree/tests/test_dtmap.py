@@ -1464,7 +1464,18 @@ def test_disabled_remote_fails(tmp_path):
         graph_generate(tmp_path, text)
 
 
-def test_flags_and_all_gpios(tmp_path):
+@pytest.mark.parametrize(
+    ("cs_gpios", "expected"),
+    [
+        ("<&gpio 1 0>, <&gpio 2 1>", "PIN(&dt_gpio, 1, 0), PIN(&dt_gpio, 2, 1)"),
+        # A 0 phandle leaves a chip select without a GPIO
+        (
+            "<&gpio 1 0>, <0>, <&gpio 2 1>",
+            "PIN(&dt_gpio, 1, 0), PBL_GPIO(nullptr, 0, 0), PIN(&dt_gpio, 2, 1)",
+        ),
+    ],
+)
+def test_flags_and_all_gpios(tmp_path, cs_gpios, expected):
     specs = dict(GRAPH_SPECS)
     specs["acme,lcdc"] = {
         "compatible": "acme,lcdc",
@@ -1485,7 +1496,7 @@ def test_flags_and_all_gpios(tmp_path):
     text = GRAPH_DTS.replace(
         'compatible = "acme,lcdc";',
         'compatible = "acme,lcdc";\n        spi-cs-high;\n        spi-lsb-first;\n'
-        "        cs-gpios = <&gpio 1 0>, <&gpio 2 1>;",
+        f"        cs-gpios = {cs_gpios};",
     )
     path, dtb = tmp_path / "f.dts", tmp_path / "f.dtb"
     path.write_text(text)
@@ -1498,10 +1509,7 @@ def test_flags_and_all_gpios(tmp_path):
     }
     gen = dtmap.Generator(fdt.load(dtb), loaded, {s["config"] for s in specs.values()})
     gen.run()
-    assert (
-        "LCDC_DEFINE(dt_lcdc, CS_HIGH | LSB, PIN(&dt_gpio, 1, 0), PIN(&dt_gpio, 2, 1));"
-        in body(gen)
-    )
+    assert f"LCDC_DEFINE(dt_lcdc, CS_HIGH | LSB, {expected});" in body(gen)
 
 
 def test_spec_provides_of_a_driver_defined_device(tmp_path):
@@ -1597,6 +1605,90 @@ def test_children_are_providers(tmp_path):
     gen.run()
     assert "LED_DEFINE(dt_status_led, 0x1000);" in body(gen)
     assert "BACKLIGHT_DEFINE(dt_node_backlight, &dt_status_led);" in body(gen)
+
+
+def test_children_with_a_property(tmp_path):
+    path, dtb = tmp_path / "c.dts", tmp_path / "c.dtb"
+    path.write_text(
+        """
+/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    pinctrl: pinctrl@1000 {
+        compatible = "acme,pinctrl";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges = <0 0x1000 0x800>;
+        gpioa: gpio@0 {
+            gpio-controller;
+            #gpio-cells = <2>;
+            reg = <0x0 0x400>;
+        };
+        gpiob: gpio@400 {
+            gpio-controller;
+            #gpio-cells = <2>;
+            reg = <0x400 0x400>;
+        };
+        uart_default: uart-0 {
+        };
+    };
+    sensor {
+        compatible = "acme,sensor";
+        enable-gpios = <&gpiob 3 0>;
+    };
+};
+"""
+    )
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    specs = {
+        "acme,pinctrl": spec(
+            "acme,pinctrl",
+            {
+                "compatible": "acme,pinctrl",
+                "config": "GPIO",
+                "class": "gpio",
+                "define": "PORT_DEFINE",
+                "children": {"property": "gpio-controller"},
+                "args": [{"name": True}, {"reg": 0}],
+            },
+        ),
+        "acme,sensor": spec(
+            "acme,sensor",
+            {
+                "compatible": "acme,sensor",
+                "config": "SENSOR",
+                "class": "sensor",
+                "define": "SENSOR_DEFINE",
+                "args": [{"gpio": "enable"}],
+            },
+        ),
+    }
+    gen = dtmap.Generator(fdt.load(dtb), specs, {"GPIO", "SENSOR"})
+    gen.run()
+    ports = instances(gen, "acme_pinctrl")
+    assert 'PORT_DEFINE(dt_gpioa, "gpioa", 0x1000);' in ports
+    assert 'PORT_DEFINE(dt_gpiob, "gpiob", 0x1400);' in ports
+    assert "uart" not in ports
+    assert "SENSOR_DEFINE(dt_node_sensor, PIN(&dt_gpiob, 3, 0));" in body(gen)
+
+
+def test_children_need_names_or_a_property():
+    data = {
+        "compatible": "a,b",
+        "config": "X",
+        "class": "gpio",
+        "define": "D",
+        "children": {"names": {"a": 0}, "property": "p"},
+    }
+    with pytest.raises(DtError, match="one of 'names' and 'property'"):
+        spec("a,b", data)
+    data["children"] = {"node": "x"}
+    with pytest.raises(DtError, match="one of 'names' and 'property'"):
+        spec("a,b", data)
 
 
 GPIO_SPEC = {
@@ -1935,6 +2027,18 @@ def test_instance_files_of_specs_sharing_one_of_their_compatibles(tmp_path):
     assert dtmap.instance_files(dtmap.load_specs(tmp_path)) == [
         "devicetree/instances/acme_one_clk.inc",
         "devicetree/instances/acme_two_bus.inc",
+    ]
+
+
+def test_instance_file_of_a_spec_for_several_compatibles(tmp_path):
+    write_specs(
+        tmp_path,
+        {
+            "panel": "compatible:\n  - acme,one\n  - acme,two\nconfig: A\nclass: clk\ndefine: A\n",
+        },
+    )
+    assert dtmap.instance_files(dtmap.load_specs(tmp_path)) == [
+        "devicetree/instances/panel.inc",
     ]
 
 
@@ -2392,6 +2496,60 @@ def test_power_domains_and_required_opps(tmp_path):
     assert "PBL_DEVICE_DEPENDS(dt_rcc, &dt_rcc.dev, &dt_pmu.dev);" in body(gen)
 
 
+def test_entry_of_a_phandle_list(tmp_path):
+    classes = {
+        **CLASSES,
+        "dma": {"class": "dma", "type": "struct dma", "include": "dma.h"},
+    }
+    dts = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    dma1: dma@1000 {
+        compatible = "acme,dma";
+        reg = <0x1000 0x100>;
+    };
+    dma2: dma@2000 {
+        compatible = "acme,dma";
+        reg = <0x2000 0x100>;
+    };
+    mux: mux@3000 {
+        compatible = "acme,mux";
+        reg = <0x3000 0x100>;
+        dma-masters = <&dma1>, <&dma2>;
+    };
+};
+"""
+    specs = {
+        "acme,mux": {
+            "compatible": "acme,mux",
+            "config": "MUX",
+            "class": "dma",
+            "define": "MUX",
+            "args": [
+                {"reg": 0},
+                {"reg": 0, "of": "dma-masters"},
+                {"reg": 0, "of": "dma-masters", "entry": 1},
+            ],
+        },
+    }
+    path, dtb = tmp_path / "mux.dts", tmp_path / "mux.dtb"
+    path.write_text(dts)
+    subprocess.run(
+        [dtc(), "-@", "-q", "-I", "dts", "-O", "dtb", "-o", str(dtb), str(path)],
+        check=True,
+    )
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    gen = dtmap.Generator(fdt.load(dtb), loaded, {"MUX"})
+    gen.run()
+    assert "MUX(dt_mux, 0x3000, 0x1000, 0x2000);" in body(gen)
+
+    specs["acme,mux"]["args"][2]["entry"] = 2
+    loaded = {name: dtmap.Spec(name, data, classes) for name, data in specs.items()}
+    with pytest.raises(DtError, match="'dma-masters' has no entry 2"):
+        dtmap.Generator(fdt.load(dtb), loaded, {"MUX"}).run()
+
+
 REGS_DTS = """/dts-v1/;
 / {
     #address-cells = <1>;
@@ -2484,6 +2642,30 @@ def test_regs_of_the_enabled_node_of_a_compatible(tmp_path):
     assert "#define PBL_DT_SIZE_ACME_LPTIMER_TIMER 0x400UL" in text
     assert "#define PBL_DT_IRQ_ACME_LPTIMER_TIMER 7\n" in text
     assert "#define PBL_DT_CLK_ACME_LPTIMER_TIMER 5U" in text
+
+
+REGS_RESET_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    rcc: reset-controller@2000 {
+        reg = <0x2000 0x400>;
+        #reset-cells = <1>;
+    };
+
+    timer@3000 {
+        compatible = "acme,lptimer";
+        reg = <0x3000 0x400>;
+        resets = <&rcc 1161>;
+    };
+};
+"""
+
+
+def test_regs_of_the_reset_of_a_compatible(tmp_path):
+    text = regs(tmp_path, [], compatible="acme,lptimer", dts=REGS_RESET_DTS)
+    assert "#define PBL_DT_RST_ACME_LPTIMER 1161U" in text
 
 
 def test_regs_of_a_compatible_need_one_enabled_node(tmp_path):

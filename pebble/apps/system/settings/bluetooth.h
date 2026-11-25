@@ -9,12 +9,11 @@
 #include <pbl/util/list.h>
 
 #include <kernel/events.h>
-
-typedef struct GAPLEConnection GAPLEConnection;
+#include <nimble/ble.h>
 
 typedef struct StoredRemoteBLE {
-  struct pbl_bt_device_internal identity;
-  GAPLEConnection *connection;
+  ble_addr_t identity;
+  bool connected;
 } StoredRemoteBLE;
 
 typedef struct StoredRemote {

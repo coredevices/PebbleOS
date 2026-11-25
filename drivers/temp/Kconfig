@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig TEMP
-    bool "Temperature Sensor"
+    bool "Temperature sensor"
     help
-      Temperature Sensor Drivers
+      Temperature sensor class (pbl/drivers/temp.h) and its drivers.
 
 if TEMP
 
@@ -30,9 +30,20 @@ config TEMP_SF32LB
     help
       Support for the SiFli SF32LB temperature sensor.
 
+config TEMP_STM32H7_ADC
+    bool "STM32H7 temperature sensor"
+    default y
+    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
+    select ADC
+    select NVMEM
+    help
+      The temperature sensor on ADC3 of the STM32H7, read against VREFINT
+      with its factory calibration.
+
 config TEMP_SIM
     bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Simulated temperature sensor, reading a value set through its
       simulator API (pbl/drivers/temp/sim.h).

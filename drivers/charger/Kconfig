@@ -27,6 +27,8 @@ config CHARGER_NPM1300
     default y
     depends on DT_HAS_NORDIC_NPM1300_ENABLED
     select CHARGER_HIGH_LOAD
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
     select MFD
     select MFD_NPM1300
     help
@@ -34,7 +36,8 @@ config CHARGER_NPM1300
 
 config CHARGER_SIM
     bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
     help
       Simulated charger, set through its simulator API
       (pbl/drivers/charger/sim.h).

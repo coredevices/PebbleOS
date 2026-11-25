@@ -19,4 +19,5 @@ set(sources
 )
 pbl_library()
 pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_BT_ANCS_CLIENT ancs/ancs.c ancs/ancs_app_name_storage.c)
 pbl_library_sources_ifdef(CONFIG_SHELL shell.c)

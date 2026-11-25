@@ -4,7 +4,7 @@
 menuconfig WATCHDOG
     bool "Watchdog"
     help
-      Watchdog Drivers
+      Hardware watchdog class (pbl/drivers/watchdog.h) and its drivers.
 
 if WATCHDOG
 
@@ -21,7 +21,8 @@ config WATCHDOG_TIMEOUT_MS
 
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52
     help
       Support for the Nordic nRF5 watchdog.
 
@@ -40,9 +41,18 @@ config WATCHDOG_SF32LB
     help
       Support for the SiFli SF32LB watchdog.
 
+config WATCHDOG_STM32_IWDG
+    bool "ST STM32 IWDG"
+    default y
+    depends on DT_HAS_ST_STM32_IWDG_ENABLED
+    depends on CLK_STM32H7
+    help
+      Support for the ST STM32H7 independent watchdog.
+
 config WATCHDOG_QEMU
-    bool "QEMU Watchdog"
-    default y if SOC_QEMU_PEBBLE
+    bool "QEMU watchdog"
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       Support for the CMSDK APB watchdog of the QEMU Pebble machines.
 

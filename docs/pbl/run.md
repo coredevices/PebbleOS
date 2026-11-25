@@ -31,9 +31,10 @@ The launched QEMU exposes:
 
 - An interactive QEMU monitor on the launching terminal (`-monitor stdio`)
 - A programmatic socket monitor (`-monitor unix:build/qemu-mon.sock`)
-- The serial console over TCP on `localhost:12345`, for {doc}`console`
-- The Pebble protocol over TCP on `localhost:12344`, for the `pebble` tool
-  and {doc}`emulator`
+- The serial console over TCP on `localhost:12345`, for {doc}`console`, and
+  for the Pebble protocol sessions of {doc}`emulator` and the `pebble` tool
+- The serial protocol that drives the emulated hardware over TCP on
+  `localhost:12344`, for {doc}`emulator` and the `pebble` tool
 
 UART1 output is also captured to `uart1.log` in the repository root.
 {doc}`../development/emulation/emulator` covers what the emulator models and how to
@@ -44,8 +45,9 @@ operate it.
 On a native board, the `native` runner starts the
 {doc}`native simulator <../development/emulation/native_simulator>`, with
 its external flash in `pebbleos-flash.bin` in the build directory, kept
-across runs, and the Pebble protocol over TCP on `localhost:12344`, as the
-emulator, for the `pebble` tool and {doc}`emulator`. Arguments after `--`
+across runs, and the same two TCP ports as the emulator: the console on
+`localhost:12345`, which the terminal keeps as well, and the serial protocol
+that drives the simulated hardware on `localhost:12344`. Arguments after `--`
 are the program's own options, e.g. a window scale factor:
 
 ```shell

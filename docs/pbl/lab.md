@@ -55,6 +55,15 @@ pbl run --resources
 pbl console
 ```
 
+The USB integration tests find the board's own USB device by its vendor
+and product IDs, and for the USB test function by its interface. Boards
+running the same USB sample share them, so a watch's `usb` entry says
+where its device sits on the host's bus: the bus number, then the hub
+ports down to it, as pyusb gives them (`bus`, `port_numbers`), e.g.
+`1-1.3.4`; on Linux, the name of the device under `/sys/bus/usb/devices`,
+whose tree `lsusb -t` shows. Without it, the tests take
+the only matching device and fail when there are several.
+
 (pbl-lab-locks)=
 
 ## Locks

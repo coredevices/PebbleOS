@@ -46,6 +46,8 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_HSI_CK 18
 /** CSI oscillator, 4 MHz. */
 #define STM32H7_CLK_CSI_CK 20
+/** HSI48 oscillator, 48 MHz. */
+#define STM32H7_CLK_RC48_CK 22
 /** LSI oscillator, 32 kHz. */
 #define STM32H7_CLK_LSI_CK 23
 /** PLL source, pllsrc: HSI, CSI or HSE. */
@@ -88,14 +90,40 @@ extern const struct pbl_clk_controller pbl_clk_stm32h7;
 #define STM32H7_CLK_GPIOI_CK 78
 #define STM32H7_CLK_GPIOJ_CK 77
 #define STM32H7_CLK_GPIOK_CK 76
+/** CRC unit clock. */
+#define STM32H7_CLK_CRC_CK 75
+/** DMA1 clock. */
+#define STM32H7_CLK_DMA1_CK 65
+/** DMA2 clock. */
+#define STM32H7_CLK_DMA2_CK 64
+/** ADC3 bus clock, which also clocks its conversions in synchronous mode. */
+#define STM32H7_CLK_ADC3_CK 128
+/** Hardware semaphore clock. */
+#define STM32H7_CLK_HSEM_CK 73
+/** WWDG2 clock, the window watchdog of the Cortex-M4. */
+#define STM32H7_CLK_WWDG2_CK 89
 /** LPTIM1 kernel clock. */
 #define STM32H7_CLK_LPTIM1_CK 144
 /** LPTIM2 kernel clock. */
 #define STM32H7_CLK_LPTIM2_CK 162
+/** SYSCFG clock. */
+#define STM32H7_CLK_SYSCFG_CK 111
+/** RNG kernel clock. */
+#define STM32H7_CLK_RNG_CK 127
+/** QUADSPI kernel clock. */
+#define STM32H7_CLK_QUADSPI_CK 121
 /** USART1 kernel clock. */
 #define STM32H7_CLK_USART1_CK 156
+/** RTC kernel clock, from the LSE, the LSI or the HSE. */
+#define STM32H7_CLK_RTC_CK 13
+/** RTC bus clock. */
+#define STM32H7_CLK_RTCAPB_CK 108
 /** UART8 kernel clock. */
 #define STM32H7_CLK_UART8_CK 131
+/** USB OTG HS clock, its 48 MHz kernel clock selected among PLL1 Q, PLL3 Q and HSI48. */
+#define STM32H7_CLK_USB1OTG_CK 124
+/** ULPI clock of the USB OTG HS, for an external PHY. */
+#define STM32H7_CLK_USB1ULPI_CK 59
 /** @} */
 
 /** @cond INTERNAL_HIDDEN */
@@ -136,6 +164,18 @@ struct pbl_clk_stm32h7 {
   /** Assigned clocks, ending with an empty entry. */
   const struct pbl_clk_assigned *assigned;
 };
+
+/**
+ * @brief Read the reset flags of the core running the code.
+ *
+ * The RCC keeps the causes of the resets since the flags were last cleared.
+ *
+ * @param ctrl The RCC.
+ * @param clear Clear the flags after reading them.
+ * @return The RSR register, which shows each core its own, @c RCC_RSR_ bits of
+ * hardware/stm32h7_rcc.h.
+ */
+uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear);
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops;

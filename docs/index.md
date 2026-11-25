@@ -12,14 +12,11 @@
 
 <img class="home-logo" src="_static/images/logo.svg" alt="PebbleOS" />
 
-<img class="home-watches" src="_static/images/watches.webp" alt="Pebble Time 2 and Pebble Round 2" />
+<img class="home-watches" src="_static/images/home-collage.webp" alt="Pebble Time 2 and Pebble Round 2 in front of the STM32H747I-DISCO, SF32LB57x-DPI-HDK and nRF52840 DK boards" />
 
-```{div} home-title
-Welcome to the PebbleOS documentation site!
-```
-
-PebbleOS is a lightweight, power-efficient operating system originally developed for Pebble smartwatches and now [released open source](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html).
-Optimized for memory-in-pixel (MIP) displays and long battery life, it features Bluetooth sync, a timeline interface, and a strong developer ecosystem through an open SDK.
+PebbleOS is a **lightweight, power-efficient general purpose RTOS** for embedded devices, grown out of the [open-sourced](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html) Pebble smartwatch firmware.
+It is built with **CMake**, **Kconfig** and **devicetree**, and runs on **many boards**.
+A wide range of **drivers** sits on a robust device model, next to subsystems such as Bluetooth LE, file systems and logging.
 
 ````{div} home-actions
 
@@ -51,7 +48,7 @@ Try it in the browser
 :link: getting_started/index
 :link-type: doc
 
-From a fresh machine to PebbleOS running in the emulator or on a watch.
+From a fresh machine to PebbleOS running in the emulator or on a board.
 :::
 
 :::{grid-item-card} 🛠️ Development
@@ -61,11 +58,18 @@ From a fresh machine to PebbleOS running in the emulator or on a watch.
 The `pbl` CLI and every command, the build system, tests, QEMU and debugging.
 :::
 
+:::{grid-item-card} 🧪 Samples
+:link: samples/index
+:link-type: doc
+
+Small applications showing the kernel, subsystems and drivers in use.
+:::
+
 :::{grid-item-card} 🏛️ Architecture
 :link: architecture/index
 :link-type: doc
 
-How the firmware is layered: tasks, boot, processes and memory.
+How PebbleOS is layered, configured and booted, and how applications sit on top.
 :::
 
 :::{grid-item-card} ⚙️ Kernel
@@ -75,13 +79,6 @@ How the firmware is layered: tasks, boot, processes and memory.
 Threads, synchronization, interrupts and scheduling.
 :::
 
-:::{grid-item-card} 🧩 Subsystems
-:link: subsystems/index
-:link-type: doc
-
-Bluetooth, logging, input, the shell and the other OS subsystems.
-:::
-
 :::{grid-item-card} 🔌 Drivers
 :link: drivers/index
 :link-type: doc
@@ -89,25 +86,25 @@ Bluetooth, logging, input, the shell and the other OS subsystems.
 The device model and every hardware driver class.
 :::
 
-:::{grid-item-card} 📡 Services
-:link: services/index
+:::{grid-item-card} 🧩 Subsystems
+:link: subsystems/index
 :link-type: doc
 
-System services between drivers and apps, from activity to timeline.
+Bluetooth, logging, input, the shell and the other OS subsystems.
 :::
 
-:::{grid-item-card} ⌚ Boards
+:::{grid-item-card} ⌚ Pebble Firmware
+:link: pebble/index
+:link-type: doc
+
+The watch firmware built on PebbleOS: a playground and the application SDK.
+:::
+
+:::{grid-item-card} 🔧 Boards
 :link: boards/index
 :link-type: doc
 
-Supported watches and emulated boards, and how to program them.
-:::
-
-:::{grid-item-card} 📖 Reference
-:link: reference/index
-:link-type: doc
-
-Protocols and file formats.
+Supported hardware, emulated and host boards, and how to program them.
 :::
 
 ::::
@@ -117,7 +114,15 @@ Protocols and file formats.
 :caption: Start here
 
 getting_started/index.md
+```
+
+```{toctree}
+:hidden:
+:caption: Pebble Firmware
+
+Overview <pebble/index.md>
 playground.md
+sdk/index.md
 ```
 
 ```{toctree}
@@ -139,12 +144,10 @@ development/conventions.md
 
 architecture/index.md
 kernel/index.md
-subsystems/index.md
 drivers/index.md
-services/index.md
+subsystems/index.md
 libraries/index.md
 third_party/index.md
-sdk/index.md
 ```
 
 ```{toctree}
@@ -152,6 +155,7 @@ sdk/index.md
 :caption: Hardware
 
 boards/index.md
+addons/index.md
 programmers/index.md
 ```
 

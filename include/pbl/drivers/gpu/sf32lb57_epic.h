@@ -10,7 +10,6 @@
 #include <pbl/drivers/gpu.h>
 #include <pbl/drivers/reset.h>
 #include <pbl/kernel/irq.h>
-#include <pbl/kernel/sem.h>
 
 /**
  * @defgroup drivers_gpu_sf32lb57_epic SF32LB57 ePIC
@@ -28,7 +27,9 @@
 
 /** @cond INTERNAL_HIDDEN */
 struct pbl_gpu_sf32lb57_epic_state {
-  struct pbl_sem done;
+  bool active;
+  struct pbl_gpu_buffer dst;
+  struct pbl_gpu_rect rect;
 };
 /** @endcond */
 
@@ -67,9 +68,7 @@ extern const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops;
  */
 #define PBL_GPU_SF32LB57_EPIC_DEFINE(sym, _name, _base, _window, _irq, _clk, _rst)                \
   PBL_GPU_STATE_DEFINE(sym);                                                                      \
-  static struct pbl_gpu_sf32lb57_epic_state sym##_epic_state = {                                  \
-    .done = PBL_SEM_INITIALIZER(0, 1),                                                            \
-  };                                                                                              \
+  static struct pbl_gpu_sf32lb57_epic_state sym##_epic_state;                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_gpu_sf32lb57_epic, struct pbl_gpu, gpu){                    \
     .gpu = PBL_GPU_INIT(                                                                          \
         sym, _name, nullptr, &pbl_gpu_sf32lb57_epic_ops,                                          \

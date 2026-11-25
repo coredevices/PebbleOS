@@ -102,8 +102,7 @@ def pytest_addoption(parser):
         default=[],
         metavar="SCHEME:ADDRESS",
         help="Connect with this backend instead of the device's default; may "
-        "be repeated (serial:TTY[@BAUD], devconn:HOST[:PORT], "
-        "qemu:HOST:PORT)",
+        "be repeated (serial:TTY[@BAUD], devconn:HOST[:PORT])",
     )
     group.addoption(
         "--flash-before",

@@ -82,7 +82,8 @@ The mouse drives the touchscreen: click and drag, or scroll with the wheel
 or two fingers on a trackpad, which drags a finger from the pointer.
 
 From a shell, {doc}`../../pbl/emulator` taps, swipes, captures the screen
-and feeds phone data over the Pebble protocol port, as with the emulator.
+and feeds phone data over the Pebble protocol, in a session on the console
+port {doc}`../../pbl/run` serves next to the terminal.
 
 ### Console
 
@@ -103,8 +104,11 @@ always listening, with log lines printing above its prompt. `Ctrl-\` quits.
 - `-t SECONDS`: quit after that long.
 - `-c PORT`: serve the console on a TCP port, one client at a time, instead
   of the terminal. Its output still goes to stdout.
-- `-p PORT`: serve the QEMU serial protocol on a TCP port, where a phone
-  connects with libpebble2's QEMU transport (`pebble --qemu`).
+- `-C PORT`: serve the console on a TCP port and on the terminal. A phone
+  opens its Pebble protocol session there. {doc}`../../pbl/run` serves it on
+  12345.
+- `-p PORT`: serve the QEMU serial protocol on a TCP port, which drives the
+  simulated hardware: battery, sensors, microphone.
   {doc}`../../pbl/run` serves it on 12344.
 - `-b PORT|DEVICE`: with `CONFIG_NIMBLE_HCI_UART`, connect the Bluetooth HCI
   UART to an H4 controller: a TCP port on the local host (e.g. Bumble's
@@ -123,12 +127,13 @@ always listening, with log lines printing above its prompt. `Ctrl-\` quits.
 
 The simulator interprets the ARM code of `.pbw` apps and their workers with
 [Samsa](https://github.com/coredevices/samsa), a Thumb-2 interpreter, so they
-install and run as on a watch. Install them from the command line, or over
-the QEMU serial protocol as a phone would:
+install and run as on a watch. Install them from the command line, or as a
+phone would, with the `pebble` tool and its phone simulator talking to the
+console:
 
 ```shell
 pbl run -- -i app.pbw
-pebble install --qemu localhost:12344 app.pbw
+pebble install --qemu localhost:12344 --qemu-console localhost:12345 --pypkjs --platform emery app.pbw
 ```
 
 In a browser, the page installs a `.pbw` dropped on it, picked with **Open
@@ -206,12 +211,14 @@ Another page can embed a build in a frame and be its phone:
 
 - `?screen` shows the screen alone, filling the frame, with no frame artwork,
   buttons or controls, and takes no input.
-- `?serial` gives the parent page the QEMU serial protocol, as `-p` does on
-  the command line. The frame posts `{pblReady: true}`, then the watch's bytes
-  as `{pblSerial: Uint8Array}`; the parent posts its bytes back the same way,
-  and a `.pbw` to install as `{pblInstall: Uint8Array}`. The watch starts
-  with no phone: the parent connects as one with a
-  `QemuProtocol_BluetoothConnection` message.
+- `?serial` gives the parent page the console and the QEMU serial protocol,
+  as `-c` and `-p` do on the command line. The frame posts
+  `{pblReady: true, console: true}`, then the console's bytes as
+  `{pblConsole: Uint8Array}` and the QEMU serial protocol's as
+  `{pblSerial: Uint8Array}`; the parent posts its bytes back the same way,
+  and a `.pbw` to install as `{pblInstall: Uint8Array}`. The parent is the
+  phone once it opens a Pebble protocol session on the console, in the
+  {doc}`console transport's frames </subsystems/pp/transports>`.
 
 ## How it works
 

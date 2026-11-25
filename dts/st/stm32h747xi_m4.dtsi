@@ -10,3 +10,10 @@
 		reg = <0x10000000 0x48000>;
 	};
 };
+
+// HSEM2, the interrupt of the semaphores for the Cortex-M4, through its line of the EXTI, which
+// wakes it from Stop
+&hsem {
+	interrupt-parent = <&exti>;
+	interrupts = <78 IRQ_TYPE_LEVEL_HIGH>;
+};

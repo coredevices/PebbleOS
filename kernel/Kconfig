@@ -4,209 +4,280 @@
 menu "Kernel"
 
 config KERNEL_IDLE_STACK_SIZE
-	int "Idle thread stack size in bytes"
-	default 1024
+    int "Idle thread stack size in bytes"
+    default 512
+    help
+      Stack of the idle thread, which runs the idle states of the SoC.
 
 config CPU_IDLE
-	bool "CPU idle states"
-	help
-	  Idle the CPU in the low-power states of the SoC, the deepest one
-	  allowed and worth entering for the time until the next timeout,
-	  with the tick stopped meanwhile. Without it the CPU waits for an
-	  interrupt a tick at a time, which is enough where power does not
-	  matter, e.g. a bootloader.
+    bool "CPU idle states"
+    help
+      Idle the CPU in the low-power states of the SoC, the deepest one
+      allowed and worth entering for the time until the next timeout,
+      with the tick stopped meanwhile. Without it the CPU waits for an
+      interrupt a tick at a time, which is enough where power does not
+      matter, e.g. a bootloader.
 
 config KERNEL_MAIN_STACK_SIZE
-	int "Main thread stack size in bytes"
-	default 4096
+    int "Main thread stack size in bytes"
+    default 1024
+    help
+      Stack of the main thread, which initializes the system and then
+      runs main().
 
 config KERNEL_MAIN_THREAD_PRIO
-	int "Main thread priority"
-	default 3
+    int "Main thread priority"
+    default 3
+    help
+      Priority of the main thread, between 0 and KERNEL_NUM_PRIORITIES - 1,
+      higher first.
+
+config KERNEL_SYS_WORKQ
+    bool "Background work queue"
+    help
+      SysWorkq, the system's queue for background work, and the
+      pbl_sys_work_call() family running on it. Selected by what uses
+      them.
+
+if KERNEL_SYS_WORKQ
 
 config KERNEL_SYS_WORKQ_STACK_SIZE
-	int "Background work queue stack size in bytes"
-	default 4096
+    int "Background work queue stack size in bytes"
+    default 1024
+    help
+      Stack of SysWorkq, the thread of the background work queue.
 
 config KERNEL_SYS_WORKQ_PRIO
-	int "Background work queue priority"
-	default 1
+    int "Background work queue priority"
+    default 1
+    help
+      Priority of SysWorkq.
 
 config KERNEL_SYS_WORKQ_BOOST_PRIO
-	int "Background work queue priority while running boosted work"
-	default 3
+    int "Background work queue priority while running boosted work"
+    default 3
+    help
+      Priority SysWorkq runs at while work submitted with
+      pbl_work_submit_boosted() is pending.
 
 config KERNEL_SYS_WORKQ_CALLS
-	int "Calls with a payload pending at once on the background work queue"
-	default 30
+    int "Calls with a payload pending at once on the background work queue"
+    default 30
+    help
+      Slots for the calls with a payload of pbl_sys_work_call() pending on
+      the background work queue.
 
 config KERNEL_SYS_WORKQ_CALL_TIMEOUT_MS
-	int "Time to wait for a background work queue slot before stopping the system"
-	default 3000
+    int "Time to wait for a background work queue slot before stopping the system"
+    default 3000
+    help
+      How long pbl_sys_work_call() waits for a free slot before it panics,
+      as the queue is then stuck.
+
+endif # KERNEL_SYS_WORKQ
+
+config KERNEL_SYS_WORKQ_HIGH
+    bool "High priority work queue"
+    help
+      SysWorkqHigh, the system's queue for short, time sensitive work,
+      and pbl_sys_work_call_high(). Selected by what uses them.
+
+if KERNEL_SYS_WORKQ_HIGH
 
 config KERNEL_SYS_WORKQ_HIGH_CALLS
-	int "Calls with a payload pending at once on the high priority work queue"
-	default 5
+    int "Calls with a payload pending at once on the high priority work queue"
+    default 5
+    help
+      Slots for the calls with a payload pending on the high priority work
+      queue.
 
 config KERNEL_SYS_WORKQ_HIGH_CALL_TIMEOUT_MS
-	int "Time to wait for a high priority work queue slot"
-	default 50
+    int "Time to wait for a high priority work queue slot"
+    default 50
+    help
+      How long pbl_sys_work_call_high() waits for a free slot before it
+      gives up and fails.
 
 config KERNEL_SYS_WORKQ_HIGH_STACK_SIZE
-	int "High priority work queue stack size in bytes"
-	default 1380
+    int "High priority work queue stack size in bytes"
+    default 1024
+    help
+      Stack of SysWorkqHigh, the thread of the high priority work queue.
 
 config KERNEL_SYS_WORKQ_HIGH_PRIO
-	int "High priority work queue priority"
-	default 4
+    int "High priority work queue priority"
+    default 4
+    help
+      Priority of SysWorkqHigh.
+
+endif # KERNEL_SYS_WORKQ_HIGH
 
 config KERNEL_ISR_STACK_SIZE
-	int "ISR stack size in bytes"
-	default 1024
+    int "ISR stack size in bytes"
+    default 1024
+    help
+      Stack the interrupt handlers run on, shared by all of them.
 
 config KERNEL_PRINT_BUFFER_SIZE
-	int "pbl_print() buffer size in bytes"
-	default 128
-	help
-	  Buffer on the caller's stack that pbl_print() formats into. Text is cut
-	  at one byte less.
+    int "pbl_print() buffer size in bytes"
+    default 128
+    help
+      Buffer on the caller's stack that pbl_print() formats into. Text is cut
+      at one byte less.
 
 config ARCH_HAS_COREDUMP
-	bool
-	help
-	  The architecture can capture its state for a core dump.
+    bool
+    help
+      The architecture can capture its state for a core dump.
 
 config ARCH_HAS_STACK_GUARD
-	bool
-	help
-	  The architecture can trap a thread overflowing its stack.
+    bool
+    help
+      The architecture can trap a thread overflowing its stack.
 
 config KERNEL_STACK_GUARD
-	bool "Trap stack overflows"
-	depends on ARCH_HAS_STACK_GUARD
-	help
-	  Fault as soon as a thread or the ISR stack overflows, instead of
-	  corrupting the memory below it. Uses the stack limit registers where
-	  the core has them, and otherwise a no-access MPU region below each
-	  stack.
+    bool "Trap stack overflows"
+    depends on ARCH_HAS_STACK_GUARD
+    help
+      Fault as soon as a thread or the ISR stack overflows, instead of
+      corrupting the memory below it. Uses the stack limit registers where
+      the core has them, and otherwise a no-access MPU region below each
+      stack.
 
 config KERNEL_STACK_GUARD_SIZE
-	int
-	default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
-	default 0
-	help
-	  Bytes reserved below a stack for its MPU guard, on top of the size the
-	  stack is defined with. An exception frame with FP state takes 104 bytes
-	  and lazy stacking only writes its lowest 32, so a smaller guard can be
-	  skipped without a fault.
+    int
+    default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
+    default 0
+    help
+      Bytes reserved below a stack for its MPU guard, on top of the size the
+      stack is defined with. An exception frame with FP state takes 104 bytes
+      and lazy stacking only writes its lowest 32, so a smaller guard can be
+      skipped without a fault.
 
 config KERNEL_USER_STACK_GUARD_SIZE
-	int
-	default 32 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
-	default 0
-	help
-	  MPU guard of a stack only used unprivileged, see
-	  pbl_thread_attr::user_stack. Frames that skip it still fault, as they
-	  land in memory the thread can't write.
+    int
+    default 32 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
+    default 0
+    help
+      MPU guard of a stack only used unprivileged, see
+      pbl_thread_attr::user_stack. Frames that skip it still fault, as they
+      land in memory the thread can't write.
 
 config KERNEL_MPU_REGIONS
-	int
-	default 12 if SOC_SF32LB52 || SOC_SF32LB57
-	default 8
-	help
-	  MPU slots the core implements. The last four switch with the thread, and
-	  the rest take the static regions.
+    int
+    default 8
+    help
+      MPU slots the core implements. The last four switch with the thread, and
+      the rest take the static regions. SoCs whose core implements more set
+      it in their Kconfig.defconfig.
 
 config KERNEL_MPU_IN_FAULTS
-	bool
-	help
-	  Keep the MPU on in the HardFault and NMI handlers.
+    bool
+    help
+      Keep the MPU on in the HardFault and NMI handlers.
 
 config KERNEL_TICK_HZ
-	int "Tick rate in Hz"
-	default 1000
+    int "Tick rate in Hz"
+    default 1000
+    help
+      Rate of the kernel tick, the resolution of timeouts. SoCs whose
+      timer rate is not a multiple of it set another in their
+      Kconfig.defconfig.
 
 config KERNEL_ZERO_LATENCY_IRQS
-	bool "Zero-latency interrupts"
-	help
-	  Reserve the controller level above every other interrupt for lines
-	  bound with PBL_IRQ_ZERO_LATENCY, which the kernel never masks and
-	  which must not call it. The other interrupts then start one level
-	  lower.
+    bool "Zero-latency interrupts"
+    help
+      Reserve the controller level above every other interrupt for lines
+      bound with PBL_IRQ_ZERO_LATENCY, which the kernel never masks and
+      which must not call it. The other interrupts then start one level
+      lower.
 
 config NUM_IRQS
-	int
-	range 1 512
-	help
-	  Number of SoC interrupt lines, i.e. vector table entries past the
-	  core exceptions. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
+    int
+    range 1 512
+    help
+      Number of SoC interrupt lines, i.e. vector table entries past the
+      core exceptions. Defaulted per SoC in soc/*/*/Kconfig.defconfig.
 
 config KERNEL_NUM_PRIORITIES
-	int "Number of thread priorities"
-	default 5
+    int "Number of thread priorities"
+    default 5
+    help
+      Number of thread priorities, 0 being the lowest.
 
 config KERNEL_MAX_THREADS
-	int "Maximum number of threads alive at once"
-	default 12
+    int "Maximum number of threads alive at once"
+    default 12
+    help
+      Threads a snapshot of the thread statistics, see
+      pbl_thread_stats_snapshot(), is sized for. The kernel itself does
+      not limit the number of threads.
 
 config KERNEL_THREAD_TLS_SLOTS
-	int "Per-thread pointer slots"
-	default 2
+    int "Per-thread pointer slots"
+    default 2
+    help
+      Pointers each thread keeps for pbl_thread_tls_get() and
+      pbl_thread_tls_set().
 
 config KERNEL_STACK_ALIGN
-	int "Thread stack alignment"
-	default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
-	default 32
-	help
-	  Must be a multiple of the stack guard size, which an MPU region can
-	  only cover when naturally aligned.
+    int "Thread stack alignment"
+    default 128 if KERNEL_STACK_GUARD && !CPU_CORTEX_M_HAS_SPLIM
+    default 32
+    help
+      Must be a multiple of the stack guard size, which an MPU region can
+      only cover when naturally aligned.
 
 config KERNEL_MUTEX_LOCK_LR
-	bool "Record the caller of the outermost mutex lock"
+    bool "Record the caller of the outermost mutex lock"
+    help
+      Keep the return address of the outermost lock of each mutex in
+      pbl_mutex::lock_lr, to find who holds a mutex from a debugger or a
+      core dump.
 
 config ARCH_HAS_DEBUGGER_DETECT
-	bool
-	help
-	  The architecture can tell whether a debugger is attached.
+    bool
+    help
+      The architecture can tell whether a debugger is attached.
 
 config ARCH_HAS_USERSPACE
-	bool
-	help
-	  The architecture can run threads unprivileged and take syscalls
-	  from them.
+    bool
+    help
+      The architecture can run threads unprivileged and take syscalls
+      from them.
 
 config USERSPACE
-	bool "Unprivileged threads and syscalls"
-	depends on ARCH_HAS_USERSPACE
-	help
-	  Let threads run unprivileged, confined by the MPU, and enter
-	  privileged code only through syscalls, which check every argument
-	  they are handed. Without it every thread runs privileged and
-	  syscalls are plain calls.
+    bool "Unprivileged threads and syscalls"
+    depends on ARCH_HAS_USERSPACE
+    help
+      Let threads run unprivileged, confined by the MPU, and enter
+      privileged code only through syscalls, which check every argument
+      they are handed. Without it every thread runs privileged and
+      syscalls are plain calls.
 
 config RAMFUNC
-	bool
-	help
-	  Code and read-only data can be placed in RAM: the .ramfunc
-	  section is loaded from flash and copied to RAM at boot. Selected
-	  by SoCs that need code to run while flash is unavailable.
+    bool
+    help
+      Code and read-only data can be placed in RAM: the .ramfunc
+      section is loaded from flash and copied to RAM at boot. Selected
+      by SoCs that need code to run while flash is unavailable.
 
 config SCRATCH_HEAP_SHARED
-	bool "Scratch heap in the kernel heap" if RAM
-	default y
-	help
-	  Have the scratch heap (pbl/kernel/scratch.h) share the kernel
-	  heap. Without it, the scratch heap has memory of its own, the
-	  external RAM of the board (its EXTRAM device), which is then only
-	  powered while something is allocated.
+    bool "Scratch heap in the kernel heap" if RAM
+    default y
+    help
+      Have the scratch heap (pbl/kernel/scratch.h) share the kernel
+      heap. Without it, the scratch heap has memory of its own, the
+      external RAM of the board (its EXTRAM device), which is then only
+      powered while something is allocated.
 
 config SCRATCH_HEAP_SIZE
-	int "Scratch heap size in bytes"
-	depends on !SCRATCH_HEAP_SHARED
-	default 2097152
-	help
-	  Most the scratch heap takes of its memory. Its map takes one
-	  bit of internal RAM per 512 bytes.
+    int "Scratch heap size in bytes"
+    depends on !SCRATCH_HEAP_SHARED
+    default 2097152
+    help
+      Most the scratch heap takes of its memory. Its map takes one
+      bit of internal RAM per 512 bytes.
 
 endmenu
 

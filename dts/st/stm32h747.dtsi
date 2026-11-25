@@ -13,12 +13,24 @@
 			compatible = "arm,cortex-m7";
 			device_type = "cpu";
 			reg = <0>;
+			cpu-idle-states = <&stop>;
 		};
 
 		cpu1: cpu@1 {
 			compatible = "arm,cortex-m4";
 			device_type = "cpu";
 			reg = <1>;
+			cpu-idle-states = <&stop>;
+		};
+
+		idle-states {
+			// Stop, the time back mostly the HSE crystal starting
+			stop: cpu-sleep-0 {
+				compatible = "arm,idle-state";
+				entry-latency-us = <50>;
+				exit-latency-us = <2000>;
+				min-residency-us = <10000>;
+			};
 		};
 	};
 
@@ -26,17 +38,37 @@
 		compatible = "st,stm32h747-m4";
 		st,syscfg-holdboot = <&rcc 0xa0 0x8>;
 		st,syscfg-boot-address = <&flash 0x48 0xffff>;
+		st,syscfg-flash = <&rcc 0x194 0x100>;
+		mboxes = <&hsem 0>, <&hsem 1>;
+		mbox-names = "shutdown", "clocks";
+		st,wwdg = <&wwdg2>;
 		status = "disabled";
 	};
 
 	soc {
+		// The window watchdog of the Cortex-M4
+		wwdg2: watchdog@40002c00 {
+			compatible = "st,stm32h743-wwdg";
+			reg = <0x40002c00 0x400>;
+			clocks = <&rcc WWDG2_CK>;
+			status = "disabled";
+		};
+
 		pwr: power-config@58024800 {
 			compatible = "st,stm32h747-pwr";
 			reg = <0x58024800 0x400>;
+
+			usb33: usb33 {
+				regulator-name = "usb33";
+			};
 		};
 	};
 };
 
 &rcc {
 	st,syscfg = <&pwr>;
+};
+
+&rtc {
+	st,syscfg = <&pwr 0x00 0x100>;
 };

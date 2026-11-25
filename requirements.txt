@@ -41,6 +41,10 @@ numpy
 ppk2-api
 # Its software controller asks the peripheral for the LTK since 0.0.235.
 bumble>=0.0.235
+pyusb
+
+# C formatting; the clang-format CI job installs this version
+clang-format==23.1.5
 
 -e tools/libs/pbl-cli
 -e tools/libs/pbl-console[protocol]

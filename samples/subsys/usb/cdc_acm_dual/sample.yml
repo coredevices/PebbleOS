@@ -1,0 +1,5 @@
+description: Two serial ports over USB, the console on one and an echo on the other
+expect:
+  - 'usb: console on port 0, echo on port 1'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk]

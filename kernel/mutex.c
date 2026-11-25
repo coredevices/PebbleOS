@@ -68,7 +68,7 @@ int pbl_mutex_lock_lr(struct pbl_mutex *m, pbl_timeout_t timeout, uintptr_t lr) 
       prv_prio_update(m->owner);
     }
   }
-#if CONFIG_KERNEL_MUTEX_LOCK_LR
+#ifdef CONFIG_KERNEL_MUTEX_LOCK_LR
   if (rc == 0 && m->count == 1) {
     m->lock_lr = lr;
   }

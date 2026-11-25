@@ -4,12 +4,28 @@
 config SOC_STM32H7
     bool
     select SOC_FAMILY_STM32
+    select SOC_HAS_UNIQUE_ID
     select CPU_HAS_FPU
     select CPU_HAS_FPU_DOUBLE if CPU_CORTEX_M7
     select CPU_HAS_ICACHE if CPU_CORTEX_M7
     select CPU_HAS_DCACHE if CPU_CORTEX_M7
     select PINCTRL
-    select REMOTEPROC if DT_HAS_ST_STM32H747_M4_ENABLED
+    select SOC_HAS_IDLE_STATES
+    select SOC_HAS_POWER_OFF
+    select RAMFUNC if CPU_CORTEX_M4
+    select REMOTEPROC if DT_HAS_ST_STM32H747_M4_ENABLED && CPU_CORTEX_M7
     select TIMER_STM32_LPTIM
     help
       ST STM32H7 series, selected by its SoCs.
+
+config SOC_STM32H7_CM4_MBOX
+    bool "Doorbells with the Cortex-M7"
+    default y
+    depends on CPU_CORTEX_M4 && DT_HAS_ST_STM32H747_M4_ENABLED
+    select KERNEL_SYS_WORKQ
+    select MBOX
+    help
+      Power this core off when the Cortex-M7 asks, before it powers the
+      system off, Standby needing both cores stopped, or to stop this core;
+      and ask the Cortex-M7 for the clock tree when this core alone wakes
+      from Stop.

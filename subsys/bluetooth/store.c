@@ -3,20 +3,17 @@
 
 #include "store.h"
 
-#include "nimble_type_conversions.h"
-
 #include <errno.h>
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
-#include <pbl/bluetooth/gap_le_connect.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 
 #include <host/ble_hs.h>
 #include <host/ble_store.h>
-#include <kernel/event_loop.h>
 #include <nimble/nimble_port_pebble.h>
 #include <store/config/ble_store_config.h>
 #include <syscfg/syscfg.h>
@@ -92,10 +89,10 @@ static int prv_write_if_changed(int obj_type, const union ble_store_value *value
 static void prv_value_to_info(const struct ble_store_value_sec *value_sec,
                               struct pbl_bt_bond_info *info) {
   *info = (struct pbl_bt_bond_info){
+    .addr = value_sec->peer_addr,
     .irk_valid = value_sec->irk_present,
   };
 
-  nimble_addr_to_pebble_device(&value_sec->peer_addr, &info->addr);
   if (value_sec->irk_present) {
     memcpy(info->irk.data, value_sec->irk, KEY_SIZE);
   }
@@ -108,16 +105,6 @@ struct sec_written {
 
 static void prv_sec_written_cb(void *data) {
   struct sec_written *ctx = data;
-
-  if (ctx->info.irk_valid) {
-    struct pbl_bt_irk_change irk_change = {
-      .device = ctx->info.addr,
-      .irk = ctx->info.irk,
-      .irk_valid = true,
-    };
-
-    pbl_bt_handle_le_connection_handle_update_irk(&irk_change);
-  }
 
   if (ctx->is_new) {
     pbl_bt_cb_bond_added(&ctx->info);
@@ -167,15 +154,15 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
   ctx->is_new = is_new;
   prv_value_to_info(&peer.sec, &ctx->info);
   if (is_new) {
-    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(ctx->info.addr.address));
+    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(ctx->info.addr.val));
   }
-  launcher_task_add_callback(prv_sec_written_cb, ctx);
+  (void)pbl_sys_work_call(prv_sec_written_cb, ctx);
 
   return 0;
 }
 
 static void prv_bond_deleted_cb(void *data) {
-  struct pbl_bt_device_internal *addr = data;
+  ble_addr_t *addr = data;
 
   pbl_bt_cb_bond_deleted(addr);
 
@@ -183,7 +170,7 @@ static void prv_bond_deleted_cb(void *data) {
 }
 
 static int prv_store_delete(int obj_type, const union ble_store_key *key) {
-  struct pbl_bt_device_internal *addr;
+  ble_addr_t *addr;
   union ble_store_value value;
   int rc;
 
@@ -201,9 +188,9 @@ static int prv_store_delete(int obj_type, const union ble_store_key *key) {
   }
 
   addr = pbl_malloc_check(sizeof(*addr));
-  nimble_addr_to_pebble_device(&value.sec.peer_addr, addr);
-  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(addr->address));
-  launcher_task_add_callback(prv_bond_deleted_cb, addr);
+  *addr = value.sec.peer_addr;
+  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(addr->val));
+  (void)pbl_sys_work_call(prv_bond_deleted_cb, addr);
 
   return 0;
 }
@@ -237,17 +224,13 @@ void pbl_bt__store_set_local_irk(const struct pbl_bt_sm_key *irk) {
   s_local_irk = *irk;
 }
 
-static int prv_read_peer_sec(const struct pbl_bt_device_internal *addr, uint8_t idx,
+static int prv_read_peer_sec(const ble_addr_t *addr, uint8_t idx,
                              struct ble_store_value_sec *value_sec) {
   union ble_store_key key = {};
   union ble_store_value value;
   int rc;
 
-  if (addr != nullptr) {
-    pebble_device_to_nimble_addr(addr, &key.sec.peer_addr);
-  } else {
-    key.sec.peer_addr = *BLE_ADDR_ANY;
-  }
+  key.sec.peer_addr = (addr != nullptr) ? *addr : *BLE_ADDR_ANY;
   key.sec.idx = idx;
 
   rc = prv_read(BLE_STORE_OBJ_TYPE_PEER_SEC, &key, &value);
@@ -281,7 +264,7 @@ size_t pbl_bt_bond_count(void) {
   return count;
 }
 
-int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_info *info) {
+int pbl_bt_bond_get(const ble_addr_t *addr, struct pbl_bt_bond_info *info) {
   struct ble_store_value_sec value_sec;
   int ret;
 
@@ -297,90 +280,39 @@ int pbl_bt_bond_get(const struct pbl_bt_device_internal *addr, struct pbl_bt_bon
   return 0;
 }
 
-int pbl_bt_bond_get_keys(const struct pbl_bt_device_internal *addr, struct pbl_bt_bond_keys *keys) {
-  struct pbl_bt_sm_pairing_info *info = &keys->info;
-  struct ble_store_value_sec peer;
+int pbl_bt_bond_get_keys(const ble_addr_t *addr, struct pbl_bt_bond_keys *keys) {
   union ble_store_value our;
   union ble_store_key key;
   int ret;
 
-  ret = prv_read_peer_sec(addr, 0U, &peer);
+  memset(keys, 0, sizeof(*keys));
+
+  ret = prv_read_peer_sec(addr, 0U, &keys->peer);
   if (ret != 0) {
     return ret;
   }
 
-  memset(keys, 0, sizeof(*keys));
-  nimble_addr_to_pebble_device(&peer.peer_addr, &info->identity);
-
-  if (peer.ltk_present) {
-    info->is_remote_encryption_info_valid = true;
-    info->remote_encryption_info.ediv = peer.ediv;
-    info->remote_encryption_info.rand = peer.rand_num;
-    memcpy(info->remote_encryption_info.ltk.data, peer.ltk, KEY_SIZE);
-  }
-
-  if (peer.irk_present) {
-    info->is_remote_identity_info_valid = true;
-    memcpy(info->irk.data, peer.irk, KEY_SIZE);
-  }
-
-  ble_store_key_from_value_sec(&key.sec, &peer);
-  if (prv_read(BLE_STORE_OBJ_TYPE_OUR_SEC, &key, &our) == 0 && our.sec.ltk_present) {
-    info->is_local_encryption_info_valid = true;
-    info->local_encryption_info.ediv = our.sec.ediv;
-    info->local_encryption_info.rand = our.sec.rand_num;
-    memcpy(info->local_encryption_info.ltk.data, our.sec.ltk, KEY_SIZE);
-  }
-
-  if (peer.sc) {
-    keys->flags |= PBL_BT_BOND_FLAG_SECURE_CONNECTIONS;
-  }
-  if (peer.authenticated) {
-    keys->flags |= PBL_BT_BOND_FLAG_AUTHENTICATED;
+  ble_store_key_from_value_sec(&key.sec, &keys->peer);
+  if (prv_read(BLE_STORE_OBJ_TYPE_OUR_SEC, &key, &our) == 0) {
+    keys->our = our.sec;
   }
 
   return 0;
 }
 
-static void prv_keys_to_value_sec(const struct pbl_bt_bond_keys *keys, bool local,
-                                  struct ble_store_value_sec *value_sec) {
-  const struct pbl_bt_sm_pairing_info *info = &keys->info;
-
-  memset(value_sec, 0, sizeof(*value_sec));
-  value_sec->key_size = KEY_SIZE;
-  value_sec->sc = (keys->flags & PBL_BT_BOND_FLAG_SECURE_CONNECTIONS) != 0U;
-  value_sec->authenticated = (keys->flags & PBL_BT_BOND_FLAG_AUTHENTICATED) != 0U;
-  pebble_device_to_nimble_addr(&info->identity, &value_sec->peer_addr);
-
-  if (local && info->is_local_encryption_info_valid) {
-    value_sec->ediv = info->local_encryption_info.ediv;
-    value_sec->rand_num = info->local_encryption_info.rand;
-    value_sec->ltk_present = 1;
-    memcpy(value_sec->ltk, info->local_encryption_info.ltk.data, KEY_SIZE);
-  }
-
-  if (!local && info->is_remote_encryption_info_valid) {
-    value_sec->ediv = info->remote_encryption_info.ediv;
-    value_sec->rand_num = info->remote_encryption_info.rand;
-    value_sec->ltk_present = 1;
-    memcpy(value_sec->ltk, info->remote_encryption_info.ltk.data, KEY_SIZE);
-  }
-
-  if (!local && info->is_remote_identity_info_valid) {
-    value_sec->irk_present = 1;
-    memcpy(value_sec->irk, info->irk.data, KEY_SIZE);
-  }
-}
-
 int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys) {
   union ble_store_value value;
 
-  prv_keys_to_value_sec(keys, false, &value.sec);
+  value.sec = keys->peer;
   if (prv_write_if_changed(BLE_STORE_OBJ_TYPE_PEER_SEC, &value) != 0) {
     return -EIO;
   }
 
-  prv_keys_to_value_sec(keys, true, &value.sec);
+  if (!keys->our.ltk_present) {
+    return 0;
+  }
+
+  value.sec = keys->our;
   if (prv_write_if_changed(BLE_STORE_OBJ_TYPE_OUR_SEC, &value) != 0) {
     return -EIO;
   }
@@ -401,7 +333,7 @@ static int prv_unpair(const ble_addr_t *peer_addr) {
   return 0;
 }
 
-int pbl_bt_unpair(const struct pbl_bt_device_internal *addr) {
+int pbl_bt_unpair(const ble_addr_t *addr) {
   struct ble_store_value_sec value_sec;
   ble_addr_t peers[MAX_BONDS];
   size_t count = 0U;

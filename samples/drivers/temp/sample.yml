@@ -7,4 +7,4 @@ expect:
   - 'temp: -?\d+\.\d+ C'
   - 'Sample done'
 roles: [die_temp]
-integration: [qemu_emery, asterix, obelix@pvt]
+integration: [qemu_emery, asterix, obelix@pvt, stm32h747i_disco/m7, nrf52840dk, nrf52dk]

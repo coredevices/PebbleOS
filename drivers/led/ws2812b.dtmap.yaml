@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: worldsemi,ws2812b
+config: LED_WS2812B
+class: led
+define: PBL_WS2812B_DEFINE
+children:
+  names:
+    multi-led: 0
+args:
+  - parent: spi
+    up: true
+  - reg: 0
+    up: true
+  - prop: spi-max-frequency
+    up: true

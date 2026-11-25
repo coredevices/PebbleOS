@@ -19,4 +19,20 @@ args:
     index: 1
   - prop: st,syscfg-boot-address
     index: 2
+  - reg: 0
+    of: st,syscfg-flash
+  - prop: st,syscfg-flash
+    index: 1
+  - prop: st,syscfg-flash
+    index: 2
+  - mbox: shutdown
+    default: "{}"
+  - mbox: clocks
+    default: "{}"
+  - reg: 0
+    of: st,wwdg
+    default: 0
+  - clock: 0
+    of: st,wwdg
+    default: "{}"
   - flag: st,auto-boot

@@ -7,5 +7,6 @@ pbl_clar_test(test_console_frame
     lib/util/base64.c
     subsys/crc/crc32.c
   DEFINES
+    CONFIG_CONSOLE_INPUT
     CONFIG_PP_TRANSPORT_CONSOLE
 )

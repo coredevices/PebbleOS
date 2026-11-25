@@ -11,7 +11,9 @@ maintainers:
 
 description:
   The Cortex-M4 of a dual-core STM32H7, which runs its own firmware from the
-  flash. It waits until the Cortex-M7 lets it boot.
+  flash. It waits until the Cortex-M7 lets it boot, and the Cortex-M7 tells
+  it before stopping it or powering the system off. A stopped Cortex-M4 starts
+  again from a reset of its own.
 
 properties:
   compatible:
@@ -36,14 +38,53 @@ properties:
           - description: The offset of the boot address register
           - description: The field mask of the boot address
 
+  st,syscfg-flash:
+    description:
+      Allocates the flash, in the domain of the Cortex-M7, to the Cortex-M4,
+      which runs from it, so that the domain stays up while the Cortex-M4
+      runs.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    items:
+      - items:
+          - description: Phandle of syscon block
+          - description: The offset of the flash allocation register
+          - description: The field mask of the flash allocation
+
+  mboxes:
+    minItems: 1
+    items:
+      - description:
+          Tells the Cortex-M4 that the system is about to be powered off, or
+          that it is stopped; its acknowledgement means it is stopping.
+      - description:
+          Rung by the Cortex-M4 woken alone from Stop, the system then running
+          on the HSI until the Cortex-M7, which owns the clock tree, brings it
+          back.
+
+  mbox-names:
+    minItems: 1
+    items:
+      - const: shutdown
+      - const: clocks
+
+  st,wwdg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description:
+      Window watchdog of the Cortex-M4, whose timeout resets the Cortex-M4
+      alone, restarting a stopped Cortex-M4.
+
   st,auto-boot:
     $ref: /schemas/types.yaml#/definitions/flag
-    description: Boot the Cortex-M4 at startup, when its flash holds an image.
+    description: |
+      Boot the Cortex-M4 at startup, when its flash holds an image. A
+      Cortex-M4 that never boots keeps the system out of Stop and Standby,
+      as only a running core stops.
 
 required:
   - compatible
   - st,syscfg-holdboot
   - st,syscfg-boot-address
+  - st,syscfg-flash
 
 additionalProperties: false
 
@@ -53,5 +94,9 @@ examples:
         compatible = "st,stm32h747-m4";
         st,syscfg-holdboot = <&rcc 0xa0 0x8>;
         st,syscfg-boot-address = <&flash 0x48 0xffff>;
+        st,syscfg-flash = <&rcc 0x194 0x100>;
+        mboxes = <&hsem 0>, <&hsem 1>;
+        mbox-names = "shutdown", "clocks";
+        st,wwdg = <&wwdg2>;
         st,auto-boot;
     };

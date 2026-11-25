@@ -4,14 +4,18 @@
 #include <stdatomic.h>
 
 #include <pbl/drivers/clk/stm32h7.h>
+#include <pbl/drivers/reset/stm32h7.h>
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
+#include <pbl/soc/st/exti.h>
 #include <pbl/util/math.h>
 
 #include <devicetree/regs.h>
 #include <hardware/stm32_lptim.h>
+#include <hardware/stm32h7_exti.h>
 
 // A few cycles of the counter clock
 #define SYNC_TIMEOUT_US 1000U
@@ -29,9 +33,13 @@
  */
 
 #define LPTIM_BASE PBL_DT_REG_ST_STM32_LPTIMER_TIMER
-#define LPTIM_IRQN PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER
+// Its interrupt comes through its line of the EXTI, which wakes the CPU from Stop
+#define LPTIM_IRQN STM32H7_EXTI_IRQ(PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER)
+#define EXTI_LINE  PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER
 
 static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, PBL_DT_CLK_ST_STM32_LPTIMER_TIMER);
+static const struct pbl_reset s_rst =
+    PBL_RESET(STM32H7_RCC_RESET, PBL_DT_RST_ST_STM32_LPTIMER_TIMER);
 static uint64_t s_rate_mhz;
 // Count at which the last compare value was written, if any
 static bool s_cmp_written;
@@ -130,6 +138,16 @@ static void prv_isr(void) {
   pbl_clockevent_handler(&s_lptim_ce);
 }
 
+// Stopped for good, as only a reset stops it safely: its interrupt would stay raised and keep the
+// system out of Stop, should this core stop before the other
+static void prv_sys_off(enum pbl_sys_off_mode mode, void *user_data) {
+  pbl_irq_disable(LPTIM_IRQN);
+  (void)pbl_reset_reset(&s_rst);
+}
+
+PBL_SYS_OFF_HANDLER_DEFINE(s_lptim_off, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW, prv_sys_off,
+                           nullptr);
+
 PBL_IRQ_CONNECT_NUM(LPTIM_IRQN, CONFIG_TIMER_STM32_LPTIM_IRQ_PRIO, prv_isr, , 0);
 
 // Both devices share the timer.
@@ -140,7 +158,15 @@ static int prv_init(const struct pbl_device *dev) {
   if (!s_started) {
     ret = pbl_device_init(&STM32H7_RCC->dev);
     if (ret == 0) {
+      ret = pbl_device_init(&STM32H7_RCC_RESET->dev);
+    }
+    if (ret == 0) {
       ret = pbl_clk_enable(&s_clk);
+    }
+    // From its reset state, which a core started again without the system does not find it in:
+    // disabling it instead may leave its interrupt stuck
+    if (ret == 0) {
+      ret = pbl_reset_reset(&s_rst);
     }
     if (ret == 0) {
       ret = pbl_clk_get_rate(&s_clk, &s_rate_mhz);
@@ -150,7 +176,6 @@ static int prv_init(const struct pbl_device *dev) {
     }
 
     // Free running over the whole counter, undivided; the interrupt is only set while disabled
-    prv_putreg(STM32_LPTIM_CR_OFFSET, 0U);
     prv_putreg(STM32_LPTIM_CFGR_OFFSET, 0U);
     prv_putreg(STM32_LPTIM_IER_OFFSET, LPTIM_ISR_CMPM);
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE);
@@ -160,10 +185,10 @@ static int prv_init(const struct pbl_device *dev) {
     if (ret != 0) {
       return ret;
     }
-    // Not counting yet, nothing sets a flag while they are cleared
-    prv_putreg(STM32_LPTIM_ICR_OFFSET, LPTIM_ISR_ALL);
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT);
     pbl_irq_enable(LPTIM_IRQN);
+    // Wakes this core from Stop
+    pbl_soc_stm32h7_wakeup_enable(EXTI_LINE);
     s_started = true;
   }
 

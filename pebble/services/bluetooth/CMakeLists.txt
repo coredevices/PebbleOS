@@ -6,9 +6,10 @@ set(sources
   bluetooth_ctl.c
   bonding.c
   dis.c
+  gateway.c
+  link.c
   local_id.c
   pairability.c
-  pebble_pairing_service.c
   pp_ble_control.c
 )
 if(NOT CONFIG_RECOVERY_FW)
@@ -19,4 +20,5 @@ endif()
 pbl_library()
 pbl_library_sources(${sources})
 pbl_library_sources_ifdef(CONFIG_BT_SERVICE_BAS battery_level.c)
+pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_GATT pp_gatt.c)
 pbl_library_sources_ifdef(CONFIG_SHELL shell.c)

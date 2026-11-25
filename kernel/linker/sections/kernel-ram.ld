@@ -23,7 +23,9 @@
     .kernel_ro_bss (NOLOAD) : {
         __bss_start = .; /* This is used by the startup in order to initialize the .bss section */
 
+#ifdef CONFIG_USERSPACE
         . = ALIGN(__unpriv_ro_bss_size__);
+#endif
         __unpriv_ro_bss_start__ = .;
 
         *:lib_a-timelocal.o(.bss.*)
@@ -31,7 +33,9 @@
 
         *(.kernel_unpriv_ro_bss)
 
+#ifdef CONFIG_USERSPACE
         . = __unpriv_ro_bss_start__ + __unpriv_ro_bss_size__;
+#endif
     } >RAM
 
     .kernel_bss (NOLOAD) : {
@@ -63,4 +67,5 @@
     .kernel_heap (NOLOAD) : {
         _heap_start = .;
     } >REGION_KERNEL_HEAP
-    _heap_end = ORIGIN(REGION_KERNEL_HEAP) + LENGTH(REGION_KERNEL_HEAP);
+    _heap_end = __kernel_ram_end__;
+    ASSERT(_heap_start <= _heap_end, "Kernel RAM overflows into the RAM reserved after it")

@@ -4,12 +4,12 @@
 menuconfig UART
     bool "UART"
     help
-      UART Drivers
+      UART class (pbl/drivers/uart.h) and its drivers.
 
 if UART
 
 config UART_NRF5
-    bool "Nordic nRF5 UART Controller"
+    bool "Nordic nRF5 UART controller"
     default y
     depends on DT_HAS_NORDIC_NRF52832_UARTE_ENABLED
     select GPIO
@@ -24,7 +24,7 @@ config UART_NRF5_IRQ_PRIO
       Priority of the port interrupts.
 
 config UART_SF32LB
-    bool "SiFli SF32LB UART Controller"
+    bool "SiFli SF32LB UART controller"
     default y
     depends on DT_HAS_SIFLI_SF32LB52_USART_ENABLED
     select CLK
@@ -45,6 +45,7 @@ config UART_STM32
     default y
     depends on DT_HAS_ST_STM32H7_UART_ENABLED
     select CLK
+    select DMA
     select PINCTRL
     help
       Support for the ST STM32H7 USART and UART controllers.
@@ -57,7 +58,7 @@ config UART_STM32_IRQ_PRIO
       Priority of the port interrupts.
 
 config UART_QEMU
-    bool "QEMU Simple UART"
+    bool "QEMU simple UART"
     default y
     depends on DT_HAS_QEMU_PEBBLE_SIMPLE_UART_ENABLED
     help
@@ -72,7 +73,8 @@ config UART_QEMU_IRQ_PRIO
 
 config UART_POSIX
     bool "POSIX UART"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       UART backed by a host file descriptor.
 

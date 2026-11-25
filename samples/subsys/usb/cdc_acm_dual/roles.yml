@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+console_uart:
+  symbol: USB_CDC_ACM_UART(0)
+  include: pbl/usb/cdc_acm.h

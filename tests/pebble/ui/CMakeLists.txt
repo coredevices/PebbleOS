@@ -222,6 +222,7 @@ pbl_clar_test(test_action_menu_layer
   MODULES gtypes
   SOURCES
     pebble/applib/ui/action_menu_layer.c
+    pebble/applib/ui/action_menu_theme.c
     pebble/applib/ui/layer.c
     pebble/applib/ui/scroll_layer.c
     pebble/applib/ui/menu_layer.c
@@ -284,6 +285,7 @@ pbl_clar_test(test_action_menu_window
     tests/stubs/stubs_system_theme.c
     pebble/applib/ui/action_menu_hierarchy.c
     pebble/applib/ui/action_menu_layer.c
+    pebble/applib/ui/action_menu_theme.c
     pebble/applib/ui/action_menu_window.c
     pebble/applib/ui/crumbs_layer.c
     pebble/applib/ui/window.c
@@ -356,6 +358,7 @@ pbl_clar_test(test_simple_dialog
     tests/fakes/fake_gbitmap_get_data_row.c
     tests/fakes/fake_rtc.c
     tests/stubs/stubs_animation.c
+    tests/fixtures/screen_grid.c
     tests/stubs/stubs_system_theme.c
     pebble/applib/ui/dialogs/simple_dialog.c
     pebble/applib/ui/dialogs/dialog.c

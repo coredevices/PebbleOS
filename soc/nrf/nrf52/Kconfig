@@ -9,14 +9,23 @@ config SOC_NRF52
     select CRC
     select FLASH_IDLE_PM if FLASH && CPU_IDLE
     select SOC_HAS_POWER_OFF
+    select SOC_HAS_UNIQUE_ID
     select TIMER_NRF5_RTC
     help
       Nordic nRF52 series, selected by its lines.
 
 if SOC_NRF52
 
+config SOC_NRF52_RETAINED_RAM
+    bool
+    default $(dt_has_nodelabel,retained_ram)
+    help
+      The retained registers, in the RAM the retained_ram reserved memory
+      region keeps across resets, when the application reserves it.
+
 config SOC_NRF52_RETAINED_RAM_BASE
     hex
+    depends on SOC_NRF52_RETAINED_RAM
     default $(dt_nodelabel_reg_addr,retained_ram)
     help
       Base of the RAM kept across resets, the retained_ram reserved memory
@@ -24,8 +33,16 @@ config SOC_NRF52_RETAINED_RAM_BASE
 
 config SOC_NRF52_RETAINED_RAM_SIZE
     hex
+    depends on SOC_NRF52_RETAINED_RAM
     default $(dt_nodelabel_reg_size,retained_ram)
     help
       Size of the RAM kept across resets.
+
+config SOC_NRF52_RESET_PIN
+    int
+    default 21 if SOC_NRF52832
+    default 18
+    help
+      P0 pin of the reset input, connected through UICR PSELRESET.
 
 endif # SOC_NRF52

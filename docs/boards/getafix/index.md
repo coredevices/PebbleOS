@@ -4,20 +4,16 @@
 
 :::{div} board-card
 
-```{image} images/getafix.webp
-:alt: Pebble Round 2
+```{thumbnail} images/getafix.webp
 ```
 
 :Board: `getafix`
 :Revisions: `dvt`, `dvt2`
 :SoC: SiFli SF32LB52
-:Platform: Gabbro
-:Emulator: `qemu_gabbro`
 :::
 
 Pebble Round 2 is a round color watch with a touchscreen, built around the
-SiFli SF32LB52. Its firmware targets the Gabbro platform, which apps see as
-a 260 × 260 round color display.
+SiFli SF32LB52.
 
 ## Hardware
 

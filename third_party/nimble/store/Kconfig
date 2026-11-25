@@ -46,5 +46,29 @@ config NIMBLE_STORE_PRF
     help
       The bonding and root keys the recovery firmware and the normal
       firmware share, in a flash partition of its own
-      (pbl/bluetooth/prf_store.h). Its layout is the one recovery
-      firmware in the field reads.
+      (pbl/bluetooth/prf_store.h).
+
+choice NIMBLE_STORE_PRF_LAYOUT
+    prompt "PRF store layout"
+    depends on NIMBLE_STORE_PRF
+    default NIMBLE_STORE_PRF_LAYOUT_RECORDS
+    help
+      How the partition is laid out. Both firmwares of a device have to
+      agree on it, and it cannot change once a device is in the field:
+      the recovery firmware there is not updated.
+
+config NIMBLE_STORE_PRF_LAYOUT_RECORDS
+    bool "Records"
+    help
+      A log of records of 140 bytes with one CRC, each holding all the
+      store keeps: the last valid one is the store. For devices that
+      have not shipped with the legacy layout.
+
+config NIMBLE_STORE_PRF_LAYOUT_LEGACY
+    bool "Legacy"
+    help
+      Entries of 256 bytes made of fields with a CRC each, one of them
+      valid at a time. The layout of the devices that shipped with it:
+      it carries fields nothing uses any more.
+
+endchoice

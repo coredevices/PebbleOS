@@ -4,4 +4,5 @@
 pbl_library()
 pbl_library_sources(mbox.c)
 pbl_library_sources_ifdef(CONFIG_MBOX_SF32LB sf32lb.c)
+pbl_library_sources_ifdef(CONFIG_MBOX_STM32_HSEM stm32_hsem.c)
 pbl_library_sources_ifdef(CONFIG_MBOX_SHELL shell.c)

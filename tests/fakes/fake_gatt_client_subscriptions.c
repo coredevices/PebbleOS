@@ -13,10 +13,10 @@ typedef struct {
 
 static Subscribe *s_subscribe_head;
 
-static enum pbl_bt_errno s_subscribe_return_value;
+static int s_subscribe_return_value;
 
-enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
-                                                      BLESubscription subscription_type) {
+int gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t characteristic,
+                                        BLESubscription subscription_type) {
   Subscribe *subscribe = malloc(sizeof(Subscribe));
   *subscribe = (const Subscribe){
     .characteristic = characteristic,
@@ -34,7 +34,7 @@ enum pbl_bt_errno gatt_client_subscriptions_subscribe(pbl_bt_characteristic_t ch
 // Fake Manipulation
 
 void fake_gatt_client_subscriptions_init(void) {
-  s_subscribe_return_value = PBL_BT_ERRNO_OK;
+  s_subscribe_return_value = 0;
 }
 
 void fake_gatt_client_subscriptions_deinit(void) {
@@ -47,8 +47,8 @@ void fake_gatt_client_subscriptions_deinit(void) {
   s_subscribe_head = nullptr;
 }
 
-void fake_gatt_client_subscriptions_set_subscribe_return_value(enum pbl_bt_errno e) {
-  s_subscribe_return_value = e;
+void fake_gatt_client_subscriptions_set_subscribe_return_value(int ret) {
+  s_subscribe_return_value = ret;
 }
 
 void fake_gatt_client_subscriptions_assert_subscribe(pbl_bt_characteristic_t characteristic,

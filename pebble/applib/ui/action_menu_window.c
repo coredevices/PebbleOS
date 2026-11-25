@@ -3,6 +3,7 @@
 
 #include "action_menu_window.h"
 
+#include "action_menu_theme.h"
 #include "action_menu_window_private.h"
 
 #include <applib/applib_malloc.auto.h>
@@ -10,8 +11,7 @@
 #include <applib/ui/window.h>
 #include <applib/ui/window_stack.h>
 #include <process_state/app_state/app_state.h>
-
-#define ACTION_MENU_DEFAULT_BACKGROUND_COLOR GColorWhite
+#include <shell/system_theme.h>
 
 static const int IN_OUT_ANIMATION_DURATION = 200;
 
@@ -45,6 +45,26 @@ static void prv_action_window_insert_below(ActionMenu *action_menu, Window *wind
 
 static void prv_remove_window(Window *window) {
   window_stack_remove(window, false /* animated */);
+}
+
+static void prv_refresh_crumbs_colors(ActionMenuData *data) {
+  if (data->crumbs_background_follows_theme) {
+    data->config.colors.background = action_menu_theme__background_color();
+  }
+  if (data->crumbs_foreground_follows_theme) {
+    data->config.colors.foreground = gcolor_legible_over(data->config.colors.background);
+  }
+  crumbs_layer_set_colors(&data->crumbs_layer, data->config.colors.background,
+                          data->config.colors.foreground);
+}
+
+static void prv_action_window_update_proc(Layer *layer, GContext *ctx) {
+  ActionMenuData *data = window_get_user_data((Window *)layer);
+  prv_refresh_crumbs_colors(data);
+  if (!system_theme_is_system_ui()) {
+    window_set_background_color((Window *)layer, action_menu_theme__background_color());
+  }
+  window_do_layer_update_proc(layer, ctx);
 }
 
 static void prv_action_callback(const ActionMenuItem *item, void *context);
@@ -262,6 +282,7 @@ static void prv_action_window_load(Window *window) {
 #endif
   crumbs_layer_init(&data->crumbs_layer, &frame, data->config.colors.background,
                     data->config.colors.foreground);
+  window->layer.update_proc = prv_action_window_update_proc;
 #ifdef CONFIG_TOUCH
   // The decorative ring must not intercept touches intended for the menu.
   layer_set_contains_point_override((Layer *)crumbs_layer, prv_crumbs_contains_point);
@@ -373,24 +394,33 @@ ActionMenu *action_menu_open(WindowStack *window_stack, ActionMenuConfig *config
   ActionMenuData *data = applib_type_zalloc(ActionMenuData);
   data->config = *config;
   data->content_size = NumPreferredContentSizes;
-#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
-  // Apply defaults if client didn't assign foreground/background colors
-  if (gcolor_is_invisible(data->config.colors.background)) {
-    data->config.colors.background = ACTION_MENU_DEFAULT_BACKGROUND_COLOR;
+  // Apply theme defaults if the client didn't assign foreground/background colors
+  data->crumbs_background_follows_theme = gcolor_is_invisible(data->config.colors.background);
+  if (data->crumbs_background_follows_theme) {
+    data->config.colors.background = action_menu_theme__background_color();
   }
-  if (gcolor_is_invisible((data->config.colors.foreground))) {
+  const bool foreground_is_default = gcolor_is_invisible(data->config.colors.foreground);
+#if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
+  // The color palette only follows the theme for the foreground together with the background
+  data->crumbs_foreground_follows_theme =
+      foreground_is_default && data->crumbs_background_follows_theme;
+#else
+  // Black and white displays dither intermediate colors, so an explicit foreground always stays
+  data->crumbs_foreground_follows_theme = foreground_is_default;
+#endif
+  if (foreground_is_default) {
     data->config.colors.foreground = gcolor_legible_over(data->config.colors.background);
   }
-#else
-  data->config.colors.background = GColorLightGray;
-  data->config.colors.foreground = GColorBlack;
-#endif
 
   Window *window = &data->action_menu.window;
   window_init(window, WINDOW_NAME("Action Menu"));
   window_set_user_data(window, data);
   window_set_fullscreen(window, true);
-  window_set_background_color(window, GColorBlack);
+  if (system_theme_is_system_ui()) {
+    window_set_background_color_follows_theme(window, false /* dimmed */);
+  } else {
+    window_set_background_color(window, action_menu_theme__background_color());
+  }
   window_set_window_handlers(window, &(WindowHandlers){
                                        .load = prv_action_window_load,
                                        .unload = prv_action_window_unload,

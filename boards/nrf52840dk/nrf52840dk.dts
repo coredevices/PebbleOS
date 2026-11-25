@@ -1,0 +1,194 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "nordic/nrf52840-qiaa.dtsi"
+
+#include <dt-bindings/connector/arduino,uno-r3-header.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/iio/adc/nordic,nrf52832-saadc.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
+/ {
+	model = "Nordic nRF52840 DK";
+	compatible = "nordic,nrf52840-dk", "nordic,nrf52840";
+
+	lfxo: clock-32768 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led1: led-1 {
+			label = "LED1";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+		};
+
+		led2: led-2 {
+			label = "LED2";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+		};
+
+		led3: led-3 {
+			label = "LED3";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		};
+
+		led4: led-4 {
+			label = "LED4";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio0 16 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	// Buttons 1 to 4, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "Button1";
+			gpios = <&gpio0 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+			debounce-interval = <40>;
+			wakeup-source;
+		};
+
+		button-up {
+			label = "Button2";
+			gpios = <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+			debounce-interval = <40>;
+		};
+
+		button-select {
+			label = "Button3";
+			gpios = <&gpio0 24 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+			debounce-interval = <40>;
+		};
+
+		button-down {
+			label = "Button4";
+			gpios = <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+			debounce-interval = <40>;
+		};
+	};
+
+	arduino_header: arduino-header {
+		compatible = "arduino,uno-r3-header";
+		#gpio-cells = <2>;
+		gpio-map-mask = <0xffffffff 0x0>;
+		gpio-map-pass-thru = <0x0 0xffffffff>;
+		gpio-map = <ARDUINO_UNO_R3_A0 0 &gpio0 3 0>,
+			   <ARDUINO_UNO_R3_A1 0 &gpio0 4 0>,
+			   <ARDUINO_UNO_R3_A2 0 &gpio0 28 0>,
+			   <ARDUINO_UNO_R3_A3 0 &gpio0 29 0>,
+			   <ARDUINO_UNO_R3_A4 0 &gpio0 30 0>,
+			   <ARDUINO_UNO_R3_A5 0 &gpio0 31 0>,
+			   <ARDUINO_UNO_R3_D0 0 &gpio1 1 0>,
+			   <ARDUINO_UNO_R3_D1 0 &gpio1 2 0>,
+			   <ARDUINO_UNO_R3_D2 0 &gpio1 3 0>,
+			   <ARDUINO_UNO_R3_D3 0 &gpio1 4 0>,
+			   <ARDUINO_UNO_R3_D4 0 &gpio1 5 0>,
+			   <ARDUINO_UNO_R3_D5 0 &gpio1 6 0>,
+			   <ARDUINO_UNO_R3_D6 0 &gpio1 7 0>,
+			   <ARDUINO_UNO_R3_D7 0 &gpio1 8 0>,
+			   <ARDUINO_UNO_R3_D8 0 &gpio1 10 0>,
+			   <ARDUINO_UNO_R3_D9 0 &gpio1 11 0>,
+			   <ARDUINO_UNO_R3_D10 0 &gpio1 12 0>,
+			   <ARDUINO_UNO_R3_D11 0 &gpio1 13 0>,
+			   <ARDUINO_UNO_R3_D12 0 &gpio1 14 0>,
+			   <ARDUINO_UNO_R3_D13 0 &gpio1 15 0>,
+			   <ARDUINO_UNO_R3_D14 0 &gpio0 26 0>,
+			   <ARDUINO_UNO_R3_D15 0 &gpio0 27 0>;
+		io-channels = <&adc NRF52_SAADC_AIN1>, <&adc NRF52_SAADC_AIN2>,
+			      <&adc NRF52_SAADC_AIN4>, <&adc NRF52_SAADC_AIN5>,
+			      <&adc NRF52_SAADC_AIN6>, <&adc NRF52_SAADC_AIN7>;
+		io-channel-names = "a0", "a1", "a2", "a3", "a4", "a5";
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&clock {
+	clocks = <&hfxo>, <&lfxo>;
+	clock-names = "hfxo", "lfxo";
+};
+
+arduino_i2c: &i2c0 {
+	scl-gpios = <&gpio0 27 GPIO_PULL_UP>;
+	sda-gpios = <&gpio0 26 GPIO_PULL_UP>;
+};
+
+&internal_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "code";
+			reg = <0x0 0x100000>;
+		};
+	};
+};
+
+&qspi {
+	sck-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+	io-gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>, <&gpio0 21 GPIO_ACTIVE_HIGH>, <&gpio0 22 GPIO_ACTIVE_HIGH>, <&gpio0 23 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};
+
+// The interface MCU's virtual COM port
+&uart0 {
+	current-speed = <1000000>;
+	tx-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+	nordic,timer = <&timer2>;
+	status = "okay";
+};
+
+arduino_serial: &uart1 {
+	tx-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+	nordic,timer = <&timer3>;
+};
+
+arduino_spi: &spi3 {
+	sck-gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
+	mosi-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+	miso-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+};
+
+&usbd {
+	status = "okay";
+};
+
+&temp {
+	status = "okay";
+};
+
+&timer2 {
+	status = "okay";
+};

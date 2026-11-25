@@ -13,12 +13,9 @@
  * @brief Pebble-specific Bluetooth identifiers: service and characteristic UUIDs.
  *
  * Pebble UUIDs are 32-bit values expanded with the Pebble Base UUID,
- * @c XXXXXXXX-328E-0FBB-C642-1AA6699BDADA, either at run time or at compile time:
+ * @c XXXXXXXX-328E-0FBB-C642-1AA6699BDADA:
  *
  * @code{.c}
- * Uuid uuid;
- * pbl_bt_pebble_uuid_expand(&uuid, PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT);
- *
  * static const Uuid s_ppogatt_uuid = {
  *   PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT),
  * };
@@ -36,18 +33,10 @@
 /** @brief PPoGATT meta characteristic. */
 #define PBL_BT_PEBBLE_PPOGATT_META_CHARACTERISTIC_UUID_32BIT (0x10000002)
 
-/**
- * @brief Service UUID of the V1 watch-as-server PPoGATT, as shipped on Pebble 2 (DA1468x).
- *
- * Reserved so new allocations don't collide.
+/*
+ * 0x30000003 to 0x30000006 are taken: an earlier PPoGATT service hosted by the watch, and its
+ * characteristics, used them.
  */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_SERVICE_UUID_32BIT (0x30000003)
-/** @brief V1 watch-as-server PPoGATT data characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_DATA_CHARACTERISTIC_UUID_32BIT (0x30000004)
-/** @brief V1 watch-as-server PPoGATT meta characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_META_CHARACTERISTIC_UUID_32BIT (0x30000005)
-/** @brief V1 watch-as-server PPoGATT data write characteristic. */
-#define PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_V1_DATA_WR_CHARACTERISTIC_UUID_32BIT (0x30000006)
 
 /**
  * @brief Service UUID of the V2 "reversed" PPoGATT, see @ref bluetooth_ppog_reversed.
@@ -63,17 +52,6 @@
 
 /**
  * @brief Expand a 32-bit (or 16-bit) Pebble UUID with the Pebble Base UUID.
- *
- * See bt_uuid_expand_32bit() and bt_uuid_expand_16bit() to expand with the Bluetooth SIG Base
- * UUID instead.
- *
- * @param[out] uuid The expanded UUID.
- * @param value The 32-bit (or 16-bit) UUID value.
- */
-void pbl_bt_pebble_uuid_expand(Uuid *uuid, uint32_t value);
-
-/**
- * @brief Compile-time version of pbl_bt_pebble_uuid_expand().
  *
  * Expands to the 16 bytes of the UUID, as an initializer list.
  *

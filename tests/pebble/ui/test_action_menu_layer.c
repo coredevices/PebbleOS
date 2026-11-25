@@ -4,6 +4,7 @@
 #include <pbl/kernel/time.h>
 #include <pbl/util/size.h>
 
+#include <applib/dark_mode_service.h>
 #include <applib/ui/action_menu_layer.h>
 #include <applib/ui/menu_layer.h>
 #include <applib/ui/menu_layer_private.h>
@@ -22,6 +23,39 @@
 
 // Stubs
 /////////////////////
+
+static bool s_system_ui = true;
+static bool s_system_dark_mode = false;
+static bool s_global_dark_mode = false;
+static GColor s_highlight_color = GColorVividCerulean;
+
+static bool prv_test_dark_mode(void) {
+  return s_system_ui ? s_system_dark_mode : s_global_dark_mode;
+}
+
+bool system_theme_is_system_ui(void) {
+  return s_system_ui;
+}
+
+bool system_theme_is_dark_mode(void) {
+  return prv_test_dark_mode();
+}
+
+GColor system_theme_get_bg_color(void) {
+  return prv_test_dark_mode() ? GColorBlack : GColorWhite;
+}
+
+GColor system_theme_get_fg_color(void) {
+  return prv_test_dark_mode() ? GColorWhite : GColorBlack;
+}
+
+GColor system_theme_get_highlight_color(void) {
+  return s_system_ui ? s_highlight_color : GColorBlack;
+}
+
+bool dark_mode_service_peek(void) {
+  return s_global_dark_mode;
+}
 
 // ---------------------------------------------------------------------------------------------
 // Touch-navigation harness (CONFIG_TOUCH), mirroring test_menu_layer.c: menu_layer.c resolves the
@@ -92,6 +126,8 @@ void graphics_context_set_fill_color(GContext *ctx, GColor color) {
 void graphics_context_set_stroke_color(GContext *ctx, GColor color) {
 }
 void graphics_context_set_text_color(GContext *ctx, GColor color) {
+}
+void graphics_context_set_tint_color(GContext *ctx, GColor color) {
 }
 void graphics_context_set_compositing_mode(GContext *ctx, GCompOp mode) {
 }
@@ -311,16 +347,34 @@ static void prv_advance_past_double_tap_window(void) {
   fake_rtc_increment_ticks((uint64_t)400 * PBL_TICK_HZ / 1000);
 }
 
+static void prv_set_theme(bool system_ui, bool dark_mode) {
+  s_system_ui = system_ui;
+  s_system_dark_mode = dark_mode;
+  s_global_dark_mode = dark_mode;
+}
+
+static void prv_assert_menu_layer_colors(GColor bg, GColor fg, GColor highlight_bg,
+                                         GColor highlight_fg) {
+  cl_assert_equal_i(s_aml.menu_layer.normal_colors[MenuLayerColorBackground].argb, bg.argb);
+  cl_assert_equal_i(s_aml.menu_layer.normal_colors[MenuLayerColorForeground].argb, fg.argb);
+  cl_assert_equal_i(s_aml.menu_layer.highlight_colors[MenuLayerColorBackground].argb,
+                    highlight_bg.argb);
+  cl_assert_equal_i(s_aml.menu_layer.highlight_colors[MenuLayerColorForeground].argb,
+                    highlight_fg.argb);
+}
+
 // Setup and Teardown
 ////////////////////////
 
 void test_action_menu_layer__initialize(void) {
+  prv_set_theme(true /* system_ui */, false /* dark_mode */);
   fake_rtc_init(0, 0);
   prv_touch_nav_setup();
   prv_reset_counters();
 }
 
 void test_action_menu_layer__cleanup(void) {
+  prv_set_theme(true /* system_ui */, false /* dark_mode */);
 }
 
 // Tests
@@ -533,5 +587,65 @@ void test_action_menu_layer__glyph_grid_touch_dispatch_reaches_bottom_row(void) 
   cl_assert_equal_i(s_aml.selected_index, 7);
   cl_assert_equal_i(s_select_count, 0);
 #endif
+  action_menu_layer_deinit(&s_aml);
+}
+
+static void prv_assert_theme_colors(bool dark_mode) {
+  const GColor background = dark_mode ? GColorBlack : GColorWhite;
+  const GColor foreground = PBL_IF_COLOR_ELSE(dark_mode ? GColorLightGray : GColorDarkGray,
+                                              dark_mode ? GColorWhite : GColorBlack);
+  const GColor highlight_background =
+      PBL_IF_COLOR_ELSE(background, dark_mode ? GColorWhite : GColorBlack);
+  // The menu layer keeps its row fill out of the way; the cell renderer draws the highlight.
+  prv_assert_menu_layer_colors(background, foreground, background,
+                               gcolor_legible_over(highlight_background));
+}
+
+void test_action_menu_layer__system_ui_light_theme_colors(void) {
+  prv_set_theme(true /* system_ui */, false /* dark_mode */);
+  prv_init_aml_with_wide_items();
+
+  prv_assert_theme_colors(false /* dark_mode */);
+
+  action_menu_layer_deinit(&s_aml);
+}
+
+void test_action_menu_layer__system_ui_dark_theme_colors(void) {
+  prv_set_theme(true /* system_ui */, true /* dark_mode */);
+  prv_init_aml_with_wide_items();
+
+  prv_assert_theme_colors(true /* dark_mode */);
+
+  action_menu_layer_deinit(&s_aml);
+}
+
+void test_action_menu_layer__third_party_light_theme_colors(void) {
+  prv_set_theme(false /* system_ui */, false /* dark_mode */);
+  prv_init_aml_with_wide_items();
+
+  prv_assert_theme_colors(false /* dark_mode */);
+
+  action_menu_layer_deinit(&s_aml);
+}
+
+void test_action_menu_layer__third_party_dark_theme_colors(void) {
+  prv_set_theme(false /* system_ui */, true /* dark_mode */);
+  prv_init_aml_with_wide_items();
+
+  prv_assert_theme_colors(true /* dark_mode */);
+
+  action_menu_layer_deinit(&s_aml);
+}
+
+void test_action_menu_layer__third_party_theme_change_refreshes_colors(void) {
+  prv_set_theme(false /* system_ui */, false /* dark_mode */);
+  prv_init_aml_with_wide_items();
+  prv_assert_theme_colors(false /* dark_mode */);
+
+  s_global_dark_mode = true;
+  s_aml.layer.update_proc(&s_aml.layer, &s_gcontext);
+
+  prv_assert_theme_colors(true /* dark_mode */);
+
   action_menu_layer_deinit(&s_aml);
 }

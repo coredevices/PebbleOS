@@ -37,7 +37,11 @@ properties:
 
     properties:
       compatible:
-        const: sifli,sf32lb52-lptim-pwm
+        oneOf:
+          - const: sifli,sf32lb52-lptim-pwm
+          - items:
+              - const: sifli,sf32lb57-lptim-pwm
+              - const: sifli,sf32lb52-lptim-pwm
 
       "#pwm-cells":
         const: 3

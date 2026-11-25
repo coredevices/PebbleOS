@@ -248,21 +248,16 @@ typedef enum {
   PebbleBluetoothConnectionEventStateDisconnected,
 } PebbleBluetoothConnectionEventState;
 
-// FIXME: This event muddles classic + LE connection events for the phone.
-typedef struct PBL_PACKED { // 9 bytes
+typedef struct PBL_PACKED {
   PebbleBluetoothConnectionEventState state : 1;
   bool is_ble : 1;
-  struct pbl_bt_device_internal device;
 } PebbleBluetoothConnectionEvent;
 
-typedef struct PBL_PACKED { // 8 bytes
+typedef struct PBL_PACKED {
+  uint16_t conn_handle;
   uint8_t hci_reason;
-  uint64_t bt_device_bits : 50;
   bool connected : 1;
 } PebbleBLEConnectionEvent;
-
-#define PebbleEventToBTDeviceInternal(e) \
-  ((const struct pbl_bt_device_internal){.opaque = {.opaque_64 = (e)->bt_device_bits}})
 
 typedef struct PBL_PACKED { // 3 byte?
   bool airplane;

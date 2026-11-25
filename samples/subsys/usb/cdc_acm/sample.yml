@@ -1,0 +1,5 @@
+description: A serial port over USB that echoes what the host sends, for a minute
+expect:
+  - 'usb: serial port up'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk, stm32h747i_disco/m7, nrf52840dk]

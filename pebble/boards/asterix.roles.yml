@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The SoC has no calendar RTC: keep the time in the retained registers
+rtc:
+  symbol: RETAINED_RTC
+  include: pbl/drivers/rtc/retained.h

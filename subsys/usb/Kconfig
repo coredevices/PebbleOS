@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig USB_DEVICE
+    bool "USB device"
+    select UDC
+    help
+      The device side of USB (pbl/usb/usbd.h), on the board's USB device
+      controller, its udc role.
+
+if USB_DEVICE
+
+config USB_DEVICE_VID
+    hex "Vendor ID"
+    default 0x1209
+    help
+      The vendor ID of the device. The default, that of pid.codes, is for
+      tests.
+
+config USB_DEVICE_PID
+    hex "Product ID"
+    default 0x0001
+    help
+      The product ID of the device. The default is the test product ID of
+      pid.codes.
+
+config USB_DEVICE_MANUFACTURER
+    string "Manufacturer"
+    default "PebbleOS"
+
+config USB_DEVICE_PRODUCT
+    string "Product"
+    default "PebbleOS device"
+
+config USB_DEVICE_BOS
+    bool
+    help
+      The device is USB 2.1, with a BOS descriptor.
+
+config USB_DEVICE_MS_OS_20
+    bool "Microsoft OS 2.0 descriptors"
+    select USB_DEVICE_BOS
+    help
+      Microsoft OS 2.0 descriptors, for Windows to bind the functions that
+      give a WinUSB device interface GUID to WinUSB, without a driver
+      package.
+
+config USB_DEVICE_WEBUSB
+    bool "WebUSB"
+    select USB_DEVICE_BOS
+    help
+      The WebUSB platform capability, for browsers to let web pages reach
+      the device.
+
+config USB_DEVICE_WEBUSB_LANDING_PAGE
+    string "WebUSB landing page"
+    depends on USB_DEVICE_WEBUSB
+    help
+      URL, with its http:// or https:// scheme, of the page browsers may
+      offer to open when the device connects. Empty for none.
+
+config USB_DEVICE_SERIAL_NUMBER
+    bool "Serial number"
+    default y
+    depends on SOC_HAS_UNIQUE_ID
+    select MCU
+    help
+      A serial number string, the unique ID of the SoC folded to 48 bits,
+      in hexadecimal, so that hosts tell devices apart and keep their
+      names across connections.
+
+config USB_CDC_ACM
+    bool "Serial ports"
+    select UART
+    help
+      Serial ports over USB, CDC ACM, as UARTs (pbl/usb/cdc_acm.h).
+
+config USB_CDC_ACM_COUNT
+    int "Number of serial ports"
+    default 1
+    range 1 5
+    depends on USB_CDC_ACM
+    help
+      Each port takes two interfaces and three endpoints, which the stack
+      gives it from those of the controller: the device fails to come up
+      when the controller has too few.
+
+config USB_CDC_ACM_NAME
+    string "Serial port name"
+    depends on USB_CDC_ACM
+    default "Serial port"
+    help
+      The name the host shows for a serial port, as its function and
+      interface string. With several ports, port n is named after it,
+      followed by n, as "Serial port 0".
+
+config USB_CDC_ACM_TX_BUF_SIZE
+    int "Transmit buffer size"
+    default 1024
+    range 64 16384
+    depends on USB_CDC_ACM
+    help
+      Bytes each port keeps to send, while the host does not read or has
+      not opened the port. Bytes that do not fit are dropped.
+
+config USB_DFU
+    bool "Firmware upgrade"
+    depends on FLASH
+    select KERNEL_SYS_WORKQ
+    help
+      Device Firmware Upgrade 1.1, in DFU mode (pbl/usb/dfu.h): the host
+      downloads an image to a flash partition and uploads it back.
+
+config USB_DFU_TRANSFER_SIZE
+    int "Transfer size"
+    depends on USB_DFU
+    default 2048
+    range 64 4096
+    help
+      Largest block of a download or an upload, in bytes. The function
+      keeps three blocks: the one it writes and two to upload from.
+
+config USB_TEST
+    bool "Test function"
+    depends on !USB_CDC_ACM && !USB_DFU
+    help
+      A vendor-class function, to test the stack and the controller from a
+      host: bulk loopback, source and sink, an interrupt endpoint, and
+      vendor requests on endpoint 0. It takes interface 0 and endpoints
+      0x01, 0x82, 0x03, 0x84 and 0x85. The integration tests in
+      tests/integration/usb drive it.
+
+endif # USB_DEVICE

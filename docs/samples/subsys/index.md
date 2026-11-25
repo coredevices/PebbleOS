@@ -19,4 +19,10 @@ pp/gatt.md
 profiler/nodes.md
 shell/commands.md
 task_wdt/stall.md
+usb/cdc_acm.md
+usb/cdc_acm_dual.md
+usb/dfu.md
+usb/loopback.md
+usb/test.md
+usb/webusb.md
 ```

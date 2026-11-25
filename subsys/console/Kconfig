@@ -8,10 +8,20 @@ config CONSOLE
       Text console on the board's console port, CONSOLE_UART: logs and
       the shell. Off on release firmware, which leaves the port unused.
 
+config CONSOLE_INPUT
+    bool
+    depends on CONSOLE
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Receive on the console port: shell commands and frames from the
+      development tools. Selected by what reads the input.
+
 config CONSOLE_IMAGING
     bool "Flash imaging"
     depends on CONSOLE && FLASH && $(has_partition,safe-firmware)
     depends on $(has_partition,system-resources-bank-0) && $(has_partition,system-resources-bank-1)
+    select CONSOLE_INPUT
     select FLASH_CRC
     help
       Write the system resources and the recovery firmware to flash

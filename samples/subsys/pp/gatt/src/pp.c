@@ -51,20 +51,10 @@ const char *pbl_pp_gatt_cb_get_serial_number(void) {
   return "SAMPLE000001";
 }
 
-static void prv_granted_cb(void *data) {
-  pbl_bt_responsiveness_granted_cb_t granted = data;
-
-  granted();
-}
-
-/* The sample leaves the connection as the phone set it, and grants every request. */
-void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, enum pbl_bt_consumer consumer,
+/* The sample leaves the connection as the phone set it. */
+void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted) {
-  if (granted != nullptr) {
-    pbl_pp_main_call(prv_granted_cb, granted);
-  }
+                                       uint16_t max_period_secs) {
 }
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,

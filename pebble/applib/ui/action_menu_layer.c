@@ -3,6 +3,7 @@
 
 #include "action_menu_layer.h"
 
+#include "action_menu_theme.h"
 #include "action_menu_window_private.h"
 
 #include <pbl/kernel/assert.h>
@@ -10,9 +11,11 @@
 #include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
+#include <applib/fonts/codepoint.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
+#include <applib/graphics/utf8.h>
 #include <applib/platform.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/menu_layer.h>
@@ -63,6 +66,30 @@ static GFont prv_get_item_font(const ActionMenuLayer *aml) {
   return prv_get_font(aml, TextStyleFont_MenuCellTitle);
 }
 
+#if PBL_RECT
+static GFont prv_get_unselected_item_font(const ActionMenuLayer *aml) {
+  // Black and white displays keep the heavier weight; only color displays use the regular cut.
+  return PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode(), true)
+             ? aml->layout_cache.font
+             : prv_get_font(aml, TextStyleFont_MenuCellTitleRegular);
+}
+#endif
+
+static GColor prv_glyph_foreground_color(bool selected) {
+  return selected ? action_menu_theme__short_highlight_foreground_color()
+                  : action_menu_theme__foreground_color();
+}
+
+static void prv_refresh_menu_layer_colors(ActionMenuLayer *aml) {
+  menu_layer_set_normal_colors(&aml->menu_layer, action_menu_theme__background_color(),
+                               action_menu_theme__foreground_color());
+  // The action menu draws its own highlight, so keep the menu layer's row fill out of the way.
+  // On black and white displays the highlight background is the inverted color; painting it
+  // across the whole row would hide the rounded selection the cell renderer draws.
+  menu_layer_set_highlight_colors(&aml->menu_layer, action_menu_theme__background_color(),
+                                  action_menu_theme__highlight_foreground_color());
+}
+
 [[maybe_unused]] static int16_t prv_horizontal_inset(const ActionMenuLayer *aml) {
   return (aml->content_size < NumPreferredContentSizes)
              ? menu_cell_basic_horizontal_inset_for_size(aml->content_size)
@@ -109,9 +136,20 @@ static int prv_short_row_start(const ActionMenuLayer *aml, int row) {
 #if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect
 static GFont prv_get_unfocused_item_font(const ActionMenuLayer *aml) {
-  return prv_get_font(aml, TextStyleFont_Header);
+  return prv_get_font(aml, PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode(), true)
+                               ? TextStyleFont_Header
+                               : TextStyleFont_HeaderRegular);
 }
 #endif
+
+//! Textual thin cells use the same unselected font as their wide menu rows
+static GFont prv_get_thin_unselected_text_font(const ActionMenuLayer *aml) {
+#if PBL_ROUND
+  return prv_get_unfocused_item_font(aml);
+#else
+  return prv_get_unselected_item_font(aml);
+#endif
+}
 
 static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
@@ -120,7 +158,7 @@ static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
 }
 
 static void prv_draw_scaled_glyph(GContext *ctx, const char *label, GFont font, const GRect *cell,
-                                  uint8_t *pixels) {
+                                  uint8_t *pixels, GColor text_color) {
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // Reuse the context's font cache while rendering into a small transparent tile.
   memset(pixels, 0, GLYPH_SCRATCH_SIZE * GLYPH_SCRATCH_SIZE);
@@ -137,7 +175,7 @@ static void prv_draw_scaled_glyph(GContext *ctx, const char *label, GFont font, 
   ctx->parent_framebuffer = nullptr;
   ctx->draw_state.clip_box = bounds;
   ctx->draw_state.drawing_box = bounds;
-  ctx->draw_state.text_color = GColorWhite;
+  ctx->draw_state.text_color = text_color;
   graphics_draw_text(ctx, label, font, bounds, GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentCenter, nullptr);
   ctx->dest_bitmap = saved_bitmap;
@@ -220,19 +258,21 @@ static void prv_draw_glyph_columns(GContext *ctx, const GRect *bounds, GFont fon
                                    int column_width, uint8_t *pixels) {
   for (int i = 0; i < num_items; ++i) {
     GRect cell = prv_get_glyph_column_rect(bounds, num_items, i, column_width);
-    if (selected == i) {
+    const bool is_selected = (selected == i);
+    if (is_selected) {
       const GRect highlight = GRect(cell.origin.x + (column_width - GLYPH_CELL_SIZE) / 2,
                                     cell.origin.y, GLYPH_CELL_SIZE, GLYPH_CELL_SIZE);
-      graphics_context_set_fill_color(ctx, GColorDarkGray);
+      graphics_context_set_fill_color(ctx, action_menu_theme__short_highlight_background_color());
       graphics_fill_round_rect(ctx, &highlight, 8, GCornersAll);
     }
+    const GColor text_color = prv_glyph_foreground_color(is_selected);
     if (pixels) {
-      prv_draw_scaled_glyph(ctx, items[i].label, font, &cell, pixels);
+      prv_draw_scaled_glyph(ctx, items[i].label, font, &cell, pixels, text_color);
     } else {
       GRect text = cell;
       text.origin.y +=
           (cell.size.h - fonts_get_font_height(font)) / 2 - fonts_get_font_cap_offset(font);
-      graphics_context_set_text_color(ctx, GColorWhite);
+      graphics_context_set_text_color(ctx, text_color);
       graphics_draw_text(ctx, items[i].label, font, text, GTextOverflowModeTrailingEllipsis,
                          GTextAlignmentCenter, nullptr);
     }
@@ -245,7 +285,6 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
                                               ActionMenuLayer *aml, ActionMenuItem *items,
                                               int num_items, int sel_idx) {
   const GFont font = aml->layout_cache.font;
-  const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
   if (prv_is_glyph_grid(aml)) {
@@ -282,17 +321,24 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
 #else
   r.size.w /= SHORT_COL_COUNT;
 #endif
-  r.origin.y += (r.size.h - font_height) / 2 - 4;
-
   for (int i = 0; i < num_items; i++) {
     if (!items[i].label) {
       break;
     }
 
+    GFont label_font = font;
+    if (sel_idx != i &&
+        !codepoint_is_emoji(utf8_peek_codepoint((utf8_t *)items[i].label, nullptr))) {
+      // Textual labels get the muted unselected font; keep the bold font for emoji labels so
+      // their glyph size matches the focused cell.
+      label_font = prv_get_thin_unselected_text_font(aml);
+    }
+    r.origin.y = layer_bounds->origin.y + (r.size.h - fonts_get_font_height(label_font)) / 2 - 4;
+
     if (sel_idx == i) {
-      graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
+      graphics_context_set_text_color(ctx, action_menu_theme__short_highlight_foreground_color());
       // Color emoji ignore the text color, so the selection needs a background too
-      graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
+      graphics_context_set_fill_color(ctx, action_menu_theme__short_highlight_background_color());
 
       const int16_t y_offset = 1;
       const int16_t padding = r.size.w / 6;
@@ -315,10 +361,10 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
 #endif
       graphics_fill_round_rect(ctx, &bg_rect, corner_radius, GCornersAll);
     } else {
-      graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
+      graphics_context_set_text_color(ctx, action_menu_theme__foreground_color());
     }
 
-    graphics_draw_text(ctx, items[i].label, font, r, GTextOverflowModeTrailingEllipsis,
+    graphics_draw_text(ctx, items[i].label, label_font, r, GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, nullptr);
     r.origin.x += r.size.w;
   }
@@ -493,7 +539,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
                                             bool selected, GRect *content_box) {
   char *indicator = nullptr;
   const int16_t horizontal_padding = prv_horizontal_inset(aml);
-  const GFont font = aml->layout_cache.font;
+  const GFont font = selected ? aml->layout_cache.font : prv_get_unselected_item_font(aml);
   if (!item->is_leaf) {
     // If an item is not a leaf, then there would be an indicator when it is focused.  Either
     // we draw the indicator or we force the box to be smaller to force the text to render as
@@ -638,8 +684,8 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer, ActionMen
     // Prevent drawing outside of the context bitmap
     grect_clip(&ctx->draw_state.clip_box, &ctx->dest_bitmap.bounds);
 #endif
-    graphics_context_set_text_color(ctx, PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack));
-    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+    graphics_context_set_text_color(ctx, action_menu_theme__highlight_foreground_color());
+    graphics_context_set_fill_color(ctx, action_menu_theme__highlight_background_color());
   }
 
   PBL_IF_RECT_ELSE(prv_cell_item_content_draw_rect, prv_cell_item_content_draw_round)(
@@ -647,7 +693,8 @@ static void prv_cell_item_draw(GContext *ctx, const Layer *cell_layer, ActionMen
 
 #if !defined(CONFIG_RECOVERY_FW) && CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   const int16_t fade_height = 10;
-  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  graphics_context_set_compositing_mode(ctx, GCompOpTint);
+  graphics_context_set_tint_color(ctx, action_menu_theme__highlight_background_color());
   if (draw_top_shading) {
     GRect top_bounds = label_text_container;
     top_bounds.origin.y += VERTICAL_PADDING;
@@ -1002,7 +1049,7 @@ static void prv_draw_separator_cb(GContext *ctx, const Layer *cell_layer, MenuIn
     const int16_t offset_y = (cell_layer_bounds->size.h / 2) + nudge_down;
     GPoint separator_start_point =
         gpoint_add(cell_layer_bounds->origin, GPoint(offset_x, offset_y));
-    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
+    graphics_context_set_stroke_color(ctx, action_menu_theme__foreground_color());
 
     separator_start_point.y += config->separator.h;
     for (int i = 0; i < config->separator.h; i++) {
@@ -1088,8 +1135,9 @@ static void prv_changed_proc(Layer *layer) {
 }
 
 static void prv_update_proc(Layer *layer, GContext *ctx) {
-#if PBL_ROUND
   ActionMenuLayer *aml = (ActionMenuLayer *)layer;
+  prv_refresh_menu_layer_colors(aml);
+#if PBL_ROUND
   const int num_rows = prv_get_num_rows(&aml->menu_layer, 0, aml);
   const bool paged = prv_is_honeycomb(aml);
   const int max_visible_rows = SHORT_ITEM_MAX_ROWS_SPALDING;
@@ -1100,8 +1148,8 @@ static void prv_update_proc(Layer *layer, GContext *ctx) {
     const int16_t arrow_layer_height = (aml_bounds->size.h - menu_layer_frame->size.h) / 2;
 
     const int row = prv_get_menu_layer_row(aml, aml->selected_index);
-    const GColor bg_color = GColorBlack;
-    const GColor fg_color = PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite);
+    const GColor bg_color = action_menu_theme__background_color();
+    const GColor fg_color = action_menu_theme__foreground_color();
 
     GRect arrow_rect = (GRect){.size = GSize(aml_bounds->size.w, arrow_layer_height)};
     if (paged ? row > 0 : row >= max_visible_rows - 1) {
@@ -1195,10 +1243,7 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   aml->layer.update_proc = prv_update_proc;
 
   menu_layer_init(&aml->menu_layer, &aml->layer.bounds);
-  menu_layer_set_normal_colors(&aml->menu_layer, GColorBlack,
-                               PBL_IF_COLOR_ELSE(GColorDarkGray, GColorWhite));
-  // The action menu is drawn on black and has its own look, independent of the system accent
-  menu_layer_set_highlight_colors(&aml->menu_layer, GColorBlack, GColorWhite);
+  prv_refresh_menu_layer_colors(aml);
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
 #endif

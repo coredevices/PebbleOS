@@ -23,11 +23,7 @@
 // Layout Defines
 #define TEXT_ALIGNMENT (GTextAlignmentCenter)
 #define TEXT_OVERFLOW  (GTextOverflowModeWordWrap)
-#if PBL_DISPLAY_HEIGHT >= 200
-#define TEXT_FONT (fonts_get_system_font(FONT_KEY_GOTHIC_28))
-#else
-#define TEXT_FONT (fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD))
-#endif
+#define TEXT_FONT      (fonts_get_system_font(dialog_get_style()->text_font_key))
 
 // On taller round displays, inset the text box so the larger font still wraps
 // to two lines instead of running edge-to-edge against the round bezel.
@@ -40,7 +36,13 @@
 #define TEXT_RIGHT_MARGIN_PX (PBL_IF_RECT_ELSE(6, TEXT_ROUND_MARGIN_PX))
 #define TEXT_FLOW_INSET_PX   (PBL_IF_RECT_ELSE(0, 8))
 #define TEXT_LINE_HEIGHT_PX  (fonts_get_font_height(TEXT_FONT))
-#define TEXT_MAX_HEIGHT_PX   ((2 * TEXT_LINE_HEIGHT_PX) + 8) // 2 line + some space for descenders
+#if PBL_DISPLAY_HEIGHT >= 200
+#define ICON_TEXT_SPACING_PX (PBL_IF_ROUND_ELSE(8, 16))
+#else
+#define ICON_TEXT_SPACING_PX (PBL_IF_ROUND_ELSE(2, 4))
+#endif
+// The lines + some space for descenders
+#define TEXT_MAX_HEIGHT_PX ((dialog_get_style()->text_max_lines * TEXT_LINE_HEIGHT_PX) + 8)
 
 static int prv_get_rendered_text_height(const char *text, const GRect *text_box) {
   GContext *ctx = graphics_context_get_current_context();
@@ -61,30 +63,31 @@ static int prv_get_icon_top_margin(bool has_status_bar, int icon_height, int win
 #endif
   const uint16_t frame_height_claimed = icon_height + TEXT_MAX_HEIGHT_PX + status_layer_offset;
   const uint16_t icon_top_adjusted_margin_px = PBL_MAX(window_height - frame_height_claimed, 0);
-  if (icon_top_adjusted_margin_px < icon_top_default_margin_px) {
-    return icon_top_adjusted_margin_px;
+  if (icon_height == 0) {
+    // Text-only dialogs keep the default top margin so layouts tuned for them aren't disturbed
+    return PBL_MIN(icon_top_adjusted_margin_px, icon_top_default_margin_px);
   }
   // For icon+text dialogs, vertically center the icon+text block when the window is taller
   // than the default layout assumes, by splitting the leftover space evenly above and below.
-  // Text-only dialogs keep the default top margin so layouts tuned for them aren't disturbed.
-  if (icon_height > 0) {
-    return PBL_MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
+  int margin_px = icon_top_adjusted_margin_px;
+  if (icon_top_adjusted_margin_px >= icon_top_default_margin_px) {
+    margin_px = PBL_MAX(icon_top_default_margin_px, icon_top_adjusted_margin_px / 2);
   }
-  return icon_top_default_margin_px;
+  // Keep the icon high enough for the extra line a larger text size allows
+  if (dialog_get_style()->text_max_lines > 2) {
+    const int max_margin_px =
+        window_height - icon_height - ICON_TEXT_SPACING_PX - TEXT_MAX_HEIGHT_PX;
+    margin_px = PBL_MAX(PBL_MIN(margin_px, max_margin_px), 0);
+  }
+  return margin_px;
 }
 
 static void prv_get_text_box(GSize frame_size, GSize icon_size, int icon_top_margin_px,
                              GRect *text_box_out) {
-#if PBL_DISPLAY_HEIGHT >= 200
-  const uint16_t icon_text_spacing_px = PBL_IF_ROUND_ELSE(8, 16);
-#else
-  const uint16_t icon_text_spacing_px = PBL_IF_ROUND_ELSE(2, 4);
-#endif
-
   const uint16_t text_x = TEXT_LEFT_MARGIN_PX;
-  const uint16_t text_y = icon_top_margin_px + PBL_MAX(icon_size.h, 6) + icon_text_spacing_px;
+  const uint16_t text_y = icon_top_margin_px + PBL_MAX(icon_size.h, 6) + ICON_TEXT_SPACING_PX;
   const uint16_t text_w = frame_size.w - TEXT_LEFT_MARGIN_PX - TEXT_RIGHT_MARGIN_PX;
-  // Limit to 2 lines if there is an icon
+  // Limit the lines if there is an icon
   const uint16_t text_h = icon_size.h ? TEXT_MAX_HEIGHT_PX : frame_size.h - text_y;
 
   *text_box_out = GRect(text_x, text_y, text_w, text_h);

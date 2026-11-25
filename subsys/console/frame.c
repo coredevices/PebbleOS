@@ -21,6 +21,7 @@
 #define ACK_RAW_LEN (SEQ_LEN + 1U + CRC_LEN)
 #define ACK_B64_LEN 8U
 
+#ifdef CONFIG_CONSOLE_INPUT
 enum rx_state {
   RX_TEXT,
   RX_ESC,
@@ -43,6 +44,7 @@ static int s_last_seq = -1;
 // while another is handled fails its CRC, and the host answers the repeated frame.
 static char s_ack_buf[ACK_B64_LEN];
 static size_t s_ack_len;
+#endif
 
 // Under the console lock.
 static uint8_t s_tx_raw[RAW_MAX];
@@ -76,6 +78,7 @@ void pbl_console_frame_send(char channel, uint8_t seq, const void *data, size_t 
   pbl_console_unlock();
 }
 
+#ifdef CONFIG_CONSOLE_INPUT
 static void prv_process_frame(void *unused) {
   const char channel = s_rx_buf[0];
   const int raw_len =
@@ -196,3 +199,4 @@ void pbl_console__frame_input_from_isr(char c, void (*text_input)(char c)) {
       break;
   }
 }
+#endif

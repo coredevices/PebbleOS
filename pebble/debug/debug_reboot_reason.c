@@ -6,7 +6,6 @@
 #include <pbl/coredump/coredump.h>
 #include <pbl/logging/logging.h>
 
-#include <comm/ble/gatt_service_changed.h>
 #include <kernel/event_loop.h>
 #include <popups/crashed_ui.h>
 #include <system/reboot_reason.h>
@@ -40,7 +39,6 @@ void debug_reboot_reason_print(struct pbl_mcu_reboot_reason mcu_reboot_reason) {
       reason_string = "%s%sLowBattery";
       break;
     case RebootReasonCode_SoftwareUpdate:
-      gatt_service_changed_server_handle_fw_update();
       reason_string = "%s%sSoftwareUpdate";
       break;
     case RebootReasonCode_ResetButtonsHeld:

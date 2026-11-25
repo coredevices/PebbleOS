@@ -7,4 +7,4 @@ expect:
   - 'rtc: restored'
   - 'Sample done'
 roles: [rtc]
-integration: [qemu_emery, asterix, obelix@pvt]
+integration: [qemu_emery, obelix@pvt, stm32h747i_disco/m7]

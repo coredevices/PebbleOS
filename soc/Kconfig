@@ -35,6 +35,12 @@ config SOC_HAS_POWER_OFF
       The SoC implements pbl_soc_power_off(), which the kernel uses to
       power off when no power-off handler does.
 
+config SOC_HAS_UNIQUE_ID
+    bool
+    help
+      The SoC has a unique ID, which its MCU information driver reads
+      (pbl/drivers/mcu.h).
+
 config SOC
     string
     default "NRF52" if SOC_NRF52

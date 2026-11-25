@@ -52,7 +52,7 @@ static void prv_show_dialog(void *i18n_owner) {
   app_expandable_dialog_push(e_dialog);
 }
 
-static void prv_forget_ble_remote(const struct pbl_bt_device_internal *identity) {
+static void prv_forget_ble_remote(const ble_addr_t *identity) {
   (void)pbl_bt_unpair(identity);
 }
 

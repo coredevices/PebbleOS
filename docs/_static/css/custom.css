@@ -110,14 +110,13 @@ html.dark {
   grid-column: 1;
 }
 
-.home-hero > img.home-logo,
-.home-hero > .home-title {
+.home-hero > img.home-logo {
   grid-column: 1 / span 2;
 }
 
 .home-hero img.home-watches {
   grid-column: 2;
-  grid-row: 3 / span 2;
+  grid-row: 2 / span 2;
   width: 115%;
   max-width: none;
   margin: -1.5rem 0 -1rem -5%;
@@ -128,20 +127,6 @@ html.dark {
   width: 320px;
   max-width: 100%;
   margin: 0 0 1.4rem;
-}
-
-.home-title {
-  font-family: var(--sy-f-heading);
-  font-weight: 600;
-  font-size: 2.1rem;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.6rem;
-  color: var(--sy-c-heading);
-}
-
-.home-title p {
-  margin: 0;
 }
 
 .home-actions {
@@ -161,8 +146,7 @@ html.dark {
     padding: 1.6rem 1rem;
   }
 
-  .home-hero > img.home-logo,
-  .home-hero > .home-title {
+  .home-hero > img.home-logo {
     grid-column: 1;
   }
 
@@ -177,10 +161,6 @@ html.dark {
 
   .home-hero img.home-logo {
     width: 220px;
-  }
-
-  .home-title {
-    font-size: 1.6rem;
   }
 }
 
@@ -308,4 +288,58 @@ html.dark {
 
 .pbl-playground select[hidden] {
   display: none;
+}
+
+.yue .board-list th:last-child,
+.yue .board-list td:last-child {
+  text-align: center;
+}
+.yue .board-list td:last-child img {
+  display: block;
+  height: 3.5rem;
+  width: auto;
+  margin: 0 auto;
+  cursor: zoom-in;
+}
+.yue .board-card img {
+  cursor: zoom-in;
+}
+
+.sy-foot-reserved {
+  gap: 1.5rem;
+}
+.sy-foot-socials {
+  margin-left: auto;
+}
+.sy-foot #ethical-ad-placement .ethical-sidebar {
+  max-width: 380px;
+  margin: 0;
+  padding: 0.5rem;
+  background: transparent;
+}
+.sy-foot #ethical-ad-placement .ethical-content {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+.sy-foot #ethical-ad-placement .ethical-image-link {
+  flex-shrink: 0;
+  margin-right: 0.4rem;
+}
+.sy-foot #ethical-ad-placement .ethical-image-link img {
+  width: auto;
+  height: 4.5rem;
+}
+.sy-foot #ethical-ad-placement .ethical-text {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  text-align: left;
+}
+.sy-foot #ethical-ad-placement .ethical-callout {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  line-height: 1;
+  text-align: right;
 }

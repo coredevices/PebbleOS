@@ -7,5 +7,7 @@
 
 #include <pbl_arch_posix.h>
 
-#define arch_cpu_idle()      pbl_posix_cpu_wait(UINT64_MAX)
-#define arch_cpu_idle_deep() arch_cpu_idle()
+#define arch_cpu_idle()            pbl_posix_cpu_wait(UINT64_MAX)
+#define arch_cpu_idle_deep()       arch_cpu_idle()
+#define arch_cpu_wait_event_deep() arch_cpu_idle()
+#define arch_cpu_send_event()      ((void)0)

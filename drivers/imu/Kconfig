@@ -24,6 +24,7 @@ config ACCEL_LIS2DW12
     default y
     depends on DT_HAS_ST_LIS2DW12_ENABLED
     select I2C
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Support for the ST LIS2DW12 accelerometer.
 
@@ -32,12 +33,15 @@ config ACCEL_LSM6DSO
     default y
     depends on DT_HAS_ST_LSM6DSO_ENABLED
     select I2C
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Support for the ST LSM6DSO accelerometer/gyroscope.
 
 config ACCEL_SIM
     bool "Simulator"
-    default y if SOC_QEMU_PEBBLE || SOC_POSIX
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Simulated accelerometer, replaying samples and events fed through
       its simulator API (pbl/drivers/imu/sim.h).
@@ -133,11 +137,14 @@ config MAG_MMC5603NJ
     default y
     depends on DT_HAS_MEMSIC_MMC5603_ENABLED
     select I2C
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Support for the MEMSIC MMC5603NJ magnetometer.
 
 config MAG_SIM
     bool "Simulator"
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    select KERNEL_SYS_WORKQ_HIGH
     help
       Simulated magnetometer, measuring a field set through its
       simulator API (pbl/drivers/imu/sim.h).

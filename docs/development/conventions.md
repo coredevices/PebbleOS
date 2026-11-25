@@ -20,8 +20,10 @@ headers.
 ## Formatting
 
 C code is formatted with clang-format, following `.clang-format`; CI fails
-on any code clang-format 22 would change, except the files listed in
-`.clang-format-ignore`. Python code follows ruff, configured in
+on any code the clang-format version pinned in `requirements.txt` would
+change, except the files listed in `.clang-format-ignore`. Other versions
+format some lines differently, so use that one (`pip install -r
+requirements.txt` puts it on your `PATH`). Python code follows ruff, configured in
 `.ruff.toml`; CI fails on anything `ruff check` reports.
 
 ## C language

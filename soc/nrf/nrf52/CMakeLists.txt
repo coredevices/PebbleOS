@@ -7,6 +7,8 @@ pbl_library_sources(
   init.c
   power_off.c
   ppi.c
-  retained.c
 )
-pbl_linker_sources(memory linker.ld)
+if(CONFIG_SOC_NRF52_RETAINED_RAM)
+  pbl_library_sources(retained.c)
+  pbl_linker_sources(memory linker.ld)
+endif()

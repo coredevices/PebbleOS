@@ -6,3 +6,5 @@ type: struct pbl_led
 include: pbl/drivers/led.h
 provides:
   led: "&{sym}"
+roles:
+  status_led:

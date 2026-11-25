@@ -900,21 +900,30 @@ static SleepBand prv_get_sleep_band(int32_t sleep_total_seconds) {
 // -----------------------------------------------------------------------------------------
 // Pin body for a night outside the recommended range, or nullptr to use the tier's body
 PBL_T_STATIC const char *prv_get_sleep_pin_body(int32_t sleep_total_seconds,
-                                                int32_t sleep_average_seconds) {
+                                                int32_t sleep_average_seconds,
+                                                ActivityInsightsStyle style) {
   int percentage;
   const PercentTier tier = prv_calc_percent_tier(&SLEEP_SUMMARY_PIN_CONFIG, sleep_total_seconds,
                                                  sleep_average_seconds, &percentage);
   switch (prv_get_sleep_band(sleep_total_seconds)) {
     case SleepBand_Short:
-      return pbl_i18n_noop("Short night! Try going to bed a little earlier tonight.");
+      return (style == ActivityInsightsStyle_Playful)
+                 ? pbl_i18n_noop("New day, new you! An early night gets you back on track 💪")
+                 : pbl_i18n_noop("Short night! Try going to bed a little earlier tonight.");
     case SleepBand_BelowRecommended:
       if (tier == PercentTier_AboveAverage || tier == PercentTier_OnAverage) {
-        return pbl_i18n_noop("Almost there! A little more sleep tonight would help.");
+        return (style == ActivityInsightsStyle_Playful)
+                   ? pbl_i18n_noop("So close! A few more zzz's tonight and you're golden 😃")
+                   : pbl_i18n_noop("Almost there! A little more sleep tonight would help.");
       }
       return nullptr;
     case SleepBand_Long:
     case SleepBand_VeryLong:
-      return pbl_i18n_noop("A long night! Great for catching up; a steady routine helps most.");
+      return (style == ActivityInsightsStyle_Playful)
+                 ? pbl_i18n_noop("Serious zzz's! Great for catching up; keep that routine steady.")
+                 : pbl_i18n_noop(
+                       "A long night! Great for catching up; a steady routine helps "
+                       "most.");
     case SleepBand_Recommended:
       break;
   }
@@ -931,7 +940,8 @@ static bool prv_push_sleep_summary_pin(time_t now_utc, time_t pin_time_utc,
   // Insert or update the pin
   return prv_push_summary_pin(pin_time_utc, now_utc, uuid, sleep_total_seconds,
                               sleep_average_seconds, &SLEEP_SUMMARY_PIN_CONFIG,
-                              prv_get_sleep_pin_body(sleep_total_seconds, sleep_average_seconds));
+                              prv_get_sleep_pin_body(sleep_total_seconds, sleep_average_seconds,
+                                                     activity_prefs_get_insights_style()));
 }
 
 // -----------------------------------------------------------------------------------------
@@ -1459,7 +1469,8 @@ static void prv_push_activity_summary_notification(time_t notif_time, int32_t st
 // Picks the sleep summary notification copy. Its format takes hours, minutes and the percentage
 // difference from the typical, in that order. Returns nullptr for an invalid variant.
 PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
-                                                   int32_t sleep_average_seconds, int variant) {
+                                                   int32_t sleep_average_seconds, int variant,
+                                                   ActivityInsightsStyle style) {
   static const InsightCopyVariants s_short_copy = {
     .num_variants = 2,
     .variants = {
@@ -1500,6 +1511,47 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
       pbl_i18n_noop(
           "You slept for %dH %dM, more than most adults need. Catching up now and then is "
           "fine; try to keep a steady routine."),
+    },
+  };
+  // Playful copy gives the same guidance as the copy above, in the voice of the tier copy below
+  static const InsightCopyVariants s_playful_short_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Playful sleep notification on wake up, slept under 6 hours
+      pbl_i18n_noop("New day, new you! You slept for %dH %dM. Tonight's a fresh shot at 7+ hours; "
+                    "go get 'em 💪"),
+      pbl_i18n_noop("Good mornin'! You slept for %dH %dM. Most adults need at least 7 hours; an "
+                    "early night tonight and you'll be unstoppable 👊"),
+    },
+  };
+  static const InsightCopyVariants s_playful_almost_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Playful sleep notification on wake up, slept 6 to 7 hours, not below their typical
+      pbl_i18n_noop("Almost a full tank! You slept for %dH %dM. Bank a little extra shut eye "
+                    "tonight 😴"),
+      pbl_i18n_noop("So close! You slept for %dH %dM. Squeeze in a few more zzz's tonight and "
+                    "you'll be golden 😃"),
+    },
+  };
+  static const InsightCopyVariants s_playful_long_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Playful sleep notification on wake up, slept 9 to 10 hours
+      pbl_i18n_noop("You caught some serious zzz's! You slept for %dH %dM. Great for catching "
+                    "up; keep that routine steady."),
+      pbl_i18n_noop("Mmmm...what a night. You slept for %dH %dM. Extra sleep helps you recover, "
+                    "but most adults do best with 7 to 9 hours."),
+    },
+  };
+  static const InsightCopyVariants s_playful_very_long_copy = {
+    .num_variants = 2,
+    .variants = {
+      /// Playful sleep notification on wake up, slept 10 hours or more
+      pbl_i18n_noop("Whoa, epic snooze! You slept for %dH %dM. Catching up is cool; a regular "
+                    "bedtime and wake time keep you at your best."),
+      pbl_i18n_noop("That's a lot of sheep you just counted! You slept for %dH %dM, more than "
+                    "most adults need. Catching up is fine; try to keep a steady routine."),
     },
   };
   static const InsightCopyVariants s_tier_config[PercentTierCount] = {
@@ -1589,16 +1641,23 @@ PBL_T_STATIC const char *prv_get_sleep_summary_fmt(int32_t sleep_total_seconds,
   // short or very long night just because it beats the average sends the wrong message.
   switch (prv_get_sleep_band(sleep_total_seconds)) {
     case SleepBand_Short:
-      return prv_get_variant(&s_short_copy, variant);
+      return prv_get_variant(
+          (style == ActivityInsightsStyle_Playful) ? &s_playful_short_copy : &s_short_copy,
+          variant);
     case SleepBand_BelowRecommended:
       if (tier == PercentTier_AboveAverage || tier == PercentTier_OnAverage) {
-        return prv_get_variant(&s_almost_copy, variant);
+        return prv_get_variant(
+            (style == ActivityInsightsStyle_Playful) ? &s_playful_almost_copy : &s_almost_copy,
+            variant);
       }
       break;
     case SleepBand_Long:
-      return prv_get_variant(&s_long_copy, variant);
+      return prv_get_variant(
+          (style == ActivityInsightsStyle_Playful) ? &s_playful_long_copy : &s_long_copy, variant);
     case SleepBand_VeryLong:
-      return prv_get_variant(&s_very_long_copy, variant);
+      return prv_get_variant(
+          (style == ActivityInsightsStyle_Playful) ? &s_playful_very_long_copy : &s_very_long_copy,
+          variant);
     case SleepBand_Recommended:
       break;
   }
@@ -1617,7 +1676,8 @@ static void prv_push_sleep_summary_notification(time_t notif_time, int32_t sleep
 
   // Enough to fit any filled out format string above and i18n variants
   const int max_notif_length = 512;
-  const char *fmt = prv_get_sleep_summary_fmt(sleep_total_seconds, sleep_average_seconds, variant);
+  const char *fmt = prv_get_sleep_summary_fmt(sleep_total_seconds, sleep_average_seconds, variant,
+                                              activity_prefs_get_insights_style());
   if (fmt == nullptr) {
     // invalid variant
     return;

@@ -124,7 +124,6 @@ may be repeated:
 | `serial:TTY[@BAUD]`         | yes    | yes      | yes (in frames) |
 | `ble:WATCH[@CONTROLLER]`    | no     | no       | yes             |
 | `devconn:HOST[:PORT]`       | no     | app only | yes             |
-| `qemu:HOST:PORT`            | no     | no       | yes             |
 
 For example, a watch over Bluetooth through the phone app's developer
 connection, with logs and the prompt over serial:
@@ -306,7 +305,7 @@ be added there.
 ## Writing a test
 
 Tests are grouped by area in subdirectories of `tests/integration`
-(`system`, `ui`, `notifications`, `voice`, `power`). A test asks for the fixtures it
+(`system`, `ui`, `notifications`, `voice`, `power`, `usb`). A test asks for the fixtures it
 needs:
 
 ```python
@@ -460,6 +459,31 @@ tests take about 12 minutes each, so CI does not run them.
 Left for a person: the Back+Up+Select hold that reboots into PRF,
 charging a watch, the MFG menu's tests (checked in the factory), and the
 phone apps themselves.
+
+## USB
+
+The tests in `usb/` check the USB device stack and the board's controller
+through the USB test function (see {doc}`/subsystems/usb`), from the host's
+own USB stack with [pyusb](https://pyusb.github.io/pyusb/) and libusb. They run on a build of the `samples/subsys/usb/test`
+sample, not the firmware, on the lab's board for it, its USB device port
+connected to the host; builds without `CONFIG_USB_TEST` deselect them:
+
+```shell
+pbl -b build-usb configure --board sf32lb57_dpi_hdk samples/subsys/usb/test
+pbl -b build-usb build
+pbl -b build-usb itest --flash-before usb
+```
+
+They cover the descriptors, control transfers of every length around the
+packet size of endpoint 0, short ones and zero-length data stages, requests
+that stall and the next one after them, bulk loopback around packet
+boundaries and zero-length packets, the source's and the sink's patterns
+and throughput (recorded as `source_kbps` and `sink_kbps`), the interrupt
+endpoint, halting and clearing bulk endpoints without losing data, setting
+the configuration to 0 and back, and bus resets. The `usb_target` fixture
+finds the device on the bus by the build's vendor and product IDs, and
+`usb_function` gives each test the function configured, its counters
+cleared (`harness.helpers.usb`).
 
 ## Extending the harness
 

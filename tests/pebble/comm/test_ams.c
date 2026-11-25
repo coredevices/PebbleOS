@@ -5,13 +5,12 @@
 #include <string.h>
 
 #include <pbl/bluetooth/clients/ams.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/services/music.h>
+#include <pbl/services/music_ams.h>
 #include <pbl/services/music_internal.h>
 
 #include <clar.h>
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/kernel_le_client/ams/ams.h>
-#include <comm/bt_conn_mgr.h>
 
 // Stubs & Fakes
 ///////////////////////////////////////////////////////////
@@ -22,24 +21,19 @@
 #include <fake_pebble_tasks.h>
 #include <fake_rtc.h>
 
-struct {
+static struct {
   enum pbl_bt_response_time_state state;
   uint16_t max_period_secs;
-} s_conn_mgr_states[PBL_BT_CONSUMER_NUM];
+} s_last_request;
 
-void conn_mgr_set_ble_conn_response_time(GAPLEConnection *hdl, enum pbl_bt_consumer consumer,
-                                         enum pbl_bt_response_time_state state,
-                                         uint16_t max_period_secs) {
-  s_conn_mgr_states[consumer].state = state;
-  s_conn_mgr_states[consumer].max_period_secs = max_period_secs;
+void pbl_bt_responsiveness_request(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
+                                   enum pbl_bt_response_time_state state,
+                                   uint16_t max_period_secs) {
+  s_last_request.state = state;
+  s_last_request.max_period_secs = max_period_secs;
 }
 
 #define CONN_HANDLE 1
-
-GAPLEConnection *gap_le_connection_any(void) {
-  static GAPLEConnection s_connection = {.conn_handle = CONN_HANDLE};
-  return &s_connection;
-}
 
 //! When set, callbacks for KernelMain wait for prv_process_launcher_task_callback().
 static bool s_defer_launcher_task_callbacks;
@@ -414,14 +408,11 @@ void test_ams__music_request_reduced_latency(void) {
   prv_connect_ams();
 
   music_request_reduced_latency(true /* reduced_latency */);
-  cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].state,
-                    PBL_BT_RESPONSE_TIME_MIDDLE);
-  cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].max_period_secs,
-                    MAX_PERIOD_RUN_FOREVER);
+  cl_assert_equal_i(s_last_request.state, PBL_BT_RESPONSE_TIME_MIDDLE);
+  cl_assert_equal_i(s_last_request.max_period_secs, PBL_BT_RESPONSE_TIME_FOREVER);
 
   music_request_reduced_latency(false /* reduced_latency */);
-  cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE].state,
-                    PBL_BT_RESPONSE_TIME_MAX);
+  cl_assert_equal_i(s_last_request.state, PBL_BT_RESPONSE_TIME_MAX);
 }
 
 void test_ams__music_request_low_latency_for_period(void) {
@@ -429,10 +420,8 @@ void test_ams__music_request_low_latency_for_period(void) {
 
   const uint32_t period_s = 1234;
   music_request_low_latency_for_period(period_s * 1000);
-  cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY].state,
-                    PBL_BT_RESPONSE_TIME_MIN);
-  cl_assert_equal_i(s_conn_mgr_states[PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY].max_period_secs,
-                    period_s);
+  cl_assert_equal_i(s_last_request.state, PBL_BT_RESPONSE_TIME_MIN);
+  cl_assert_equal_i(s_last_request.max_period_secs, period_s);
 }
 
 // Tests: Receiving Player updates (the happy paths)
@@ -715,7 +704,7 @@ void test_ams__initialize(void) {
   s_defer_launcher_task_callbacks = false;
   s_num_writes = 0;
   s_write_rc = 0;
-  memset(s_conn_mgr_states, 0, sizeof(s_conn_mgr_states));
+  memset(&s_last_request, 0, sizeof(s_last_request));
   fake_rtc_init(1234, 5678);
   fake_event_init();
   fake_gattc_service_init();

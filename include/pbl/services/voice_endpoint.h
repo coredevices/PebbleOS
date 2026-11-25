@@ -93,4 +93,11 @@ void voice_endpoint_setup_session(VoiceEndpointSessionType session_type,
                                   AudioEndpointSessionId session_id, AudioTransferInfoSpeex *info,
                                   Uuid *app_uuid);
 
+/**
+ * @brief Keep the link of the phone fast for a voice session, or stop doing so.
+ *
+ * @param fast Whether the link is to be fast.
+ */
+void voice_endpoint_set_fast_link(bool fast);
+
 /** @} */

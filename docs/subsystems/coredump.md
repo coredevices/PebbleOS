@@ -60,6 +60,10 @@ dump with its registers at the fault. Values that cannot be recovered read
 `0xa5a5a5a5`: the frame of a fault that could not be stacked, and r4-r11 of a
 thread interrupted by an ISR.
 
+The dump runs on a stack of its own, of `CONFIG_COREDUMP_STACK_SIZE` bytes, so
+it neither depends on what is left of the stack it preempted nor overwrites it.
+The backends and the drivers they write through run on that stack.
+
 The platform implements `pbl_coredump_platform_prepare()`, which runs after the
 backends' `init` and before their `start`, so the drivers they use already work
 and nothing stored has been touched yet. It provides the serial number and build

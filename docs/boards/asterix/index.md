@@ -4,19 +4,15 @@
 
 :::{div} board-card
 
-```{image} images/asterix.webp
-:alt: Pebble 2 Duo
+```{thumbnail} images/asterix.webp
 ```
 
 :Board: `asterix`
 :SoC: Nordic nRF52840
-:Platform: Flint
-:Emulator: `qemu_flint`
 :::
 
 Pebble 2 Duo, announced as Core 2 Duo, is a rectangular black and white
-watch built around the Nordic nRF52840. Its firmware targets the Flint
-platform, which apps see as a 144 × 168 black and white display.
+watch built around the Nordic nRF52840.
 
 ## Hardware
 

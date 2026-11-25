@@ -343,8 +343,8 @@ Dialog *expandable_dialog_get_dialog(ExpandableDialog *expandable_dialog) {
 void expandable_dialog_init(ExpandableDialog *expandable_dialog, const char *dialog_name) {
   PBL_ASSERTN(expandable_dialog);
   *expandable_dialog = (ExpandableDialog){
-    .header_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD),
-    .body_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+    .header_font = fonts_get_system_font(dialog_get_style()->header_font_key),
+    .body_font = fonts_get_system_font(dialog_get_style()->body_font_key),
   };
 
   dialog_init(&expandable_dialog->dialog, dialog_name);

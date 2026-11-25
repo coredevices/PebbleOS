@@ -278,3 +278,53 @@ def main_bundle(request):
     if not bundles:
         pytest.fail(f"no firmware bundle in {path}: run 'pbl build bundle' there")
     return FirmwareBundle(bundles[-1])
+
+
+@pytest.fixture(scope="session")
+def usb_target(request, build, lab_setup, lab_locks, results_dir):
+    """The build's USB device on the host's bus
+    (:class:`harness.helpers.usb.UsbTarget`), flashed first with
+    --flash-before."""
+    from harness.helpers import usb as usb_helpers
+
+    if not build.config.get("CONFIG_USB_DEVICE"):
+        pytest.skip("the build has no USB device")
+    try:
+        import usb.backend.libusb1
+    except ImportError:
+        pytest.skip("pyusb is not installed")
+    if usb.backend.libusb1.get_backend() is None:
+        pytest.skip("libusb is not installed")
+
+    if request.config.getoption("flash_before"):
+        os.makedirs(results_dir, exist_ok=True)
+        usb_helpers.flash(
+            build,
+            lab_setup.serial[0] if lab_setup.serial else None,
+            os.path.join(results_dir, "flash.log"),
+        )
+
+    match = (
+        usb_helpers.is_test_function if build.config.get("CONFIG_USB_TEST") else None
+    )
+    return usb_helpers.UsbTarget(
+        build.config["CONFIG_USB_DEVICE_VID"],
+        build.config["CONFIG_USB_DEVICE_PID"],
+        match,
+        lab_setup.usb,
+    )
+
+
+@pytest.fixture
+def usb_function(usb_target):
+    """The USB test function (:class:`harness.helpers.usb.TestFunction`),
+    configured, its counters cleared."""
+    from harness.helpers.usb import TestFunction
+
+    fn = TestFunction(usb_target.find(timeout=15.0))
+    fn.configure()
+    fn.reset_stats()
+    try:
+        yield fn
+    finally:
+        fn.release()

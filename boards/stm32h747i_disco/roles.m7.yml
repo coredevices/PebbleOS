@@ -2,3 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 console_uart: usart1
+status_led: led_green
+flash: flash0
+die_temp: adc3
+rtc: rtc
+udc: usbotg_hs

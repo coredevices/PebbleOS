@@ -8,6 +8,7 @@ define: PBL_REGULATOR_FIXED_DEFINE
 args:
   - name: true
   - gpio: ""
+    default: PBL_GPIO(nullptr, 0, 0)
   - flag: enable-active-high
   - prop: startup-delay-us
     default: 0

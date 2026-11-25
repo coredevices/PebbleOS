@@ -67,6 +67,8 @@ set(PBL_TEST_DEFINES
   CONFIG_KERNEL_USER_STACK_GUARD_SIZE=0
   CONFIG_APP_THREAD_PRIO=2
   CONFIG_WORKER_THREAD_PRIO=1
+  CONFIG_KERNEL_SYS_WORKQ=1
+  CONFIG_KERNEL_SYS_WORKQ_HIGH=1
   CONFIG_KERNEL_SYS_WORKQ_STACK_SIZE=4096
   CONFIG_KERNEL_SYS_WORKQ_PRIO=1
   CONFIG_KERNEL_SYS_WORKQ_BOOST_PRIO=3
@@ -114,7 +116,6 @@ add_subdirectory(${PBL_BASE}/pebble/services/protobuf_log/proto
                  ${CMAKE_BINARY_DIR}/pebble/services/protobuf_log/proto)
 add_subdirectory(${PBL_BASE}/lib/util ${CMAKE_BINARY_DIR}/lib/util)
 add_subdirectory(${PBL_BASE}/third_party/speex ${CMAKE_BINARY_DIR}/third_party/speex)
-add_subdirectory(${PBL_BASE}/lib/btutil ${CMAKE_BINARY_DIR}/lib/btutil)
 add_subdirectory(${PBL_BASE}/lib/kraepelin ${CMAKE_BINARY_DIR}/lib/kraepelin)
 add_subdirectory(${PBL_BASE}/lib/vanhees ${CMAKE_BINARY_DIR}/lib/vanhees)
 add_subdirectory(${PBL_BASE}/subsys/crc ${CMAKE_BINARY_DIR}/libcrc)

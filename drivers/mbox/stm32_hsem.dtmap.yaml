@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32-hwspinlock
+config: MBOX_STM32_HSEM
+class: mbox
+define: PBL_MBOX_STM32_HSEM_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - clock: 0
+  - consumers: mboxes
+    default: "1"
+  - irq: 0
+  - prop: interrupts
+    index: 0

@@ -15,6 +15,7 @@
 #include <pbl/services/notifications/action_chaining_window.h>
 #include <pbl/services/notifications/alerts_preferences.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
+#include <pbl/services/notifications/ancs/ancs.h>
 #include <pbl/services/notifications/ancs/ancs_notifications.h>
 #include <pbl/services/notifications/notification_constants.h>
 #include <pbl/services/notifications/notification_storage.h>
@@ -40,7 +41,6 @@
 #include <applib/ui/window_manager.h>
 #include <applib/voice/voice_window.h>
 #include <applib/voice/voice_window_private.h>
-#include <comm/ble/kernel_le_client/ancs/ancs.h>
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
 #include <kernel/ui/kernel_ui.h>
@@ -49,6 +49,10 @@
 #include <process_state/app_state/app_state.h>
 
 PBL_LOG_MODULE_DECLARE(service_timeline, CONFIG_SERVICE_TIMELINE_LOG_LEVEL);
+
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
 
 typedef struct {
   void *action_data;
@@ -102,15 +106,13 @@ static void prv_subscribe_to_action_results_and_timeouts(ActionResultData *data,
 
 static void prv_request_responsive_session(void) {
   // In anticipation of having to communicate with the phone, request the minimum latency for 10s:
-  pbl_pp_session_set_responsiveness(
-      pbl_pp_session_get_system(), PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MIN,
-      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS, nullptr);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
+                                    PBL_BT_RESPONSE_TIME_MIN, FAST_LINK_TIMEOUT_S);
 }
 
 static void prv_reset_session_responsiveness(void) {
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
-                                    PBL_BT_CONSUMER_TIMELINE_ACTION_MENU, PBL_BT_RESPONSE_TIME_MAX,
-                                    0, nullptr);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_response_time_req,
+                                    PBL_BT_RESPONSE_TIME_MAX, 0);
 }
 
 static WindowStack *prv_get_window_stack(ActionResultData *data) {

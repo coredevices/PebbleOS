@@ -17,14 +17,17 @@
 
 PBL_LOG_MODULE_DEFINE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 // -------------------------------------------------------------------------------------------------
 // Misc helpers:
 
 static void prv_request_fast_connection(struct pbl_pp_session *session) {
   // TODO: use a heuristic to decide whether to put the connection in fast mode
-  pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+  pbl_pp_session_set_responsiveness(session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                    FAST_LINK_TIMEOUT_S);
 }
 
 static AppOutboxMessage *prv_outbox_message_from_app_message_send_job(

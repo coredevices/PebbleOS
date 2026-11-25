@@ -13,10 +13,9 @@ import termios
 import time
 import tty
 
-import serial
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "log_hashing"))
 from logdehash import LogDehash
+from pblconsole.link import open_port, usb_ids
 
 QUIT = 0x1C  # Ctrl-\
 # How long a line that may be a log line waits for its end.
@@ -92,18 +91,24 @@ def main():
     parser.add_argument("url", help="serial port or socket://HOST:PORT")
     parser.add_argument("--baudrate", type=int, default=1000000)
     parser.add_argument("--dict", help="log hash dictionary, if the build has one")
+    parser.add_argument(
+        "--keep-input-from",
+        metavar="VID:PID",
+        help="keep what the port received as it opened, when it is a USB port "
+        "with these IDs: the firmware's own, which holds what it printed until "
+        "the host opens it",
+    )
     args = parser.parse_args()
 
     dehasher = None
     if args.dict and os.path.exists(args.dict):
         dehasher = Dehasher(LogDehash(args.dict, justify="small", color=True))
 
-    port = serial.serial_for_url(
-        args.url, baudrate=args.baudrate, timeout=0, do_not_open=True
-    )
-    # RTS resets the SoC on some boards.
-    port.rts = False
-    port.open()
+    keep_input = False
+    if args.keep_input_from:
+        vid, _, pid = args.keep_input_from.partition(":")
+        keep_input = usb_ids(args.url) == (int(vid, 16), int(pid, 16))
+    port = open_port(args.url, args.baudrate, 0, keep_input)
 
     print(f"--- {args.url}; Ctrl-\\ quits ---\r")
     stdin = sys.stdin.fileno()

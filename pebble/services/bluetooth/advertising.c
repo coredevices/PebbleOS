@@ -331,7 +331,7 @@ void bt_advertising_handle_disconnect(void) {
   pbl_mutex_unlock(&s_lock);
 }
 
-void pbl_bt_handle_host_resynced(void) {
+void pbl_bt_cb_host_synced(void) {
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (!s_running) {
     pbl_mutex_unlock(&s_lock);

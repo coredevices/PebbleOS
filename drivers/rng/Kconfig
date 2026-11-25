@@ -2,15 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 menuconfig RNG
-    bool "Random Number Generator"
+    bool "Random number generator"
     help
-      RNG Drivers
+      Random number generator class (pbl/drivers/rng.h) and its drivers.
 
 if RNG
 
 config RNG_NRF5
     bool "Nordic nRF5"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52
     help
       Support for the Nordic nRF5 RNG.
 
@@ -29,15 +30,25 @@ config RNG_SF32LB
     help
       Support for the SiFli SF32LB RNG.
 
+config RNG_STM32
+    bool "ST STM32"
+    default y
+    depends on DT_HAS_ST_STM32_RNG_ENABLED
+    select CLK
+    help
+      Support for the ST STM32 RNG.
+
 config RNG_QEMU
     bool "QEMU"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.
 
 config RNG_POSIX
     bool "POSIX"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       Host random number generator.
 
@@ -50,7 +61,7 @@ config RNG_SHELL
       statistics.
 
 module = DRIVER_RNG
-module-str = Random Number Generator
+module-str = Random number generator
 source "subsys/logging/Kconfig.template.log_level"
 
 endif # RNG

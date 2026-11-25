@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <pbl/bluetooth/responsiveness.h>
+
 /**
  * @defgroup services_put_bytes Put bytes
  * @ingroup services
@@ -71,6 +73,17 @@ typedef struct PbInstallStatus {
 
 /** @brief Initialize put bytes. */
 void put_bytes_init(void);
+
+/** @brief How long, in seconds, a transfer keeps the link fast without asking again. */
+#define PUT_BYTES_FAST_LINK_TIMEOUT_S 60
+
+/**
+ * @brief Ask for a response time on the link of the phone, as the transfer.
+ *
+ * @param state The response time.
+ * @param timeout_secs How long for.
+ */
+void put_bytes_set_response_time(enum pbl_bt_response_time_state state, uint16_t timeout_secs);
 
 /**
  * @brief Cancel an ongoing app, app resources or worker transfer.

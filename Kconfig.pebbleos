@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Per-SoC symbol defaults; loaded first so they take precedence.
 osource "soc/*/Kconfig.defconfig"
 
@@ -13,9 +16,8 @@ rsource "soc/Kconfig"
 config RELEASE
     bool "Release build"
     help
-      Whether this is a release build. Pass
-      `-DCONFIG_RELEASE=y` to `./waf configure` to enable. Gates
-      features that should only run on shipping firmware.
+      Build the firmware as shipped: features meant for development only
+      are left out. Enabled with -DCONFIG_RELEASE=y when configuring.
 
 config PBLBOOT
     bool "PBLBOOT bootloader"
@@ -195,51 +197,6 @@ config QEMU_MACHINE
       QEMU machine identifier passed to qemu-system-arm via the
       `-machine` flag. Set per board in
       boards/<board>/Kconfig.defconfig.
-
-# App RAM. An application that runs apps reserves RAM for them, per SDK app
-# execution environment (2x/3x/4x). For each environment, SEGMENT is the RAM
-# given to the app itself (stack + text + data + bss + heap) and RUNTIME is
-# the RAM reserved for the application runtime (AppState). A SEGMENT of 0
-# means the environment is unsupported. SEGMENT must be a multiple of eight
-# bytes, as the process loader enforces eight-byte alignment on all segments.
-# The app segment is sized for the largest environment.
-
-config APP_RAM_2X_SEGMENT_SIZE
-    int
-    default 0
-
-config APP_RAM_2X_RUNTIME_SIZE
-    int
-    default 0
-
-config APP_RAM_3X_SEGMENT_SIZE
-    int
-    default 0
-
-config APP_RAM_3X_RUNTIME_SIZE
-    int
-    default 0
-
-config APP_RAM_4X_SEGMENT_SIZE
-    int
-    default 0
-
-config APP_RAM_4X_RUNTIME_SIZE
-    int
-    default 0
-
-# Worker RAM. SEGMENT is the RAM given to the worker itself (stack + text +
-# data + bss + heap) and RUNTIME is the RAM reserved for the worker runtime
-# (WorkerState). SEGMENT must be a multiple of eight bytes.
-
-config WORKER_RAM_SEGMENT_SIZE
-    int
-    default 11648
-
-config WORKER_RAM_RUNTIME_SIZE
-    int
-    default 1024 if SOC_POSIX
-    default 640
 
 config SRAM_BASE
     hex

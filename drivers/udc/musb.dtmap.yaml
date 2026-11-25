@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-usb
+config: UDC_MUSB
+class: udc
+define: PBL_UDC_MUSB_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - compatible: true
+    values:
+      sifli,sf32lb57-usb: MUSB_SIFLI
+  - clock: 0
+  - pinctrl: default
+  - reg: 0
+    of: sifli,hpsys-cfg
+  - prop: sifli,fifo-size
+  - assigned-clocks: PBL_CLK_ASSIGNED
+    optional: true

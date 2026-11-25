@@ -74,11 +74,10 @@ struct pbl_pp_transport {
   /**
    * @brief Apply a connection response time, see pbl_pp_session_set_responsiveness().
    *
-   * NULL if the transport has no such notion; requests are then granted at once.
+   * NULL if the transport has no such notion.
    */
-  void (*set_responsiveness)(struct pbl_pp_session *session, enum pbl_bt_consumer consumer,
-                             enum pbl_bt_response_time_state state, uint16_t max_period_secs,
-                             pbl_bt_responsiveness_granted_cb_t granted);
+  void (*set_responsiveness)(struct pbl_pp_session *session, struct pbl_bt_responsiveness_req *req,
+                             enum pbl_bt_response_time_state state, uint16_t max_period_secs);
 };
 
 /**

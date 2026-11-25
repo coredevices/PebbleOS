@@ -18,7 +18,8 @@ config RTC_SHELL
 
 config RTC_RETAINED
     bool "Retained RAM"
-    default y if SOC_NRF52
+    default y
+    depends on SOC_NRF52_RETAINED_RAM
     help
       The time last set, kept in retained RAM, for SoCs without a calendar
       RTC. It survives resets but not power loss, and does not count while
@@ -32,15 +33,32 @@ config RTC_SF32LB
     help
       SiFli SF32LB calendar RTC, counting clk_rtc at its calibrated rate.
 
+config RTC_STM32
+    bool "STM32 RTC"
+    default y
+    depends on DT_HAS_ST_STM32H7_RTC_ENABLED
+    select CLK
+    help
+      STM32H7 calendar RTC in the backup domain, counting the LSE across
+      resets and in Standby, with alarm A, which wakes the system from
+      Standby.
+
+config RTC_STM32_IRQ_PRIO
+    int "Alarm interrupt priority"
+    default 0
+    depends on RTC_STM32
+
 config RTC_QEMU
     bool "QEMU RTC"
-    default y if SOC_QEMU_PEBBLE
+    default y
+    depends on SOC_QEMU_PEBBLE
     help
       QEMU RTC, following the host clock.
 
 config RTC_POSIX
     bool "POSIX RTC"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       RTC following the host clock.
 

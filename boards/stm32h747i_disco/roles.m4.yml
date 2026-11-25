@@ -2,3 +2,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 console_uart: uart8
+status_led: led_orange

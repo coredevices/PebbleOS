@@ -1,21 +1,23 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/music_ams.h>
 #include <pbl/services/music_endpoint.h>
 #include <pbl/services/music_endpoint_types.h>
 #include <pbl/services/music_internal.h>
 #include <pbl/util/math.h>
 #include <pbl/util/units.h>
 
-#include <comm/ble/kernel_le_client/ams/ams.h>
-#include <comm/bt_conn_mgr.h>
-
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
+
+static struct pbl_bt_responsiveness_req s_reduced_latency_req;
+static struct pbl_bt_responsiveness_req s_low_latency_req;
 
 static bool s_connected;
 static bool s_progress_reporting_supported = true;
@@ -261,15 +263,13 @@ static bool prv_music_needs_user_to_start_playback_on_phone(void) {
 static void prv_music_request_reduced_latency(bool reduced_latency) {
   const enum pbl_bt_response_time_state state =
       reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(),
-                                    PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE, state,
-                                    MAX_PERIOD_RUN_FOREVER, nullptr);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_reduced_latency_req, state,
+                                    PBL_BT_RESPONSE_TIME_FOREVER);
 }
 
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
-  pbl_pp_session_set_responsiveness(
-      pbl_pp_session_get_system(), PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY,
-      PBL_BT_RESPONSE_TIME_MIN, period_ms / PBL_MSEC_PER_SEC, nullptr);
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_low_latency_req,
+                                    PBL_BT_RESPONSE_TIME_MIN, period_ms / PBL_MSEC_PER_SEC);
 }
 
 static const MusicServerImplementation s_pp_music_implementation = {

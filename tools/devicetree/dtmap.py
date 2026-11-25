@@ -58,7 +58,9 @@ SPEC_KEYS = {
     "header",
     "drives",
 }
-CHILDREN_KEYS = {"node", "names"}
+CHILDREN_KEYS = {"node", "names", "property"}
+# A GPIO list entry with a 0 phandle
+UNCONNECTED_GPIO = "PBL_GPIO(nullptr, 0, 0)"
 CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
 ROLE_KEYS = {"symbol", "include"}
 PINCTRL_KEYS = {"define", "pin", "pinmux", "flags", "values"}
@@ -103,6 +105,7 @@ ARG_OPTIONS = {
     "wrap",
     "field",
     "of",
+    "entry",
     "child",
     "index",
     "item",
@@ -173,9 +176,9 @@ class Spec:
         self.drives = as_list(data.get("drives", []))
         self.children = data.get("children")
         if self.children is not None:
-            check_keys(
-                self._error, self.children, CHILDREN_KEYS, "children", ("names",)
-            )
+            check_keys(self._error, self.children, CHILDREN_KEYS, "children")
+            if ("names" in self.children) == ("property" in self.children):
+                raise self._error("'children' needs one of 'names' and 'property'")
             if not self.define:
                 raise self._error("'children' needs 'define'")
         self.sources = []
@@ -211,7 +214,11 @@ class Spec:
         self.symbols = symbol
         # A SoC singleton defined from the tree keeps the name C code knows it by
         self.singleton = symbol[self.classes[0]] if self.define and fixed else None
-        self.file = c_ident(self.compatibles[0])
+        # A spec for several compatibles names its instance file after itself
+        if len(self.compatibles) > 1:
+            self.file = c_ident(Path(path).name.removesuffix(".dtmap.yaml"))
+        else:
+            self.file = c_ident(self.compatibles[0])
         self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
         trailing = [
@@ -591,10 +598,12 @@ class Generator:
             if owner is None:
                 continue
             for spec in self._device(owner).specs:
-                children = spec.children or {}
-                if children.get("node") == container and name in children.get(
-                    "names", {}
-                ):
+                children = spec.children
+                if children is None or children.get("node") != container:
+                    continue
+                if "property" in children and node.has(children["property"]):
+                    return Device(node, [spec], owner=self._device(owner))
+                if name in children.get("names", {}):
                     return Device(
                         node,
                         [spec],
@@ -699,16 +708,22 @@ class Generator:
             self.declarations.append(declaration)
 
     def _instantiate_children(self, dev, spec):
-        """One instance per child, matched by name, as the regulators of a PMIC."""
+        """One instance per child, matched by name, as the regulators of a PMIC, or having a
+        property, as the ports of a pin controller."""
         container = dev.node
         if "node" in spec.children:
             name = spec.children["node"]
             container = next((c for c in dev.node.children if c.name == name), None)
             if container is None:
                 return
-        names = spec.children["names"]
+        prop = spec.children.get("property")
+        names = spec.children.get("names", {})
         for child in container.children:
             if not enabled(child):
+                continue
+            if prop is not None:
+                if child.has(prop):
+                    self._instantiate(self._device(child), spec)
                 continue
             name = child.name.split("@")[0]
             if name not in names:
@@ -1153,10 +1168,13 @@ class Generator:
         if "of" in arg:
             if not node.has(arg["of"]):
                 return None
-            # The first phandle, as all cells of nvmem-cells are in the same device
-            node = self.tree.phandle(
-                node.u32s(arg["of"])[0], f"{dev.node.path}: '{arg['of']}'"
-            )
+            # The first phandle, as all cells of nvmem-cells are in the same device, unless
+            # another entry of a list of phandles is asked for, as a DMA controller of a router
+            entry = arg.get("entry", 0)
+            phandles = node.u32s(arg["of"])
+            if entry >= len(phandles):
+                raise dev.error(f"'{arg['of']}' has no entry {entry}")
+            node = self.tree.phandle(phandles[entry], f"{dev.node.path}: '{arg['of']}'")
         if kind == "name":
             return f'"{dev.name}"'
         # The node read, as the memory a device is given with memory-region
@@ -1339,15 +1357,20 @@ class Generator:
             prop = f"{key}-gpios" if key else "gpios"
             if not node.has(prop):
                 return None
-            entries = self._phandles(src, prop, "#gpio-cells")
+            # A 0 phandle is a line left unconnected, as a chip select without a GPIO
+            entries = self._phandles(src, prop, "#gpio-cells", empty=True)
             if arg.get("all"):
                 return ", ".join(
-                    self._provided(src, target, "gpio", cells)
-                    for target, cells in entries
+                    UNCONNECTED_GPIO
+                    if entry is None
+                    else self._provided(src, entry[0], "gpio", entry[1])
+                    for entry in entries
                 )
             index = arg.get("index", 0)
             if index >= len(entries):
                 raise src.error(f"no entry {index} in '{prop}'")
+            if entries[index] is None:
+                return UNCONNECTED_GPIO
             target, cells = entries[index]
             return self._provided(src, target, "gpio", cells)
         if kind == "pinctrl":
@@ -1591,6 +1614,11 @@ def _compatible_defines(tree, compatible, error):
         if len(clocks) < 2:
             raise error(f"{node.path} has a clock without a specifier")
         defines[f"PBL_DT_CLK_{name}"] = f"{clocks[1]}U"
+    if node.has("resets"):
+        resets = node.u32s("resets")
+        if len(resets) < 2:
+            raise error(f"{node.path} has a reset without a specifier")
+        defines[f"PBL_DT_RST_{name}"] = f"{resets[1]}U"
     return defines
 
 

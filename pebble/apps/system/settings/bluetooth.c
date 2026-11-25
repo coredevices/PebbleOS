@@ -13,11 +13,11 @@
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
-#include <pbl/btutil/bt_device.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/bonding.h>
+#include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/string.h>
@@ -30,9 +30,6 @@
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/ui/ui.h>
-#include <comm/ble/gap_le_connection.h>
-#include <comm/ble/gap_le_device_name.h>
-#include <comm/bt_lock.h>
 #include <kernel/ui/kernel_ui.h>
 #include <kernel/ui/system_icons.h>
 #include <resource/resource_ids.auto.h>
@@ -95,7 +92,7 @@ static void settings_bluetooth_toggle_airplane_mode(SettingsBluetoothData *data)
 }
 
 bool is_remote_connected(StoredRemote *remote) {
-  return (remote->ble.connection != nullptr);
+  return remote->ble.connected;
 }
 
 static int remote_comparator(void *remote_data, void *other_data) {
@@ -137,13 +134,7 @@ static void prv_add_ble_remote(const struct pbl_bt_bond_info *info, void *contex
   prv_copy_device_name_with_fallback(remote,
                                      bt_bonding_get_peer_name(&info->addr, name) ? name : nullptr);
 
-  bt_lock();
-  GAPLEConnection *connection = gap_le_connection_find_by_irk(&info->irk);
-  if (!connection) {
-    connection = gap_le_connection_by_device(&info->addr);
-  }
-  remote->ble.connection = connection;
-  bt_unlock();
+  remote->ble.connected = bt_link_is_connected_to(&info->addr);
 
   add_remote(data, remote);
 }
@@ -196,7 +187,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
           event->bluetooth.connection.state == PebbleBluetoothConnectionEventStateConnected) {
         // iOS seems to respond with 0x0E (Unlikely Error) when performing this request while
         // the encryption set up is going on. For non-bonded devices it will work fine though.
-        gap_le_device_name_request(&event->bluetooth.connection.device);
+        bt_link_read_peer_name();
       }
       [[fallthrough]];
     case PBL_BT_PEBBLE_PAIRING_EVENT:
@@ -454,7 +445,7 @@ static void prv_expand_cb(SettingsCallbacks *context) {
 
   // When entering the BT Settings, update device names of all connected devices:
   if (!bt_ctl_is_airplane_mode_on()) {
-    gap_le_device_name_request_all();
+    bt_link_read_peer_name();
   }
 
   data->bt_airplane_event_info = (EventServiceInfo){

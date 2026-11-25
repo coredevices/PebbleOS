@@ -3,6 +3,7 @@
 
 #include <dt-bindings/clock/stm32h7-clks.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/mfd/stm32h7-rcc.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 
 / {
@@ -45,10 +46,34 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
+		// The unique ID and the factory calibration of the analog blocks, in system memory
+		romem: efuse@1ff1e800 {
+			compatible = "st,stm32f4-otp";
+			reg = <0x1ff1e800 0x100>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			// The temperature sensor at 30 and 130 degrees (110 on revision Y), and
+			// VREFINT, read at 3.3 V
+			ts_cal1: calib@20 {
+				reg = <0x20 0x2>;
+			};
+
+			ts_cal2: calib@40 {
+				reg = <0x40 0x2>;
+			};
+
+			vrefint: calib@60 {
+				reg = <0x60 0x2>;
+			};
+		};
+
 		lptimer1: timer@40002400 {
 			compatible = "st,stm32-lptimer";
 			reg = <0x40002400 0x400>;
-			interrupts = <93>;
+			interrupt-parent = <&exti>;
+			interrupts = <47 IRQ_TYPE_LEVEL_HIGH>;
+			resets = <&rcc STM32H7_APB1L_RESET(LPTIM1)>;
 			clocks = <&rcc LPTIM1_CK>;
 			clock-names = "mux";
 			#address-cells = <1>;
@@ -81,7 +106,9 @@
 		lptimer2: timer@58002400 {
 			compatible = "st,stm32-lptimer";
 			reg = <0x58002400 0x400>;
-			interrupts = <138>;
+			interrupt-parent = <&exti>;
+			interrupts = <48 IRQ_TYPE_LEVEL_HIGH>;
+			resets = <&rcc STM32H7_APB4_RESET(LPTIM2)>;
 			clocks = <&rcc LPTIM2_CK>;
 			clock-names = "mux";
 			#address-cells = <1>;
@@ -109,6 +136,24 @@
 				compatible = "st,stm32-lptimer-timer";
 				status = "disabled";
 			};
+		};
+
+		usbotg_hs: usb@40040000 {
+			compatible = "st,stm32f7-hsotg";
+			reg = <0x40040000 0x40000>;
+			interrupts = <77>;
+			clocks = <&rcc USB1OTG_CK>;
+			clock-names = "otg";
+			/* 952 words of FIFO RAM (GHWCFG3). Receive: 13 for setup
+			 * packets, 2 x (512 / 4 + 1) for two packets, 2 x 9 OUT
+			 * endpoints for their status, 1 for the global OUT NAK. Transmit:
+			 * a 64-byte packet on endpoint 0, 512 bytes on endpoints 1 to 4,
+			 * 128 bytes on the rest. 946 words in all.
+			 */
+			g-rx-fifo-size = <290>;
+			g-np-tx-fifo-size = <16>;
+			g-tx-fifo-size = <128 128 128 128 32 32 32 32>;
+			status = "disabled";
 		};
 
 		usart2: serial@40004400 {
@@ -175,6 +220,46 @@
 			status = "disabled";
 		};
 
+		dma1: dma-controller@40020000 {
+			compatible = "st,stm32-dma";
+			reg = <0x40020000 0x400>;
+			interrupts = <11>, <12>, <13>, <14>, <15>, <16>, <17>, <47>;
+			clocks = <&rcc DMA1_CK>;
+			#dma-cells = <4>;
+			st,mem2mem;
+			dma-requests = <8>;
+			status = "disabled";
+		};
+
+		dma2: dma-controller@40020400 {
+			compatible = "st,stm32-dma";
+			reg = <0x40020400 0x400>;
+			interrupts = <56>, <57>, <58>, <59>, <60>, <68>, <69>, <70>;
+			clocks = <&rcc DMA2_CK>;
+			#dma-cells = <4>;
+			st,mem2mem;
+			dma-requests = <8>;
+			status = "disabled";
+		};
+
+		dmamux1: dma-router@40020800 {
+			compatible = "st,stm32h7-dmamux";
+			reg = <0x40020800 0x40>;
+			#dma-cells = <3>;
+			dma-channels = <16>;
+			dma-requests = <128>;
+			dma-masters = <&dma1>, <&dma2>;
+			clocks = <&rcc DMA1_CK>;
+			status = "disabled";
+		};
+
+		rng: rng@48021800 {
+			compatible = "st,stm32-rng";
+			reg = <0x48021800 0x400>;
+			clocks = <&rcc RNG_CK>;
+			status = "disabled";
+		};
+
 		flash: flash-controller@52002000 {
 			compatible = "st,stm32h7-flash-controller";
 			reg = <0x52002000 0x1000>;
@@ -182,15 +267,69 @@
 			#size-cells = <1>;
 		};
 
+		qspi: spi@52005000 {
+			compatible = "st,stm32f469-qspi";
+			reg = <0x52005000 0x1000>, <0x90000000 0x10000000>;
+			reg-names = "qspi", "qspi_mm";
+			interrupts = <92>;
+			clocks = <&rcc QUADSPI_CK>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		exti: interrupt-controller@58000000 {
+			compatible = "st,stm32h7-exti";
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			reg = <0x58000000 0x400>;
+			interrupts = <1>, <2>, <3>, <6>, <7>, <8>, <9>, <10>, <23>, <40>, <41>, <62>, <76>;
+		};
+
+		syscfg: syscon@58000400 {
+			compatible = "st,stm32-syscfg", "syscon";
+			reg = <0x58000400 0x400>;
+			clocks = <&rcc SYSCFG_CK>;
+		};
+
+		rtc: rtc@58004000 {
+			compatible = "st,stm32h7-rtc";
+			reg = <0x58004000 0x400>;
+			clocks = <&rcc RTCAPB_CK>, <&rcc RTC_CK>;
+			clock-names = "pclk", "rtc_ck";
+			interrupt-parent = <&exti>;
+			interrupts = <17 IRQ_TYPE_EDGE_RISING>;
+			status = "disabled";
+		};
+
+		wwdg1: watchdog@50003000 {
+			compatible = "st,stm32h743-wwdg";
+			reg = <0x50003000 0x400>;
+			clocks = <&rcc WWDG1_CK>;
+			status = "disabled";
+		};
+
+		iwdg: watchdog@58004800 {
+			compatible = "st,stm32-iwdg";
+			reg = <0x58004800 0x400>;
+			clocks = <&rcc LSI_CK>;
+			clock-names = "lsi";
+			status = "disabled";
+		};
+
 		pinctrl: pinctrl@58020000 {
 			compatible = "st,stm32h743-pinctrl";
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges = <0 0x58020000 0x3000>;
+			interrupt-parent = <&exti>;
+			st,syscfg = <&syscfg 0x8>;
 
 			gpioa: gpio@0 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x0 0x400>;
 				clocks = <&rcc GPIOA_CK>;
 				st,bank-name = "GPIOA";
@@ -199,6 +338,8 @@
 			gpiob: gpio@400 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x400 0x400>;
 				clocks = <&rcc GPIOB_CK>;
 				st,bank-name = "GPIOB";
@@ -207,6 +348,8 @@
 			gpioc: gpio@800 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x800 0x400>;
 				clocks = <&rcc GPIOC_CK>;
 				st,bank-name = "GPIOC";
@@ -215,6 +358,8 @@
 			gpiod: gpio@c00 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0xc00 0x400>;
 				clocks = <&rcc GPIOD_CK>;
 				st,bank-name = "GPIOD";
@@ -223,6 +368,8 @@
 			gpioe: gpio@1000 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x1000 0x400>;
 				clocks = <&rcc GPIOE_CK>;
 				st,bank-name = "GPIOE";
@@ -231,6 +378,8 @@
 			gpiof: gpio@1400 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x1400 0x400>;
 				clocks = <&rcc GPIOF_CK>;
 				st,bank-name = "GPIOF";
@@ -239,6 +388,8 @@
 			gpiog: gpio@1800 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x1800 0x400>;
 				clocks = <&rcc GPIOG_CK>;
 				st,bank-name = "GPIOG";
@@ -247,6 +398,8 @@
 			gpioh: gpio@1c00 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x1c00 0x400>;
 				clocks = <&rcc GPIOH_CK>;
 				st,bank-name = "GPIOH";
@@ -255,6 +408,8 @@
 			gpioi: gpio@2000 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x2000 0x400>;
 				clocks = <&rcc GPIOI_CK>;
 				st,bank-name = "GPIOI";
@@ -263,6 +418,8 @@
 			gpioj: gpio@2400 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x2400 0x400>;
 				clocks = <&rcc GPIOJ_CK>;
 				st,bank-name = "GPIOJ";
@@ -271,6 +428,8 @@
 			gpiok: gpio@2800 {
 				gpio-controller;
 				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 				reg = <0x2800 0x400>;
 				clocks = <&rcc GPIOK_CK>;
 				st,bank-name = "GPIOK";
@@ -285,5 +444,46 @@
 			clocks = <&clk_hse>, <&clk_lse>, <&clk_i2s>;
 		};
 
+		crc: crc@58024c00 {
+			compatible = "st,stm32f7-crc";
+			reg = <0x58024c00 0x400>;
+			clocks = <&rcc CRC_CK>;
+			status = "disabled";
+		};
+
+		adc_3: adc@58026000 {
+			compatible = "st,stm32h7-adc-core";
+			reg = <0x58026000 0x400>;
+			interrupts = <127>;
+			clocks = <&rcc ADC3_CK>;
+			clock-names = "bus";
+			interrupt-controller;
+			#interrupt-cells = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+
+			// Its internal channels: the temperature sensor on 18, VREFINT on 19
+			adc3: adc@0 {
+				compatible = "st,stm32h7-adc";
+				#io-channel-cells = <1>;
+				reg = <0x0>;
+				interrupt-parent = <&adc_3>;
+				interrupts = <0>;
+				nvmem-cells = <&vrefint>, <&ts_cal1>, <&ts_cal2>;
+				nvmem-cell-names = "vrefint", "ts-cal1", "ts-cal2";
+				status = "disabled";
+			};
+		};
+
+		hsem: hwspinlock@58026400 {
+			compatible = "st,stm32-hwspinlock";
+			reg = <0x58026400 0x400>;
+			interrupts = <125>;
+			#hwlock-cells = <1>;
+			#mbox-cells = <1>;
+			clocks = <&rcc HSEM_CK>;
+			clock-names = "hsem";
+		};
 	};
 };

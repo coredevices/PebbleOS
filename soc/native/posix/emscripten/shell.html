@@ -494,35 +494,45 @@
     });
   }
 
-  // ?serial: the parent page is the phone. The firmware's QEMU serial bytes
-  // go to it as { pblSerial: Uint8Array }, gathered per turn of the event
-  // loop; it sends bytes back the same way, and a .pbw as { pblInstall }.
-  // { pblReady: true } tells it the frame takes messages; the firmware may
-  // still be booting, and holds the bytes until it is up. The watch starts
-  // with no phone, so the parent's first message connects one.
+  // ?serial: the parent page is the phone. The bytes of the firmware's
+  // console, where it takes the Pebble protocol in frames, go to it as
+  // { pblConsole: Uint8Array } and those of the QEMU serial protocol, which
+  // drives the emulated hardware, as { pblSerial: Uint8Array }, gathered per
+  // turn of the event loop; it sends bytes back the same way, and a .pbw as
+  // { pblInstall }. { pblReady: true, console: true } tells it the frame
+  // takes messages; the firmware may still be booting, and holds the bytes
+  // until it is up.
   function enableSerial() {
-    if (!params.has('serial') || parent === window || !Module._uart_posix_qemu_rx_from_page) return;
-    let tx = [];
-    Module.onQemuSerial = (c) => {
-      if (!tx.length) {
+    if (!params.has('serial') || parent === window || !Module._uart_posix_rx_from_page) return;
+    const UART_CONSOLE = 0, UART_QEMU = 1;
+    const channels = { [UART_CONSOLE]: 'pblConsole', [UART_QEMU]: 'pblSerial' };
+    const tx = { [UART_CONSOLE]: [], [UART_QEMU]: [] };
+    Module.onUartTx = (id, c) => {
+      const bytes = tx[id];
+      if (!bytes.length) {
         setTimeout(() => {
-          parent.postMessage({ pblSerial: new Uint8Array(tx) }, '*');
-          tx = [];
+          parent.postMessage({ [channels[id]]: new Uint8Array(bytes) }, '*');
+          bytes.length = 0;
         });
       }
-      tx.push(c);
+      bytes.push(c);
+    };
+    const rx = (id, bytes) => {
+      Module.uartRx = bytes;
+      Module._uart_posix_rx_from_page(id, bytes.length);
+      Module.uartRx = null;
     };
     window.addEventListener('message', (e) => {
       if (e.source !== parent) return;
-      if (e.data?.pblSerial instanceof Uint8Array) {
-        Module.qemuSerialRx = e.data.pblSerial;
-        Module._uart_posix_qemu_rx_from_page(e.data.pblSerial.length);
-        Module.qemuSerialRx = null;
+      if (e.data?.pblConsole instanceof Uint8Array) {
+        rx(UART_CONSOLE, e.data.pblConsole);
+      } else if (e.data?.pblSerial instanceof Uint8Array) {
+        rx(UART_QEMU, e.data.pblSerial);
       } else if (e.data?.pblInstall instanceof Uint8Array) {
         installBytes(e.data.pblInstall, 'app from the page');
       }
     });
-    parent.postMessage({ pblReady: true }, '*');
+    parent.postMessage({ pblReady: true, console: true }, '*');
   }
 
   if (embedded) {

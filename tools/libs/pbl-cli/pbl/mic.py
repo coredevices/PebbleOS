@@ -145,7 +145,7 @@ def _record(stream, warn):
             yield block
 
 
-def stream(pebble, source, paced=True):
+def stream(transport, source, paced=True):
     """Send ``source`` to the emulator's microphone, in real time if ``paced``.
 
     A recording arrives in real time already.
@@ -156,7 +156,7 @@ def stream(pebble, source, paced=True):
     start = time.monotonic()
     sent = 0
     while message := b"".join(itertools.islice(source, BLOCKS_PER_MESSAGE)):
-        pebble.transport.send_packet(message, target=target)
+        transport.send_packet(message, target=target)
         sent += len(message) // 2
         ahead = start + sent / SAMPLE_RATE - LEAD_S - time.monotonic()
         if paced and ahead > 0:

@@ -12,7 +12,7 @@ if CLK
 config CLK_SHELL
     bool "Clock shell commands"
     default DRIVER_SHELL
-    depends on SHELL && CLK && DEVICE_NAMES
+    depends on SHELL && DEVICE_NAMES
     help
       The clk shell command: list clocks and rates, and sample, hold and
       inspect calibrated clocks.
@@ -81,6 +81,9 @@ config CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S
     int "LRC10 calibration period (seconds)"
     range 10 3600
     default 60
+    help
+      Time between LRC10 measurements, which follow its drift with
+      temperature.
 
 endif # CLK_SF32LB52_PMUC
 
@@ -117,6 +120,9 @@ config CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S
     int "LRC10 calibration period (seconds)"
     range 10 3600
     default 60
+    help
+      Time between LRC10 measurements, which follow its drift with
+      temperature.
 
 endif # CLK_SF32LB57_PMUC
 

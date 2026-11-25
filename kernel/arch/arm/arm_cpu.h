@@ -22,6 +22,7 @@
 #define ARM_SCB_AIRCR_SYSRESETREQ    (1UL << 2)
 #define ARM_SCB_CCR                  0xE000ED14UL
 #define ARM_SCB_CCR_DIV_0_TRP        (1UL << 4)
+#define ARM_SCB_CCR_STKOFHFNMIGN     (1UL << 10)
 #define ARM_SCB_CCR_DC               (1UL << 16)
 #define ARM_SCB_CCR_IC               (1UL << 17)
 #define ARM_SCB_SHPR(exc)            (0xE000ED18UL + (exc) - 4U)

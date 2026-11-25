@@ -46,6 +46,8 @@ static lv_indev_t *s_pointer;
 static lv_indev_t *s_keypad;
 static struct pbl_display_buffer s_fb;
 static bool s_fb_allocated;
+/* What the heap gave for the frame, before aligning it */
+static void *s_fb_raw;
 static enum pbl_display_format s_format;
 static int32_t s_dirty_y0;
 static int32_t s_dirty_y1;
@@ -158,10 +160,16 @@ static void prv_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map
   lv_display_flush_ready(disp);
 }
 
+/* LVGL takes buffers that start as LV_DRAW_BUF_ALIGN says: allocations are padded to align them. */
+static void *prv_align(void *raw, lv_color_format_t format) {
+  return raw == nullptr ? nullptr : lv_draw_buf_align(raw, format);
+}
+
 static int prv_display_init(void) {
   const struct pbl_display_props *props = pbl_display_get_props(DISPLAY);
   lv_color_format_t format = LV_COLOR_FORMAT_RGB565;
   uint32_t buf_size;
+  void *buf_raw = nullptr;
   void *buf = nullptr;
 
   s_format = props->format;
@@ -191,14 +199,16 @@ static int prv_display_init(void) {
     } else {
       s_fb.pitch = props->width;
     }
-    s_fb.data = pbl_zalloc(s_fb.pitch * props->height);
+    s_fb_raw = pbl_zalloc(s_fb.pitch * props->height + LV_DRAW_BUF_ALIGN - 1U);
+    s_fb.data = prv_align(s_fb_raw, format);
     s_fb_allocated = true;
   }
 
   /* LVGL renders in bands that are copied or converted into the frame, or straight into the
    * frame of an RGB565 display. */
   if (s_format != PBL_DISPLAY_FORMAT_RGB565) {
-    buf = pbl_malloc(buf_size);
+    buf_raw = pbl_malloc(buf_size + LV_DRAW_BUF_ALIGN - 1U);
+    buf = prv_align(buf_raw, format);
   }
   if (s_fb.data == nullptr || (s_format != PBL_DISPLAY_FORMAT_RGB565 && buf == nullptr)) {
     goto err;
@@ -222,7 +232,8 @@ static int prv_display_init(void) {
     lv_display_set_buffers(s_disp, buf, nullptr, buf_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
   } else {
     /* A second frame, where there is memory for one, is rendered while the first is sent. */
-    void *second = pbl_scratch_zalloc(s_fb.pitch * props->height);
+    void *second =
+        prv_align(pbl_scratch_zalloc(s_fb.pitch * props->height + LV_DRAW_BUF_ALIGN - 1U), format);
 
     s_two_frames = second != nullptr;
     lv_display_set_buffers(s_disp, s_fb.data, second, s_fb.pitch * props->height,
@@ -239,9 +250,9 @@ static int prv_display_init(void) {
   return 0;
 
 err:
-  pbl_free(buf);
+  pbl_free(buf_raw);
   if (s_fb_allocated) {
-    pbl_free(s_fb.data);
+    pbl_free(s_fb_raw);
   }
   s_fb.data = nullptr;
 

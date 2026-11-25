@@ -10,16 +10,17 @@
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
+#include <pbl/services/bluetooth/advertising.h>
 #include <pbl/services/bluetooth/battery_level.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/dis.h>
+#include <pbl/services/bluetooth/gateway.h>
+#include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/services/bluetooth/pairability.h>
 
-#include <comm/ble/gap_le.h>
-#include <comm/qemu/pp_transport.h>
 #include <kernel/events.h>
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -76,15 +77,14 @@ static void prv_comm_start(void) {
   pbl_free(config);
 
   if (s_comm_is_running) {
-    gap_le_init();
+    bt_link_init();
+    bt_advertising_init();
+    bt_gateway_init();
     bt_local_id_configure_driver();
 #ifdef CONFIG_BT_SERVICE_BAS
     bt_battery_level_start();
 #endif
     bt_pairability_init();
-#ifdef CONFIG_QEMU_SERIAL
-    qemu_pp_start();
-#endif
   } else {
     PBL_LOG_ERR("BT driver failed to start!");
   }
@@ -97,10 +97,9 @@ static void prv_comm_stop(void) {
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
 #endif
-  gap_le_deinit();
-#ifdef CONFIG_QEMU_SERIAL
-  qemu_pp_stop();
-#endif
+  bt_gateway_deinit();
+  bt_link_deinit();
+  bt_advertising_deinit();
 
   // Should be the last thing to happen that touches the Bluetooth controller directly
   pbl_bt_stop();
@@ -132,7 +131,6 @@ static void prv_send_state_change_event(void) {
 }
 
 static void prv_comm_state_change(void *context) {
-  static bool s_first_run = true;
   pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
   s_comm_state_change_eval_is_scheduled = false;
   bool is_active_mode = bt_ctl_is_bluetooth_active();
@@ -146,12 +144,8 @@ static void prv_comm_state_change(void *context) {
     if (is_active_mode == s_comm_is_running) {
       prv_send_state_change_event();
     }
-  } else if (!s_comm_is_running && s_first_run) {
-    PBL_LOG_DBG("Shutting down the BT stack on boot");
-    pbl_bt_power_down_controller_on_boot();
   }
 
-  s_first_run = false;
   pbl_mutex_unlock(&s_comm_state_change_mutex);
 }
 

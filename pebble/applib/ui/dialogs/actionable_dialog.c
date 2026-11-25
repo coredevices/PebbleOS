@@ -31,7 +31,7 @@ static void prv_actionable_dialog_load(Window *window) {
 #endif
   const GFont dialog_text_font = actionable_dialog->text_font
                                      ? actionable_dialog->text_font
-                                     : fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+                                     : fonts_get_system_font(dialog_get_style()->body_font_key);
   const int max_text_line_height_px = 2 * fonts_get_font_height(dialog_text_font) + 8;
   const uint16_t icon_text_spacing_px = 4;
 

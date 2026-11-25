@@ -8,7 +8,6 @@
 #include <pbl/kernel/cache.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/mmio.h>
-#include <pbl/kernel/time.h>
 #include <pbl/kernel/types.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
@@ -19,9 +18,8 @@
 
 #include <hardware/sf32lb57_epic.h>
 
-// How long a job is waited for in place before its interrupt is, and at most
-#define EPIC_SPIN_US    200U
-#define EPIC_TIMEOUT_MS 500U
+// Past twice the size of the data cache, cleaning all of it costs less than line by line
+#define EPIC_CACHE_ALL_BYTES (32U * 1024U)
 
 // Layers and canvas of a job with a transform span at most this many pixels
 #define EPIC_TRANSFORM_SPAN_MAX 512
@@ -122,39 +120,17 @@ static void prv_layers_off(const struct pbl_gpu_sf32lb57_epic *epic) {
   prv_modify(epic, SF32LB57_EPIC_VL_ROT_OFFSET, 0U, SF32LB57_EPIC_VL_ROT_CALC_CLR);
 }
 
-// Runs the job the registers hold
-static int prv_run(const struct pbl_gpu_sf32lb57_epic *epic) {
-  const uint32_t spin = (uint32_t)((uint64_t)pbl_cycles_per_sec() * EPIC_SPIN_US / 1000000U);
-  uint32_t start;
-  int ret = 0;
-
+// Starts the job the registers hold: its interrupt ends it
+static void prv_start(const struct pbl_gpu_sf32lb57_epic *epic) {
+  epic->state->active = true;
   prv_write(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET, prv_read(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET));
+  prv_modify(epic, SF32LB57_EPIC_SETTING_OFFSET, 0U, SF32LB57_EPIC_SETTING_EOF_IRQ_MASK);
   prv_modify(epic, SF32LB57_EPIC_COMMAND_OFFSET, 0U, SF32LB57_EPIC_COMMAND_START);
-
-  start = pbl_cycle_get_32();
-  while (prv_busy(epic) && (pbl_cycle_get_32() - start) < spin) {
-  }
-
-  if (prv_busy(epic)) {
-    pbl_sem_reset(&epic->state->done);
-    prv_modify(epic, SF32LB57_EPIC_SETTING_OFFSET, 0U, SF32LB57_EPIC_SETTING_EOF_IRQ_MASK);
-
-    if (prv_busy(epic) && pbl_sem_take(&epic->state->done, PBL_MSEC(EPIC_TIMEOUT_MS)) != 0 &&
-        prv_busy(epic)) {
-      (void)pbl_reset_reset(&epic->rst);
-      ret = -ETIMEDOUT;
-    }
-
-    prv_modify(epic, SF32LB57_EPIC_SETTING_OFFSET, SF32LB57_EPIC_SETTING_EOF_IRQ_MASK, 0U);
-  }
-
-  prv_layers_off(epic);
-
-  return ret;
 }
 
-// Flushes or invalidates the cache lines of a rectangle of a buffer: row by row if it is
-// narrow, in one go otherwise
+// Flushes, or flushes and invalidates, the cache lines of a rectangle of a buffer: row by row if
+// it is narrow, in one go otherwise, and all of the cache if it is large. Lines between the rows
+// the CPU wrote while the job ran are written back, not dropped.
 static void prv_cache(const struct pbl_gpu_buffer *buf, const struct pbl_gpu_rect *rect,
                       bool invalidate) {
   const size_t len = (size_t)rect->width * s_formats[buf->format].bytes;
@@ -163,6 +139,15 @@ static void prv_cache(const struct pbl_gpu_buffer *buf, const struct pbl_gpu_rec
   size_t step = buf->pitch;
   size_t size = len;
 
+  if ((rows - 1U) * buf->pitch + len > EPIC_CACHE_ALL_BYTES) {
+    if (invalidate) {
+      pbl_dcache_flush_invalidate_all();
+    } else {
+      pbl_dcache_flush_all();
+    }
+    return;
+  }
+
   if (len + 2U * CONFIG_DCACHE_LINE_SIZE >= buf->pitch) {
     size = (rows - 1U) * buf->pitch + len;
     rows = 1U;
@@ -170,7 +155,7 @@ static void prv_cache(const struct pbl_gpu_buffer *buf, const struct pbl_gpu_rec
 
   for (size_t row = 0U; row < rows; row++) {
     if (invalidate) {
-      pbl_dcache_invalidate_range(first + row * step, size);
+      pbl_dcache_flush_invalidate_range(first + row * step, size);
     } else {
       pbl_dcache_flush_range(first + row * step, size);
     }
@@ -197,15 +182,33 @@ static int prv_begin(const struct pbl_gpu_sf32lb57_epic *epic, const struct pbl_
     prv_cache(src, src_rect, false);
   }
 
+  epic->state->dst = *dst;
+  epic->state->rect = *rect;
+
   return 0;
 }
 
-static void prv_end(const struct pbl_gpu_sf32lb57_epic *epic, const struct pbl_gpu_buffer *dst,
-                    const struct pbl_gpu_rect *rect) {
-  prv_cache(dst, rect, true);
+// Ends the job running, once, from its interrupt or from an abort
+static void prv_end(const struct pbl_gpu_sf32lb57_epic *epic, int status) {
+  struct pbl_gpu_sf32lb57_epic_state *st = epic->state;
+
+  pbl_irq_lock();
+  if (!st->active) {
+    pbl_irq_unlock();
+    return;
+  }
+  st->active = false;
+  pbl_irq_unlock();
+
+  prv_modify(epic, SF32LB57_EPIC_SETTING_OFFSET, SF32LB57_EPIC_SETTING_EOF_IRQ_MASK, 0U);
+  prv_write(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET, prv_read(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET));
+  prv_layers_off(epic);
+  prv_cache(&st->dst, &st->rect, true);
 
   pbl_idle_state_release(SOC_SF32LB_IDLE_DEEPWFI);
   (void)pbl_clk_disable(&epic->clk);
+
+  pbl_gpu_complete(&epic->gpu, status);
 }
 
 static int prv_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
@@ -227,11 +230,9 @@ static int prv_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
   }
   prv_canvas(epic, dst, first, 0U, 0U, rect->width, rect->height, argb);
 
-  ret = prv_run(epic);
+  prv_start(epic);
 
-  prv_end(epic, dst, rect);
-
-  return ret;
+  return 0;
 }
 
 // The video layer of a transformed blit, in the coordinates of the target
@@ -388,6 +389,7 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
   int ret;
 
   if (!prv_video(blit, &video)) {
+    pbl_gpu_complete(&epic->gpu, 0);
     return 0;
   }
 
@@ -400,6 +402,7 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
   x1 = PBL_MIN(video.x + video.width, (int32_t)clip->x + clip->width);
   y1 = PBL_MIN(video.y + video.height, (int32_t)clip->y + clip->height);
   if (area.x >= x1 || area.y >= y1) {
+    pbl_gpu_complete(&epic->gpu, 0);
     return 0;
   }
   area.width = (uint16_t)(x1 - area.x);
@@ -480,11 +483,9 @@ static int prv_blit_transformed(const struct pbl_gpu_sf32lb57_epic *epic,
   prv_canvas(epic, dst, first, (uint32_t)(area.x - x0), (uint32_t)(area.y - y0), area.width,
              area.height, 0U);
 
-  ret = prv_run(epic);
+  prv_start(epic);
 
-  prv_end(epic, dst, &area);
-
-  return ret;
+  return 0;
 }
 
 static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
@@ -504,6 +505,7 @@ static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
   }
 
   if (x0 >= x1 || y0 >= y1) {
+    pbl_gpu_complete(gpu, 0);
     return 0;
   }
 
@@ -535,17 +537,22 @@ static int prv_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
             0U, rect.width, rect.height, blit->alpha, blit->color);
   prv_canvas(epic, dst, first, 0U, 0U, rect.width, rect.height, 0U);
 
-  ret = prv_run(epic);
+  prv_start(epic);
 
-  prv_end(epic, dst, &rect);
-
-  return ret;
+  return 0;
 }
 
 void pbl_gpu_sf32lb57_epic_irq_handler(const struct pbl_gpu_sf32lb57_epic *epic) {
-  prv_write(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET, prv_read(epic, SF32LB57_EPIC_EOF_IRQ_OFFSET));
-  prv_modify(epic, SF32LB57_EPIC_SETTING_OFFSET, SF32LB57_EPIC_SETTING_EOF_IRQ_MASK, 0U);
-  pbl_sem_give(&epic->state->done);
+  prv_end(epic, 0);
+}
+
+static void prv_abort(const struct pbl_gpu *gpu) {
+  const struct pbl_gpu_sf32lb57_epic *epic = prv_epic(gpu);
+
+  if (prv_busy(epic)) {
+    (void)pbl_reset_reset(&epic->rst);
+  }
+  prv_end(epic, -ETIMEDOUT);
 }
 
 static int prv_init(const struct pbl_gpu *gpu) {
@@ -576,6 +583,7 @@ const struct pbl_gpu_ops pbl_gpu_sf32lb57_epic_ops = {
   .init = prv_init,
   .fill = prv_fill,
   .blit = prv_blit,
+  .abort = prv_abort,
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb57_epic)

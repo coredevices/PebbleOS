@@ -10,6 +10,7 @@ config INPUT_ADC_KEYS
     depends on INPUT
     select ADC
     select GPIO
+    select KERNEL_SYS_WORKQ
     help
       Keys on a resistor ladder read through an ADC channel on an
       interrupt that a press or release raises.
@@ -25,7 +26,8 @@ config INPUT_GPIO_KEYS
 
 config INPUT_SDL
     bool "SDL keyboard"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     depends on INPUT
     select SDL
     help

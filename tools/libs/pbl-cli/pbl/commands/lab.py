@@ -66,6 +66,7 @@ class Lab(PblCommand):
                     "probe": watch.probe,
                     "probe_locked_by": lock.holder(lock.probe_key(watch.name)),
                     "supply": watch.supply,
+                    "usb": watch.usb,
                 }
             )
         for supply in lab.supplies.values():
@@ -119,6 +120,8 @@ class Lab(PblCommand):
                 print(f"      probe: {probe}")
             if watch["supply"]:
                 print(f"      supply: {watch['supply']}")
+            if watch["usb"]:
+                print(f"      usb: {watch['usb']}")
         if status["supplies"]:
             print("supplies:")
         for supply in status["supplies"]:

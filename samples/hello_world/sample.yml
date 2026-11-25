@@ -1,4 +1,4 @@
 description: Smallest application, which prints a message from main()
 expect:
   - 'Hello World! \w+'
-integration: [qemu_emery, qemu_flint, asterix, obelix@pvt, sf32lb57_dpi_hdk, stm32h747i_disco]
+integration: [qemu_emery, qemu_flint, asterix, obelix@pvt, sf32lb57_dpi_hdk, stm32h747i_disco, nrf52840dk, nrf52dk]

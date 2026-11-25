@@ -1,0 +1,8 @@
+description: The status LED blinking, half a second on and half a second off, then red, green and blue for a second each where it has color
+expect:
+  - 'led: on'
+  - 'led: off'
+  - 'led: blinked 5 times'
+  - 'Sample done'
+roles: [status_led]
+integration: [stm32h747i_disco, nrf52840dk, nrf52dk]

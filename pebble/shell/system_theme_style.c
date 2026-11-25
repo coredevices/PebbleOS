@@ -19,12 +19,22 @@
 #endif
 #endif
 
+//! Recovery firmware has no 36 point fonts, and only uses the default content size
+#if defined(CONFIG_RECOVERY_FW)
+#define DIALOG_FONT_36      FONT_KEY_GOTHIC_28
+#define DIALOG_FONT_36_BOLD FONT_KEY_GOTHIC_28_BOLD
+#else
+#define DIALOG_FONT_36      FONT_KEY_GOTHIC_36
+#define DIALOG_FONT_36_BOLD FONT_KEY_GOTHIC_36_BOLD
+#endif
+
 static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
   [PreferredContentSizeSmall] =
       {
         .fonts =
             {
               [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
+              [TextStyleFont_HeaderRegular] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_18_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_18,
@@ -36,6 +46,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               //! Small
               //!       is designed
               [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_18_BOLD,
+              [TextStyleFont_MenuCellTitleRegular] = FONT_KEY_GOTHIC_18,
               //! @note this is the same as Medium until Small is designed
               [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
@@ -69,6 +80,13 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_24_BOLD,
+            },
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
             {
@@ -89,6 +107,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
         .fonts =
             {
               [TextStyleFont_Header] = FONT_KEY_GOTHIC_18_BOLD,
+              [TextStyleFont_HeaderRegular] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_24_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_24_BOLD,
@@ -97,6 +116,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_Caption] = FONT_KEY_GOTHIC_14,
               [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_MenuCellTitleRegular] = FONT_KEY_GOTHIC_24,
               [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_18,
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_20_BOLD_NUMBERS,
@@ -132,6 +152,23 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
 #endif
               .right_icon_spacing = PBL_IF_RECT_ELSE(7, 35),
             },
+#if PBL_DISPLAY_HEIGHT >= 200
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_18_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_24_BOLD,
+            },
+#else
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_28_BOLD,
+            },
+#endif
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
             {
@@ -152,6 +189,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
         .fonts =
             {
               [TextStyleFont_Header] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_HeaderRegular] = FONT_KEY_GOTHIC_24,
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_Title] = FONT_KEY_GOTHIC_28_BOLD,
               [TextStyleFont_Body] = FONT_KEY_GOTHIC_28,
@@ -160,6 +198,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               [TextStyleFont_Caption] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_Footer] = FONT_KEY_GOTHIC_18,
               [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_24_BOLD,
+              [TextStyleFont_MenuCellTitleRegular] = FONT_KEY_GOTHIC_24,
               [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_24,
 #if !defined(CONFIG_RECOVERY_FW)
               [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_26_BOLD_NUMBERS_AM_PM,
@@ -202,6 +241,23 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
               .text_inset_multi = -3,
               .right_text_inset_with_icon = 4,
             },
+#if PBL_DISPLAY_HEIGHT >= 200
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_28,
+              .text_max_lines = 2,
+              .body_font_key = FONT_KEY_GOTHIC_24_BOLD,
+              .header_font_key = FONT_KEY_GOTHIC_28_BOLD,
+            },
+#else
+        .dialog =
+            {
+              .text_font_key = FONT_KEY_GOTHIC_28_BOLD,
+              .text_max_lines = 3,
+              .body_font_key = FONT_KEY_GOTHIC_28_BOLD,
+              .header_font_key = DIALOG_FONT_36_BOLD,
+            },
+#endif
 #if !defined(CONFIG_RECOVERY_FW)
         .launcher =
             {
@@ -222,6 +278,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
     .fonts =
         {
           [TextStyleFont_Header] = FONT_KEY_GOTHIC_28_BOLD,
+          [TextStyleFont_HeaderRegular] = FONT_KEY_GOTHIC_28,
 #if !defined(CONFIG_RECOVERY_FW)
           [TextStyleFont_Title] = FONT_KEY_GOTHIC_36_BOLD,
           [TextStyleFont_Body] = FONT_KEY_GOTHIC_36,
@@ -230,6 +287,7 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           [TextStyleFont_Caption] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_Footer] = FONT_KEY_GOTHIC_24,
           [TextStyleFont_MenuCellTitle] = FONT_KEY_GOTHIC_28_BOLD,
+          [TextStyleFont_MenuCellTitleRegular] = FONT_KEY_GOTHIC_28,
           [TextStyleFont_MenuCellSubtitle] = FONT_KEY_GOTHIC_28,
 #if !defined(CONFIG_RECOVERY_FW)
           [TextStyleFont_TimeHeaderNumbers] = FONT_KEY_LECO_32_BOLD_NUMBERS,
@@ -259,6 +317,13 @@ static const SystemThemeStyle s_styles[NumPreferredContentSizes] = {
           .text_inset_single = -1,
           .text_inset_multi = -3,
           .right_text_inset_with_icon = 4,
+        },
+    .dialog =
+        {
+          .text_font_key = DIALOG_FONT_36,
+          .text_max_lines = 3,
+          .body_font_key = FONT_KEY_GOTHIC_28_BOLD,
+          .header_font_key = DIALOG_FONT_36_BOLD,
         },
 #if !defined(CONFIG_RECOVERY_FW)
     .launcher = {

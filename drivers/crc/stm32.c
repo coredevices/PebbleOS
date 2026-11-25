@@ -1,0 +1,143 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include <errno.h>
+#include <inttypes.h>
+
+#include <pbl/device.h>
+#include <pbl/devicetree.h>
+#include <pbl/drivers/crc.h>
+#include <pbl/drivers/crc/stm32.h>
+#include <pbl/kernel/irq.h>
+#include <pbl/kernel/mmio.h>
+#include <pbl/logging/logging.h>
+#include <pbl/util/bitops.h>
+#include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
+
+#include <hardware/stm32_crc.h>
+
+PBL_LOG_MODULE_DEFINE(driver_crc_stm32, CONFIG_DRIVER_CRC_LOG_LEVEL);
+
+#define CRC32_POLY 0x04C11DB7U
+
+#define CR_CRC32_LEGACY PBL_FIELD_PREP(CRC_CR_POLYSIZE_MASK, CRC_CR_POLYSIZE_32)
+#define CR_CRC32 \
+  (CR_CRC32_LEGACY | PBL_FIELD_PREP(CRC_CR_REV_IN_MASK, CRC_CR_REV_IN_WORD) | CRC_CR_REV_OUT)
+
+// Longest run fed to the unit with interrupts locked
+#define BURST_LEN 256U
+
+enum algo {
+  ALGO_CRC32,
+  ALGO_CRC32_LEGACY,
+};
+
+extern const struct pbl_crc_stm32 pbl_crc_stm32_inst;
+
+static const struct pbl_crc_stm32 *const s_crc = &pbl_crc_stm32_inst;
+
+static inline uint32_t prv_getreg(uint32_t offset) {
+  return pbl_readl(s_crc->base + offset);
+}
+
+static inline void prv_putreg(uint32_t offset, uint32_t value) {
+  pbl_writel(value, s_crc->base + offset);
+}
+
+// A write to the data register stalls the bus until the unit has taken the previous word
+static uint32_t prv_burst(enum algo algo, uint32_t value, const uint8_t *data, size_t len) {
+  // The unit keeps its register unreflected: a reflected CRC-32 resumes from the bit-reversed
+  // complement of its output.
+  const uint32_t cr = (algo == ALGO_CRC32) ? CR_CRC32 : CR_CRC32_LEGACY;
+
+  prv_putreg(STM32_CRC_POL_OFFSET, CRC32_POLY);
+  prv_putreg(STM32_CRC_INIT_OFFSET, (algo == ALGO_CRC32) ? pbl_bitrev32(~value) : value);
+  prv_putreg(STM32_CRC_CR_OFFSET, cr | CRC_CR_RESET);
+
+  // The unit takes each word MSB first, as the legacy checksum does; reversing the whole word
+  // feeds a reflected CRC-32 its bytes in memory order.
+  for (size_t i = 0; i < len; i += 4) {
+    prv_putreg(STM32_CRC_DR_OFFSET, pbl_get_le32(&data[i]));
+  }
+
+  value = prv_getreg(STM32_CRC_DR_OFFSET);
+
+  return (algo == ALGO_CRC32) ? ~value : value;
+}
+
+static size_t prv_compute(enum algo algo, uint32_t *value, const void *data, size_t len) {
+  const uint8_t *bytes = data;
+  const size_t total = len & ~(size_t)3;
+  size_t done = 0;
+
+  // The gate is shared and counted: it stays open across the bursts of a call
+  if (total == 0U || pbl_clk_enable(&s_crc->clk) != 0) {
+    return 0;
+  }
+
+  while (done < total) {
+    const size_t burst = (total - done < BURST_LEN) ? (total - done) : BURST_LEN;
+
+    pbl_irq_lock();
+    *value = prv_burst(algo, *value, &bytes[done], burst);
+    pbl_irq_unlock();
+    done += burst;
+  }
+
+  pbl_clk_disable(&s_crc->clk);
+
+  return done;
+}
+
+static int prv_check(enum algo algo, uint32_t init, uint32_t expected) {
+  static const char vector[] = "0123456789abcdef";
+  const size_t len = sizeof(vector) - 1;
+
+  uint32_t whole = init;
+  prv_compute(algo, &whole, vector, len);
+
+  uint32_t resumed = init;
+  prv_compute(algo, &resumed, vector, len / 2);
+  prv_compute(algo, &resumed, &vector[len / 2], len / 2);
+
+  if ((whole != expected) || (resumed != expected)) {
+    PBL_LOG_ERR("CRC unit self-test failed (algo %d): 0x%08" PRIx32 "/0x%08" PRIx32
+                ", expected 0x%08" PRIx32,
+                algo, whole, resumed, expected);
+    return -EIO;
+  }
+
+  return 0;
+}
+
+int pbl_crc_stm32_init(const struct pbl_device *dev) {
+  int ret;
+
+  ret = pbl_device_init(&s_crc->clk.ctrl->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = prv_check(ALGO_CRC32, 0, 0x68c4f033U);
+  if (ret != 0) {
+    return ret;
+  }
+
+  return prv_check(ALGO_CRC32_LEGACY, 0xffffffffU, 0x50b663c0U);
+}
+
+// Before the unit is up, or if it failed its self-test, callers fall back to software
+static bool prv_ready(void) {
+  return pbl_device_is_ready(&s_crc->dev);
+}
+
+size_t pbl_crc_hw_crc32(uint32_t *crc, const void *data, size_t len) {
+  return prv_ready() ? prv_compute(ALGO_CRC32, crc, data, len) : 0;
+}
+
+size_t pbl_crc_hw_crc32_legacy(uint32_t *reg, const void *data, size_t len) {
+  return prv_ready() ? prv_compute(ALGO_CRC32_LEGACY, reg, data, len) : 0;
+}
+
+#include PBL_DT_INSTANCES(st_stm32f7_crc)

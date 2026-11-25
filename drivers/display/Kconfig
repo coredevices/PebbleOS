@@ -4,7 +4,8 @@
 menuconfig DISPLAY
     bool "Display"
     help
-      Display Drivers
+      Display class (pbl/drivers/display.h) and its drivers: the
+      controllers that take the framebuffer to the panel.
 
 if DISPLAY
 
@@ -32,6 +33,7 @@ config DISPLAY_SF32LB57_LCDC
     default y
     depends on DT_HAS_SIFLI_SF32LB57_LCDC_ENABLED
     select CLK
+    select KERNEL_SYS_WORKQ
     select MIPI_DBI
     select PANEL
     select PINCTRL
@@ -67,17 +69,28 @@ config DISPLAY_SF32LB57_LCDC_FORMAT_RGB565
 
 endchoice
 
-config DISPLAY_SHARP_LS013B7DH01
-    bool "Sharp LS013B7DH01"
+config DISPLAY_SHARP_MEMORY
+    bool "Sharp memory LCDs"
     default y
-    depends on DT_HAS_SHARP_LS013B7DH01_ENABLED
+    depends on DT_HAS_SHARP_LS010B7DH04_ENABLED || \
+               DT_HAS_SHARP_LS011B7DH03_ENABLED || \
+               DT_HAS_SHARP_LS012B7DD01_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH01_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH03_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH05_ENABLED || \
+               DT_HAS_SHARP_LS027B7DH01_ENABLED || \
+               DT_HAS_SHARP_LS027B7DH01A_ENABLED || \
+               DT_HAS_SHARP_LS044Q7DH01_ENABLED
+    select GPIO
     select PWM
     select SPI
     help
-      Support for the Sharp LS013B7DH01 memory LCD.
+      Support for the Sharp memory LCDs addressing their lines with 8 bits:
+      LS010B7DH04, LS011B7DH03, LS012B7DD01, LS013B7DH01, LS013B7DH03,
+      LS013B7DH05, LS027B7DH01, LS027B7DH01A and LS044Q7DH01.
 
 config DISPLAY_QEMU
-    bool "QEMU Framebuffer Display"
+    bool "QEMU framebuffer display"
     default y
     depends on DT_HAS_QEMU_PEBBLE_DISPLAY_ENABLED
     help
@@ -85,7 +98,8 @@ config DISPLAY_QEMU
 
 config DISPLAY_SDL
     bool "SDL window"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     select SDL
     help
       Display shown in an SDL window on the host of a native build.

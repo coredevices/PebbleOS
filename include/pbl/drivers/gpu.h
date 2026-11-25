@@ -6,7 +6,8 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
-#include <pbl/kernel/mutex.h>
+#include <pbl/kernel/sem.h>
+#include <pbl/kernel/types.h>
 #include <pbl/util/bits.h>
 
 /**
@@ -35,10 +36,21 @@
  * ret = pbl_gpu_blit(GPU, &fb, nullptr, &blit);
  * @endcode
  *
- * Calls are made from task context, one job at a time, and return once the job is done, with the
- * target ready to be read by the CPU: buffers may be cached. They return 0 or a negative errno:
- * @c -ENOTSUP for a job the GPU cannot take, @c -EINVAL for an invalid one, @c -ENODEV if the
- * GPU is not ready and @c -EIO or @c -ETIMEDOUT if the hardware failed.
+ * Calls are made from task context and return once the job is done, with the target ready to be
+ * read by the CPU: buffers may be cached. They return 0 or a negative errno: @c -ENOTSUP for a job
+ * the GPU cannot take, @c -EINVAL for an invalid one, @c -ENODEV if the GPU is not ready and
+ * @c -EIO or @c -ETIMEDOUT if the hardware failed.
+ *
+ * The CPU can draw meanwhile: pbl_gpu_fill_async() and pbl_gpu_blit_async() start a job and return,
+ * and a callback tells when it is done. One job runs at a time. While it runs, the CPU must neither
+ * write its sources nor touch the cache lines of the rectangle it draws, those it shares with the
+ * pixels around included.
+ *
+ * @code{.c}
+ * ret = pbl_gpu_fill_async(GPU, &fb, &bar, 0xFF000000, prv_done, nullptr);
+ * prv_draw_text_elsewhere();
+ * ret = pbl_gpu_wait(GPU, PBL_MSEC(100));
+ * @endcode
  * @{
  */
 
@@ -141,9 +153,22 @@ extern const struct pbl_device_class pbl_gpu_class;
 
 struct pbl_gpu;
 
+/**
+ * @brief Called when a job started with pbl_gpu_fill_async() or pbl_gpu_blit_async() is done,
+ * from the GPU interrupt or from the call that started it.
+ *
+ * @param status 0 or a negative errno.
+ * @param arg Argument given with the job.
+ */
+typedef void (*pbl_gpu_done_t)(int status, void *arg);
+
 /** @cond INTERNAL_HIDDEN */
 struct pbl_gpu_state {
-  struct pbl_mutex lock;
+  /** Taken while a job runs. */
+  struct pbl_sem free;
+  int status;
+  pbl_gpu_done_t done;
+  void *arg;
 };
 /** @endcond */
 
@@ -151,23 +176,26 @@ struct pbl_gpu_state {
  * @brief GPU driver operations.
  *
  * The class layer checks the job against the capabilities, clips it to the target and runs one
- * at a time; drivers draw, and look after the caches of the buffers.
+ * at a time; drivers draw, and look after the caches of the buffers. A job a driver starts ends
+ * with pbl_gpu_complete(), from its interrupt or before the operation returns.
  */
 struct pbl_gpu_ops {
   /** Set the GPU up. Returns 0 or a negative errno. */
   int (*init)(const struct pbl_gpu *gpu);
   /**
-   * Fill @p rect, within @p dst and not empty, with @p argb, blended if not opaque. Returns 0 or
-   * a negative errno.
+   * Start filling @p rect, within @p dst and not empty, with @p argb, blended if not opaque.
+   * Returns 0 once started, or a negative errno for a job not started.
    */
   int (*fill)(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
               const struct pbl_gpu_rect *rect, uint32_t argb);
   /**
-   * Draw @p blit over @p dst, touching only @p clip, within @p dst and not empty. Returns 0 or a
-   * negative errno.
+   * Start drawing @p blit over @p dst, touching only @p clip, within @p dst and not empty.
+   * Returns 0 once started, or a negative errno for a job not started.
    */
   int (*blit)(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
               const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit);
+  /** Optional. Stop the job running, which then completes. */
+  void (*abort)(const struct pbl_gpu *gpu);
 };
 
 /** @brief A GPU. */
@@ -192,7 +220,7 @@ extern const struct pbl_gpu *const GPU;
  */
 #define PBL_GPU_STATE_DEFINE(sym) \
   PBL_DEVICE_STATE_DEFINE(sym);   \
-  static struct pbl_gpu_state sym##_gpu_state = {.lock = PBL_MUTEX_INITIALIZER}
+  static struct pbl_gpu_state sym##_gpu_state = {.free = PBL_SEM_INITIALIZER(1, 1)}
 
 /**
  * @brief Initializer for the struct pbl_gpu of GPU @p sym.
@@ -206,9 +234,7 @@ extern const struct pbl_gpu *const GPU;
 #define PBL_GPU_INIT(sym, _name, _parent, _ops, ...)                                     \
   {                                                                                      \
     .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_gpu_dev_init, _parent, &pbl_gpu_class), \
-    .ops = (_ops), .state = &sym##_gpu_state, .caps = {                                  \
-      __VA_ARGS__                                                                        \
-    }                                                                                    \
+    .ops = (_ops), .state = &sym##_gpu_state, .caps = {__VA_ARGS__}                      \
   }
 
 /**
@@ -218,6 +244,14 @@ extern const struct pbl_gpu *const GPU;
  * @return 0 or a negative errno.
  */
 int pbl_gpu_dev_init(const struct pbl_device *dev);
+
+/**
+ * @brief End the job running, for drivers. Callable from an interrupt.
+ *
+ * @param gpu GPU.
+ * @param status 0 or a negative errno.
+ */
+void pbl_gpu_complete(const struct pbl_gpu *gpu, int status);
 
 /**
  * @brief Get what a GPU can do.
@@ -253,5 +287,46 @@ int pbl_gpu_fill(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
  */
 int pbl_gpu_blit(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
                  const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit);
+
+/**
+ * @brief Start filling a rectangle with a color, as pbl_gpu_fill() does.
+ *
+ * @param gpu GPU.
+ * @param dst Target.
+ * @param rect Rectangle, clipped to the target, or NULL for all of it.
+ * @param argb Color, as 0xAARRGGBB.
+ * @param done Called when the job is done, maybe before this returns, or NULL.
+ * @param arg Passed to @p done.
+ * @return 0 once started, then @p done is called; @c -EBUSY if a job runs, or another negative
+ *         errno for a job not started.
+ */
+int pbl_gpu_fill_async(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *rect, uint32_t argb, pbl_gpu_done_t done,
+                       void *arg);
+
+/**
+ * @brief Start drawing a buffer over another, as pbl_gpu_blit() does.
+ *
+ * @param gpu GPU.
+ * @param dst Target.
+ * @param clip Rectangle of the target that may change, clipped to it, or NULL for all of it.
+ * @param blit Source, where it goes and how.
+ * @param done Called when the job is done, maybe before this returns, or NULL.
+ * @param arg Passed to @p done.
+ * @return 0 once started, then @p done is called; @c -EBUSY if a job runs, or another negative
+ *         errno for a job not started.
+ */
+int pbl_gpu_blit_async(const struct pbl_gpu *gpu, const struct pbl_gpu_buffer *dst,
+                       const struct pbl_gpu_rect *clip, const struct pbl_gpu_blit *blit,
+                       pbl_gpu_done_t done, void *arg);
+
+/**
+ * @brief Wait for the job running to be done, if any.
+ *
+ * @param gpu GPU.
+ * @param timeout Longest wait, after which the job is stopped.
+ * @return Status of the last job, or @c -ETIMEDOUT for one stopped.
+ */
+int pbl_gpu_wait(const struct pbl_gpu *gpu, pbl_timeout_t timeout);
 
 /** @} */

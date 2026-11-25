@@ -34,8 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Session related functions
 
-pbl_bt_responsiveness_granted_cb_t fake_comm_session_get_last_responsiveness_granted_handler(void);
-
 int fake_comm_session_open_call_count(void);
 int fake_comm_session_close_call_count(void);
 

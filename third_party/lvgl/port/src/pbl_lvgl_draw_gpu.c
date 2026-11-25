@@ -6,17 +6,44 @@
 #include <errno.h>
 
 #include <pbl/drivers/gpu.h>
+#include <pbl/kernel/timer.h>
+#include <pbl/util/misc.h>
 
 #include <lvgl_private.h>
 #include <pbl_lvgl.h>
 
+// The GPU requests dispatches from its interrupt, which only LVGL without an OS takes
+#if LV_USE_OS
+#error "the GPU draw unit needs LV_USE_OS off"
+#endif
+
 #define DRAW_UNIT_ID 64
 #define SCORE        70
 
+#define JOB_TIMEOUT_MS 500U
+
+/*
+ * Fills, images and layers run on the GPU while the software unit draws the tasks they do not
+ * overlap; labels, blitted a glyph at a time, wait for each.
+ */
 struct pbl_lvgl__draw_gpu_unit {
   lv_draw_unit_t base;
   lv_draw_task_t *task;
+  /* Set by the GPU, from its interrupt, when the job of the task is done. */
+  volatile bool done;
+  volatile int status;
+  /* Asks for a dispatch, and so for the job to be stopped, if the job never ends. */
+  struct pbl_timer timeout;
+  volatile bool expired;
 };
+
+/* While the GPU draws a rectangle, the CPU must not touch the cache lines it shares with the pixels
+ * around: tasks within a line or a row of it wait for it. */
+#ifdef CONFIG_DCACHE_LINE_SIZE
+#define SHARED_LINE_BYTES CONFIG_DCACHE_LINE_SIZE
+#else
+#define SHARED_LINE_BYTES 0
+#endif
 
 static bool prv_format(lv_color_format_t cf, enum pbl_gpu_format *format) {
   switch (cf) {
@@ -184,27 +211,66 @@ static int32_t prv_evaluate(lv_draw_unit_t *unit, lv_draw_task_t *t) {
   }
 
   if (t->preference_score > SCORE) {
+    int32_t px = SHARED_LINE_BYTES / (int32_t)lv_color_format_get_size(base->layer->color_format);
+
     t->preference_score = SCORE;
     t->preferred_draw_unit_id = DRAW_UNIT_ID;
+    if (SHARED_LINE_BYTES != 0) {
+      lv_area_increase(&t->_real_area, px, 1);
+    }
   }
 
   return 1;
 }
 
-static int prv_fill(lv_draw_task_t *t) {
+// A target whose cache lines it shares with other memory is drawn while the CPU waits
+static bool prv_background(const struct pbl_gpu_buffer *dst) {
+  return SHARED_LINE_BYTES == 0 ||
+         ((uintptr_t)dst->data % SHARED_LINE_BYTES == 0U && dst->pitch % SHARED_LINE_BYTES == 0U);
+}
+
+static int prv_sync(int ret) {
+  return ret == 0 ? 1 : ret;
+}
+
+static void prv_done(int status, void *arg) {
+  struct pbl_lvgl__draw_gpu_unit *unit = arg;
+
+  pbl_timer_stop(&unit->timeout);
+  unit->status = status;
+  unit->done = true;
+  lv_draw_dispatch_request();
+}
+
+static void prv_timeout(struct pbl_timer *timer) {
+  struct pbl_lvgl__draw_gpu_unit *unit =
+      PBL_CONTAINER_OF(timer, struct pbl_lvgl__draw_gpu_unit, timeout);
+
+  unit->expired = true;
+  lv_draw_dispatch_request();
+}
+
+/* Starts the job of a task, done when the unit says so; 1 for nothing to draw. */
+static int prv_fill(struct pbl_lvgl__draw_gpu_unit *unit, lv_draw_task_t *t) {
   const lv_draw_fill_dsc_t *dsc = t->draw_dsc;
   struct pbl_gpu_buffer dst;
   struct pbl_gpu_rect rect;
+  uint32_t argb;
 
   if (dsc->opa <= LV_OPA_MIN || !prv_target(t, &t->area, &dst, &rect)) {
-    return 0;
+    return 1;
   }
 
-  return pbl_gpu_fill(GPU, &dst, &rect,
-                      ((uint32_t)dsc->opa << 24) | (lv_color_to_u32(dsc->color) & 0xFFFFFFU));
+  argb = ((uint32_t)dsc->opa << 24) | (lv_color_to_u32(dsc->color) & 0xFFFFFFU);
+  if (!prv_background(&dst)) {
+    return prv_sync(pbl_gpu_fill(GPU, &dst, &rect, argb));
+  }
+
+  return pbl_gpu_fill_async(GPU, &dst, &rect, argb, prv_done, unit);
 }
 
-static int prv_image(lv_draw_task_t *t, const lv_image_header_t *header, const void *data) {
+static int prv_image(struct pbl_lvgl__draw_gpu_unit *unit, lv_draw_task_t *t,
+                     const lv_image_header_t *header, const void *data) {
   const lv_draw_image_dsc_t *dsc = t->draw_dsc;
   const lv_layer_t *layer = t->target_layer;
   struct pbl_gpu_transform transform = {
@@ -230,7 +296,7 @@ static int prv_image(lv_draw_task_t *t, const lv_image_header_t *header, const v
   struct pbl_gpu_rect clip;
 
   if (dsc->opa <= LV_OPA_MIN) {
-    return 0;
+    return 1;
   }
 
   if (!prv_buffer(header, data, &src)) {
@@ -245,10 +311,14 @@ static int prv_image(lv_draw_task_t *t, const lv_image_header_t *header, const v
   }
 
   if (!prv_target(t, &area, &dst, &clip)) {
-    return 0;
+    return 1;
   }
 
-  return pbl_gpu_blit(GPU, &dst, &clip, &blit);
+  if (!prv_background(&dst)) {
+    return prv_sync(pbl_gpu_blit(GPU, &dst, &clip, &blit));
+  }
+
+  return pbl_gpu_blit_async(GPU, &dst, &clip, &blit, prv_done, unit);
 }
 
 // A glyph as the GPU takes it: its coverage, in the color of the text
@@ -372,8 +442,26 @@ static void prv_letter(lv_draw_task_t *t, lv_draw_glyph_dsc_t *glyph, lv_draw_fi
   }
 }
 
-// What the GPU refuses once it sees the job is drawn in software
-static void prv_execute(lv_draw_task_t *t) {
+// Draws a task in software, as the GPU refused or failed it
+static void prv_draw_sw(lv_draw_task_t *t) {
+  switch (t->type) {
+    case LV_DRAW_TASK_TYPE_FILL:
+      lv_draw_sw_fill(t, t->draw_dsc, &t->area);
+      break;
+    case LV_DRAW_TASK_TYPE_IMAGE:
+      lv_draw_sw_image(t, t->draw_dsc, &t->area);
+      break;
+    case LV_DRAW_TASK_TYPE_LAYER:
+      lv_draw_sw_layer(t, t->draw_dsc, &t->area);
+      break;
+    default:
+      break;
+  }
+}
+
+// Starts the job of a task: 0 once started, 1 for a task done, or a negative errno for one the
+// GPU refused
+static int prv_start(struct pbl_lvgl__draw_gpu_unit *unit, lv_draw_task_t *t) {
   switch (t->type) {
     case LV_DRAW_TASK_TYPE_LABEL: {
       const lv_draw_label_dsc_t *dsc = t->draw_dsc;
@@ -381,21 +469,15 @@ static void prv_execute(lv_draw_task_t *t) {
       if (dsc->opa > LV_OPA_MIN) {
         lv_draw_label_iterate_characters(t, dsc, &t->area, prv_letter);
       }
-      break;
+      return 1;
     }
     case LV_DRAW_TASK_TYPE_FILL:
-      if (prv_fill(t) != 0) {
-        lv_draw_sw_fill(t, t->draw_dsc, &t->area);
-      }
-      break;
+      return prv_fill(unit, t);
     case LV_DRAW_TASK_TYPE_IMAGE: {
       const lv_draw_image_dsc_t *dsc = t->draw_dsc;
       const lv_image_dsc_t *img = dsc->src;
 
-      if (prv_image(t, &img->header, img->data) != 0) {
-        lv_draw_sw_image(t, t->draw_dsc, &t->area);
-      }
-      break;
+      return prv_image(unit, t, &img->header, img->data);
     }
     case LV_DRAW_TASK_TYPE_LAYER: {
       const lv_draw_image_dsc_t *dsc = t->draw_dsc;
@@ -403,25 +485,43 @@ static void prv_execute(lv_draw_task_t *t) {
 
       // A layer nothing was drawn on has no buffer
       if (src->draw_buf == nullptr) {
-        break;
+        return 1;
       }
-
-      if (prv_image(t, &src->draw_buf->header, src->draw_buf->data) != 0) {
-        lv_draw_sw_layer(t, t->draw_dsc, &t->area);
-      }
-      break;
+      return prv_image(unit, t, &src->draw_buf->header, src->draw_buf->data);
     }
     default:
-      break;
+      return 1;
   }
 }
 
-static int32_t prv_dispatch(lv_draw_unit_t *unit, lv_layer_t *layer) {
-  struct pbl_lvgl__draw_gpu_unit *gpu_unit = (struct pbl_lvgl__draw_gpu_unit *)unit;
-  lv_draw_task_t *t;
+static void prv_finish(struct pbl_lvgl__draw_gpu_unit *unit) {
+  unit->task->state = LV_DRAW_TASK_STATE_FINISHED;
+  unit->task = nullptr;
+  lv_draw_dispatch_request();
+}
 
-  if (gpu_unit->task != nullptr) {
-    return 0;
+static int32_t prv_dispatch(lv_draw_unit_t *base, lv_layer_t *layer) {
+  struct pbl_lvgl__draw_gpu_unit *unit = (struct pbl_lvgl__draw_gpu_unit *)base;
+  lv_draw_task_t *t;
+  int ret;
+
+  if (unit->task != nullptr) {
+    if (!unit->done) {
+      if (!unit->expired) {
+        return LV_DRAW_UNIT_IDLE;
+      }
+      // Stops the job, which ends it with an error, or waits again for a GPU that cannot
+      (void)pbl_gpu_wait(GPU, PBL_NO_WAIT);
+      if (!unit->done) {
+        unit->expired = false;
+        pbl_timer_start(&unit->timeout, PBL_MSEC(JOB_TIMEOUT_MS));
+        return LV_DRAW_UNIT_IDLE;
+      }
+    }
+    if (unit->status != 0) {
+      prv_draw_sw(unit->task);
+    }
+    prv_finish(unit);
   }
 
   t = lv_draw_get_available_task(layer, nullptr, DRAW_UNIT_ID);
@@ -435,14 +535,19 @@ static int32_t prv_dispatch(lv_draw_unit_t *unit, lv_layer_t *layer) {
   }
 
   t->state = LV_DRAW_TASK_STATE_IN_PROGRESS;
-  gpu_unit->task = t;
+  unit->task = t;
+  unit->done = false;
+  unit->expired = false;
+  pbl_timer_start(&unit->timeout, PBL_MSEC(JOB_TIMEOUT_MS));
 
-  prv_execute(t);
-
-  t->state = LV_DRAW_TASK_STATE_FINISHED;
-  gpu_unit->task = nullptr;
-
-  lv_draw_dispatch_request();
+  ret = prv_start(unit, t);
+  if (ret != 0) {
+    pbl_timer_stop(&unit->timeout);
+    if (ret < 0) {
+      prv_draw_sw(t);
+    }
+    prv_finish(unit);
+  }
 
   return 1;
 }
@@ -453,4 +558,5 @@ void pbl_lvgl__draw_gpu_init(void) {
   unit->base.evaluate_cb = prv_evaluate;
   unit->base.dispatch_cb = prv_dispatch;
   unit->base.name = "PBL_GPU";
+  pbl_timer_init(&unit->timeout, prv_timeout);
 }

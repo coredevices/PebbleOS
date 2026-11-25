@@ -13,8 +13,5 @@ vibe: drv2604
 mic: mic
 speaker: speaker
 die_temp: temp
-rtc:
-  symbol: RETAINED_RTC
-  include: pbl/drivers/rtc/retained.h
 battery: battery
 charger: pmic

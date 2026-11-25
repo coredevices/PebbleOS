@@ -20,6 +20,7 @@
  * @param[in,out] buf_sz Size of @p buf in bytes; set to the ID length on success.
  * @retval 0 ID read.
  * @retval -ENOSPC @p buf is too small.
+ * @retval -ENODATA The part has no ID programmed.
  * @retval -errno Other errors.
  */
 int mcu_get_serial(void *buf, size_t *buf_sz);

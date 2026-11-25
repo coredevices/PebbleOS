@@ -3,76 +3,29 @@
 
 #pragma once
 
-#include <inttypes.h>
+#include <stdbool.h>
 #include <stdint.h>
-
-#include <pbl/bluetooth/gap_le_connect.h>
-#include <pbl/bluetooth/types.h>
-#include <pbl/kernel/compiler.h>
 
 /**
  * @defgroup bluetooth_responsiveness Responsiveness
  * @ingroup bluetooth
- * @brief Connection response time requests and connection parameter updates.
+ * @brief How fast a connection responds, traded against the power it takes.
  *
- * Firmware modules request a response time as a consumer; the connection manager
- * (@c comm/bt_conn_mgr.h) picks the fastest one requested and updates the connection
- * parameters with pbl_bt_le_connection_parameter_update().
+ * Whoever needs a connection fast asks for a response time on it, for a limited period. The fastest
+ * one asked for is negotiated with the central as connection parameters:
+ *
+ * | Response time | Interval | Peripheral latency | Supervision timeout |
+ * | --- | --- | --- | --- |
+ * | @ref PBL_BT_RESPONSE_TIME_MAX, @ref PBL_BT_RESPONSE_TIME_MIDDLE | 45 to 60 ms | 4 | 6 s |
+ * | @ref PBL_BT_RESPONSE_TIME_MIN | 15 ms | 0 | 6 s |
+ *
+ * A request the central does not answer is made again, three times at most. Nothing is negotiated
+ * before the first request, nor within a second of connecting.
  * @{
  */
 
-/**
- * @brief Firmware modules that request a response time.
- *
- * Each module enters and exits low latency states under its own consumer.
- */
-enum pbl_bt_consumer {
-  /** No consumer. */
-  PBL_BT_CONSUMER_NONE = 0,
-  /** Applications. */
-  PBL_BT_CONSUMER_APP,
-  /** LE pairing. */
-  PBL_BT_CONSUMER_LE_PAIRING,
-  /** LE GATT service discovery. */
-  PBL_BT_CONSUMER_LE_SERVICE_DISCOVERY,
-  /** Music service, until released. */
-  PBL_BT_CONSUMER_MUSIC_SERVICE_INDEFINITE,
-  /** Music service, briefly. */
-  PBL_BT_CONSUMER_MUSIC_SERVICE_MOMENTARY,
-  /** Pebble Protocol app fetch. */
-  PBL_BT_CONSUMER_PP_APP_FETCH,
-  /** Pebble Protocol app messages. */
-  PBL_BT_CONSUMER_PP_APP_MESSAGE,
-  /** Pebble Protocol audio endpoint. */
-  PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
-  /** Pebble Protocol get bytes. */
-  PBL_BT_CONSUMER_PP_GET_BYTES,
-  /** Pebble Protocol log dump. */
-  PBL_BT_CONSUMER_PP_LOG_DUMP,
-  /** Pebble Protocol put bytes. */
-  PBL_BT_CONSUMER_PP_PUT_BYTES,
-  /** Pebble Protocol screenshot. */
-  PBL_BT_CONSUMER_PP_SCREENSHOT,
-  /** Pebble Protocol voice endpoint. */
-  PBL_BT_CONSUMER_PP_VOICE_ENDPOINT,
-  /** Prompt (debug console over Pebble Protocol). */
-  PBL_BT_CONSUMER_PROMPT,
-  /** Timeline action menu. */
-  PBL_BT_CONSUMER_TIMELINE_ACTION_MENU,
-  /** Recovery firmware. */
-  PBL_BT_CONSUMER_PRF,
-  /** Remote device, through the Pebble Pairing Service. */
-  PBL_BT_CONSUMER_PPS_REMOTE_DEVICE,
-  /** Unit tests. */
-  PBL_BT_CONSUMER_UNIT_TESTS,
-  /** Number of consumers. */
-  PBL_BT_CONSUMER_NUM,
-};
-
 /** @brief Connection response time. */
 enum pbl_bt_response_time_state {
-  /** Invalid. */
-  PBL_BT_RESPONSE_TIME_INVALID = -1,
   /** Slowest response, lowest throughput and power. */
   PBL_BT_RESPONSE_TIME_MAX = 0,
   /** Intermediate response time. */
@@ -83,56 +36,45 @@ enum pbl_bt_response_time_state {
   PBL_BT_RESPONSE_TIME_NUM,
 };
 
-/** @brief Called when the requested response time has been negotiated and granted. */
-typedef void (*pbl_bt_responsiveness_granted_cb_t)(void);
-
 /**
- * @name Minimum latency timeouts
- * Longest time, in seconds, each module may keep the connection in PBL_BT_RESPONSE_TIME_MIN.
- * @{
+ * @brief A request for a response time.
+ *
+ * Whoever asks owns one, zero-initialized, that lives for as long as it asks. Its fields are
+ * private.
  */
-/** @brief Audio. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS (10)
-/** @brief App fetch. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_FETCH_SECS (5)
-/** @brief App messages. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS (10)
-/** @brief Core dump transfer. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_CD_SECS (10)
-/** @brief Pebble Protocol reception. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PROTOCOL_RECV_SECS (60)
-/** @brief Put bytes. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS (60)
-/** @brief Screenshots. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_SCREENSHOT_SECS (5)
-/** @brief Timeline action menu. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_TIMELINE_ACTION_MENU_SECS (10)
-/** @brief Voice. */
-#define PBL_BT_MIN_LATENCY_MODE_TIMEOUT_VOICE_SECS (10)
-/** @} */
-
-/** @brief Connection parameter update request. Packed because it is serialized. */
-struct PBL_PACKED pbl_bt_conn_params_update_req {
-  /** Minimum connection interval in 1.25 ms units. */
-  uint16_t interval_min_1_25ms;
-  /** Maximum connection interval in 1.25 ms units. */
-  uint16_t interval_max_1_25ms;
-  /** Peripheral latency in connection events. */
-  uint16_t slave_latency_events;
-  /** Supervision timeout in 10 ms units. */
-  uint16_t supervision_timeout_10ms;
+struct pbl_bt_responsiveness_req {
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_bt_responsiveness_req *next;
+  uint64_t until;
+  uint16_t conn_handle;
+  uint8_t state;
+  bool active;
+  /** @endcond */
 };
 
+/** @brief Period of a request that lasts until it is taken back. */
+#define PBL_BT_RESPONSE_TIME_FOREVER UINT16_MAX
+
 /**
- * @brief Request new connection parameters.
+ * @brief Ask for a response time on a connection, replacing what the request asked for before.
  *
- * The outcome is reported through pbl_bt_handle_le_conn_params_update_event().
+ * Asking for @ref PBL_BT_RESPONSE_TIME_MAX takes the request back, two seconds later so that
+ * consecutive operations do not go back and forth.
  *
- * @param addr The peer.
- * @param req Requested parameters.
- * @return PBL_BT_HCI_STATUS_SUCCESS if the request was sent, otherwise the reason it was not.
+ * @param conn_handle The connection. Nothing happens if there is none.
+ * @param req The request of who asks.
+ * @param state The response time.
+ * @param max_period_secs How long for, or @ref PBL_BT_RESPONSE_TIME_FOREVER.
  */
-enum pbl_bt_hci_status pbl_bt_le_connection_parameter_update(
-    const struct pbl_bt_device_internal *addr, const struct pbl_bt_conn_params_update_req *req);
+void pbl_bt_responsiveness_request(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
+                                   enum pbl_bt_response_time_state state, uint16_t max_period_secs);
+
+/**
+ * @brief Get the response time asked for on a connection.
+ *
+ * @param conn_handle The connection.
+ * @return The fastest response time asked for, @ref PBL_BT_RESPONSE_TIME_MAX if none is.
+ */
+enum pbl_bt_response_time_state pbl_bt_responsiveness_get(uint16_t conn_handle);
 
 /** @} */

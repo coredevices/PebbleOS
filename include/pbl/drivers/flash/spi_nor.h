@@ -70,11 +70,18 @@ struct pbl_flash_spi_nor {
   const struct pbl_spi_mem *bus;
   /** Supply, or NULL. */
   const struct pbl_regulator *vcc;
+  /** Parts wired in parallel, each holding one byte of every group of this many, 1 for one part. */
+  uint8_t parallel;
 };
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
 /** @endcond */
+
+/**
+ * @brief Number of parts wired in parallel, from one argument each.
+ */
+#define PBL_FLASH_SPI_NOR_PARALLEL(...) ((uint8_t)sizeof((uint8_t[]){__VA_ARGS__}))
 
 /**
  * @brief Define a NOR flash on a SPI memory controller.
@@ -83,9 +90,10 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
  * @param _name Name.
  * @param _bus Controller, a struct pbl_spi_mem.
  * @param _vcc Supply, a struct pbl_regulator, or NULL.
+ * @param _parallel Parts wired in parallel, 1 for one part.
  * @param ... OTP cells, from PBL_FLASH_OTP_CELL(), if any.
  */
-#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _vcc, ...)                           \
+#define PBL_FLASH_SPI_NOR_DEFINE(sym, _name, _bus, _vcc, _parallel, ...)                \
   PBL_FLASH_STATE_DEFINE(sym);                                                          \
   static struct pbl_flash_spi_nor_data sym##_data;                                      \
   __VA_OPT__(static const struct pbl_flash_otp_cell sym##_otp_cells[] = {__VA_ARGS__};) \
@@ -95,7 +103,7 @@ extern const struct pbl_flash_ops pbl_flash_spi_nor_ops;
   PBL_DEVICE_INSTANCE(sym, struct pbl_flash_spi_nor, struct pbl_flash, flash) {         \
     .flash = PBL_FLASH_INIT(sym, _name, &(_bus)->dev, &pbl_flash_spi_nor_ops,           \
                             &sym##_data.geometry, &sym##_data.otp, &sym##_otp_layout),  \
-    .data = &sym##_data, .bus = (_bus), .vcc = (_vcc),                                  \
+    .data = &sym##_data, .bus = (_bus), .vcc = (_vcc), .parallel = (_parallel),         \
   }
 
 /** @} */

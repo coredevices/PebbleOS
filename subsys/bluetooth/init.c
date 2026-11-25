@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "responsiveness.h"
 #include "services/services.h"
 #include "store.h"
 
@@ -14,7 +15,6 @@
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 
-#include <comm/bt_lock.h>
 #include <host/ble_hs.h>
 #include <host/ble_hs_stop.h>
 #include <host/util/util.h>
@@ -57,7 +57,7 @@ static void prv_sync_cb(void) {
   }
 
   pbl_sem_give(&s_host_started);
-  pbl_bt_handle_host_resynced();
+  pbl_bt_cb_host_synced();
 }
 
 static void prv_reset_cb(int reason) {
@@ -102,12 +102,11 @@ static void prv_ble_hs_stop_cb(int status, void *arg) {
 
 // ----------------------------------------------------------------------------------------
 void pbl_bt_init(void) {
-  bt_lock_init();
-
   nimble_gattc_op_queue_init();
 
   nimble_port_init();
   pbl_bt__store_init();
+  pbl_bt__responsiveness_init();
 
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
@@ -193,7 +192,4 @@ void pbl_bt_stop(void) {
   s_driver_state = DriverStateStopped;
 
   ble_gatts_reset();
-}
-
-void pbl_bt_power_down_controller_on_boot(void) {
 }

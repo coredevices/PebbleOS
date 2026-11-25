@@ -17,6 +17,10 @@
 
 PBL_LOG_MODULE_DECLARE(service_app_message, CONFIG_SERVICE_APP_MESSAGE_LOG_LEVEL);
 
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
+
 extern const struct pbl_pp_receiver_api g_app_message_receiver_implementation;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,9 +76,8 @@ static struct pbl_pp_receiver *prv_app_message_receiver_prepare(
     struct pbl_pp_session *session, const struct pbl_pp_endpoint *endpoint,
     size_t total_payload_size) {
   if (total_payload_size > 500) {
-    pbl_pp_session_set_responsiveness(session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                      PBL_BT_RESPONSE_TIME_MIN,
-                                      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+    pbl_pp_session_set_responsiveness(session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                      FAST_LINK_TIMEOUT_S);
   }
 
   AppMessageReceiver *rcv = (AppMessageReceiver *)pbl_zalloc(sizeof(AppMessageReceiver));
@@ -120,9 +123,8 @@ static void prv_app_message_receiver_write(struct pbl_pp_receiver *receiver, con
                                            size_t length) {
   AppMessageReceiver *rcv = (AppMessageReceiver *)receiver;
 
-  pbl_pp_session_set_responsiveness(rcv->session, PBL_BT_CONSUMER_PP_APP_MESSAGE,
-                                    PBL_BT_RESPONSE_TIME_MIN,
-                                    PBL_BT_MIN_LATENCY_MODE_TIMEOUT_APP_MESSAGE_SECS, nullptr);
+  pbl_pp_session_set_responsiveness(rcv->session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                    FAST_LINK_TIMEOUT_S);
 
   if (rcv->header_bytes_remaining > 0) {
     const size_t header_bytes_to_write = PBL_MIN(rcv->header_bytes_remaining, length);

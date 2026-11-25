@@ -19,4 +19,14 @@ properties:
           - const: coredevices,asterix
           - const: nordic,nrf52840
 
+      - description: Nordic nRF52 DK
+        items:
+          - const: nordic,nrf52-dk
+          - const: nordic,nrf52832
+
+      - description: Nordic nRF52840 DK
+        items:
+          - const: nordic,nrf52840-dk
+          - const: nordic,nrf52840
+
 additionalProperties: true

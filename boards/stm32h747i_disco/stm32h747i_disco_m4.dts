@@ -9,6 +9,18 @@
 #include "st/stm32h747xi_m4.dtsi"
 #include "stm32h747i_disco.dtsi"
 
+&led_green {
+	status = "disabled";
+};
+
+&led_red {
+	status = "disabled";
+};
+
+&led_blue {
+	status = "disabled";
+};
+
 // LPTIM2 counts the LSE; the Cortex-M7 sets up the rest of the clocks
 &rcc {
 	assigned-clocks = <&rcc LPTIM2_CK>;
@@ -21,6 +33,11 @@
 	timer {
 		status = "okay";
 	};
+};
+
+// Powers off when the Cortex-M7 asks
+&m4 {
+	status = "okay";
 };
 
 &uart8 {

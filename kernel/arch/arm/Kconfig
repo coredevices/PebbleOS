@@ -2,105 +2,105 @@
 # SPDX-License-Identifier: Apache-2.0
 
 config CPU_CORTEX_M
-	bool
-	select ARCH_HAS_COREDUMP
-	select ARCH_HAS_DEBUGGER_DETECT
-	select ARCH_HAS_STACK_GUARD
-	select ARCH_HAS_USERSPACE
-	help
-	  ARM Cortex-M core. Selected through the CPU the SoC selects.
+    bool
+    select ARCH_HAS_COREDUMP
+    select ARCH_HAS_DEBUGGER_DETECT
+    select ARCH_HAS_STACK_GUARD
+    select ARCH_HAS_USERSPACE
+    help
+      ARM Cortex-M core. Selected through the CPU the SoC selects.
 
 config CPU_CORTEX_M4
-	bool
-	select CPU_CORTEX_M
-	select ARMV7_M
+    bool
+    select CPU_CORTEX_M
+    select ARMV7_M
 
 config CPU_CORTEX_M7
-	bool
-	select CPU_CORTEX_M
-	select ARMV7_M
+    bool
+    select CPU_CORTEX_M
+    select ARMV7_M
 
 config CPU_CORTEX_M33
-	bool
-	select CPU_CORTEX_M
-	select ARMV8_M_MAINLINE
+    bool
+    select CPU_CORTEX_M
+    select ARMV8_M_MAINLINE
 
 config CPU_STAR_MC1
-	bool
-	select CPU_CORTEX_M
-	select ARMV8_M_MAINLINE
-	select ARMV8_M_DSP
-	help
-	  Arm China STAR-MC1, compatible with the Cortex-M33.
+    bool
+    select CPU_CORTEX_M
+    select ARMV8_M_MAINLINE
+    select ARMV8_M_DSP
+    help
+      Arm China STAR-MC1, compatible with the Cortex-M33.
 
 config ARCH_VECTOR_TABLE_RAM
-	bool
-	help
-	  Point VTOR at a copy of the vector table in RAM, for SoCs whose
-	  vector fetches from flash bypass the cache.
+    bool
+    help
+      Point VTOR at a copy of the vector table in RAM, for SoCs whose
+      vector fetches from flash bypass the cache.
 
 config ARMV7_M
-	bool
-	help
-	  ARMv7-M architecture.
+    bool
+    help
+      ARMv7-M architecture.
 
 config ARMV8_M_MAINLINE
-	bool
-	select CPU_CORTEX_M_HAS_SPLIM
-	help
-	  ARMv8-M Mainline architecture.
+    bool
+    select CPU_CORTEX_M_HAS_SPLIM
+    help
+      ARMv8-M Mainline architecture.
 
 config ARMV8_M_DSP
-	bool
-	depends on ARMV8_M_MAINLINE
-	help
-	  ARMv8-M DSP extension.
+    bool
+    depends on ARMV8_M_MAINLINE
+    help
+      ARMv8-M DSP extension.
 
 config CPU_CORTEX_M_HAS_SPLIM
-	bool
-	help
-	  MSPLIM and PSPLIM stack limit registers.
+    bool
+    help
+      MSPLIM and PSPLIM stack limit registers.
 
 config CPU_HAS_FPU
-	bool
-	help
-	  Single-precision FPU: FPv4-SP on the Cortex-M4, FPv5-SP on the
-	  Cortex-M7 and ARMv8-M.
+    bool
+    help
+      Single-precision FPU: FPv4-SP on the Cortex-M4, FPv5-SP on the
+      Cortex-M7 and ARMv8-M.
 
 config CPU_HAS_FPU_DOUBLE
-	bool
-	depends on CPU_HAS_FPU
-	help
-	  The FPU does double precision too: FPv5-D16.
+    bool
+    depends on CPU_HAS_FPU
+    help
+      The FPU does double precision too: FPv5-D16.
 
 config FP_SOFTFP_ABI
-	bool
-	depends on CPU_HAS_FPU
-	help
-	  Pass floating-point arguments in core registers (softfp) rather
-	  than in FPU registers (hard), for binary compatibility with
-	  soft-float code. Selected by what needs it.
+    bool
+    depends on CPU_HAS_FPU
+    help
+      Pass floating-point arguments in core registers (softfp) rather
+      than in FPU registers (hard), for binary compatibility with
+      soft-float code. Selected by what needs it.
 
 config CPU_HAS_ICACHE
-	bool
-	help
-	  L1 instruction cache maintained through the SCB.
+    bool
+    help
+      L1 instruction cache maintained through the SCB.
 
 config CPU_HAS_DCACHE
-	bool
-	help
-	  L1 data cache maintained through the SCB.
+    bool
+    help
+      L1 data cache maintained through the SCB.
 
 config ICACHE_LINE_SIZE
-	int
-	depends on CPU_HAS_ICACHE
-	default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
-	help
-	  Instruction cache line size in bytes.
+    int
+    depends on CPU_HAS_ICACHE
+    default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
+    help
+      Instruction cache line size in bytes.
 
 config DCACHE_LINE_SIZE
-	int
-	depends on CPU_HAS_DCACHE
-	default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
-	help
-	  Data cache line size in bytes.
+    int
+    depends on CPU_HAS_DCACHE
+    default 32 if CPU_STAR_MC1 || CPU_CORTEX_M7
+    help
+      Data cache line size in bytes.

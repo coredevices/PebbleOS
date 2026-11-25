@@ -1309,7 +1309,9 @@ static inline void prv_walk_lines_down(Iterator *const line_iter, TextLayout *co
     bool avoiding_orphans =
         uses_paging && ctx->draw_state.avoid_text_orphans && page_contains_enough_lines;
 
-  render_line: {} // this {} is just an empty statement that both C and our linter accepts
+  render_line:
+    {
+    } // this {} is just an empty statement that both C and our linter accepts
     const bool is_text_remaining =
         line_add_words(line, &line_iter_state->word_iter, callbacks->last_line_cb);
     // NOTE: Account for descender - assume descender is no more than half the line height

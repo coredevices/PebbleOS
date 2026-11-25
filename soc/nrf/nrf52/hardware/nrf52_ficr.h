@@ -12,6 +12,5 @@
 
 /* Register bit definitions */
 
+#define FICR_PART_NRF52832 0x06U
 #define FICR_PART_NRF52840 0x08U
-
-#define FICR_REVISION_HARDENED_APPROTECT 0x05U

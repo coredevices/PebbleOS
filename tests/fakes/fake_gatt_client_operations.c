@@ -16,10 +16,10 @@ typedef struct {
 
 static Read *s_read_head;
 
-static enum pbl_bt_errno s_read_return_value;
+static int s_read_return_value;
 
-enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic) {
-  if (s_read_return_value != PBL_BT_ERRNO_OK) {
+int gatt_client_op_read(pbl_bt_characteristic_t characteristic) {
+  if (s_read_return_value != 0) {
     return s_read_return_value;
   }
   Read *read = malloc(sizeof(Read));
@@ -31,7 +31,7 @@ enum pbl_bt_errno gatt_client_op_read(pbl_bt_characteristic_t characteristic) {
   } else {
     s_read_head = read;
   }
-  return PBL_BT_ERRNO_OK;
+  return 0;
 }
 
 typedef struct {
@@ -44,12 +44,11 @@ typedef struct {
 
 static Write *s_write_head;
 
-static enum pbl_bt_errno s_write_return_value;
+static int s_write_return_value;
 
-static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characteristic,
-                                                const uint8_t *value, size_t value_length,
-                                                bool is_response_required) {
-  if (s_write_return_value != PBL_BT_ERRNO_OK) {
+static int fake_gatt_client_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                                  size_t value_length, bool is_response_required) {
+  if (s_write_return_value != 0) {
     return s_write_return_value;
   }
   Write *write = malloc(sizeof(Write));
@@ -73,17 +72,17 @@ static enum pbl_bt_errno fake_gatt_client_write(pbl_bt_characteristic_t characte
   } else {
     s_write_head = write;
   }
-  return PBL_BT_ERRNO_OK;
+  return 0;
 }
 
-enum pbl_bt_errno gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
-                                       size_t value_length) {
+int gatt_client_op_write(pbl_bt_characteristic_t characteristic, const uint8_t *value,
+                         size_t value_length) {
   return fake_gatt_client_write(characteristic, value, value_length,
                                 true /* is_response_required */);
 }
 
-enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
-                                                        const uint8_t *value, size_t value_length) {
+int gatt_client_op_write_without_response(pbl_bt_characteristic_t characteristic,
+                                          const uint8_t *value, size_t value_length) {
   return fake_gatt_client_write(characteristic, value, value_length,
                                 false /* is_response_required */);
 }
@@ -92,8 +91,8 @@ enum pbl_bt_errno gatt_client_op_write_without_response(pbl_bt_characteristic_t 
 // Fake Manipulation
 
 void fake_gatt_client_op_init(void) {
-  s_read_return_value = PBL_BT_ERRNO_OK;
-  s_write_return_value = PBL_BT_ERRNO_OK;
+  s_read_return_value = 0;
+  s_write_return_value = 0;
 }
 
 void fake_gatt_client_op_deinit(void) {
@@ -108,8 +107,8 @@ void fake_gatt_client_op_deinit(void) {
   fake_gatt_client_op_clear_write_list();
 }
 
-void fake_gatt_client_op_set_read_return_value(enum pbl_bt_errno e) {
-  s_read_return_value = e;
+void fake_gatt_client_op_set_read_return_value(int ret) {
+  s_read_return_value = ret;
 }
 
 void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic) {
@@ -123,8 +122,8 @@ void fake_gatt_client_op_assert_read(pbl_bt_characteristic_t characteristic) {
   free(old_head);
 }
 
-void fake_gatt_client_op_set_write_return_value(enum pbl_bt_errno e) {
-  s_write_return_value = e;
+void fake_gatt_client_op_set_write_return_value(int ret) {
+  s_write_return_value = ret;
 }
 
 void fake_gatt_client_op_clear_write_list(void) {

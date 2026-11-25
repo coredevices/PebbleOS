@@ -123,6 +123,16 @@ static void prv_crumbs_layer_update_proc_round(Layer *layer, GContext *ctx) {
 }
 #endif
 
+void crumbs_layer_set_colors(CrumbsLayer *crumbs_layer, GColor bg_color, GColor fg_color) {
+  if (gcolor_equal(crumbs_layer->bg_color, bg_color) &&
+      gcolor_equal(crumbs_layer->fg_color, fg_color)) {
+    return;
+  }
+  crumbs_layer->bg_color = bg_color;
+  crumbs_layer->fg_color = fg_color;
+  layer_mark_dirty((Layer *)crumbs_layer);
+}
+
 void crumbs_layer_set_level(CrumbsLayer *crumbs_layer, int level) {
   const int max_crumbs = prv_crumb_maximum_count();
   if (level > max_crumbs) {
@@ -148,7 +158,7 @@ CrumbsLayer *crumbs_layer_create(GRect frame, GColor bg_color, GColor fg_color) 
   // Note: Not yet exported for 3rd party applications so no padding needed
   CrumbsLayer *cl = applib_malloc(sizeof(CrumbsLayer));
   if (cl) {
-    crumbs_layer_init(cl, &frame, fg_color, bg_color);
+    crumbs_layer_init(cl, &frame, bg_color, fg_color);
   }
 
   return cl;

@@ -5,7 +5,8 @@ menuconfig TOUCH
     bool "Touchscreen"
     select INPUT
     help
-      Touchscreen Drivers
+      Touchscreen class (pbl/drivers/touch.h) and its drivers, which
+      report touches as input events.
 
 if TOUCH
 
@@ -23,6 +24,7 @@ config TOUCH_CST816
     depends on DT_HAS_HYNITRON_CST816S_ENABLED
     select I2C
     select CST816_FW
+    select KERNEL_SYS_WORKQ
     select PINCTRL
     help
       Support for the Hynitron CST816 touch controller.
@@ -32,15 +34,17 @@ config TOUCH_FT6236
     default y
     depends on DT_HAS_FOCALTECH_FT6236_ENABLED
     select I2C
+    select KERNEL_SYS_WORKQ
     select PINCTRL
     help
       Support for the FocalTech FT6x36 touch controllers, such as the
       FT6236 and the FT6146.
 
 config TOUCH_QEMU
-    bool "QEMU Touchscreen"
+    bool "QEMU touchscreen"
     default y
     depends on DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
+    select KERNEL_SYS_WORKQ
     help
       Support for the QEMU touchscreen peripheral.
 
@@ -53,8 +57,9 @@ config TOUCH_QEMU_IRQ_PRIO
 
 config TOUCH_SDL
     bool "SDL mouse"
-    default y if SOC_POSIX
+    default y
     depends on DISPLAY_SDL
+    select KERNEL_SYS_WORKQ
     select SDL
     help
       Touchscreen driven by the mouse, through SDL, in a native build.
@@ -63,13 +68,13 @@ if TOUCH_SDL
 
 config TOUCH_SDL_SIZE_X
     int "SDL touchscreen X coordinates"
-    default DISPLAY_SDL_WIDTH if DISPLAY_SDL
+    default DISPLAY_SDL_WIDTH
     help
       Number of X coordinates the SDL touchscreen reports.
 
 config TOUCH_SDL_SIZE_Y
     int "SDL touchscreen Y coordinates"
-    default DISPLAY_SDL_HEIGHT if DISPLAY_SDL
+    default DISPLAY_SDL_HEIGHT
     help
       Number of Y coordinates the SDL touchscreen reports.
 

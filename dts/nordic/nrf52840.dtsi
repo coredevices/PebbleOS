@@ -25,18 +25,6 @@
 		reg = <0x20000000 0x40000>;
 	};
 
-	reserved-memory {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges;
-
-		/* Kept across resets */
-		retained_ram: memory@20000000 {
-			reg = <0x20000000 0x100>;
-			no-map;
-		};
-	};
-
 	hfxo: clock-32000000 {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -125,6 +113,14 @@
 			compatible = "nordic,nrf52840-gpiote", "nordic,nrf52832-gpiote";
 			reg = <0x40006000 0x1000>;
 			interrupts = <6>;
+		};
+
+		adc: adc@40007000 {
+			compatible = "nordic,nrf52840-saadc", "nordic,nrf52832-saadc";
+			reg = <0x40007000 0x1000>;
+			interrupts = <7>;
+			#io-channel-cells = <1>;
+			status = "disabled";
 		};
 
 		timer0: timer@40008000 {
@@ -297,6 +293,15 @@
 			compatible = "nordic,nrf52840-uarte", "nordic,nrf52832-uarte";
 			reg = <0x40028000 0x1000>;
 			interrupts = <40>;
+			status = "disabled";
+		};
+
+		usbd: usb@40027000 {
+			compatible = "nordic,nrf52840-usbd";
+			reg = <0x40027000 0x1000>;
+			interrupts = <39>;
+			clocks = <&clock NRF52_CLOCK_HFCLK>;
+			nordic,power = <&clock>;
 			status = "disabled";
 		};
 

@@ -30,6 +30,15 @@ static_assert(STM32H7_CLK_GPIOA_CK == GPIOA_CK && STM32H7_CLK_GPIOK_CK == GPIOK_
 static_assert(STM32H7_CLK_PLLSRC == PLLSRC && STM32H7_CLK_PLL1_P == PLL1_P &&
               STM32H7_CLK_PLL1_Q == PLL1_Q && STM32H7_CLK_PLL1_R == PLL1_R &&
               STM32H7_CLK_PLL3_R == PLL3_R && STM32H7_CLK_PLL3_R == STM32H7_CLK_PLL1_P + 8);
+static_assert(STM32H7_CLK_SYSCFG_CK == SYSCFG_CK);
+static_assert(STM32H7_CLK_RC48_CK == RC48_CK && STM32H7_CLK_RNG_CK == RNG_CK);
+static_assert(STM32H7_CLK_CRC_CK == CRC_CK);
+static_assert(STM32H7_CLK_QUADSPI_CK == QUADSPI_CK);
+static_assert(STM32H7_CLK_DMA1_CK == DMA1_CK && STM32H7_CLK_DMA2_CK == DMA2_CK);
+static_assert(STM32H7_CLK_ADC3_CK == ADC3_CK);
+static_assert(STM32H7_CLK_RTC_CK == RTC_CK && STM32H7_CLK_RTCAPB_CK == RTCAPB_CK);
+static_assert(STM32H7_CLK_USB1OTG_CK == USB1OTG_CK && STM32H7_CLK_USB1ULPI_CK == USB1ULPI_CK);
+static_assert(STM32H7_CLK_HSEM_CK == HSEM_CK && STM32H7_CLK_WWDG2_CK == WWDG2_CK);
 static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
 
 // The system clock goes to PLL1 P once PLL1 starts
@@ -67,10 +76,21 @@ struct gate {
   uint16_t reg;
   uint8_t bit;
   uint8_t parent;
+  // Bit in D3AMR of a D3 peripheral working in Stop, which keeps its clocks while the CPU that
+  // enabled it is stopped
+  bool autonomous;
+  uint8_t amen;
 };
 
 #define GATE(_reg, _bit, _parent) \
   {.reg = STM32H7_RCC_##_reg##_OFFSET, .bit = (_bit), .parent = STM32H7_CLK_##_parent}
+
+#define GATE_AUTONOMOUS(_reg, _bit, _parent, _amen) \
+  {.reg = STM32H7_RCC_##_reg##_OFFSET,              \
+   .bit = (_bit),                                   \
+   .parent = STM32H7_CLK_##_parent,                 \
+   .autonomous = true,                              \
+   .amen = (_amen)}
 
 static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOA_CK] = GATE(AHB4ENR, 0, HCLK),
@@ -84,8 +104,20 @@ static const struct gate s_gates[PBL_CLK_STM32H7_NUM_CLKS] = {
   [STM32H7_CLK_GPIOI_CK] = GATE(AHB4ENR, 8, HCLK),
   [STM32H7_CLK_GPIOJ_CK] = GATE(AHB4ENR, 9, HCLK),
   [STM32H7_CLK_GPIOK_CK] = GATE(AHB4ENR, 10, HCLK),
+  [STM32H7_CLK_CRC_CK] = GATE(AHB4ENR, 19, HCLK),
+  [STM32H7_CLK_DMA1_CK] = GATE(AHB1ENR, 0, HCLK),
+  [STM32H7_CLK_DMA2_CK] = GATE(AHB1ENR, 1, HCLK),
+  [STM32H7_CLK_ADC3_CK] = GATE(AHB4ENR, 24, HCLK),
+  [STM32H7_CLK_USB1OTG_CK] = GATE(AHB1ENR, 25, HCLK),
+  [STM32H7_CLK_USB1ULPI_CK] = GATE(AHB1ENR, 26, HCLK),
+  [STM32H7_CLK_HSEM_CK] = GATE(AHB4ENR, 25, HCLK),
+  [STM32H7_CLK_WWDG2_CK] = GATE(APB1LENR, 11, PCLK1),
   [STM32H7_CLK_LPTIM1_CK] = GATE(APB1LENR, 9, PCLK1),
-  [STM32H7_CLK_LPTIM2_CK] = GATE(APB4ENR, 9, PCLK4),
+  [STM32H7_CLK_LPTIM2_CK] = GATE_AUTONOMOUS(APB4ENR, 9, PCLK4, 9),
+  [STM32H7_CLK_SYSCFG_CK] = GATE(APB4ENR, 1, PCLK4),
+  [STM32H7_CLK_RTCAPB_CK] = GATE(APB4ENR, 16, PCLK4),
+  [STM32H7_CLK_RNG_CK] = GATE(AHB2ENR, 6, RC48_CK),
+  [STM32H7_CLK_QUADSPI_CK] = GATE(AHB3ENR, 14, HCLK),
   [STM32H7_CLK_USART1_CK] = GATE(APB2ENR, 4, PCLK2),
   [STM32H7_CLK_UART8_CK] = GATE(APB1LENR, 31, PCLK1),
 };
@@ -178,6 +210,15 @@ static int prv_lse_on(const struct pbl_clk_stm32h7 *rcc) {
                           LSERDY_TIMEOUT_US);
 }
 
+// The RTC clock is in the backup domain too
+static int prv_rtc_on(const struct pbl_clk_stm32h7 *rcc, bool on) {
+  pbl_modifyl(0U, PWR_CR1_DBP, rcc->pwr + STM32H7_PWR_CR1_OFFSET);
+  pbl_modifyl(on ? 0U : RCC_BDCR_RTCEN, on ? RCC_BDCR_RTCEN : 0U,
+              rcc->base + STM32H7_RCC_BDCR_OFFSET);
+
+  return 0;
+}
+
 // PLL outputs follow each other, P, Q and R of PLL1, then of PLL2 and PLL3
 static bool prv_is_pll(uint32_t id) {
   return id >= STM32H7_CLK_PLL1_P && id <= STM32H7_CLK_PLL3_R;
@@ -222,10 +263,14 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   switch (id) {
     case STM32H7_CLK_HSE_CK:
       return prv_hse_on(rcc);
+    case STM32H7_CLK_RC48_CK:
+      return prv_osc_on(rcc, STM32H7_RCC_CR_OFFSET, RCC_CR_HSI48ON, RCC_CR_HSI48RDY);
     case STM32H7_CLK_LSI_CK:
       return prv_osc_on(rcc, STM32H7_RCC_CSR_OFFSET, RCC_CSR_LSION, RCC_CSR_LSIRDY);
     case STM32H7_CLK_LSE_CK:
       return prv_lse_on(rcc);
+    case STM32H7_CLK_RTC_CK:
+      return prv_rtc_on(rcc, true);
     default:
       break;
   }
@@ -234,6 +279,9 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
     return 0;
   }
 
+  if (s_gates[id].autonomous) {
+    pbl_modifyl(0U, PBL_BIT(s_gates[id].amen), rcc->base + STM32H7_RCC_D3AMR_OFFSET);
+  }
   pbl_modifyl(0U, PBL_BIT(s_gates[id].bit), rcc->base + s_gates[id].reg);
   // The clock runs two cycles after the write; the read back waits for them
   (void)prv_getreg(rcc, s_gates[id].reg);
@@ -245,15 +293,23 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
   const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
 
   switch (id) {
+    case STM32H7_CLK_RC48_CK:
+      pbl_modifyl(RCC_CR_HSI48ON, 0U, rcc->base + STM32H7_RCC_CR_OFFSET);
+      return 0;
     case STM32H7_CLK_LSI_CK:
       pbl_modifyl(RCC_CSR_LSION, 0U, rcc->base + STM32H7_RCC_CSR_OFFSET);
       return 0;
+    case STM32H7_CLK_RTC_CK:
+      return prv_rtc_on(rcc, false);
     default:
       break;
   }
 
   if (prv_is_gate(id)) {
     pbl_modifyl(PBL_BIT(s_gates[id].bit), 0U, rcc->base + s_gates[id].reg);
+    if (s_gates[id].autonomous) {
+      pbl_modifyl(PBL_BIT(s_gates[id].amen), 0U, rcc->base + STM32H7_RCC_D3AMR_OFFSET);
+    }
   }
 
   return 0;
@@ -297,6 +353,7 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
       return 0;
     case STM32H7_CLK_HSI_CK:
     case STM32H7_CLK_CSI_CK:
+    case STM32H7_CLK_RC48_CK:
     case STM32H7_CLK_LSI_CK:
       return -ENOENT;
     case STM32H7_CLK_PLLSRC:
@@ -367,6 +424,33 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
         default:
           return -ENOTSUP;
       }
+    case STM32H7_CLK_RNG_CK:
+      switch (
+          PBL_FIELD_GET(RCC_D2CCIP2R_RNGSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
+        case RCC_D2CCIP2R_RNGSEL_HSI48:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_RC48_CK);
+          return 0;
+        case RCC_D2CCIP2R_RNGSEL_PLL1_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_Q);
+          return 0;
+        case RCC_D2CCIP2R_RNGSEL_LSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        default:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
+          return 0;
+      }
+    case STM32H7_CLK_RTC_CK:
+      switch (PBL_FIELD_GET(RCC_BDCR_RTCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_BDCR_OFFSET))) {
+        case RCC_BDCR_RTCSEL_LSE:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSE_CK);
+          return 0;
+        case RCC_BDCR_RTCSEL_LSI:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_LSI_CK);
+          return 0;
+        default:
+          return -ENOENT;
+      }
     case STM32H7_CLK_LPTIM1_CK:
       return prv_get_lptim_parent(
           ctrl, STM32H7_CLK_PCLK1,
@@ -377,6 +461,21 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
           ctrl, STM32H7_CLK_PCLK4,
           PBL_FIELD_GET(RCC_D3CCIPR_LPTIM2SEL_MASK, prv_getreg(rcc, STM32H7_RCC_D3CCIPR_OFFSET)),
           parent);
+    case STM32H7_CLK_USB1OTG_CK:
+      switch (
+          PBL_FIELD_GET(RCC_D2CCIP2R_USBSEL_MASK, prv_getreg(rcc, STM32H7_RCC_D2CCIP2R_OFFSET))) {
+        case RCC_D2CCIP2R_USBSEL_PLL1_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL1_Q);
+          return 0;
+        case RCC_D2CCIP2R_USBSEL_PLL3_Q:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_PLL3_Q);
+          return 0;
+        case RCC_D2CCIP2R_USBSEL_HSI48:
+          *parent = (struct pbl_clk)PBL_CLK(ctrl, STM32H7_CLK_RC48_CK);
+          return 0;
+        default:
+          return -ENOENT;
+      }
     default:
       if (!prv_is_gate(id)) {
         return -EINVAL;
@@ -400,6 +499,9 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
       return 0;
     case STM32H7_CLK_CSI_CK:
       *rate_mhz = STM32H7_CSI_HZ * MHZ_PER_HZ;
+      return 0;
+    case STM32H7_CLK_RC48_CK:
+      *rate_mhz = STM32H7_HSI48_HZ * MHZ_PER_HZ;
       return 0;
     case STM32H7_CLK_LSI_CK:
       *rate_mhz = STM32H7_LSI_HZ * MHZ_PER_HZ;
@@ -606,15 +708,81 @@ static int prv_set_lptim_parent(const struct pbl_clk_controller *ctrl, uint32_t 
   return 0;
 }
 
+// The selection only changes after a reset of the backup domain, which would stop the LSE and
+// lose the time: it is set once, from the first boot
+static int prv_set_rtc_parent(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t cur = PBL_FIELD_GET(RCC_BDCR_RTCSEL_MASK, prv_getreg(rcc, STM32H7_RCC_BDCR_OFFSET));
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_LSE_CK:
+      sel = RCC_BDCR_RTCSEL_LSE;
+      break;
+    case STM32H7_CLK_LSI_CK:
+      sel = RCC_BDCR_RTCSEL_LSI;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  if (cur == sel) {
+    return 0;
+  }
+
+  if (cur != RCC_BDCR_RTCSEL_NONE) {
+    return -EBUSY;
+  }
+
+  pbl_modifyl(0U, PWR_CR1_DBP, rcc->pwr + STM32H7_PWR_CR1_OFFSET);
+  prv_modify(rcc, STM32H7_RCC_BDCR_OFFSET, RCC_BDCR_RTCSEL_MASK, sel);
+
+  return 0;
+}
+
+static int prv_set_usb_parent(const struct pbl_clk_controller *ctrl, const struct pbl_clk *parent) {
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case STM32H7_CLK_PLL1_Q:
+      sel = RCC_D2CCIP2R_USBSEL_PLL1_Q;
+      break;
+    case STM32H7_CLK_PLL3_Q:
+      sel = RCC_D2CCIP2R_USBSEL_PLL3_Q;
+      break;
+    case STM32H7_CLK_RC48_CK:
+      sel = RCC_D2CCIP2R_USBSEL_HSI48;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  prv_modify(prv_rcc(ctrl), STM32H7_RCC_D2CCIP2R_OFFSET, RCC_D2CCIP2R_USBSEL_MASK, sel);
+
+  return 0;
+}
+
 static int prv_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                           const struct pbl_clk *parent) {
   switch (id) {
+    case STM32H7_CLK_RTC_CK:
+      return prv_set_rtc_parent(ctrl, parent);
     case STM32H7_CLK_LPTIM1_CK:
       return prv_set_lptim_parent(ctrl, STM32H7_RCC_D2CCIP2R_OFFSET, RCC_D2CCIP2R_LPTIM1SEL_MASK,
                                   STM32H7_CLK_PCLK1, parent);
     case STM32H7_CLK_LPTIM2_CK:
       return prv_set_lptim_parent(ctrl, STM32H7_RCC_D3CCIPR_OFFSET, RCC_D3CCIPR_LPTIM2SEL_MASK,
                                   STM32H7_CLK_PCLK4, parent);
+    case STM32H7_CLK_USB1OTG_CK:
+      return prv_set_usb_parent(ctrl, parent);
     case STM32H7_CLK_PLLSRC:
       return prv_set_pllsrc(ctrl, parent);
     case STM32H7_CLK_SYS_CK:
@@ -751,6 +919,17 @@ static int prv_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
   }
 }
 
+uint32_t pbl_clk_stm32h7_reset_flags(const struct pbl_clk_controller *ctrl, bool clear) {
+  const struct pbl_clk_stm32h7 *rcc = prv_rcc(ctrl);
+  uint32_t rsr = prv_getreg(rcc, STM32H7_RCC_RSR_OFFSET);
+
+  if (clear) {
+    pbl_modifyl(0U, RCC_RSR_RMVF, rcc->base + STM32H7_RCC_RSR_OFFSET);
+  }
+
+  return rsr;
+}
+
 const struct pbl_clk_controller_ops pbl_clk_stm32h7_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
@@ -800,4 +979,4 @@ int pbl_clk_stm32h7_init(const struct pbl_device *dev) {
 }
 #endif
 
-#include PBL_DT_INSTANCES(st_stm32h743_rcc)
+#include PBL_DT_INSTANCES(st_stm32h743_rcc_clk)

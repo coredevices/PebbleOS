@@ -46,7 +46,10 @@ static void prv_setup_state_config(ActionToggleContext *ctx, ActionToggleDialogC
     config->window_name = ctx->config.impl->window_name;
   }
   if (!config->icon) {
-    config->icon = ctx->config.impl->icons[dialog_type];
+    const ActionToggleImpl *impl = ctx->config.impl;
+    const bool disabling = (prv_get_toggled_state_index(ctx) == ActionToggleState_Disabled);
+    config->icon =
+        (disabling && impl->disable_icon) ? impl->disable_icon : impl->icons[dialog_type];
   }
   if (!config->timeout_ms) {
     // Set the default prompt or result dialog timeout

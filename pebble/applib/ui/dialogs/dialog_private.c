@@ -34,6 +34,12 @@ void dialog_init(Dialog *dialog, const char *dialog_name) {
   dialog->destroy_on_pop = true;
 }
 
+const SystemThemeDialogStyle *dialog_get_style(void) {
+  const PreferredContentSize size =
+      system_theme_is_system_ui() ? system_theme_get_content_size() : PreferredContentSizeDefault;
+  return &system_theme_get_style_for_size(size)->dialog;
+}
+
 void dialog_apply_text_color(Dialog *dialog, TextLayer *text_layer) {
   if (dialog->text_follows_theme) {
     text_layer_set_text_color_follows_theme(text_layer);

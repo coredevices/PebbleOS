@@ -1,299 +1,102 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "clients/op_queue.h"
-#include "nimble_type_conversions.h"
 #include "pairability_priv.h"
 
 #include <stdio.h>
+#include <string.h>
 
+#include <pbl/bluetooth/clients/gap.h>
 #include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/gap.h>
-#include <pbl/bluetooth/gatt.h>
 #include <pbl/bluetooth/pairing_confirm.h>
-#include <pbl/kernel/assert.h>
-#include <pbl/kernel/malloc.h>
+#include <pbl/bluetooth/types.h>
 #include <pbl/logging/logging.h>
-#include <pbl/util/math.h>
 
 #include <host/ble_gap.h>
-#include <os/os_mbuf.h>
+#include <host/ble_hs.h>
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
-static const ble_uuid16_t s_device_name_chr_uuid = BLE_UUID16_INIT(0x2A00);
-static char s_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-static bool s_pairing_in_progress;
-static uint16_t s_pairing_conn_handle;
+/* What the pairing of a connection is confirmed with: its handle. */
+#define PAIRING_CTX(conn_handle) ((struct pbl_bt_pairing_confirm_ctx *)(uintptr_t)(conn_handle))
 
-static int prv_device_name_read_event_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
-                                         struct ble_gatt_attr *attr, void *arg) {
-  if (error->status != 0) {
-    nimble_gattc_op_queue_complete();
-    return 0;
+static char s_peer_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+static uint16_t s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
+static struct ble_gap_event_listener s_pairing_listener;
+
+static bool prv_is_bonded(const struct ble_gap_conn_desc *desc) {
+  const struct ble_store_key_sec key_sec = {.peer_addr = desc->peer_id_addr};
+  struct ble_store_value_sec value_sec;
+
+  return ble_store_read_peer_sec(&key_sec, &value_sec) == 0;
+}
+
+static void prv_peer_name_cb(uint16_t conn_handle, const char *name) {
+  strncpy(s_peer_name, name, sizeof(s_peer_name) - 1);
+}
+
+static void prv_handle_connect(const struct ble_gap_event *event) {
+  struct ble_gap_conn_desc desc;
+
+  if (event->connect.status != 0 || ble_gap_conn_find(event->connect.conn_handle, &desc) != 0) {
+    return;
   }
 
-  size_t len = PBL_MIN(OS_MBUF_PKTLEN(attr->om), sizeof(s_device_name) - 1);
-  os_mbuf_copydata(attr->om, 0, len, s_device_name);
-  s_device_name[len] = '\0';
+  /* A peer with no bond is to pair: its name is shown when confirming. */
+  memset(s_peer_name, 0, sizeof(s_peer_name));
+  if (!prv_is_bonded(&desc)) {
+    pbl_bt_gapc_read_name(event->connect.conn_handle, prv_peer_name_cb);
+  }
+}
+
+static void prv_end_pairing(uint16_t conn_handle, bool success) {
+  if (conn_handle != s_pairing_conn_handle) {
+    return;
+  }
+
+  s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
+  pbl_bt_cb_pairing_confirm_handle_completed(PAIRING_CTX(conn_handle), success);
+}
+
+/* A link dropped while pairing raises no pairing complete event. */
+static int prv_pairing_gap_event(struct ble_gap_event *event, void *arg) {
+  if (event->type == BLE_GAP_EVENT_DISCONNECT) {
+    prv_end_pairing(event->disconnect.conn.conn_handle, false);
+  }
 
   return 0;
 }
 
-static int prv_device_name_read_op_start(void *ctx) {
-  const uint16_t conn_handle = *(uint16_t *)ctx;
+static void prv_handle_passkey(const struct ble_gap_event *event) {
+  char passkey[7];
 
-  int rc = ble_gattc_read_by_uuid(conn_handle, 1, UINT16_MAX, (ble_uuid_t *)&s_device_name_chr_uuid,
-                                  prv_device_name_read_event_cb, nullptr);
-  if (rc != 0) {
-    PBL_LOG_ERR("Pairing device name read failed to start (rc=0x%04x)", (uint16_t)rc);
-  }
+  /* Listeners run newest first: the pairing ends before anyone else handles the disconnection. */
+  (void)ble_gap_event_listener_unregister(&s_pairing_listener);
+  (void)ble_gap_event_listener_register(&s_pairing_listener, prv_pairing_gap_event, nullptr);
 
-  return rc;
-}
-
-static void prv_handle_connection_event(struct ble_gap_event *event) {
-  // we only want to notify on a successful connection
-  if (event->connect.status != 0)
-    return;
-
-  struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(event->connect.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_connection_event: Failed to find connection descriptor");
-    return;
-  }
-
-  struct pbl_bt_conn_complete_event complete_event = {
-    .handle = event->connect.conn_handle,
-    .is_master = desc.role == BLE_GAP_ROLE_MASTER,
-    .status = PBL_BT_HCI_STATUS_SUCCESS,
-    .mtu = ble_att_mtu(event->connect.conn_handle),
-  };
-
-  // If OTA address != ID address, then the address must be resolved.
-  // This happens for an already paired devices.
-  complete_event.is_resolved = ble_addr_cmp(&desc.peer_id_addr, &desc.peer_ota_addr) != 0;
-
-  {
-    struct pbl_bt_addr ota_addr, id_addr;
-    nimble_addr_to_pebble_addr(&desc.peer_ota_addr, &ota_addr);
-    nimble_addr_to_pebble_addr(&desc.peer_id_addr, &id_addr);
-    PBL_LOG_DBG("Conn compl: ota=" PBL_BT_ADDR_FMT " atype=%u", PBL_BT_ADDR_XPLODE(ota_addr),
-                desc.peer_ota_addr.type);
-    PBL_LOG_DBG("Conn compl: id=" PBL_BT_ADDR_FMT " atype=%u", PBL_BT_ADDR_XPLODE(id_addr),
-                desc.peer_id_addr.type);
-  }
-
-  if (complete_event.is_resolved) {
-    int rc;
-    struct ble_store_key_sec key_sec;
-    struct ble_store_value_sec value_sec;
-
-    key_sec.idx = 0;
-    key_sec.peer_addr = desc.peer_id_addr;
-
-    rc = ble_store_read_peer_sec(&key_sec, &value_sec);
-    if (rc != 0) {
-      // We can get a resolved address in case of a repeated pairing event,
-      // where peer security is deleted. An identity resolved event will be
-      // received later after the new pairing is completed.
-      PBL_LOG_INFO("Address resolved but no stored peer security (rc=%d)", rc);
-      complete_event.is_resolved = false;
-    } else {
-      memcpy(complete_event.irk.data, value_sec.irk, 16);
-    }
-  } else {
-    // If the address is not resolved, pairing is gonna happen.
-    // Trigger name read to have it ready for the pairing confirmation.
-    memset(s_device_name, 0, sizeof(s_device_name));
-    uint16_t *conn_handle = pbl_malloc_check(sizeof(*conn_handle));
-    *conn_handle = event->connect.conn_handle;
-    nimble_gattc_op_queue_push(prv_device_name_read_op_start, conn_handle);
-  }
-
-  nimble_conn_params_to_pebble(&desc, &complete_event.conn_params);
-  nimble_addr_to_pebble_device(&desc.peer_id_addr, &complete_event.peer_address);
-
-  s_pairing_in_progress = false;
-
-  pbl_bt_handle_le_connection_complete_event(&complete_event);
-}
-
-static void prv_end_pairing(uint16_t conn_handle, bool success) {
-  if (!s_pairing_in_progress || conn_handle != s_pairing_conn_handle) {
-    return;
-  }
-
-  struct pbl_bt_pairing_confirm_ctx *ctx =
-      (struct pbl_bt_pairing_confirm_ctx *)((uintptr_t)conn_handle);
-  pbl_bt_cb_pairing_confirm_handle_completed(ctx, success);
-  s_pairing_in_progress = false;
-}
-
-static void prv_handle_disconnection_event(struct ble_gap_event *event) {
-  // A link dropped mid-pairing raises no pairing complete event.
-  prv_end_pairing(event->disconnect.conn.conn_handle, false);
-
-  struct pbl_bt_gatt_device_disconnection_event gatt_event;
-  nimble_addr_to_pebble_addr(&event->disconnect.conn.peer_id_addr, &gatt_event.dev_address);
-  pbl_bt_cb_gatt_handle_disconnect(&gatt_event);
-
-  struct pbl_bt_disconn_complete_event disconnection_event = {
-    .handle = event->disconnect.conn.conn_handle,
-    .reason = event->disconnect.reason,
-    .status = PBL_BT_HCI_STATUS_SUCCESS,
-  };
-  nimble_addr_to_pebble_device(&event->disconnect.conn.peer_id_addr,
-                               &disconnection_event.peer_address);
-  pbl_bt_handle_le_disconnection_complete_event(&disconnection_event);
-}
-
-static void prv_handle_enc_change_event(struct ble_gap_event *event) {
-  struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(event->enc_change.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_enc_change_event: Failed to find connection descriptor");
-    return;
-  }
-
-  PBL_LOG_INFO("Encryption change: status=0x%04x encrypted=%u bonded=%u",
-               (uint16_t)event->enc_change.status, desc.sec_state.encrypted, desc.sec_state.bonded);
-
-  struct pbl_bt_encryption_change enc_change_event = {
-    .encryption_enabled = desc.sec_state.encrypted,
-    .status = event->enc_change.status, // doesn't technically match but only logged so this is fine
-  };
-  nimble_addr_to_pebble_addr(&desc.peer_id_addr, &enc_change_event.dev_address);
-  pbl_bt_handle_le_encryption_change_event(&enc_change_event);
-}
-
-static void prv_handle_conn_params_updated_event(struct ble_gap_event *event) {
-  struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(event->conn_update.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_conn_params_updated_event: Failed to find connection descriptor");
-    return;
-  }
-
-  if (event->conn_update.status != 0) {
-    PBL_LOG_ERR("Connection parameters update failed: 0x%04x", (uint16_t)event->conn_update.status);
-  } else {
-    PBL_LOG_INFO(
-        "Connection parameters updated: "
-        "itvl=%u ms, latency=%u, spvn timeout=%u ms",
-        desc.conn_itvl * BLE_HCI_CONN_ITVL / 1000, desc.conn_latency,
-        desc.supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
-  }
-
-  struct pbl_bt_conn_update_complete_event conn_params_update_event = {
-    .status = nimble_hs_status_to_hci(event->conn_update.status),
-  };
-  nimble_conn_params_to_pebble(&desc, &conn_params_update_event.conn_params);
-  nimble_addr_to_pebble_addr(&desc.peer_id_addr, &conn_params_update_event.dev_address);
-
-  pbl_bt_handle_le_conn_params_update_event(&conn_params_update_event);
-}
-
-static void prv_handle_conn_update_req_event(struct ble_gap_event *event) {
-  *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
-
-  PBL_LOG_INFO(
-      "Connection update request: "
-      "itvl=(%u, %u) ms, latency=%u, spvn timeout=%u ms",
-      event->conn_update_req.self_params->itvl_min * BLE_HCI_CONN_ITVL / 1000,
-      event->conn_update_req.self_params->itvl_max * BLE_HCI_CONN_ITVL / 1000,
-      event->conn_update_req.self_params->latency,
-      event->conn_update_req.self_params->supervision_timeout * BLE_HCI_CONN_SPVN_TMO_UNITS);
-}
-
-static void prv_handle_passkey_event(struct ble_gap_event *event) {
-  char passkey_str[7];
-  uint32_t passkey = 0;
-  const char *device_name = nullptr;
-  struct pbl_bt_pairing_confirm_ctx *ctx =
-      (struct pbl_bt_pairing_confirm_ctx *)((uintptr_t)event->passkey.conn_handle);
-
-  if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-    passkey = event->passkey.params.numcmp;
-  }
-
-  if (s_device_name[0] != '\0') {
-    device_name = s_device_name;
-  }
-
-  snprintf(passkey_str, sizeof(passkey_str), "%06" PRIu32, passkey);
-  pbl_bt_cb_pairing_confirm_handle_request(ctx, device_name, passkey_str);
-  s_pairing_in_progress = true;
+  snprintf(
+      passkey, sizeof(passkey), "%06" PRIu32,
+      (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) ? event->passkey.params.numcmp : 0);
   s_pairing_conn_handle = event->passkey.conn_handle;
+  pbl_bt_cb_pairing_confirm_handle_request(PAIRING_CTX(event->passkey.conn_handle),
+                                           (s_peer_name[0] != '\0') ? s_peer_name : nullptr,
+                                           passkey);
 }
 
-static void prv_handle_pairing_complete_event(struct ble_gap_event *event) {
-  PBL_LOG_INFO("Pairing complete: status=0x%04x", (uint16_t)event->pairing_complete.status);
-
-  prv_end_pairing(event->pairing_complete.conn_handle, event->pairing_complete.status == 0);
-}
-
-static void prv_handle_identity_resolved_event(struct ble_gap_event *event) {
+static int prv_handle_pairing_request(const struct ble_gap_event *event) {
   struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(event->identity_resolved.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_identity_resolved_event: Failed to find connection descriptor");
-    return;
-  }
-
-  struct pbl_bt_addr_change addr_change_event;
-  nimble_addr_to_pebble_device(&desc.peer_ota_addr, &addr_change_event.device);
-  nimble_addr_to_pebble_device(&desc.peer_id_addr, &addr_change_event.new_device);
-  pbl_bt_handle_le_connection_handle_update_address(&addr_change_event);
-}
-
-static void prv_handle_mtu_change_event(struct ble_gap_event *event) {
-  struct ble_gap_conn_desc desc;
-  if (ble_gap_conn_find(event->mtu.conn_handle, &desc) != 0) {
-    PBL_LOG_ERR("prv_handle_mtu_change_event: Failed to find connection descriptor");
-    return;
-  }
-
-  struct pbl_bt_gatt_device_mtu_update_event mtu_update_event = {.mtu = event->mtu.value};
-  nimble_addr_to_pebble_addr(&desc.peer_id_addr, &mtu_update_event.dev_address);
-  pbl_bt_cb_gatt_handle_mtu_update(&mtu_update_event);
-}
-
-extern int pebble_pairing_service_get_connectivity_send_notification(uint16_t conn_handle,
-                                                                     uint16_t attr_handle);
-static void prv_handle_subscription_event(struct ble_gap_event *event) {
-  PBL_LOG_DBG("prv_handle_subscription_event: connhandle: %d attr:%d notify:%d/%d indicate:%d/%d",
-              event->subscribe.conn_handle, event->subscribe.attr_handle,
-              event->subscribe.prev_notify, event->subscribe.cur_notify,
-              event->subscribe.prev_indicate, event->subscribe.cur_indicate);
-}
-
-static void prv_handle_notification_rx_event(struct ble_gap_event *event) {
-  if (!pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
-                              event->notify_rx.om)) {
-    PBL_LOG_DBG("Notification of handle %u is for no one", event->notify_rx.attr_handle);
-  }
-}
-
-static void prv_handle_notification_tx_event(struct ble_gap_event *event) {
-  PBL_LOG_DBG("notification tx event; status=%d attr_handle=%d indication=%d\n",
-              event->notify_tx.status, event->notify_tx.attr_handle, event->notify_tx.indication);
-}
-
-static int prv_handle_pairing_request_event(struct ble_gap_event *event) {
-  struct ble_gap_conn_desc desc;
-  struct ble_store_value_sec value_sec;
-  int rc;
 
   if (pairability_is_enabled()) {
     return 0;
   }
 
-  rc = ble_gap_conn_find(event->pairing_request.conn_handle, &desc);
-  if (rc != 0) {
+  if (ble_gap_conn_find(event->pairing_request.conn_handle, &desc) != 0) {
     return BLE_SM_ERR_UNSPECIFIED;
   }
 
-  // Bonded peers are handled by the repeat pairing policy
-  struct ble_store_key_sec key_sec = {.peer_addr = desc.peer_id_addr};
-  if (ble_store_read_peer_sec(&key_sec, &value_sec) == 0) {
+  /* Bonded peers are handled by the repeat pairing policy. */
+  if (prv_is_bonded(&desc)) {
     return 0;
   }
 
@@ -301,15 +104,15 @@ static int prv_handle_pairing_request_event(struct ble_gap_event *event) {
   return BLE_SM_ERR_PAIR_NOT_SUPP;
 }
 
-static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
+static int prv_handle_repeat_pairing(const struct ble_gap_event *event) {
 #if defined(CONFIG_BT_REPEAT_PAIRING_ALWAYS) || \
     (MYNEWT_VAL(BLE_SM_SC_ONLY) && (MYNEWT_VAL(BLE_SM_IO_CAP) == BLE_HS_IO_DISPLAY_YESNO))
   struct ble_gap_conn_desc desc;
-  int ret;
+  int rc;
 
-  ret = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
-  if (ret != 0) {
-    return ret;
+  rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
+  if (rc != 0) {
+    return rc;
   }
 
   PBL_LOG_INFO("Repeat pairing: deleting stored peer keys and retrying");
@@ -317,84 +120,37 @@ static int prv_handle_repeat_pairing_event(struct ble_gap_event *event) {
 
   return BLE_GAP_REPEAT_PAIRING_RETRY;
 #else
-  PBL_LOG_WRN("BLE_GAP_EVENT_REPEAT_PAIRING ignored");
+  PBL_LOG_WRN("Repeat pairing ignored");
   return BLE_GAP_REPEAT_PAIRING_IGNORE;
 #endif
-}
-
-static void prv_handle_phy_update_event(struct ble_gap_event *event) {
-  if (event->phy_updated.status != 0) {
-    PBL_LOG_ERR("PHY update failed: 0x%04x", (uint16_t)event->phy_updated.status);
-    return;
-  }
-
-  PBL_LOG_DBG("PHY update complete; conn_handle=%d, tx_phy=%d, rx_phy=%d",
-              event->phy_updated.conn_handle, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
 }
 
 int pbl_bt_gap_event_handler(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
-      PBL_LOG_DBG("BLE_GAP_EVENT_CONNECT");
-      prv_handle_connection_event(event);
-      break;
-    case BLE_GAP_EVENT_DISCONNECT:
-      PBL_LOG_DBG("BLE_GAP_EVENT_DISCONNECT reason=0x%x", event->disconnect.reason);
-      prv_handle_disconnection_event(event);
-      break;
-    case BLE_GAP_EVENT_ENC_CHANGE:
-      PBL_LOG_DBG("BLE_GAP_EVENT_ENC_CHANGE");
-      prv_handle_enc_change_event(event);
-      break;
-    case BLE_GAP_EVENT_CONN_UPDATE:
-      PBL_LOG_DBG("BLE_GAP_EVENT_CONN_UPDATE");
-      prv_handle_conn_params_updated_event(event);
+      prv_handle_connect(event);
       break;
     case BLE_GAP_EVENT_CONN_UPDATE_REQ:
-      PBL_LOG_DBG("BLE_GAP_EVENT_CONN_UPDATE_REQ");
-      prv_handle_conn_update_req_event(event);
+      *event->conn_update_req.self_params = *event->conn_update_req.peer_params;
       break;
     case BLE_GAP_EVENT_PASSKEY_ACTION:
-      PBL_LOG_DBG("BLE_GAP_EVENT_PASSKEY_ACTION");
-      prv_handle_passkey_event(event);
-      break;
-    case BLE_GAP_EVENT_IDENTITY_RESOLVED:
-      PBL_LOG_DBG("BLE_GAP_EVENT_IDENTITY_RESOLVED");
-      prv_handle_identity_resolved_event(event);
+      prv_handle_passkey(event);
       break;
     case BLE_GAP_EVENT_PAIRING_COMPLETE:
-      PBL_LOG_DBG("BLE_GAP_EVENT_PAIRING_COMPLETE");
-      prv_handle_pairing_complete_event(event);
-      break;
-    case BLE_GAP_EVENT_MTU:
-      PBL_LOG_DBG("BLE_GAP_EVENT_MTU");
-      prv_handle_mtu_change_event(event);
-      break;
-    case BLE_GAP_EVENT_SUBSCRIBE:
-      PBL_LOG_DBG("BLE_GAP_EVENT_SUBSCRIBE");
-      prv_handle_subscription_event(event);
+      PBL_LOG_INFO("Pairing complete: status=0x%04x", (uint16_t)event->pairing_complete.status);
+      prv_end_pairing(event->pairing_complete.conn_handle, event->pairing_complete.status == 0);
       break;
     case BLE_GAP_EVENT_NOTIFY_RX:
-      // no log here because it's incredibly noisy
-      prv_handle_notification_rx_event(event);
-      break;
-    case BLE_GAP_EVENT_NOTIFY_TX:
-      PBL_LOG_DBG("BLE_GAP_EVENT_NOTIFY_TX");
-      prv_handle_notification_tx_event(event);
+      (void)pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
+                                   event->notify_rx.om);
       break;
     case BLE_GAP_EVENT_PAIRING_REQUEST:
-      PBL_LOG_DBG("BLE_GAP_EVENT_PAIRING_REQUEST");
-      return prv_handle_pairing_request_event(event);
+      return prv_handle_pairing_request(event);
     case BLE_GAP_EVENT_REPEAT_PAIRING:
-      PBL_LOG_DBG("BLE_GAP_EVENT_REPEAT_PAIRING");
-      return prv_handle_repeat_pairing_event(event);
-    case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:
-      PBL_LOG_DBG("BLE_GAP_EVENT_PHY_UPDATE_COMPLETE");
-      prv_handle_phy_update_event(event);
-      break;
+      return prv_handle_repeat_pairing(event);
     default:
-      PBL_LOG_WRN("Unhandled GAP event: %d", event->type);
       break;
   }
+
   return 0;
 }

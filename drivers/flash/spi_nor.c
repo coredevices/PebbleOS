@@ -18,7 +18,12 @@
 
 PBL_LOG_MODULE_DECLARE(driver_flash, CONFIG_DRIVER_FLASH_LOG_LEVEL);
 
-#define ID_LEN               3U
+#define ID_LEN 3U
+// The longest register read or write, the ID
+#define REG_MAX_LEN  ID_LEN
+#define PARALLEL_MAX 4U
+// Bytes of SFDP read at a time from parts in parallel
+#define SFDP_CHUNK           16U
 #define ADDR_3BYTE           3U
 #define ADDR_4BYTE           4U
 #define ADDR_4BYTE_THRESHOLD (16U * 1024U * 1024U)
@@ -132,13 +137,44 @@ static int prv_cmd(const struct pbl_flash_spi_nor *nor, uint8_t opcode) {
   return pbl_spi_mem_exec_op(nor->bus, &op);
 }
 
-static int prv_read_reg(const struct pbl_flash_spi_nor *nor, uint8_t opcode, void *buf,
-                        size_t len) {
+static int prv_read_reg_raw(const struct pbl_flash_spi_nor *nor, uint8_t opcode, void *buf,
+                            size_t len) {
   struct pbl_spi_mem_op op =
       PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(opcode, 1), PBL_SPI_MEM_OP_NO_ADDR, PBL_SPI_MEM_OP_NO_DUMMY,
                      PBL_SPI_MEM_OP_DATA_IN(len, buf, 1));
 
   return pbl_spi_mem_exec_op(nor->bus, &op);
+}
+
+// Parts in parallel each give every byte in turn: a status bit is set when it is set in any part,
+// so that the parts are busy while one of them is
+static int prv_read_reg(const struct pbl_flash_spi_nor *nor, uint8_t opcode, void *buf,
+                        size_t len) {
+  uint8_t raw[REG_MAX_LEN * PARALLEL_MAX];
+  uint8_t *dst = buf;
+  int ret;
+
+  if (nor->parallel == 1U) {
+    return prv_read_reg_raw(nor, opcode, buf, len);
+  }
+
+  if (len > REG_MAX_LEN) {
+    return -EINVAL;
+  }
+
+  ret = prv_read_reg_raw(nor, opcode, raw, len * nor->parallel);
+  if (ret != 0) {
+    return ret;
+  }
+
+  for (size_t i = 0U; i < len; i++) {
+    dst[i] = 0U;
+    for (uint8_t p = 0U; p < nor->parallel; p++) {
+      dst[i] |= raw[i * nor->parallel + p];
+    }
+  }
+
+  return 0;
 }
 
 static int prv_busy(const struct pbl_flash_spi_nor *nor, bool *busy) {
@@ -193,12 +229,25 @@ static int prv_exec_wait(const struct pbl_flash_spi_nor *nor, const struct pbl_s
   return prv_exec_wait_susp(nor, op, nullptr);
 }
 
+// Parts in parallel each take every byte in turn: each byte goes to all of them
 static int prv_write_reg(const struct pbl_flash_spi_nor *nor, uint8_t opcode, const void *buf,
                          size_t len) {
+  uint8_t raw[REG_MAX_LEN * PARALLEL_MAX];
   struct pbl_spi_mem_op op =
       PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(opcode, 1), PBL_SPI_MEM_OP_NO_ADDR, PBL_SPI_MEM_OP_NO_DUMMY,
                      PBL_SPI_MEM_OP_DATA_OUT(len, buf, 1));
   int ret;
+
+  if (nor->parallel > 1U) {
+    if (len > REG_MAX_LEN) {
+      return -EINVAL;
+    }
+    for (size_t i = 0U; i < len * nor->parallel; i++) {
+      raw[i] = ((const uint8_t *)buf)[i / nor->parallel];
+    }
+    op.data.nbytes = len * nor->parallel;
+    op.data.buf.out = raw;
+  }
 
   ret = prv_cmd(nor, PBL_FLASH_NOR_CMD_WREN);
   if (ret != 0) {
@@ -232,7 +281,8 @@ static int prv_write_sr1(const struct pbl_flash_spi_nor *nor, uint8_t sr1) {
   uint8_t sr[2] = {sr1};
   int ret;
 
-  if (nor->data->qer == QER_SR2_BIT1_V6 || nor->data->qer == QER_SR1_BIT6) {
+  if (nor->data->qer == QER_SR2_BIT1_V6 || nor->data->qer == QER_SR1_BIT6 ||
+      (nor->data->part->flags & (PBL_FLASH_NOR_F_FSR | PBL_FLASH_NOR_F_SECR)) != 0U) {
     return prv_write_reg(nor, PBL_FLASH_NOR_CMD_WRSR, sr, 1U);
   }
 
@@ -273,14 +323,46 @@ static int prv_exec_chunked(const struct pbl_flash_spi_nor *nor, struct pbl_spi_
   return 0;
 }
 
-static int prv_read_sfdp(const struct pbl_flash_spi_nor *nor, uint32_t addr, void *buf,
-                         size_t len) {
+static int prv_read_sfdp_raw(const struct pbl_flash_spi_nor *nor, uint32_t addr, void *buf,
+                             size_t len) {
   struct pbl_spi_mem_op op =
       PBL_SPI_MEM_OP(PBL_SPI_MEM_OP_CMD(PBL_FLASH_NOR_CMD_RDSFDP, 1),
                      PBL_SPI_MEM_OP_ADDR(SFDP_ADDR_NBYTES, addr, 1),
                      PBL_SPI_MEM_OP_DUMMY(SFDP_DUMMY, 1), PBL_SPI_MEM_OP_DATA_IN(len, buf, 1));
 
   return prv_exec_chunked(nor, &op);
+}
+
+// Parts in parallel take the address of every group of bytes: the first part's table is every
+// first byte of the groups, the same in identical parts
+static int prv_read_sfdp(const struct pbl_flash_spi_nor *nor, uint32_t addr, void *buf,
+                         size_t len) {
+  uint8_t raw[SFDP_CHUNK * PARALLEL_MAX];
+  uint8_t *dst = buf;
+  int ret;
+
+  if (nor->parallel == 1U) {
+    return prv_read_sfdp_raw(nor, addr, buf, len);
+  }
+
+  while (len > 0U) {
+    size_t chunk = PBL_MIN(len, SFDP_CHUNK);
+
+    ret = prv_read_sfdp_raw(nor, addr * nor->parallel, raw, chunk * nor->parallel);
+    if (ret != 0) {
+      return ret;
+    }
+
+    for (size_t i = 0U; i < chunk; i++) {
+      dst[i] = raw[i * nor->parallel];
+    }
+
+    addr += chunk;
+    dst += chunk;
+    len -= chunk;
+  }
+
+  return 0;
 }
 
 static int prv_read_table(const struct pbl_flash_spi_nor *nor, const uint8_t *ph, uint32_t *dw,
@@ -555,7 +637,6 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
                             const struct erase_type *small, const struct erase_type *large,
                             bool four_byte, struct modes *out) {
   const uint8_t addr_nbytes = nor->data->addr_nbytes;
-  const bool quad = nor->data->qer != QER_NONE;
   struct read_mode modes[5];
   size_t n = 0U;
   bool found = false;
@@ -564,10 +645,10 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
   if (sfdp->have_bfpt) {
     const uint32_t *dw = sfdp->bfpt;
 
-    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_4_4) != 0U && quad) {
+    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_4_4) != 0U) {
       modes[n++] = prv_bfpt_read_mode((uint16_t)dw[BFPT_DW3], 4U, 4U);
     }
-    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_1_4) != 0U && quad) {
+    if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_1_4) != 0U) {
       modes[n++] = prv_bfpt_read_mode((uint16_t)(dw[BFPT_DW3] >> 16), 1U, 4U);
     }
     if ((dw[BFPT_DW1] & BFPT_DW1_READ_1_2_2) != 0U) {
@@ -599,7 +680,7 @@ static int prv_select_modes(const struct pbl_flash_spi_nor *nor, const struct sf
 
   op =
       four_byte ? prv_opcode_4b(nor, sfdp, PBL_FLASH_NOR_CMD_PP_1_1_4) : PBL_FLASH_NOR_CMD_PP_1_1_4;
-  if (quad && prv_can_program(nor, op, 4U, addr_nbytes)) {
+  if (prv_can_program(nor, op, 4U, addr_nbytes)) {
     out->pp_opcode = op;
     out->pp_data_width = 4U;
   } else {
@@ -695,7 +776,13 @@ static int prv_probe(const struct pbl_flash_spi_nor *nor) {
   data->en4b = data->addr_nbytes == ADDR_4BYTE && !four_byte;
   data->reg_addr_nbytes = data->en4b ? ADDR_4BYTE : ADDR_3BYTE;
 
-  if (modes.read.data_width == 4U || data->pp_data_width == 4U) {
+  // Each part holds one byte of every group: together, they span as many times each unit
+  data->geometry.size *= nor->parallel;
+  data->geometry.page_size *= nor->parallel;
+  data->geometry.sector_size *= nor->parallel;
+  data->geometry.subsector_size *= nor->parallel;
+
+  if (data->qer != QER_NONE && (modes.read.data_width == 4U || data->pp_data_width == 4U)) {
     ret = prv_set_quad_enable(nor);
     if (ret != 0) {
       return ret;
@@ -791,6 +878,7 @@ static const struct pbl_flash_nor_part *prv_find_part(uint32_t jedec_id) {
 
 static int prv_init(const struct pbl_flash *flash) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+  uint8_t raw_id[ID_LEN * PARALLEL_MAX];
   uint8_t id[ID_LEN];
   uint32_t jedec_id;
   int ret;
@@ -832,19 +920,39 @@ static int prv_init(const struct pbl_flash *flash) {
     }
   }
 
-  ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDID, id, sizeof(id));
+  if (nor->parallel == 0U || nor->parallel > PARALLEL_MAX) {
+    return -EINVAL;
+  }
+
+  // Each part in parallel gives its ID, every byte in turn
+  ret = prv_read_reg_raw(nor, PBL_FLASH_NOR_CMD_RDID, raw_id, ID_LEN * nor->parallel);
   if (ret != 0) {
     return ret;
   }
 
-  jedec_id = pbl_get_le24(id);
-  nor->data->part = prv_find_part(jedec_id);
-  if (nor->data->part == nullptr) {
-    PBL_LOG_ERR("Unsupported flash id 0x%06" PRIx32, jedec_id);
-    return -ENODEV;
+  for (uint8_t p = 0U; p < nor->parallel; p++) {
+    for (uint8_t i = 0U; i < ID_LEN; i++) {
+      id[i] = raw_id[i * nor->parallel + p];
+    }
+
+    jedec_id = pbl_get_le24(id);
+    if (p == 0U) {
+      nor->data->part = prv_find_part(jedec_id);
+      if (nor->data->part == nullptr) {
+        PBL_LOG_ERR("Unsupported flash id 0x%06" PRIx32, jedec_id);
+        return -ENODEV;
+      }
+    } else if (jedec_id != nor->data->part->id) {
+      PBL_LOG_ERR("Flash %u id 0x%06" PRIx32 ", expected 0x%06" PRIx32, p, jedec_id,
+                  nor->data->part->id);
+      return -ENODEV;
+    }
   }
 
-  nor->data->otp = nor->data->part->otp.info;
+  // The OTP areas of parts in parallel are not one
+  if (nor->parallel == 1U) {
+    nor->data->otp = nor->data->part->otp.info;
+  }
   PBL_LOG_DBG("Flash %s", nor->data->part->name);
 
   ret = prv_probe(nor);
@@ -873,8 +981,8 @@ static int prv_read_op(const struct pbl_flash_spi_nor *nor, uint32_t offs, void 
 }
 
 // Through the window where it reaches, through operations beyond
-static int prv_read(const struct pbl_flash *flash, uint32_t offs, void *buf, size_t len) {
-  const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+static int prv_read_aligned(const struct pbl_flash_spi_nor *nor, uint32_t offs, void *buf,
+                            size_t len) {
   const struct pbl_spi_mem_dirmap *dm = &nor->data->dirmap;
   uint8_t *dst = buf;
   int ret;
@@ -906,8 +1014,52 @@ static int prv_read(const struct pbl_flash *flash, uint32_t offs, void *buf, siz
   return 0;
 }
 
-static int prv_write(const struct pbl_flash *flash, uint32_t start, const void *buf, size_t len) {
+// Parts in parallel take one address for each group of bytes: a read starts and ends on a group
+static int prv_read(const struct pbl_flash *flash, uint32_t offs, void *buf, size_t len) {
   const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+  const uint8_t p = nor->parallel;
+  uint8_t group[PARALLEL_MAX];
+  uint8_t *dst = buf;
+  size_t head = offs % p;
+  size_t chunk;
+  int ret;
+
+  if (head != 0U) {
+    chunk = PBL_MIN(len, p - head);
+    ret = prv_read_aligned(nor, offs - head, group, p);
+    if (ret != 0) {
+      return ret;
+    }
+    memcpy(dst, &group[head], chunk);
+    offs += chunk;
+    dst += chunk;
+    len -= chunk;
+  }
+
+  chunk = len - (len % p);
+  if (chunk > 0U) {
+    ret = prv_read_aligned(nor, offs, dst, chunk);
+    if (ret != 0) {
+      return ret;
+    }
+    offs += chunk;
+    dst += chunk;
+    len -= chunk;
+  }
+
+  if (len > 0U) {
+    ret = prv_read_aligned(nor, offs, group, p);
+    if (ret != 0) {
+      return ret;
+    }
+    memcpy(dst, group, len);
+  }
+
+  return 0;
+}
+
+static int prv_write_aligned(const struct pbl_flash_spi_nor *nor, uint32_t start, const void *buf,
+                             size_t len) {
   const struct pbl_flash_spi_nor_data *data = nor->data;
   const uint32_t page_size = data->geometry.page_size;
   const size_t total = len;
@@ -944,6 +1096,50 @@ static int prv_write(const struct pbl_flash *flash, uint32_t start, const void *
   pbl_spi_mem_dirmap_invalidate(nor->bus, &data->dirmap, start, total);
 
   return ret;
+}
+
+// Parts in parallel take one address for each group of bytes: the bytes a write leaves out of
+// its first and last group are programmed erased, which leaves them as they are
+static int prv_write(const struct pbl_flash *flash, uint32_t start, const void *buf, size_t len) {
+  const struct pbl_flash_spi_nor *nor = prv_nor(flash);
+  const uint8_t p = nor->parallel;
+  uint8_t group[PARALLEL_MAX];
+  const uint8_t *src = buf;
+  size_t head = start % p;
+  size_t chunk;
+  int ret;
+
+  if (head != 0U) {
+    chunk = PBL_MIN(len, p - head);
+    memset(group, 0xff, sizeof(group));
+    memcpy(&group[head], src, chunk);
+    ret = prv_write_aligned(nor, start - head, group, p);
+    if (ret != 0) {
+      return ret;
+    }
+    start += chunk;
+    src += chunk;
+    len -= chunk;
+  }
+
+  chunk = len - (len % p);
+  if (chunk > 0U) {
+    ret = prv_write_aligned(nor, start, src, chunk);
+    if (ret != 0) {
+      return ret;
+    }
+    start += chunk;
+    src += chunk;
+    len -= chunk;
+  }
+
+  if (len > 0U) {
+    memset(group, 0xff, sizeof(group));
+    memcpy(group, src, len);
+    return prv_write_aligned(nor, start, group, p);
+  }
+
+  return 0;
 }
 
 static int prv_erase(const struct pbl_flash *flash, uint32_t offset, uint32_t size) {
@@ -997,6 +1193,28 @@ static int prv_erase_status(const struct pbl_flash *flash) {
 
   if (busy) {
     return -EBUSY;
+  }
+
+  if ((nor->data->part->flags & PBL_FLASH_NOR_F_FSR) != 0U) {
+    uint8_t fsr;
+
+    ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDFSR, &fsr, sizeof(fsr));
+    if (ret != 0) {
+      return ret;
+    }
+
+    return ((fsr & PBL_FLASH_NOR_FSR_ERASE_SUS) != 0U) ? -EAGAIN : 0;
+  }
+
+  if ((nor->data->part->flags & PBL_FLASH_NOR_F_SECR) != 0U) {
+    uint8_t secr;
+
+    ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSECR, &secr, sizeof(secr));
+    if (ret != 0) {
+      return ret;
+    }
+
+    return ((secr & PBL_FLASH_NOR_SECR_ESB) != 0U) ? -EAGAIN : 0;
   }
 
   ret = prv_read_reg(nor, PBL_FLASH_NOR_CMD_RDSR2, &sr2, sizeof(sr2));

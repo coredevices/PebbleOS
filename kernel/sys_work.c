@@ -13,6 +13,11 @@
 #include <pbl/kernel/work.h>
 #include <pbl/util/misc.h>
 
+#ifdef CONFIG_KERNEL_SYS_WORKQ
+PBL_WORKQ_DEFINE(pbl_sys_workq);
+static struct pbl_thread s_sys_thread;
+PBL_THREAD_STACK_DEFINE(s_sys_stack, CONFIG_KERNEL_SYS_WORKQ_STACK_SIZE);
+
 struct pbl_sys_work__heap_call {
   struct pbl_work work;
   pbl_work_call_fn_t fn;
@@ -20,11 +25,50 @@ struct pbl_sys_work__heap_call {
 };
 
 static PBL_WORK_POOL_DEFINE(s_pool, CONFIG_KERNEL_SYS_WORKQ_CALLS);
-static PBL_WORK_POOL_DEFINE(s_high_pool, CONFIG_KERNEL_SYS_WORKQ_HIGH_CALLS);
 //! The function behind a heap call, which is all the queue knows about.
 static pbl_work_call_fn_t s_heap_fn;
 static bool s_blocked;
+#endif
 
+#ifdef CONFIG_KERNEL_SYS_WORKQ_HIGH
+PBL_WORKQ_DEFINE(pbl_sys_workq_high);
+static struct pbl_thread s_sys_high_thread;
+PBL_THREAD_STACK_DEFINE(s_sys_high_stack, CONFIG_KERNEL_SYS_WORKQ_HIGH_STACK_SIZE);
+
+static PBL_WORK_POOL_DEFINE(s_high_pool, CONFIG_KERNEL_SYS_WORKQ_HIGH_CALLS);
+#endif
+
+[[maybe_unused]] static void prv_start(struct pbl_workq *q, struct pbl_thread *thread,
+                                       const char *name, pbl_prio_t prio, void *stack,
+                                       size_t stack_size) {
+  const struct pbl_thread_attr attr = {
+    .name = name,
+    .entry = pbl_workq_thread,
+    .arg = q,
+    .prio = prio,
+    .privileged = true,
+    .stack = stack,
+    .stack_size = stack_size,
+  };
+
+  // Set here too, as callers can ask for it before the thread first runs.
+  q->thread = thread;
+  PBL_ASSERTN(pbl_thread_create(thread, &attr) == 0);
+}
+
+void sys_workq_init(void) {
+#ifdef CONFIG_KERNEL_SYS_WORKQ
+  pbl_workq_set_boost_prio(&pbl_sys_workq, CONFIG_KERNEL_SYS_WORKQ_BOOST_PRIO);
+  prv_start(&pbl_sys_workq, &s_sys_thread, "SysWorkq", CONFIG_KERNEL_SYS_WORKQ_PRIO, s_sys_stack,
+            sizeof(s_sys_stack));
+#endif
+#ifdef CONFIG_KERNEL_SYS_WORKQ_HIGH
+  prv_start(&pbl_sys_workq_high, &s_sys_high_thread, "SysWorkqHigh",
+            CONFIG_KERNEL_SYS_WORKQ_HIGH_PRIO, s_sys_high_stack, sizeof(s_sys_high_stack));
+#endif
+}
+
+#ifdef CONFIG_KERNEL_SYS_WORKQ
 void *pbl_sys_work_current_fn(void) {
   return s_heap_fn ? (void *)s_heap_fn : pbl_workq_current_fn(&pbl_sys_workq);
 }
@@ -96,15 +140,6 @@ bool pbl_sys_work_try_call(pbl_work_call_fn_t fn, void *data) {
   return !s_blocked && pbl_work_call(&pbl_sys_workq, &s_pool, fn, data, PBL_NO_WAIT) == 0;
 }
 
-bool pbl_sys_work_call_high(pbl_work_call_fn_t fn, void *data) {
-  return pbl_work_call(&pbl_sys_workq_high, &s_high_pool, fn, data,
-                       PBL_MSEC(CONFIG_KERNEL_SYS_WORKQ_HIGH_CALL_TIMEOUT_MS)) == 0;
-}
-
-void pbl_sys_work_call_high_from_isr(pbl_work_call_fn_t fn, void *data) {
-  (void)pbl_work_call(&pbl_sys_workq_high, &s_high_pool, fn, data, PBL_NO_WAIT);
-}
-
 void pbl_sys_work_block(bool block) {
   s_blocked = block;
 }
@@ -114,8 +149,27 @@ size_t pbl_sys_work_num_free(void) {
 
   return pbl_work_pool_num_free(own_pool != nullptr ? own_pool : &s_pool);
 }
+#endif
+
+#ifdef CONFIG_KERNEL_SYS_WORKQ_HIGH
+bool pbl_sys_work_call_high(pbl_work_call_fn_t fn, void *data) {
+  return pbl_work_call(&pbl_sys_workq_high, &s_high_pool, fn, data,
+                       PBL_MSEC(CONFIG_KERNEL_SYS_WORKQ_HIGH_CALL_TIMEOUT_MS)) == 0;
+}
+
+void pbl_sys_work_call_high_from_isr(pbl_work_call_fn_t fn, void *data) {
+  (void)pbl_work_call(&pbl_sys_workq_high, &s_high_pool, fn, data, PBL_NO_WAIT);
+}
+#endif
 
 #if UNITTEST
+void sys_workq_reset_for_test(void) {
+  memset(&s_sys_thread, 0, sizeof(s_sys_thread));
+  memset(&s_sys_high_thread, 0, sizeof(s_sys_high_thread));
+  pbl_workq_init(&pbl_sys_workq);
+  pbl_workq_init(&pbl_sys_workq_high);
+}
+
 void sys_work_reset_for_test(void) {
   static struct pbl_work_call s_slots[CONFIG_KERNEL_SYS_WORKQ_CALLS];
   static struct pbl_work_call s_high_slots[CONFIG_KERNEL_SYS_WORKQ_HIGH_CALLS];

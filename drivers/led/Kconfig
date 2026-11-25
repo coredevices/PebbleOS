@@ -4,7 +4,8 @@
 menuconfig LED
     bool "LED"
     help
-      LED Drivers
+      LED class (pbl/drivers/led.h), selected by the drivers that light
+      LEDs, such as the LED backlight.
 
 if LED
 
@@ -21,6 +22,23 @@ config LED_AW2016
     select LED_HAS_COLOR
     help
       Support for the Awinic AW2016 RGB LED controller.
+
+config LED_WS2812B
+    bool "Worldsemi WS2812B"
+    default y
+    depends on DT_HAS_WORLDSEMI_WS2812B_ENABLED
+    select SPI
+    select LED_HAS_COLOR
+    help
+      Support for a Worldsemi WS2812B RGB LED on a SPI MOSI line.
+
+config LED_GPIO
+    bool "GPIO LEDs"
+    default y
+    depends on DT_HAS_GPIO_LEDS_ENABLED
+    select GPIO
+    help
+      Support for LEDs switched by GPIOs.
 
 module = DRIVER_LED
 module-str = LED

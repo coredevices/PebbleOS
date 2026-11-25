@@ -118,14 +118,6 @@ int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint
   return 0;
 }
 
-void bt_lock(void) {
-  return;
-}
-
-void bt_unlock(void) {
-  return;
-}
-
 // Tests
 ///////////////////////////////////////
 

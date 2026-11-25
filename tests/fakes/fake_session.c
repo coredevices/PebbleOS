@@ -261,13 +261,11 @@ void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {
 
 static uint32_t s_responsiveness_max_period_s;
 static bool s_responsiveness_latency_is_reduced;
-static pbl_bt_responsiveness_granted_cb_t s_last_responsiveness_granted_handler;
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
-                                       enum pbl_bt_consumer consumer,
+                                       struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs,
-                                       pbl_bt_responsiveness_granted_cb_t granted_handler) {
+                                       uint16_t max_period_secs) {
   s_responsiveness_max_period_s = max_period_secs;
 
   if (state == PBL_BT_RESPONSE_TIME_MIDDLE) {
@@ -275,16 +273,10 @@ void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
   } else if (state == PBL_BT_RESPONSE_TIME_MAX) {
     s_responsiveness_latency_is_reduced = false;
   }
-
-  s_last_responsiveness_granted_handler = granted_handler;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Session related functions
-
-pbl_bt_responsiveness_granted_cb_t fake_comm_session_get_last_responsiveness_granted_handler(void) {
-  return s_last_responsiveness_granted_handler;
-}
 
 int fake_comm_session_open_call_count(void) {
   return s_session_open_call_count;
@@ -468,7 +460,6 @@ void fake_comm_session_init(void) {
 
   s_session_close_call_count = 0;
   s_session_open_call_count = 0;
-  s_last_responsiveness_granted_handler = nullptr;
 }
 
 void fake_comm_session_cleanup(void) {

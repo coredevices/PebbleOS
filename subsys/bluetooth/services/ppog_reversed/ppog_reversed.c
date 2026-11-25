@@ -1,12 +1,13 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
+
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/nimble_type_conversions.h>
 #include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
@@ -91,15 +92,7 @@ static void prv_handle_subscribe_event(struct ble_gap_event *event) {
     return;
   }
   if (event->subscribe.cur_notify) {
-    struct ble_gap_conn_desc desc;
-    if (ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
-      PBL_LOG_ERR("Reversed PPoG subscribe: no conn descriptor for handle %u",
-                  event->subscribe.conn_handle);
-      return;
-    }
-    struct pbl_bt_device_internal device;
-    nimble_addr_to_pebble_device(&desc.peer_id_addr, &device);
-    pbl_bt_cb_ppog_reversed_subscribed(&device, event->subscribe.conn_handle);
+    pbl_bt_cb_ppog_reversed_subscribed(event->subscribe.conn_handle);
   } else {
     pbl_bt_cb_ppog_reversed_unsubscribed(event->subscribe.conn_handle);
   }
@@ -142,23 +135,22 @@ int pbl_bt__ppog_reversed_init(void) {
   return 0;
 }
 
-enum pbl_bt_errno pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf,
-                                              uint16_t len) {
+int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
   if (!om) {
-    return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
+    return -ENOMEM;
   }
   int rc = ble_gatts_notify_custom(conn_handle, s_data_notify_handle, om);
   // ble_gatts_notify_custom always consumes the mbuf, even on error.
   switch (rc) {
     case 0:
-      return PBL_BT_ERRNO_OK;
+      return 0;
     case BLE_HS_ENOMEM:
-      return PBL_BT_ERRNO_NOT_ENOUGH_RESOURCES;
+      return -ENOMEM;
     case BLE_HS_ENOTCONN:
-      return PBL_BT_ERRNO_INVALID_STATE;
+      return -ENOTCONN;
     default:
       PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
-      return (enum pbl_bt_errno)(PBL_BT_ERRNO_INTERNAL_ERROR_BEGIN + rc);
+      return -EIO;
   }
 }

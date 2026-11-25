@@ -6,33 +6,10 @@
  * default to the devicetree's memory and reserved memory nodes, or are set by
  * the SoC or board.
  *
- * SRAM is carved up sequentially from CONFIG_SRAM_BASE: the kernel gets
- * whatever is left after the worker and the app take their share at the end.
- * The app segment is sized for the largest app execution environment (2x, 3x
- * or 4x) the application supports, and is empty when it runs no apps.
- *
- * The worker and app segments are not memory regions: the firmware overwrites
- * them wholesale at runtime, so nothing may ever be linked into them. Only
- * their bounds are exported, as symbols.
+ * The kernel's RAM runs from CONFIG_SRAM_BASE to __kernel_ram_end__, the end
+ * of SRAM unless the application reserves RAM after the kernel's from a
+ * memory linker snippet.
  */
-
-#define PBL_MAX(a, b) ((a) > (b) ? (a) : (b))
-
-#define PBL_APP_RAM_2X_SIZE \
-    (CONFIG_APP_RAM_2X_SEGMENT_SIZE + CONFIG_APP_RAM_2X_RUNTIME_SIZE)
-#define PBL_APP_RAM_3X_SIZE \
-    (CONFIG_APP_RAM_3X_SEGMENT_SIZE + CONFIG_APP_RAM_3X_RUNTIME_SIZE)
-#define PBL_APP_RAM_4X_SIZE \
-    (CONFIG_APP_RAM_4X_SEGMENT_SIZE + CONFIG_APP_RAM_4X_RUNTIME_SIZE)
-
-#define PBL_APP_RAM_SIZE \
-    PBL_MAX(PBL_APP_RAM_2X_SIZE, PBL_MAX(PBL_APP_RAM_3X_SIZE, PBL_APP_RAM_4X_SIZE))
-
-#define PBL_WORKER_RAM_SIZE \
-    (CONFIG_WORKER_RAM_SEGMENT_SIZE + CONFIG_WORKER_RAM_RUNTIME_SIZE)
-
-#define PBL_RAM_SIZE \
-    (CONFIG_SRAM_SIZE - PBL_WORKER_RAM_SIZE - PBL_APP_RAM_SIZE)
 
 MEMORY
 {
@@ -41,7 +18,7 @@ MEMORY
                  LENGTH = CONFIG_FW_FLASH_SIZE - CONFIG_FIRMWARE_OFFSET
 
     RAM (xrw) : ORIGIN = CONFIG_SRAM_BASE,
-                LENGTH = PBL_RAM_SIZE
+                LENGTH = CONFIG_SRAM_SIZE
 }
 
 __FLASH_start__ = CONFIG_FLASH_BASE;
@@ -49,29 +26,10 @@ __FLASH_size__ = CONFIG_FLASH_SIZE;
 
 __SRAM_size__ = CONFIG_SRAM_SIZE;
 
+PROVIDE(__kernel_ram_end__ = ORIGIN(RAM) + LENGTH(RAM));
+
 __RAM_start__ = ORIGIN(RAM);
-__RAM_size__ = LENGTH(RAM);
-
-__WORKER_RAM__ = __RAM_start__ + __RAM_size__;
-__WORKER_RAM_size__ = PBL_WORKER_RAM_SIZE;
-__WORKER_RAM_end__ = __WORKER_RAM__ + __WORKER_RAM_size__;
-
-__APP_RAM__ = __WORKER_RAM_end__;
-__APP_RAM_size__ = PBL_APP_RAM_SIZE;
-__APP_RAM_end__ = __APP_RAM__ + __APP_RAM_size__;
+__RAM_size__ = __kernel_ram_end__ - __RAM_start__;
 
 REGION_ALIAS("REGION_ISR_STACK", RAM);
 REGION_ALIAS("REGION_KERNEL_HEAP", RAM);
-
-/* The process loader enforces eight-byte alignment on all segments. */
-ASSERT(CONFIG_APP_RAM_2X_SEGMENT_SIZE % 8 == 0,
-       "The app_segment size for the 2x app environment is not a multiple of eight bytes");
-ASSERT(CONFIG_APP_RAM_3X_SEGMENT_SIZE % 8 == 0,
-       "The app_segment size for the 3x app environment is not a multiple of eight bytes");
-ASSERT(CONFIG_APP_RAM_4X_SEGMENT_SIZE % 8 == 0,
-       "The app_segment size for the 4x app environment is not a multiple of eight bytes");
-ASSERT(CONFIG_WORKER_RAM_SEGMENT_SIZE % 8 == 0,
-       "The worker segment size is not a multiple of eight bytes");
-
-/* Basic sanity check: the kernel needs at least 64k. */
-ASSERT(PBL_RAM_SIZE >= 64K, "Kernel RAM is too small!")

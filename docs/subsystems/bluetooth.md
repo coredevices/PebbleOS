@@ -6,25 +6,22 @@ API is `include/pbl/bluetooth/`, enabled by `CONFIG_BT`; the
 
 ## Layering
 
-`pebble/comm/ble/` is the host-side BLE layer and carries substantial design
-prose:
-
-- `gap_le_connect.c` — connection management: the bonded phone, once its
-  link is encrypted, is the gateway whose services the firmware uses.
-- `gap_le_connect_params.c` — a primer on connection intervals, slave
-  latency and supervision timeouts, and why the firmware deviates from the
-  spec-recommended parameter-update pause for iOS.
+The subsystem does not wrap NimBLE: it runs its host and adds what an
+application needs around it, and everything else is done with NimBLE directly.
+A connection is named by its NimBLE handle everywhere, and whoever needs its
+events follows them with `ble_gap_event_listener_register()`.
 
 ```{mermaid}
 flowchart TD
-  ble["Host BLE layer<br/>pebble/comm/ble/"]
-  glue["pbl_bt API<br/>subsys/bluetooth/"]
+  fw["Firmware<br/>pebble/services/bluetooth/"]
+  glue["Bluetooth subsystem<br/>subsys/bluetooth/"]
   nimble["NimBLE host and port<br/>third_party/nimble"]
   nrf["NimBLE controller<br/>nRF52 radio"]
   sifli["SiFli LCPU<br/>IPC, SF32LB52"]
   fake["Fake controller<br/>QEMU"]
   uart["H4 controller<br/>CONFIG_NIMBLE_HCI_UART"]
-  ble --> glue --> nimble
+  fw --> glue --> nimble
+  fw --> nimble
   nimble -- HCI --> nrf
   nimble -- HCI --> sifli
   nimble -- HCI --> fake
@@ -33,13 +30,24 @@ flowchart TD
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
   classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
   classDef base fill:#525252,stroke:#525252,color:#ffffff
-  class ble app
+  class fw app
   class glue,nimble system
   class nrf,sifli,fake,uart base
 ```
 
-Beneath it sits NimBLE (`third_party/nimble`), which `subsys/bluetooth/`
-implements the `pbl_bt` API on. NimBLE can also be used on its own, with
+What the subsystem has:
+
+| Part | Header | What for |
+| --- | --- | --- |
+| Start and stop | `pbl/bluetooth/init.h` | The host task, the services and the identity address |
+| Bonds | `pbl/bluetooth/bond.h` | The store, and what is in it |
+| Pairing | `pbl/bluetooth/gap.h`, `pairing_confirm.h`, `pairability.h` | Who may pair, and the confirmation by the user |
+| Response time | `pbl/bluetooth/responsiveness.h` | The connection parameters, see below |
+| GATT services | `subsys/bluetooth/services/` | What the watch serves |
+| GATT clients | `pbl/bluetooth/clients/` | What it uses of a peer, see below |
+
+Beneath it sits NimBLE (`third_party/nimble`), which can also be used on its
+own, with
 `CONFIG_NIMBLE`: its port runs the host, and the link layer when the
 controller is in the image, on threads that `nimble_port_pebble_init()`
 starts, and the {doc}`NimBLE samples <../samples/index>` use its API
@@ -75,7 +83,16 @@ peers and their CCCDs where its backend, `NIMBLE_STORE_BACKEND`, says:
 The PRF store (`pbl/bluetooth/prf_store.h`, `NIMBLE_STORE_PRF`) is a flash
 partition of its own with the one bonding and the root keys the recovery
 firmware and the normal firmware share. Recovery firmware in the field reads
-it, so its layout is fixed.
+it, so the layout a device ships with is fixed. `NIMBLE_STORE_PRF_LAYOUT`
+chooses it:
+
+| Layout | Is |
+| --- | --- |
+| `NIMBLE_STORE_PRF_LAYOUT_RECORDS` | A log of 140-byte records with one CRC, each holding all the store keeps: the last valid one is the store. The default |
+| `NIMBLE_STORE_PRF_LAYOUT_LEGACY` | Entries of 256 bytes made of fields with a CRC each. What Asterix, Obelix and Getafix shipped with, and keep |
+
+The types that describe a layout are the store's own: a bonding goes in and
+comes out as the keys NimBLE stores for a peer, `struct ble_store_value_sec`.
 
 The Bluetooth subsystem uses that store too, and it is the only place bonds
 are kept. `pbl/bluetooth/bond.h` lists them by the peer's identity address,
@@ -92,6 +109,43 @@ The firmware builds on that in its Bluetooth service:
 - Both take the local IRK from the root keys in the PRF store, so that a phone
   sees one watch. The phone's name is kept there as well.
 
+## Response time
+
+A connection is slow and frugal, or fast and costly, and which one is a matter
+of its parameters. Whoever needs it fast asks for a response time on a
+connection with `pbl_bt_responsiveness_request()`, with a request it owns
+(`struct pbl_bt_responsiveness_req`) and for a limited period; the fastest one asked for is negotiated with the central:
+
+| Response time | Interval | Peripheral latency | Supervision timeout |
+| --- | --- | --- | --- |
+| `PBL_BT_RESPONSE_TIME_MAX`, `_MIDDLE` | 45 to 60 ms | 4 | 6 s |
+| `PBL_BT_RESPONSE_TIME_MIN` | 15 ms | 0 | 6 s |
+
+The interval is the time between two connection events, where both ends meet
+on a channel; the latency is the number of them the peripheral may skip when
+it has nothing to send, which saves it power without costing it latency of its
+own; the supervision timeout is how long the link survives without one.
+
+Nothing is asked of the central before the first request, nor within a second
+of connecting: the specification recommends five, but iOS connects with a
+720 ms supervision timeout and never raises it on its own, so the link is
+fragile until then. A request the central does not answer in 5 s is made
+again, three times at most; one that collides with a procedure of the central
+is made again 2 s later and does not count. A response time taken back holds
+for 2 s more, so that consecutive transfers do not go back and forth.
+
+## The link of the firmware
+
+The watch is a peripheral with one connection, the link
+(`pebble/services/bluetooth/link.c`). It follows it with a GAP listener, and
+tells the rest of the firmware about it:
+
+- Any connection and disconnection, with `PBL_BT_PEBBLE_CONNECTION_EVENT`.
+- The gateway: the link becomes the gateway's once it is encrypted and its
+  peer is bonded, and only then are the services of the phone used. That, and
+  the loss of it, is `PEBBLE_BLE_CONNECTION_EVENT`, with the connection handle.
+- The device name of the peer, read with the GAP client and kept with its bond.
+
 ## GATT clients
 
 The clients of the services of a peer are built on NimBLE alone, and can be
@@ -106,6 +160,7 @@ used without the rest of the subsystem:
   the outcomes and the notifications. Notification listeners are fed by
   whoever handles the GAP events of a connection, with
   `pbl_bt_gattc_notify_rx()`.
+- `pbl/bluetooth/clients/gap.h` reads the device name of a peer.
 - `pbl/bluetooth/clients/ancs.h` (`BT_ANCS_CLIENT`) is the client of the Apple
   Notification Center Service. It reports the notifications of the device,
   and on request gets their attributes and those of their apps, gathering
@@ -123,15 +178,15 @@ used without the rest of the subsystem:
 
 The firmware uses them for everything it needs from the phone, which it calls
 the gateway: the bonded peer, once its link is encrypted.
-`pebble/comm/ble/kernel_le_client/` starts a client of each service when the
+`pebble/services/bluetooth/gateway.c` starts a client of each service when the
 gateway connects, and stops them when it goes:
 
 | Service | Client | What for |
 | --- | --- | --- |
 | PPoGATT | `subsys/pp/transports/gatt/` | Sessions with the phone app, and with other apps: each hosts an instance of the service |
-| Generic Attribute | `kernel_le_client.c` | Service Changed: when the phone indicates it, every client looks for its service again |
-| ANCS | `ancs/`, on the ANCS client | iOS notifications |
-| AMS | `ams/`, on the AMS client | iOS media control |
+| Generic Attribute | `gateway.c` | Service Changed: when the phone indicates it, every client looks for its service again |
+| ANCS | `pebble/services/notifications/ancs/ancs.c`, on the ANCS client | iOS notifications |
+| AMS | `pebble/services/music/ams.c`, on the AMS client | iOS media control |
 
 Each looks for its own service, in that order, so that the session with the
 phone app comes first. What a client reports on the NimBLE host thread is

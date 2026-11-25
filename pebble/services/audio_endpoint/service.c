@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
@@ -10,9 +11,11 @@
 #include <pbl/services/audio_endpoint_private.h>
 #include <pbl/util/circular_buffer.h>
 
-#include <comm/bt_lock.h>
-
 PBL_LOG_MODULE_DEFINE(service_audio_endpoint, CONFIG_SERVICE_AUDIO_ENDPOINT_LOG_LEVEL);
+
+#define FAST_LINK_TIMEOUT_S 10
+
+static struct pbl_bt_responsiveness_req s_response_time_req;
 
 #define ACTIVE_MODE_TIMEOUT      (10000)
 #define ACTIVE_MODE_START_BUFFER (100)
@@ -38,9 +41,10 @@ static AudioEndpointSession s_session = {
   .active_mode_trigger = PBL_DELAYED_WORK_INITIALIZER(prv_active_mode_timer_cb),
 };
 static uint32_t s_dropped_frames;
+static PBL_MUTEX_DEFINE(s_lock);
 
 static void prv_session_deinit(bool call_stop_handler) {
-  bt_lock();
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (call_stop_handler && s_session.stop_transfer) {
     s_session.stop_transfer(s_session.id);
   }
@@ -49,13 +53,13 @@ static void prv_session_deinit(bool call_stop_handler) {
     s_session.active_mode_on = false;
     pbl_delayed_work_cancel(&s_session.active_mode_trigger);
     struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
-    pbl_pp_session_set_responsiveness(comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT,
-                                      PBL_BT_RESPONSE_TIME_MAX, 0, nullptr);
+    pbl_pp_session_set_responsiveness(comm_session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MAX,
+                                      0);
   }
 
   s_session.id = AUDIO_ENDPOINT_SESSION_INVALID_ID;
   s_session.stop_transfer = nullptr;
-  bt_unlock();
+  pbl_mutex_unlock(&s_lock);
 
   if (s_dropped_frames > 0) {
     PBL_LOG_WRN("Dropped %" PRIu32 " frames during audio transfer", s_dropped_frames);
@@ -81,13 +85,12 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_AUDIO, PBL_PP_ACCESS_PRIVATE,
 
 static void prv_start_active_mode(void *data) {
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();
-  pbl_pp_session_set_responsiveness(
-      comm_session, PBL_BT_CONSUMER_PP_AUDIO_ENDPOINT, PBL_BT_RESPONSE_TIME_MIN,
-      PBL_BT_MIN_LATENCY_MODE_TIMEOUT_AUDIO_SECS, nullptr /* granted_handler */);
+  pbl_pp_session_set_responsiveness(comm_session, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                    FAST_LINK_TIMEOUT_S);
 }
 
-//! Never block on bt_lock from the high priority queue (pbl_pp_session_set_responsiveness
-//! takes it); defer to SysWorkq.
+//! Never block on the high priority queue (pbl_pp_session_set_responsiveness() takes locks);
+//! defer to SysWorkq.
 static void prv_active_mode_timer_cb(struct pbl_work *work) {
   pbl_sys_work_call(prv_start_active_mode, nullptr);
 
@@ -103,7 +106,7 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(
     return AUDIO_ENDPOINT_SESSION_INVALID_ID;
   }
 
-  bt_lock();
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   s_session.id = ++s_session_id;
   s_session.stop_transfer = stop_transfer;
@@ -114,7 +117,7 @@ AudioEndpointSessionId audio_endpoint_setup_transfer(
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_session.active_mode_trigger,
                               PBL_MSEC(ACTIVE_MODE_PERIOD_MS));
 
-  bt_unlock();
+  pbl_mutex_unlock(&s_lock);
 
   prv_start_active_mode(nullptr);
 

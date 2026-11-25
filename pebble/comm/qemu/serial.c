@@ -22,6 +22,7 @@
 #include <pbl/board.h>
 #include <pbl/drivers/uart.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/activity/activity.h>
 #include <pbl/services/activity/activity_private.h>
@@ -31,7 +32,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <comm/qemu/pp_transport.h>
 #include <comm/qemu/serial.h>
 #include <comm/qemu/serial_private.h>
 #include <kernel/events.h>
@@ -41,6 +41,8 @@
 #include <shell/system_theme.h>
 
 PBL_LOG_MODULE_DEFINE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
+
+#define READY_LOG_DELAY_MS 500U
 
 static void prv_uart_rx(const struct pbl_uart *uart, uint8_t byte, void *arg);
 
@@ -104,6 +106,18 @@ static void prv_accel_msg_callback(const uint8_t *data, uint32_t len) {
 
 // -----------------------------------------------------------------------------------------
 // Handle incoming Bluetooth connection packet data (QemuProtocol_BluetoothConnection)
+static bool s_app_connected = true;
+
+static void prv_put_comm_session_event(bool is_open, bool is_system) {
+  PebbleEvent event = {
+    .type = PEBBLE_COMM_SESSION_EVENT,
+    .bluetooth.comm_session_event.is_open = is_open,
+    .bluetooth.comm_session_event.is_system = is_system,
+  };
+
+  event_put(&event);
+}
+
 static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t len) {
   QemuProtocolBluetoothConnectionHeader *hdr = (QemuProtocolBluetoothConnectionHeader *)data;
   if (len != sizeof(*hdr)) {
@@ -112,12 +126,13 @@ static void prv_bluetooth_connection_msg_callback(const uint8_t *data, uint32_t 
   }
 
   PBL_LOG_DBG("Got bluetooth connection msg: connected:%d", hdr->connected);
-  bool current_status = qemu_pp_is_connected();
-  bool new_status = (hdr->connected != 0);
+  const bool connected = (hdr->connected != 0);
 
-  if (new_status != current_status && !bt_ctl_is_airplane_mode_on()) {
-    // Change to new status if we're not in airplane mode
-    qemu_pp_set_connected(new_status);
+  if (connected != s_app_connected && !bt_ctl_is_airplane_mode_on()) {
+    // Only tell apps: the session the host has open stays as it is.
+    prv_put_comm_session_event(connected, true);
+    prv_put_comm_session_event(connected, false);
+    s_app_connected = connected;
   }
 }
 
@@ -299,8 +314,7 @@ static void prv_mic_msg_callback(const uint8_t *data, uint32_t len) {
 // -----------------------------------------------------------------------------------------
 // List of incoming message handlers
 static const QemuMessageHandler s_qemu_endpoints[] = {
-  // IMPORTANT: These must be in sorted order!!
-  {QemuProtocol_SPP, qemu_pp_receive},
+// IMPORTANT: These must be in sorted order!!
 #ifdef CONFIG_ACCEL_SIM
   {QemuProtocol_Tap, prv_tap_msg_callback},
 #endif
@@ -495,4 +509,14 @@ void qemu_serial_send(QemuProtocol protocol, const uint8_t *data, uint32_t len) 
   prv_send((uint8_t *)&footer, sizeof(footer));
 
   pbl_mutex_unlock(&s_qemu_state.qemu_comm_lock);
+}
+
+static void prv_log_ready(struct pbl_work *work) {
+  PBL_LOG_INFO("Ready for communication.");
+}
+
+static PBL_DELAYED_WORK_DEFINE(s_ready_log_work, prv_log_ready);
+
+void qemu_serial_notify_ready(void) {
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &s_ready_log_work, PBL_MSEC(READY_LOG_DELAY_MS));
 }

@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include <pbl/bluetooth/conn_event_stats.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/fatal.h>
@@ -25,7 +24,6 @@
 #include <pbl/util/math.h>
 #include <pbl/util/testing.h>
 
-#include <comm/bluetooth_analytics.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <kernel/system_message.h>
@@ -138,8 +136,6 @@ typedef struct {
 
   //! the time in ticks at which the put bytes init request completed
   uint64_t start_ticks;
-  struct pbl_bt_slave_conn_event_stats conn_event_stats;
-
   //! Holds PB commands. Will enqueue multiple PutRequests when pre-acking is enabled
   PutBytesPendingJobs pb_pending_jobs;
 
@@ -315,9 +311,10 @@ static bool prv_init_put_job_queue_if_necessary(void) {
   return true;
 }
 
-static void prv_set_responsiveness(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
-  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), PBL_BT_CONSUMER_PP_PUT_BYTES,
-                                    state, timeout_secs, nullptr);
+void put_bytes_set_response_time(enum pbl_bt_response_time_state state, uint16_t timeout_secs) {
+  static struct pbl_bt_responsiveness_req s_req;
+
+  pbl_pp_session_set_responsiveness(pbl_pp_session_get_system(), &s_req, state, timeout_secs);
 }
 
 static void prv_send_nack_from_sys_work(void *data) {
@@ -349,7 +346,7 @@ static void prv_cleanup(void) {
   // PutBytes, we will stay at Min for an extra 10 seconds after the entire transaction is
   // completed. Marginal power hit, but shouldn't happen often since PutBytes itself doesn't
   // happen too often.
-  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, 10);
+  put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIN, 10);
 
   PebbleEvent event = {
     .type = PEBBLE_PUT_BYTES_EVENT,
@@ -800,10 +797,6 @@ static void prv_do_commit(void) {
     PBL_LOG_DBG("PutBytes pushed %d bytes/sec", bytes_per_sec);
   }
 
-  bluetooth_analytics_handle_put_bytes_stats(commit_succeeded, s_pb_state.type,
-                                             s_pb_state.total_size, elapsed_time_ms,
-                                             &s_pb_state.conn_event_stats);
-
   if (commit_succeeded) {
     s_pb_state.is_success = true;
     PBL_LOG_DBG("PutBytes commit CB. CRC matches! Calculated CRC is 0x%" PRIx32
@@ -1246,7 +1239,7 @@ void prv_receiver_finish(struct pbl_pp_receiver *receiver) {
   }
 
   // We are still processing PB data, keep the BT connection fast
-  prv_set_responsiveness(PBL_BT_RESPONSE_TIME_MIN, PBL_BT_MIN_LATENCY_MODE_TIMEOUT_PUT_BYTES_SECS);
+  put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIN, PUT_BYTES_FAST_LINK_TIMEOUT_S);
 
   prv_finalize_pb_job();
   if (prv_receiver_contains_put_request()) {

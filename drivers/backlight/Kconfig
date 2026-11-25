@@ -4,7 +4,8 @@
 menuconfig BACKLIGHT
     bool "Backlight"
     help
-      Backlight Drivers
+      Backlight class (pbl/drivers/backlight.h) and its drivers: the
+      brightness, and the color where the hardware mixes one.
 
 if BACKLIGHT
 
@@ -55,17 +56,18 @@ config BACKLIGHT_QEMU
 
 config BACKLIGHT_POSIX
     bool "POSIX"
-    default y if SOC_POSIX
+    default y
+    depends on SOC_POSIX
     help
       Backlight of a native build, which does nothing.
 
 config BACKLIGHT_QEMU_COLOR
-    bool "QEMU Color"
+    bool "QEMU color"
     depends on BACKLIGHT_QEMU
     select BACKLIGHT_HAS_COLOR
     help
-      Enable support for RGB backlight colors in the QEMU backlight driver.
-  
+      RGB backlight colors in the QEMU backlight driver.
+
 module = DRIVER_BACKLIGHT
 module-str = Backlight
 source "subsys/logging/Kconfig.template.log_level"

@@ -9,21 +9,92 @@
 #include "st/stm32h747xi_m7.dtsi"
 #include "stm32h747i_disco.dtsi"
 
+/ {
+	// The USB3320 on the ULPI of the USB OTG HS, clocked by its own 24 MHz crystal
+	usbotg_hs_phy: usb-phy {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
+		clocks = <&rcc USB1ULPI_CK>;
+		clock-names = "main_clk";
+	};
+
+	// The joystick, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-back {
+			label = "JoyLeft";
+			gpios = <&gpiok 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_BACK>;
+		};
+
+		button-up {
+			label = "JoyUp";
+			gpios = <&gpiok 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_UP>;
+		};
+
+		button-select {
+			label = "JoySel";
+			gpios = <&gpiok 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_SELECT>;
+		};
+
+		button-down {
+			label = "JoyDown";
+			gpios = <&gpiok 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_DOWN>;
+		};
+
+		button-right {
+			label = "JoyRight";
+			gpios = <&gpiok 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_RIGHT>;
+		};
+
+		// On a wakeup pin, it starts the kit again from power-off
+		button-wakeup {
+			label = "Wakeup";
+			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_WAKEUP>;
+			wakeup-source;
+		};
+	};
+};
+
+&led_orange {
+	status = "disabled";
+};
+
 // The CPU at 400 MHz from PLL1 on HSE, AHB at 200 MHz and APB at 100 MHz; LPTIM1 counts the LSE
-// crystal
+// crystal; the USB OTG HS takes its 48 MHz from HSI48
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>,
-			  <&rcc LPTIM1_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc USB1OTG_CK>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <&rcc LSE_CK>;
+				 <&rcc LSE_CK>, <&rcc LSE_CK>, <&rcc RC48_CK>;
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <0>;
+			       <100000000>, <100000000>, <0>, <0>, <0>;
+};
+
+&dma1 {
+	status = "okay";
+};
+
+&dma2 {
+	status = "okay";
+};
+
+&dmamux1 {
+	status = "okay";
 };
 
 &usart1 {
 	pinctrl-0 = <&usart1_default>;
 	pinctrl-names = "default";
+	dmas = <&dmamux1 41 0x400 0x10>;
+	dma-names = "rx";
 	status = "okay";
 };
 
@@ -38,6 +109,61 @@
 
 &m4 {
 	st,auto-boot;
+	status = "okay";
+};
+
+&iwdg {
+	status = "okay";
+};
+
+&rng {
+	status = "okay";
+};
+
+&crc {
+	status = "okay";
+};
+
+// The two MT25QL512ABB, one on each bank, share the chip select: they work as one flash, each
+// holding every other byte
+&qspi {
+	pinctrl-0 = <&qspi_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		parallel-memories = /bits/ 64 <0x4000000 0x4000000>;
+		spi-max-frequency = <50000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+	};
+};
+
+// VREF+ is tied to the 3.3 V of VDDA
+&adc_3 {
+	vdda-supply = <&v3v3>;
+	vref-supply = <&v3v3>;
+	status = "okay";
+};
+
+&adc3 {
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+// The USB OTG HS, on its micro-AB connector, as a device
+&usbotg_hs {
+	dr_mode = "peripheral";
+	phys = <&usbotg_hs_phy>;
+	phy-names = "usb2-phy";
+	usb33d-supply = <&usb33>;
+	pinctrl-0 = <&usbotg_hs_ulpi>;
+	pinctrl-names = "default";
 	status = "okay";
 };
 

@@ -644,7 +644,7 @@ static void prv_back_click_handler(ClickRecognizerRef recognizer, void *context)
 
   tick_timer_service_unsubscribe();
 
-#ifdef CONFIG_CONSOLE
+#ifdef CONFIG_CONSOLE_INPUT
   pbl_console_set_rx_enabled(true);
 #endif
   bt_ctl_set_enabled(true);
@@ -672,7 +672,7 @@ static void prv_handle_init(void) {
   app_state_set_user_data(data);
 
   // Disable power consumers and idle watchdog for the entire test
-#ifdef CONFIG_CONSOLE
+#ifdef CONFIG_CONSOLE_INPUT
   pbl_console_set_rx_enabled(false);
 #endif
   bt_ctl_set_enabled(false);

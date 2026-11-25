@@ -25,70 +25,75 @@ PBL_LOG_MODULE_DECLARE(service_activity, CONFIG_SERVICE_ACTIVITY_LOG_LEVEL);
 
 static PBL_MUTEX_DEFINE(s_insight_settings_mutex);
 
-#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD_DEFAULT                                         \
-  {                                                                                             \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = false, .reward = { \
-      .min_days_data = 6,                                                                       \
-      .continuous_min_days_data = 2,                                                            \
-      .target_qualifying_days = 2,                                                              \
-      .target_percent_of_median = 120,                                                          \
-      .notif_min_interval_seconds = 7 * PBL_SEC_PER_DAY,                                        \
-      .sleep.trigger_after_wakeup_seconds = 2 * PBL_SEC_PER_HOUR                                \
-    }                                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_REWARD_DEFAULT                             \
+  {                                                                                 \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = false, \
+    .reward = {                                                                     \
+      .min_days_data = 6,                                                           \
+      .continuous_min_days_data = 2,                                                \
+      .target_qualifying_days = 2,                                                  \
+      .target_percent_of_median = 120,                                              \
+      .notif_min_interval_seconds = 7 * PBL_SEC_PER_DAY,                            \
+      .sleep.trigger_after_wakeup_seconds = 2 * PBL_SEC_PER_HOUR                    \
+    }                                                                               \
   }
 
-#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY_DEFAULT                                        \
-  {                                                                                             \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, .summary = { \
-      .above_avg_threshold = 10,                                                                \
-      .below_avg_threshold = -10,                                                               \
-      .fail_threshold = -50,                                                                    \
-      .sleep = {                                                                                \
-        .max_fail_minutes = 7 * PBL_MIN_PER_HOUR,                                               \
-        .trigger_notif_seconds = 30 * PBL_SEC_PER_MIN,                                          \
-        .trigger_notif_activity = 10,                                                           \
-        .trigger_notif_active_minutes = 2                                                       \
-      }                                                                                         \
-    }                                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_SLEEP_SUMMARY_DEFAULT                           \
+  {                                                                                \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, \
+    .summary = {                                                                   \
+      .above_avg_threshold = 10,                                                   \
+      .below_avg_threshold = -10,                                                  \
+      .fail_threshold = -50,                                                       \
+      .sleep = {                                                                   \
+        .max_fail_minutes = 7 * PBL_MIN_PER_HOUR,                                  \
+        .trigger_notif_seconds = 30 * PBL_SEC_PER_MIN,                             \
+        .trigger_notif_activity = 10,                                              \
+        .trigger_notif_active_minutes = 2                                          \
+      }                                                                            \
+    }                                                                              \
   }
 
-#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD_DEFAULT                                      \
-  {                                                                                             \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = false, .reward = { \
-      .min_days_data = 6,                                                                       \
-      .continuous_min_days_data = 0,                                                            \
-      .target_qualifying_days = 0,                                                              \
-      .target_percent_of_median = 150,                                                          \
-      .notif_min_interval_seconds = 1 * PBL_SEC_PER_DAY,                                        \
-      .activity = {.trigger_active_minutes = 2, .trigger_steps_per_minute = 50}                 \
-    }                                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_REWARD_DEFAULT                          \
+  {                                                                                 \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = false, \
+    .reward = {                                                                     \
+      .min_days_data = 6,                                                           \
+      .continuous_min_days_data = 0,                                                \
+      .target_qualifying_days = 0,                                                  \
+      .target_percent_of_median = 150,                                              \
+      .notif_min_interval_seconds = 1 * PBL_SEC_PER_DAY,                            \
+      .activity = {.trigger_active_minutes = 2, .trigger_steps_per_minute = 50}     \
+    }                                                                               \
   }
 
-#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY_DEFAULT                                     \
-  {                                                                                             \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, .summary = { \
-      .above_avg_threshold = 10,                                                                \
-      .below_avg_threshold = -10,                                                               \
-      .fail_threshold = -50,                                                                    \
-      .activity = {                                                                             \
-        .trigger_minute = (20 * PBL_MIN_PER_HOUR) + 30,                                         \
-        .update_threshold_steps = 1000,                                                         \
-        .update_max_interval_seconds = 30 * PBL_SEC_PER_MIN,                                    \
-        .show_notification = true,                                                              \
-        .max_fail_steps = 10000,                                                                \
-      }                                                                                         \
-    }                                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SUMMARY_DEFAULT                        \
+  {                                                                                \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, \
+    .summary = {                                                                   \
+      .above_avg_threshold = 10,                                                   \
+      .below_avg_threshold = -10,                                                  \
+      .fail_threshold = -50,                                                       \
+      .activity = {                                                                \
+        .trigger_minute = (20 * PBL_MIN_PER_HOUR) + 30,                            \
+        .update_threshold_steps = 1000,                                            \
+        .update_max_interval_seconds = 30 * PBL_SEC_PER_MIN,                       \
+        .show_notification = true,                                                 \
+        .max_fail_steps = 10000,                                                   \
+      }                                                                            \
+    }                                                                              \
   }
 
-#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SESSION_DEFAULT                                     \
-  {                                                                                             \
-    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, .session = { \
-      .show_notification = true,                                                                \
-      .activity = {                                                                             \
-        .trigger_elapsed_minutes = 20,                                                          \
-        .trigger_cooldown_minutes = 10,                                                         \
-      },                                                                                        \
-    }                                                                                           \
+#define ACTIVITY_INSIGHTS_SETTINGS_ACTIVITY_SESSION_DEFAULT                        \
+  {                                                                                \
+    .version = ACTIVITY_INSIGHTS_SETTINGS_CURRENT_STRUCT_VERSION, .enabled = true, \
+    .session = {                                                                   \
+      .show_notification = true,                                                   \
+      .activity = {                                                                \
+        .trigger_elapsed_minutes = 20,                                             \
+        .trigger_cooldown_minutes = 10,                                            \
+      },                                                                           \
+    }                                                                              \
   }
 
 typedef struct {

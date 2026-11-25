@@ -68,11 +68,16 @@ static const char *s_syncable_settings[] = {
   "lightIntensity",
   "lightMotion",
   "lightTouch",
+  "touchEnabled",
+  "touchNavMenuEnabled",
   "lightAmbientThreshold",
 #ifdef CONFIG_DYNAMIC_BACKLIGHT
   "lightDynamicMode",
 #endif
   "lightPreset",
+#ifdef CONFIG_APP_SCALING
+  "legacyAppRenderMode",
+#endif
 #ifdef CONFIG_BACKLIGHT_HAS_COLOR
   "lightColor",
   "lightColorDayNightEnabled",
@@ -99,6 +104,9 @@ static const char *s_syncable_settings[] = {
   // UI theming
   "settingsMenuHighlightColor",
   "appsMenuHighlightColor",
+  "themeHighlightColor",
+  "darkMode",
+  "darkModeSchedule",
 
   // Timeline preferences
   "timelineQuickViewEnabled",
@@ -112,6 +120,7 @@ static const char *s_syncable_settings[] = {
   "activityPreferences",
   "activityHealthAppOpened",
   "activityWorkoutAppOpened",
+  "activityInsightsStyle",
   "alarmsAppOpened",
   "hrmPreferences",
   "heartRatePreferences",
@@ -141,6 +150,8 @@ static const char *s_syncable_notif_prefs[] = {
   "vibeScoreNotifications",
   "vibeScoreIncomingCalls",
   "vibeScoreAlarms",
+  "vibeScoreHourly",
+  "vibeScoreOnDisconnect",
   "dndManuallyEnabled",
   "dndSmartEnabled",
   "dndWeekdaySchedule",
@@ -155,10 +166,15 @@ static const char *s_syncable_notif_prefs[] = {
   "notifBacklight",
   "notifRespectPhoneSilence",
   "notifDismissalSync",
+  "notifGroupingRange",
+  "notifStatusBarStyle",
+  "speakerMuted",
+  "speakerVolume",
   "dndMotionBacklight",
   "dndTouchBacklight",
   "dndNotificationBacklight",
   "dndAutoDismiss",
+  "dndMuteSpeaker",
 };
 
 static const size_t s_num_syncable_notif_prefs = PBL_ARRAY_SIZE(s_syncable_notif_prefs);

@@ -72,6 +72,11 @@ class Console(PblCommand):
         log_dict = os.path.join(build.path, "log.dict.json")
         if os.path.exists(log_dict):
             console += f" --dict {shlex.quote(log_dict)}"
+        if not emulated and build.config.get("CONFIG_USB_CDC_ACM"):
+            # Checked at each open: the port may not be there yet
+            vid = build.config.get("CONFIG_USB_DEVICE_VID")
+            pid = build.config.get("CONFIG_USB_DEVICE_PID")
+            console += f" --keep-input-from {vid:04x}:{pid:04x}"
 
         if args.reconnect:
             keepalive = self.script("tools", "console_keepalive.py")

@@ -11,6 +11,7 @@
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/idle.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/time.h>
@@ -67,12 +68,15 @@ struct pbl_clk_sf32lb_soc {
   uint32_t bg_offset;
   uint32_t bg_en;
   bool mpi3;
+  // DWCFGR bits keeping the DLL outputs running in deep WFI, 0 if none
+  uint32_t dwcfgr_dll_out;
 };
 
 // For the code that runs with the flash down, which cannot read the device
 static uintptr_t s_base;
 static uintptr_t s_cfg;
 static uint32_t s_sel_sys_lp;
+static uint32_t s_dwcfgr_dll_out;
 static uint32_t s_bg_offset;
 static uint32_t s_bg_en;
 
@@ -185,6 +189,9 @@ const struct pbl_clk_sf32lb_soc pbl_clk_sf32lb57_soc = {
   .bg_offset = SF32LB57_HPSYS_CFG_ANAU_CR_OFFSET,
   .bg_en = HPSYS_CFG_ANAU_CR_EN_BG,
   .mpi3 = true,
+  .dwcfgr_dll_out = SF32LB57_HPSYS_RCC_DWCFGR_DLL1_OUT_EN |
+                    SF32LB57_HPSYS_RCC_DWCFGR_DLL1_OUT_RSTB |
+                    SF32LB57_HPSYS_RCC_DWCFGR_DLL2_OUT_EN | SF32LB57_HPSYS_RCC_DWCFGR_DLL2_OUT_RSTB,
 };
 
 static const struct pbl_clk_sf32lb *prv_rcc(const struct pbl_clk_controller *ctrl) {
@@ -548,6 +555,31 @@ static int prv_set_mpi_parent(const struct pbl_clk_controller *ctrl, uint32_t ma
   return 0;
 }
 
+// The USB controller clock: clk_hpsys or DLL2, then divided
+static int prv_set_usbc_parent(const struct pbl_clk_controller *ctrl,
+                               const struct pbl_clk *parent) {
+  uint32_t sel;
+
+  if (parent->ctrl != ctrl) {
+    return -EINVAL;
+  }
+
+  switch (parent->id) {
+    case SF32LB_HPSYS_CLK_SYS:
+      sel = 0U;
+      break;
+    case SF32LB_HPSYS_CLK_DLL2:
+      sel = HPSYS_RCC_CSR_SEL_USBC;
+      break;
+    default:
+      return -EINVAL;
+  }
+
+  prv_modify(ctrl, SF32LB52_HPSYS_RCC_CSR_OFFSET, HPSYS_RCC_CSR_SEL_USBC, sel);
+
+  return 0;
+}
+
 static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
                               const struct pbl_clk *parent) {
   const struct pbl_clk_sf32lb *rcc = prv_rcc(ctrl);
@@ -565,6 +597,8 @@ static int prv_clk_set_parent(const struct pbl_clk_controller *ctrl, uint32_t id
         return -EINVAL;
       }
       return prv_set_mpi_parent(ctrl, HPSYS_RCC_CSR_SEL_MPI3_MASK, parent);
+    case SF32LB_HPSYS_CLK_USBC_K:
+      return prv_set_usbc_parent(ctrl, parent);
     case SF32LB_HPSYS_CLK_PERI:
       break;
     default:
@@ -674,6 +708,13 @@ static int prv_clk_set_rate(const struct pbl_clk_controller *ctrl, uint32_t id, 
       prv_modify(ctrl, SF32LB52_HPSYS_RCC_CFGR_OFFSET, mask, PBL_FIELD_PREP(mask, pdiv));
       return 0;
     }
+    case SF32LB_HPSYS_CLK_USBC_K:
+      if (div > PBL_FIELD_GET(HPSYS_RCC_USBCR_DIV_MASK, HPSYS_RCC_USBCR_DIV_MASK)) {
+        return -EINVAL;
+      }
+      prv_modify(ctrl, SF32LB52_HPSYS_RCC_USBCR_OFFSET, HPSYS_RCC_USBCR_DIV_MASK,
+                 PBL_FIELD_PREP(HPSYS_RCC_USBCR_DIV_MASK, div));
+      return 0;
     default:
       return -EINVAL;
   }
@@ -715,6 +756,39 @@ PBL_SECTION_RAM void pbl_clk_sf32lb_hxt48_resume(const struct pbl_clk_sf32lb_hxt
   pbl_writel(state->csr, s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET);
 }
 
+static uint32_t s_deepwfi_holds;
+static uint32_t s_deepwfi_saved;
+
+int pbl_clk_sf32lb_deepwfi_hold(void) {
+  uint32_t addr = s_base + SF32LB52_HPSYS_RCC_DWCFGR_OFFSET;
+  uint32_t sel;
+
+  if (s_dwcfgr_dll_out == 0U) {
+    return -ENOTSUP;
+  }
+
+  pbl_irq_lock();
+  if (s_deepwfi_holds++ == 0U) {
+    s_deepwfi_saved = pbl_readl(addr);
+    sel = PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK,
+                        pbl_readl(s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET));
+    pbl_writel((s_deepwfi_saved & ~HPSYS_RCC_DWCFGR_SEL_SYS_MASK) |
+                   PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_SEL_SYS_MASK, sel) | s_dwcfgr_dll_out,
+               addr);
+  }
+  pbl_irq_unlock();
+
+  return 0;
+}
+
+void pbl_clk_sf32lb_deepwfi_release(void) {
+  pbl_irq_lock();
+  if (s_deepwfi_holds > 0U && --s_deepwfi_holds == 0U) {
+    pbl_writel(s_deepwfi_saved, s_base + SF32LB52_HPSYS_RCC_DWCFGR_OFFSET);
+  }
+  pbl_irq_unlock();
+}
+
 static struct pbl_clk_sf32lb_hxt48_state s_idle_hxt48;
 
 // HXT48 stops in deep sleep
@@ -739,6 +813,7 @@ int pbl_clk_sf32lb_init(const struct pbl_device *dev) {
   s_base = rcc->base;
   s_cfg = rcc->cfg;
   s_sel_sys_lp = rcc->soc->sel_sys_lp;
+  s_dwcfgr_dll_out = rcc->soc->dwcfgr_dll_out;
   s_bg_offset = rcc->soc->bg_offset;
   s_bg_en = rcc->soc->bg_en;
 

@@ -3,4 +3,5 @@
 
 pbl_library()
 pbl_library_sources_ifdef(CONFIG_CRC_SF32LB sf32lb.c)
+pbl_library_sources_ifdef(CONFIG_CRC_STM32 stm32.c)
 pbl_library_sources_ifdef(CONFIG_CRC_SHELL shell.c)

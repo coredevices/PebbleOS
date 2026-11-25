@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/usb/sifli,sf32lb57-usb.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB57 USB controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Mentor Graphics MUSB full-speed controller with its PHY, which the HPSYS
+  configuration enables, on PA35 (D+) and PA36 (D-).
+
+properties:
+  compatible:
+    const: sifli,sf32lb57-usb
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  sifli,hpsys-cfg:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: HPSYS configuration, which enables the PHY and the bandgap it runs from.
+
+  sifli,fifo-size:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description:
+      Bytes of FIFO RAM that hold packets correctly, endpoint 0's included.
+      The SF32LB57 corrupts packets past its first 512 bytes, though the
+      controller's RAMINFO register gives 1 KiB.
+
+  dr_mode:
+    enum: [peripheral]
+
+  pinctrl-0: true
+
+  pinctrl-names: true
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - sifli,hpsys-cfg
+  - sifli,fifo-size
+
+additionalProperties: false
+
+examples:
+  - |
+    usb@50047000 {
+        compatible = "sifli,sf32lb57-usb";
+        reg = <0x50047000 0x1000>;
+        interrupts = <92>;
+        clocks = <&hpsys_rcc 33>;
+        sifli,hpsys-cfg = <&hpsys_cfg>;
+        sifli,fifo-size = <512>;
+    };

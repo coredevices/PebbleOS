@@ -4,16 +4,17 @@
 #include <string.h>
 
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/bluetooth/prf_store_layout.h>
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/board/partitions.h>
-#include <pbl/btutil/sm_util.h>
+#include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
+#include <host/ble_store.h>
+#include <prf_legacy_layout.h>
 
 // Fakes
 //////////////////////////////////////////////////////////
@@ -51,118 +52,38 @@ void pbl_mutex_unlock(struct pbl_mutex *m) {
 static const char DEVICE_NAME[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = "ABCDEFGHIJKLMNOPQRS";
 static const char *PAIRING_NAME = "Blah123";
 
-static const struct pbl_bt_sm_pairing_info PAIRING_INFO = (const struct pbl_bt_sm_pairing_info){
-  .local_encryption_info =
-      {
-        .ediv = 123,
-        .ltk =
-            (const struct pbl_bt_sm_key){
-              .data =
-                  {
-                    0x44,
-                    0x55,
-                    0x66,
-                    0x77,
-                    0x00,
-                    0x11,
-                    0x22,
-                    0x33,
-                    0xcc,
-                    0xdd,
-                    0xee,
-                    0xff,
-                    0x88,
-                    0x99,
-                    0xaa,
-                    0xbb,
-                  },
-            },
-        .rand = 0x11223344,
-      },
+#define PEER_ADDR                                \
+  {                                              \
+    .type = BLE_ADDR_RANDOM,                     \
+    .val = {0x88, 0x77, 0x66, 0x55, 0x44, 0x33}, \
+  }
 
-  .remote_encryption_info =
-      {
-        .ltk =
-            (const struct pbl_bt_sm_key){
-              .data =
-                  {
-                    0x00,
-                    0x11,
-                    0x22,
-                    0x33,
-                    0x44,
-                    0x55,
-                    0x66,
-                    0x77,
-                    0x88,
-                    0x99,
-                    0xaa,
-                    0xbb,
-                    0xcc,
-                    0xdd,
-                    0xee,
-                    0xff,
-                  },
-            },
-        .rand = 0x11223344,
-        .ediv = 9876,
-      },
-
+static const struct ble_store_value_sec PEER = {
+  .peer_addr = PEER_ADDR,
+  .key_size = 16,
+  .ediv = 9876,
+  .rand_num = 0x1122334455667788,
+  .ltk =
+      {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
+       0xff},
+  .ltk_present = 1,
   .irk =
-      (const struct pbl_bt_sm_key){
-        .data =
-            {
-              0x88,
-              0x99,
-              0xaa,
-              0xbb,
-              0xcc,
-              0xdd,
-              0xee,
-              0xff,
-              0x00,
-              0x11,
-              0x22,
-              0x33,
-              0x44,
-              0x55,
-              0x66,
-              0x77,
-            },
-      },
-  .identity =
-      (const struct pbl_bt_device_internal){
-        .opaque.opaque_64 = 0x1122334455667788,
-      },
+      {0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11,
+       0x00},
+  .irk_present = 1,
+  .authenticated = 1,
+};
 
-  .csrk =
-      {
-        .data =
-            {
-              0xcc,
-              0xdd,
-              0xee,
-              0xff,
-              0x88,
-              0x99,
-              0xaa,
-              0xbb,
-              0x44,
-              0x55,
-              0x66,
-              0x77,
-              0x00,
-              0x11,
-              0x22,
-              0x33,
-            },
-      },
-
-  .is_local_encryption_info_valid = true,
-  .is_remote_encryption_info_valid = true,
-  .is_remote_identity_info_valid = true,
-  .is_remote_signing_info_valid = true,
-  .is_mitm_protection_enabled = true,
+static const struct ble_store_value_sec OUR = {
+  .peer_addr = PEER_ADDR,
+  .key_size = 16,
+  .ediv = 123,
+  .rand_num = 0x8877665544332211,
+  .ltk =
+      {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae,
+       0xaf},
+  .ltk_present = 1,
+  .authenticated = 1,
 };
 
 // Helpers
@@ -176,6 +97,43 @@ static const struct pbl_bt_sm_key ROOT_KEYS_CLEAR[PBL_BT_SM_ROOT_KEY_TYPE_NUM] =
   {.data = {0x33}},
   {.data = {0x44}},
 };
+
+static void prv_assert_pairing(void) {
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
+  struct ble_store_value_sec peer;
+  struct ble_store_value_sec our;
+
+  cl_assert(pbl_bt_prf_store_get_pairing(&peer, &our, name));
+  cl_assert_equal_s(name, DEVICE_NAME);
+
+  cl_assert_equal_i(ble_addr_cmp(&peer.peer_addr, &PEER.peer_addr), 0);
+  cl_assert_equal_i(peer.key_size, 16);
+  cl_assert_equal_i(peer.ltk_present, 1);
+  cl_assert_equal_i(peer.ediv, PEER.ediv);
+  cl_assert(peer.rand_num == PEER.rand_num);
+  cl_assert_equal_m(peer.ltk, PEER.ltk, sizeof(peer.ltk));
+  cl_assert_equal_i(peer.irk_present, 1);
+  cl_assert_equal_m(peer.irk, PEER.irk, sizeof(peer.irk));
+  cl_assert_equal_i(peer.csrk_present, 0);
+  cl_assert_equal_i(peer.sc, 0);
+  cl_assert_equal_i(peer.authenticated, 1);
+
+  cl_assert_equal_i(ble_addr_cmp(&our.peer_addr, &PEER.peer_addr), 0);
+  cl_assert_equal_i(our.key_size, 16);
+  cl_assert_equal_i(our.ltk_present, 1);
+  cl_assert_equal_i(our.ediv, OUR.ediv);
+  cl_assert(our.rand_num == OUR.rand_num);
+  cl_assert_equal_m(our.ltk, OUR.ltk, sizeof(our.ltk));
+  cl_assert_equal_i(our.irk_present, 0);
+  cl_assert_equal_i(our.authenticated, 1);
+}
+
+static void prv_read_pairing_field(SprfBlePairingData *data) {
+  pbl_flash_read(FLASH,
+                 SPRF_PAGE_FLASH_OFFSET(pbl_bt_prf_store__get_page()) +
+                     offsetof(SharedPRFData, ble_pairing_data),
+                 (uint8_t *)data, sizeof(*data));
+}
 
 static void prv_set_field(bool set) {
   struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
@@ -268,61 +226,100 @@ void test_prf_store__find_first_valid_sector(void) {
 }
 
 void test_prf_store__wipe_all(void) {
-  struct pbl_bt_sm_pairing_info sm_pairing_info;
-  memset(&sm_pairing_info, 0xaa, sizeof(sm_pairing_info));
-  sm_pairing_info.is_local_encryption_info_valid = true;
-  sm_pairing_info.is_remote_signing_info_valid = true;
-  sm_pairing_info.is_remote_identity_info_valid = true;
-  pbl_bt_prf_store_set_pairing(&sm_pairing_info, PAIRING_NAME, 0 /* flags */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, PAIRING_NAME);
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), true);
   pbl_bt_prf_store_wipe();
 
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
 }
 
+// What is written is what older firmware reads.
+void test_prf_store__pairing_layout(void) {
+  static const uint8_t identity[] = {0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x02, 0x00};
+  static const uint8_t no_key[16];
+  SprfBlePairingData data;
+
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
+  prv_read_pairing_field(&data);
+
+  cl_assert_equal_m(data.l_ltk.data, OUR.ltk, sizeof(OUR.ltk));
+  cl_assert(data.l_rand == OUR.rand_num);
+  cl_assert_equal_i(data.l_ediv, OUR.ediv);
+  cl_assert_equal_i(data.r_ediv, PEER.ediv);
+  cl_assert_equal_m(data.r_ltk.data, PEER.ltk, sizeof(PEER.ltk));
+  cl_assert(data.r_rand == PEER.rand_num);
+  cl_assert_equal_m(data.irk.data, PEER.irk, sizeof(PEER.irk));
+  cl_assert_equal_m(data.csrk.data, no_key, sizeof(no_key));
+  cl_assert_equal_m(&data.identity_addr, identity, sizeof(identity));
+  cl_assert_equal_i(data.fields, SprfValidFields_LocalEncryptionInfoValid |
+                                     SprfValidFields_RemoteEncryptionInfoValid |
+                                     SprfValidFields_RemoteIdentityInfoValid);
+  cl_assert_equal_i(data.is_mitm_protection_enabled, 0);
+  cl_assert_equal_i(data.requires_address_pinning, 0);
+  cl_assert_equal_i(data.flags, SPRF_PAIRING_FLAG_AUTHENTICATED);
+}
+
+// What older firmware wrote, a CSRK and its other flags included, is read.
+void test_prf_store__pairing_layout_of_older_firmware(void) {
+  SprfBlePairingData *data;
+  struct ble_store_value_sec peer;
+  SharedPRFData page;
+
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
+  pbl_flash_read(FLASH, SPRF_PAGE_FLASH_OFFSET(pbl_bt_prf_store__get_page()), (uint8_t *)&page,
+                 sizeof(page));
+
+  data = &page.ble_pairing_data;
+  memset(data->csrk.data, 0x5a, sizeof(data->csrk.data));
+  data->fields |= SprfValidFields_RemoteSigningInfoValid;
+  data->is_mitm_protection_enabled = true;
+  data->crc =
+      pbl_crc32(0, (const uint8_t *)data + sizeof(data->crc), sizeof(*data) - sizeof(data->crc));
+
+  fake_spi_flash_erase();
+  pbl_flash_write(FLASH, SPRF_PAGE_FLASH_OFFSET(0), (const uint8_t *)&page, sizeof(page));
+  pbl_bt_prf_store_init();
+
+  prv_assert_pairing();
+  cl_assert(pbl_bt_prf_store_get_pairing(&peer, nullptr, nullptr));
+  cl_assert_equal_i(peer.csrk_present, 0);
+}
+
 void test_prf_store__ble_pairing(void) {
   pbl_bt_prf_store_wipe();
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
 
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, 0 /* flags */);
-
-  char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  memset(name_out, 0, sizeof(name_out));
-  struct pbl_bt_sm_pairing_info pairing_info_out = {};
-  uint8_t flags = 0;
-  cl_assert_equal_b(pbl_bt_prf_store_get_pairing(&pairing_info_out, name_out, &flags), true);
-  cl_assert_equal_i(flags, 0);
-  cl_assert_equal_i(strcmp(DEVICE_NAME, name_out), 0);
-  cl_assert_equal_b(PAIRING_INFO.is_mitm_protection_enabled,
-                    pairing_info_out.is_mitm_protection_enabled);
-  cl_assert_equal_b(PAIRING_INFO.is_remote_signing_info_valid,
-                    pairing_info_out.is_remote_signing_info_valid);
-  cl_assert_equal_b(PAIRING_INFO.is_remote_identity_info_valid,
-                    pairing_info_out.is_remote_identity_info_valid);
-  cl_assert_equal_b(PAIRING_INFO.is_remote_encryption_info_valid,
-                    pairing_info_out.is_remote_encryption_info_valid);
-  cl_assert_equal_b(PAIRING_INFO.is_local_encryption_info_valid,
-                    pairing_info_out.is_local_encryption_info_valid);
-  cl_assert_equal_i(PAIRING_INFO.local_encryption_info.ediv,
-                    pairing_info_out.local_encryption_info.ediv);
-  cl_assert_equal_i(PAIRING_INFO.local_encryption_info.div,
-                    pairing_info_out.local_encryption_info.div);
-  cl_assert(PAIRING_INFO.identity.opaque.opaque_64 == pairing_info_out.identity.opaque.opaque_64);
-  cl_assert(PAIRING_INFO.remote_encryption_info.rand ==
-            pairing_info_out.remote_encryption_info.rand);
-  cl_assert_equal_i(PAIRING_INFO.remote_encryption_info.ediv,
-                    pairing_info_out.remote_encryption_info.ediv);
-  cl_assert_equal_i(
-      memcmp(&PAIRING_INFO.remote_encryption_info.ltk, &pairing_info_out.remote_encryption_info.ltk,
-             sizeof(struct pbl_bt_sm_key)),
-      0);
-  cl_assert_equal_i(memcmp(&PAIRING_INFO.irk, &pairing_info_out.irk, sizeof(struct pbl_bt_sm_key)),
-                    0);
-  cl_assert_equal_i(
-      memcmp(&PAIRING_INFO.csrk, &pairing_info_out.csrk, sizeof(struct pbl_bt_sm_key)), 0);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
+  prv_assert_pairing();
 
   pbl_bt_prf_store_erase_pairing();
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
+}
+
+// A peer that distributed no LTK, and a watch that has none for it.
+void test_prf_store__ble_pairing_without_ltks(void) {
+  struct ble_store_value_sec peer = PEER;
+  struct ble_store_value_sec peer_out;
+  struct ble_store_value_sec our_out;
+
+  peer.ltk_present = 0;
+  pbl_bt_prf_store_set_pairing(&peer, nullptr, DEVICE_NAME);
+
+  cl_assert(pbl_bt_prf_store_get_pairing(&peer_out, &our_out, nullptr));
+  cl_assert_equal_i(peer_out.ltk_present, 0);
+  cl_assert_equal_i(peer_out.irk_present, 1);
+  cl_assert_equal_i(our_out.ltk_present, 0);
+  cl_assert_equal_i(ble_addr_cmp(&our_out.peer_addr, &PEER.peer_addr), 0);
+}
+
+void test_prf_store__ble_pairing_without_keys_is_ignored(void) {
+  struct ble_store_value_sec peer = PEER;
+
+  peer.ltk_present = 0;
+  peer.irk_present = 0;
+  pbl_bt_prf_store_set_pairing(&peer, nullptr, DEVICE_NAME);
+
+  cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));
 }
 
 void test_prf_store__root_keys(void) {
@@ -372,18 +369,10 @@ void test_prf_store__rewrite_pages_and_wrap_around(void) {
 void test_prf_store__save_all_data_confirm_all_data_correct(void) {
   const bool FIELD_SET = true;
 
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
   prv_set_field(FIELD_SET);
 
-  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-
-  // Check pairing info
-  struct pbl_bt_sm_pairing_info pairing_info_out;
-  uint8_t flags = 0;
-  pbl_bt_prf_store_get_pairing(&pairing_info_out, device_name_out, &flags);
-  cl_assert_equal_i(flags, 0xff);
-  cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
-  cl_assert_equal_s(device_name_out, DEVICE_NAME);
+  prv_assert_pairing();
 
   // Check the root keys
   cl_assert_equal_b(prv_get_field(), FIELD_SET);
@@ -392,7 +381,7 @@ void test_prf_store__save_all_data_confirm_all_data_correct(void) {
 void test_prf_store__write_in_loop_confirm_data_still_intact(void) {
   bool FIELD_SET = true;
 
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, 0xff /* flags */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
   prv_set_field(FIELD_SET);
 
   for (uint32_t i = 0; i < 50; i++) {
@@ -405,16 +394,7 @@ void test_prf_store__write_in_loop_confirm_data_still_intact(void) {
 
   // Check if our old information is still in tact after looping and rewriting a ton of times
 
-  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-
-  // Check pairing info
-  struct pbl_bt_sm_pairing_info pairing_info_out;
-  uint8_t flags = 0;
-
-  pbl_bt_prf_store_get_pairing(&pairing_info_out, device_name_out, &flags);
-  cl_assert_equal_i(flags, 0xff);
-  cl_assert_equal_b(sm_is_pairing_info_equal_identity(&PAIRING_INFO, &pairing_info_out), true);
-  cl_assert_equal_s(device_name_out, DEVICE_NAME);
+  prv_assert_pairing();
 }
 
 // Sets the root keys, then corrupts their crc
@@ -490,27 +470,39 @@ void test_prf_store__handle_corrupt_field_during_setting(void) {
 
 // Test that when we write the ble_data and the ble_name separately, a page rewrite isn't triggered
 void test_prf_store__write_ble_data_and_ble_name_separately(void) {
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, nullptr, true /* auto_accept_re_pairing */);
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, true /* auto_accept_re_pairing */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, nullptr);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
   // confirm we wrote to the same "Page"
   cl_assert_equal_i(pbl_bt_prf_store__get_page(), 0);
+}
+
+// Test that a pairing stored without a name keeps the name of the same peer only
+void test_prf_store__name_of_another_peer_is_dropped(void) {
+  char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE] = {};
+  struct ble_store_value_sec other = PEER;
+
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, nullptr);
+  prv_assert_pairing();
+
+  other.peer_addr.val[0] ^= 0xff;
+  pbl_bt_prf_store_set_pairing(&other, nullptr, nullptr);
+  cl_assert(pbl_bt_prf_store_get_pairing(nullptr, nullptr, name));
+  cl_assert_equal_s(name, "");
 }
 
 // Test that when deleting the ble_data, both the data and name are deleted.
 // Test that when rewriting the ble_data, the same page is used (since they were previously
 // marked with 0xFF's
 void test_prf_store__write_ble_data_name_delete_rewrite(void) {
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, true /* auto_accept_re_pairing */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
   cl_assert_equal_i(pbl_bt_prf_store__get_page(), 0);
   pbl_bt_prf_store_erase_pairing();
   cl_assert_equal_i(pbl_bt_prf_store__get_page(), 2);
 
-  char device_name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
-  struct pbl_bt_sm_pairing_info pairing_info_out;
-  const bool rv = pbl_bt_prf_store_get_pairing(&pairing_info_out, device_name_out, nullptr);
-  cl_assert_equal_b(rv, false);
+  cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));
 
-  pbl_bt_prf_store_set_pairing(&PAIRING_INFO, DEVICE_NAME, true /* auto_accept_re_pairing */);
+  pbl_bt_prf_store_set_pairing(&PEER, &OUR, DEVICE_NAME);
   // It should detect the fields were already blank in the current page so the index should not
   // increment
   cl_assert_equal_i(pbl_bt_prf_store__get_page(), 2);
