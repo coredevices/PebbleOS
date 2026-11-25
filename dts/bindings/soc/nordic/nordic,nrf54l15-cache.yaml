@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf54l15-cache.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L cache
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Instruction cache of the application core, in front of the RRAM.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-cache
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    node@e0082000 {
+        compatible = "nordic,nrf54l15-cache";
+        reg = <0xe0082000 0x1000>;
+    };

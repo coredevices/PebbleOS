@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf54l15-tampc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L tamper controller
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Watches for tampering, and holds the signals that open the debug access
+  ports to the cores.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-tampc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    node@500dc000 {
+        compatible = "nordic,nrf54l15-tampc";
+        reg = <0x500dc000 0x1000>;
+        interrupts = <220>;
+    };

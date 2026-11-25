@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf54l15-oscillators.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L oscillators and regulators
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Configures the crystal oscillators, their load capacitors and the PLL of the CPU clock, and shares its registers with the regulators.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-oscillators
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    node@50120000 {
+        compatible = "nordic,nrf54l15-oscillators";
+        reg = <0x50120000 0x1000>;
+    };
