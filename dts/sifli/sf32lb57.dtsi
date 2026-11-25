@@ -241,6 +241,15 @@
 			status = "disabled";
 		};
 
+		can1: can@5000a000 {
+			compatible = "sifli,sf32lb57-can";
+			reg = <0x5000a000 0x1000>;
+			interrupts = <83>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_CAN1>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_CAN1>;
+			status = "disabled";
+		};
+
 		hpsys_cfg: syscon@5000b000 {
 			compatible = "sifli,sf32lb57-hpsys-cfg", "syscon";
 			reg = <0x5000b000 0x1000>;
@@ -269,6 +278,15 @@
 					reg = <0x24 0x8>;
 				};
 			};
+		};
+
+		can2: can@5000e000 {
+			compatible = "sifli,sf32lb57-can";
+			reg = <0x5000e000 0x1000>;
+			interrupts = <100>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_CAN2>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_CAN2>;
+			status = "disabled";
 		};
 
 		mpi1: spi@50041000 {
