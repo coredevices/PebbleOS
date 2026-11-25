@@ -4,6 +4,7 @@
 config SOC_STM32H7
     bool
     select SOC_FAMILY_STM32
+    select SOC_HAS_UNIQUE_ID
     select CPU_HAS_FPU
     select CPU_HAS_FPU_DOUBLE if CPU_CORTEX_M7
     select CPU_HAS_ICACHE if CPU_CORTEX_M7
