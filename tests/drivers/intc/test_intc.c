@@ -15,6 +15,7 @@ static int s_configure_ret;
 static int s_enable_calls;
 static int s_disable_calls;
 static uint32_t s_wake;
+static uint32_t s_freed;
 static int s_handler_calls;
 static void *s_handler_arg;
 
@@ -59,11 +60,19 @@ static int prv_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
   return 0;
 }
 
+static void prv_free(const struct pbl_intc *intc, uint32_t hwirq) {
+  cl_assert(s_lock_depth > 0);
+  // Released after being masked
+  cl_assert((s_unmasked & (1U << hwirq)) == 0U);
+  s_freed |= 1U << hwirq;
+}
+
 static const struct pbl_intc_ops s_ops = {
   .configure = prv_configure,
   .enable = prv_enable,
   .disable = prv_disable,
   .set_wake = prv_set_wake,
+  .free = prv_free,
 };
 
 static const struct pbl_intc_ops s_ops_no_wake = {
@@ -98,6 +107,7 @@ void test_intc__initialize(void) {
   s_enable_calls = 0;
   s_disable_calls = 0;
   s_wake = 0U;
+  s_freed = 0U;
   s_handler_calls = 0;
   s_handler_arg = nullptr;
   memset(s_intc_intc_lines, 0, sizeof(s_intc_intc_lines));
@@ -184,6 +194,7 @@ void test_intc__free(void) {
 
   cl_assert_equal_i(pbl_intc_free(&s_line1), 0);
   cl_assert_equal_i(s_unmasked, 0x0);
+  cl_assert_equal_i(s_freed, 1U << 1);
   cl_assert(s_intc.lines[1].handler == nullptr);
 
   cl_assert_equal_i(pbl_intc_request(&s_line1, prv_handler, nullptr), 0);
@@ -232,4 +243,16 @@ void test_intc__set_wake_unsupported(void) {
   cl_assert_equal_i(pbl_device_init(&s_intc_no_wake.dev), 0);
   cl_assert_equal_i(pbl_intc_request(&line, prv_handler, nullptr), 0);
   cl_assert_equal_i(pbl_intc_set_wake(&line, true), -ENOTSUP);
+}
+
+void test_intc__free_without_driver_release(void) {
+  const struct pbl_irq_spec line = PBL_IRQ_SPEC(&s_intc_no_wake, 1, PBL_IRQ_TYPE_EDGE_FALLING);
+
+  memset(s_intc_no_wake_intc_lines, 0, sizeof(s_intc_no_wake_intc_lines));
+  cl_assert_equal_i(pbl_device_init(&s_intc_no_wake.dev), 0);
+  cl_assert_equal_i(pbl_intc_request(&line, prv_handler, nullptr), 0);
+
+  cl_assert_equal_i(pbl_intc_free(&line), 0);
+  cl_assert_equal_i(s_freed, 0U);
+  cl_assert(s_intc_no_wake.lines[1].handler == nullptr);
 }

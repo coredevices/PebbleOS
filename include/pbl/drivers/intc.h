@@ -72,6 +72,8 @@ struct pbl_intc_ops {
   int (*disable)(const struct pbl_intc *intc, uint32_t hwirq);
   /** Make a line a wake source from power-off, or not. Optional. Returns 0 or a negative errno. */
   int (*set_wake)(const struct pbl_intc *intc, uint32_t hwirq, bool on);
+  /** Release what configure() took for a disabled line, and its wake setting. Optional. */
+  void (*free)(const struct pbl_intc *intc, uint32_t hwirq);
 };
 
 /** @brief Runtime state of a line. */
