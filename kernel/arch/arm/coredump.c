@@ -99,6 +99,12 @@ void PBL_NAKED NMI_Handler(void) {
 }
 
 PBL_EXTERNALLY_VISIBLE void arch_coredump_handler_c(void) {
+#if defined(CONFIG_CPU_CORTEX_M_HAS_SPLIM) && defined(CONFIG_KERNEL_STACK_GUARD)
+  // The limit may be ignored in the NMI. Honoured, an overflow of the dump's stack locks the CPU
+  // up until the watchdog resets it, instead of overwriting what is below.
+  arch_writel(arch_readl(ARM_SCB_CCR) & ~ARM_SCB_CCR_STKOFHFNMIGN, ARM_SCB_CCR);
+#endif
+
   uint32_t *process_sp = (uint32_t *)(RETURNS_TO_PSP(s_saved_registers.core_reg[PBL_THREAD_REG_LR])
                                           ? s_saved_registers.extra_reg.psp
                                           : s_saved_registers.extra_reg.msp);
