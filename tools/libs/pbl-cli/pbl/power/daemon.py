@@ -6,19 +6,22 @@
 Some supplies (the PPK2) cut the power when their port closes, so a watch
 stays powered only while a process holds the supply. The daemon does,
 taking requests from ``pbl power`` over a unix socket until it is told to
-power off. It holds the supply's lock (:mod:`pbl.lock`) meanwhile.
+power off. It holds the supply's lock (:mod:`pbl.lock`) meanwhile, and
+:class:`Client` drives the supply through it.
 
 Requests and replies are one JSON object per line: ``{"op": ...}``, then
 ``{"ok": true, ...}`` or ``{"ok": false, "error": ...}``.
 """
 
 import argparse
+import contextlib
 import json
 import os
 import socket
 import socketserver
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 
@@ -37,7 +40,7 @@ def log_path(key):
     return os.path.join(lock.lock_dir(), f"{key}.log")
 
 
-class DaemonError(Exception):
+class DaemonError(power.PowerError):
     pass
 
 
@@ -65,12 +68,17 @@ def request(key, op, timeout=None, **args):
     return reply
 
 
-def running(key):
+def status(key):
+    """The status of the daemon for the supply locked by ``key``, or None
+    when none runs."""
     try:
-        request(key, "status")
-        return True
+        return request(key, "status")
     except DaemonError:
-        return False
+        return None
+
+
+def running(key):
+    return status(key) is not None
 
 
 def stop(key):
@@ -170,6 +178,8 @@ class _Daemon:
             self._stop_recording()
             supply.off()
             self.stopping.set()
+        elif op == "switch_off":
+            supply.off()
         elif op == "cycle":
             supply.cycle(args.get("off_s", power.DEFAULT_OFF_S))
         elif op == "voltage":
@@ -187,7 +197,7 @@ class _Daemon:
                 raise power.PowerError("a recording runs: stop it first")
             with supply.measure(args.get("name", "measurement")) as m:
                 time.sleep(args["seconds"])
-            return self._result(m, args.get("save"))
+            return self._result(m, args)
         elif op == "start":
             if self.recording:
                 raise power.PowerError(f"recording {self.recording[2]} runs already")
@@ -198,7 +208,7 @@ class _Daemon:
             if not self.recording:
                 raise power.PowerError("no recording runs")
             m = self._stop_recording()
-            return self._result(m, args.get("save"))
+            return self._result(m, args)
         else:
             raise power.PowerError(f"unknown request {op!r}")
         return self.status()
@@ -212,10 +222,85 @@ class _Daemon:
         return m
 
     @staticmethod
-    def _result(m, save):
-        if save:
-            m.save(save)
-        return {"measurement": m.summary(), "text": str(m)}
+    def _result(m, args):
+        if args.get("save"):
+            m.save(args["save"])
+        if args.get("samples"):
+            import numpy as np
+
+            np.save(args["samples"], m.samples)
+        return {
+            "measurement": m.summary(),
+            "text": str(m),
+            "sample_rate_hz": m.sample_rate_hz,
+        }
+
+
+class Client(power.Supply):
+    """The supply a daemon holds, driven through it. Switching it off leaves
+    the daemon running, and closing the client leaves the supply as it is."""
+
+    def __init__(self, key):
+        reply = request(key, "status")
+        super().__init__(reply["port"])
+        self.key = key
+        self._update(reply)
+
+    def _update(self, reply):
+        self.name = reply["supply"]
+        self.pid = reply["pid"]
+        self.voltage_mv = reply["voltage_mv"]
+        self.powered = reply["powered"]
+        self.measures = reply["measures"]
+
+    def _request(self, op, **args):
+        try:
+            reply = request(self.key, op, **args)
+        except DaemonError as e:
+            if str(e).startswith("unknown request"):
+                raise self._outdated(f"cannot {op}") from None
+            raise
+        self._update(reply)
+
+    def _outdated(self, what):
+        return DaemonError(
+            f"the pbl power daemon (pid {self.pid}) {what}: it predates this "
+            "pbl, restart it with 'pbl power off' and 'pbl power on'"
+        )
+
+    def on(self):
+        self._request("on")
+
+    def off(self):
+        self._request("switch_off")
+
+    def cycle(self, off_s=power.DEFAULT_OFF_S):
+        self._request("cycle", off_s=off_s)
+
+    def set_voltage(self, voltage_mv):
+        self._request("voltage", voltage_mv=voltage_mv)
+
+    @contextlib.contextmanager
+    def measure(self, name="measurement"):
+        from pbl.power.measurement import Measurement
+
+        request(self.key, "start", name=name)
+        m = Measurement(name, self.voltage_mv, None)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "samples.npy")
+            try:
+                yield m
+            except BaseException:
+                with contextlib.suppress(DaemonError):
+                    request(self.key, "stop")
+                raise
+            reply = request(self.key, "stop", samples=path)
+            if not os.path.exists(path):
+                raise self._outdated("does not hand over samples")
+            import numpy as np
+
+            m.samples = np.load(path)
+            m.sample_rate_hz = reply["sample_rate_hz"]
 
 
 def _serve(daemon, path):

@@ -1,16 +1,23 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import contextlib
+import os
 import sys
+import tempfile
+import threading
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "libs" / "pbl-cli"))
 
-from pbl import power
+from pbl import lock, power
 from pbl.commands.power import start_voltage
 from pbl.lab import Lab
+from pbl.power import daemon
+from pbl.power.measurement import Measurement
 
 
 def lab(**device):
@@ -76,3 +83,78 @@ def test_no_voltage_to_start_at():
         power.PowerError, match="supply ppk2 powers no device.* pass --voltage"
     ):
         start_voltage(None, "ppk2", None)
+
+
+class FakeSupply(power.Supply):
+    measures = True
+
+    def __init__(self, port, voltage_mv=None):
+        super().__init__(port)
+        self.voltage_mv = voltage_mv
+
+    def on(self):
+        self.powered = True
+
+    def off(self):
+        self.powered = False
+
+    def set_voltage(self, voltage_mv):
+        self.voltage_mv = voltage_mv
+
+    @contextlib.contextmanager
+    def measure(self, name="measurement"):
+        m = Measurement(name, self.voltage_mv, 1000)
+        yield m
+        m.samples = np.arange(10, dtype=float)
+
+
+@pytest.fixture
+def lock_dir(monkeypatch):
+    # Short: macOS limits unix socket paths to 104 bytes.
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp:
+        monkeypatch.setenv(lock.ENV, tmp)
+        yield tmp
+
+
+@pytest.fixture
+def served(lock_dir):
+    supply = FakeSupply("/dev/cu.fake", 3300)
+    d = daemon._Daemon(supply, "ppk2")
+    thread = threading.Thread(
+        target=daemon._serve, args=(d, daemon.socket_path("k")), daemon=True
+    )
+    thread.start()
+    for _ in range(100):
+        if os.path.exists(daemon.socket_path("k")):
+            break
+        threading.Event().wait(0.01)
+    yield supply
+    d.stopping.set()
+    thread.join()
+
+
+def test_client_drives_the_daemon(served):
+    client = daemon.Client("k")
+    assert client.voltage_mv == 3300
+    assert client.measures
+    client.on()
+    assert served.powered and client.powered
+    client.off()
+    assert served.powered is False
+    assert daemon.running("k")
+
+
+def test_client_measures(served):
+    client = daemon.Client("k")
+    with client.measure("idle") as m:
+        pass
+    assert m.name == "idle"
+    assert m.voltage_mv == 3300
+    assert m.sample_rate_hz == 1000
+    assert list(m.samples) == list(range(10))
+
+
+def test_no_daemon(lock_dir):
+    assert daemon.status("k") is None
+    with pytest.raises(power.PowerError):
+        daemon.Client("k")
