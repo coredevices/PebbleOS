@@ -4,7 +4,7 @@
 #pragma once
 
 #include <pbl/bluetooth/pebble_bt.h>
-#include <pbl/kernel/compiler.h>
+#include <pbl/util/bits.h>
 
 /**
  * @defgroup bluetooth_pebble_pairing_service Pebble Pairing Service
@@ -12,87 +12,50 @@
  * @brief GATT service through which the phone app checks the connection and triggers pairing.
  *
  * The service (PBL_BT_PPS_UUID_16BIT) has a Connectivity Status characteristic (read, notify)
- * and a Trigger Pairing characteristic (read, write). A subscribed central is notified of the
- * status when the link gets encrypted. The wire formats below must fit the minimum ATT MTU.
+ * and a Trigger Pairing characteristic (read, write). Reading the latter, or writing it without
+ * @ref PBL_BT_PPS_TRIGGER_NO_SECURITY_REQUEST, makes the watch ask for security if the link is not
+ * encrypted. The central is notified of the status when its link gets encrypted, subscribed or
+ * not.
  * @{
  */
 
-/** @brief UUID of the Connectivity Status characteristic, as an initializer list. */
-#define PBL_BT_PPS_CONNECTION_STATUS_UUID PBL_BT_PEBBLE_UUID_EXPAND(1)
-/** @brief UUID of the Trigger Pairing characteristic, as an initializer list. */
-#define PBL_BT_PPS_TRIGGER_PAIRING_UUID PBL_BT_PEBBLE_UUID_EXPAND(2)
+/** @brief Pebble UUID of the Connectivity Status characteristic, see PBL_BT_PEBBLE_UUID128_INIT().
+ */
+#define PBL_BT_PPS_CONNECTION_STATUS_UUID_32BIT 1U
+/** @brief Pebble UUID of the Trigger Pairing characteristic, see PBL_BT_PEBBLE_UUID128_INIT(). */
+#define PBL_BT_PPS_TRIGGER_PAIRING_UUID_32BIT 2U
 
-/** @brief Connectivity Status value, with respect to the device reading it. */
-struct PBL_PACKED pbl_bt_pps_connectivity_status {
-  union {
-    struct {
-      /** True if the reading device is connected (always true). */
-      bool ble_is_connected : 1;
-      /** True if the reading device is bonded. */
-      bool ble_is_bonded : 1;
-      /** True if the current LE link is encrypted. */
-      bool ble_is_encrypted : 1;
-      /** True if the watch has a bonding to an LE gateway. */
-      bool has_bonded_gateway : 1;
-      /**
-       * True if the watch supports the @ref pbl_bt_pps_trigger_request::no_slave_security_request
-       * bit.
-       */
-      bool supports_pinning_without_security_request : 1;
-      /** True if reversed PPoGATT was enabled at the time of bonding. */
-      bool is_reversed_ppogatt_enabled : 1;
+/** @brief Size of the Connectivity Status value: the flags below, two reserved bytes, a zero. */
+#define PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE 4U
 
-      /** Reserved, zero. */
-      uint32_t rsvd : 18;
+/**
+ * @name Flags of the Connectivity Status value, in its first byte
+ *
+ * With respect to the device reading it.
+ * @{
+ */
+/** The reading device is connected (always set). */
+#define PBL_BT_PPS_STATUS_CONNECTED PBL_BIT(0)
+/** The reading device is bonded. */
+#define PBL_BT_PPS_STATUS_BONDED PBL_BIT(1)
+/** The link is encrypted. */
+#define PBL_BT_PPS_STATUS_ENCRYPTED PBL_BIT(2)
+/** The watch has a bonding. */
+#define PBL_BT_PPS_STATUS_HAS_BONDED_GATEWAY PBL_BIT(3)
+/** The watch honours @ref PBL_BT_PPS_TRIGGER_NO_SECURITY_REQUEST (always set). */
+#define PBL_BT_PPS_STATUS_NO_SECURITY_REQUEST_SUPPORTED PBL_BIT(4)
+/** @} */
 
-      /**
-       * Error of the last pairing, or zero if no pairing completed or it succeeded.
-       *
-       * See Bluetooth Core Specification v4.2, Vol 3, Part H, 3.5.5 Pairing Failed.
-       */
-      uint8_t last_pairing_result;
-    };
-    /** Raw value. */
-    uint8_t bytes[4];
-  };
-};
-
-static_assert(sizeof(struct pbl_bt_pps_connectivity_status) == 4, "");
-
-/** @brief Value written to the Trigger Pairing characteristic. */
-struct PBL_PACKED pbl_bt_pps_trigger_request {
-  /** Pin the local address for this device. */
-  bool should_pin_address : 1;
-
-  /**
-   * Don't send a security request. Mutually exclusive with
-   * @ref should_force_slave_security_request.
-   */
-  bool no_slave_security_request : 1;
-
-  /**
-   * Send a security request even if the link is already encrypted. Mutually exclusive with
-   * @ref no_slave_security_request.
-   */
-  bool should_force_slave_security_request : 1;
-
-  /**
-   * Accept re-pairing with this device automatically (matching IRK or identity address).
-   *
-   * @note A work-around for an Android 4.4.x bug. It opens a security hole: a phone could
-   * impersonate the trusted phone and pair without the user knowing.
-   */
-  bool should_auto_accept_re_pairing : 1;
-
-  /**
-   * Reverse the PPoGATT server and client roles for this phone.
-   *
-   * For older Android phones with a broken GATT server API: the watch then hosts a "reversed"
-   * PPoGATT service the phone app connects to as a client. It only works if this bit is set
-   * before pairing, which keeps unpaired devices and non-Pebble apps on a phone that supports
-   * normal PPoGATT away from the reversed service.
-   */
-  bool is_reversed_ppogatt_enabled : 1;
-};
+/**
+ * @name Flags of the byte written to the Trigger Pairing characteristic
+ *
+ * The other bits are ignored.
+ * @{
+ */
+/** Do not send a security request. */
+#define PBL_BT_PPS_TRIGGER_NO_SECURITY_REQUEST PBL_BIT(1)
+/** Send a security request even if the link is encrypted. */
+#define PBL_BT_PPS_TRIGGER_FORCE_SECURITY_REQUEST PBL_BIT(2)
+/** @} */
 
 /** @} */
