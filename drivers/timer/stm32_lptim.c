@@ -4,6 +4,7 @@
 #include <stdatomic.h>
 
 #include <pbl/drivers/clk/stm32h7.h>
+#include <pbl/drivers/reset/stm32h7.h>
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -34,6 +35,8 @@
 #define LPTIM_IRQN STM32H7_EXTI_IRQ(PBL_DT_IRQ_ST_STM32_LPTIMER_TIMER)
 
 static const struct pbl_clk s_clk = PBL_CLK(STM32H7_RCC, PBL_DT_CLK_ST_STM32_LPTIMER_TIMER);
+static const struct pbl_reset s_rst =
+    PBL_RESET(STM32H7_RCC_RESET, PBL_DT_RST_ST_STM32_LPTIMER_TIMER);
 static uint64_t s_rate_mhz;
 // Count at which the last compare value was written, if any
 static bool s_cmp_written;
@@ -142,7 +145,15 @@ static int prv_init(const struct pbl_device *dev) {
   if (!s_started) {
     ret = pbl_device_init(&STM32H7_RCC->dev);
     if (ret == 0) {
+      ret = pbl_device_init(&STM32H7_RCC_RESET->dev);
+    }
+    if (ret == 0) {
       ret = pbl_clk_enable(&s_clk);
+    }
+    // From its reset state, which a core started again without the system does not find it in:
+    // disabling it instead may leave its interrupt stuck
+    if (ret == 0) {
+      ret = pbl_reset_reset(&s_rst);
     }
     if (ret == 0) {
       ret = pbl_clk_get_rate(&s_clk, &s_rate_mhz);
@@ -152,7 +163,6 @@ static int prv_init(const struct pbl_device *dev) {
     }
 
     // Free running over the whole counter, undivided; the interrupt is only set while disabled
-    prv_putreg(STM32_LPTIM_CR_OFFSET, 0U);
     prv_putreg(STM32_LPTIM_CFGR_OFFSET, 0U);
     prv_putreg(STM32_LPTIM_IER_OFFSET, LPTIM_ISR_CMPM);
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE);
@@ -162,8 +172,6 @@ static int prv_init(const struct pbl_device *dev) {
     if (ret != 0) {
       return ret;
     }
-    // Not counting yet, nothing sets a flag while they are cleared
-    prv_putreg(STM32_LPTIM_ICR_OFFSET, LPTIM_ISR_ALL);
     prv_putreg(STM32_LPTIM_CR_OFFSET, LPTIM_CR_ENABLE | LPTIM_CR_CNTSTRT);
     pbl_irq_enable(LPTIM_IRQN);
     s_started = true;

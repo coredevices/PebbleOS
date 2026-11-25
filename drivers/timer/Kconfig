@@ -56,6 +56,7 @@ config TIMER_SF32LB_LPTIM_IRQ_PRIO
 config TIMER_STM32_LPTIM
     bool
     select CLK
+    select RESET
     help
       Clock source and clock event device on the LPTIM of the STM32H7 the
       board enables its timer function on, counting its kernel clock,
