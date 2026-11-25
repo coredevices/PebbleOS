@@ -50,6 +50,13 @@ config CLK_NRF52
     help
       HFCLK and LFCLK of the Nordic nRF52, from their crystal oscillators.
 
+config CLK_NRF54L
+    bool "Nordic nRF54L clock control"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_CLOCK_ENABLED
+    help
+      HFCLK and LFCLK of the Nordic nRF54L, from their crystal oscillators.
+
 config CLK_CAL
     bool
     help
