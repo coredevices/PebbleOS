@@ -41,6 +41,9 @@ class Watch:
     serial: str = None
     probe: str = None
     supply: str = None
+    #: The voltage the supply gives the device, in millivolts: required
+    #: with a supply.
+    voltage: int = None
     #: Where the watch's own USB device sits on the host's bus, as
     #: ``<bus>-<port>[.<port>...]``.
     usb: str = None
@@ -108,6 +111,7 @@ class Lab:
     def _check(self):
         powered = {}
         for watch in self.watches.values():
+            _check_voltage(watch)
             if watch.supply is None:
                 continue
             if watch.supply not in self.supplies:
@@ -118,6 +122,13 @@ class Lab:
                     f"and {watch.name}"
                 )
             powered[watch.supply] = watch.name
+
+    def powered_by(self, supply):
+        """The device the supply called ``supply`` powers, or None."""
+        for device in self.watches.values():
+            if device.supply == supply:
+                return device
+        return None
 
     def watch_for(self, board_target, name=None):
         """The watch running ``board_target``: the one called ``name``, or
@@ -149,6 +160,22 @@ class Lab:
 
     def dongle_ports(self):
         return [dongle.port for dongle in self.dongles.values()]
+
+
+def _check_voltage(device):
+    voltage = device.voltage
+    if voltage is None:
+        if device.supply is not None:
+            raise ValueError(
+                f"device {device.name}: its supply {device.supply} has no "
+                "voltage in the lab; add `voltage:` (in mV)"
+            )
+        return
+    if type(voltage) is not int or voltage <= 0:
+        raise ValueError(
+            f"device {device.name}: voltage {voltage!r} is not a positive "
+            "whole number of millivolts"
+        )
 
 
 def _same_port(a, b):

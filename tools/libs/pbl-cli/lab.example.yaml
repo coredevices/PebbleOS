@@ -10,8 +10,9 @@
 # `serial` is the debug serial port (console, sftool, serial debuggers),
 # `probe` the debug probe as the probe-rs runner names it, VID:PID[:SERIAL]
 # (the nrfutil runner takes its serial number), `supply` the one
-# wired to its battery terminals, `usb` where the board's own USB device
-# sits on the host's bus, as <bus>-<port>[.<port>...] (pyusb's bus and
+# wired to its battery terminals and `voltage` what that supplies, in mV,
+# required with a supply. `usb` is where the board's own USB device sits on
+# the host's bus, as <bus>-<port>[.<port>...] (pyusb's bus and
 # port_numbers), for the USB tests to tell it from other boards with the
 # same IDs.
 watches:
@@ -22,6 +23,7 @@ watches:
     board: getafix@dvt2
     serial: /dev/tty.wchusbserial5B7A1354971
     supply: ppk2
+    voltage: 3800
   asterix:
     board: asterix
     serial: /dev/tty.usbmodem0010500000001

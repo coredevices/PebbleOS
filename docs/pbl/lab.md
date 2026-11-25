@@ -17,14 +17,14 @@ watches:
       serial: /dev/tty.wchusbserial5B7A1355001, in use by pid 4242 (pbl console, since 2026-11-02T10:12:03+01:00, in /home/me/pebbleos)
    getafix: getafix@dvt2
       serial: /dev/tty.wchusbserial5B7A1354971 (missing)
-      supply: ppk2
+      supply: ppk2 at 3800 mV
 supplies:
    ppk2: ppk2, auto
 ```
 
 `--json` prints the same for scripts and agents: per port, `present`
 (`false` when the device node is not there, `null` when it cannot tell)
-and `locked_by`, the session holding it.
+and `locked_by`, the session holding it, and per device its `voltage_mv`.
 
 (pbl-lab-file)=
 
@@ -39,6 +39,13 @@ else. `pbl` reads it from `--lab`, else `$PBL_LAB`, else
 :language: yaml
 :lines: 4-
 ```
+
+A device's `voltage` is the voltage its supply gives it, in millivolts:
+its battery's when the supply replaces a battery, its rail's for a board
+that a supply powers in place of its regulator. A device with a supply
+must give one: nothing guesses a voltage, and a lab file without it does
+not load. It belongs to the device rather than the supply, so that moving
+a supply to another device cannot carry over a voltage wrong for it.
 
 Commands that reach a watch take the ports the command line leaves out
 from the lab's watch for the build: {doc}`run`, {doc}`erase`,

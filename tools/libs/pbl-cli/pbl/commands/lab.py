@@ -66,6 +66,7 @@ class Lab(PblCommand):
                     "probe": watch.probe,
                     "probe_locked_by": lock.holder(lock.probe_key(watch.name)),
                     "supply": watch.supply,
+                    "voltage_mv": watch.voltage,
                     "usb": watch.usb,
                 }
             )
@@ -118,8 +119,12 @@ class Lab(PblCommand):
                 if watch["probe_locked_by"]:
                     probe += f", in use by {lock.describe(watch['probe_locked_by'])}"
                 print(f"      probe: {probe}")
+            voltage = f"{watch['voltage_mv']} mV" if watch["voltage_mv"] else None
             if watch["supply"]:
-                print(f"      supply: {watch['supply']}")
+                at = f" at {voltage}" if voltage else ""
+                print(f"      supply: {watch['supply']}{at}")
+            elif voltage:
+                print(f"      voltage: {voltage}")
             if watch["usb"]:
                 print(f"      usb: {watch['usb']}")
         if status["supplies"]:
