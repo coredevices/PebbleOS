@@ -90,6 +90,12 @@ lcd_qspi_i2c: &i2c1 {
 	pinctrl-names = "default";
 };
 
+&can1 {
+	pinctrl-0 = <&can1_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
 &usbc {
 	pinctrl-0 = <&usbc_default>;
 	pinctrl-names = "default";

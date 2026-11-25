@@ -31,6 +31,8 @@ module, which carries an SF32LB579V6EN6.
   USB port, both on USB-C
 - **Storage**: microSD card slot
 - **Debug**: SWD header
+- **CAN**: CAN1 on header H59 (RX on PA09, TX on PA08), with 3.3 V on H60,
+  for an external transceiver
 - **Connectors**: 8080, quad SPI and RGB LCD, DVP camera, PDM microphones,
   and pin headers with the GPIOs
 - **Power**: from USB or a battery. Both USB-C connectors, through H49 and
