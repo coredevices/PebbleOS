@@ -319,7 +319,7 @@ static void *prv_buffer_slot(PebbleEvent *event) {
     case PEBBLE_BLOBDB_EVENT:
       return &event->blob_db.key;
 
-    case PBL_BT_PEBBLE_PAIRING_EVENT:
+    case PEBBLE_BT_PAIRING_EVENT:
       if (event->bluetooth.pair.type == PebbleBluetoothPairEventTypePairingUserConfirmation) {
         return &event->bluetooth.pair.confirmation_info;
       }

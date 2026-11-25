@@ -628,7 +628,7 @@ void bluetooth_pairing_ui_handle_event(PebbleBluetoothPairEvent *event) {
 
 static void prv_put_pairing_event(const PebbleBluetoothPairEvent *pair_event) {
   PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_PAIRING_EVENT,
+    .type = PEBBLE_BT_PAIRING_EVENT,
     .bluetooth.pair = *pair_event,
   };
   event_put(&event);

@@ -32,7 +32,7 @@
  * pbl_bt_init(); // once, at boot
  *
  * struct pbl_bt_config *config = pbl_zalloc_check(sizeof(*config));
- * dis_get_info(&config->dis_info);
+ * bt_dis_get_info(&config->dis_info);
  * int rc = pbl_bt_start(config);
  * pbl_free(config);
  *

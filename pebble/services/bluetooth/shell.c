@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#ifdef CONFIG_SHELL
-
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
@@ -21,6 +19,10 @@
 #include <host/ble_gap.h>
 #include <host/ble_store.h>
 #include <services/gatt/ble_svc_gatt.h>
+
+#ifdef CONFIG_RECOVERY_FW
+extern void factory_reset_set_reason_and_reset(void);
+#endif
 
 PBL_SHELL_SUBCMD_SET_CREATE(sub_bt);
 PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", nullptr);
@@ -174,7 +176,6 @@ static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **arg
 
 #ifdef CONFIG_RECOVERY_FW
   // Reset to get the host and controller caches back in sync
-  extern void factory_reset_set_reason_and_reset(void);
   factory_reset_set_reason_and_reset();
 #endif
   return 0;
@@ -186,6 +187,4 @@ static const struct pbl_shell_cmd sub_bt_sprf[] = {
 };
 
 PBL_SHELL_SUBCMD_ADD(sub_bt, sprf, sub_bt_sprf, "Shared PRF storage", nullptr, 0, 0);
-#endif
-
 #endif

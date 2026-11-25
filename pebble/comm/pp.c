@@ -43,7 +43,7 @@ static void prv_put_session_events(struct pbl_pp_session *session, bool is_open)
 // A console session stands for the connection of a phone.
 static void prv_put_connection_event(struct pbl_pp_session *session, bool connected) {
   PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .bluetooth.connection.state = connected ? PebbleBluetoothConnectionEventStateConnected
                                             : PebbleBluetoothConnectionEventStateDisconnected,
   };

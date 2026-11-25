@@ -79,7 +79,7 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
       alarm_popup_push_window(&e->alarm_clock);
       return;
 
-    case PBL_BT_PEBBLE_PAIRING_EVENT:
+    case PEBBLE_BT_PAIRING_EVENT:
       bluetooth_pairing_ui_handle_event(&e->bluetooth.pair);
       return;
 

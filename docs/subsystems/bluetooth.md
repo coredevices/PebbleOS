@@ -140,7 +140,7 @@ The watch is a peripheral with one connection, the link
 (`pebble/services/bluetooth/link.c`). It follows it with a GAP listener, and
 tells the rest of the firmware about it:
 
-- Any connection and disconnection, with `PBL_BT_PEBBLE_CONNECTION_EVENT`.
+- Any connection and disconnection, with `PEBBLE_BT_CONNECTION_EVENT`.
 - The gateway: the link becomes the gateway's once it is encrypted and its
   peer is bonded, and only then are the services of the phone used. That, and
   the loss of it, is `PEBBLE_BLE_CONNECTION_EVENT`, with the connection handle.

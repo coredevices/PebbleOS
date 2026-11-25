@@ -307,7 +307,7 @@ static void handle_init(void) {
   event_service_client_subscribe(&data->pebble_gather_logs_event_info);
 
   data->bt_connection_event_info = (EventServiceInfo){
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .handler = prv_bt_event_handler,
   };
   event_service_client_subscribe(&data->bt_connection_event_info);

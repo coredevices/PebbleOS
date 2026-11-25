@@ -27,10 +27,9 @@ static char s_peer_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 /* Only used by the Settings and recovery UIs, to refresh. */
 static void prv_put_connection_event(bool connected) {
   PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .bluetooth = {
       .connection = {
-        .is_ble = true,
         .state = connected ? PebbleBluetoothConnectionEventStateConnected
                            : PebbleBluetoothConnectionEventStateDisconnected,
       },

@@ -53,9 +53,8 @@ bool bt_ctl_is_bluetooth_running(void) {
 
 static void prv_put_disconnection_event(void) {
   PebbleEvent event = (PebbleEvent){
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .bluetooth.connection = {
-      .is_ble = true,
       .state = PebbleBluetoothConnectionEventStateDisconnected,
     }
   };
@@ -70,7 +69,7 @@ static void prv_comm_start(void) {
   struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   // Heap allocated to reduce stack usage
   struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
-  dis_get_info(&config->dis_info);
+  bt_dis_get_info(&config->dis_info);
 
   // Without root keys the stack would run with an identity anyone can resolve.
   if (bt_bonding_get_root_keys(root_keys) == 0) {
@@ -114,7 +113,7 @@ static void prv_comm_stop(void) {
 static void prv_send_state_change_event(void) {
   PBL_LOG_DBG("----> Sending a BT state event");
   PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_STATE_EVENT,
+    .type = PEBBLE_BT_STATE_EVENT,
     .bluetooth = {
       .state = {
         .airplane = s_comm_airplane_mode_on,
