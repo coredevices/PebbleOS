@@ -51,16 +51,21 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   return 0;
 }
 
+static const ble_uuid128_t s_svc_uuid =
+    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT);
+static const ble_uuid128_t s_data_uuid =
+    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT);
+static const ble_uuid128_t s_data_wr_uuid = PBL_BT_PEBBLE_UUID128_INIT(
+    PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT);
+
 static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
   {
     .type = BLE_GATT_SVC_TYPE_PRIMARY,
-    .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(
-        PBL_BT_PEBBLE_UUID_EXPAND(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT))),
+    .uuid = &s_svc_uuid.u,
     .characteristics =
         (struct ble_gatt_chr_def[]){
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PEBBLE_UUID_EXPAND(
-                PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT))),
+            .uuid = &s_data_uuid.u,
             .access_cb = prv_access_data_notify,
             // READ_ENC (without READ) gates the CCCD: subscribing
             // requires an encrypted link, explicit reads stay blocked.
@@ -68,8 +73,7 @@ static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
             .val_handle = &s_data_notify_handle,
           },
           {
-            .uuid = BLE_UUID128_DECLARE(BLE_UUID_SWIZZLE(PBL_BT_PEBBLE_UUID_EXPAND(
-                PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT))),
+            .uuid = &s_data_wr_uuid.u,
             .access_cb = prv_access_data_write,
             .flags = BLE_GATT_CHR_F_WRITE_NO_RSP | BLE_GATT_CHR_F_WRITE_ENC,
             .val_handle = &s_data_write_handle,
