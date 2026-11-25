@@ -35,6 +35,13 @@ Each core is a board of its own: `stm32h747i_disco/m7` for the Cortex-M7 and
 - **Debug**: ST-LINK/V3E, with a virtual COM port, which also powers the kit
 - **Connectors**: Arduino Uno V3, STMod+ and 8-bit camera
 
+## Low power
+
+The system reaches Stop and Standby only once both cores stop. The Cortex-M4
+does not boot at reset on this kit: the Cortex-M7 starts it (`st,auto-boot`),
+and it has to run firmware that idles. A Cortex-M4 left held keeps the system
+out of both, and the Cortex-M7 warns of it at power-off.
+
 ## Flashing
 
 The board embeds an ST-LINK, through which the `openocd` runner flashes it.

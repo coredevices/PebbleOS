@@ -75,7 +75,10 @@ properties:
 
   st,auto-boot:
     $ref: /schemas/types.yaml#/definitions/flag
-    description: Boot the Cortex-M4 at startup, when its flash holds an image.
+    description: |
+      Boot the Cortex-M4 at startup, when its flash holds an image. A
+      Cortex-M4 that never boots keeps the system out of Stop and Standby,
+      as only a running core stops.
 
 required:
   - compatible
