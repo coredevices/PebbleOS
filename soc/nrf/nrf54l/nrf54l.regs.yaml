@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Blocks the SoC code reaches without a device
+config: SOC_NRF54L
+labels:
+  - ficr
+  - tampc
+  - rramc
+  - oscillators
+  - radio
+  - icache
+  - grtc
