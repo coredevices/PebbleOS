@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: ti,tca6408
+config: GPIO_TCA6408
+class: gpio
+define: PBL_TCA6408_DEFINE
+args:
+  - parent: i2c
+  - reg: 0
