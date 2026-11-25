@@ -4,3 +4,7 @@
 config SOC_SF32LB579
     bool "SiFli SF32LB579"
     select SOC_SF32LB57
+
+config SOC_SF32LB57G
+    bool "SiFli SF32LB57G"
+    select SOC_SF32LB57
