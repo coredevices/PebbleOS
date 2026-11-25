@@ -4,6 +4,7 @@
 pbl_clar_test(test_gattc_service
   SOURCES
     subsys/bluetooth/clients/gatt.c
+    subsys/bluetooth/clients/op_queue.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
     third_party/nimble/port/include

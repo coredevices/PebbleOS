@@ -1,10 +1,10 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/* What the inline functions of the NimBLE headers refer to; none is called. */
+/* What the inline functions of the NimBLE headers refer to; a test defines those it calls. */
 
-#define STUB(_name)  \
-  void _name(void) { \
+#define STUB(_name)                        \
+  __attribute__((weak)) void _name(void) { \
   }
 
 STUB(ble_transport_to_hs_acl_impl)

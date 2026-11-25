@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "clients/op_queue.h"
 #include "responsiveness.h"
 #include "services/services.h"
 #include "store.h"
@@ -26,8 +27,6 @@
 PBL_LOG_MODULE_DEFINE(bt, CONFIG_BT_LOG_LEVEL);
 
 static const uint32_t s_bt_stack_start_stop_timeout_ms = 10000;
-
-extern void nimble_gattc_op_queue_init(void);
 
 static PBL_SEM_DEFINE(s_host_started, 0, 1);
 static PBL_SEM_DEFINE(s_host_stopped, 0, 1);
@@ -102,7 +101,7 @@ static void prv_ble_hs_stop_cb(int status, void *arg) {
 
 // ----------------------------------------------------------------------------------------
 void pbl_bt_init(void) {
-  nimble_gattc_op_queue_init();
+  pbl_bt__gattc_op_queue_init();
 
   nimble_port_init();
   pbl_bt__store_init();

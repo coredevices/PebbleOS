@@ -26,7 +26,7 @@ static int prv_read_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
   size_t len;
 
   if (error->status != 0) {
-    nimble_gattc_op_queue_complete();
+    pbl_bt__gattc_op_queue_complete();
     return 0;
   }
 
@@ -45,11 +45,17 @@ static int prv_start(void *ctx) {
 }
 
 void pbl_bt_gapc_read_name(uint16_t conn_handle, pbl_bt_gapc_name_cb_t cb) {
-  struct read *read = pbl_malloc_check(sizeof(*read));
+  struct read *read = pbl_malloc(sizeof(*read));
+
+  if (read == nullptr) {
+    return;
+  }
 
   *read = (struct read){
     .conn_handle = conn_handle,
     .cb = cb,
   };
-  nimble_gattc_op_queue_push(prv_start, read);
+  if (pbl_bt__gattc_op_queue_push(prv_start, read) != 0) {
+    pbl_free(read);
+  }
 }

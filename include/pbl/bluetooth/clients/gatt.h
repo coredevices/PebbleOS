@@ -51,8 +51,8 @@ struct pbl_bt_gattc_chr {
  * @brief Called when pbl_bt_gattc_discover() is done, on the host task.
  *
  * @param conn_handle Connection.
- * @param status 0 if the service was found, @c BLE_HS_ENOENT if the peer does not have it, or
- * what failed.
+ * @param status 0 if the service was found, -ENOENT if the peer does not have it, the ATT error
+ * the peer answered with (positive) or another negative errno.
  * @param chrs The characteristics, in the order they were asked for; valid during the call.
  * @param arg As passed to pbl_bt_gattc_discover().
  */
@@ -72,7 +72,8 @@ typedef void (*pbl_bt_gattc_discover_cb_t)(uint16_t conn_handle, int status,
  * @param num_chrs Number of characteristics.
  * @param cb Called with the outcome, exactly once if this returns 0.
  * @param arg Passed to @p cb.
- * @return 0 if queued, a @c BLE_HS_* code otherwise.
+ * @retval 0 Queued.
+ * @retval -ENOMEM Out of memory.
  */
 int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint8_t instance,
                           const ble_uuid_t *const *chr_uuids, uint8_t num_chrs,
@@ -197,20 +198,18 @@ void pbl_bt_gattc_service_stop(struct pbl_bt_gattc_service *svc);
  *
  * To its indications instead when it has no notifications.
  *
- * @retval 0 Asked, @c subscribed follows.
+ * @retval 0 Queued, @c subscribed follows.
  * @retval -ENOTCONN The characteristic, or its CCCD, was not found (yet).
  * @retval -ENOMEM Out of memory.
- * @retval -EIO The stack refused.
  */
 int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr, bool enable);
 
 /**
  * @brief Write the value of a characteristic.
  *
- * @retval 0 Written, @c written follows.
+ * @retval 0 Queued, @c written follows.
  * @retval -ENOTCONN The characteristic was not found (yet).
  * @retval -ENOMEM Out of memory.
- * @retval -EIO The stack refused.
  */
 int pbl_bt_gattc_service_write(struct pbl_bt_gattc_service *svc, uint8_t chr, const void *data,
                                uint16_t len);
@@ -229,10 +228,9 @@ int pbl_bt_gattc_service_write_no_rsp(struct pbl_bt_gattc_service *svc, uint8_t 
 /**
  * @brief Read the value of a characteristic, all of it however long.
  *
- * @retval 0 Asked, @c read follows.
+ * @retval 0 Queued, @c read follows.
  * @retval -ENOTCONN The characteristic was not found (yet).
  * @retval -ENOMEM Out of memory.
- * @retval -EIO The stack refused.
  */
 int pbl_bt_gattc_service_read(struct pbl_bt_gattc_service *svc, uint8_t chr);
 

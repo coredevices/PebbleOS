@@ -153,11 +153,13 @@ used without the rest of the subsystem:
 
 - `pbl/bluetooth/clients/gatt.h` (`BT_GATT_CLIENT`) is what clients share.
   `pbl_bt_gattc_discover()` finds one service and the value and CCCD handles
-  of its characteristics, one discovery at a time, since NimBLE cannot tell
-  the responses of concurrent ones apart. A service client
-  (`PBL_BT_GATTC_SERVICE_DEFINE()`) builds on it for one service of one
-  connection: it subscribes, writes and reads by characteristic, and reports
-  the outcomes and the notifications. Notification listeners are fed by
+  of its characteristics. A service client (`PBL_BT_GATTC_SERVICE_DEFINE()`)
+  builds on it for one service of one connection: it subscribes, writes and
+  reads by characteristic, and reports the outcomes and the notifications.
+  Discoveries, subscriptions, reads and writes with a response are queued and
+  run one at a time on the host task, since NimBLE cannot tell the responses
+  of concurrent procedures apart; a write without a response is sent at once.
+  Notification listeners are fed by
   whoever handles the GAP events of a connection, with
   `pbl_bt_gattc_notify_rx()`.
 - `pbl/bluetooth/clients/gap.h` reads the device name of a peer.

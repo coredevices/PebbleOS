@@ -9,6 +9,7 @@
 #include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/util/byteorder.h>
 
 #include <host/ble_hs.h>
 
@@ -32,10 +33,32 @@ struct discovery {
 
 #define NO_CHR UINT8_MAX
 
+/* What a code of the stack is to the callers: 0, the ATT error of the peer, or -errno. */
+static int prv_status(int rc) {
+  if (rc == 0 || rc == BLE_HS_EDONE) {
+    return 0;
+  } else if (rc > BLE_HS_ERR_ATT_BASE && rc <= BLE_HS_ERR_ATT_BASE + UINT8_MAX) {
+    return rc - BLE_HS_ERR_ATT_BASE;
+  }
+
+  switch (rc) {
+    case BLE_HS_ENOENT:
+      return -ENOENT;
+    case BLE_HS_ENOTCONN:
+      return -ENOTCONN;
+    case BLE_HS_ENOMEM:
+      return -ENOMEM;
+    case BLE_HS_ETIMEOUT:
+      return -ETIMEDOUT;
+    default:
+      return -EIO;
+  }
+}
+
 /* The queue frees the discovery, which is its op's context: call back first. */
 static void prv_done(struct discovery *d, int status) {
-  d->cb(d->conn_handle, status, d->chrs, d->arg);
-  nimble_gattc_op_queue_complete();
+  d->cb(d->conn_handle, prv_status(status), d->chrs, d->arg);
+  pbl_bt__gattc_op_queue_complete();
 }
 
 static int prv_dsc_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
@@ -144,7 +167,7 @@ static int prv_start(void *ctx) {
 
   rc = ble_gattc_disc_svc_by_uuid(d->conn_handle, d->svc_uuid, prv_svc_cb, d);
   if (rc != 0) {
-    d->cb(d->conn_handle, rc, d->chrs, d->arg);
+    d->cb(d->conn_handle, prv_status(rc), d->chrs, d->arg);
   }
 
   return rc;
@@ -166,10 +189,11 @@ int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint
                           const ble_uuid_t *const *chr_uuids, uint8_t num_chrs,
                           pbl_bt_gattc_discover_cb_t cb, void *arg) {
   struct discovery *d;
+  int rc;
 
   d = pbl_zalloc(sizeof(*d) + num_chrs * (sizeof(d->chrs[0]) + sizeof(d->chr_end_handles[0])));
   if (d == nullptr) {
-    return BLE_HS_ENOMEM;
+    return -ENOMEM;
   }
 
   d->chr_end_handles = (uint16_t *)&d->chrs[num_chrs];
@@ -183,9 +207,12 @@ int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint
   d->cb = cb;
   d->arg = arg;
 
-  nimble_gattc_op_queue_push(prv_start, d);
+  rc = pbl_bt__gattc_op_queue_push(prv_start, d);
+  if (rc != 0) {
+    pbl_free(d);
+  }
 
-  return 0;
+  return rc;
 }
 
 static PBL_MUTEX_DEFINE(s_service_lock);
@@ -205,31 +232,15 @@ struct service_op {
   uint32_t session;
   uint8_t chr;
   enum service_op_type type;
+  uint16_t conn_handle;
+  uint16_t handle;
   /* What was read so far. */
   uint8_t *value;
   uint16_t len;
+  /* What to write. */
+  uint16_t data_len;
+  uint8_t data[];
 };
-
-static int prv_status(int rc) {
-  if (rc == 0 || rc == BLE_HS_EDONE) {
-    return 0;
-  } else if (rc > BLE_HS_ERR_ATT_BASE && rc <= BLE_HS_ERR_ATT_BASE + UINT8_MAX) {
-    return rc - BLE_HS_ERR_ATT_BASE;
-  }
-
-  switch (rc) {
-    case BLE_HS_ENOENT:
-      return -ENOENT;
-    case BLE_HS_ENOTCONN:
-      return -ENOTCONN;
-    case BLE_HS_ENOMEM:
-      return -ENOMEM;
-    case BLE_HS_ETIMEOUT:
-      return -ETIMEDOUT;
-    default:
-      return -EIO;
-  }
-}
 
 /* The callbacks if the answer is for the service as it was started last, null otherwise. */
 static const struct pbl_bt_gattc_service_cb *prv_service_cb(struct pbl_bt_gattc_service *svc,
@@ -252,10 +263,10 @@ static int prv_check_chrs(const struct pbl_bt_gattc_service *svc, int status,
     const uint32_t bit = 1UL << i;
 
     if (chrs[i].val_handle == 0 && (svc->optional_chrs & bit) == 0) {
-      status = BLE_HS_ENOENT;
+      status = -ENOENT;
     } else if (chrs[i].val_handle != 0 && chrs[i].cccd_handle == 0 &&
                (svc->notifying_chrs & bit) != 0) {
-      status = BLE_HS_ENOENT;
+      status = -ENOENT;
     }
   }
 
@@ -281,7 +292,7 @@ static void prv_service_discovered(uint16_t conn_handle, int status,
   pbl_free(op);
 
   if (cb != nullptr && cb->discovered != nullptr) {
-    cb->discovered(svc, prv_status(status));
+    cb->discovered(svc, status);
   }
 }
 
@@ -316,7 +327,7 @@ int pbl_bt_gattc_service_start(struct pbl_bt_gattc_service *svc, uint16_t conn_h
     pbl_bt_gattc_service_stop(svc);
   }
 
-  return prv_status(rc);
+  return rc;
 }
 
 static void prv_service_rediscovered(uint16_t conn_handle, int status,
@@ -351,7 +362,7 @@ static void prv_service_rediscovered(uint16_t conn_handle, int status,
   pbl_free(op);
 
   if (cb != nullptr && cb->discovered != nullptr) {
-    cb->discovered(svc, prv_status(status));
+    cb->discovered(svc, status);
   }
 }
 
@@ -383,7 +394,7 @@ int pbl_bt_gattc_service_rediscover(struct pbl_bt_gattc_service *svc) {
     pbl_free(op);
   }
 
-  return prv_status(rc);
+  return rc;
 }
 
 void pbl_bt_gattc_service_stop(struct pbl_bt_gattc_service *svc) {
@@ -393,18 +404,13 @@ void pbl_bt_gattc_service_stop(struct pbl_bt_gattc_service *svc) {
   pbl_mutex_unlock(&s_service_lock);
 }
 
-static int prv_service_op_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
-                             struct ble_gatt_attr *attr, void *arg) {
-  struct service_op *op = arg;
+/* Tells the client how an operation ended, unless the service moved or stopped since. */
+static void prv_service_op_report(const struct service_op *op, int status) {
   struct pbl_bt_gattc_service *svc = op->svc;
   const struct pbl_bt_gattc_service_cb *cb = prv_service_cb(svc, op->generation);
-  int status = prv_status(error->status);
-  /* Other than 0 ends a read that has more to come. */
-  int rc = 0;
 
   if (cb == nullptr) {
-    rc = BLE_HS_EDONE;
-    goto done;
+    return;
   }
 
   switch (op->type) {
@@ -420,55 +426,93 @@ static int prv_service_op_cb(uint16_t conn_handle, const struct ble_gatt_error *
       }
       break;
     case SERVICE_OP_READ:
-      /* The value comes in parts, and then that it is done. */
-      if (error->status == 0 && attr != nullptr) {
-        const uint16_t len = (attr->om != nullptr) ? OS_MBUF_PKTLEN(attr->om) : 0;
-        uint8_t *value;
-
-        if (len == 0) {
-          return 0;
-        }
-        value = pbl_realloc(op->value, op->len + len);
-        if (value != nullptr) {
-          os_mbuf_copydata(attr->om, 0, len, &value[op->len]);
-          op->value = value;
-          op->len += len;
-          return 0;
-        }
-        status = -ENOMEM;
-        rc = BLE_HS_EDONE;
-      }
       if (cb->read != nullptr) {
         cb->read(svc, op->chr, status, status == 0 ? op->value : nullptr,
                  status == 0 ? op->len : 0);
       }
       break;
   }
+}
 
-done:
+static int prv_service_op_cb(uint16_t conn_handle, const struct ble_gatt_error *error,
+                             struct ble_gatt_attr *attr, void *arg) {
+  struct service_op *op = arg;
+  int status = prv_status(error->status);
+  /* Other than 0 ends a read that has more to come. */
+  int rc = 0;
+
+  /* The value of a read comes in parts, and then that it is done. */
+  if (op->type == SERVICE_OP_READ && error->status == 0 && attr != nullptr) {
+    const uint16_t len = (attr->om != nullptr) ? OS_MBUF_PKTLEN(attr->om) : 0;
+    uint8_t *value;
+
+    if (len == 0) {
+      return 0;
+    }
+
+    value = pbl_realloc(op->value, op->len + len);
+    if (value != nullptr) {
+      os_mbuf_copydata(attr->om, 0, len, &value[op->len]);
+      op->value = value;
+      op->len += len;
+      return 0;
+    }
+
+    status = -ENOMEM;
+    rc = BLE_HS_EDONE;
+  }
+
+  prv_service_op_report(op, status);
+
+  /* The queue frees the operation. */
   pbl_free(op->value);
-  pbl_free(op);
+  pbl_bt__gattc_op_queue_complete();
 
   return rc;
 }
 
-/* Starts an operation on a characteristic, on its CCCD for the subscriptions. */
+static int prv_service_op_start(void *ctx) {
+  struct service_op *op = ctx;
+  int rc;
+
+  /* Asked of the service where it no longer is. */
+  if (prv_service_cb(op->svc, op->generation) == nullptr) {
+    return BLE_HS_ENOENT;
+  }
+
+  if (op->type == SERVICE_OP_READ) {
+    rc = ble_gattc_read_long(op->conn_handle, op->handle, 0, prv_service_op_cb, op);
+  } else {
+    rc = ble_gattc_write_flat(op->conn_handle, op->handle, op->data, op->data_len,
+                              prv_service_op_cb, op);
+  }
+
+  if (rc != 0) {
+    prv_service_op_report(op, prv_status(rc));
+  }
+
+  return rc;
+}
+
+/* Queues an operation on a characteristic, on its CCCD for the subscriptions. */
 static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum service_op_type type,
                           const void *data, uint16_t len) {
   const bool on_cccd = (type == SERVICE_OP_SUBSCRIBE || type == SERVICE_OP_UNSUBSCRIBE);
   struct service_op *op;
-  uint16_t conn_handle;
   uint16_t handle = 0;
   uint16_t cccd = 0;
   int rc;
 
-  op = pbl_malloc(sizeof(*op));
+  if (on_cccd) {
+    len = sizeof(cccd);
+  }
+
+  op = pbl_malloc(sizeof(*op) + len);
   if (op == nullptr) {
     return -ENOMEM;
   }
 
   pbl_mutex_lock(&s_service_lock, PBL_FOREVER);
-  conn_handle = svc->conn_handle;
   if (svc->started && chr < svc->num_chrs) {
     handle = on_cccd ? svc->chrs[chr].cccd_handle : svc->chrs[chr].val_handle;
     /* Notifications when the characteristic has them, indications otherwise. */
@@ -476,9 +520,16 @@ static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum se
       cccd = (svc->chrs[chr].properties & BLE_GATT_CHR_PROP_NOTIFY) ? BLE_GATT_CCCD_NOTIFY
                                                                     : BLE_GATT_CCCD_INDICATE;
     }
-    cccd = htole16(cccd);
   }
-  *op = (struct service_op){.svc = svc, .generation = svc->generation, .chr = chr, .type = type};
+  *op = (struct service_op){
+    .svc = svc,
+    .generation = svc->generation,
+    .chr = chr,
+    .type = type,
+    .conn_handle = svc->conn_handle,
+    .handle = handle,
+    .data_len = len,
+  };
   pbl_mutex_unlock(&s_service_lock);
 
   if (handle == 0) {
@@ -487,17 +538,18 @@ static int prv_service_op(struct pbl_bt_gattc_service *svc, uint8_t chr, enum se
   }
 
   if (on_cccd) {
-    rc = ble_gattc_write_flat(conn_handle, handle, &cccd, sizeof(cccd), prv_service_op_cb, op);
-  } else if (type == SERVICE_OP_WRITE) {
-    rc = ble_gattc_write_flat(conn_handle, handle, data, len, prv_service_op_cb, op);
-  } else {
-    rc = ble_gattc_read_long(conn_handle, handle, 0, prv_service_op_cb, op);
+    cccd = pbl_cpu_to_le16(cccd);
+    memcpy(op->data, &cccd, sizeof(cccd));
+  } else if (len > 0) {
+    memcpy(op->data, data, len);
   }
+
+  rc = pbl_bt__gattc_op_queue_push(prv_service_op_start, op);
   if (rc != 0) {
     pbl_free(op);
   }
 
-  return prv_status(rc);
+  return rc;
 }
 
 int pbl_bt_gattc_service_subscribe(struct pbl_bt_gattc_service *svc, uint8_t chr, bool enable) {
