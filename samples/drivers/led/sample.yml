@@ -1,4 +1,4 @@
-description: The status LED blinking, half a second on and half a second off
+description: The status LED blinking, half a second on and half a second off, then red, green and blue for a second each where it has color
 expect:
   - 'led: on'
   - 'led: off'
