@@ -14,7 +14,7 @@
 
 #include <clar.h>
 #include <host/ble_store.h>
-#include <prf_legacy_layout.h>
+#include <legacy_layout.h>
 
 // Fakes
 //////////////////////////////////////////////////////////

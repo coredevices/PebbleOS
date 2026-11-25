@@ -31,5 +31,6 @@ rsource "services/Kconfig"
 endif
 
 rsource "clients/Kconfig"
+rsource "prf_store/Kconfig"
 
 endmenu

@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "prf_legacy_layout.h"
+#include "legacy_layout.h"
 
 #include <errno.h>
 #include <string.h>
@@ -17,7 +17,7 @@
 
 #include <host/ble_store.h>
 
-PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(bt_prf_store, CONFIG_BT_PRF_STORE_LOG_LEVEL);
 
 #define KEY_SIZE 16
 

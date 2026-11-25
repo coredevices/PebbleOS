@@ -4,11 +4,11 @@
 pbl_clar_test(test_bonding
   SOURCES
     pebble/services/bluetooth/bonding.c
-    third_party/nimble/store/prf_legacy.c
+    subsys/bluetooth/prf_store/legacy.c
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
-    third_party/nimble/store
+    subsys/bluetooth/prf_store
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
     third_party/nimble/mynewt-nimble/nimble/host/include
@@ -28,11 +28,11 @@ pbl_clar_test(test_bt_settings
 
 pbl_clar_test(test_prf_store
   SOURCES
-    third_party/nimble/store/prf_legacy.c
+    subsys/bluetooth/prf_store/legacy.c
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
-    third_party/nimble/store
+    subsys/bluetooth/prf_store
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
     third_party/nimble/mynewt-nimble/nimble/host/include
@@ -43,11 +43,11 @@ pbl_clar_test(test_prf_store
 
 pbl_clar_test(test_prf_store_records
   SOURCES
-    third_party/nimble/store/prf_records.c
+    subsys/bluetooth/prf_store/records.c
     tests/fakes/fake_spi_flash.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
-    third_party/nimble/store
+    subsys/bluetooth/prf_store
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
     third_party/nimble/mynewt-nimble/nimble/host/include

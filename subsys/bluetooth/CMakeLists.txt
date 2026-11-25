@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 add_subdirectory(clients)
+pbl_add_subdirectory_ifdef(CONFIG_BT_PRF_STORE prf_store)
 
 if(CONFIG_BT)
   file(GLOB sources CONFIGURE_DEPENDS *.c)

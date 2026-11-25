@@ -67,7 +67,7 @@ PebbleOS side of it is split by what it does:
 | --- | --- |
 | `port/` | The NPL on the kernel, `nimble_port_pebble_init()` and the threads it starts, the nRF52 interrupts and the TRNG |
 | `transport/` | The HCI transports, chosen with `NIMBLE_HCI`, and the identity address the controller is given |
-| `store/` | The backends NimBLE's config store persists in, and the PRF store |
+| `store/` | The backends NimBLE's config store persists in |
 
 An application brings NimBLE up as on its other ports: `nimble_port_init()`,
 then `ble_hs_cfg`, the store with `ble_store_config_init()` and the GATT
@@ -78,21 +78,23 @@ peers and their CCCDs where its backend, `NIMBLE_STORE_BACKEND`, says:
 | --- | --- |
 | `NIMBLE_STORE_BACKEND_RAM` | Nothing across a reset |
 | `NIMBLE_STORE_BACKEND_SETTINGS` | Everything in `/nimble_store`, along with a local IRK generated once. The default with `CONFIG_SETTINGS` |
-| `NIMBLE_STORE_BACKEND_PRF` | One bonding in the PRF store; its local IRK is the identity root key kept there |
+| `NIMBLE_STORE_BACKEND_PRF` | One bonding in the PRF store; the local IRK is left to whoever uses the store |
 
-The PRF store (`pbl/bluetooth/prf_store.h`, `NIMBLE_STORE_PRF`) is a flash
-partition of its own with the one bonding and the root keys the recovery
-firmware and the normal firmware share. Recovery firmware in the field reads
-it, so the layout a device ships with is fixed. `NIMBLE_STORE_PRF_LAYOUT`
+The PRF store (`pbl/bluetooth/prf_store.h`, `BT_PRF_STORE`, in
+`subsys/bluetooth/prf_store`) is a flash partition of its own with the one
+bonding and the root keys the recovery firmware and the normal firmware
+share. It needs NimBLE for its types only. Recovery firmware in the field
+reads it, so the layout a device ships with is fixed. `BT_PRF_STORE_LAYOUT`
 chooses it:
 
 | Layout | Is |
 | --- | --- |
-| `NIMBLE_STORE_PRF_LAYOUT_RECORDS` | A log of 140-byte records with one CRC, each holding all the store keeps: the last valid one is the store. The default |
-| `NIMBLE_STORE_PRF_LAYOUT_LEGACY` | Entries of 256 bytes made of fields with a CRC each. What Asterix, Obelix and Getafix shipped with, and keep |
+| `BT_PRF_STORE_LAYOUT_RECORDS` | A log of 140-byte records with one CRC, each holding all the store keeps: the last valid one is the store. The default |
+| `BT_PRF_STORE_LAYOUT_LEGACY` | Entries of 256 bytes made of fields with a CRC each. What Asterix, Obelix and Getafix shipped with, and keep |
 
 The types that describe a layout are the store's own: a bonding goes in and
 comes out as the keys NimBLE stores for a peer, `struct ble_store_value_sec`.
+What writes returns an errno if the flash failed.
 
 The Bluetooth subsystem uses that store too, and it is the only place bonds
 are kept. `pbl/bluetooth/bond.h` lists them by the peer's identity address,

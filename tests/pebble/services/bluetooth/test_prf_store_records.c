@@ -13,7 +13,7 @@
 #include <clar.h>
 #include <fake_spi_flash.h>
 #include <host/ble_store.h>
-#include <prf_records_layout.h>
+#include <records_layout.h>
 
 #define NUM_SLOTS (PART_SHARED_PRF_STORAGE_SIZE / sizeof(struct prf_record))
 
