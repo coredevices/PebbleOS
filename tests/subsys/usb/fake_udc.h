@@ -48,6 +48,8 @@ static int s_queued[2][16];
 static uint8_t s_queued_data[2][16][64];
 // An endpoint whose transfers fail to queue with -EBUSY, or 0 for none
 static uint8_t s_fail_ep;
+// An endpoint the controller refuses to enable, or -1
+static int s_ep_refused = -1;
 
 int pbl_device_init(const struct pbl_device *dev) {
   return 0;
@@ -76,6 +78,9 @@ int pbl_udc_ep_enable(const struct pbl_udc *udc, uint8_t ep, enum pbl_udc_ep_typ
   uint8_t n = ep & ~PBL_UDC_EP_IN;
 
   cl_assert(n < FAKE_NUM_EPS);
+  if (ep == s_ep_refused) {
+    return -EINVAL;
+  }
   if (n != 0U && (FAKE_CAPS & PBL_UDC_CAP_EP_ONE_DIR) != 0U) {
     cl_assert(!s_enabled_eps[!in][n]);
   }

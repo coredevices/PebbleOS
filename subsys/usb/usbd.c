@@ -9,6 +9,7 @@
 
 #include <pbl/drivers/mcu.h>
 #include <pbl/drivers/udc.h>
+#include <pbl/logging/logging.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
@@ -449,9 +450,10 @@ static uint32_t prv_ep_bit(uint8_t ep) {
 
 // Enables or disables the endpoints of the current alternate setting of an interface of a
 // function, by its own number, or of all its interfaces
-static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
+static int prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
   int cur = -1;
   uint8_t alt = 0U;
+  int ret;
 
   for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
     const struct pbl_usb_desc_header *d = prv_desc(fn, i);
@@ -475,25 +477,54 @@ static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, boo
       continue;
     }
 
-    if (on) {
-      (void)pbl_udc_ep_enable(UDC, ep, type, mps);
-    } else {
-      (void)pbl_udc_ep_disable(UDC, ep);
-    }
     s_ctrl.halted &= ~prv_ep_bit(ep);
+    if (!on) {
+      (void)pbl_udc_ep_disable(UDC, ep);
+      continue;
+    }
+
+    ret = pbl_udc_ep_enable(UDC, ep, type, mps);
+    if (ret != 0) {
+      PBL_LOG_WRN("usb: endpoint 0x%02x of %u bytes failed (%d)", ep, mps, ret);
+      return ret;
+    }
+  }
+
+  return 0;
+}
+
+static void prv_eps_off(void) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    (void)prv_ifaces_switch(fn, -1, false);
   }
 }
 
-// Every interface is at its alternate setting 0 when not configured
-static void prv_set_configured(bool on) {
+// Every interface is at its alternate setting 0 when not configured; a configuration whose
+// endpoints the controller cannot all take is not set
+static int prv_set_configured(bool on) {
+  int ret;
+
+  if (!on) {
+    prv_eps_off();
+  } else {
+    PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+      ret = prv_ifaces_switch(fn, -1, true);
+      if (ret != 0) {
+        prv_eps_off();
+        return ret;
+      }
+    }
+  }
+
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    prv_ifaces_switch(fn, -1, on);
     if (fn->configured != nullptr) {
       fn->configured(on);
     }
   }
 
   memset(s_ctrl.alt, 0, sizeof(s_ctrl.alt));
+
+  return 0;
 }
 
 // The function of an interface of the device, and its own number for it
@@ -541,6 +572,8 @@ static int prv_get_interface(uint16_t iface, uint8_t **data, uint16_t *len) {
 static int prv_set_interface(uint16_t iface, uint16_t alt) {
   const struct pbl_usbd_function *fn;
   uint8_t local;
+  uint8_t old;
+  int ret;
 
   if (s_ctrl.config == 0U || iface >= MAX_IFACES || alt > UINT8_MAX) {
     return -EINVAL;
@@ -551,9 +584,16 @@ static int prv_set_interface(uint16_t iface, uint16_t alt) {
     return -EINVAL;
   }
 
-  prv_ifaces_switch(fn, local, false);
+  old = s_ctrl.alt[iface];
+  (void)prv_ifaces_switch(fn, local, false);
   s_ctrl.alt[iface] = (uint8_t)alt;
-  prv_ifaces_switch(fn, local, true);
+  ret = prv_ifaces_switch(fn, local, true);
+  if (ret != 0) {
+    (void)prv_ifaces_switch(fn, local, false);
+    s_ctrl.alt[iface] = old;
+    (void)prv_ifaces_switch(fn, local, true);
+    return ret;
+  }
   if (fn->set_alt != nullptr) {
     fn->set_alt(local, (uint8_t)alt);
   }
@@ -581,6 +621,7 @@ static int prv_set_halt(uint8_t ep, bool halt) {
 static int prv_standard(uint8_t **data, uint16_t *len) {
   const struct pbl_usb_setup *setup = &s_ctrl.setup;
   uint8_t recip = setup->bmRequestType & PBL_USB_RECIP_MASK;
+  int ret;
 
   *len = 0U;
   switch (setup->bRequest) {
@@ -593,12 +634,17 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
         return -EINVAL;
       }
       if (s_ctrl.config != 0U) {
-        prv_set_configured(false);
+        s_ctrl.config = 0U;
+        (void)prv_set_configured(false);
+      }
+      if (setup->wValue == 0U) {
+        return 0;
+      }
+      ret = prv_set_configured(true);
+      if (ret != 0) {
+        return ret;
       }
       s_ctrl.config = (uint8_t)setup->wValue;
-      if (s_ctrl.config != 0U) {
-        prv_set_configured(true);
-      }
       return 0;
     case PBL_USB_REQ_GET_CONFIGURATION:
       s_ctrl.buf[0] = s_ctrl.config;
@@ -778,7 +824,7 @@ static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const u
     case PBL_UDC_EVENT_RESET:
       if (s_ctrl.config != 0U) {
         s_ctrl.config = 0U;
-        prv_set_configured(false);
+        (void)prv_set_configured(false);
       }
       s_ctrl.stage = STAGE_IDLE;
       (void)pbl_udc_ep_enable(udc, 0U, PBL_UDC_EP_CONTROL, EP0_MPS);

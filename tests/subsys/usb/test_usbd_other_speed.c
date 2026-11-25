@@ -101,3 +101,21 @@ void test_usbd_other_speed__qualifier(void) {
 void test_usbd_other_speed__second_configuration(void) {
   cl_assert_equal_i(prv_get_descriptor(PBL_USB_DESC_OTHER_SPEED, 1U), -1);
 }
+
+// A configuration whose endpoints the controller cannot all take is not set
+void test_usbd_other_speed__endpoint_refused(void) {
+  uint8_t type = PBL_USB_TYPE_STANDARD | PBL_USB_RECIP_DEVICE;
+
+  s_ep_refused = 0x82;
+  cl_assert_equal_i(prv_request(type, PBL_USB_REQ_SET_CONFIGURATION, 1U, 0U, 0U), -1);
+  cl_assert(!s_enabled_eps[0][1]);
+  cl_assert(!s_enabled_eps[1][1]);
+  cl_assert_equal_i(prv_request_in(type, PBL_USB_REQ_GET_CONFIGURATION, 0U, 0U, 1U), 1);
+  cl_assert_equal_i(s_in[0], 0);
+
+  s_ep_refused = -1;
+  cl_assert_equal_i(prv_request(type, PBL_USB_REQ_SET_CONFIGURATION, 1U, 0U, 0U), 0);
+  cl_assert(s_enabled_eps[0][1]);
+  cl_assert(s_enabled_eps[1][1]);
+  cl_assert(s_enabled_eps[1][2]);
+}
