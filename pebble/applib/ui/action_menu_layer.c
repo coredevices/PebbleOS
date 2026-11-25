@@ -70,9 +70,6 @@ static GColor prv_glyph_foreground_color(bool selected) {
 }
 
 static void prv_refresh_menu_layer_colors(ActionMenuLayer *aml) {
-  if (system_theme_is_system_ui()) {
-    return;
-  }
   menu_layer_set_normal_colors(&aml->menu_layer, action_menu_theme__background_color(),
                                action_menu_theme__foreground_color());
   // The action menu draws its own highlight, so keep the menu layer's row fill out of the way.
@@ -269,6 +266,12 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
   const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
+  // MenuLayers fill the whole highlighted cell with the inverted highlight background on black
+  // and white displays, which would hide this row's other columns. Restore the themed
+  // background so only the per-column selection tiles highlight.
+  GRect bg_fill = r;
+  graphics_context_set_fill_color(ctx, action_menu_theme__background_color());
+  graphics_fill_rect(ctx, &bg_fill);
   if (prv_is_glyph_grid(aml)) {
     uint8_t *pixels = applib_malloc(GLYPH_SCRATCH_SIZE * GLYPH_SCRATCH_SIZE);
     if (prv_is_honeycomb(aml)) {
@@ -1218,12 +1221,7 @@ void action_menu_layer_init(ActionMenuLayer *aml, const GRect *frame) {
   aml->layer.update_proc = prv_update_proc;
 
   menu_layer_init(&aml->menu_layer, &aml->layer.bounds);
-  if (system_theme_is_system_ui()) {
-    menu_layer_set_colors_follow_theme(&aml->menu_layer);
-  } else {
-    // The documented third-party palette, adapted to the current dark mode setting
-    prv_refresh_menu_layer_colors(aml);
-  }
+  prv_refresh_menu_layer_colors(aml);
 #if PBL_ROUND
   menu_layer_pad_bottom_enable(&aml->menu_layer, false);
 #endif
