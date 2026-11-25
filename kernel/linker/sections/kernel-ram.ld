@@ -57,4 +57,5 @@
     .kernel_heap (NOLOAD) : {
         _heap_start = .;
     } >REGION_KERNEL_HEAP
-    _heap_end = ORIGIN(REGION_KERNEL_HEAP) + LENGTH(REGION_KERNEL_HEAP);
+    _heap_end = __kernel_ram_end__;
+    ASSERT(_heap_start <= _heap_end, "Kernel RAM overflows into the RAM reserved after it")
