@@ -15,10 +15,12 @@ description:
 
 properties:
   compatible:
-    items:
-      - enum:
-          - nordic,nrf52840-nvmc
+    oneOf:
       - const: nordic,nrf52832-nvmc
+      - items:
+          - enum:
+              - nordic,nrf52840-nvmc
+          - const: nordic,nrf52832-nvmc
 
   reg:
     maxItems: 1
