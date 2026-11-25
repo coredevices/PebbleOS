@@ -51,14 +51,21 @@ properties:
           - description: The field mask of the flash allocation
 
   mboxes:
+    minItems: 1
     items:
       - description:
           Tells the Cortex-M4 that the system is about to be powered off, or
           that it is stopped; its acknowledgement means it is stopping.
+      - description:
+          Rung by the Cortex-M4 woken alone from Stop, the system then running
+          on the HSI until the Cortex-M7, which owns the clock tree, brings it
+          back.
 
   mbox-names:
+    minItems: 1
     items:
       - const: shutdown
+      - const: clocks
 
   st,wwdg:
     $ref: /schemas/types.yaml#/definitions/phandle
@@ -85,8 +92,8 @@ examples:
         st,syscfg-holdboot = <&rcc 0xa0 0x8>;
         st,syscfg-boot-address = <&flash 0x48 0xffff>;
         st,syscfg-flash = <&rcc 0x194 0x100>;
-        mboxes = <&hsem 0>;
-        mbox-names = "shutdown";
+        mboxes = <&hsem 0>, <&hsem 1>;
+        mbox-names = "shutdown", "clocks";
         st,wwdg = <&wwdg2>;
         st,auto-boot;
     };
