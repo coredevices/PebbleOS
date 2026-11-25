@@ -58,22 +58,30 @@ def test_configuration_descriptor(usb_function):
     assert cfg.bNumInterfaces == 1
     intf = cfg[(husb.INTERFACE, 0)]
     assert intf.bInterfaceClass == husb.VENDOR_CLASS
-    eps = {ep.bEndpointAddress: ep for ep in intf}
-    assert sorted(eps) == sorted(
-        [husb.EP_LOOP_OUT, husb.EP_LOOP_IN, husb.EP_SINK, husb.EP_SOURCE, husb.EP_INT]
-    )
+    eps = usb_function.endpoints
+    addrs = [ep.bEndpointAddress for ep in eps.values()]
+    assert len(set(addrs)) == len(addrs)
+    assert all(addr & 0x0F for addr in addrs)
     bulk_mps = 512 if dev.speed == usb.util.SPEED_HIGH else 64
-    for addr in (husb.EP_LOOP_OUT, husb.EP_LOOP_IN, husb.EP_SINK, husb.EP_SOURCE):
+    for name, direction in (
+        ("loop_out", usb.util.ENDPOINT_OUT),
+        ("loop_in", usb.util.ENDPOINT_IN),
+        ("sink", usb.util.ENDPOINT_OUT),
+        ("source", usb.util.ENDPOINT_IN),
+    ):
+        assert usb.util.endpoint_direction(eps[name].bEndpointAddress) == direction
         assert (
-            usb.util.endpoint_type(eps[addr].bmAttributes)
+            usb.util.endpoint_type(eps[name].bmAttributes)
             == usb.util.ENDPOINT_TYPE_BULK
         )
-        assert eps[addr].wMaxPacketSize == bulk_mps
+        assert eps[name].wMaxPacketSize == bulk_mps
     assert (
-        usb.util.endpoint_type(eps[husb.EP_INT].bmAttributes)
-        == usb.util.ENDPOINT_TYPE_INTR
+        usb.util.endpoint_direction(eps["int"].bEndpointAddress) == usb.util.ENDPOINT_IN
     )
-    assert eps[husb.EP_INT].wMaxPacketSize == husb.INT_MPS
+    assert (
+        usb.util.endpoint_type(eps["int"].bmAttributes) == usb.util.ENDPOINT_TYPE_INTR
+    )
+    assert eps["int"].wMaxPacketSize == husb.INT_MPS
 
     # Whole, truncated to the host's wLength, and short of a longer one.
     total = cfg.wTotalLength
@@ -91,11 +99,39 @@ def test_standard_requests(usb_function):
     assert bytes(dev.ctrl_transfer(0x80, 0x06, 0x0300, 0, 255)) == b"\x04\x03\x09\x04"
 
 
+def test_device_qualifier(usb_function):
+    """A device running at high speed tells how it would be at full speed; a
+    full-speed one may stall."""
+    import usb.core
+    import usb.util
+
+    dev = usb_function.dev
+    try:
+        data = bytes(dev.ctrl_transfer(0x80, 0x06, 0x0600, 0, 10))
+    except usb.core.USBError as e:
+        assert dev.speed != usb.util.SPEED_HIGH
+        assert husb.is_stall(e), e
+        return
+    assert data == bytes(
+        [
+            10,
+            0x06,
+            dev.bcdUSB & 0xFF,
+            dev.bcdUSB >> 8,
+            dev.bDeviceClass,
+            dev.bDeviceSubClass,
+            dev.bDeviceProtocol,
+            dev.bMaxPacketSize0,
+            dev.bNumConfigurations,
+            0,
+        ]
+    )
+
+
 @pytest.mark.parametrize(
     "request_type, req, value, length",
     [
-        # Descriptors the device does not have: device qualifier, BOS, a string
-        (0x80, 0x06, 0x0600, 10),
+        # Descriptors the device does not have: BOS, a string
         (0x80, 0x06, 0x0F00, 5),
         (0x80, 0x06, 0x03FE, 255),
         # A second configuration, SET_DESCRIPTOR
@@ -218,10 +254,12 @@ def test_interrupt(usb_function):
     assert elapsed < 2.0
 
 
-@pytest.mark.parametrize("ep", [husb.EP_LOOP_OUT, husb.EP_LOOP_IN])
-def test_halt_loopback(usb_function, ep):
+@pytest.mark.parametrize("name", ["loop_out", "loop_in"])
+def test_halt_loopback(usb_function, name):
     import usb.core
 
+    ep = usb_function.ep(name)
+    mps = usb_function.mps(name)
     payload = _payload(100, ep)
     assert usb_function.loop(payload) == payload
 
@@ -229,7 +267,7 @@ def test_halt_loopback(usb_function, ep):
     assert usb_function.halted(ep)
     with pytest.raises(usb.core.USBError) as e:
         if ep & 0x80:
-            usb_function.dev.read(ep, 64, 1000)
+            usb_function.dev.read(ep, mps, 1000)
         else:
             usb_function.dev.write(ep, payload, 1000)
     assert husb.is_stall(e.value), e.value
@@ -237,7 +275,7 @@ def test_halt_loopback(usb_function, ep):
     # The host resets its data toggle as the device does.
     usb_function.dev.clear_halt(ep)
     assert not usb_function.halted(ep)
-    for length in (100, 64, 1):
+    for length in (100, mps, 1):
         payload = _payload(length, length + ep)
         assert usb_function.loop(payload) == payload
 
@@ -246,12 +284,14 @@ def test_halt_source_sink(usb_function):
     import usb.core
 
     mps = usb_function.bulk_mps
+    source = usb_function.ep("source")
+    sink = usb_function.ep("sink")
     # The source has its next packet in the controller, which the stall flushes.
     before = usb_function.source(8 * mps)
-    usb_function.set_halt(husb.EP_SOURCE)
-    usb_function.set_halt(husb.EP_SINK)
-    assert usb_function.halted(husb.EP_SOURCE)
-    assert usb_function.halted(husb.EP_SINK)
+    usb_function.set_halt(source)
+    usb_function.set_halt(sink)
+    assert usb_function.halted(source)
+    assert usb_function.halted(sink)
     with pytest.raises(usb.core.USBError) as e:
         usb_function.source(mps)
     assert husb.is_stall(e.value), e.value
@@ -259,10 +299,10 @@ def test_halt_source_sink(usb_function):
         usb_function.sink(husb.pattern(1, mps))
     assert husb.is_stall(e.value), e.value
 
-    usb_function.dev.clear_halt(husb.EP_SOURCE)
-    usb_function.dev.clear_halt(husb.EP_SINK)
-    assert not usb_function.halted(husb.EP_SOURCE)
-    assert not usb_function.halted(husb.EP_SINK)
+    usb_function.dev.clear_halt(source)
+    usb_function.dev.clear_halt(sink)
+    assert not usb_function.halted(source)
+    assert not usb_function.halted(sink)
 
     # Nothing lost: the stream goes on where it stopped.
     data = before + usb_function.source(16 * mps)

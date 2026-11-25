@@ -29,11 +29,8 @@ REQ_STATS = 0x05
 STATS = ("loop_bytes", "source_bytes", "sink_bytes", "sink_errors", "int_packets")
 
 INTERFACE = 0
-EP_LOOP_OUT = 0x01
-EP_LOOP_IN = 0x82
-EP_SINK = 0x03
-EP_SOURCE = 0x84
-EP_INT = 0x85
+#: The function's endpoints, in the order of its descriptors.
+ENDPOINTS = ("loop_out", "loop_in", "sink", "source", "int")
 
 VENDOR_CLASS = 0xFF
 #: Largest control transfer the function takes.
@@ -136,13 +133,28 @@ class TestFunction:
     def __init__(self, dev, timeout_ms=2000):
         self.dev = dev
         self.timeout_ms = timeout_ms
+        self._eps = None
+
+    @property
+    def endpoints(self):
+        """The function's endpoint descriptors by name, as the device numbered
+        them."""
+        if self._eps is None:
+            intf = self.dev.get_active_configuration()[(INTERFACE, 0)]
+            self._eps = dict(zip(ENDPOINTS, intf, strict=True))
+        return self._eps
+
+    def ep(self, name):
+        """The address of an endpoint of the function."""
+        return self.endpoints[name].bEndpointAddress
+
+    def mps(self, name):
+        """The maximum packet size of an endpoint of the function."""
+        return self.endpoints[name].wMaxPacketSize
 
     @property
     def bulk_mps(self):
-        intf = self.dev.get_active_configuration()[(INTERFACE, 0)]
-        return next(
-            ep for ep in intf if ep.bEndpointAddress == EP_LOOP_IN
-        ).wMaxPacketSize
+        return self.mps("loop_in")
 
     def configure(self):
         """Select configuration 1 and claim the interface."""
@@ -211,21 +223,25 @@ class TestFunction:
 
     def loop(self, data):
         """Send ``data`` and return what comes back."""
-        mps = self.bulk_mps
-        self.dev.write(EP_LOOP_OUT, data, self.timeout_ms)
+        mps = self.mps("loop_out")
+        self.dev.write(self.ep("loop_out"), data, self.timeout_ms)
         # A transfer of full packets ends with a zero-length one, both ways.
         if len(data) % mps == 0 and len(data) != 0:
-            self.dev.write(EP_LOOP_OUT, b"", self.timeout_ms)
-        return bytes(self.dev.read(EP_LOOP_IN, len(data) + mps, self.timeout_ms))
+            self.dev.write(self.ep("loop_out"), b"", self.timeout_ms)
+        return bytes(
+            self.dev.read(
+                self.ep("loop_in"), len(data) + self.mps("loop_in"), self.timeout_ms
+            )
+        )
 
     def source(self, length):
-        return bytes(self.dev.read(EP_SOURCE, length, self.timeout_ms))
+        return bytes(self.dev.read(self.ep("source"), length, self.timeout_ms))
 
     def sink(self, data):
-        return self.dev.write(EP_SINK, data, self.timeout_ms)
+        return self.dev.write(self.ep("sink"), data, self.timeout_ms)
 
     def interrupt(self):
-        return bytes(self.dev.read(EP_INT, INT_MPS, self.timeout_ms))
+        return bytes(self.dev.read(self.ep("int"), INT_MPS, self.timeout_ms))
 
 
 def pattern(packets, mps, seq=0):
