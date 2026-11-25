@@ -18,6 +18,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
@@ -155,16 +156,10 @@ static void prv_write_fifo(const struct pbl_udc_musb *m, uint8_t n, const uint8_
   size_t i = 0U;
 
   for (; i + 4U <= len; i += 4U) {
-    uint32_t w;
-
-    memcpy(&w, &buf[i], sizeof(w));
-    pbl_writel(w, fifo);
+    pbl_writel(pbl_get_le32(&buf[i]), fifo);
   }
   if (len - i >= 2U) {
-    uint16_t h;
-
-    memcpy(&h, &buf[i], sizeof(h));
-    pbl_writew(h, fifo);
+    pbl_writew(pbl_get_le16(&buf[i]), fifo);
     i += 2U;
   }
   if (i < len) {
@@ -179,14 +174,14 @@ static void prv_read_fifo(const struct pbl_udc_musb *m, uint8_t n, uint8_t *buf,
   size_t i = 0U;
 
   for (; i + 4U <= len; i += 4U) {
-    uint32_t w = pbl_readl(fifo);
+    uint32_t w = pbl_cpu_to_le32(pbl_readl(fifo));
 
     if (i < keep) {
       memcpy(&buf[i], &w, PBL_MIN(sizeof(w), keep - i));
     }
   }
   if (len - i >= 2U) {
-    uint16_t h = pbl_readw(fifo);
+    uint16_t h = pbl_cpu_to_le16(pbl_readw(fifo));
 
     if (i < keep) {
       memcpy(&buf[i], &h, PBL_MIN(sizeof(h), keep - i));
