@@ -26,3 +26,7 @@ PBL_WEAK void status_bar_layer_deinit(StatusBarLayer *status_bar_layer) {
 PBL_WEAK void status_bar_layer_set_separator_mode(StatusBarLayer *status_bar_layer,
                                                   StatusBarLayerSeparatorMode mode) {
 }
+
+PBL_WEAK int16_t status_bar_layer_get_height_for_mode(StatusBarLayerMode mode) {
+  return STATUS_BAR_LAYER_HEIGHT;
+}

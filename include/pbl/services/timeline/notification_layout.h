@@ -59,9 +59,10 @@
  * @brief Smallest layout origin y at which its text is considered visible.
  *
  * @param h Height of the layout.
+ * @param swap_h Height of the swap layer the layout is shown in.
  */
-#define TEXT_VISIBLE_LOWER_THRESHOLD(h) \
-  (-(h) + PBL_DISPLAY_HEIGHT - STATUS_BAR_LAYER_HEIGHT - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
+#define TEXT_VISIBLE_LOWER_THRESHOLD(h, swap_h) \
+  (-(h) + (swap_h) - INTERPOLATE_MOOOK_BOUNCE_BACK - 1)
 
 /**
  * @brief Fonts and spacing of a notification card, per content size.
@@ -188,6 +189,11 @@ static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIF
  * @return New layout, allocated on the calling task's heap.
  */
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config);
+
+/**
+ * @brief Status bar mode of the notification window, from the selected status bar style.
+ */
+StatusBarLayerMode notification_layout_get_status_bar_mode(void);
 
 /**
  * @brief Check the attributes of a notification or reminder.
