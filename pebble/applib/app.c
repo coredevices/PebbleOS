@@ -13,7 +13,6 @@
 #include <applib/ui/window_stack.h>
 #include <kernel/events.h>
 #include <process_state/app_state/app_state.h>
-#include <shell/system_theme.h>
 #include <syscall/syscall.h>
 
 PBL_PROFILER_NODE_DEFINE(render_app);
@@ -240,14 +239,11 @@ void app_event_loop_common(void) {
   event_service_client_subscribe(&events_info->will_focus_event);
   event_service_client_subscribe(&events_info->button_down_event);
   event_service_client_subscribe(&events_info->button_up_event);
-  if (system_theme_is_system_ui()) {
-    // Third party apps keep the SDK default colors, so they have nothing to redraw
-    events_info->dark_mode_change_event = (EventServiceInfo){
-      .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
-      .handler = prv_app_dark_mode_change_handler,
-    };
-    event_service_client_subscribe(&events_info->dark_mode_change_event);
-  }
+  events_info->dark_mode_change_event = (EventServiceInfo){
+    .type = PEBBLE_DARK_MODE_CHANGE_EVENT,
+    .handler = prv_app_dark_mode_change_handler,
+  };
+  event_service_client_subscribe(&events_info->dark_mode_change_event);
   prv_legacy2_status_bar_timer_subscribe(); // a no-op on sdk3+ applications
 
   event_loop_upkeep();

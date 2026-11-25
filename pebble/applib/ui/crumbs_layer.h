@@ -16,12 +16,14 @@ typedef struct {
   int16_t crumbs_x_increment;
 } CrumbsLayer;
 
-void crumbs_layer_init(CrumbsLayer *crumbs_layer, const GRect *frame, GColor fg_color,
-                       GColor bg_color);
+void crumbs_layer_init(CrumbsLayer *crumbs_layer, const GRect *frame, GColor bg_color,
+                       GColor fg_color);
 
-CrumbsLayer *crumbs_layer_create(GRect frame, GColor fg_color, GColor bg_color);
+CrumbsLayer *crumbs_layer_create(GRect frame, GColor bg_color, GColor fg_color);
 
 void crumbs_layer_set_level(CrumbsLayer *crumbs_layer, int level);
+
+void crumbs_layer_set_colors(CrumbsLayer *crumbs_layer, GColor bg_color, GColor fg_color);
 
 void crumbs_layer_deinit(CrumbsLayer *crumbs_layer);
 
