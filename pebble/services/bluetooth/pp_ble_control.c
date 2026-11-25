@@ -5,62 +5,38 @@
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/services/bluetooth/pairability.h>
-#include <pbl/services/bluetooth/pp_ble_control.h>
-
-#include <kernel/pebble_tasks.h>
+#include <pbl/util/byteorder.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
-typedef enum {
-  // Values 0 - 3 are deprecated, do not use.
-  BLEControlCommandTypeSetDiscoverablePairable = 4,
-} BLEControlCommandType;
+// Opcodes 0 to 3 were used once.
+#define OPCODE_SET_DISCOVERABLE_PAIRABLE 4U
 
-typedef struct PBL_PACKED {
+struct PBL_PACKED set_discoverable_pairable {
   uint8_t opcode;
-  bool discoverable_pairable;
+  uint8_t discoverable_pairable;
+  // Seconds, little endian.
   uint16_t duration;
-} BLEControlCommandSetDiscoverablePairable;
+};
 
-// -----------------------------------------------------------------------------
-//! Handler for the "Set Discoverable & Pairable" command
-static void prv_handle_set_discoverable_pairable(
-    BLEControlCommandSetDiscoverablePairable *cmd_data) {
-  bt_pairability_use_for_period(cmd_data->duration);
-  PBL_LOG_DBG("Set Discoverable Pairable: %u, %u", cmd_data->discoverable_pairable,
-              cmd_data->duration);
-}
+static void prv_msg_cb(struct pbl_pp_session *session, const uint8_t *data, size_t length) {
+  const struct set_discoverable_pairable *cmd = (const struct set_discoverable_pairable *)data;
+  uint16_t duration;
 
-// -----------------------------------------------------------------------------
-//! Pebble protocol handler for the BLE control endpoint
-void pp_ble_control_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
-                                          size_t length) {
-  PBL_ASSERT_RUNNING_FROM_EXPECTED_TASK(PebbleTask_SysWorkq);
-
-  if (length < sizeof(BLEControlCommandSetDiscoverablePairable)) {
-    PBL_LOG_WRN("Invalid pp_ble_control_protocol_msg_callback message: %d", (int)length);
+  if (length < sizeof(*cmd)) {
+    PBL_LOG_WRN("Short BLE control message: %d", (int)length);
     return;
   }
 
-  const uint8_t opcode = *(const uint8_t *)data;
-  switch (opcode) {
-    case 0 ... 3:
-      PBL_LOG_WRN("Deprecated & unsupported opcode: %u", opcode);
-      break;
-
-    case BLEControlCommandTypeSetDiscoverablePairable: {
-      BLEControlCommandSetDiscoverablePairable *cmd_data =
-          (BLEControlCommandSetDiscoverablePairable *)data;
-      prv_handle_set_discoverable_pairable(cmd_data);
-      break;
-    }
-    default:
-      PBL_LOG_DBG("Unknown opcode %u", opcode);
-      break;
+  if (cmd->opcode != OPCODE_SET_DISCOVERABLE_PAIRABLE) {
+    PBL_LOG_WRN("Unsupported BLE control opcode: %u", cmd->opcode);
+    return;
   }
+
+  duration = pbl_le16_to_cpu(cmd->duration);
+  PBL_LOG_DBG("Set discoverable pairable: %u, %u s", cmd->discoverable_pairable, duration);
+
+  bt_pairability_use_for_period(cmd->discoverable_pairable != 0U ? duration : 0U);
 }
 
-#ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLE_CONTROL, PBL_PP_ACCESS_PRIVATE,
-                       pp_ble_control_protocol_msg_callback);
-#endif
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLE_CONTROL, PBL_PP_ACCESS_PRIVATE, prv_msg_cb);
