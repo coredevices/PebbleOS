@@ -162,6 +162,7 @@ def _device_test_session(request):
         return
 
     dut = request.getfixturevalue("dut")
+    dut.ensure_connected()
     results = request.getfixturevalue("test_results_dir")
     dut.initialize_log_files(request.node.nodeid)
     start = dut.logs.mark()
