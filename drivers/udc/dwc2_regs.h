@@ -87,6 +87,7 @@
 #define DCFG_DSPD_FS   3U
 #define DCFG_DAD_MASK  PBL_GENMASK(10, 4)
 
+#define DCTL_RWUSIG PBL_BIT(0)
 #define DCTL_SDIS   PBL_BIT(1)
 #define DCTL_CGINAK PBL_BIT(8)
 #define DCTL_SGONAK PBL_BIT(9)
