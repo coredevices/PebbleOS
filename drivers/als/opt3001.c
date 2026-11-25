@@ -7,6 +7,7 @@
 #include <pbl/drivers/als.h>
 #include <pbl/drivers/als/opt3001.h>
 #include <pbl/drivers/i2c.h>
+#include <pbl/drivers/regulator.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
@@ -70,8 +71,7 @@ static int prv_configure(const struct pbl_opt3001 *dev, uint8_t mode) {
                                 PBL_FIELD_PREP(OPT3001_CONFIG_MODE_MASK, mode));
 }
 
-static int prv_init(const struct pbl_als *als) {
-  const struct pbl_opt3001 *dev = prv_get(als);
+static int prv_probe(const struct pbl_opt3001 *dev) {
   uint16_t mfgid;
   uint16_t devid;
   int ret;
@@ -102,6 +102,30 @@ static int prv_init(const struct pbl_als *als) {
   }
 
   return 0;
+}
+
+static int prv_init(const struct pbl_als *als) {
+  const struct pbl_opt3001 *dev = prv_get(als);
+  int ret;
+
+  if (dev->supply != nullptr) {
+    ret = pbl_device_init(&dev->supply->dev);
+    if (ret != 0) {
+      return ret;
+    }
+
+    ret = pbl_regulator_enable(dev->supply);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = prv_probe(dev);
+  if (ret != 0 && dev->supply != nullptr) {
+    (void)pbl_regulator_disable(dev->supply);
+  }
+
+  return ret;
 }
 
 static int prv_read(const struct pbl_als *als, uint32_t *level) {
