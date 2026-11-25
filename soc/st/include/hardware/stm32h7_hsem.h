@@ -17,12 +17,17 @@
 #define STM32H7_HSEM_C2ICR_OFFSET  0x0114
 #define STM32H7_HSEM_C2ISR_OFFSET  0x0118
 #define STM32H7_HSEM_C2MISR_OFFSET 0x011c
+#define STM32H7_HSEM_CR_OFFSET     0x0140
+#define STM32H7_HSEM_KEYR_OFFSET   0x0144
 
 /* Register bit definitions */
 
 #define HSEM_R_LOCK        PBL_BIT(31)
 #define HSEM_R_COREID_MASK PBL_GENMASK(11, 8)
 #define HSEM_R_PROCID_MASK PBL_GENMASK(7, 0)
+
+#define HSEM_CR_KEY_MASK    PBL_GENMASK(31, 16)
+#define HSEM_CR_COREID_MASK PBL_GENMASK(11, 8)
 
 /* The cores, as the semaphores know them */
 #define HSEM_COREID_CM7 3U
