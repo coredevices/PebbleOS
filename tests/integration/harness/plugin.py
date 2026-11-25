@@ -233,7 +233,7 @@ def pytest_configure(config):
 def _resolve_setup(config, build, board, device_type):
     lab_path = config.getoption("lab")
     lab = labs.load(lab_path) if lab_path else None
-    return labs.resolve(
+    setup = labs.resolve(
         build if build is not None and board == build.board else None,
         device_type,
         {
@@ -248,6 +248,9 @@ def _resolve_setup(config, build, board, device_type):
         },
         lab,
     )
+    if device_type == "hardware":
+        setup.check_daemon()
+    return setup
 
 
 def _marker_args(item, name):

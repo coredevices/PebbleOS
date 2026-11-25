@@ -68,6 +68,8 @@ class Setup:
     #: What the supply supplies, in millivolts, and where that comes from.
     voltage_mv: int = None
     voltage_from: str = None
+    #: The pid of the ``pbl power`` daemon holding the supply, if one does.
+    supply_daemon: int = None
     #: An emulated watch's Bluetooth: VIRTUAL, or a dongle's serial port
     #: (for QEMU, any -serial spec).
     bt_hci: str = None
@@ -89,8 +91,9 @@ class Setup:
             return "no power supply in this setup"
         return None
 
-    def locks(self):
-        """The locks (:mod:`pbl.lock`) on the ports the setup uses."""
+    def device_locks(self):
+        """The locks (:mod:`pbl.lock`) on the device's serial ports and
+        debug probe: what flashing it takes."""
         from pbl import lock
 
         locks = [(lock.serial_key(port), f"serial port {port}") for port in self.serial]
@@ -98,23 +101,54 @@ class Setup:
             locks.append(
                 (lock.probe_key(self.watch), f"watch {self.watch}'s debug probe")
             )
-        if self.supply_port:
-            from pbl import power
+        return locks
 
-            key = power.lock_key(self.supply_type, self.supply_port)
-            locks.append((key, f"{self.supply_type} {self.supply_port}"))
+    def locks(self):
+        """The locks on the ports the setup uses, but its supply's."""
+        from pbl import lock
+
+        locks = self.device_locks()
         for port in (self.bt_hci, self.phone.controller if self.phone else None):
             locks.append((lock.serial_key(port), f"Bluetooth controller {port}"))
         return locks
+
+    def supply_lock(self):
+        from pbl import power
+
+        key = power.lock_key(self.supply_type, self.supply_port)
+        return key, f"{self.supply_type} {self.supply_port}"
+
+    def check_daemon(self):
+        """Look for a ``pbl power`` daemon holding the supply, which the
+        tests then use: its status, or None. Raises HarnessError when it
+        supplies another voltage than the setup's."""
+        from pbl.power import daemon
+
+        self.supply_daemon = None
+        if self.supply_port is None:
+            return None
+        status = daemon.status(self.supply_lock()[0])
+        if status is None:
+            return None
+        if status["voltage_mv"] != self.voltage_mv:
+            raise HarnessError(
+                f"supply {status['supply']} is held by a pbl power daemon (pid "
+                f"{status['pid']}) at {status['voltage_mv']} mV, the tests want "
+                f"{self.voltage_mv} mV ({self.voltage_from}); the harness does not "
+                "change a running supply's voltage"
+            )
+        self.supply_daemon = status["pid"]
+        return status
 
     def describe(self):
         parts = [self.watch or self.device_type]
         if self.serial:
             parts.append(f"serial {', '.join(self.serial)}")
         if self.supply_port:
-            parts.append(
-                f"{self.supply_type} {self.supply_port} at {self.voltage_mv} mV"
-            )
+            supply = f"{self.supply_type} {self.supply_port} at {self.voltage_mv} mV"
+            if self.supply_daemon is not None:
+                supply += f" (pbl power daemon, pid {self.supply_daemon})"
+            parts.append(supply)
         if self.bt_hci:
             parts.append(f"Bluetooth {self.bt_hci}")
         if self.phone:

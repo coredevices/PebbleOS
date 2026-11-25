@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import contextlib
 import os
 
 import pytest
@@ -58,37 +59,64 @@ def lab_setup(request):
     return request.config.pbl_setup
 
 
-@pytest.fixture(scope="session")
-def lab_locks(lab_setup):
-    """Hold the ports the setup uses, against other sessions."""
+@contextlib.contextmanager
+def _holding(locks):
     from pbl import lock
 
     try:
-        with lock.holding(lab_setup.locks()):
+        with lock.holding(locks):
             yield
     except lock.LockError as e:
         pytest.exit(str(e), returncode=pytest.ExitCode.USAGE_ERROR)
 
 
 @pytest.fixture(scope="session")
+def device_locks(lab_setup):
+    """Hold the device's serial ports and debug probe, against other
+    sessions: what flashing it takes."""
+    with _holding(lab_setup.device_locks()):
+        yield
+
+
+@pytest.fixture(scope="session")
+def lab_locks(lab_setup, device_locks):
+    """Hold the ports the setup uses, but the supply's, against other
+    sessions."""
+    with _holding(lab_setup.locks()):
+        yield
+
+
+@pytest.fixture(scope="session")
 def supply(lab_setup, lab_locks):
     """The supply powering the watch (:class:`pbl.power.Supply`), if the
-    setup has one."""
+    setup has one: through the ``pbl power`` daemon holding it, else held
+    for the session."""
     if lab_setup.supply_port is None:
         yield None
         return
     from pbl import power
+    from pbl.power import daemon
 
+    key, what = lab_setup.supply_lock()
     try:
-        supply = power.open_supply(
-            lab_setup.supply_type, lab_setup.supply_port, lab_setup.voltage_mv
-        )
+        held = lab_setup.check_daemon() is not None
+        supply = daemon.Client(key) if held else None
     except power.PowerError as e:
         raise HarnessError(str(e)) from None
-    try:
+    if held:
         yield supply
-    finally:
-        supply.close()
+        return
+    with _holding([(key, what)]):
+        try:
+            supply = power.open_supply(
+                lab_setup.supply_type, lab_setup.supply_port, lab_setup.voltage_mv
+            )
+        except power.PowerError as e:
+            raise HarnessError(str(e)) from None
+        try:
+            yield supply
+        finally:
+            supply.close()
 
 
 @pytest.fixture(scope="session")
@@ -281,7 +309,7 @@ def main_bundle(request):
 
 
 @pytest.fixture(scope="session")
-def usb_target(request, build, lab_setup, lab_locks, results_dir):
+def usb_target(request, build, lab_setup, device_locks, results_dir):
     """The build's USB device on the host's bus
     (:class:`harness.helpers.usb.UsbTarget`), flashed first with
     --flash-before."""

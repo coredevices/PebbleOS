@@ -36,8 +36,11 @@ summary, and `--save DIR` writes it as `<name>.json`, along with
 measure. A measurement is kept in memory until it stops: about 24 MB a
 minute with a PPK2.
 
-The background process holds the supply's lock, so an {doc}`itest` session
-on the watch fails right away, naming it, until `pbl power off`.
+The background process holds the supply's lock. An {doc}`itest` session on
+the device drives the supply through it instead, the device staying powered
+when the session ends, provided it supplies the voltage the tests run at;
+otherwise the session fails, naming both voltages, and leaves the supply
+as it is.
 
 `on`, `off`, `cycle` and the rest talk to whichever process holds the
 supply, even one from another session. `--wait` (see {ref}`pbl-lab-locks`)

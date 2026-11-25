@@ -98,7 +98,10 @@ The setup comes from the {doc}`lab file <../../pbl/lab>`, which describes
 the hardware wired to this host and the rest of `pbl` uses too: the watch
 running the build's board (`--watch` picks another), its supply, and a dongle for the phone. Options on the
 command line override it. A session on a watch holds the locks on all of
-those ports while it runs.
+those ports while it runs, its supply's only when no `pbl power` session
+holds it (see [](#current-measurement)). Tests that use neither the supply
+nor a phone, such as the USB tests, hold only the device's serial port and
+debug probe, `--flash-before` included.
 
 ```shell
 pbl -b build-getafix itest --lab ~/pebble-lab.yaml --flash-before
@@ -296,7 +299,7 @@ from anyone other than the author is refused unless they approved the
 commit that would run.
 
 Each run first switches the watch's supply off with `pbl power off`, ending
-any `pbl power` session left on the watch: the tests need the supply to
+any `pbl power` session left on the watch, so that the tests power it
 themselves.
 
 The markers are in `harness/plugin.py`; they are strict, so a new one must
@@ -388,7 +391,11 @@ pbl -b build-obelix itest --device-serial /dev/tty.usbserial-1 \
 ```
 
 The supply supplies `--voltage`, else the device's `voltage` in the lab;
-with neither, the session fails rather than pick one.
+with neither, the session fails rather than pick one. When a `pbl power`
+session (see {doc}`/pbl/power`) already holds the supply, the harness
+drives it through that session rather than waiting for it, provided it
+supplies that voltage; at another voltage the session fails before it
+starts, and the supply is left as it is.
 
 With a PPK2 the harness powers the watch on before the session, and
 `dut.reset()` power-cycles it. `power.measure_idle(name)` measures the watch
