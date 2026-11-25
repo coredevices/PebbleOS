@@ -319,7 +319,8 @@ void pbl_bt_prf_store_init(void) {
 
 void pbl_bt_prf_store_wipe(void) {
   prv_lock();
-  prv_invalidate_current_page();
+  // Invalidating the page would leave the keys in flash.
+  prv_erase_region_and_save(nullptr);
   prv_unlock();
 }
 

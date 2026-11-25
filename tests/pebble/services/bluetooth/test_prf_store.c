@@ -231,6 +231,14 @@ void test_prf_store__wipe_all(void) {
   pbl_bt_prf_store_wipe();
 
   cl_assert_equal_b(pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr), false);
+
+  // The keys are gone from the flash too.
+  for (uint32_t offset = 0; offset < PART_SHARED_PRF_STORAGE_SIZE; offset++) {
+    uint8_t byte;
+
+    pbl_flash_read(FLASH, PART_SHARED_PRF_STORAGE_OFFSET + offset, &byte, sizeof(byte));
+    cl_assert_equal_i(byte, 0xff);
+  }
 }
 
 // What is written is what older firmware reads.
