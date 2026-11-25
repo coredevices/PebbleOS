@@ -195,7 +195,7 @@ ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co) {
 }
 
 ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, ble_npl_time_t now) {
-  return pbl_ticks_to_ms(pbl_delayed_work_remaining(&co->work));
+  return pbl_delayed_work_remaining(&co->work);
 }
 
 ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks) {

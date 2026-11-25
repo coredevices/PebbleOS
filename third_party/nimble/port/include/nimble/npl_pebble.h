@@ -31,8 +31,6 @@ void npl_pebble_callout_stop(struct ble_npl_callout *co);
 
 bool npl_pebble_callout_is_active(struct ble_npl_callout *co);
 
-ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks);
-
 ble_npl_time_t npl_pebble_callout_get_ticks(struct ble_npl_callout *co);
 
 ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, ble_npl_time_t now);
@@ -40,11 +38,5 @@ ble_npl_time_t npl_pebble_callout_remaining_ticks(struct ble_npl_callout *co, bl
 ble_npl_error_t npl_pebble_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks);
 
 ble_npl_error_t npl_pebble_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms);
-
-void npl_pebble_hw_set_isr(int irqn, void (*addr)(void));
-
-uint32_t npl_pebble_hw_enter_critical(void);
-
-void npl_pebble_hw_exit_critical(uint32_t ctx);
 
 #endif /* _NPL_PEBBLE_H_ */
