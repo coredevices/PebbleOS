@@ -23,3 +23,10 @@ holder stopped with it.
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
 | STM32H7 hardware semaphores | `st,stm32-hwspinlock` | `CONFIG_HWSPINLOCK_STM32_HSEM` |
+
+## Users
+
+| Driver | Shares |
+| --- | --- |
+| STM32 pin controller and GPIO | Port registers, between the cores of an STM32H747 |
+| STM32 GPIO and RTC | EXTI triggers and their routing in the SYSCFG, between the cores of an STM32H747 |
