@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: st,stm32h743-rcc
+config: RESET_STM32H7
+class: reset
+symbol: pbl_reset_stm32h7_rcc
+define: PBL_RESET_STM32H7_DEFINE
+args:
+  - name: true
+  - reg: 0
