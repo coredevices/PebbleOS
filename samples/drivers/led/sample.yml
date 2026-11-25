@@ -5,4 +5,4 @@ expect:
   - 'led: blinked 5 times'
   - 'Sample done'
 roles: [status_led]
-integration: [stm32h747i_disco, nrf52840dk, nrf52dk]
+integration: [stm32h747i_disco, nrf52840dk, nrf52dk, nrf54l15dk]
