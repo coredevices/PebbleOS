@@ -17,6 +17,38 @@ pbl_clar_test(test_bonding
   PLATFORMS emery
 )
 
+# The same, over the other layout of the PRF store.
+pbl_clar_test(test_bonding_records
+  SOURCE test_bonding.c
+  SOURCES
+    pebble/services/bluetooth/bonding.c
+    subsys/bluetooth/prf_store/records.c
+    tests/fakes/fake_spi_flash.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    subsys/bluetooth/prf_store
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/nimble/host/include
+    third_party/nimble/mynewt-nimble/nimble/transport/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
+  PLATFORMS emery
+)
+
+pbl_clar_test(test_pairability
+  SOURCES
+    pebble/services/bluetooth/pairability.c
+    tests/fakes/fake_rtc.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/nimble/host/include
+    third_party/nimble/mynewt-nimble/nimble/transport/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
+  PLATFORMS emery
+)
+
 pbl_clar_test(test_bt_settings
   MODULES settings
   SOURCES
