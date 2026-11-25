@@ -42,51 +42,62 @@ enum prv_stat {
   STAT_COUNT,
 };
 
-static const uint8_t s_desc[] = {
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE,
-  0,
-  5,
-  VENDOR_CLASS,
-  0,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_LOOP_OUT,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_LOOP_IN,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_SINK,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_SOURCE,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_INT,
-  PBL_UDC_EP_INTERRUPT,
-  INT_MPS,
-  0,
-  INT_INTERVAL,
+static const struct PBL_PACKED {
+  struct pbl_usb_desc_iface iface;
+  struct pbl_usb_desc_ep loop_out;
+  struct pbl_usb_desc_ep loop_in;
+  struct pbl_usb_desc_ep sink;
+  struct pbl_usb_desc_ep source;
+  struct pbl_usb_desc_ep intr;
+} s_desc = {
+  .iface =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE,
+        .bNumEndpoints = 5U,
+        .bInterfaceClass = VENDOR_CLASS,
+      },
+  .loop_out =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_LOOP_OUT,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .loop_in =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_LOOP_IN,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .sink =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_SINK,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .source =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_SOURCE,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .intr = {
+    .bLength = sizeof(struct pbl_usb_desc_ep),
+    .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+    .bEndpointAddress = EP_INT,
+    .bmAttributes = PBL_UDC_EP_INTERRUPT,
+    .wMaxPacketSize = PBL_CPU_TO_LE16(INT_MPS),
+    .bInterval = INT_INTERVAL,
+  },
 };
 
 static struct {
@@ -246,7 +257,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 }
 
 PBL_USBD_FUNCTION_DEFINE(test) = {
-  .desc = s_desc,
+  .desc = &s_desc,
   .desc_len = sizeof(s_desc),
   .first_iface = IFACE,
   .num_ifaces = 1U,

@@ -10,6 +10,7 @@
 #include <pbl/kernel/msgq.h>
 #include <pbl/kernel/time.h>
 #include <pbl/usb/usbd.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/size.h>
 
 #define RUN_S 60
@@ -31,65 +32,81 @@
 #define STRING_BULK 2U
 #define STRING_INT  3U
 
-static const uint8_t s_desc[] = {
+static const struct PBL_PACKED {
   /* Setting 0, without endpoints */
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE,
-  ALT_OFF,
-  0,
-  VENDOR_CLASS,
-  0,
-  0,
-  STRING_OFF,
+  struct pbl_usb_desc_iface off;
   /* Setting 1, looping back on bulk endpoints */
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE,
-  ALT_BULK,
-  2,
-  VENDOR_CLASS,
-  0,
-  0,
-  STRING_BULK,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_OUT,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_IN,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
+  struct pbl_usb_desc_iface bulk;
+  struct pbl_usb_desc_ep bulk_out;
+  struct pbl_usb_desc_ep bulk_in;
   /* Setting 2, on the same endpoints as interrupt ones */
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE,
-  ALT_INT,
-  2,
-  VENDOR_CLASS,
-  0,
-  0,
-  STRING_INT,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_OUT,
-  PBL_UDC_EP_INTERRUPT,
-  INT_MPS,
-  0,
-  1,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_IN,
-  PBL_UDC_EP_INTERRUPT,
-  INT_MPS,
-  0,
-  1,
+  struct pbl_usb_desc_iface intr;
+  struct pbl_usb_desc_ep intr_out;
+  struct pbl_usb_desc_ep intr_in;
+} s_desc = {
+  .off =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE,
+        .bAlternateSetting = ALT_OFF,
+        .bNumEndpoints = 0U,
+        .bInterfaceClass = VENDOR_CLASS,
+        .iInterface = STRING_OFF,
+      },
+  .bulk =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE,
+        .bAlternateSetting = ALT_BULK,
+        .bNumEndpoints = 2U,
+        .bInterfaceClass = VENDOR_CLASS,
+        .iInterface = STRING_BULK,
+      },
+  .bulk_out =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_OUT,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .bulk_in =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_IN,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .intr =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE,
+        .bAlternateSetting = ALT_INT,
+        .bNumEndpoints = 2U,
+        .bInterfaceClass = VENDOR_CLASS,
+        .iInterface = STRING_INT,
+      },
+  .intr_out =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_OUT,
+        .bmAttributes = PBL_UDC_EP_INTERRUPT,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(INT_MPS),
+        .bInterval = 1U,
+      },
+  .intr_in = {
+    .bLength = sizeof(struct pbl_usb_desc_ep),
+    .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+    .bEndpointAddress = EP_IN,
+    .bmAttributes = PBL_UDC_EP_INTERRUPT,
+    .wMaxPacketSize = PBL_CPU_TO_LE16(INT_MPS),
+    .bInterval = 1U,
+  },
 };
 
 static const char *const s_strings[] = {
@@ -140,7 +157,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 }
 
 PBL_USBD_FUNCTION_DEFINE(loopback) = {
-  .desc = s_desc,
+  .desc = &s_desc,
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),

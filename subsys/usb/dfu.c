@@ -61,26 +61,36 @@ enum prv_status {
   STATUS_ERR_STALLEDPKT = 0x0f,
 };
 
-static const uint8_t s_desc[] = {
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE,
-  0,
-  0,
-  DFU_CLASS,
-  DFU_SUBCLASS,
-  DFU_PROTOCOL_DFU,
-  0,
-  9,
-  DFU_DESC_FUNCTIONAL,
-  DFU_ATTR_CAN_DNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT,
-  // wDetachTimeOut, which DFU mode does not use
-  0,
-  0,
-  TRANSFER_SIZE & 0xffU,
-  TRANSFER_SIZE >> 8,
-  0x10,
-  0x01,
+struct PBL_PACKED pbl_usb_dfu__desc_functional {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bmAttributes;
+  uint16_t wDetachTimeOut;
+  uint16_t wTransferSize;
+  uint16_t bcdDFUVersion;
+};
+
+static const struct PBL_PACKED {
+  struct pbl_usb_desc_iface iface;
+  struct pbl_usb_dfu__desc_functional func;
+} s_desc = {
+  .iface =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE,
+        .bInterfaceClass = DFU_CLASS,
+        .bInterfaceSubClass = DFU_SUBCLASS,
+        .bInterfaceProtocol = DFU_PROTOCOL_DFU,
+      },
+  // wDetachTimeOut stays 0, as DFU mode does not use it
+  .func = {
+    .bLength = sizeof(struct pbl_usb_dfu__desc_functional),
+    .bDescriptorType = DFU_DESC_FUNCTIONAL,
+    .bmAttributes = DFU_ATTR_CAN_DNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT,
+    .wTransferSize = PBL_CPU_TO_LE16(TRANSFER_SIZE),
+    .bcdDFUVersion = PBL_CPU_TO_LE16(0x0110U),
+  },
 };
 
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usb_dfu_region, usb_dfu_regions);
@@ -422,7 +432,7 @@ static void prv_configured(bool on) {
 }
 
 PBL_USBD_FUNCTION_DEFINE(dfu) = {
-  .desc = s_desc,
+  .desc = &s_desc,
   .desc_len = sizeof(s_desc),
   .first_iface = IFACE,
   .num_ifaces = 1U,

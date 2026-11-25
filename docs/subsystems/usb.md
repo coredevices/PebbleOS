@@ -35,6 +35,55 @@ from the controller's interrupt.
 | `CONFIG_USB_DEVICE_MANUFACTURER` | `PebbleOS` | Manufacturer string |
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
 
+### Descriptors
+
+`include/pbl/usb/usb.h` describes the standard descriptors as packed
+structures, `struct pbl_usb_desc_iface`, `struct pbl_usb_desc_ep` and the
+others, with the field names of the specification. A function gives its
+descriptors as one constant structure of them, in the order they are sent,
+class-specific ones defined next to the function. Their 16-bit fields are
+little-endian, which `PBL_CPU_TO_LE16()` gives in a static initializer:
+
+```c
+static const struct PBL_PACKED {
+  struct pbl_usb_desc_iface iface;
+  struct pbl_usb_desc_ep out;
+  struct pbl_usb_desc_ep in;
+} s_desc = {
+  .iface = {
+    .bLength = sizeof(struct pbl_usb_desc_iface),
+    .bDescriptorType = PBL_USB_DESC_INTERFACE,
+    .bInterfaceNumber = 0U,
+    .bNumEndpoints = 2U,
+    .bInterfaceClass = 0xffU,
+  },
+  .out = {
+    .bLength = sizeof(struct pbl_usb_desc_ep),
+    .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+    .bEndpointAddress = 0x01U,
+    .bmAttributes = PBL_UDC_EP_BULK,
+    .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+  },
+  .in = {
+    .bLength = sizeof(struct pbl_usb_desc_ep),
+    .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+    .bEndpointAddress = 0x82U,
+    .bmAttributes = PBL_UDC_EP_BULK,
+    .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+  },
+};
+
+PBL_USBD_FUNCTION_DEFINE(vendor) = {
+  .desc = &s_desc,
+  .desc_len = sizeof(s_desc),
+  .first_iface = 0U,
+  .num_ifaces = 1U,
+};
+```
+
+The descriptors stay constant: the stack fixes up the copy it sends, as the
+packet size of bulk endpoints for the bus speed.
+
 ### Strings
 
 A function names its strings with indices of its own, from 1, in the
@@ -65,7 +114,7 @@ settings of the first 16 interfaces; the others only have setting 0.
 static const char *const s_strings[] = {"Loopback off", "Loopback"};
 
 PBL_USBD_FUNCTION_DEFINE(loopback) = {
-  .desc = s_desc, /* iInterface 1 for setting 0, 2 for setting 1 */
+  .desc = &s_desc, /* iInterface 1 for setting 0, 2 for setting 1 */
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),

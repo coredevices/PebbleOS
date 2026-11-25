@@ -14,6 +14,8 @@
 #define EP0_MPS     64U
 #define EP0_BUF_LEN 512U
 
+#define BCD_USB 0x0200U
+
 #define USB_CFG_VALUE 1U
 
 #define STRING_LANGID       0U
@@ -75,17 +77,24 @@ static uint8_t prv_interval(uint8_t frames) {
   return n;
 }
 
-// Endpoint descriptors of a function as the bus speed has them, at desc[i]
-static bool prv_endpoint(const uint8_t *desc, uint8_t *ep, enum pbl_udc_ep_type *type,
-                         uint16_t *mps, uint8_t *interval) {
-  if (desc[1] != PBL_USB_DESC_ENDPOINT) {
+// The descriptor at offset i of a function's descriptors
+static const struct pbl_usb_desc_header *prv_desc(const struct pbl_usbd_function *fn, uint16_t i) {
+  return (const struct pbl_usb_desc_header *)((const uint8_t *)fn->desc + i);
+}
+
+// An endpoint descriptor of a function as the bus speed has it
+static bool prv_endpoint(const struct pbl_usb_desc_header *hdr, uint8_t *ep,
+                         enum pbl_udc_ep_type *type, uint16_t *mps, uint8_t *interval) {
+  const struct pbl_usb_desc_ep *d = (const struct pbl_usb_desc_ep *)hdr;
+
+  if (hdr->bDescriptorType != PBL_USB_DESC_ENDPOINT) {
     return false;
   }
 
-  *ep = desc[2];
-  *type = (enum pbl_udc_ep_type)(desc[3] & 0x3U);
-  *mps = (*type == PBL_UDC_EP_BULK) ? pbl_usbd_bulk_mps() : pbl_get_le16(&desc[4]);
-  *interval = (*type == PBL_UDC_EP_INTERRUPT) ? prv_interval(desc[6]) : desc[6];
+  *ep = d->bEndpointAddress;
+  *type = (enum pbl_udc_ep_type)(d->bmAttributes & 0x3U);
+  *mps = (*type == PBL_UDC_EP_BULK) ? pbl_usbd_bulk_mps() : pbl_le16_to_cpu(d->wMaxPacketSize);
+  *interval = (*type == PBL_UDC_EP_INTERRUPT) ? prv_interval(d->bInterval) : d->bInterval;
 
   return true;
 }
@@ -96,7 +105,8 @@ static uint8_t prv_string_index(const struct pbl_usbd_function *fn, uint8_t firs
 }
 
 static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
-  uint16_t len = 9U;
+  struct pbl_usb_desc_config *cfg = (struct pbl_usb_desc_config *)out;
+  uint16_t len = sizeof(*cfg);
   uint8_t ifaces = 0U;
   uint8_t first_string = STRING_FUNCTIONS;
 
@@ -106,20 +116,27 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
     }
 
     memcpy(&out[len], fn->desc, fn->desc_len);
-    for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
-      const uint8_t *d = &fn->desc[i];
+    for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
+      const struct pbl_usb_desc_header *d = prv_desc(fn, i);
+      void *copy = &out[len + i];
       uint8_t ep;
       enum pbl_udc_ep_type type;
       uint16_t mps;
       uint8_t interval;
 
-      if (d[1] == PBL_USB_DESC_INTERFACE) {
-        out[len + i + 8U] = prv_string_index(fn, first_string, d[8]);
-      } else if (d[1] == PBL_USB_DESC_IAD) {
-        out[len + i + 7U] = prv_string_index(fn, first_string, d[7]);
+      if (d->bDescriptorType == PBL_USB_DESC_INTERFACE) {
+        struct pbl_usb_desc_iface *iface = copy;
+
+        iface->iInterface = prv_string_index(fn, first_string, iface->iInterface);
+      } else if (d->bDescriptorType == PBL_USB_DESC_IAD) {
+        struct pbl_usb_desc_iad *iad = copy;
+
+        iad->iFunction = prv_string_index(fn, first_string, iad->iFunction);
       } else if (prv_endpoint(d, &ep, &type, &mps, &interval)) {
-        pbl_put_le16(mps, &out[len + i + 4U]);
-        out[len + i + 6U] = interval;
+        struct pbl_usb_desc_ep *epd = copy;
+
+        epd->wMaxPacketSize = pbl_cpu_to_le16(mps);
+        epd->bInterval = interval;
       }
     }
     len += fn->desc_len;
@@ -127,46 +144,47 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
     first_string += fn->num_strings;
   }
 
-  out[0] = 9U;
-  out[1] = PBL_USB_DESC_CONFIGURATION;
-  pbl_put_le16(len, &out[2]);
-  out[4] = ifaces;
-  out[5] = USB_CFG_VALUE;
-  out[6] = 0U;
-  out[7] = USB_CFG_ATTRIBUTES;
-  out[8] = USB_CFG_MAX_POWER;
+  *cfg = (struct pbl_usb_desc_config){
+    .bLength = sizeof(*cfg),
+    .bDescriptorType = PBL_USB_DESC_CONFIGURATION,
+    .wTotalLength = pbl_cpu_to_le16(len),
+    .bNumInterfaces = ifaces,
+    .bConfigurationValue = USB_CFG_VALUE,
+    .bmAttributes = USB_CFG_ATTRIBUTES,
+    .bMaxPower = USB_CFG_MAX_POWER,
+  };
 
   return len;
 }
 
-// The device, or how it would be at the other speed, which a high-speed device tells
-static uint16_t prv_device_desc(uint8_t *out, bool qualifier) {
-  uint16_t len = qualifier ? 10U : 18U;
+// Miscellaneous, with interface association descriptors
+static const struct pbl_usb_desc_device s_device_desc = {
+  .bLength = sizeof(struct pbl_usb_desc_device),
+  .bDescriptorType = PBL_USB_DESC_DEVICE,
+  .bcdUSB = PBL_CPU_TO_LE16(BCD_USB),
+  .bDeviceClass = 0xefU,
+  .bDeviceSubClass = 0x02U,
+  .bDeviceProtocol = 0x01U,
+  .bMaxPacketSize0 = EP0_MPS,
+  .idVendor = PBL_CPU_TO_LE16(CONFIG_USB_DEVICE_VID),
+  .idProduct = PBL_CPU_TO_LE16(CONFIG_USB_DEVICE_PID),
+  .bcdDevice = PBL_CPU_TO_LE16(0x0100U),
+  .iManufacturer = STRING_MANUFACTURER,
+  .iProduct = STRING_PRODUCT,
+  .bNumConfigurations = 1U,
+};
 
-  out[0] = (uint8_t)len;
-  out[1] = qualifier ? PBL_USB_DESC_DEVICE_QUALIFIER : PBL_USB_DESC_DEVICE;
-  pbl_put_le16(0x0200U, &out[2]);
-  // Miscellaneous, with interface association descriptors
-  out[4] = 0xefU;
-  out[5] = 0x02U;
-  out[6] = 0x01U;
-  out[7] = EP0_MPS;
-  if (qualifier) {
-    out[8] = 1U;
-    out[9] = 0U;
-    return len;
-  }
-
-  pbl_put_le16(CONFIG_USB_DEVICE_VID, &out[8]);
-  pbl_put_le16(CONFIG_USB_DEVICE_PID, &out[10]);
-  pbl_put_le16(0x0100U, &out[12]);
-  out[14] = STRING_MANUFACTURER;
-  out[15] = STRING_PRODUCT;
-  out[16] = 0U;
-  out[17] = 1U;
-
-  return len;
-}
+// How the device would be at the other speed, which a high-speed device tells
+static const struct pbl_usb_desc_qualifier s_qualifier_desc = {
+  .bLength = sizeof(struct pbl_usb_desc_qualifier),
+  .bDescriptorType = PBL_USB_DESC_DEVICE_QUALIFIER,
+  .bcdUSB = PBL_CPU_TO_LE16(BCD_USB),
+  .bDeviceClass = 0xefU,
+  .bDeviceSubClass = 0x02U,
+  .bDeviceProtocol = 0x01U,
+  .bMaxPacketSize0 = EP0_MPS,
+  .bNumConfigurations = 1U,
+};
 
 static const char *prv_string(uint8_t index) {
   if (index == STRING_MANUFACTURER) {
@@ -188,12 +206,12 @@ static const char *prv_string(uint8_t index) {
 }
 
 static uint16_t prv_string_desc(uint8_t *out, uint16_t room, uint8_t index) {
+  struct pbl_usb_desc_header *hdr = (struct pbl_usb_desc_header *)out;
   const char *str;
   uint16_t len;
 
   if (index == STRING_LANGID) {
-    out[0] = 4U;
-    out[1] = PBL_USB_DESC_STRING;
+    *hdr = (struct pbl_usb_desc_header){.bLength = 4U, .bDescriptorType = PBL_USB_DESC_STRING};
     pbl_put_le16(0x0409U, &out[2]);
     return 4U;
   }
@@ -203,10 +221,10 @@ static uint16_t prv_string_desc(uint8_t *out, uint16_t room, uint8_t index) {
     return 0U;
   }
 
-  len = (uint16_t)PBL_MIN(2U + 2U * strlen(str), room);
-  out[0] = (uint8_t)len;
-  out[1] = PBL_USB_DESC_STRING;
-  for (uint16_t i = 2U; i + 1U < len; i += 2U) {
+  len = (uint16_t)PBL_MIN(sizeof(*hdr) + 2U * strlen(str), room);
+  *hdr =
+      (struct pbl_usb_desc_header){.bLength = (uint8_t)len, .bDescriptorType = PBL_USB_DESC_STRING};
+  for (uint16_t i = sizeof(*hdr); i + 1U < len; i += 2U) {
     out[i] = (uint8_t)str[(i - 2U) / 2U];
     out[i + 1U] = 0U;
   }
@@ -221,13 +239,15 @@ static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
   *data = s_ctrl.buf;
   switch (type) {
     case PBL_USB_DESC_DEVICE:
-      *len = prv_device_desc(s_ctrl.buf, false);
+      memcpy(s_ctrl.buf, &s_device_desc, sizeof(s_device_desc));
+      *len = sizeof(s_device_desc);
       break;
     case PBL_USB_DESC_DEVICE_QUALIFIER:
       if (UDC->max_speed != PBL_UDC_SPEED_HIGH) {
         return -ENOTSUP;
       }
-      *len = prv_device_desc(s_ctrl.buf, true);
+      memcpy(s_ctrl.buf, &s_qualifier_desc, sizeof(s_qualifier_desc));
+      *len = sizeof(s_qualifier_desc);
       break;
     case PBL_USB_DESC_CONFIGURATION:
       if (index != 0U) {
@@ -259,16 +279,18 @@ static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, boo
   int cur = -1;
   uint8_t alt = 0U;
 
-  for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
-    const uint8_t *d = &fn->desc[i];
+  for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
+    const struct pbl_usb_desc_header *d = prv_desc(fn, i);
     uint8_t ep;
     enum pbl_udc_ep_type type;
     uint16_t mps;
     uint8_t interval;
 
-    if (d[1] == PBL_USB_DESC_INTERFACE) {
-      cur = d[2];
-      alt = d[3];
+    if (d->bDescriptorType == PBL_USB_DESC_INTERFACE) {
+      const struct pbl_usb_desc_iface *iface = (const struct pbl_usb_desc_iface *)d;
+
+      cur = iface->bInterfaceNumber;
+      alt = iface->bAlternateSetting;
       continue;
     }
     if (cur < 0 || (iface >= 0 && cur != iface) || alt != prv_alt((uint8_t)cur)) {
@@ -310,10 +332,11 @@ static const struct pbl_usbd_function *prv_function(uint8_t iface) {
 }
 
 static bool prv_alt_exists(const struct pbl_usbd_function *fn, uint8_t iface, uint8_t alt) {
-  for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
-    const uint8_t *d = &fn->desc[i];
+  for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
+    const struct pbl_usb_desc_iface *d = (const struct pbl_usb_desc_iface *)prv_desc(fn, i);
 
-    if (d[1] == PBL_USB_DESC_INTERFACE && d[2] == iface && d[3] == alt) {
+    if (d->bDescriptorType == PBL_USB_DESC_INTERFACE && d->bInterfaceNumber == iface &&
+        d->bAlternateSetting == alt) {
       return true;
     }
   }
@@ -460,7 +483,13 @@ static void prv_setup(const uint8_t *packet) {
   uint16_t len = 0U;
   int ret;
 
-  memcpy(&s_ctrl.setup, packet, sizeof(s_ctrl.setup));
+  s_ctrl.setup = (struct pbl_usb_setup){
+    .bmRequestType = packet[0],
+    .bRequest = packet[1],
+    .wValue = pbl_get_le16(&packet[2]),
+    .wIndex = pbl_get_le16(&packet[4]),
+    .wLength = pbl_get_le16(&packet[6]),
+  };
   in = (setup->bmRequestType & PBL_USB_DIR_IN) != 0U;
 
   switch (setup->bmRequestType & PBL_USB_TYPE_MASK) {
@@ -567,8 +596,10 @@ static void prv_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *
   }
 
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    for (uint16_t i = 0U; i < fn->desc_len; i += fn->desc[i]) {
-      if (fn->desc[i + 1U] == PBL_USB_DESC_ENDPOINT && fn->desc[i + 2U] == ep) {
+    for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
+      const struct pbl_usb_desc_ep *d = (const struct pbl_usb_desc_ep *)prv_desc(fn, i);
+
+      if (d->bDescriptorType == PBL_USB_DESC_ENDPOINT && d->bEndpointAddress == ep) {
         if (fn->xfer_done != nullptr) {
           fn->xfer_done(ep, ret);
         }

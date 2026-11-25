@@ -38,8 +38,11 @@
 
 /** @brief A function of the device: a class, on interfaces and endpoints of its own. */
 struct pbl_usbd_function {
-  /** Interface and endpoint descriptors, class-specific ones included. */
-  const uint8_t *desc;
+  /**
+   * Interface and endpoint descriptors, class-specific ones included, one after the other: as a
+   * packed structure of @ref pbl_usb_desc_iface, @ref pbl_usb_desc_ep and the others.
+   */
+  const void *desc;
   /** Length of @ref desc, in bytes. */
   uint16_t desc_len;
   /** Optional. Strings of the descriptors, ASCII, by their index minus 1. */
