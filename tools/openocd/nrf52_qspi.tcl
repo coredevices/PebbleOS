@@ -31,7 +31,7 @@ proc _qspi_reg {off} {
 
 proc _qspi_wait_ready {{timeout_ms 5000}} {
 	set start [clock milliseconds]
-	while {[mrw [_qspi_reg 0x100]] == 0} {
+	while {[read_memory [_qspi_reg 0x100] 32 1] == 0} {
 		if {[clock milliseconds] - $start > $timeout_ms} {
 			error "qspi: timed out waiting for READY"
 		}
@@ -47,7 +47,7 @@ proc _qspi_cinstr {opcode {len 0} {dat0 0} {dat1 0}} {
 	# LIO2 and LIO3 high: they are WP# and HOLD# on most parts
 	mww [_qspi_reg 0x634] [expr {$opcode | (($len + 1) << 8) | (1 << 12) | (1 << 13)}]
 	_qspi_wait_ready
-	return [mrw [_qspi_reg 0x638]]
+	return [read_memory [_qspi_reg 0x638] 32 1]
 }
 
 proc _qspi_wait_wip {{timeout_ms 10000}} {
