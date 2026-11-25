@@ -23,10 +23,12 @@
 #define STM32H7_EXTI_CORE_PR1_OFFSET  STM32H7_EXTI_C1PR1_OFFSET
 #endif
 
-/* The NVIC interrupt of the configurable lines a device interrupts through */
+/* The NVIC interrupt of the lines a device interrupts through */
 #define STM32H7_EXTI_IRQ(line)  STM32H7_EXTI_IRQ_(line)
 #define STM32H7_EXTI_IRQ_(line) STM32H7_EXTI_LINE##line##_IRQ
 #define STM32H7_EXTI_LINE17_IRQ 41
+#define STM32H7_EXTI_LINE47_IRQ 93
+#define STM32H7_EXTI_LINE48_IRQ 138
 
 /* SYSCFG register offsets */
 
