@@ -13,9 +13,13 @@ pyusb:
 import usb.core
 
 dev = usb.core.find(idVendor=0x1209, idProduct=0x0001)
-dev.write(0x04, b"hello")
-print(bytes(dev.read(0x85, 512)))
+ep_out, ep_in = dev.get_active_configuration()[(0, 0)]
+ep_out.write(b"hello")
+print(bytes(ep_in.read(512)))
 ```
+
+The stack picks the endpoints of the device, so the script takes them from
+the descriptors of the interface.
 
 ```{pebbleos-sample}
 :path: samples/subsys/usb/webusb

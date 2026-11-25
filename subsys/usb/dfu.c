@@ -14,11 +14,7 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
-#ifdef CONFIG_USB_CDC_ACM
-#define IFACE 2U
-#else
 #define IFACE 0U
-#endif
 
 #define DFU_CLASS           0xfeU
 #define DFU_SUBCLASS        0x01U
@@ -434,8 +430,6 @@ static void prv_configured(bool on) {
 PBL_USBD_FUNCTION_DEFINE(dfu) = {
   .desc = &s_desc,
   .desc_len = sizeof(s_desc),
-  .first_iface = IFACE,
-  .num_ifaces = 1U,
   .configured = prv_configured,
   .class_request = prv_class_request,
   .control_out = prv_control_out,

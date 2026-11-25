@@ -4,15 +4,16 @@
 #include "fake_udc.h"
 
 // A single WinUSB interface: the device is not composite, and the set has no subsets
-static const uint8_t s_vendor_desc[] = {
-  9, PBL_USB_DESC_INTERFACE, 0, 0, 0, 0xff, 0, 0, 0,
+static const struct pbl_usb_desc_iface s_vendor_desc = {
+  .bLength = sizeof(struct pbl_usb_desc_iface),
+  .bDescriptorType = PBL_USB_DESC_INTERFACE,
+  .bInterfaceNumber = 0U,
+  .bInterfaceClass = 0xffU,
 };
 
 PBL_USBD_FUNCTION_DEFINE(vendor) = {
-  .desc = s_vendor_desc,
+  .desc = &s_vendor_desc,
   .desc_len = sizeof(s_vendor_desc),
-  .first_iface = 0U,
-  .num_ifaces = 1U,
   .winusb_guid = GUID,
 };
 

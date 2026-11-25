@@ -138,7 +138,7 @@ static bool prv_composite(void) {
   uint8_t ifaces = 0U;
 
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    ifaces += fn->num_ifaces;
+    ifaces += pbl_usbd__num_ifaces(fn);
   }
 
   return ifaces > 1U;
@@ -209,7 +209,7 @@ static int prv_ms_os_20_set(uint8_t *out, uint16_t room) {
       *(struct pbl_usbd__ms_os_20_subset_func *)p = (struct pbl_usbd__ms_os_20_subset_func){
         .wLength = pbl_cpu_to_le16(sizeof(struct pbl_usbd__ms_os_20_subset_func)),
         .wDescriptorType = pbl_cpu_to_le16(MS_OS_20_SUBSET_FUNC),
-        .bFirstInterface = fn->first_iface,
+        .bFirstInterface = pbl_usbd__first_iface(fn),
         .wSubsetLength = pbl_cpu_to_le16(prv_function_len(true)),
       };
       p += sizeof(struct pbl_usbd__ms_os_20_subset_func);

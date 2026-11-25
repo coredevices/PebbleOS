@@ -6,6 +6,11 @@
 #include <stdint.h>
 
 #include <pbl/usb/usb.h>
+#include <pbl/usb/usbd.h>
+
+// First interface of the device a function's interface 0 is, and how many it has
+uint8_t pbl_usbd__first_iface(const struct pbl_usbd_function *fn);
+uint8_t pbl_usbd__num_ifaces(const struct pbl_usbd_function *fn);
 
 // BOS descriptor into out: its length, or a negative errno
 int pbl_usbd__bos_desc(uint8_t *out, uint16_t room);

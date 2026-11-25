@@ -29,7 +29,12 @@
 #define STRING_PRODUCT      2U
 #define STRING_FUNCTIONS    3U
 
-#define MAX_IFACES 16U
+#define MAX_IFACES    16U
+#define MAX_FUNCTIONS 8U
+#define MAX_EPS       16U
+
+// An endpoint the controller does not have, for one the stack did not give
+#define EP_NONE 0xffU
 
 // Bus-powered, at most 100 mA
 #define USB_CFG_ATTRIBUTES 0x80U
@@ -61,7 +66,43 @@ static struct {
   uint8_t buf[EP0_BUF_LEN];
 } s_ctrl;
 
+// The numbers the stack gave the functions, by their index in the section: interfaces, and the
+// function owning each endpoint of the controller, plus 1, with its own address for it
+static struct {
+  uint8_t first_iface[MAX_FUNCTIONS];
+  uint8_t num_ifaces[MAX_FUNCTIONS];
+  struct {
+    uint8_t fn;
+    uint8_t ep;
+  } eps[2][MAX_EPS];
+} s_num;
+
 static atomic_bool s_enabled;
+
+static uint8_t prv_index(const struct pbl_usbd_function *fn) {
+  return (uint8_t)(fn - PBL_ITERABLE_SECTION_START(usbd_functions));
+}
+
+uint8_t pbl_usbd__first_iface(const struct pbl_usbd_function *fn) {
+  return s_num.first_iface[prv_index(fn)];
+}
+
+uint8_t pbl_usbd__num_ifaces(const struct pbl_usbd_function *fn) {
+  return s_num.num_ifaces[prv_index(fn)];
+}
+
+uint8_t pbl_usbd_ep(const struct pbl_usbd_function *fn, uint8_t ep) {
+  bool in = (ep & PBL_UDC_EP_IN) != 0U;
+  uint8_t owner = prv_index(fn) + 1U;
+
+  for (uint8_t n = 1U; n < MAX_EPS; n++) {
+    if (s_num.eps[in][n].fn == owner && s_num.eps[in][n].ep == ep) {
+      return in ? (n | PBL_UDC_EP_IN) : n;
+    }
+  }
+
+  return EP_NONE;
+}
 
 uint16_t pbl_usbd_bulk_mps(void) {
   return pbl_udc_speed(UDC) == PBL_UDC_SPEED_HIGH ? BULK_MPS_HS : BULK_MPS_FS;
@@ -88,16 +129,91 @@ static const struct pbl_usb_desc_header *prv_desc(const struct pbl_usbd_function
   return (const struct pbl_usb_desc_header *)((const uint8_t *)fn->desc + i);
 }
 
-// An endpoint descriptor of a function as the bus speed has it
-static bool prv_endpoint(const struct pbl_usb_desc_header *hdr, uint8_t *ep,
-                         enum pbl_udc_ep_type *type, uint16_t *mps, uint8_t *interval) {
+// The first endpoint of the controller in the direction of a function's endpoint that is free,
+// with its other direction too where the controller serves one per number
+static int prv_assign_ep(uint8_t index, uint8_t ep) {
+  bool in = (ep & PBL_UDC_EP_IN) != 0U;
+  uint8_t num_eps = PBL_MIN(UDC->num_eps, MAX_EPS);
+  const struct pbl_usbd_function *fn = &PBL_ITERABLE_SECTION_START(usbd_functions)[index];
+
+  if ((ep & 0x70U) != 0U || (ep & 0x0fU) == 0U) {
+    return -EINVAL;
+  }
+
+  if (pbl_usbd_ep(fn, ep) != EP_NONE) {
+    return 0;
+  }
+
+  for (uint8_t n = 1U; n < num_eps; n++) {
+    if (s_num.eps[in][n].fn != 0U) {
+      continue;
+    }
+    if ((UDC->caps & PBL_UDC_CAP_EP_ONE_DIR) != 0U && s_num.eps[!in][n].fn != 0U) {
+      continue;
+    }
+
+    s_num.eps[in][n].fn = index + 1U;
+    s_num.eps[in][n].ep = ep;
+    return 0;
+  }
+
+  return -ENOSPC;
+}
+
+// Interfaces in the order of the functions, endpoints from the first the controller has free
+static int prv_assign(void) {
+  uint8_t iface = 0U;
+  uint8_t index = 0U;
+  int ret;
+
+  memset(&s_num, 0, sizeof(s_num));
+
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    uint8_t num_ifaces = 0U;
+
+    if (index >= MAX_FUNCTIONS) {
+      return -ENOSPC;
+    }
+
+    for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
+      const struct pbl_usb_desc_header *d = prv_desc(fn, i);
+
+      if (d->bDescriptorType == PBL_USB_DESC_INTERFACE) {
+        const struct pbl_usb_desc_iface *id = (const struct pbl_usb_desc_iface *)d;
+
+        num_ifaces = PBL_MAX(num_ifaces, (uint8_t)(id->bInterfaceNumber + 1U));
+      } else if (d->bDescriptorType == PBL_USB_DESC_ENDPOINT) {
+        ret = prv_assign_ep(index, ((const struct pbl_usb_desc_ep *)d)->bEndpointAddress);
+        if (ret != 0) {
+          return ret;
+        }
+      }
+    }
+
+    if (iface + num_ifaces > MAX_IFACES) {
+      return -ENOSPC;
+    }
+
+    s_num.first_iface[index] = iface;
+    s_num.num_ifaces[index] = num_ifaces;
+    iface += num_ifaces;
+    index++;
+  }
+
+  return 0;
+}
+
+// An endpoint descriptor of a function as the controller and the bus speed have it
+static bool prv_endpoint(const struct pbl_usbd_function *fn, const struct pbl_usb_desc_header *hdr,
+                         uint8_t *ep, enum pbl_udc_ep_type *type, uint16_t *mps,
+                         uint8_t *interval) {
   const struct pbl_usb_desc_ep *d = (const struct pbl_usb_desc_ep *)hdr;
 
   if (hdr->bDescriptorType != PBL_USB_DESC_ENDPOINT) {
     return false;
   }
 
-  *ep = d->bEndpointAddress;
+  *ep = pbl_usbd_ep(fn, d->bEndpointAddress);
   *type = (enum pbl_udc_ep_type)(d->bmAttributes & 0x3U);
   *mps = (*type == PBL_UDC_EP_BULK) ? pbl_usbd_bulk_mps() : pbl_le16_to_cpu(d->wMaxPacketSize);
   *interval = (*type == PBL_UDC_EP_INTERRUPT) ? prv_interval(d->bInterval) : d->bInterval;
@@ -117,6 +233,8 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
   uint8_t first_string = STRING_FUNCTIONS;
 
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
+    uint8_t first_iface = pbl_usbd__first_iface(fn);
+
     if (len + fn->desc_len > room) {
       return 0U;
     }
@@ -133,20 +251,25 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
       if (d->bDescriptorType == PBL_USB_DESC_INTERFACE) {
         struct pbl_usb_desc_iface *iface = copy;
 
+        iface->bInterfaceNumber += first_iface;
         iface->iInterface = prv_string_index(fn, first_string, iface->iInterface);
       } else if (d->bDescriptorType == PBL_USB_DESC_IAD) {
         struct pbl_usb_desc_iad *iad = copy;
 
+        iad->bFirstInterface += first_iface;
         iad->iFunction = prv_string_index(fn, first_string, iad->iFunction);
-      } else if (prv_endpoint(d, &ep, &type, &mps, &interval)) {
+      } else if (prv_endpoint(fn, d, &ep, &type, &mps, &interval)) {
         struct pbl_usb_desc_ep *epd = copy;
 
+        epd->bEndpointAddress = ep;
         epd->wMaxPacketSize = pbl_cpu_to_le16(mps);
         epd->bInterval = interval;
+      } else if (fn->desc_fixup != nullptr) {
+        fn->desc_fixup(copy, first_iface);
       }
     }
     len += fn->desc_len;
-    ifaces += fn->num_ifaces;
+    ifaces += pbl_usbd__num_ifaces(fn);
     first_string += fn->num_strings;
   }
 
@@ -291,7 +414,7 @@ static uint32_t prv_ep_bit(uint8_t ep) {
 }
 
 // Enables or disables the endpoints of the current alternate setting of an interface of a
-// function, or of all its interfaces
+// function, by its own number, or of all its interfaces
 static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
   int cur = -1;
   uint8_t alt = 0U;
@@ -310,10 +433,11 @@ static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, boo
       alt = iface->bAlternateSetting;
       continue;
     }
-    if (cur < 0 || (iface >= 0 && cur != iface) || alt != prv_alt((uint8_t)cur)) {
+    if (cur < 0 || (iface >= 0 && cur != iface) ||
+        alt != prv_alt(pbl_usbd__first_iface(fn) + (uint8_t)cur)) {
       continue;
     }
-    if (!prv_endpoint(d, &ep, &type, &mps, &interval)) {
+    if (!prv_endpoint(fn, d, &ep, &type, &mps, &interval)) {
       continue;
     }
 
@@ -338,9 +462,13 @@ static void prv_set_configured(bool on) {
   memset(s_ctrl.alt, 0, sizeof(s_ctrl.alt));
 }
 
-static const struct pbl_usbd_function *prv_function(uint8_t iface) {
+// The function of an interface of the device, and its own number for it
+static const struct pbl_usbd_function *prv_function(uint8_t iface, uint8_t *local) {
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    if (iface >= fn->first_iface && iface < fn->first_iface + fn->num_ifaces) {
+    uint8_t first = pbl_usbd__first_iface(fn);
+
+    if (iface >= first && iface < first + pbl_usbd__num_ifaces(fn)) {
+      *local = iface - first;
       return fn;
     }
   }
@@ -362,7 +490,10 @@ static bool prv_alt_exists(const struct pbl_usbd_function *fn, uint8_t iface, ui
 }
 
 static int prv_get_interface(uint16_t iface, uint8_t **data, uint16_t *len) {
-  if (s_ctrl.config == 0U || iface >= MAX_IFACES || prv_function((uint8_t)iface) == nullptr) {
+  uint8_t local;
+
+  if (s_ctrl.config == 0U || iface >= MAX_IFACES ||
+      prv_function((uint8_t)iface, &local) == nullptr) {
     return -EINVAL;
   }
 
@@ -375,21 +506,22 @@ static int prv_get_interface(uint16_t iface, uint8_t **data, uint16_t *len) {
 
 static int prv_set_interface(uint16_t iface, uint16_t alt) {
   const struct pbl_usbd_function *fn;
+  uint8_t local;
 
   if (s_ctrl.config == 0U || iface >= MAX_IFACES || alt > UINT8_MAX) {
     return -EINVAL;
   }
 
-  fn = prv_function((uint8_t)iface);
-  if (fn == nullptr || !prv_alt_exists(fn, (uint8_t)iface, (uint8_t)alt)) {
+  fn = prv_function((uint8_t)iface, &local);
+  if (fn == nullptr || !prv_alt_exists(fn, local, (uint8_t)alt)) {
     return -EINVAL;
   }
 
-  prv_ifaces_switch(fn, iface, false);
+  prv_ifaces_switch(fn, local, false);
   s_ctrl.alt[iface] = (uint8_t)alt;
-  prv_ifaces_switch(fn, iface, true);
+  prv_ifaces_switch(fn, local, true);
   if (fn->set_alt != nullptr) {
-    fn->set_alt((uint8_t)iface, (uint8_t)alt);
+    fn->set_alt(local, (uint8_t)alt);
   }
 
   return 0;
@@ -472,16 +604,19 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
 // A class or vendor request to an interface, for its function
 static int prv_function_request(const struct pbl_usbd_function **fn, uint8_t **data,
                                 uint16_t *len) {
-  const struct pbl_usb_setup *setup = &s_ctrl.setup;
+  struct pbl_usb_setup *setup = &s_ctrl.setup;
+  uint8_t local;
 
   if ((setup->bmRequestType & PBL_USB_RECIP_MASK) != PBL_USB_RECIP_INTERFACE) {
     return -ENOTSUP;
   }
 
-  *fn = prv_function((uint8_t)setup->wIndex);
+  *fn = prv_function((uint8_t)setup->wIndex, &local);
   if (*fn == nullptr || (*fn)->class_request == nullptr) {
     return -ENOTSUP;
   }
+
+  setup->wIndex = (setup->wIndex & 0xff00U) | local;
 
   return (*fn)->class_request(setup, data, len);
 }
@@ -624,22 +759,22 @@ static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const u
 }
 
 static void prv_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *arg) {
-  if ((ep & ~PBL_UDC_EP_IN) == 0U) {
+  bool in = (ep & PBL_UDC_EP_IN) != 0U;
+  uint8_t n = ep & ~PBL_UDC_EP_IN;
+  const struct pbl_usbd_function *fn;
+
+  if (n == 0U) {
     prv_ep0_done(ep, ret);
     return;
   }
 
-  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    for (uint16_t i = 0U; i < fn->desc_len; i += prv_desc(fn, i)->bLength) {
-      const struct pbl_usb_desc_ep *d = (const struct pbl_usb_desc_ep *)prv_desc(fn, i);
+  if (n >= MAX_EPS || s_num.eps[in][n].fn == 0U) {
+    return;
+  }
 
-      if (d->bDescriptorType == PBL_USB_DESC_ENDPOINT && d->bEndpointAddress == ep) {
-        if (fn->xfer_done != nullptr) {
-          fn->xfer_done(ep, ret);
-        }
-        return;
-      }
-    }
+  fn = &PBL_ITERABLE_SECTION_START(usbd_functions)[s_num.eps[in][n].fn - 1U];
+  if (fn->xfer_done != nullptr) {
+    fn->xfer_done(s_num.eps[in][n].ep, ret);
   }
 }
 
@@ -648,6 +783,24 @@ static const struct pbl_udc_callbacks s_callbacks = {
   .xfer_done = prv_xfer_done,
 };
 
+static int prv_enable(void) {
+  int ret;
+
+  ret = prv_assign();
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_device_init(&UDC->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  pbl_udc_register(UDC, &s_callbacks, nullptr);
+
+  return pbl_udc_enable(UDC);
+}
+
 int pbl_usbd_enable(void) {
   int ret;
 
@@ -655,12 +808,9 @@ int pbl_usbd_enable(void) {
     return 0;
   }
 
-  ret = pbl_device_init(&UDC->dev);
-  if (ret == 0) {
-    pbl_udc_register(UDC, &s_callbacks, nullptr);
-    ret = pbl_udc_enable(UDC);
-  }
+  ret = prv_enable();
   if (ret != 0) {
+    memset(&s_num, 0, sizeof(s_num));
     atomic_store(&s_enabled, false);
   }
 

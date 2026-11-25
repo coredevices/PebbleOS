@@ -17,17 +17,20 @@
  *
  * The device has one configuration, made of the functions defined with
  * PBL_USBD_FUNCTION_DEFINE(), in the order of their names. Each function gives its interface and
- * endpoint descriptors, with its interface numbers and endpoint addresses: the functions of a
- * device do not share any. The stack sets the maximum packet size of their bulk endpoints for the
- * bus speed, enables their endpoints when the host configures the device, and hands them the
- * class and vendor requests to their interfaces and the end of the transfers on their endpoints.
- * Everything the stack calls runs from the controller's interrupt.
+ * endpoint descriptors with numbers of its own: interfaces from 0, endpoints by a number from 1 to
+ * 15 and their direction. The stack numbers the interfaces of the device in the order of the
+ * functions, gives each endpoint of a function an endpoint of the controller, and puts those
+ * numbers in the configuration descriptor as it sends it. It also sets the maximum packet size of
+ * their bulk endpoints for the bus speed, enables their endpoints when the host configures the
+ * device, and hands them the class and vendor requests to their interfaces and the end of the
+ * transfers on their endpoints, with their own numbers. A function queues transfers on the
+ * endpoint pbl_usbd_ep() gives. Everything the stack calls runs from the controller's interrupt.
  *
  * An interface can have alternate settings: its interface descriptor is followed by others with the
  * same interface number and a higher bAlternateSetting, each with its own endpoints. Two settings
- * may use the same endpoint addresses. Configuring the device selects setting 0 of every
- * interface; SET_INTERFACE then disables the endpoints of the current setting, enables those of
- * the new one and calls @ref pbl_usbd_function.set_alt.
+ * may use the same endpoints. Configuring the device selects setting 0 of every interface;
+ * SET_INTERFACE then disables the endpoints of the current setting, enables those of the new one
+ * and calls @ref pbl_usbd_function.set_alt.
  *
  * A function names its strings with its own indices, from 1, in the iInterface field of its
  * interface descriptors and the iFunction field of its interface association descriptor: index n
@@ -44,7 +47,8 @@
 struct pbl_usbd_function {
   /**
    * Interface and endpoint descriptors, class-specific ones included, one after the other: as a
-   * packed structure of @ref pbl_usb_desc_iface, @ref pbl_usb_desc_ep and the others.
+   * packed structure of @ref pbl_usb_desc_iface, @ref pbl_usb_desc_ep and the others, with the
+   * function's own interface numbers and endpoint addresses.
    */
   const void *desc;
   /** Length of @ref desc, in bytes. */
@@ -53,10 +57,11 @@ struct pbl_usbd_function {
   const char *const *strings;
   /** Number of @ref strings. */
   uint8_t num_strings;
-  /** First interface. */
-  uint8_t first_iface;
-  /** Number of interfaces. */
-  uint8_t num_ifaces;
+  /**
+   * Optional. Put the interface numbers of the device in class-specific descriptor @p desc, a copy
+   * the stack sends: the function's interface n is @p first_iface + n.
+   */
+  void (*desc_fixup)(struct pbl_usb_desc_header *desc, uint8_t first_iface);
   /**
    * Optional. The host configured the device, its endpoints now enabled, or left that
    * configuration, at a reset or a disconnection.
@@ -69,14 +74,17 @@ struct pbl_usbd_function {
    */
   void (*set_alt)(uint8_t iface, uint8_t alt);
   /**
-   * Optional. A class or vendor request to an interface of the function. For an IN request, point
-   * @p data at what to send, @p len bytes; for an OUT one, at room for @p len bytes, which then
-   * arrive through @ref control_out. Returns 0, or a negative errno for the request to stall.
+   * Optional. A class or vendor request to an interface of the function, the function's own
+   * number in the low byte of wIndex. For an IN request, point @p data at what to send, @p len
+   * bytes; for an OUT one, at room for @p len bytes, which then arrive through @ref control_out.
+   * Returns 0, or a negative errno for the request to stall.
    */
   int (*class_request)(const struct pbl_usb_setup *setup, uint8_t **data, uint16_t *len);
   /** Optional. The data of an OUT class or vendor request, the request done. */
   void (*control_out)(const struct pbl_usb_setup *setup, const uint8_t *data, uint16_t len);
-  /** Optional. A transfer on an endpoint of the function ended: bytes moved, or a negative errno.
+  /**
+   * Optional. A transfer on endpoint @p ep of the function, its own address, ended: bytes moved,
+   * or a negative errno.
    */
   void (*xfer_done)(uint8_t ep, int ret);
   /**
@@ -97,9 +105,25 @@ struct pbl_usbd_function {
       const struct pbl_usbd_function, usbd_functions, #name)
 
 /**
+ * @brief Declare a function defined further down the file, for code that refers to it first.
+ *
+ * @param name Name.
+ */
+#define PBL_USBD_FUNCTION_DECLARE(name) \
+  static const struct pbl_usbd_function pbl_usbd_function_##name
+
+/**
+ * @brief A function of the file, as pbl_usbd_ep() takes it.
+ *
+ * @param name Name.
+ */
+#define PBL_USBD_FUNCTION(name) (&pbl_usbd_function_##name)
+
+/**
  * @brief Connect the device to the bus, once: the controller first, if it is not up yet.
  *
- * @return 0, or a negative errno, as @c -ENODEV when the controller failed.
+ * @return 0, or a negative errno: @c -ENOSPC when the functions need more interfaces or endpoints
+ * than the device has, @c -ENODEV when the controller failed.
  */
 int pbl_usbd_enable(void);
 
@@ -109,5 +133,14 @@ int pbl_usbd_enable(void);
  * @return 64 at full speed, 512 at high speed.
  */
 uint16_t pbl_usbd_bulk_mps(void);
+
+/**
+ * @brief The endpoint of the controller that serves an endpoint of a function.
+ *
+ * @param fn Function.
+ * @param ep Endpoint address in the function's descriptors.
+ * @return Endpoint address, once pbl_usbd_enable() succeeded; else one no controller has.
+ */
+uint8_t pbl_usbd_ep(const struct pbl_usbd_function *fn, uint8_t ep);
 
 /** @} */

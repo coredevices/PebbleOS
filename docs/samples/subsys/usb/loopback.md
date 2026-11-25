@@ -16,9 +16,13 @@ import usb.core
 
 dev = usb.core.find(idVendor=0x1209, idProduct=0x0001)
 dev.set_interface_altsetting(interface=0, alternate_setting=1)
-dev.write(0x01, b"hello")
-print(bytes(dev.read(0x82, 64)))
+ep_out, ep_in = dev.get_active_configuration()[(0, 1)]
+ep_out.write(b"hello")
+print(bytes(ep_in.read(64)))
 ```
+
+The stack picks the endpoints of the device, so the script takes them from
+the descriptors of the setting.
 
 ```{pebbleos-sample}
 :path: samples/subsys/usb/loopback

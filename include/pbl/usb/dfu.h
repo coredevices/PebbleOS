@@ -12,7 +12,7 @@
  * @brief Device Firmware Upgrade 1.1, in DFU mode: a host downloads an image to a flash partition
  * and uploads it back, as with dfu-util.
  *
- * The function takes the interface after the serial port's, or interface 0 without it, and only
+ * The function has one interface, numbered by the stack among the other functions', and uses only
  * endpoint 0. The partition it writes is a region the application defines with
  * PBL_USB_DFU_REGION_DEFINE(): the function erases its subsectors as the download reaches them,
  * and never writes outside it. A download starts at the beginning of the region, an upload reads
