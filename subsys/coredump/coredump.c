@@ -17,6 +17,7 @@ extern char *itoa(int value, char *str, int base);
 #include <pbl/coredump/format.h>
 #include <pbl/drivers/watchdog.h>
 #include <pbl/kernel/assert.h>
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/time.h>
 #include <pbl/util/math.h>
@@ -171,6 +172,15 @@ static void prv_regions_write(bool late) {
   }
 }
 
+// Large locals live in functions that are not inlined, so that they are off the stack by the time
+// the backends write.
+static PBL_NOINLINE void prv_current_regs(struct pbl_coredump_thread *thread) {
+  uint32_t regs[PBL_THREAD_REG_COUNT];
+
+  arch_coredump_thread_regs(regs);
+  memcpy(thread->registers, regs, sizeof(thread->registers));
+}
+
 static void prv_thread_write(const struct pbl_thread_info *info, void *ctx) {
   struct pbl_coredump_thread thread = {
     .id = (uint32_t)info->id,
@@ -181,16 +191,24 @@ static void prv_thread_write(const struct pbl_thread_info *info, void *ctx) {
 
   strncpy((char *)thread.name, info->name, sizeof(thread.name));
   if (info->current) {
-    uint32_t regs[PBL_THREAD_REG_COUNT];
-
-    arch_coredump_thread_regs(regs);
-    memcpy(thread.registers, regs, sizeof(thread.registers));
+    prv_current_regs(&thread);
   } else {
     memcpy(thread.registers, info->regs, sizeof(thread.registers));
   }
 
   prv_chunk_begin(PBL_COREDUMP_CHUNK_THREAD, sizeof(thread));
   prv_output(&thread, sizeof(thread));
+}
+
+static PBL_NOINLINE void prv_exception_write(void) {
+  struct pbl_thread_info exception = {
+    .name = "ISR",
+    .id = 1,
+  };
+
+  if (arch_coredump_exception_regs(exception.regs)) {
+    prv_thread_write(&exception, nullptr);
+  }
 }
 
 static void prv_backends_init(void) {
@@ -236,32 +254,40 @@ void pbl_coredump_trigger(bool forced) {
   arch_coredump_trigger();
 }
 
-void pbl_coredump_arch_handler(void) {
+static PBL_NOINLINE void prv_image_hdr_init(struct pbl_coredump_image_hdr *hdr) {
   struct pbl_coredump_metadata metadata = {};
 
-  pbl_coredump__log("CD: starting");
-  watchdog_feed();
-
-  prv_backends_init();
   pbl_coredump_platform_prepare(&metadata);
 
-  const uint32_t timestamp = pbl_realtime();
+  *hdr = (struct pbl_coredump_image_hdr){
+    .magic = PBL_COREDUMP_MAGIC,
+    .core_number = CORE_ID_MAIN_MCU,
+    .version = PBL_COREDUMP_VERSION,
+    .time_stamp = pbl_realtime(),
+  };
+  strncpy((char *)hdr->serial_number, metadata.serial_number, sizeof(hdr->serial_number) - 1);
+  strncpy((char *)hdr->build_id, metadata.build_id, sizeof(hdr->build_id) - 1);
+}
 
-  prv_backends_start(timestamp);
+static PBL_NOINLINE void prv_image_begin(void) {
+  struct pbl_coredump_image_hdr hdr;
+
+  prv_image_hdr_init(&hdr);
+
+  prv_backends_start(hdr.time_stamp);
   if (s_active == 0) {
     prv_reset();
   }
 
-  struct pbl_coredump_image_hdr image_hdr = {
-    .magic = PBL_COREDUMP_MAGIC,
-    .core_number = CORE_ID_MAIN_MCU,
-    .version = PBL_COREDUMP_VERSION,
-    .time_stamp = timestamp,
-  };
-  strncpy((char *)image_hdr.serial_number, metadata.serial_number,
-          sizeof(image_hdr.serial_number) - 1);
-  strncpy((char *)image_hdr.build_id, metadata.build_id, sizeof(image_hdr.build_id) - 1);
-  prv_output(&image_hdr, sizeof(image_hdr));
+  prv_output(&hdr, sizeof(hdr));
+}
+
+void pbl_coredump_arch_handler(void) {
+  pbl_coredump__log("CD: starting");
+  watchdog_feed();
+
+  prv_backends_init();
+  prv_image_begin();
 
   prv_regions_write(false);
 
@@ -273,13 +299,7 @@ void pbl_coredump_arch_handler(void) {
   // image without a terminator is still parseable from storage that reads as erased.
   pbl_thread_foreach(prv_thread_write, nullptr);
 
-  struct pbl_thread_info exception = {
-    .name = "ISR",
-    .id = 1,
-  };
-  if (arch_coredump_exception_regs(exception.regs)) {
-    prv_thread_write(&exception, nullptr);
-  }
+  prv_exception_write();
 
   prv_regions_write(true);
 
