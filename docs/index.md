@@ -14,12 +14,9 @@
 
 <img class="home-watches" src="_static/images/watches.webp" alt="Pebble Time 2 and Pebble Round 2" />
 
-```{div} home-title
-Welcome to the PebbleOS documentation site!
-```
-
-PebbleOS is a lightweight, power-efficient general purpose RTOS for embedded devices, grown out of the [open-sourced](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html) Pebble smartwatch firmware.
-It is built with CMake and Kconfig, supports devicetree, and offers many device classes on top of a robust device model, along with subsystems such as Bluetooth LE, file systems and logging.
+PebbleOS is a **lightweight, power-efficient general purpose RTOS** for embedded devices, grown out of the [open-sourced](https://opensource.googleblog.com/2025/01/see-code-that-powered-pebble-smartwatches.html) Pebble smartwatch firmware.
+It is built with **CMake**, **Kconfig** and **devicetree**, and runs on **many boards**.
+A wide range of **drivers** sits on a robust device model, next to subsystems such as Bluetooth LE, file systems and logging.
 
 ````{div} home-actions
 

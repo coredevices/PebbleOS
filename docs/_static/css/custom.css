@@ -110,14 +110,13 @@ html.dark {
   grid-column: 1;
 }
 
-.home-hero > img.home-logo,
-.home-hero > .home-title {
+.home-hero > img.home-logo {
   grid-column: 1 / span 2;
 }
 
 .home-hero img.home-watches {
   grid-column: 2;
-  grid-row: 3 / span 2;
+  grid-row: 2 / span 2;
   width: 115%;
   max-width: none;
   margin: -1.5rem 0 -1rem -5%;
@@ -128,20 +127,6 @@ html.dark {
   width: 320px;
   max-width: 100%;
   margin: 0 0 1.4rem;
-}
-
-.home-title {
-  font-family: var(--sy-f-heading);
-  font-weight: 600;
-  font-size: 2.1rem;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.6rem;
-  color: var(--sy-c-heading);
-}
-
-.home-title p {
-  margin: 0;
 }
 
 .home-actions {
@@ -161,8 +146,7 @@ html.dark {
     padding: 1.6rem 1rem;
   }
 
-  .home-hero > img.home-logo,
-  .home-hero > .home-title {
+  .home-hero > img.home-logo {
     grid-column: 1;
   }
 
@@ -177,10 +161,6 @@ html.dark {
 
   .home-hero img.home-logo {
     width: 220px;
-  }
-
-  .home-title {
-    font-size: 1.6rem;
   }
 }
 
