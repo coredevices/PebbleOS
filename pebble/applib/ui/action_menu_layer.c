@@ -11,9 +11,11 @@
 #include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
+#include <applib/fonts/codepoint.h>
 #include <applib/fonts/fonts.h>
 #include <applib/graphics/graphics.h>
 #include <applib/graphics/text.h>
+#include <applib/graphics/utf8.h>
 #include <applib/platform.h>
 #include <applib/ui/animation.h>
 #include <applib/ui/menu_layer.h>
@@ -63,6 +65,13 @@ static GFont prv_get_font(const ActionMenuLayer *aml, TextStyleFont font) {
 static GFont prv_get_item_font(const ActionMenuLayer *aml) {
   return prv_get_font(aml, TextStyleFont_MenuCellTitle);
 }
+
+#if PBL_RECT
+static GFont prv_get_unselected_item_font(const ActionMenuLayer *aml) {
+  return action_menu_theme__is_dark_mode() ? aml->layout_cache.font
+                                           : prv_get_font(aml, TextStyleFont_MenuCellTitleRegular);
+}
+#endif
 
 static GColor prv_glyph_foreground_color(bool selected) {
   return selected ? action_menu_theme__highlight_foreground_color()
@@ -125,9 +134,20 @@ static int prv_short_row_start(const ActionMenuLayer *aml, int row) {
 #if PBL_ROUND
 //! Only used on round displays to achieve a fish-eye effect
 static GFont prv_get_unfocused_item_font(const ActionMenuLayer *aml) {
-  return prv_get_font(aml, TextStyleFont_Header);
+  return prv_get_font(aml, PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode(), true)
+                               ? TextStyleFont_Header
+                               : TextStyleFont_HeaderRegular);
 }
 #endif
+
+//! Textual thin cells use the same unselected font as their wide menu rows
+static GFont prv_get_thin_unselected_text_font(const ActionMenuLayer *aml) {
+#if PBL_ROUND
+  return prv_get_unfocused_item_font(aml);
+#else
+  return prv_get_unselected_item_font(aml);
+#endif
+}
 
 static uint16_t prv_get_num_rows(MenuLayer *menu_layer, uint16_t section_index,
                                  void *callback_context) {
@@ -263,7 +283,6 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
                                               ActionMenuLayer *aml, ActionMenuItem *items,
                                               int num_items, int sel_idx) {
   const GFont font = aml->layout_cache.font;
-  const int16_t font_height = fonts_get_font_height(font);
   const GRect *layer_bounds = &cell_layer->bounds;
   GRect r = *layer_bounds;
   // MenuLayers fill the whole highlighted cell with the inverted highlight background on black
@@ -306,12 +325,19 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
 #else
   r.size.w /= SHORT_COL_COUNT;
 #endif
-  r.origin.y += (r.size.h - font_height) / 2 - 4;
-
   for (int i = 0; i < num_items; i++) {
     if (!items[i].label) {
       break;
     }
+
+    GFont label_font = font;
+    if (sel_idx != i &&
+        !codepoint_is_emoji(utf8_peek_codepoint((utf8_t *)items[i].label, nullptr))) {
+      // Textual labels get the muted unselected font; keep the bold font for emoji labels so
+      // their glyph size matches the focused cell.
+      label_font = prv_get_thin_unselected_text_font(aml);
+    }
+    r.origin.y = layer_bounds->origin.y + (r.size.h - fonts_get_font_height(label_font)) / 2 - 4;
 
     if (sel_idx == i) {
       graphics_context_set_text_color(ctx, action_menu_theme__highlight_foreground_color());
@@ -342,7 +368,7 @@ static PBL_NOINLINE void prv_cell_column_draw(GContext *ctx, struct Layer const 
       graphics_context_set_text_color(ctx, action_menu_theme__foreground_color());
     }
 
-    graphics_draw_text(ctx, items[i].label, font, r, GTextOverflowModeTrailingEllipsis,
+    graphics_draw_text(ctx, items[i].label, label_font, r, GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentCenter, nullptr);
     r.origin.x += r.size.w;
   }
@@ -517,7 +543,7 @@ static void prv_cell_item_content_draw_rect(GContext *ctx, const Layer *cell_lay
                                             bool selected, GRect *content_box) {
   char *indicator = nullptr;
   const int16_t horizontal_padding = prv_horizontal_inset(aml);
-  const GFont font = aml->layout_cache.font;
+  const GFont font = selected ? aml->layout_cache.font : prv_get_unselected_item_font(aml);
   if (!item->is_leaf) {
     // If an item is not a leaf, then there would be an indicator when it is focused.  Either
     // we draw the indicator or we force the box to be smaller to force the text to render as
