@@ -38,4 +38,11 @@ config SOC_NRF52_RETAINED_RAM_SIZE
     help
       Size of the RAM kept across resets.
 
+config SOC_NRF52_RESET_PIN
+    int
+    default 21 if SOC_NRF52832
+    default 18
+    help
+      P0 pin of the reset input, connected through UICR PSELRESET.
+
 endif # SOC_NRF52

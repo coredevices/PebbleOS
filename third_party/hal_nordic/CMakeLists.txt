@@ -1,6 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+if(CONFIG_HAL_NORDIC_NRF52832)
+  pbl_compile_definitions(NRF52832_XXAA)
+endif()
 if(CONFIG_HAL_NORDIC_NRF52840)
   pbl_compile_definitions(NRF52840_XXAA)
 endif()
