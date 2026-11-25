@@ -62,7 +62,7 @@ bool pbl_bt_prf_store_get_pairing(struct ble_store_value_sec *peer, struct ble_s
  *
  * @param peer The peer's keys.
  * @param our The keys of the watch for that peer, or NULL if it has none.
- * @param name Remote device name, or NULL to keep the stored name.
+ * @param name Remote device name, or NULL to keep the stored name if it is of the same peer.
  */
 void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
                                   const struct ble_store_value_sec *our, const char *name);
