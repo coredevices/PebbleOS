@@ -351,6 +351,21 @@
 			status = "disabled";
 		};
 
+		gptim1: timer@50090000 {
+			compatible = "sifli,sf32lb57-gptim", "sifli,sf32lb52-gptim";
+			reg = <0x50090000 0x1000>;
+			interrupts = <70>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPTIM1>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_GPTIM1>;
+			status = "disabled";
+
+			gptim1_pwm: pwm {
+				compatible = "sifli,sf32lb57-gptim-pwm", "sifli,sf32lb52-gptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
+		};
+
 		wdt1: watchdog@50094000 {
 			compatible = "sifli,sf32lb57-wdt";
 			reg = <0x50094000 0x1000>;
@@ -446,6 +461,21 @@
 			sifli,hpsys-cfg = <&hpsys_cfg>;
 			sifli,fifo-size = <512>;
 			status = "disabled";
+		};
+
+		gptim2: timer@500b0000 {
+			compatible = "sifli,sf32lb57-gptim", "sifli,sf32lb52-gptim";
+			reg = <0x500b0000 0x1000>;
+			interrupts = <71>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_GPTIM2>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_GPTIM2>;
+			status = "disabled";
+
+			gptim2_pwm: pwm {
+				compatible = "sifli,sf32lb57-gptim-pwm", "sifli,sf32lb52-gptim-pwm";
+				#pwm-cells = <3>;
+				status = "disabled";
+			};
 		};
 
 		gpadc: adc@500b2000 {
