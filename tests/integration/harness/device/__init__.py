@@ -255,6 +255,21 @@ class DeviceAdapter(ABC):
         except Unsupported:
             pass
 
+    def ensure_connected(self):
+        """Reconnect if the firmware stopped answering on the prompt, as
+        after it reset on its own: a crash then fails one test, not every
+        test after it."""
+        if not self.has(Capability.PROMPT):
+            return
+        try:
+            self.prompt(self.command("version"), timeout=5)
+            return
+        except (OSError, HarnessError) as e:
+            logger.warning("the firmware stopped answering (%s), reconnecting", e)
+        self.disconnect()
+        self.connect()
+        self.wait_ready()
+
     def wait_ready(self, timeout=None):
         """Wait until the firmware answers on the prompt or the protocol."""
         timeout = timeout or self.config.base_timeout
