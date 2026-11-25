@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/mfd/sifli,sf32lb52-gptim.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: SiFli SF32LB52 general-purpose timer
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  16-bit timer counting PCLK through a 16-bit prescaler, with four
+  capture/compare channels. Its functions are child nodes, as the PWM
+  outputs.
+
+properties:
+  compatible:
+    oneOf:
+      - const: sifli,sf32lb52-gptim
+      - items:
+          - const: sifli,sf32lb57-gptim
+          - const: sifli,sf32lb52-gptim
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+  pwm:
+    type: object
+    additionalProperties: false
+    description:
+      PWM outputs, one per channel 0-3. The channels share the period.
+
+    properties:
+      compatible:
+        oneOf:
+          - const: sifli,sf32lb52-gptim-pwm
+          - items:
+              - const: sifli,sf32lb57-gptim-pwm
+              - const: sifli,sf32lb52-gptim-pwm
+
+      "#pwm-cells":
+        const: 3
+
+      pinctrl-0: true
+
+      pinctrl-names:
+        const: default
+
+      status: true
+
+    required:
+      - compatible
+      - "#pwm-cells"
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+
+additionalProperties: false
+
+examples:
+  - |
+    timer@50090000 {
+        compatible = "sifli,sf32lb52-gptim";
+        reg = <0x50090000 0x1000>;
+        interrupts = <70>;
+        clocks = <&hpsys_rcc 14>;
+        resets = <&hpsys_rcc 15>;
+
+        pwm {
+            compatible = "sifli,sf32lb52-gptim-pwm";
+            #pwm-cells = <3>;
+        };
+    };
