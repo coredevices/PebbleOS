@@ -6,7 +6,7 @@
 #include <syscall/syscall.h>
 
 void app_comm_set_sniff_interval(const SniffInterval interval) {
-  sys_app_comm_set_responsiveness(interval);
+  // Kept for the apps that call it: nothing lies between the slowest and the fastest response time.
 }
 
 SniffInterval app_comm_get_sniff_interval(void) {

@@ -404,17 +404,6 @@ void test_ams__music_needs_user_to_start_playback_on_phone(void) {
 // Tests: music_request_..._latency
 ///////////////////////////////////////////////////////////
 
-void test_ams__music_request_reduced_latency(void) {
-  prv_connect_ams();
-
-  music_request_reduced_latency(true /* reduced_latency */);
-  cl_assert_equal_i(s_last_request.state, PBL_BT_RESPONSE_TIME_MIDDLE);
-  cl_assert_equal_i(s_last_request.max_period_secs, PBL_BT_RESPONSE_TIME_FOREVER);
-
-  music_request_reduced_latency(false /* reduced_latency */);
-  cl_assert_equal_i(s_last_request.state, PBL_BT_RESPONSE_TIME_MAX);
-}
-
 void test_ams__music_request_low_latency_for_period(void) {
   prv_connect_ams();
 

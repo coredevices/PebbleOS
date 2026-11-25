@@ -313,9 +313,6 @@ static void prv_init(void) {
   prv_update_scrollable_metrics(data);
   workout_active_window_push(data->active_window);
 
-  // overall reduce the sniff-mode latency at the expense of some power...
-  app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
-
   health_service_set_heart_rate_sample_period(1 /* interval_s */);
   health_service_events_subscribe(prv_health_service_event_handler, data);
 

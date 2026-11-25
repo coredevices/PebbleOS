@@ -25,7 +25,6 @@
 
 PBL_LOG_MODULE_DECLARE(service_music, CONFIG_SERVICE_MUSIC_LOG_LEVEL);
 
-static struct pbl_bt_responsiveness_req s_reduced_latency_req;
 static struct pbl_bt_responsiveness_req s_low_latency_req;
 
 // -------------------------------------------------------------------------------------------------
@@ -125,22 +124,10 @@ static void prv_request_response_time(struct pbl_bt_responsiveness_req *req,
   }
 }
 
-static void prv_request_reduced_latency_cb(void *data) {
-  const bool reduced_latency = (uintptr_t)data;
-  const enum pbl_bt_response_time_state state =
-      reduced_latency ? PBL_BT_RESPONSE_TIME_MIDDLE : PBL_BT_RESPONSE_TIME_MAX;
-  prv_request_response_time(&s_reduced_latency_req, state, PBL_BT_RESPONSE_TIME_FOREVER);
-}
-
 static void prv_request_low_latency_for_period_cb(void *data) {
   const uint32_t period_ms = (uintptr_t)data;
   prv_request_response_time(&s_low_latency_req, PBL_BT_RESPONSE_TIME_MIN,
                             period_ms / PBL_MSEC_PER_SEC);
-}
-
-static void prv_music_request_reduced_latency(bool reduced_latency) {
-  prv_perform_on_kernel_main_task(prv_request_reduced_latency_cb,
-                                  (void *)(uintptr_t)reduced_latency);
 }
 
 static void prv_music_request_low_latency_for_period(uint32_t period_ms) {
@@ -154,7 +141,6 @@ static const MusicServerImplementation s_ams_music_implementation = {
   .command_send = prv_music_command_send,
   .needs_user_to_start_playback_on_phone = prv_music_needs_user_to_start_playback_on_phone,
   .get_capability_bitset = prv_music_get_capability_bitset,
-  .request_reduced_latency = prv_music_request_reduced_latency,
   .request_low_latency_for_period = prv_music_request_low_latency_for_period,
 };
 

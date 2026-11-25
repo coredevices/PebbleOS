@@ -51,13 +51,6 @@ static const struct params s_params[PBL_BT_RESPONSE_TIME_NUM] = {
         .latency = 4,
         .supervision_timeout = BLE_GAP_SUPERVISION_TIMEOUT_MS(6000),
       },
-  [PBL_BT_RESPONSE_TIME_MIDDLE] =
-      {
-        .itvl_min = BLE_GAP_CONN_ITVL_MS(45),
-        .itvl_max = BLE_GAP_CONN_ITVL_MS(60),
-        .latency = 4,
-        .supervision_timeout = BLE_GAP_SUPERVISION_TIMEOUT_MS(6000),
-      },
   [PBL_BT_RESPONSE_TIME_MIN] = {
     .itvl_min = BLE_GAP_CONN_ITVL_MS(15),
     .itvl_max = BLE_GAP_CONN_ITVL_MS(15),

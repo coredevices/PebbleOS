@@ -77,9 +77,6 @@ bool music_skip_seeks_within_track(void) {
 void music_command_send(MusicCommand command) {
 }
 
-void music_request_reduced_latency(bool reduced_latency) {
-}
-
 void music_request_low_latency_for_period(uint32_t period_ms) {
 }
 

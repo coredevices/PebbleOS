@@ -16,7 +16,7 @@
  *
  * | Response time | Interval | Peripheral latency | Supervision timeout |
  * | --- | --- | --- | --- |
- * | @ref PBL_BT_RESPONSE_TIME_MAX, @ref PBL_BT_RESPONSE_TIME_MIDDLE | 45 to 60 ms | 4 | 6 s |
+ * | @ref PBL_BT_RESPONSE_TIME_MAX | 45 to 60 ms | 4 | 6 s |
  * | @ref PBL_BT_RESPONSE_TIME_MIN | 15 ms | 0 | 6 s |
  *
  * A request the central does not answer is made again, three times at most. Nothing is negotiated
@@ -28,8 +28,6 @@
 enum pbl_bt_response_time_state {
   /** Slowest response, lowest throughput and power. */
   PBL_BT_RESPONSE_TIME_MAX = 0,
-  /** Intermediate response time. */
-  PBL_BT_RESPONSE_TIME_MIDDLE,
   /** Fastest response, highest throughput and power. */
   PBL_BT_RESPONSE_TIME_MIN,
   /** Number of response times. */
@@ -59,12 +57,13 @@ struct pbl_bt_responsiveness_req {
  * @brief Ask for a response time on a connection, replacing what the request asked for before.
  *
  * Asking for @ref PBL_BT_RESPONSE_TIME_MAX takes the request back, two seconds later so that
- * consecutive operations do not go back and forth.
+ * consecutive operations do not go back and forth. A period of zero ends the request at once.
  *
  * @param conn_handle The connection. Nothing happens if there is none.
  * @param req The request of who asks.
  * @param state The response time.
- * @param max_period_secs How long for, or @ref PBL_BT_RESPONSE_TIME_FOREVER.
+ * @param max_period_secs How long for, or @ref PBL_BT_RESPONSE_TIME_FOREVER. Not used when taking
+ * the request back.
  */
 void pbl_bt_responsiveness_request(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
                                    enum pbl_bt_response_time_state state, uint16_t max_period_secs);

@@ -206,13 +206,6 @@ bool music_skip_seeks_within_track(void);
 bool music_needs_user_to_start_playback_on_phone(void);
 
 /**
- * @brief Enable or disable a reduced latency mode on the backend connection.
- *
- * @param reduced_latency True to request reduced latency, false to release the request.
- */
-void music_request_reduced_latency(bool reduced_latency);
-
-/**
  * @brief Request the lowest connection latency for a limited time.
  *
  * @param period_seconds Duration in milliseconds, despite the name.

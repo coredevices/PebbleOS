@@ -118,7 +118,7 @@ connection with `pbl_bt_responsiveness_request()`, with a request it owns
 
 | Response time | Interval | Peripheral latency | Supervision timeout |
 | --- | --- | --- | --- |
-| `PBL_BT_RESPONSE_TIME_MAX`, `_MIDDLE` | 45 to 60 ms | 4 | 6 s |
+| `PBL_BT_RESPONSE_TIME_MAX` | 45 to 60 ms | 4 | 6 s |
 | `PBL_BT_RESPONSE_TIME_MIN` | 15 ms | 0 | 6 s |
 
 The interval is the time between two connection events, where both ends meet

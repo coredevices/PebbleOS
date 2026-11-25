@@ -260,19 +260,12 @@ void pbl_pp_send_buffer_end(struct pbl_pp_send_buffer *sb) {
 }
 
 static uint32_t s_responsiveness_max_period_s;
-static bool s_responsiveness_latency_is_reduced;
 
 void pbl_pp_session_set_responsiveness(struct pbl_pp_session *session,
                                        struct pbl_bt_responsiveness_req *req,
                                        enum pbl_bt_response_time_state state,
                                        uint16_t max_period_secs) {
   s_responsiveness_max_period_s = max_period_secs;
-
-  if (state == PBL_BT_RESPONSE_TIME_MIDDLE) {
-    s_responsiveness_latency_is_reduced = true;
-  } else if (state == PBL_BT_RESPONSE_TIME_MAX) {
-    s_responsiveness_latency_is_reduced = false;
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,10 +291,6 @@ void fake_comm_session_process_send_next(void) {
 
 uint32_t fake_comm_session_get_responsiveness_max_period(void) {
   return s_responsiveness_max_period_s;
-}
-
-uint32_t fake_comm_session_is_latency_reduced(void) {
-  return s_responsiveness_latency_is_reduced;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

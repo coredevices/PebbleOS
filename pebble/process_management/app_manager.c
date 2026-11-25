@@ -491,8 +491,6 @@ static void prv_app_cleanup(void) {
 #endif
 #endif
 
-  app_comm_set_sniff_interval(SNIFF_INTERVAL_NORMAL);
-
   app_manager_set_minimum_run_level(ProcessAppRunLevelNormal);
   app_install_cleanup_registered_app_callbacks();
   app_install_notify_app_closed();

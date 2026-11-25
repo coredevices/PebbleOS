@@ -120,8 +120,9 @@ bool pb_storage_raw_init(PutBytesStorage *storage, PutBytesObjectType object_typ
   if (append_offset == 0) {
     // Reduce BLE activity while the blocking erase runs, to lower stack pressure on the
     // NimbleHost task. Scoped to the erase only: this is the request chunk streaming holds at
-    // PBL_BT_RESPONSE_TIME_MIN, so leaving it in place would cancel the fast connection interval.
-    put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIDDLE, PUT_BYTES_FAST_LINK_TIMEOUT_S);
+    // PBL_BT_RESPONSE_TIME_MIN. A period of zero ends it now; taking it back would hold it for
+    // longer than the erase blocks what lets go of it.
+    put_bytes_set_response_time(PBL_BT_RESPONSE_TIME_MIN, 0);
 
     // By erasing the entire region we make it more likely for 'pb_storage_raw_get_status' to
     // recover the correct location.
