@@ -158,3 +158,11 @@ def test_no_daemon(lock_dir):
     assert daemon.status("k") is None
     with pytest.raises(power.PowerError):
         daemon.Client("k")
+
+
+def test_parent_holds(lock_dir):
+    assert not lock.parent_holds("port-x")
+    with lock.holding([("port-x", "serial port x")]):
+        assert lock.parent_holds("port-x")
+    assert not lock.parent_holds("port-x")
+    assert not lock.parent_holds(None)

@@ -99,6 +99,16 @@ def normalize_wait(argv):
     return out
 
 
+def _in_session(device):
+    """Whether a parent process, such as an integration test session, holds
+    ``device``'s ports: the device is its own, whatever keeps it powered."""
+    from pbl import lock
+
+    return lock.parent_holds(lock.serial_key(device.serial)) or lock.parent_holds(
+        lock.probe_key(device.name)
+    )
+
+
 class PblCommand(ABC):
     #: Which section of the top-level help the command is listed under.
     group = "other"
@@ -215,7 +225,7 @@ class PblCommand(ABC):
                 watch = lab.watch_for(build.board, name)
         except labs.LabError as e:
             self.die(str(e))
-        if watch is not None and watch.supply is not None:
+        if watch is not None and watch.supply is not None and not _in_session(watch):
             self.wait_for_supply(lab.supplies[watch.supply])
         return watch
 
