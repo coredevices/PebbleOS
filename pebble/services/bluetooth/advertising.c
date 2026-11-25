@@ -116,7 +116,7 @@ static int prv_set_discovery_fields(void) {
 
   /* What flags, services and TX power leave, less the name's own header. */
   name_max = BLE_HS_ADV_MAX_SZ - 3 - (2 + 2 * fields.num_uuids16) - 3 - 2;
-  bt_local_id_copy_device_name(name, true);
+  bt_local_id_copy_device_name(name);
   name[sizeof(name) - 1] = '\0';
   fields.name_len = PBL_MIN(strlen(name), name_max);
   fields.name_is_complete = (name[fields.name_len] == '\0');

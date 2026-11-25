@@ -372,7 +372,7 @@ static void prv_draw_row_cb(SettingsCallbacks *context, GContext *ctx, const Lay
         icon = &data->icon_heap_bitmap[AirplaneIconIdx];
       } else {
         // Always show device name as subtitle
-        bt_local_id_copy_device_name(device_name_buffer, false);
+        bt_local_id_copy_device_name(device_name_buffer);
         subtitle = device_name_buffer;
         icon = &data->icon_heap_bitmap[BluetoothIconIdx];
       }
