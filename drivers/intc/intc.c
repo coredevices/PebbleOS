@@ -93,6 +93,10 @@ int pbl_intc_free(const struct pbl_irq_spec *spec) {
     }
   }
 
+  if (spec->intc->ops->free != nullptr) {
+    spec->intc->ops->free(spec->intc, spec->hwirq);
+  }
+
   line->handler = nullptr;
   line->arg = nullptr;
   prv_mark_enabled(spec->intc, spec->hwirq, false);
