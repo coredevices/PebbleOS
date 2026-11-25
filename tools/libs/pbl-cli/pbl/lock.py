@@ -194,6 +194,11 @@ def _held():
     return set(filter(None, os.environ.get(HELD_ENV, "").split(",")))
 
 
+def parent_holds(key):
+    """Whether a parent of this process holds ``key``."""
+    return key is not None and key in _held() and holder(key) is not None
+
+
 def _set_held(keys):
     if keys:
         os.environ[HELD_ENV] = ",".join(sorted(keys))
