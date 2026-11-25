@@ -9,6 +9,7 @@
 #include <pbl/drivers/mbox.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/soc/st/exti.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -31,6 +32,8 @@ struct pbl_mbox_stm32_hsem {
   struct pbl_mbox_controller ctrl;
   uintptr_t base;
   pbl_irq_t irqn;
+  // Line of the EXTI the interrupt comes through
+  uint32_t wakeup;
   struct pbl_clk clk;
 };
 
@@ -115,17 +118,27 @@ static void prv_isr(const struct pbl_mbox_stm32_hsem *hsem) {
 static int prv_init(const struct pbl_device *dev) {
   const struct pbl_mbox_stm32_hsem *hsem =
       PBL_CONTAINER_OF(dev, const struct pbl_mbox_stm32_hsem, ctrl.dev);
+  int ret;
 
-  return pbl_clk_enable(&hsem->clk);
+  ret = pbl_clk_enable(&hsem->clk);
+  if (ret != 0) {
+    return ret;
+  }
+
+  // The other core rings this one stopped
+  pbl_soc_stm32h7_wakeup_enable(hsem->wakeup);
+
+  return 0;
 }
 
-#define PBL_MBOX_STM32_HSEM_DEFINE(sym, _name, _base, _clk, _num_chans, _irq)             \
+#define PBL_MBOX_STM32_HSEM_DEFINE(sym, _name, _base, _clk, _num_chans, _irq, _wakeup)    \
   static_assert((_num_chans) <= NUM_SEMAPHORES);                                          \
   PBL_MBOX_CONTROLLER_STATE_DEFINE(sym, _num_chans);                                      \
   PBL_DEVICE_INSTANCE(sym, struct pbl_mbox_stm32_hsem, struct pbl_mbox_controller, ctrl){ \
     .ctrl = PBL_MBOX_CONTROLLER_INIT(sym, _name, prv_init, nullptr, &s_ops, 1U),          \
     .base = (_base),                                                                      \
     .irqn = (_irq),                                                                       \
+    .wakeup = (_wakeup),                                                                  \
     .clk = _clk,                                                                          \
   };                                                                                      \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_MBOX_STM32_HSEM_IRQ_PRIO, prv_isr, &sym##_inst, 0)

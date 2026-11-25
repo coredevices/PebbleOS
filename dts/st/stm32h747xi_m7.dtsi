@@ -10,3 +10,10 @@
 		reg = <0x24000000 0x80000>;
 	};
 };
+
+// HSEM1, the interrupt of the semaphores for the Cortex-M7, through its line of the EXTI, which
+// wakes it from Stop
+&hsem {
+	interrupt-parent = <&exti>;
+	interrupts = <77 IRQ_TYPE_LEVEL_HIGH>;
+};

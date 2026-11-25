@@ -11,7 +11,9 @@
 	};
 };
 
-// HSEM2, the interrupt of the semaphores for the Cortex-M4
+// HSEM2, the interrupt of the semaphores for the Cortex-M4, through its line of the EXTI, which
+// wakes it from Stop
 &hsem {
-	interrupts = <126>;
+	interrupt-parent = <&exti>;
+	interrupts = <78 IRQ_TYPE_LEVEL_HIGH>;
 };
