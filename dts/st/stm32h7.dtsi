@@ -462,5 +462,15 @@
 				status = "disabled";
 			};
 		};
+
+		hsem: hwspinlock@58026400 {
+			compatible = "st,stm32-hwspinlock";
+			reg = <0x58026400 0x400>;
+			interrupts = <125>;
+			#hwlock-cells = <1>;
+			#mbox-cells = <1>;
+			clocks = <&rcc HSEM_CK>;
+			clock-names = "hsem";
+		};
 	};
 };

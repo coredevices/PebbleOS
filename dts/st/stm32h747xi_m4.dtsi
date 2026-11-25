@@ -10,3 +10,8 @@
 		reg = <0x10000000 0x48000>;
 	};
 };
+
+// HSEM2, the interrupt of the semaphores for the Cortex-M4
+&hsem {
+	interrupts = <126>;
+};
