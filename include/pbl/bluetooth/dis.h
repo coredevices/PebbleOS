@@ -10,19 +10,18 @@
  * @ingroup bluetooth
  * @brief Values served by the GATT Device Information Service.
  *
- * The lengths are spelled out instead of derived from the firmware headers that define them, so
- * this header stays usable by the stack. The firmware checks at build time that they are large
- * enough. All lengths include the terminator.
+ * The lengths are those of the values the application serves, which checks at build time that
+ * they are large enough. All lengths include the terminator.
  * @{
  */
 
-/** @brief Length of the model number, MFG_HW_VERSION_SIZE + 1. */
+/** @brief Length of the model number. */
 #define PBL_BT_DIS_MODEL_NUMBER_LEN (10)
-/** @brief Length of the manufacturer name, at least sizeof(CONFIG_BT_VENDOR_NAME). */
+/** @brief Length of the manufacturer name. */
 #define PBL_BT_DIS_MANUFACTURER_LEN (18)
-/** @brief Length of the serial number, MFG_SERIAL_NUMBER_SIZE + 1. */
+/** @brief Length of the serial number. */
 #define PBL_BT_DIS_SERIAL_NUMBER_LEN (13)
-/** @brief Length of the firmware revision, FW_METADATA_VERSION_TAG_BYTES. */
+/** @brief Length of the firmware revision. */
 #define PBL_BT_DIS_FW_REVISION_LEN (32)
 /** @brief Length of the software revision, formatted as @c xx.xxx. */
 #define PBL_BT_DIS_SW_REVISION_LEN (8)
