@@ -7,6 +7,8 @@
 #include <pbl/bluetooth/clients/ancs.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/util/byteorder.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
 static const ble_uuid128_t s_svc_uuid = BLE_UUID128_INIT(PBL_BT_ANCS_UUID_SERVICE);
@@ -56,25 +58,7 @@ enum parsed {
 static PBL_MUTEX_DEFINE(s_lock);
 
 static struct pbl_bt_ancs_client *prv_client(struct pbl_bt_gattc_service *svc) {
-  return (struct pbl_bt_ancs_client *)((uint8_t *)svc - offsetof(struct pbl_bt_ancs_client, svc));
-}
-
-static void prv_put_le16(uint8_t *dst, uint16_t value) {
-  dst[0] = value & 0xff;
-  dst[1] = value >> 8;
-}
-
-static void prv_put_le32(uint8_t *dst, uint32_t value) {
-  prv_put_le16(dst, value & 0xffff);
-  prv_put_le16(dst + 2, value >> 16);
-}
-
-static uint16_t prv_get_le16(const uint8_t *src) {
-  return src[0] | (src[1] << 8);
-}
-
-static uint32_t prv_get_le32(const uint8_t *src) {
-  return prv_get_le16(src) | ((uint32_t)prv_get_le16(src + 2) << 16);
+  return PBL_CONTAINER_OF(svc, struct pbl_bt_ancs_client, svc);
 }
 
 /* Finds the attributes asked for in what was gathered of the response. */
@@ -96,7 +80,7 @@ static enum parsed prv_parse(const struct pbl_bt_ancs_client *client,
 
   while (offset + ATTR_HDR_LEN <= client->len) {
     const struct pbl_bt_ancs_attr *attr = (const struct pbl_bt_ancs_attr *)&client->buf[offset];
-    const uint16_t len = prv_get_le16(&client->buf[offset + 1]);
+    const uint16_t len = pbl_get_le16(&client->buf[offset + 1]);
     uint8_t i;
 
     /* The service may send attributes that were not asked for: those are skipped. */
@@ -198,7 +182,7 @@ static void prv_notification_source(struct pbl_bt_ancs_client *client, const uin
     .flags = data[1],
     .category = data[2],
     .category_count = data[3],
-    .uid = prv_get_le32(&data[4]),
+    .uid = pbl_get_le32(&data[4]),
   };
   client->cb->notification(client, &notif);
 }
@@ -220,7 +204,7 @@ static void prv_data_source(struct pbl_bt_ancs_client *client, const uint8_t *da
 
     if (client->request == REQUEST_NOTIF_ATTRS) {
       ours = len >= NOTIF_HDR_LEN && data[0] == CMD_GET_NOTIF_ATTRS &&
-             prv_get_le32(&data[1]) == client->uid;
+             pbl_get_le32(&data[1]) == client->uid;
     } else {
       ours = len >= 1 && data[0] == CMD_GET_APP_ATTRS;
     }
@@ -385,13 +369,13 @@ int pbl_bt_ancs_client_get_notif_attrs(struct pbl_bt_ancs_client *client, uint32
   }
 
   cmd[0] = CMD_GET_NOTIF_ATTRS;
-  prv_put_le32(&cmd[1], uid);
+  pbl_put_le32(uid, &cmd[1]);
   for (uint8_t i = 0; i < num_attrs; i++) {
     cmd[len++] = attrs[i].id;
     if (attrs[i].id == PBL_BT_ANCS_NOTIF_ATTR_TITLE ||
         attrs[i].id == PBL_BT_ANCS_NOTIF_ATTR_SUBTITLE ||
         attrs[i].id == PBL_BT_ANCS_NOTIF_ATTR_MESSAGE) {
-      prv_put_le16(&cmd[len], attrs[i].max_len);
+      pbl_put_le16(attrs[i].max_len, &cmd[len]);
       len += 2;
     }
   }
@@ -433,7 +417,7 @@ int pbl_bt_ancs_client_perform_action(struct pbl_bt_ancs_client *client, uint32_
   uint8_t cmd[ACTION_CMD_LEN];
 
   cmd[0] = CMD_PERFORM_ACTION;
-  prv_put_le32(&cmd[1], uid);
+  pbl_put_le32(uid, &cmd[1]);
   cmd[NOTIF_HDR_LEN] = action;
 
   return prv_request(client, REQUEST_ACTION, uid, nullptr, 0, cmd, sizeof(cmd));
