@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_NRF54L
+    bool
+    select SOC_FAMILY_NRF
+    select CPU_CORTEX_M33
+    select CPU_HAS_FPU
+    select SOC_HAS_UNIQUE_ID
+    select NVMEM
+    help
+      Nordic nRF54L series, selected by its lines. Runs on the secure
+      application core.

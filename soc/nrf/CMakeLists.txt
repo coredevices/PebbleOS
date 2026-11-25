@@ -4,3 +4,6 @@
 if(CONFIG_SOC_NRF52)
   add_subdirectory(nrf52)
 endif()
+if(CONFIG_SOC_NRF54L)
+  add_subdirectory(nrf54l)
+endif()

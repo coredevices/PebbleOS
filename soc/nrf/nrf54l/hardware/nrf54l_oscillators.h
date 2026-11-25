@@ -1,0 +1,16 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+/* Register offsets */
+
+#define NRF54L_OSCILLATORS_XOSC32M_INTCAP_OFFSET  0x071c
+#define NRF54L_OSCILLATORS_PLL_FREQ_OFFSET        0x0800
+#define NRF54L_OSCILLATORS_XOSC32KI_INTCAP_OFFSET 0x0904
+
+/* Register bit definitions */
+
+#define OSCILLATORS_PLL_FREQ_CK128M 1U
