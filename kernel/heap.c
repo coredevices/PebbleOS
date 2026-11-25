@@ -564,6 +564,12 @@ char *pbl_heap_strdup(struct pbl_heap *heap, const char *s, uintptr_t caller) {
   pbl_fatal_error_handler(caller);
 }
 
+#ifdef CONFIG_MALLOC_INSTRUMENTATION
+static void prv_oom_dump_line(const char *line, void *arg) {
+  PBL_LOG_ALWAYS("%s", line);
+}
+#endif
+
 [[noreturn]] void pbl_heap_oom(struct pbl_heap *heap, size_t size, uintptr_t caller) {
   unsigned int used = 0, free_bytes = 0, max_free = 0;
   pbl_heap_stats(heap, &used, &free_bytes, &max_free);
@@ -572,7 +578,7 @@ char *pbl_heap_strdup(struct pbl_heap *heap, const char *s, uintptr_t caller) {
                  size, caller, used, free_bytes, max_free);
 
 #ifdef CONFIG_MALLOC_INSTRUMENTATION
-  pbl_heap_dump(heap);
+  pbl_heap_dump(heap, prv_oom_dump_line, nullptr);
 #endif
 
   pbl_heap_oom_handler(heap, size, caller);
