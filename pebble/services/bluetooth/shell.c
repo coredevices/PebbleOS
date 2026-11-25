@@ -165,7 +165,13 @@ static int prv_cmd_bonds(const struct pbl_shell *sh, size_t argc, char **argv) {
 PBL_SHELL_SUBCMD_ADD(sub_bt, bonds, nullptr, "Dump the bonds", prv_cmd_bonds, 0, 0);
 
 static int prv_cmd_sprf_nuke(const struct pbl_shell *sh, size_t argc, char **argv) {
-  pbl_bt_prf_store_wipe();
+  const int ret = pbl_bt_prf_store_wipe();
+
+  if (ret != 0) {
+    pbl_shell_error(sh, "wipe failed (%d)", ret);
+    return ret;
+  }
+
 #ifdef CONFIG_RECOVERY_FW
   // Reset to get the host and controller caches back in sync
   extern void factory_reset_set_reason_and_reset(void);

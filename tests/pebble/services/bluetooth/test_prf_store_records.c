@@ -427,6 +427,25 @@ void test_prf_store_records__unknown_version_after_known(void) {
   prv_assert_pairing(NAME);
 }
 
+// A slot that does not read back as written is skipped.
+void test_prf_store_records__slot_that_does_not_take_is_skipped(void) {
+  static const uint8_t worn[sizeof(struct prf_record)];
+  struct prf_record record;
+
+  cl_assert_equal_i(pbl_bt_prf_store_set_pairing(&PEER, &OUR, NAME), 0);
+
+  // Bits that are programmed stay so until an erase.
+  pbl_flash_write(FLASH, SLOT_ADDR(1), worn, sizeof(worn));
+
+  cl_assert_equal_i(pbl_bt_prf_store_set_pairing_name("Other"), 0);
+  prv_assert_pairing("Other");
+  prv_read_slot(2, &record);
+  cl_assert_equal_s(record.name, "Other");
+
+  pbl_bt_prf_store_init();
+  prv_assert_pairing("Other");
+}
+
 // What another layout, or nothing, left in the partition.
 void test_prf_store_records__garbage(void) {
   static uint8_t garbage[PART_SHARED_PRF_STORAGE_SIZE];

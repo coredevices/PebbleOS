@@ -3,6 +3,7 @@
 
 #include "prf_legacy_layout.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/bluetooth/prf_store.h>
@@ -57,12 +58,37 @@ static PBL_MUTEX_DEFINE(s_sprf_mutex);
 // Helper functions
 //
 
+// The first error of the flash since the lock was taken: what a setter returns.
+static int s_flash_err;
+
 static void prv_lock(void) {
   pbl_mutex_lock(&s_sprf_mutex, PBL_FOREVER);
+  s_flash_err = 0;
 }
 
-static void prv_unlock(void) {
+static int prv_unlock(void) {
+  const int err = s_flash_err;
+
   pbl_mutex_unlock(&s_sprf_mutex);
+
+  return err;
+}
+
+static void prv_flash_write(uint32_t addr, const void *buf, size_t len) {
+  const int ret = pbl_flash_write(FLASH, addr, buf, len);
+
+  if (ret != 0 && s_flash_err == 0) {
+    s_flash_err = ret;
+  }
+}
+
+static void prv_flash_erase(void) {
+  const int ret =
+      pbl_flash_partition_erase(PART_SHARED_PRF_STORAGE, 0U, PART_SHARED_PRF_STORAGE_SIZE);
+
+  if (ret != 0 && s_flash_err == 0) {
+    s_flash_err = ret;
+  }
 }
 
 static bool prv_buffer_empty(const uint8_t *buf, size_t num_bytes) {
@@ -137,12 +163,12 @@ static void prv_write_to_current_page(SharedPRFData *data, bool write_metadata) 
       data->magic = SprfMagic_ValidEntry;
       data->version = SPRF_CUR_VERSION;
     }
-    pbl_flash_write(FLASH, prv_current_page_flash_addr(), (uint8_t *)data, sizeof(*data));
+    prv_flash_write(prv_current_page_flash_addr(), data, sizeof(*data));
   }
 }
 
 static void prv_erase_region_and_save(SharedPRFData *data) {
-  pbl_flash_partition_erase(PART_SHARED_PRF_STORAGE, 0U, PART_SHARED_PRF_STORAGE_SIZE);
+  prv_flash_erase();
   s_valid_page_idx = 0;
   prv_write_to_current_page(data, false);
 }
@@ -158,7 +184,7 @@ static void prv_invalidate_current_page(void) {
 
   // Invalidate current page
   SprfMagic new_magic = SprfMagic_InvalidatedEntry;
-  pbl_flash_write(FLASH, prv_current_page_flash_addr(), (uint8_t *)&new_magic, sizeof(SprfMagic));
+  prv_flash_write(prv_current_page_flash_addr(), &new_magic, sizeof(SprfMagic));
   s_valid_page_idx++;
 
   // Sanity check to make sure that the page we are moving to is actually empty.
@@ -237,7 +263,7 @@ static void prv_persist_field(uint8_t *field, size_t offset, size_t field_size, 
   // not 0xFFFFFFFF instead of comparing all bytes.
 
   *(uint32_t *)field = new_crc;
-  pbl_flash_write(FLASH, prv_current_page_flash_addr() + offset, field, field_size);
+  prv_flash_write(prv_current_page_flash_addr() + offset, field, field_size);
 
 cleanup:
   prv_dealloc_struct(data);
@@ -317,11 +343,11 @@ void pbl_bt_prf_store_init(void) {
   prv_unlock();
 }
 
-void pbl_bt_prf_store_wipe(void) {
+int pbl_bt_prf_store_wipe(void) {
   prv_lock();
   // Invalidating the page would leave the keys in flash.
   prv_erase_region_and_save(nullptr);
-  prv_unlock();
+  return prv_unlock();
 }
 
 //!
@@ -356,7 +382,7 @@ unlock:
   return rv;
 }
 
-void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
+int pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   prv_lock();
   {
     SprfRootKeys data = {};
@@ -365,7 +391,7 @@ void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
     }
     SPRF_PERSIST_FIELD(data, root_keys);
   }
-  prv_unlock();
+  return prv_unlock();
 }
 
 //!
@@ -441,13 +467,13 @@ unlock:
   return rv;
 }
 
-void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
-                                  const struct ble_store_value_sec *our, const char *name) {
+int pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
+                                 const struct ble_store_value_sec *our, const char *name) {
   const bool has_our_ltk = (our != nullptr) && our->ltk_present;
 
   if (!peer || !(peer->ltk_present || peer->irk_present || has_our_ltk)) {
     PBL_LOG_WRN("PRF Storage: Attempting to store an NULL or empty pairing info");
-    return;
+    return -EINVAL;
   }
 
   prv_lock();
@@ -495,10 +521,10 @@ void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
       SPRF_PERSIST_FIELD(name_data, ble_pairing_name);
     }
   }
-  prv_unlock();
+  return prv_unlock();
 }
 
-void pbl_bt_prf_store_set_pairing_name(const char *name) {
+int pbl_bt_prf_store_set_pairing_name(const char *name) {
   prv_lock();
   {
     SprfBlePairingData data;
@@ -509,16 +535,16 @@ void pbl_bt_prf_store_set_pairing_name(const char *name) {
       SPRF_PERSIST_FIELD(name_data, ble_pairing_name);
     }
   }
-  prv_unlock();
+  return prv_unlock();
 }
 
-void pbl_bt_prf_store_erase_pairing(void) {
+int pbl_bt_prf_store_erase_pairing(void) {
   prv_lock();
   {
     SPRF_ERASE_FIELD(ble_pairing_data);
     SPRF_ERASE_FIELD(ble_pairing_name);
   }
-  prv_unlock();
+  return prv_unlock();
 }
 
 //!

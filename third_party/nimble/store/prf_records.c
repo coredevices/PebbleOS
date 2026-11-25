@@ -3,6 +3,7 @@
 
 #include "prf_records_layout.h"
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/bluetooth/prf_store.h>
@@ -22,6 +23,8 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 #define COMPACT_SLOTS (NUM_SLOTS * 3U / 4U)
 
 #define NO_SLOT UINT32_MAX
+
+#define APPEND_ATTEMPTS 3U
 
 #define PAIRING_FLAGS                                                              \
   (PRF_RECORD_FLAG_PAIRING | PRF_RECORD_FLAG_PEER_LTK | PRF_RECORD_FLAG_PEER_IRK | \
@@ -63,32 +66,63 @@ static bool prv_is_intact(const struct prf_record *record) {
   return record->magic == PRF_RECORD_MAGIC && record->crc == prv_crc(record);
 }
 
-static void prv_erase(void) {
-  pbl_flash_partition_erase(PART_SHARED_PRF_STORAGE, 0U, PART_SHARED_PRF_STORAGE_SIZE);
+static int prv_erase(void) {
+  int ret;
+
   s_cur = NO_SLOT;
+
+  ret = pbl_flash_partition_erase(PART_SHARED_PRF_STORAGE, 0U, PART_SHARED_PRF_STORAGE_SIZE);
+  if (ret != 0) {
+    // What is there is not known: nothing is written before it is erased.
+    s_free = NUM_SLOTS;
+    return ret;
+  }
+
   s_free = 0U;
+
+  return 0;
 }
 
 // The store as it is: nothing in it if there is no record.
 static void prv_load(struct prf_record *record) {
-  if (s_cur == NO_SLOT) {
+  if (s_cur == NO_SLOT ||
+      pbl_flash_read(FLASH, prv_slot_addr(s_cur), record, sizeof(*record)) != 0) {
     memset(record, 0, sizeof(*record));
-    return;
   }
-
-  pbl_flash_read(FLASH, prv_slot_addr(s_cur), record, sizeof(*record));
 }
 
-static void prv_append(const struct prf_record *record) {
-  if (s_free >= NUM_SLOTS) {
-    prv_erase();
+// A record is the store once it reads back as written: a slot that did not take it is skipped.
+static int prv_append(const struct prf_record *record) {
+  struct prf_record written;
+  int ret = -EIO;
+
+  for (unsigned int i = 0U; i < APPEND_ATTEMPTS; i++) {
+    uint32_t slot;
+
+    if (s_free >= NUM_SLOTS) {
+      ret = prv_erase();
+      if (ret != 0) {
+        return ret;
+      }
+    }
+
+    slot = s_free++;
+    ret = pbl_flash_write(FLASH, prv_slot_addr(slot), record, sizeof(*record));
+    if (ret == 0) {
+      ret = pbl_flash_read(FLASH, prv_slot_addr(slot), &written, sizeof(written));
+    }
+    if (ret == 0 && memcmp(&written, record, sizeof(written)) == 0) {
+      s_cur = slot;
+      return 0;
+    }
+
+    ret = -EIO;
   }
 
-  pbl_flash_write(FLASH, prv_slot_addr(s_free), record, sizeof(*record));
-  s_cur = s_free++;
+  return ret;
 }
 
-static void prv_save(struct prf_record *record) {
+static int prv_save(struct prf_record *record) {
   struct prf_record current;
 
   record->magic = PRF_RECORD_MAGIC;
@@ -99,13 +133,13 @@ static void prv_save(struct prf_record *record) {
   prv_load(&current);
   if (s_cur == NO_SLOT) {
     if (record->flags == 0U) {
-      return;
+      return 0;
     }
   } else if (memcmp(&current, record, sizeof(current)) == 0) {
-    return;
+    return 0;
   }
 
-  prv_append(record);
+  return prv_append(record);
 }
 
 static void prv_clear_pairing(struct prf_record *record) {
@@ -136,8 +170,8 @@ void pbl_bt_prf_store_init(void) {
   s_free = 0U;
 
   for (uint32_t slot = 0U; slot < NUM_SLOTS; slot++) {
-    pbl_flash_read(FLASH, prv_slot_addr(slot), &record, sizeof(record));
-    if (prv_is_erased(&record)) {
+    if (pbl_flash_read(FLASH, prv_slot_addr(slot), &record, sizeof(record)) == 0 &&
+        prv_is_erased(&record)) {
       continue;
     }
 
@@ -153,19 +187,22 @@ void pbl_bt_prf_store_init(void) {
   if (s_free > COMPACT_SLOTS) {
     has_record = (s_cur != NO_SLOT);
     prv_load(&record);
-    prv_erase();
-    if (has_record) {
-      prv_append(&record);
+    if (prv_erase() != 0 || (has_record && prv_append(&record) != 0)) {
+      PBL_LOG_ERR("Could not compact the PRF store");
     }
   }
 
   pbl_mutex_unlock(&s_lock);
 }
 
-void pbl_bt_prf_store_wipe(void) {
+int pbl_bt_prf_store_wipe(void) {
+  int ret;
+
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
-  prv_erase();
+  ret = prv_erase();
   pbl_mutex_unlock(&s_lock);
+
+  return ret;
 }
 
 bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
@@ -189,8 +226,9 @@ bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
   return true;
 }
 
-void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
+int pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   struct prf_record record;
+  int ret;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
@@ -200,9 +238,11 @@ void pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
   if (keys_in != nullptr) {
     memcpy(record.root_keys, keys_in, sizeof(record.root_keys));
   }
-  prv_save(&record);
+  ret = prv_save(&record);
 
   pbl_mutex_unlock(&s_lock);
+
+  return ret;
 }
 
 static void prv_fill_sec(struct ble_store_value_sec *sec, const struct prf_record *record) {
@@ -257,14 +297,15 @@ bool pbl_bt_prf_store_get_pairing(struct ble_store_value_sec *peer, struct ble_s
   return true;
 }
 
-void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
-                                  const struct ble_store_value_sec *our, const char *name) {
+int pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
+                                 const struct ble_store_value_sec *our, const char *name) {
   const bool has_our_ltk = (our != nullptr) && our->ltk_present;
   struct prf_record record;
+  int ret;
 
   if (peer == nullptr || !(peer->ltk_present || peer->irk_present || has_our_ltk)) {
     PBL_LOG_WRN("Not storing a pairing without keys");
-    return;
+    return -EINVAL;
   }
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
@@ -312,34 +353,42 @@ void pbl_bt_prf_store_set_pairing(const struct ble_store_value_sec *peer,
     prv_set_name(&record, name);
   }
 
-  prv_save(&record);
+  ret = prv_save(&record);
 
   pbl_mutex_unlock(&s_lock);
+
+  return ret;
 }
 
-void pbl_bt_prf_store_set_pairing_name(const char *name) {
+int pbl_bt_prf_store_set_pairing_name(const char *name) {
   struct prf_record record;
+  int ret = 0;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   prv_load(&record);
   if ((record.flags & PRF_RECORD_FLAG_PAIRING) != 0U) {
     prv_set_name(&record, name);
-    prv_save(&record);
+    ret = prv_save(&record);
   }
 
   pbl_mutex_unlock(&s_lock);
+
+  return ret;
 }
 
-void pbl_bt_prf_store_erase_pairing(void) {
+int pbl_bt_prf_store_erase_pairing(void) {
   struct prf_record record;
+  int ret;
 
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
 
   prv_load(&record);
   prv_clear_pairing(&record);
   memset(record.name, 0, sizeof(record.name));
-  prv_save(&record);
+  ret = prv_save(&record);
 
   pbl_mutex_unlock(&s_lock);
+
+  return ret;
 }

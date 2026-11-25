@@ -65,7 +65,9 @@ static void prv_copy_to_prf_store(const ble_addr_t *addr) {
     return;
   }
 
-  pbl_bt_prf_store_set_pairing(&keys.peer, &keys.our, nullptr);
+  if (pbl_bt_prf_store_set_pairing(&keys.peer, &keys.our, nullptr) != 0) {
+    PBL_LOG_ERR("Could not copy the bond to the PRF store");
+  }
 }
 
 struct others {
@@ -150,7 +152,10 @@ int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
     }
   }
 
-  pbl_bt_prf_store_set_root_keys(keys);
+  // They still serve until the next boot.
+  if (pbl_bt_prf_store_set_root_keys(keys) != 0) {
+    PBL_LOG_ERR("Could not store the root keys");
+  }
 
   return 0;
 }
@@ -172,7 +177,7 @@ void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name) {
     return;
   }
 
-  pbl_bt_prf_store_set_pairing_name(name);
+  (void)pbl_bt_prf_store_set_pairing_name(name);
 }
 
 void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
@@ -204,7 +209,7 @@ void pbl_bt_cb_bond_deleted(const ble_addr_t *addr) {
   }
 
   if (prv_get_prf_pairing(&stored, nullptr) && ble_addr_cmp(&stored.peer.peer_addr, addr) == 0) {
-    pbl_bt_prf_store_erase_pairing();
+    (void)pbl_bt_prf_store_erase_pairing();
   }
 
   if (!bt_ctl_is_bluetooth_running()) {
