@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/timer/nordic,nrf54l15-grtc.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L global real-time counter
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Counter of microseconds since it started, 52 bits wide, kept from the low-frequency clock in sleep, with compare channels. Its interrupt is the one of the secure application core.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-grtc
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    node@500e2000 {
+        compatible = "nordic,nrf54l15-grtc";
+        reg = <0x500e2000 0x1000>;
+        interrupts = <228>;
+    };

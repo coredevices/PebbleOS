@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/serial/nordic,nrf54l15-uarte.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L UARTE
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  UART with EasyDMA of the nRF54L series, on a 16 MHz peripheral clock. Its
+  pins are selected in its own registers, from tx-gpios and rx-gpios, and must
+  be in its power domain.
+
+allOf:
+  - $ref: /schemas/serial/serial.yaml#
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-uarte
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  current-speed:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Initial baud rate, in bits per second.
+
+  tx-gpios:
+    maxItems: 1
+
+  rx-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - tx-gpios
+  - rx-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    serial@500c6000 {
+        compatible = "nordic,nrf54l15-uarte";
+        reg = <0x500c6000 0x1000>;
+        interrupts = <198>;
+        current-speed = <115200>;
+        tx-gpios = <&gpio1 4 0>;
+        rx-gpios = <&gpio1 5 0>;
+    };

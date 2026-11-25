@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/nordic,nrf54l15-clock.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L clock control
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  Runs the two clocks of the system:
+
+  - HFCLK, the clock of the peripherals, from the internal RC oscillator, or
+    from the HFXO crystal oscillator while a consumer asks for it;
+  - LFCLK, the 32768 Hz clock of the GRTC, from the LFXO crystal oscillator.
+
+  It shares its registers and interrupt with the power and reset control
+  blocks. The load capacitors of the crystals are in the oscillators block, and
+  their values follow the trims in the FICR. Clock specifiers take one cell, an
+  ID from <dt-bindings/clock/nordic,nrf54l15-clock.h>.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-clock
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  '#clock-cells':
+    const: 1
+
+  clocks:
+    minItems: 1
+    items:
+      - description: 32 MHz crystal
+      - description: 32768 Hz crystal, if fitted
+
+  clock-names:
+    minItems: 1
+    items:
+      - const: hfxo
+      - const: lfxo
+
+  nordic,oscillators:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Oscillators block, with the load capacitors of the crystals.
+
+  nvmem-cells:
+    items:
+      - description: FICR trim of the load capacitors of the 32 MHz crystal
+      - description: FICR trim of the load capacitors of the 32768 Hz crystal
+
+  nvmem-cell-names:
+    items:
+      - const: hfxo-trim
+      - const: lfxo-trim
+
+  nordic,hfxo-load-capacitance-femtofarads:
+    description:
+      Internal load capacitance of the 32 MHz crystal, from 4000 to 17000 fF
+      in steps of 250 fF. Without it, the internal capacitors are left off.
+    minimum: 4000
+    maximum: 17000
+
+  nordic,lfxo-load-capacitance-femtofarads:
+    description:
+      Internal load capacitance of the 32768 Hz crystal, from 4000 to 18000
+      fF in steps of 500 fF. Without it, the internal capacitors are left off.
+    minimum: 4000
+    maximum: 18000
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - '#clock-cells'
+  - clocks
+  - clock-names
+  - nordic,oscillators
+  - nvmem-cells
+  - nvmem-cell-names
+
+additionalProperties: false
+
+examples:
+  - |
+    clock-controller@5010e000 {
+        compatible = "nordic,nrf54l15-clock";
+        reg = <0x5010e000 0x1000>;
+        interrupts = <261>;
+        #clock-cells = <1>;
+        clocks = <&hfxo>, <&lfxo>;
+        clock-names = "hfxo", "lfxo";
+        nordic,oscillators = <&oscillators>;
+        nvmem-cells = <&hfxo_trim>, <&lfxo_trim>;
+        nvmem-cell-names = "hfxo-trim", "lfxo-trim";
+        nordic,hfxo-load-capacitance-femtofarads = <15000>;
+        nordic,lfxo-load-capacitance-femtofarads = <17000>;
+    };

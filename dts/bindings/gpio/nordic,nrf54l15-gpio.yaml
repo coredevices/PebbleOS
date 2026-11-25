@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/gpio/nordic,nrf54l15-gpio.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L GPIO port
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  A GPIO port of the nRF54L series. The pins of a port with a GPIOTE in its
+  power domain interrupt through it, so interrupt specifiers take two cells,
+  the pin and the trigger type from <dt-bindings/interrupt-controller/irq.h>.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-gpio
+
+  reg:
+    maxItems: 1
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  ngpios:
+    minimum: 1
+    maximum: 32
+
+  gpio-reserved-ranges: true
+
+  nordic,port:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Number of the port, as the peripherals select its pins.
+
+  nordic,gpiote:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: GPIOTE the pins interrupt through, on its IN channels.
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+required:
+  - compatible
+  - reg
+  - gpio-controller
+  - '#gpio-cells'
+  - nordic,port
+
+dependencies:
+  interrupt-controller: ['#interrupt-cells', 'nordic,gpiote']
+
+additionalProperties: false
+
+examples:
+  - |
+    gpio@500d8200 {
+        compatible = "nordic,nrf54l15-gpio";
+        reg = <0x500d8200 0x300>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <16>;
+        nordic,port = <1>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+        nordic,gpiote = <&gpiote20>;
+    };
