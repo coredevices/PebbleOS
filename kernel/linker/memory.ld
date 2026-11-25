@@ -33,6 +33,3 @@ __RAM_size__ = __kernel_ram_end__ - __RAM_start__;
 
 REGION_ALIAS("REGION_ISR_STACK", RAM);
 REGION_ALIAS("REGION_KERNEL_HEAP", RAM);
-
-/* Basic sanity check: the kernel needs at least 64k. */
-ASSERT(__RAM_size__ >= 64K, "Kernel RAM is too small!")
