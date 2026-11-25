@@ -16,6 +16,7 @@ static const char *const s_type_names[] = {
   [PBL_INPUT_EV_KEY] = "key",
   [PBL_INPUT_EV_ABS] = "abs",
   [PBL_INPUT_EV_GES] = "ges",
+  [PBL_INPUT_EV_REL] = "rel",
 };
 
 static bool s_dump;
@@ -25,7 +26,8 @@ static void prv_dump_cb(const struct pbl_input_event *evt, void *user_data) {
     return;
   }
 
-  PBL_LOG_INFO("%s code %" PRIu16 " value %" PRId32 " sync %d", s_type_names[evt->type], evt->code,
+  PBL_LOG_INFO("%s code %" PRIu16 " value %" PRId32 " sync %d",
+               evt->type < PBL_ARRAY_SIZE(s_type_names) ? s_type_names[evt->type] : "?", evt->code,
                evt->value, evt->sync);
 }
 
@@ -81,7 +83,7 @@ static int prv_cmd_report(const struct pbl_shell *sh, size_t argc, char **argv) 
 
 static const struct pbl_shell_cmd sub_input[] = {
   PBL_SHELL_CMD_ARG(dump, nullptr, "Log every event <on|off>", prv_cmd_dump, 2, 0),
-  PBL_SHELL_CMD_ARG(report, nullptr, "Report an event <key|abs|ges> <code> <value> [sync=1]",
+  PBL_SHELL_CMD_ARG(report, nullptr, "Report an event <key|abs|ges|rel> <code> <value> [sync=1]",
                     prv_cmd_report, 4, 1),
   PBL_SHELL_SUBCMD_SET_END,
 };

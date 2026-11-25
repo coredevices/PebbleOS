@@ -32,6 +32,9 @@ static void prv_print(const struct pbl_input_event *evt) {
     case PBL_INPUT_EV_GES:
       printf("input: gesture %d\n", evt->code);
       break;
+    case PBL_INPUT_EV_REL:
+      printf("input: relative axis %d %+d\n", evt->code, (int)evt->value);
+      break;
     default:
       printf("input: type %d code %d value %d\n", evt->type, evt->code, (int)evt->value);
       break;

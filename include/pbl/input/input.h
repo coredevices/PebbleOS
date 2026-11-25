@@ -47,6 +47,8 @@ enum pbl_input_type : uint8_t {
   PBL_INPUT_EV_ABS,
   /** Gesture recognized by the device, @c value unused. */
   PBL_INPUT_EV_GES,
+  /** Relative axis, @c value the signed number of steps moved. */
+  PBL_INPUT_EV_REL,
 };
 
 /** @brief @ref PBL_INPUT_EV_KEY codes, with the Linux input event code values. */
@@ -63,6 +65,13 @@ enum : uint16_t {
 enum : uint16_t {
   PBL_INPUT_ABS_X = 0,
   PBL_INPUT_ABS_Y = 1,
+};
+
+/** @brief @ref PBL_INPUT_EV_REL codes, with the Linux input event code values. */
+enum : uint16_t {
+  PBL_INPUT_REL_X = 0,
+  PBL_INPUT_REL_Y = 1,
+  PBL_INPUT_REL_WHEEL = 8,
 };
 
 /** @brief @ref PBL_INPUT_EV_GES codes, located at the report's @ref PBL_INPUT_ABS_X and Y. */
@@ -135,6 +144,17 @@ static inline void pbl_input_report_key(uint16_t code, bool pressed, bool sync) 
  */
 static inline void pbl_input_report_abs(uint16_t code, int32_t value, bool sync) {
   pbl_input_report(PBL_INPUT_EV_ABS, code, value, sync);
+}
+
+/**
+ * @brief Report a relative axis event.
+ *
+ * @param code @ref PBL_INPUT_EV_REL code.
+ * @param steps Signed number of steps moved.
+ * @param sync Whether the event ends a report.
+ */
+static inline void pbl_input_report_rel(uint16_t code, int32_t steps, bool sync) {
+  pbl_input_report(PBL_INPUT_EV_REL, code, steps, sync);
 }
 
 /**
