@@ -19,13 +19,13 @@ GColor action_menu_theme__background_color(void) {
 GColor action_menu_theme__foreground_color(void) {
   // Keep the action menu's muted, unselected text on color displays. On black and white
   // displays the theme foreground is already the only readable option.
-  return PBL_IF_COLOR_ELSE(GColorDarkGray,
+  return PBL_IF_COLOR_ELSE(action_menu_theme__is_dark_mode() ? GColorLightGray : GColorDarkGray,
                            action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack);
 }
 
 GColor action_menu_theme__highlight_background_color(void) {
-  // The selected item only changes its text color on color displays. Invert the theme on
-  // black and white displays so the selection stays visible.
+  // The focused item is distinguished by its bold text and foreground color. Invert the
+  // theme on black and white displays so the selection stays visible.
   return PBL_IF_COLOR_ELSE(action_menu_theme__background_color(),
                            action_menu_theme__is_dark_mode() ? GColorWhite : GColorBlack);
 }

@@ -592,8 +592,8 @@ void test_action_menu_layer__glyph_grid_touch_dispatch_reaches_bottom_row(void) 
 
 static void prv_assert_theme_colors(bool dark_mode) {
   const GColor background = dark_mode ? GColorBlack : GColorWhite;
-  const GColor foreground =
-      PBL_IF_COLOR_ELSE(GColorDarkGray, dark_mode ? GColorWhite : GColorBlack);
+  const GColor foreground = PBL_IF_COLOR_ELSE(dark_mode ? GColorLightGray : GColorDarkGray,
+                                              dark_mode ? GColorWhite : GColorBlack);
   const GColor highlight_background =
       PBL_IF_COLOR_ELSE(background, dark_mode ? GColorWhite : GColorBlack);
   // The menu layer keeps its row fill out of the way; the cell renderer draws the highlight.

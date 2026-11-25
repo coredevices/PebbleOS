@@ -18,6 +18,8 @@ typedef enum TextStyleFont {
   //! a notification belongs to, or who sent a message. It is smaller than the body copy when
   //! readable, but always bold.
   TextStyleFont_Header,
+  //! Non-bold counterpart of the header, for differentiating selected rows.
+  TextStyleFont_HeaderRegular,
 #if !defined(CONFIG_RECOVERY_FW)
   //! Title is for prominent text that is usually the title or name of the content, giving context
   //! for the user such as the subject line of an email. It is comparable to the body, but
@@ -38,6 +40,8 @@ typedef enum TextStyleFont {
   TextStyleFont_Footer,
   //! For titles of menu cells that identify an item of a list.
   TextStyleFont_MenuCellTitle,
+  //! Non-bold counterpart of a menu cell title, for differentiating selected rows.
+  TextStyleFont_MenuCellTitleRegular,
   //! For subtitles of menu cells that provide auxiliary information about an item of a list.
   TextStyleFont_MenuCellSubtitle,
 #if !defined(CONFIG_RECOVERY_FW)
