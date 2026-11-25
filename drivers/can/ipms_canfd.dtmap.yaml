@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: sifli,sf32lb57-can
+config: CAN_IPMS_CANFD
+class: can
+define: PBL_CAN_IPMS_CANFD_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - irq: 0
+  - compatible: true
+    values:
+      sifli,sf32lb57-can: IPMS_CANFD_SIFLI
+  - clock: 0
+  - reset: 0
+  - pinctrl: default

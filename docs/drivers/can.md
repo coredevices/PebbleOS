@@ -26,6 +26,15 @@ of room and the times it went bus off; `pbl_can_get_stats()` returns them.
 | Kconfig | `CONFIG_CAN`, enabled by the application |
 | API | {apidoc}`API reference <drivers_can>` |
 
+## Drivers
+
+| Driver | Compatible | Kconfig |
+| --- | --- | --- |
+| Fraunhofer IPMS CAN-CTRL | `sifli,sf32lb57-can` | `CONFIG_CAN_IPMS_CANFD` |
+
+The IPMS CAN-CTRL controllers of the SF32LB57 support neither loopback nor CAN
+FD.
+
 ## Shell
 
 With `CONFIG_CAN_SHELL`, the `can` command configures and starts a
