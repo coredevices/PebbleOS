@@ -103,3 +103,38 @@ void test_byteorder__put_unaligned(void) {
   cl_assert_equal_i(buf[0], 0xaa);
   cl_assert_equal_i(buf[9], 0xaa);
 }
+
+static const struct PBL_PACKED {
+  uint16_t le16;
+  uint32_t le32;
+  uint64_t le64;
+  uint16_t be16;
+  uint32_t be32;
+  uint64_t be64;
+} s_fields = {
+  .le16 = PBL_CPU_TO_LE16(0x0201),
+  .le32 = PBL_CPU_TO_LE32(0x04030201),
+  .le64 = PBL_CPU_TO_LE64(0x0807060504030201ULL),
+  .be16 = PBL_CPU_TO_BE16(0x0102),
+  .be32 = PBL_CPU_TO_BE32(0x01020304),
+  .be64 = PBL_CPU_TO_BE64(0x0102030405060708ULL),
+};
+
+void test_byteorder__static_initializer(void) {
+  const uint8_t expected[] = {
+    0x01, 0x02, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x01, 0x02, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+  };
+
+  cl_assert_equal_i(sizeof(s_fields), sizeof(expected));
+  cl_assert_equal_m(&s_fields, expected, sizeof(expected));
+}
+
+void test_byteorder__macros(void) {
+  cl_assert_equal_i(PBL_CPU_TO_LE16(0x1234), pbl_cpu_to_le16(0x1234));
+  cl_assert_equal_i(PBL_CPU_TO_LE32(0x12345678), pbl_cpu_to_le32(0x12345678));
+  cl_assert(PBL_CPU_TO_LE64(0x0123456789abcdefULL) == pbl_cpu_to_le64(0x0123456789abcdefULL));
+  cl_assert_equal_i(PBL_CPU_TO_BE16(0x1234), pbl_cpu_to_be16(0x1234));
+  cl_assert_equal_i(PBL_CPU_TO_BE32(0x12345678), pbl_cpu_to_be32(0x12345678));
+  cl_assert(PBL_CPU_TO_BE64(0x0123456789abcdefULL) == pbl_cpu_to_be64(0x0123456789abcdefULL));
+}

@@ -8,12 +8,13 @@
 
 #include <pbl/kernel/compiler.h>
 
-static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "only little-endian CPUs are supported");
-
 /**
  * @defgroup util_byteorder Byte order
  * @ingroup util
- * @brief Conversions between the CPU byte order (always little-endian) and fixed byte orders.
+ * @brief Conversions between the CPU byte order, little- or big-endian, and fixed byte orders.
+ *
+ * The functions convert at run time; the PBL_CPU_TO_LE16() family of macros does the same as
+ * constant expressions, for static initializers.
  *
  * @code{.c}
  * struct PBL_PACKED hdr {
@@ -35,6 +36,86 @@ typedef struct {
   uint16_t v;
 } pbl_be16_t;
 
+/** @cond INTERNAL_HIDDEN */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define PBL_BYTEORDER_LE16(v) ((uint16_t)(v))
+#define PBL_BYTEORDER_LE32(v) ((uint32_t)(v))
+#define PBL_BYTEORDER_LE64(v) ((uint64_t)(v))
+#define PBL_BYTEORDER_BE16(v) ((uint16_t)PBL_BSWAP16((uint16_t)(v)))
+#define PBL_BYTEORDER_BE32(v) ((uint32_t)PBL_BSWAP32((uint32_t)(v)))
+#define PBL_BYTEORDER_BE64(v) ((uint64_t)PBL_BSWAP64((uint64_t)(v)))
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define PBL_BYTEORDER_LE16(v) ((uint16_t)PBL_BSWAP16((uint16_t)(v)))
+#define PBL_BYTEORDER_LE32(v) ((uint32_t)PBL_BSWAP32((uint32_t)(v)))
+#define PBL_BYTEORDER_LE64(v) ((uint64_t)PBL_BSWAP64((uint64_t)(v)))
+#define PBL_BYTEORDER_BE16(v) ((uint16_t)(v))
+#define PBL_BYTEORDER_BE32(v) ((uint32_t)(v))
+#define PBL_BYTEORDER_BE64(v) ((uint64_t)(v))
+#else
+#error "unsupported CPU byte order"
+#endif
+/** @endcond */
+
+/**
+ * @brief Convert a 16-bit value from CPU order to little-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on big-endian CPUs. Being a constant expression, it can be used in
+ * static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_LE16(v) PBL_BYTEORDER_LE16(v)
+
+/**
+ * @brief Convert a 32-bit value from CPU order to little-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on big-endian CPUs. Being a constant expression, it can be used in
+ * static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_LE32(v) PBL_BYTEORDER_LE32(v)
+
+/**
+ * @brief Convert a 64-bit value from CPU order to little-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on big-endian CPUs. Being a constant expression, it can be used in
+ * static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_LE64(v) PBL_BYTEORDER_LE64(v)
+
+/**
+ * @brief Convert a 16-bit value from CPU order to big-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on little-endian CPUs. Being a constant expression, it can be used
+ * in static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_BE16(v) PBL_BYTEORDER_BE16(v)
+
+/**
+ * @brief Convert a 32-bit value from CPU order to big-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on little-endian CPUs. Being a constant expression, it can be used
+ * in static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_BE32(v) PBL_BYTEORDER_BE32(v)
+
+/**
+ * @brief Convert a 64-bit value from CPU order to big-endian, as a constant expression.
+ *
+ * The value is byte-swapped only on little-endian CPUs. Being a constant expression, it can be used
+ * in static initializers.
+ *
+ * @param v Value in CPU order.
+ */
+#define PBL_CPU_TO_BE64(v) PBL_BYTEORDER_BE64(v)
+
 /**
  * @brief Convert a big-endian 16-bit value to CPU order.
  *
@@ -42,7 +123,7 @@ typedef struct {
  * @return Value in CPU order.
  */
 static inline uint16_t pbl_be16_to_cpu(uint16_t v) {
-  return PBL_BSWAP16(v);
+  return PBL_BYTEORDER_BE16(v);
 }
 
 /**
@@ -52,7 +133,7 @@ static inline uint16_t pbl_be16_to_cpu(uint16_t v) {
  * @return Big-endian value.
  */
 static inline uint16_t pbl_cpu_to_be16(uint16_t v) {
-  return PBL_BSWAP16(v);
+  return PBL_BYTEORDER_BE16(v);
 }
 
 /**
@@ -62,7 +143,7 @@ static inline uint16_t pbl_cpu_to_be16(uint16_t v) {
  * @return Value in CPU order.
  */
 static inline uint32_t pbl_be32_to_cpu(uint32_t v) {
-  return PBL_BSWAP32(v);
+  return PBL_BYTEORDER_BE32(v);
 }
 
 /**
@@ -72,7 +153,7 @@ static inline uint32_t pbl_be32_to_cpu(uint32_t v) {
  * @return Big-endian value.
  */
 static inline uint32_t pbl_cpu_to_be32(uint32_t v) {
-  return PBL_BSWAP32(v);
+  return PBL_BYTEORDER_BE32(v);
 }
 
 /**
@@ -82,7 +163,7 @@ static inline uint32_t pbl_cpu_to_be32(uint32_t v) {
  * @return Value in CPU order.
  */
 static inline uint64_t pbl_be64_to_cpu(uint64_t v) {
-  return PBL_BSWAP64(v);
+  return PBL_BYTEORDER_BE64(v);
 }
 
 /**
@@ -92,7 +173,7 @@ static inline uint64_t pbl_be64_to_cpu(uint64_t v) {
  * @return Big-endian value.
  */
 static inline uint64_t pbl_cpu_to_be64(uint64_t v) {
-  return PBL_BSWAP64(v);
+  return PBL_BYTEORDER_BE64(v);
 }
 
 /**
@@ -102,7 +183,7 @@ static inline uint64_t pbl_cpu_to_be64(uint64_t v) {
  * @return Value in CPU order.
  */
 static inline uint16_t pbl_le16_to_cpu(uint16_t v) {
-  return v;
+  return PBL_BYTEORDER_LE16(v);
 }
 
 /**
@@ -112,7 +193,7 @@ static inline uint16_t pbl_le16_to_cpu(uint16_t v) {
  * @return Little-endian value.
  */
 static inline uint16_t pbl_cpu_to_le16(uint16_t v) {
-  return v;
+  return PBL_BYTEORDER_LE16(v);
 }
 
 /**
@@ -122,7 +203,7 @@ static inline uint16_t pbl_cpu_to_le16(uint16_t v) {
  * @return Value in CPU order.
  */
 static inline uint32_t pbl_le32_to_cpu(uint32_t v) {
-  return v;
+  return PBL_BYTEORDER_LE32(v);
 }
 
 /**
@@ -132,7 +213,7 @@ static inline uint32_t pbl_le32_to_cpu(uint32_t v) {
  * @return Little-endian value.
  */
 static inline uint32_t pbl_cpu_to_le32(uint32_t v) {
-  return v;
+  return PBL_BYTEORDER_LE32(v);
 }
 
 /**
@@ -142,7 +223,7 @@ static inline uint32_t pbl_cpu_to_le32(uint32_t v) {
  * @return Value in CPU order.
  */
 static inline uint64_t pbl_le64_to_cpu(uint64_t v) {
-  return v;
+  return PBL_BYTEORDER_LE64(v);
 }
 
 /**
@@ -152,7 +233,7 @@ static inline uint64_t pbl_le64_to_cpu(uint64_t v) {
  * @return Little-endian value.
  */
 static inline uint64_t pbl_cpu_to_le64(uint64_t v) {
-  return v;
+  return PBL_BYTEORDER_LE64(v);
 }
 
 /**
