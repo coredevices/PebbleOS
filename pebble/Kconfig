@@ -101,25 +101,58 @@ config USERSPACE
 # The SDK platform, and what follows from it.
 rsource "Kconfig.platform"
 
-# RAM of the apps of the legacy SDK execution environments. 2.x apps are
-# rectangular; 3.x apps are those of the frozen platform of the same shape
-# and colour depth. A platform states the RAM of its own, 4.x, apps.
+# App RAM, per SDK app execution environment (2x/3x/4x). For each
+# environment, SEGMENT is the RAM given to the app itself (stack + text + data
+# + bss + heap) and RUNTIME is the RAM reserved for the application runtime
+# (AppState). A SEGMENT of 0 means the environment is unsupported. SEGMENT
+# must be a multiple of eight bytes, as the process loader enforces
+# eight-byte alignment on all segments. The app segment is sized for the
+# largest environment.
+#
+# 2.x apps are rectangular; 3.x apps are those of the frozen platform of the
+# same shape and colour depth. A platform states the RAM of its own, 4.x,
+# apps.
 
 config APP_RAM_2X_SEGMENT_SIZE
+    int
     default 0 if PLATFORM_ROUND
     default 25952
 
 config APP_RAM_2X_RUNTIME_SIZE
+    int
     default 0 if PLATFORM_ROUND
     default 6820
 
 config APP_RAM_3X_SEGMENT_SIZE
+    int
     default 67584 if PLATFORM_ROUND || PLATFORM_COLOR
     default 25952
 
 config APP_RAM_3X_RUNTIME_SIZE
+    int
     default 30720 if PLATFORM_ROUND || PLATFORM_COLOR
     default 6820
+
+config APP_RAM_4X_SEGMENT_SIZE
+    int
+    default 0
+
+config APP_RAM_4X_RUNTIME_SIZE
+    int
+    default 0
+
+# Worker RAM. SEGMENT is the RAM given to the worker itself (stack + text +
+# data + bss + heap) and RUNTIME is the RAM reserved for the worker runtime
+# (WorkerState). SEGMENT must be a multiple of eight bytes.
+
+config WORKER_RAM_SEGMENT_SIZE
+    int
+    default 11648
+
+config WORKER_RAM_RUNTIME_SIZE
+    int
+    default 1024 if SOC_POSIX
+    default 640
 
 source "Kconfig.pebbleos"
 
