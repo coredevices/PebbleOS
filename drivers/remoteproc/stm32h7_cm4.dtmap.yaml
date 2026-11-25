@@ -19,4 +19,10 @@ args:
     index: 1
   - prop: st,syscfg-boot-address
     index: 2
+  - reg: 0
+    of: st,syscfg-flash
+  - prop: st,syscfg-flash
+    index: 1
+  - prop: st,syscfg-flash
+    index: 2
   - flag: st,auto-boot
