@@ -4,6 +4,7 @@
 """One port shared by log lines, the shell and binary frames."""
 
 import base64
+import os
 import re
 import socket
 import struct
@@ -39,6 +40,49 @@ class ConsoleTimeout(ConsoleError):
     pass
 
 
+def _canonical(path):
+    path = os.path.realpath(path)
+    # macOS has a tty.* and a cu.* node for each port, and lists the cu.* one
+    return re.sub(r"^/dev/tty\.", "/dev/cu.", path)
+
+
+def usb_ids(url):
+    """The USB vendor and product IDs of the serial port ``url``, a device
+    path or a link to one, or None for anything else."""
+    from serial.tools import list_ports
+
+    if "://" in url:
+        return None
+    path = _canonical(url)
+    for port in list_ports.comports():
+        if port.vid is not None and _canonical(port.device) == path:
+            return (port.vid, port.pid)
+    return None
+
+
+def open_port(url, baudrate, timeout, keep_input=False):
+    """Open a serial port or ``socket://`` URL, with RTS released, as RTS
+    resets the SoC on some boards. pyserial throws away what the port
+    received as it opened; ``keep_input`` keeps it, for a port the firmware
+    serves itself, which sends what it held as soon as the host opens it."""
+    import serial
+
+    port = serial.serial_for_url(
+        url, baudrate=baudrate, timeout=timeout, do_not_open=True
+    )
+    port.rts = False
+    if not keep_input or not hasattr(port, "_reset_input_buffer"):
+        port.open()
+        return port
+
+    port._reset_input_buffer = lambda: None
+    try:
+        port.open()
+    finally:
+        del port._reset_input_buffer
+    return port
+
+
 def frame_crc(channel, body):
     return zlib.crc32(body, zlib.crc32(channel))
 
@@ -54,10 +98,11 @@ class ConsoleLink:
     shell output, with ``match`` the groups (level, task, time, source,
     message) of those that are formatted log lines, else None."""
 
-    def __init__(self, url, baudrate=DEFAULT_BAUDRATE, on_log=None):
+    def __init__(self, url, baudrate=DEFAULT_BAUDRATE, on_log=None, keep_input=False):
         self.url = url
         self.baudrate = baudrate
         self.on_log = on_log
+        self.keep_input = keep_input
         self._channels = {}
         self._serial = None
         self._reader = None
@@ -79,14 +124,7 @@ class ConsoleLink:
         self._last_seq = {}
 
     def open(self):
-        import serial
-
-        port = serial.serial_for_url(
-            self.url, baudrate=self.baudrate, timeout=0.1, do_not_open=True
-        )
-        # RTS resets the SoC on some boards.
-        port.rts = False
-        port.open()
+        port = open_port(self.url, self.baudrate, 0.1, self.keep_input)
         tcp = getattr(port, "_socket", None)
         if tcp is not None:
             # Each frame waits for the last one's acknowledgement.
