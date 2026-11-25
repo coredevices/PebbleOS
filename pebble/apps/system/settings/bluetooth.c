@@ -19,7 +19,6 @@
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>
-#include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/string.h>
 
 #include <applib/app.h>
@@ -73,7 +72,6 @@ typedef struct SettingsBluetoothData {
 
   char header_buffer[HEADER_BUFFER_SIZE];
   ToggleState toggle_state;
-  bool did_enable_pairability;
 
   EventServiceInfo bt_airplane_event_info;
   EventServiceInfo bt_connection_event_info;
@@ -192,26 +190,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
       [[fallthrough]];
     case PBL_BT_PEBBLE_PAIRING_EVENT:
     case PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT: {
-      bool had_remotes = (settings_data->remote_list_head != nullptr);
       settings_bluetooth_update_remotes_private(settings_data);
-      bool has_remotes = (settings_data->remote_list_head != nullptr);
-
-      // Handle single phone pairing policy: enable/disable advertising based on pairing state
-      if (had_remotes && !has_remotes) {
-        // Device was removed, enable advertising
-        if (!settings_data->did_enable_pairability) {
-          bt_pairability_use();
-          settings_data->did_enable_pairability = true;
-          PBL_LOG_INFO("Enabled advertising - no paired devices");
-        }
-      } else if (!had_remotes && has_remotes) {
-        // Device was added, disable advertising
-        if (settings_data->did_enable_pairability) {
-          bt_pairability_release();
-          settings_data->did_enable_pairability = false;
-          PBL_LOG_INFO("Disabled advertising - device paired");
-        }
-      }
 
       settings_menu_reload_data(SettingsMenuItemBluetooth);
       break;
@@ -473,13 +452,6 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   event_service_client_subscribe(&data->bt_pairing_event_info);
   event_service_client_subscribe(&data->ble_device_name_updated_event_info);
 
-  // Only enable pairing/advertising if there are no paired devices (single phone policy)
-  data->did_enable_pairability = false;
-  if (!data->remote_list_head) {
-    bt_pairability_use();
-    data->did_enable_pairability = true;
-  }
-
   // Reload & redraw after pairing popup
   app_focus_service_subscribe_handlers((AppFocusHandlers){.did_focus = prv_focus_handler});
 }
@@ -489,11 +461,6 @@ static void prv_expand_cb(SettingsCallbacks *context) {
 // they consume a fair amount of power
 static void prv_hide_cb(SettingsCallbacks *context) {
   SettingsBluetoothData *data = (SettingsBluetoothData *)context;
-
-  // Only release pairability if we enabled it
-  if (data->did_enable_pairability) {
-    bt_pairability_release();
-  }
 
   event_service_client_unsubscribe(&data->bt_airplane_event_info);
   event_service_client_unsubscribe(&data->bt_connection_event_info);
