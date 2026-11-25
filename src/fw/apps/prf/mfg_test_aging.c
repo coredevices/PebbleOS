@@ -654,7 +654,7 @@ static void prv_config_provider(void *context) {
 static void prv_handle_init(void) {
   AppData *data = app_malloc_check(sizeof(AppData));
   *data = (AppData){
-    .state = AgingStateWaitPlug,
+    .state = AgingStateWaitUnplug,
 #ifdef CONFIG_SPEAKER
     .audio_playing = false,
 #endif
@@ -700,7 +700,7 @@ static void prv_handle_init(void) {
                                                            GTextAlignmentLeft));
   layer_add_child(window_layer, &status->layer);
 
-  tick_timer_service_subscribe(SECOND_UNIT, prv_handle_tick);
+  tick_timer_service_subscribe(MINUTE_UNIT, prv_handle_tick);
 
   app_window_stack_push(window, true);
 }
