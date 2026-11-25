@@ -17,3 +17,9 @@ of an early console.
 A holder keeps a lock for a few register accesses. A processor waiting for
 longer than `CONFIG_HWSPINLOCK_TIMEOUT_US` gives up with `-ETIMEDOUT`: the
 holder stopped with it.
+
+## Drivers
+
+| Driver | Compatible | Kconfig |
+| --- | --- | --- |
+| STM32H7 hardware semaphores | `st,stm32-hwspinlock` | `CONFIG_HWSPINLOCK_STM32_HSEM` |

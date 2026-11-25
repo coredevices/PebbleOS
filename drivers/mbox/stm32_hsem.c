@@ -143,4 +143,4 @@ static int prv_init(const struct pbl_device *dev) {
   };                                                                                      \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_MBOX_STM32_HSEM_IRQ_PRIO, prv_isr, &sym##_inst, 0)
 
-#include PBL_DT_INSTANCES(st_stm32_hwspinlock)
+#include PBL_DT_INSTANCES(st_stm32_hwspinlock_mbox)
