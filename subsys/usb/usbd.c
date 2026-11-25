@@ -119,16 +119,20 @@ uint8_t pbl_usbd_ep(const struct pbl_usbd_function *fn, uint8_t ep) {
 static char s_serial[2U * SERIAL_LEN + 1U];
 #endif
 
+static uint16_t prv_bulk_mps(enum pbl_udc_speed speed) {
+  return speed == PBL_UDC_SPEED_HIGH ? BULK_MPS_HS : BULK_MPS_FS;
+}
+
 uint16_t pbl_usbd_bulk_mps(void) {
-  return pbl_udc_speed(UDC) == PBL_UDC_SPEED_HIGH ? BULK_MPS_HS : BULK_MPS_FS;
+  return prv_bulk_mps(pbl_udc_speed(UDC));
 }
 
 // The descriptors give interrupt intervals in frames, which high speed counts in 2^(n-1)
 // microframes
-static uint8_t prv_interval(uint8_t frames) {
+static uint8_t prv_interval(uint8_t frames, enum pbl_udc_speed speed) {
   uint8_t n = 1U;
 
-  if (pbl_udc_speed(UDC) != PBL_UDC_SPEED_HIGH) {
+  if (speed != PBL_UDC_SPEED_HIGH) {
     return frames;
   }
 
@@ -218,10 +222,10 @@ static int prv_assign(void) {
   return 0;
 }
 
-// An endpoint descriptor of a function as the controller and the bus speed have it
+// An endpoint descriptor of a function as the controller has it at a bus speed
 static bool prv_endpoint(const struct pbl_usbd_function *fn, const struct pbl_usb_desc_header *hdr,
-                         uint8_t *ep, enum pbl_udc_ep_type *type, uint16_t *mps,
-                         uint8_t *interval) {
+                         enum pbl_udc_speed speed, uint8_t *ep, enum pbl_udc_ep_type *type,
+                         uint16_t *mps, uint8_t *interval) {
   const struct pbl_usb_desc_ep *d = (const struct pbl_usb_desc_ep *)hdr;
 
   if (hdr->bDescriptorType != PBL_USB_DESC_ENDPOINT) {
@@ -230,8 +234,8 @@ static bool prv_endpoint(const struct pbl_usbd_function *fn, const struct pbl_us
 
   *ep = pbl_usbd_ep(fn, d->bEndpointAddress);
   *type = (enum pbl_udc_ep_type)(d->bmAttributes & 0x3U);
-  *mps = (*type == PBL_UDC_EP_BULK) ? pbl_usbd_bulk_mps() : pbl_le16_to_cpu(d->wMaxPacketSize);
-  *interval = (*type == PBL_UDC_EP_INTERRUPT) ? prv_interval(d->bInterval) : d->bInterval;
+  *mps = (*type == PBL_UDC_EP_BULK) ? prv_bulk_mps(speed) : pbl_le16_to_cpu(d->wMaxPacketSize);
+  *interval = (*type == PBL_UDC_EP_INTERRUPT) ? prv_interval(d->bInterval, speed) : d->bInterval;
 
   return true;
 }
@@ -241,7 +245,9 @@ static uint8_t prv_string_index(const struct pbl_usbd_function *fn, uint8_t firs
   return (index != 0U && index <= fn->num_strings) ? (uint8_t)(first + index - 1U) : 0U;
 }
 
-static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
+// The configuration as it is at a bus speed, as a descriptor of the given type
+static uint16_t prv_config_desc(uint8_t *out, uint16_t room, enum pbl_udc_speed speed,
+                                uint8_t type) {
   struct pbl_usb_desc_config *cfg = (struct pbl_usb_desc_config *)out;
   uint16_t len = sizeof(*cfg);
   uint8_t ifaces = 0U;
@@ -259,7 +265,7 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
       const struct pbl_usb_desc_header *d = prv_desc(fn, i);
       void *copy = &out[len + i];
       uint8_t ep;
-      enum pbl_udc_ep_type type;
+      enum pbl_udc_ep_type ep_type;
       uint16_t mps;
       uint8_t interval;
 
@@ -273,7 +279,7 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
 
         iad->bFirstInterface += first_iface;
         iad->iFunction = prv_string_index(fn, first_string, iad->iFunction);
-      } else if (prv_endpoint(fn, d, &ep, &type, &mps, &interval)) {
+      } else if (prv_endpoint(fn, d, speed, &ep, &ep_type, &mps, &interval)) {
         struct pbl_usb_desc_ep *epd = copy;
 
         epd->bEndpointAddress = ep;
@@ -290,7 +296,7 @@ static uint16_t prv_config_desc(uint8_t *out, uint16_t room) {
 
   *cfg = (struct pbl_usb_desc_config){
     .bLength = sizeof(*cfg),
-    .bDescriptorType = PBL_USB_DESC_CONFIGURATION,
+    .bDescriptorType = type,
     .wTotalLength = pbl_cpu_to_le16(len),
     .bNumInterfaces = ifaces,
     .bConfigurationValue = USB_CFG_VALUE,
@@ -384,6 +390,7 @@ static uint16_t prv_string_desc(uint8_t *out, uint16_t room, uint8_t index) {
 static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
   uint8_t type = (uint8_t)(s_ctrl.setup.wValue >> 8);
   uint8_t index = (uint8_t)s_ctrl.setup.wValue;
+  enum pbl_udc_speed speed;
 
   *data = s_ctrl.buf;
   switch (type) {
@@ -402,7 +409,14 @@ static int prv_get_descriptor(uint8_t **data, uint16_t *len) {
       if (index != 0U) {
         return -ENOTSUP;
       }
-      *len = prv_config_desc(s_ctrl.buf, sizeof(s_ctrl.buf));
+      *len = prv_config_desc(s_ctrl.buf, sizeof(s_ctrl.buf), pbl_udc_speed(UDC), type);
+      break;
+    case PBL_USB_DESC_OTHER_SPEED:
+      if (UDC->max_speed != PBL_UDC_SPEED_HIGH || index != 0U) {
+        return -ENOTSUP;
+      }
+      speed = pbl_udc_speed(UDC) == PBL_UDC_SPEED_HIGH ? PBL_UDC_SPEED_FULL : PBL_UDC_SPEED_HIGH;
+      *len = prv_config_desc(s_ctrl.buf, sizeof(s_ctrl.buf), speed, type);
       break;
     case PBL_USB_DESC_STRING:
       *len = prv_string_desc(s_ctrl.buf, sizeof(s_ctrl.buf), index);
@@ -457,7 +471,7 @@ static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, boo
         alt != prv_alt(pbl_usbd__first_iface(fn) + (uint8_t)cur)) {
       continue;
     }
-    if (!prv_endpoint(fn, d, &ep, &type, &mps, &interval)) {
+    if (!prv_endpoint(fn, d, pbl_udc_speed(UDC), &ep, &type, &mps, &interval)) {
       continue;
     }
 

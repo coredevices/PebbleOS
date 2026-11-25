@@ -67,6 +67,12 @@ void test_usbd_numbering__config_desc(void) {
   prv_assert_one_dir();
 }
 
+// A full-speed controller has no other speed to describe
+void test_usbd_numbering__full_speed_only(void) {
+  cl_assert_equal_i(prv_get_descriptor(PBL_USB_DESC_DEVICE_QUALIFIER, 0U), -1);
+  cl_assert_equal_i(prv_get_descriptor(PBL_USB_DESC_OTHER_SPEED, 0U), -1);
+}
+
 void test_usbd_numbering__requests(void) {
   uint8_t type = PBL_USB_TYPE_CLASS | PBL_USB_RECIP_INTERFACE;
 

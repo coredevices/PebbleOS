@@ -14,20 +14,26 @@
 
 #include <clar.h>
 
-// A controller of FAKE_NUM_EPS endpoints, with FAKE_CAPS
+// A controller of FAKE_NUM_EPS endpoints, with FAKE_CAPS, as fast as FAKE_MAX_SPEED
 #ifndef FAKE_NUM_EPS
 #define FAKE_NUM_EPS 8U
 #endif
 #ifndef FAKE_CAPS
 #define FAKE_CAPS 0U
 #endif
+#ifndef FAKE_MAX_SPEED
+#define FAKE_MAX_SPEED PBL_UDC_SPEED_FULL
+#endif
 
 static const struct pbl_udc s_udc = {
   .num_eps = FAKE_NUM_EPS,
-  .max_speed = PBL_UDC_SPEED_FULL,
+  .max_speed = FAKE_MAX_SPEED,
   .caps = FAKE_CAPS,
 };
 const struct pbl_udc *const UDC = &s_udc;
+
+// The speed the bus runs at
+static enum pbl_udc_speed s_speed = PBL_UDC_SPEED_FULL;
 
 static const struct pbl_udc_callbacks *s_cb;
 static uint8_t s_in[1024];
@@ -57,7 +63,7 @@ int pbl_udc_enable(const struct pbl_udc *udc) {
 }
 
 enum pbl_udc_speed pbl_udc_speed(const struct pbl_udc *udc) {
-  return PBL_UDC_SPEED_FULL;
+  return s_speed;
 }
 
 int pbl_udc_set_address(const struct pbl_udc *udc, uint8_t addr) {
