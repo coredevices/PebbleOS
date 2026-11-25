@@ -8,3 +8,5 @@ define: PBL_OPT3001_DEFINE
 args:
   - parent: i2c
   - reg: 0
+  - supply: vdd
+    default: nullptr
