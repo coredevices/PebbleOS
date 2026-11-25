@@ -18,4 +18,5 @@ adc.md
 pwm.md
 dma.md
 mbox.md
+hwspinlock.md
 ```

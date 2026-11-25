@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: hwspinlock
+type: struct pbl_hwspinlock_controller
+include: pbl/drivers/hwspinlock.h
+provides:
+  hwlock: "PBL_HWSPINLOCK(&{sym}, {0})"
