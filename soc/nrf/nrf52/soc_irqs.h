@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! nRF52840 IRQ lines.
+//! nRF52 IRQ lines.
 
 #pragma once
 
@@ -42,9 +42,12 @@
 #define PBL_SOC_IRQN_RTC2                              36
 #define PBL_SOC_IRQN_I2S                               37
 #define PBL_SOC_IRQN_FPU                               38
-#define PBL_SOC_IRQN_USBD                              39
-#define PBL_SOC_IRQN_UARTE1                            40
-#define PBL_SOC_IRQN_QSPI                              41
-#define PBL_SOC_IRQN_CRYPTOCELL                        42
-#define PBL_SOC_IRQN_PWM3                              45
-#define PBL_SOC_IRQN_SPIM3                             47
+
+#ifdef CONFIG_SOC_NRF52840
+#define PBL_SOC_IRQN_USBD       39
+#define PBL_SOC_IRQN_UARTE1     40
+#define PBL_SOC_IRQN_QSPI       41
+#define PBL_SOC_IRQN_CRYPTOCELL 42
+#define PBL_SOC_IRQN_PWM3       45
+#define PBL_SOC_IRQN_SPIM3      47
+#endif

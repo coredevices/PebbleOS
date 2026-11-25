@@ -9,6 +9,12 @@ menuconfig HAL_NORDIC
 
 if HAL_NORDIC
 
+config HAL_NORDIC_NRF52832
+    bool
+    default y if SOC_NRF52832
+    help
+      Configure the nrfx HAL headers for the Nordic nRF52832 SoC.
+
 config HAL_NORDIC_NRF52840
     bool
     default y if SOC_NRF52840

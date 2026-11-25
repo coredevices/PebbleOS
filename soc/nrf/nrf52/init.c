@@ -15,8 +15,6 @@
 #include <hardware/nrf52_nvmc.h>
 #include <hardware/nrf52_uicr.h>
 
-#define RESET_PIN 18U
-
 static void prv_uicr_write(uint32_t val, uintptr_t offset) {
   pbl_writel(NVMC_CONFIG_WEN_WEN, PBL_DT_REG_NVMC + NRF52_NVMC_CONFIG_OFFSET);
   pbl_writel(val, PBL_DT_REG_UICR + offset);
@@ -25,9 +23,23 @@ static void prv_uicr_write(uint32_t val, uintptr_t offset) {
   pbl_writel(NVMC_CONFIG_WEN_REN, PBL_DT_REG_NVMC + NRF52_NVMC_CONFIG_OFFSET);
 }
 
+//! First silicon revision of each part with the hardened APPROTECT.
+static uint32_t prv_hardened_approtect_revision(uint32_t part) {
+  switch (part) {
+    case FICR_PART_NRF52832:
+      return 0x07U;
+    case FICR_PART_NRF52840:
+      return 0x05U;
+    default:
+      return UINT32_MAX;
+  }
+}
+
 static void prv_approtect_init(void) {
-  if (pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_PART_OFFSET) != FICR_PART_NRF52840 ||
-      pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_REVISION_OFFSET) < FICR_REVISION_HARDENED_APPROTECT) {
+  uint32_t part = pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_PART_OFFSET);
+
+  if (pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_REVISION_OFFSET) <
+      prv_hardened_approtect_revision(part)) {
     return;
   }
 
@@ -54,8 +66,8 @@ static void prv_uicr_init(void) {
   }
 
   if (!prv_reset_pin_connected()) {
-    prv_uicr_write(RESET_PIN, NRF52_UICR_PSELRESET_OFFSET(0));
-    prv_uicr_write(RESET_PIN, NRF52_UICR_PSELRESET_OFFSET(1));
+    prv_uicr_write(CONFIG_SOC_NRF52_RESET_PIN, NRF52_UICR_PSELRESET_OFFSET(0));
+    prv_uicr_write(CONFIG_SOC_NRF52_RESET_PIN, NRF52_UICR_PSELRESET_OFFSET(1));
     pbl_reboot_emergency();
   }
 }
