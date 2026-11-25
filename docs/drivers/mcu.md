@@ -15,5 +15,6 @@ MCU information reports facts about the SoC, such as its unique ID.
 | --- | --- | --- |
 | Nordic nRF5 | — | `CONFIG_MCU_NRF5` |
 | SiFli SF32LB | — | `CONFIG_MCU_SF32LB` |
+| ST STM32 | — | `CONFIG_MCU_STM32` |
 | QEMU | — | `CONFIG_MCU_QEMU` |
 | POSIX | — | `CONFIG_MCU_POSIX` |

@@ -45,7 +45,7 @@
 		interrupt-parent = <&nvic>;
 		ranges;
 
-		// The factory calibration of the analog blocks, in system memory
+		// The unique ID and the factory calibration of the analog blocks, in system memory
 		romem: efuse@1ff1e800 {
 			compatible = "st,stm32f4-otp";
 			reg = <0x1ff1e800 0x100>;

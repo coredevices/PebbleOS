@@ -23,6 +23,14 @@ config MCU_SF32LB
     help
       Support for SiFli SF32LB MCU information.
 
+config MCU_STM32
+    bool "ST STM32"
+    default y
+    depends on SOC_STM32H7
+    select NVMEM
+    help
+      Support for ST STM32 MCU information.
+
 config MCU_QEMU
     bool "QEMU"
     default y

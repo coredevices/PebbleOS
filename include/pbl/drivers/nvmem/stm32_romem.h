@@ -11,7 +11,8 @@
  * @defgroup drivers_nvmem_stm32_romem STM32 factory-programmed data
  * @ingroup drivers_nvmem
  * @brief @ref drivers_nvmem provider of the read-only memory an STM32 holds its factory data
- * in, as the calibration of the analog blocks in the system memory of the STM32H7.
+ * in, as the unique ID and the calibration of the analog blocks in the system memory of the
+ * STM32H7.
  * @{
  */
 
@@ -25,6 +26,7 @@ struct pbl_nvmem_stm32_romem {
 
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_nvmem_ops pbl_nvmem_stm32_romem_ops;
+extern const struct pbl_nvmem pbl_nvmem_stm32_romem;
 /** @endcond */
 
 /**
@@ -42,5 +44,8 @@ extern const struct pbl_nvmem_ops pbl_nvmem_stm32_romem_ops;
         PBL_NVMEM_INIT(sym, _name, nullptr, nullptr, &pbl_nvmem_stm32_romem_ops, _size, 1U, 1U), \
     .base = (_base),                                                                             \
   }
+
+/** Factory-programmed memory. */
+#define STM32_ROMEM (&pbl_nvmem_stm32_romem)
 
 /** @} */
