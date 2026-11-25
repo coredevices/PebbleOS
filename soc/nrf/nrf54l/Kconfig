@@ -8,6 +8,7 @@ config SOC_NRF54L
     select CPU_HAS_FPU
     select SOC_HAS_UNIQUE_ID
     select NVMEM
+    select TIMER_NRF_GRTC
     help
       Nordic nRF54L series, selected by its lines. Runs on the secure
       application core.
