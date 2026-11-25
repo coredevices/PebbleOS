@@ -5,15 +5,21 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
+
 /**
  * @defgroup usb USB
  * @ingroup subsys
  * @brief Definitions of the USB 2.0 specification the device stack uses.
+ *
+ * Descriptors are packed structures with the field names of the specification. Their multi-byte
+ * fields are little-endian, on the bus as in memory: static initializers give them with
+ * PBL_CPU_TO_LE16() and PBL_CPU_TO_LE32(), code with pbl_cpu_to_le16() and pbl_le16_to_cpu().
  * @{
  */
 
-/** @brief Setup packet, as it arrives, little-endian. */
-struct pbl_usb_setup {
+/** @brief Setup packet, its 16-bit fields in CPU order. */
+struct PBL_PACKED pbl_usb_setup {
   /** Direction, type and recipient. */
   uint8_t bmRequestType;
   /** Request. */
@@ -24,7 +30,7 @@ struct pbl_usb_setup {
   uint16_t wIndex;
   /** Length of the data stage. */
   uint16_t wLength;
-} __attribute__((packed));
+};
 
 /** @name bmRequestType fields */
 /** @{ */
@@ -66,5 +72,156 @@ struct pbl_usb_setup {
 #define PBL_USB_DESC_IAD              0x0bU
 #define PBL_USB_DESC_CS_INTERFACE     0x24U
 /** @} */
+
+/** @brief The first two fields of every descriptor. */
+struct PBL_PACKED pbl_usb_desc_header {
+  /** Length of the descriptor, in bytes. */
+  uint8_t bLength;
+  /** Descriptor type. */
+  uint8_t bDescriptorType;
+};
+
+/** @brief Device descriptor. */
+struct PBL_PACKED pbl_usb_desc_device {
+  /** Length, 18. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_DEVICE. */
+  uint8_t bDescriptorType;
+  /** USB release, in binary-coded decimal. */
+  uint16_t bcdUSB;
+  /** Class. */
+  uint8_t bDeviceClass;
+  /** Subclass. */
+  uint8_t bDeviceSubClass;
+  /** Protocol. */
+  uint8_t bDeviceProtocol;
+  /** Maximum packet size of endpoint 0. */
+  uint8_t bMaxPacketSize0;
+  /** Vendor ID. */
+  uint16_t idVendor;
+  /** Product ID. */
+  uint16_t idProduct;
+  /** Device release, in binary-coded decimal. */
+  uint16_t bcdDevice;
+  /** Index of the manufacturer string. */
+  uint8_t iManufacturer;
+  /** Index of the product string. */
+  uint8_t iProduct;
+  /** Index of the serial number string. */
+  uint8_t iSerialNumber;
+  /** Number of configurations. */
+  uint8_t bNumConfigurations;
+};
+
+/** @brief Device qualifier descriptor: the device as it would be at the other speed. */
+struct PBL_PACKED pbl_usb_desc_qualifier {
+  /** Length, 10. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_DEVICE_QUALIFIER. */
+  uint8_t bDescriptorType;
+  /** USB release, in binary-coded decimal. */
+  uint16_t bcdUSB;
+  /** Class. */
+  uint8_t bDeviceClass;
+  /** Subclass. */
+  uint8_t bDeviceSubClass;
+  /** Protocol. */
+  uint8_t bDeviceProtocol;
+  /** Maximum packet size of endpoint 0. */
+  uint8_t bMaxPacketSize0;
+  /** Number of configurations. */
+  uint8_t bNumConfigurations;
+  /** Reserved, 0. */
+  uint8_t bReserved;
+};
+
+/** @brief Configuration descriptor, which the descriptors of its interfaces follow. */
+struct PBL_PACKED pbl_usb_desc_config {
+  /** Length, 9. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_CONFIGURATION. */
+  uint8_t bDescriptorType;
+  /** Length of the configuration and the descriptors that follow it. */
+  uint16_t wTotalLength;
+  /** Number of interfaces. */
+  uint8_t bNumInterfaces;
+  /** Value of the configuration, for SET_CONFIGURATION. */
+  uint8_t bConfigurationValue;
+  /** Index of the configuration string. */
+  uint8_t iConfiguration;
+  /** Attributes. */
+  uint8_t bmAttributes;
+  /** Maximum power, in units of 2 mA. */
+  uint8_t bMaxPower;
+};
+
+/** @brief Interface association descriptor: interfaces that make one function. */
+struct PBL_PACKED pbl_usb_desc_iad {
+  /** Length, 8. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_IAD. */
+  uint8_t bDescriptorType;
+  /** First interface. */
+  uint8_t bFirstInterface;
+  /** Number of interfaces. */
+  uint8_t bInterfaceCount;
+  /** Class. */
+  uint8_t bFunctionClass;
+  /** Subclass. */
+  uint8_t bFunctionSubClass;
+  /** Protocol. */
+  uint8_t bFunctionProtocol;
+  /** Index of the function string. */
+  uint8_t iFunction;
+};
+
+/** @brief Interface descriptor, of one alternate setting of an interface. */
+struct PBL_PACKED pbl_usb_desc_iface {
+  /** Length, 9. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_INTERFACE. */
+  uint8_t bDescriptorType;
+  /** Interface number. */
+  uint8_t bInterfaceNumber;
+  /** Alternate setting. */
+  uint8_t bAlternateSetting;
+  /** Number of endpoints, endpoint 0 excluded. */
+  uint8_t bNumEndpoints;
+  /** Class. */
+  uint8_t bInterfaceClass;
+  /** Subclass. */
+  uint8_t bInterfaceSubClass;
+  /** Protocol. */
+  uint8_t bInterfaceProtocol;
+  /** Index of the interface string. */
+  uint8_t iInterface;
+};
+
+/** @brief Endpoint descriptor. */
+struct PBL_PACKED pbl_usb_desc_ep {
+  /** Length, 7. */
+  uint8_t bLength;
+  /** @ref PBL_USB_DESC_ENDPOINT. */
+  uint8_t bDescriptorType;
+  /** Address: the number, with the direction in bit 7. */
+  uint8_t bEndpointAddress;
+  /** Transfer type, in bits 1:0. */
+  uint8_t bmAttributes;
+  /** Maximum packet size. */
+  uint16_t wMaxPacketSize;
+  /** Polling interval. */
+  uint8_t bInterval;
+};
+
+/** @cond INTERNAL_HIDDEN */
+static_assert(sizeof(struct pbl_usb_setup) == 8U);
+static_assert(sizeof(struct pbl_usb_desc_header) == 2U);
+static_assert(sizeof(struct pbl_usb_desc_device) == 18U);
+static_assert(sizeof(struct pbl_usb_desc_qualifier) == 10U);
+static_assert(sizeof(struct pbl_usb_desc_config) == 9U);
+static_assert(sizeof(struct pbl_usb_desc_iad) == 8U);
+static_assert(sizeof(struct pbl_usb_desc_iface) == 9U);
+static_assert(sizeof(struct pbl_usb_desc_ep) == 7U);
+/** @endcond */
 
 /** @} */

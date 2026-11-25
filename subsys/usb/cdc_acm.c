@@ -9,6 +9,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/usb/cdc_acm.h>
 #include <pbl/usb/usbd.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
@@ -39,76 +40,131 @@
 #define BUF_LEN 512U
 #define TX_RING 1024U
 
-static const uint8_t s_desc[] = {
-  // Association of the two interfaces
-  8,
-  PBL_USB_DESC_IAD,
-  IFACE_COMM,
-  2,
-  CDC_CLASS,
-  CDC_SUBCLASS_ACM,
-  CDC_PROTOCOL_AT,
-  STRING_NAME,
-  // Communication interface, with its functional descriptors and notification endpoint
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE_COMM,
-  0,
-  1,
-  CDC_CLASS,
-  CDC_SUBCLASS_ACM,
-  CDC_PROTOCOL_AT,
-  STRING_NAME,
-  5,
-  PBL_USB_DESC_CS_INTERFACE,
-  CDC_FUNC_HEADER,
-  0x10,
-  0x01,
-  5,
-  PBL_USB_DESC_CS_INTERFACE,
-  CDC_FUNC_CALL_MGMT,
-  0,
-  IFACE_DATA,
-  4,
-  PBL_USB_DESC_CS_INTERFACE,
-  CDC_FUNC_ACM,
-  CDC_ACM_CAP_LINE,
-  5,
-  PBL_USB_DESC_CS_INTERFACE,
-  CDC_FUNC_UNION,
-  IFACE_COMM,
-  IFACE_DATA,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_NOTIFY,
-  PBL_UDC_EP_INTERRUPT,
-  16,
-  0,
-  16,
-  // Data interface
-  9,
-  PBL_USB_DESC_INTERFACE,
-  IFACE_DATA,
-  0,
-  2,
-  CDC_DATA_CLASS,
-  0,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_DATA_OUT,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
-  7,
-  PBL_USB_DESC_ENDPOINT,
-  EP_DATA_IN,
-  PBL_UDC_EP_BULK,
-  64,
-  0,
-  0,
+struct PBL_PACKED pbl_usb_cdc__desc_header {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint16_t bcdCDC;
+};
+
+struct PBL_PACKED pbl_usb_cdc__desc_call_mgmt {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bmCapabilities;
+  uint8_t bDataInterface;
+};
+
+struct PBL_PACKED pbl_usb_cdc__desc_acm {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bmCapabilities;
+};
+
+struct PBL_PACKED pbl_usb_cdc__desc_union {
+  uint8_t bFunctionLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubtype;
+  uint8_t bControlInterface;
+  uint8_t bSubordinateInterface0;
+};
+
+static const struct PBL_PACKED {
+  struct pbl_usb_desc_iad iad;
+  struct pbl_usb_desc_iface comm;
+  struct pbl_usb_cdc__desc_header header;
+  struct pbl_usb_cdc__desc_call_mgmt call_mgmt;
+  struct pbl_usb_cdc__desc_acm acm;
+  struct pbl_usb_cdc__desc_union cdc_union;
+  struct pbl_usb_desc_ep notify;
+  struct pbl_usb_desc_iface data;
+  struct pbl_usb_desc_ep data_out;
+  struct pbl_usb_desc_ep data_in;
+} s_desc = {
+  .iad =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iad),
+        .bDescriptorType = PBL_USB_DESC_IAD,
+        .bFirstInterface = IFACE_COMM,
+        .bInterfaceCount = 2U,
+        .bFunctionClass = CDC_CLASS,
+        .bFunctionSubClass = CDC_SUBCLASS_ACM,
+        .bFunctionProtocol = CDC_PROTOCOL_AT,
+        .iFunction = STRING_NAME,
+      },
+  .comm =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE_COMM,
+        .bNumEndpoints = 1U,
+        .bInterfaceClass = CDC_CLASS,
+        .bInterfaceSubClass = CDC_SUBCLASS_ACM,
+        .bInterfaceProtocol = CDC_PROTOCOL_AT,
+        .iInterface = STRING_NAME,
+      },
+  .header =
+      {
+        .bFunctionLength = sizeof(struct pbl_usb_cdc__desc_header),
+        .bDescriptorType = PBL_USB_DESC_CS_INTERFACE,
+        .bDescriptorSubtype = CDC_FUNC_HEADER,
+        .bcdCDC = PBL_CPU_TO_LE16(0x0110U),
+      },
+  .call_mgmt =
+      {
+        .bFunctionLength = sizeof(struct pbl_usb_cdc__desc_call_mgmt),
+        .bDescriptorType = PBL_USB_DESC_CS_INTERFACE,
+        .bDescriptorSubtype = CDC_FUNC_CALL_MGMT,
+        .bDataInterface = IFACE_DATA,
+      },
+  .acm =
+      {
+        .bFunctionLength = sizeof(struct pbl_usb_cdc__desc_acm),
+        .bDescriptorType = PBL_USB_DESC_CS_INTERFACE,
+        .bDescriptorSubtype = CDC_FUNC_ACM,
+        .bmCapabilities = CDC_ACM_CAP_LINE,
+      },
+  .cdc_union =
+      {
+        .bFunctionLength = sizeof(struct pbl_usb_cdc__desc_union),
+        .bDescriptorType = PBL_USB_DESC_CS_INTERFACE,
+        .bDescriptorSubtype = CDC_FUNC_UNION,
+        .bControlInterface = IFACE_COMM,
+        .bSubordinateInterface0 = IFACE_DATA,
+      },
+  .notify =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_NOTIFY,
+        .bmAttributes = PBL_UDC_EP_INTERRUPT,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(16U),
+        .bInterval = 16U,
+      },
+  .data =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_iface),
+        .bDescriptorType = PBL_USB_DESC_INTERFACE,
+        .bInterfaceNumber = IFACE_DATA,
+        .bNumEndpoints = 2U,
+        .bInterfaceClass = CDC_DATA_CLASS,
+      },
+  .data_out =
+      {
+        .bLength = sizeof(struct pbl_usb_desc_ep),
+        .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+        .bEndpointAddress = EP_DATA_OUT,
+        .bmAttributes = PBL_UDC_EP_BULK,
+        .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+      },
+  .data_in = {
+    .bLength = sizeof(struct pbl_usb_desc_ep),
+    .bDescriptorType = PBL_USB_DESC_ENDPOINT,
+    .bEndpointAddress = EP_DATA_IN,
+    .bmAttributes = PBL_UDC_EP_BULK,
+    .wMaxPacketSize = PBL_CPU_TO_LE16(64U),
+  },
 };
 
 static const char *const s_strings[] = {
@@ -211,7 +267,7 @@ static void prv_xfer_done(uint8_t ep, int ret) {
 }
 
 PBL_USBD_FUNCTION_DEFINE(cdc_acm) = {
-  .desc = s_desc,
+  .desc = &s_desc,
   .desc_len = sizeof(s_desc),
   .strings = s_strings,
   .num_strings = PBL_ARRAY_SIZE(s_strings),
