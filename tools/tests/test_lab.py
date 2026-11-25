@@ -8,6 +8,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "libs" / "pbl-cli"))
 
+from pbl import power
+from pbl.commands.power import start_voltage
 from pbl.lab import Lab
 
 
@@ -60,3 +62,17 @@ def test_lab_file_without_a_voltage_fails(tmp_path):
     )
     with pytest.raises(Exception, match="invalid lab file.*has no voltage"):
         Lab.load(str(path))
+
+
+def test_start_voltage():
+    device = lab(supply="ppk2", voltage=3300).watches["disco"]
+    assert start_voltage(None, "ppk2", device) == 3300
+    assert start_voltage(3300, "ppk2", device) == 3300
+    assert start_voltage(3000, "ppk2", None) == 3000
+
+
+def test_no_voltage_to_start_at():
+    with pytest.raises(
+        power.PowerError, match="supply ppk2 powers no device.* pass --voltage"
+    ):
+        start_voltage(None, "ppk2", None)
