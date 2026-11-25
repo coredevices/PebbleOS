@@ -7,6 +7,7 @@
 
 #include <pbl/drivers/udc.h>
 #include <pbl/usb/usbd.h>
+#include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
@@ -44,6 +45,8 @@ static struct {
   bool zlp;
   uint8_t config;
   uint8_t alt[MAX_IFACES];
+  // Endpoints the host halted, by bit: OUT ones from bit 0, IN ones from bit 16
+  uint32_t halted;
   // The function an OUT data stage is for, and where its data goes
   const struct pbl_usbd_function *out_fn;
   uint8_t *out_data;
@@ -243,6 +246,10 @@ static uint8_t prv_alt(uint8_t iface) {
   return iface < MAX_IFACES ? s_ctrl.alt[iface] : 0U;
 }
 
+static uint32_t prv_ep_bit(uint8_t ep) {
+  return PBL_BIT((ep & 0x0fU) + (((ep & PBL_UDC_EP_IN) != 0U) ? 16U : 0U));
+}
+
 // Enables or disables the endpoints of the current alternate setting of an interface of a
 // function, or of all its interfaces
 static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
@@ -273,6 +280,7 @@ static void prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, boo
     } else {
       (void)pbl_udc_ep_disable(UDC, ep);
     }
+    s_ctrl.halted &= ~prv_ep_bit(ep);
   }
 }
 
@@ -344,6 +352,23 @@ static int prv_set_interface(uint16_t iface, uint16_t alt) {
   return 0;
 }
 
+static int prv_set_halt(uint8_t ep, bool halt) {
+  int ret;
+
+  ret = pbl_udc_ep_set_halt(UDC, ep, halt);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (halt) {
+    s_ctrl.halted |= prv_ep_bit(ep);
+  } else {
+    s_ctrl.halted &= ~prv_ep_bit(ep);
+  }
+
+  return 0;
+}
+
 static int prv_standard(uint8_t **data, uint16_t *len) {
   const struct pbl_usb_setup *setup = &s_ctrl.setup;
   uint8_t recip = setup->bmRequestType & PBL_USB_RECIP_MASK;
@@ -372,7 +397,10 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       *len = 1U;
       return 0;
     case PBL_USB_REQ_GET_STATUS:
-      s_ctrl.buf[0] = 0U;
+      s_ctrl.buf[0] = (recip == PBL_USB_RECIP_ENDPOINT &&
+                       (s_ctrl.halted & prv_ep_bit((uint8_t)setup->wIndex)) != 0U)
+                          ? 1U
+                          : 0U;
       s_ctrl.buf[1] = 0U;
       *data = s_ctrl.buf;
       *len = 2U;
@@ -392,8 +420,7 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       if (recip != PBL_USB_RECIP_ENDPOINT || setup->wValue != PBL_USB_FEATURE_ENDPOINT_HALT) {
         return -ENOTSUP;
       }
-      return pbl_udc_ep_set_halt(UDC, (uint8_t)setup->wIndex,
-                                 setup->bRequest == PBL_USB_REQ_SET_FEATURE);
+      return prv_set_halt((uint8_t)setup->wIndex, setup->bRequest == PBL_USB_REQ_SET_FEATURE);
     default:
       return -ENOTSUP;
   }
