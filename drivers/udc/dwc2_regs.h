@@ -17,6 +17,7 @@
 #define DWC2_GRXFSIZ    0x0024
 #define DWC2_DIEPTXF0   0x0028
 #define DWC2_GGPIO      0x0038
+#define DWC2_GHWCFG3    0x004c
 #define DWC2_DIEPTXF(n) (0x0104 + 4U * ((n) - 1U))
 
 #define GOTGCTL_BVALOEN  PBL_BIT(6)
@@ -32,6 +33,8 @@
 #define GUSBCFG_TSDPS      PBL_BIT(22)
 #define GUSBCFG_FHMOD      PBL_BIT(29)
 #define GUSBCFG_FDMOD      PBL_BIT(30)
+
+#define GHWCFG3_DFIFODEPTH_MASK PBL_GENMASK(31, 16)
 
 #define GRSTCTL_CSRST       PBL_BIT(0)
 #define GRSTCTL_RXFFLSH     PBL_BIT(4)

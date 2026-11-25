@@ -139,9 +139,15 @@
 			interrupts = <77>;
 			clocks = <&rcc USB1OTG_CK>;
 			clock-names = "otg";
-			g-rx-fifo-size = <256>;
-			g-np-tx-fifo-size = <32>;
-			g-tx-fifo-size = <128 128 128 64 64 64 32 32>;
+			/* 952 words of FIFO RAM (GHWCFG3). Receive: 13 for setup
+			 * packets, 2 x (512 / 4 + 1) for two packets, 2 x 9 OUT
+			 * endpoints for their status, 1 for the global OUT NAK. Transmit:
+			 * a 64-byte packet on endpoint 0, 512 bytes on endpoints 1 to 4,
+			 * 128 bytes on the rest. 946 words in all.
+			 */
+			g-rx-fifo-size = <290>;
+			g-np-tx-fifo-size = <16>;
+			g-tx-fifo-size = <128 128 128 128 32 32 32 32>;
 			status = "disabled";
 		};
 
