@@ -57,6 +57,9 @@
 /* Lines 55 to 60, of the PWR wakeup pins, in the second set of registers */
 #define EXTI_LINES2_WKUP PBL_GENMASK(28, 23)
 
+/* Line 80, of the SEV of the Cortex-M7, in the third set */
+#define EXTI_LINES3_CM7_SEV PBL_BIT(16)
+
 /* SYSCFG register offsets */
 
 #define STM32H7_SYSCFG_EXTICR_OFFSET(line) (0x0008 + ((line) / 4U) * 4U)

@@ -41,6 +41,7 @@
 		st,syscfg-flash = <&rcc 0x194 0x100>;
 		mboxes = <&hsem 0>;
 		mbox-names = "shutdown";
+		st,wwdg = <&wwdg2>;
 		status = "disabled";
 	};
 

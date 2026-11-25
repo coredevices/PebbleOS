@@ -53,7 +53,7 @@ int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
 // wakeup would have nothing to run
 [[noreturn]] static PBL_SECTION_RAM void prv_stop(void) {
   while (true) {
-    pbl_cpu_idle_deep();
+    pbl_cpu_wait_event_deep();
   }
 }
 
@@ -64,6 +64,7 @@ int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
   prv_irqs_off();
 
   prv_mask_wakeups(0U);
+  pbl_writel(EXTI_LINES3_CM7_SEV, EXTI(CORE_EMR3));
   pbl_modifyl(PWR_CPUCR_RUN_D3, PWR_CPUCR_PDDS_D1 | PWR_CPUCR_PDDS_D2 | PWR_CPUCR_PDDS_D3,
               PWR(CORECR));
 
