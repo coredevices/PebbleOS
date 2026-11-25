@@ -3,4 +3,7 @@
 
 #pragma once
 
-bool pairability_is_enabled(void);
+#include <stdbool.h>
+
+/** @brief Whether new pairings are accepted. */
+bool pbl_bt__pairability_is_enabled(void);
