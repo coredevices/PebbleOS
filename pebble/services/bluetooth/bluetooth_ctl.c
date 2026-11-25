@@ -67,13 +67,15 @@ static void prv_comm_start(void) {
   if (s_comm_is_running) {
     return;
   }
+  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
   // Heap allocated to reduce stack usage
   struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
   dis_get_info(&config->dis_info);
 
   // Without root keys the stack would run with an identity anyone can resolve.
-  if (bt_bonding_get_root_keys(config->root_keys) == 0) {
-    s_comm_is_running = pbl_bt_start(config);
+  if (bt_bonding_get_root_keys(root_keys) == 0) {
+    config->irk = root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY];
+    s_comm_is_running = (pbl_bt_start(config) == 0);
   }
   pbl_free(config);
 
