@@ -12,6 +12,7 @@
 #include "pbl/kernel/types.h"
 #include "pbl/kernel/work.h"
 #include "pbl/mcu/interrupts.h"
+#include "pbl/util/math.h"
 #include "pbl/util/misc.h"
 
 #include <assert.h>
@@ -146,66 +147,8 @@ ble_npl_error_t npl_pebble_sem_release(struct ble_npl_sem *sem) {
   return BLE_NPL_OK;
 }
 
-static void os_callout_timer_cb(struct pbl_work *work);
-
-//! npl_pebble_callout_do_update is the core logic of the update, and can
-//! happen from a few places.  It can happen directly from
-//! npl_pebble_callout_reset, but if that's called while we're in an ISR, it
-//! gets deferred to an eventq for later.  And, if there's an update that is
-//! waiting for an eventq that didn't get called yet, but the timer did get
-//! called, this function can
-//! also get called from when the callout otherwise would have happened, to
-//! go reset the timer and try again later.
-static void npl_pebble_callout_do_update(struct ble_npl_callout *co) {
-  if (!co->update_pending) {
-    return;
-  }
-
-  // It's possible that we "missed" -- that is to say, something like the
-  // following happened:
-  //
-  //  * npl_pebble_callout_reset got called in an ISR, with a small number
-  //    of `ticks`.
-  //  * An `update_ev` is enqueued to go actually do the update.
-  //  * The CPU is heavily loaded, and more than `ticks` pass.
-  //  * Eventually, the `update_ev` comes to the front of the `eventq`, and
-  //    finally triggers the npl_pebble_callout_do_update.
-  //  * But the remaining time on the timer is negative; we are late!  (This
-  //    is, of course, perfectly allowed: a timer is a promise to do
-  //    something *not sooner* than a certain time, and any amount of time
-  //    later.  If NimBLE needs something done with hard real time results,
-  //    it needs to use its own built-in TIMER and RTC.)
-  //  * We don't want to just trigger the event from this thread; for the
-  //    sake of consistency, and avoiding exacerbating extremely rare bugs
-  //    that would be quite difficult to track down, we want to ensure that
-  //    callouts are always triggered from the same context.  So, we defer
-  //    it for the minimum amount of time possible, but we make sure that it
-  //    is triggered through the same work queue path that it always would be
-  //    otherwise.
-  int rem_ticks = co->update_target_time_ticks - pbl_uptime_ticks();
-  if (rem_ticks < 1) {
-    // Oh, well...
-    rem_ticks = 1;
-  }
-
-  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &co->work, PBL_TICKS(rem_ticks));
-
-  co->update_pending = false;
-}
-
-static void npl_pebble_callout_do_update_from_eventq(struct ble_npl_event *ev) {
-  npl_pebble_callout_do_update((struct ble_npl_callout *)ev->arg);
-}
-
 static void os_callout_timer_cb(struct pbl_work *work) {
   struct ble_npl_callout *co = PBL_CONTAINER_OF(work, struct ble_npl_callout, work.work);
-
-  // check to see if we are pending an update; if so, trigger it and do
-  // nothing, since we were already asked to delay until later
-  if (co->update_pending) {
-    npl_pebble_callout_do_update(co);
-    return;
-  }
 
   if (co->evq) {
     ble_npl_eventq_put(co->evq, &co->ev);
@@ -226,8 +169,6 @@ void npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *
 
   pbl_delayed_work_init(&co->work, os_callout_timer_cb);
   co->evq = evq;
-  co->ticks = 0;
-  co->update_ev.queued = false;
 
   ble_npl_event_init(&co->ev, ev_cb, ev_arg);
 }
@@ -235,22 +176,8 @@ void npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *
 ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks) {
   co->ticks = ticks;
 
-  co->update_pending = 1;
-  co->update_target_time_ticks = pbl_uptime_ticks() + ticks;
-
-  // we may be in an ISR; if we are, we make the event queue actually
-  // schedule the timer for us later.  otherwise, we can do it ourselves.
-  if (mcu_state_is_isr()) {
-    // it's a two-step operation here: we insert the update request into the
-    // eventq (which *is* an ISR-safe operation), and then the eventq,
-    // whenever it's processed, actually schedules the timer based on the
-    // update_target_time_ticks.
-    co->update_ev.fn = npl_pebble_callout_do_update_from_eventq;
-    co->update_ev.arg = (void *)co;
-    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &co->update_ev);
-  } else {
-    npl_pebble_callout_do_update(co);
-  }
+  // Never run from here, so that a callout always runs from the same context.
+  pbl_delayed_work_reschedule(&pbl_sys_workq_high, &co->work, PBL_TICKS(PBL_MAX(ticks, 1U)));
 
   return BLE_NPL_OK;
 }

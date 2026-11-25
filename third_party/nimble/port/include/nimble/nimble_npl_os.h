@@ -50,19 +50,6 @@ struct ble_npl_eventq {
 struct ble_npl_callout {
   struct pbl_delayed_work work;
 
-  //! whether we have made changes to this timer from ISR state and need
-  //! someone to go sync them back up on the main thread for us
-  bool update_pending;
-
-  //! if we are pending_update, there might have been some ticks between
-  //! when we asked to do work, and when it happens; set an actual target
-  //! time in ticks for the timer, rather than deferring the number of ticks
-  //! to start counting when we actually schedule
-  uint64_t update_target_time_ticks;
-
-  //! event to be pushed for update from ISR
-  struct ble_npl_event update_ev;
-
   struct ble_npl_eventq *evq;
   struct ble_npl_event ev;
   uint64_t ticks;
