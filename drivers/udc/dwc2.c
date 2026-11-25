@@ -16,6 +16,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/time.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -35,6 +36,10 @@
 #define MODE_TIMEOUT_US  50000U
 // An endpoint stops within a few packets, and is stopped with interrupts locked
 #define EP_STOP_TIMEOUT_US 1000U
+
+// Remote wakeup: the bus idle that long before, then resume signalled that long, within 1-15 ms
+#define WAKEUP_IDLE_MS   5U
+#define WAKEUP_RESUME_MS 10U
 
 // Turnaround time, in PHY clocks: for the 60 MHz of a ULPI PHY, and for full speed on a fast AHB
 #define TRDT_HS 9U
@@ -64,6 +69,8 @@ struct pbl_udc_dwc2_state {
   struct prv_ep in[MAX_EPS];
   struct prv_ep out[MAX_EPS];
   bool dma;
+  bool suspended;
+  uint64_t suspend_ms;
 };
 
 struct pbl_udc_dwc2 {
@@ -379,6 +386,7 @@ static void prv_iep(const struct pbl_udc_dwc2 *d) {
 
 // The host reset the bus: every endpoint but endpoint 0 is gone, and endpoint 0 waits for setup
 static void prv_bus_reset(const struct pbl_udc_dwc2 *d) {
+  d->state->suspended = false;
   prv_flush_tx(d, GRSTCTL_TXFNUM_ALL);
 
   for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
@@ -444,11 +452,14 @@ static void prv_isr(const struct pbl_udc_dwc2 *d) {
 
   if ((sts & GINT_USBSUSP) != 0U) {
     prv_putreg(d, DWC2_GINTSTS, GINT_USBSUSP);
+    d->state->suspended = true;
+    d->state->suspend_ms = pbl_uptime_ms();
     pbl_udc_event(&d->udc, PBL_UDC_EVENT_SUSPEND, nullptr);
   }
 
   if ((sts & GINT_WKUINT) != 0U) {
     prv_putreg(d, DWC2_GINTSTS, GINT_WKUINT);
+    d->state->suspended = false;
     pbl_udc_event(&d->udc, PBL_UDC_EVENT_RESUME, nullptr);
   }
 
@@ -820,6 +831,38 @@ static int prv_init(const struct pbl_udc *udc) {
   return 0;
 }
 
+// Resume signalling, once the bus has been idle long enough, then the bus is active again
+static int prv_wakeup(const struct pbl_udc *udc) {
+  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+  struct pbl_udc_dwc2_state *st = d->state;
+  uint64_t since;
+
+  pbl_irq_lock();
+  if (!st->suspended) {
+    pbl_irq_unlock();
+    return -EALREADY;
+  }
+  since = pbl_uptime_ms() - st->suspend_ms;
+  pbl_irq_unlock();
+
+  if (since < WAKEUP_IDLE_MS) {
+    pbl_sleep_ms((uint32_t)(WAKEUP_IDLE_MS - since));
+  }
+
+  prv_modify(d, DWC2_DCTL, 0U, DCTL_RWUSIG);
+  pbl_sleep_ms(WAKEUP_RESUME_MS);
+  prv_modify(d, DWC2_DCTL, DCTL_RWUSIG, 0U);
+
+  pbl_irq_lock();
+  if (st->suspended) {
+    st->suspended = false;
+    pbl_udc_event(&d->udc, PBL_UDC_EVENT_RESUME, nullptr);
+  }
+  pbl_irq_unlock();
+
+  return 0;
+}
+
 static const struct pbl_udc_ops s_ops = {
   .init = prv_init,
   .enable = prv_enable,
@@ -830,6 +873,7 @@ static const struct pbl_udc_ops s_ops = {
   .ep_disable = prv_ep_disable,
   .ep_set_halt = prv_ep_set_halt,
   .ep_queue = prv_ep_queue,
+  .wakeup = prv_wakeup,
 };
 
 #define PBL_UDC_DWC2_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _phy_clk, _ulpi, _supply, \
