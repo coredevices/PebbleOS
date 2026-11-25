@@ -16,6 +16,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
@@ -154,7 +155,7 @@ static void prv_ep0_arm_in(const struct pbl_udc_dwc2 *d) {
 
 static void prv_read_fifo(const struct pbl_udc_dwc2 *d, uint8_t *buf, size_t len, size_t keep) {
   for (size_t i = 0U; i < len; i += sizeof(uint32_t)) {
-    uint32_t word = prv_getreg(d, DWC2_FIFO(0U));
+    uint32_t word = pbl_cpu_to_le32(prv_getreg(d, DWC2_FIFO(0U)));
     size_t n = PBL_MIN(len - i, sizeof(uint32_t));
 
     if (i < keep) {
@@ -180,7 +181,7 @@ static void prv_tx_fill(const struct pbl_udc_dwc2 *d, uint8_t n) {
       uint32_t word = 0U;
 
       memcpy(&word, &ep->buf[ep->done + i], PBL_MIN(chunk - i, sizeof(uint32_t)));
-      prv_putreg(d, DWC2_FIFO(n), word);
+      prv_putreg(d, DWC2_FIFO(n), pbl_le32_to_cpu(word));
     }
     ep->done += chunk;
   }
