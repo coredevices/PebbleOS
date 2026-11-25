@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_PRF_STORE
+    bool "PRF store"
+    depends on NIMBLE
+    depends on FLASH
+    help
+      The bonding and root keys the recovery firmware and the normal
+      firmware share, in a flash partition of its own
+      (pbl/bluetooth/prf_store.h). It only needs the types of NimBLE.
+
+choice BT_PRF_STORE_LAYOUT
+    prompt "PRF store layout"
+    depends on BT_PRF_STORE
+    default BT_PRF_STORE_LAYOUT_RECORDS
+    help
+      How the partition is laid out. Both firmwares of a device have to
+      agree on it, and it cannot change once a device is in the field:
+      the recovery firmware there is not updated.
+
+config BT_PRF_STORE_LAYOUT_RECORDS
+    bool "Records"
+    help
+      A log of records of 140 bytes with one CRC, each holding all the
+      store keeps: the last valid one is the store. For devices that
+      have not shipped with the legacy layout.
+
+config BT_PRF_STORE_LAYOUT_LEGACY
+    bool "Legacy"
+    help
+      Entries of 256 bytes made of fields with a CRC each, one of them
+      valid at a time. The layout of the devices that shipped with it:
+      it carries fields nothing uses any more.
+
+endchoice
+
+if BT_PRF_STORE
+
+module = BT_PRF_STORE
+module-str = PRF store
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

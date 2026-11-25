@@ -14,12 +14,12 @@ struct ble_store_value_sec;
  * @brief The bonding and root keys the recovery firmware (PRF) and the normal firmware share.
  *
  * Kept in a flash partition of its own. How the partition is laid out is a build choice
- * (@c NIMBLE_STORE_PRF_LAYOUT) and private to the store, whose layout headers describe it. Both
+ * (@c BT_PRF_STORE_LAYOUT) and private to the store, whose layout headers describe it. Both
  * firmwares of a device have to agree on it, and it cannot change once a device is in the field:
  * the recovery firmware there is not updated. All functions are serialized by a mutex. Those that
  * write return 0, or a negative errno if the flash failed.
  *
- * Implemented by the NimBLE store (@c NIMBLE_STORE_PRF), which can also persist in it
+ * Enabled with @c BT_PRF_STORE. NimBLE's store can also persist in it
  * (@c NIMBLE_STORE_BACKEND_PRF).
  * @{
  */

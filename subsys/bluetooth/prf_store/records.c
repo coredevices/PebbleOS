@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include "prf_records_layout.h"
+#include "records_layout.h"
 
 #include <errno.h>
 #include <string.h>
@@ -15,7 +15,7 @@
 
 #include <host/ble_store.h>
 
-PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
+PBL_LOG_MODULE_DEFINE(bt_prf_store, CONFIG_BT_PRF_STORE_LOG_LEVEL);
 
 #define NUM_SLOTS (PART_SHARED_PRF_STORAGE_SIZE / sizeof(struct prf_record))
 
