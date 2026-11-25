@@ -325,6 +325,41 @@ html.dark {
   cursor: zoom-in;
 }
 
-#ethical-ad-placement {
-  display: none !important;
+.sy-foot-reserved {
+  gap: 1.5rem;
+}
+.sy-foot-socials {
+  margin-left: auto;
+}
+.sy-foot #ethical-ad-placement .ethical-sidebar {
+  max-width: 380px;
+  margin: 0;
+  padding: 0.5rem;
+  background: transparent;
+}
+.sy-foot #ethical-ad-placement .ethical-content {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+.sy-foot #ethical-ad-placement .ethical-image-link {
+  flex-shrink: 0;
+  margin-right: 0.4rem;
+}
+.sy-foot #ethical-ad-placement .ethical-image-link img {
+  width: auto;
+  height: 4.5rem;
+}
+.sy-foot #ethical-ad-placement .ethical-text {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  text-align: left;
+}
+.sy-foot #ethical-ad-placement .ethical-callout {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  line-height: 1;
+  text-align: right;
 }
