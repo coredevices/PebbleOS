@@ -772,7 +772,7 @@ int pbl_clk_sf32lb_deepwfi_hold(void) {
     s_deepwfi_saved = pbl_readl(addr);
     sel = PBL_FIELD_GET(HPSYS_RCC_CSR_SEL_SYS_MASK,
                         pbl_readl(s_base + SF32LB52_HPSYS_RCC_CSR_OFFSET));
-    pbl_writel((s_deepwfi_saved & ~HPSYS_RCC_DWCFGR_SEL_SYS_MASK) |
+    pbl_writel((s_deepwfi_saved & ~(HPSYS_RCC_DWCFGR_SEL_SYS_MASK | HPSYS_RCC_DWCFGR_DIV_EN)) |
                    PBL_FIELD_PREP(HPSYS_RCC_DWCFGR_SEL_SYS_MASK, sel) | s_dwcfgr_dll_out,
                addr);
   }

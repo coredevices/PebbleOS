@@ -210,10 +210,11 @@ void pbl_clk_sf32lb_hxt48_suspend(struct pbl_clk_sf32lb_hxt48_state *state);
 void pbl_clk_sf32lb_hxt48_resume(const struct pbl_clk_sf32lb_hxt48_state *state);
 
 /**
- * @brief Keep clk_hpsys and the DLLs running in deep WFI, for blocks clocked from them.
+ * @brief Keep clk_hpsys, its bus dividers and the DLLs running in deep WFI, for blocks clocked
+ * from them.
  *
- * Deep WFI otherwise moves clk_hpsys to HRC48 and stops the DLL outputs. The bus clock is still
- * divided down. Counted: balance each call with pbl_clk_sf32lb_deepwfi_release().
+ * Deep WFI otherwise moves clk_hpsys to HRC48, divides the bus clocks down and stops the DLL
+ * outputs. Counted: balance each call with pbl_clk_sf32lb_deepwfi_release().
  *
  * @return 0, or -ENOTSUP where deep WFI cannot keep the DLLs running.
  */
