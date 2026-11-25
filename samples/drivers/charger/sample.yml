@@ -1,11 +1,12 @@
-description: The battery voltage, current and temperature, and the charger state, read three times
+description: The battery voltage, current and temperature, and the charger state, read every second for 30 seconds with charging enabled, Select toggling it
 expect:
+  - 'charger: charging enabled'
   - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
   - 'charger: external power (present|absent), charge [a-z ]+'
   - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
   - 'charger: external power (present|absent), charge [a-z ]+'
-  - 'charger: -?\d+ mV, -?\d+ uA, -?\d+ mC'
-  - 'charger: external power (present|absent), charge [a-z ]+'
+  - 'charger: charging disabled'
   - 'Sample done'
+timeout: 40
 roles: [charger]
 integration: [qemu_emery, asterix, obelix@pvt]
