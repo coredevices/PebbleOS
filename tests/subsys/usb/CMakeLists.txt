@@ -1,5 +1,5 @@
-#SPDX - FileCopyrightText : 2026 Core Devices LLC
-#SPDX - License - Identifier : Apache - 2.0
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
 
 set(usbd_defines
   CONFIG_USB_DEVICE_VID=0x1209
