@@ -62,6 +62,7 @@ html_theme_options = {
     "accent_color": "tomato",
     "github_url": "https://github.com/coredevices/pebbleos",
     "ethical_ads_publisher": "",
+    "foot_socials": [],
     "nav_links": [
         {"title": "Getting started", "url": "getting_started/index"},
         {"title": "Architecture", "url": "architecture/index"},
