@@ -10,6 +10,7 @@
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/id.h>
 #include <pbl/bluetooth/prf_store.h>
+#include <pbl/bluetooth/responsiveness.h>
 #include <pbl/bluetooth/types.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
@@ -78,11 +79,12 @@ static int prv_cmd_le_mode(const struct pbl_shell *sh, size_t argc, char **argv)
     return -EINVAL;
   }
 
-  bt_link_set_response_time(&s_response_time_req, state, PBL_BT_RESPONSE_TIME_FOREVER);
+  pbl_bt_responsiveness_request(bt_link_get_conn_handle(), &s_response_time_req, state,
+                                PBL_BT_RESPONSE_TIME_FOREVER);
   return 0;
 }
 
-PBL_SHELL_SUBCMD_ADD(sub_bt, le_mode, nullptr, "Set the LE response time <0-2>", prv_cmd_le_mode, 2,
+PBL_SHELL_SUBCMD_ADD(sub_bt, le_mode, nullptr, "Set the LE response time <0-1>", prv_cmd_le_mode, 2,
                      0);
 
 static int prv_cmd_conn_params(const struct pbl_shell *sh, size_t argc, char **argv) {

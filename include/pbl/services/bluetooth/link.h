@@ -50,16 +50,6 @@ bool bt_link_is_connected(void);
 bool bt_link_is_connected_to(const ble_addr_t *identity);
 
 /**
- * @brief Ask for a response time on the link, see pbl_bt_responsiveness_request().
- *
- * @param req Request of who asks, see struct pbl_bt_responsiveness_req.
- * @param state The response time.
- * @param max_period_secs How long for.
- */
-void bt_link_set_response_time(struct pbl_bt_responsiveness_req *req,
-                               enum pbl_bt_response_time_state state, uint16_t max_period_secs);
-
-/**
  * @brief Read the device name of the peer.
  *
  * The name of a bonded peer is kept with its bond, and @c PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT is
