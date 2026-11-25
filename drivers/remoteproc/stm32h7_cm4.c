@@ -14,6 +14,7 @@
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 
@@ -154,7 +155,14 @@ static const struct pbl_rproc_ops s_ops = {
 // The system only reaches Standby once the Cortex-M4 stops too: tell it, and wait for it to take
 // the request when the power-off allows it
 static void prv_sys_off(enum pbl_sys_off_mode mode, void *user_data) {
-  prv_shutdown(user_data, mode == PBL_SYS_OFF_POWER_OFF_PREPARE);
+  const struct pbl_rproc_stm32h7_cm4 *cm4 = user_data;
+
+  // Never booted, it is never in CStop: D2 stays up, and the system out of Standby
+  if (mode == PBL_SYS_OFF_POWER_OFF_PREPARE && !cm4->state->booted) {
+    PBL_LOG_WRN("Cortex-M4 never booted, the system stays out of Standby");
+  }
+
+  prv_shutdown(cm4, mode == PBL_SYS_OFF_POWER_OFF_PREPARE);
 }
 
 static int prv_init(const struct pbl_device *dev) {
