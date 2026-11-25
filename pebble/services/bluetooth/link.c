@@ -289,11 +289,6 @@ bool bt_link_is_connected_to(const ble_addr_t *identity) {
          ble_addr_cmp(&desc.peer_id_addr, identity) == 0;
 }
 
-void bt_link_set_response_time(struct pbl_bt_responsiveness_req *req,
-                               enum pbl_bt_response_time_state state, uint16_t max_period_secs) {
-  pbl_bt_responsiveness_request(bt_link_get_conn_handle(), req, state, max_period_secs);
-}
-
 static void prv_peer_name_changed_cb(void *data) {
   char name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
   struct ble_gap_conn_desc desc;
