@@ -36,6 +36,18 @@ properties:
           - description: The offset of the boot address register
           - description: The field mask of the boot address
 
+  st,syscfg-flash:
+    description:
+      Allocates the flash, in the domain of the Cortex-M7, to the Cortex-M4,
+      which runs from it, so that the domain stays up while the Cortex-M4
+      runs.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    items:
+      - items:
+          - description: Phandle of syscon block
+          - description: The offset of the flash allocation register
+          - description: The field mask of the flash allocation
+
   st,auto-boot:
     $ref: /schemas/types.yaml#/definitions/flag
     description: Boot the Cortex-M4 at startup, when its flash holds an image.
@@ -44,6 +56,7 @@ required:
   - compatible
   - st,syscfg-holdboot
   - st,syscfg-boot-address
+  - st,syscfg-flash
 
 additionalProperties: false
 
@@ -53,5 +66,6 @@ examples:
         compatible = "st,stm32h747-m4";
         st,syscfg-holdboot = <&rcc 0xa0 0x8>;
         st,syscfg-boot-address = <&flash 0x48 0xffff>;
+        st,syscfg-flash = <&rcc 0x194 0x100>;
         st,auto-boot;
     };

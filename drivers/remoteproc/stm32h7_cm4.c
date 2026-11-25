@@ -16,6 +16,8 @@ struct pbl_rproc_stm32h7_cm4 {
   uint32_t holdboot_mask;
   uintptr_t boot_address;
   uint32_t boot_address_mask;
+  uintptr_t flash;
+  uint32_t flash_mask;
   bool auto_boot;
 };
 
@@ -33,6 +35,8 @@ static int prv_start(const struct pbl_rproc *rproc) {
     return -ENOENT;
   }
 
+  // It runs from the flash at once: the domain of the flash must not stop under it
+  pbl_modifyl(0U, cm4->flash_mask, cm4->flash);
   pbl_modifyl(0U, cm4->holdboot_mask, cm4->holdboot);
 
   return 0;
@@ -61,15 +65,16 @@ static int prv_init(const struct pbl_device *dev) {
   return ret == -ENOENT ? 0 : ret;
 }
 
-#define PBL_RPROC_STM32H7_CM4_DEFINE(sym, _name, _holdboot, _holdboot_off, _holdboot_mask, \
-                                     _boot_address, _boot_address_off, _boot_address_mask, \
-                                     _auto_boot)                                           \
-  PBL_RPROC_STATE_DEFINE(sym);                                                             \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_stm32h7_cm4, struct pbl_rproc, rproc) {        \
-    .rproc = PBL_RPROC_INIT(sym, _name, prv_init, nullptr, &s_ops),                        \
-    .holdboot = (_holdboot) + (_holdboot_off), .holdboot_mask = (_holdboot_mask),          \
-    .boot_address = (_boot_address) + (_boot_address_off),                                 \
-    .boot_address_mask = (_boot_address_mask), .auto_boot = (_auto_boot),                  \
+#define PBL_RPROC_STM32H7_CM4_DEFINE(sym, _name, _holdboot, _holdboot_off, _holdboot_mask,         \
+                                     _boot_address, _boot_address_off, _boot_address_mask, _flash, \
+                                     _flash_off, _flash_mask, _auto_boot)                          \
+  PBL_RPROC_STATE_DEFINE(sym);                                                                     \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_stm32h7_cm4, struct pbl_rproc, rproc) {                \
+    .rproc = PBL_RPROC_INIT(sym, _name, prv_init, nullptr, &s_ops),                                \
+    .holdboot = (_holdboot) + (_holdboot_off), .holdboot_mask = (_holdboot_mask),                  \
+    .boot_address = (_boot_address) + (_boot_address_off),                                         \
+    .boot_address_mask = (_boot_address_mask), .flash = (_flash) + (_flash_off),                   \
+    .flash_mask = (_flash_mask), .auto_boot = (_auto_boot),                                        \
   }
 
 #include PBL_DT_INSTANCES(st_stm32h747_m4)
