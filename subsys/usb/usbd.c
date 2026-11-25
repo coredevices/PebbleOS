@@ -10,6 +10,8 @@
 #include <pbl/drivers/mcu.h>
 #include <pbl/drivers/udc.h>
 #include <pbl/kernel/irq.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/bits.h>
@@ -64,8 +66,31 @@
 #define BULK_MPS_FS 64U
 #define BULK_MPS_HS 512U
 
+// The two transfers of a control transfer stage, a bus reset with its two events, a setup packet
+// and room for suspend and resume
+#define EVENTS 16U
+
+#define RECONNECT_MS 10U
+
+PBL_LOG_MODULE_DEFINE(usbd, CONFIG_USB_DEVICE_LOG_LEVEL);
+
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usbd_function, usbd_functions);
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usbd_listener, usbd_listeners);
+
+enum prv_kind {
+  KIND_EVENT,
+  KIND_XFER_DONE,
+  KIND_CONNECT,
+};
+
+struct pbl_usbd__event {
+  uint8_t kind;
+  // Bus event, or endpoint
+  uint8_t id;
+  // Bytes moved or a negative errno, or the sequence number of a setup packet
+  int32_t val;
+  uint8_t setup[8];
+};
 
 enum prv_stage {
   STAGE_IDLE,
@@ -76,6 +101,8 @@ enum prv_stage {
 
 static struct {
   struct pbl_usb_setup setup;
+  // The setup packet served, by its sequence number
+  uint32_t seq;
   enum prv_stage stage;
   bool zlp;
   uint8_t config;
@@ -99,8 +126,8 @@ static struct {
   } eps[2][MAX_EPS];
 } s_num;
 
-// Bus state, under the IRQ lock. The bus idles from the connection until the host resets it: that
-// is no suspend to report.
+// Bus state, kept by the stack's thread. The bus idles from the connection until the host resets
+// it: that is no suspend to report.
 static struct {
   bool reset;
   bool connected;
@@ -108,7 +135,27 @@ static struct {
   bool remote_wakeup;
 } s_bus;
 
+// Filled by the controller's interrupt, drained by the stack's thread
+static struct {
+  struct pbl_usbd__event ring[EVENTS];
+  uint32_t head;
+  uint32_t tail;
+  uint32_t setup_seq;
+  uint32_t lost;
+} s_events;
+
 static atomic_bool s_enabled;
+
+// Endpoints whose transfer ends reach their function, by prv_ep_bit(): those of the configuration
+// and alternate settings in use, until the stack starts disabling them
+static atomic_uint_least32_t s_live;
+
+static void prv_drain(struct pbl_work *work);
+
+static PBL_WORKQ_DEFINE(s_workq);
+static PBL_WORK_DEFINE(s_drain, prv_drain);
+PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_USB_DEVICE_THREAD_STACK_SIZE);
+static struct pbl_thread s_thread;
 
 static uint8_t prv_index(const struct pbl_usbd_function *fn) {
   return (uint8_t)(fn - PBL_ITERABLE_SECTION_START(usbd_functions));
@@ -480,9 +527,15 @@ static uint32_t prv_ep_bit(uint8_t ep) {
   return PBL_BIT((ep & 0x0fU) + (((ep & PBL_UDC_EP_IN) != 0U) ? 16U : 0U));
 }
 
-// Enables or disables the endpoints of the current alternate setting of an interface of a
-// function, by its own number, or of all its interfaces
-static int prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool on) {
+enum prv_eps_op {
+  EPS_ON,
+  EPS_CLOSE,
+  EPS_OFF,
+};
+
+// Enables the endpoints of the current alternate setting of an interface of a function, by its own
+// number, or of all its interfaces, stops handing it the ends of their transfers, or disables them
+static int prv_ifaces_eps(const struct pbl_usbd_function *fn, int iface, enum prv_eps_op op) {
   int cur = -1;
   uint8_t alt = 0U;
   int ret;
@@ -509,8 +562,13 @@ static int prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool
       continue;
     }
 
+    if (op == EPS_CLOSE) {
+      (void)atomic_fetch_and(&s_live, ~prv_ep_bit(ep));
+      continue;
+    }
+
     s_ctrl.halted &= ~prv_ep_bit(ep);
-    if (!on) {
+    if (op == EPS_OFF) {
       (void)pbl_udc_ep_disable(UDC, ep);
       continue;
     }
@@ -520,14 +578,27 @@ static int prv_ifaces_switch(const struct pbl_usbd_function *fn, int iface, bool
       PBL_LOG_WRN("usb: endpoint 0x%02x of %u bytes failed (%d)", ep, mps, ret);
       return ret;
     }
+    (void)atomic_fetch_or(&s_live, prv_ep_bit(ep));
   }
 
   return 0;
 }
 
+static int prv_ifaces_on(const struct pbl_usbd_function *fn, int iface) {
+  return prv_ifaces_eps(fn, iface, EPS_ON);
+}
+
+// The interrupt may end a transfer between two disables: once one endpoint is off, none of the
+// others hands its function a transfer end that could queue on it
+static void prv_ifaces_off(const struct pbl_usbd_function *fn, int iface) {
+  (void)prv_ifaces_eps(fn, iface, EPS_CLOSE);
+  (void)prv_ifaces_eps(fn, iface, EPS_OFF);
+}
+
 static void prv_eps_off(void) {
+  atomic_store(&s_live, 0U);
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-    (void)prv_ifaces_switch(fn, -1, false);
+    (void)prv_ifaces_eps(fn, -1, EPS_OFF);
   }
 }
 
@@ -540,7 +611,7 @@ static int prv_set_configured(bool on) {
     prv_eps_off();
   } else {
     PBL_ITERABLE_SECTION_FOREACH(const struct pbl_usbd_function, usbd_functions, fn) {
-      ret = prv_ifaces_switch(fn, -1, true);
+      ret = prv_ifaces_on(fn, -1);
       if (ret != 0) {
         prv_eps_off();
         return ret;
@@ -617,13 +688,13 @@ static int prv_set_interface(uint16_t iface, uint16_t alt) {
   }
 
   old = s_ctrl.alt[iface];
-  (void)prv_ifaces_switch(fn, local, false);
+  prv_ifaces_off(fn, local);
   s_ctrl.alt[iface] = (uint8_t)alt;
-  ret = prv_ifaces_switch(fn, local, true);
+  ret = prv_ifaces_on(fn, local);
   if (ret != 0) {
-    (void)prv_ifaces_switch(fn, local, false);
+    prv_ifaces_off(fn, local);
     s_ctrl.alt[iface] = old;
-    (void)prv_ifaces_switch(fn, local, true);
+    (void)prv_ifaces_on(fn, local);
     return ret;
   }
   if (fn->set_alt != nullptr) {
@@ -650,6 +721,19 @@ static int prv_set_halt(uint8_t ep, bool halt) {
   return 0;
 }
 
+// A bus reset or a newer setup packet since makes the address one the host no longer wants
+static int prv_set_address(uint8_t addr) {
+  int ret = -ECANCELED;
+
+  pbl_irq_lock();
+  if (s_ctrl.seq == s_events.setup_seq) {
+    ret = pbl_udc_set_address(UDC, addr);
+  }
+  pbl_irq_unlock();
+
+  return ret;
+}
+
 static int prv_standard(uint8_t **data, uint16_t *len) {
   const struct pbl_usb_setup *setup = &s_ctrl.setup;
   uint8_t recip = setup->bmRequestType & PBL_USB_RECIP_MASK;
@@ -660,7 +744,7 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
     case PBL_USB_REQ_GET_DESCRIPTOR:
       return prv_get_descriptor(data, len);
     case PBL_USB_REQ_SET_ADDRESS:
-      return pbl_udc_set_address(UDC, (uint8_t)setup->wValue);
+      return prv_set_address((uint8_t)setup->wValue);
     case PBL_USB_REQ_SET_CONFIGURATION:
       if (setup->wValue > USB_CFG_VALUE) {
         return -EINVAL;
@@ -758,9 +842,22 @@ static int prv_device_vendor(uint8_t **data, uint16_t *len) {
 #endif
 }
 
+// Endpoint 0 serves the setup packet the stack has, unless a newer one arrived since
+static void prv_ep0_queue(uint8_t ep, void *buf, size_t len) {
+  pbl_irq_lock();
+  if (s_ctrl.seq == s_events.setup_seq) {
+    (void)pbl_udc_ep_queue(UDC, ep, buf, len);
+  }
+  pbl_irq_unlock();
+}
+
 static void prv_stall(void) {
-  (void)pbl_udc_ep_set_halt(UDC, PBL_UDC_EP_IN, true);
-  (void)pbl_udc_ep_set_halt(UDC, 0U, true);
+  pbl_irq_lock();
+  if (s_ctrl.seq == s_events.setup_seq) {
+    (void)pbl_udc_ep_set_halt(UDC, PBL_UDC_EP_IN, true);
+    (void)pbl_udc_ep_set_halt(UDC, 0U, true);
+  }
+  pbl_irq_unlock();
   s_ctrl.stage = STAGE_IDLE;
 }
 
@@ -808,17 +905,17 @@ static void prv_setup(const uint8_t *packet) {
 
   if (setup->wLength == 0U) {
     s_ctrl.stage = STAGE_STATUS;
-    (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, nullptr, 0U);
+    prv_ep0_queue(PBL_UDC_EP_IN, nullptr, 0U);
   } else if (in) {
     len = PBL_MIN(len, setup->wLength);
     s_ctrl.zlp = len != 0U && len < setup->wLength && (len % EP0_MPS) == 0U;
     s_ctrl.stage = STAGE_DATA_IN;
-    (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, data, len);
+    prv_ep0_queue(PBL_UDC_EP_IN, data, len);
   } else if (data != nullptr && len >= setup->wLength) {
     s_ctrl.out_fn = fn;
     s_ctrl.out_data = data;
     s_ctrl.stage = STAGE_DATA_OUT;
-    (void)pbl_udc_ep_queue(UDC, 0U, data, setup->wLength);
+    prv_ep0_queue(0U, data, setup->wLength);
   } else {
     prv_stall();
   }
@@ -837,11 +934,11 @@ static void prv_ep0_done(uint8_t ep, int ret) {
       }
       if (s_ctrl.zlp) {
         s_ctrl.zlp = false;
-        (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, nullptr, 0U);
+        prv_ep0_queue(PBL_UDC_EP_IN, nullptr, 0U);
         break;
       }
       s_ctrl.stage = STAGE_STATUS;
-      (void)pbl_udc_ep_queue(UDC, 0U, nullptr, 0U);
+      prv_ep0_queue(0U, nullptr, 0U);
       break;
     case STAGE_DATA_OUT:
       if (ep != 0U) {
@@ -851,7 +948,7 @@ static void prv_ep0_done(uint8_t ep, int ret) {
         s_ctrl.out_fn->control_out(&s_ctrl.setup, s_ctrl.out_data, (uint16_t)ret);
       }
       s_ctrl.stage = STAGE_STATUS;
-      (void)pbl_udc_ep_queue(UDC, PBL_UDC_EP_IN, nullptr, 0U);
+      prv_ep0_queue(PBL_UDC_EP_IN, nullptr, 0U);
       break;
     default:
       s_ctrl.stage = STAGE_IDLE;
@@ -870,27 +967,24 @@ static void prv_unconfigure(void) {
   s_bus.remote_wakeup = false;
 }
 
-// With the IRQ lock held
-static int prv_connect(void) {
+static void prv_connect(void) {
   int ret;
 
   if (s_bus.connected || !atomic_load(&s_enabled) || !pbl_udc_vbus_present(UDC)) {
-    return 0;
+    return;
   }
 
   ret = pbl_udc_enable(UDC);
   if (ret != 0) {
-    return ret;
+    PBL_LOG_ERR("Cannot connect: %d", ret);
+    return;
   }
 
   s_bus.connected = true;
   s_bus.reset = false;
   prv_notify(PBL_USBD_EVENT_CONNECTED);
-
-  return 0;
 }
 
-// With the IRQ lock held
 static void prv_disconnect(void) {
   if (!s_bus.connected) {
     return;
@@ -902,18 +996,18 @@ static void prv_disconnect(void) {
   prv_notify(PBL_USBD_EVENT_DISCONNECTED);
 }
 
-static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const uint8_t *setup,
-                      void *arg) {
-  switch (evt) {
+static void prv_event(const struct pbl_usbd__event *e) {
+  switch (e->id) {
     case PBL_UDC_EVENT_RESET:
       prv_unconfigure();
-      (void)pbl_udc_ep_enable(udc, 0U, PBL_UDC_EP_CONTROL, EP0_MPS);
-      (void)pbl_udc_ep_enable(udc, PBL_UDC_EP_IN, PBL_UDC_EP_CONTROL, EP0_MPS);
+      (void)pbl_udc_ep_enable(UDC, 0U, PBL_UDC_EP_CONTROL, EP0_MPS);
+      (void)pbl_udc_ep_enable(UDC, PBL_UDC_EP_IN, PBL_UDC_EP_CONTROL, EP0_MPS);
       s_bus.reset = true;
       prv_notify(PBL_USBD_EVENT_RESET);
       break;
     case PBL_UDC_EVENT_SETUP:
-      prv_setup(setup);
+      s_ctrl.seq = (uint32_t)e->val;
+      prv_setup(e->setup);
       break;
     case PBL_UDC_EVENT_SUSPEND:
       if (s_bus.connected && s_bus.reset && !s_bus.suspended) {
@@ -928,31 +1022,22 @@ static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const u
       }
       break;
     case PBL_UDC_EVENT_VBUS_READY:
-      pbl_irq_lock();
-      (void)prv_connect();
-      pbl_irq_unlock();
+      prv_connect();
       break;
     case PBL_UDC_EVENT_VBUS_REMOVED:
-      pbl_irq_lock();
       prv_disconnect();
-      pbl_irq_unlock();
       break;
     default:
       break;
   }
 }
 
-static void prv_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *arg) {
+static void prv_data_done(uint8_t ep, int ret) {
   bool in = (ep & PBL_UDC_EP_IN) != 0U;
   uint8_t n = ep & ~PBL_UDC_EP_IN;
   const struct pbl_usbd_function *fn;
 
-  if (n == 0U) {
-    prv_ep0_done(ep, ret);
-    return;
-  }
-
-  if (n >= MAX_EPS || s_num.eps[in][n].fn == 0U) {
+  if (n >= MAX_EPS || s_num.eps[in][n].fn == 0U || (atomic_load(&s_live) & prv_ep_bit(ep)) == 0U) {
     return;
   }
 
@@ -962,12 +1047,126 @@ static void prv_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *
   }
 }
 
+// From the controller's interrupt, or from the stack's thread when an endpoint call ends a transfer
+static void prv_put(uint8_t kind, uint8_t id, int32_t val, const uint8_t *setup) {
+  struct pbl_usbd__event *e;
+
+  pbl_irq_lock();
+  // A reset also supersedes the setup packets before it
+  if (kind == KIND_EVENT && (id == PBL_UDC_EVENT_SETUP || id == PBL_UDC_EVENT_RESET)) {
+    val = (int32_t)++s_events.setup_seq;
+  }
+  if (s_events.head - s_events.tail >= EVENTS) {
+    s_events.lost++;
+    pbl_irq_unlock();
+    (void)pbl_work_submit(&s_workq, &s_drain);
+    return;
+  }
+
+  e = &s_events.ring[s_events.head % EVENTS];
+  e->kind = kind;
+  e->id = id;
+  e->val = val;
+  if (setup != nullptr) {
+    memcpy(e->setup, setup, sizeof(e->setup));
+  }
+  s_events.head++;
+  pbl_irq_unlock();
+
+  (void)pbl_work_submit(&s_workq, &s_drain);
+}
+
+static void prv_udc_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const uint8_t *setup,
+                          void *arg) {
+  // The configuration is gone with a reset or USB power, before the thread disables its endpoints
+  if (evt == PBL_UDC_EVENT_RESET || evt == PBL_UDC_EVENT_VBUS_REMOVED) {
+    atomic_store(&s_live, 0U);
+  }
+  prv_put(KIND_EVENT, (uint8_t)evt, 0, evt == PBL_UDC_EVENT_SETUP ? setup : nullptr);
+}
+
+// Endpoint 0 is the control path, which goes through the thread; the other endpoints are handed
+// over at once
+static void prv_udc_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *arg) {
+  if ((ep & ~PBL_UDC_EP_IN) != 0U) {
+    prv_data_done(ep, ret);
+    return;
+  }
+
+  prv_put(KIND_XFER_DONE, ep, ret, nullptr);
+}
+
 static const struct pbl_udc_callbacks s_callbacks = {
-  .event = prv_event,
-  .xfer_done = prv_xfer_done,
+  .event = prv_udc_event,
+  .xfer_done = prv_udc_xfer_done,
 };
 
+// Events were lost: the device, its functions unconfigured, leaves the bus and comes back for the
+// host to enumerate it again. The controller may stop its clock once disabled.
+static void prv_reconnect(uint32_t lost) {
+  PBL_LOG_ERR("%lu events lost, reconnecting", (unsigned long)lost);
+
+  prv_disconnect();
+
+  pbl_irq_lock();
+  s_events.tail = s_events.head;
+  pbl_irq_unlock();
+
+  pbl_thread_sleep(PBL_MSEC(RECONNECT_MS));
+  prv_connect();
+}
+
+static void prv_drain(struct pbl_work *work) {
+  for (;;) {
+    struct pbl_usbd__event e;
+    bool superseded;
+    uint32_t lost;
+
+    pbl_irq_lock();
+    lost = s_events.lost;
+    s_events.lost = 0U;
+    if (lost != 0U || s_events.tail == s_events.head) {
+      pbl_irq_unlock();
+      if (lost != 0U) {
+        prv_reconnect(lost);
+        continue;
+      }
+      return;
+    }
+    e = s_events.ring[s_events.tail % EVENTS];
+    superseded = (uint32_t)e.val != s_events.setup_seq;
+    s_events.tail++;
+    pbl_irq_unlock();
+
+    if (e.kind == KIND_EVENT) {
+      // A host only sends a setup packet before the last one is served if it gave up on that one
+      if (e.id != PBL_UDC_EVENT_SETUP || !superseded) {
+        prv_event(&e);
+      }
+    } else if (e.kind == KIND_XFER_DONE) {
+      prv_ep0_done(e.id, (int)e.val);
+    } else {
+      prv_connect();
+    }
+  }
+}
+
+static int prv_thread_start(void) {
+  const struct pbl_thread_attr attr = {
+    .name = "usbd",
+    .entry = pbl_workq_thread,
+    .arg = &s_workq,
+    .prio = CONFIG_USB_DEVICE_THREAD_PRIO,
+    .privileged = true,
+    .stack = s_stack,
+    .stack_size = sizeof(s_stack),
+  };
+
+  return pbl_thread_create(&s_thread, &attr);
+}
+
 static int prv_enable(void) {
+  static bool s_started;
   int ret;
 
   ret = prv_assign();
@@ -980,13 +1179,18 @@ static int prv_enable(void) {
     return ret;
   }
 
+  if (!s_started) {
+    ret = prv_thread_start();
+    if (ret != 0) {
+      return ret;
+    }
+    s_started = true;
+  }
+
   pbl_udc_register(UDC, &s_callbacks, nullptr);
+  prv_put(KIND_CONNECT, 0U, 0, nullptr);
 
-  pbl_irq_lock();
-  ret = prv_connect();
-  pbl_irq_unlock();
-
-  return ret;
+  return 0;
 }
 
 #if defined(CONFIG_USB_DEVICE_SERIAL_NUMBER)

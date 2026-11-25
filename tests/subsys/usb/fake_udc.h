@@ -9,6 +9,8 @@
 #include <string.h>
 
 #include <pbl/drivers/udc.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/work.h>
 #include <pbl/usb/usb.h>
 #include <pbl/usb/usbd.h>
 
@@ -50,6 +52,20 @@ static uint8_t s_queued_data[2][16][64];
 static uint8_t s_fail_ep;
 // An endpoint the controller refuses to enable, or -1
 static int s_ep_refused = -1;
+// An endpoint whose transfer ends, as from the interrupt, while another one is disabled, or 0
+static uint8_t s_xfer_on_disable;
+
+// The stack's work runs at once: a request is answered before its event returns
+bool pbl_work_submit(struct pbl_workq *q, struct pbl_work *work) {
+  work->fn(work);
+  return true;
+}
+
+void pbl_workq_thread(void *arg) {
+}
+
+void pbl_thread_sleep(pbl_timeout_t timeout) {
+}
 
 int pbl_device_init(const struct pbl_device *dev) {
   return 0;
@@ -102,6 +118,9 @@ int pbl_udc_ep_enable(const struct pbl_udc *udc, uint8_t ep, enum pbl_udc_ep_typ
 
 int pbl_udc_ep_disable(const struct pbl_udc *udc, uint8_t ep) {
   s_enabled_eps[(ep & PBL_UDC_EP_IN) != 0U][ep & ~PBL_UDC_EP_IN] = false;
+  if (s_xfer_on_disable != 0U && ep != s_xfer_on_disable) {
+    s_cb->xfer_done(UDC, s_xfer_on_disable, 1, nullptr);
+  }
   return 0;
 }
 

@@ -19,7 +19,7 @@ int main(void) {
     return ret;
   }
 
-  /* The device now serves the host from the controller's interrupt and the system work queue. */
+  /* The device now serves the host from the USB stack's thread and the system work queue. */
   printf("dfu: ready, partition of %d KiB at 0x%x\n", (int)(PART_DFU_SIZE / 1024U),
          (unsigned int)PART_DFU_OFFSET);
 

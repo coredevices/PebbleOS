@@ -116,7 +116,8 @@ static const char *const s_strings[] = {
   "Loopback interrupt",
 };
 
-/* The stack's callbacks run in the controller's interrupt: they queue, the main thread prints. */
+/* The stack's callbacks run on its thread or in the controller's interrupt: they queue, the main
+ * thread prints. */
 static PBL_MSGQ_DEFINE(s_alts, sizeof(uint8_t), 8);
 
 PBL_USBD_FUNCTION_DECLARE(loopback);

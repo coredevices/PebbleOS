@@ -6,6 +6,7 @@
 
 #include <pbl/drivers/udc.h>
 #include <pbl/kernel/compiler.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/usb/usbd.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
@@ -168,16 +169,17 @@ static void prv_sink_check(size_t len) {
   s_test.stats[STAT_SINK_BYTES] += len;
 }
 
+// On the stack's thread, while the transfers end in the interrupt
 static void prv_configured(bool on) {
+  pbl_irq_lock();
   s_test.configured = on;
-  if (!on) {
-    return;
+  if (on) {
+    prv_loop_rx();
+    prv_sink_rx();
+    prv_source_tx();
+    prv_int_tx();
   }
-
-  prv_loop_rx();
-  prv_sink_rx();
-  prv_source_tx();
-  prv_int_tx();
+  pbl_irq_unlock();
 }
 
 static int prv_request(const struct pbl_usb_setup *setup, uint8_t **data, uint16_t *len) {
@@ -206,16 +208,20 @@ static int prv_request(const struct pbl_usb_setup *setup, uint8_t **data, uint16
       if (in) {
         return -EINVAL;
       }
+      pbl_irq_lock();
       memset(s_test.stats, 0, sizeof(s_test.stats));
       s_test.sink_seq = 0U;
+      pbl_irq_unlock();
       return 0;
     case REQ_STATS:
       if (!in) {
         return -EINVAL;
       }
+      pbl_irq_lock();
       for (size_t i = 0U; i < STAT_COUNT; i++) {
         pbl_put_le32(s_test.stats[i], &s_test.stats_le[4U * i]);
       }
+      pbl_irq_unlock();
       *data = s_test.stats_le;
       *len = sizeof(s_test.stats_le);
       return 0;

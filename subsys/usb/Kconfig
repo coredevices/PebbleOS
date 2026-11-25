@@ -75,6 +75,19 @@ config USB_DEVICE_REMOTE_WAKEUP
       Tell the host the device can resume a bus it suspended, which
       pbl_usbd_wakeup() does once the host allows it.
 
+config USB_DEVICE_THREAD_PRIO
+    int "Thread priority"
+    default 4
+    help
+      Priority of the thread the control path runs on: bus events, the
+      requests on endpoint 0 and the calls they make into functions. It
+      answers the host's requests, as the controller's interrupt did, so
+      it runs above the main thread.
+
+config USB_DEVICE_THREAD_STACK_SIZE
+    int "Thread stack size in bytes"
+    default 2048
+
 config USB_CDC_ACM
     bool "Serial ports"
     select UART
@@ -135,5 +148,9 @@ config USB_TEST
       vendor requests on endpoint 0. It takes interface 0 and endpoints
       0x01, 0x82, 0x03, 0x84 and 0x85. The integration tests in
       tests/integration/usb drive it.
+
+module = USB_DEVICE
+module-str = USB device
+source "subsys/logging/Kconfig.template.log_level"
 
 endif # USB_DEVICE
