@@ -6,6 +6,7 @@
 
 #include <pbl/bluetooth/clients/ams.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/util/misc.h>
 #include <pbl/util/size.h>
 
 static const ble_uuid128_t s_svc_uuid = BLE_UUID128_INIT(PBL_BT_AMS_UUID_SERVICE);
@@ -31,7 +32,7 @@ static const ble_uuid_t *const s_chr_uuids[CHR_NUM] = {
 static PBL_MUTEX_DEFINE(s_lock);
 
 static struct pbl_bt_ams_client *prv_client(struct pbl_bt_gattc_service *svc) {
-  return (struct pbl_bt_ams_client *)((uint8_t *)svc - offsetof(struct pbl_bt_ams_client, svc));
+  return PBL_CONTAINER_OF(svc, struct pbl_bt_ams_client, svc);
 }
 
 static void prv_cancel_read(struct pbl_bt_ams_client *client) {

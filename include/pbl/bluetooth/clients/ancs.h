@@ -82,7 +82,8 @@ struct pbl_bt_ancs_attr_req {
   uint16_t max_len;
   /**
    * Whether the response may lack it, as that of a device that does not know the attribute.
-   * A response ends once it has the attributes that are not optional.
+   * A response ends once it has the attributes that are not optional, so ask for the optional
+   * ones first: one that came after the end would be taken for the start of the next response.
    */
   bool optional;
 };
