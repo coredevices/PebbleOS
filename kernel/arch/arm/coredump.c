@@ -63,6 +63,10 @@ PBL_USED struct {
 
 static bool s_in_fault_handler;
 
+// The dump runs here: what is left of the stack it preempted is unknown, and its contents are
+// part of the dump.
+static uint8_t PBL_ALIGNED(8) s_stack[CONFIG_COREDUMP_STACK_SIZE];
+
 void arch_coredump_trigger(void) {
   arch_writel(ARM_SCB_ICSR_NMIPENDSET, ARM_SCB_ICSR);
   arm_dsb();
@@ -81,9 +85,16 @@ void PBL_NAKED NMI_Handler(void) {
       "  mrs r3, psp                  \n"
       "  adds r0, #8                  \n" // skip pc
       "  stmia r0!, {r1-r3}           \n" // xpsr, msp, psp
+#if defined(CONFIG_CPU_CORTEX_M_HAS_SPLIM) && defined(CONFIG_KERNEL_STACK_GUARD)
+      "  ldr r0, =%[stack]            \n"
+      "  msr msplim, r0               \n"
+#endif
+      "  ldr r0, =%[stack_top]        \n"
+      "  mov sp, r0                   \n"
       "  b arch_coredump_handler_c    \n"
       :
-      : [s_saved_registers] "i"(&s_saved_registers.core_reg[PBL_THREAD_REG_R4])
+      : [s_saved_registers] "i"(&s_saved_registers.core_reg[PBL_THREAD_REG_R4]),
+        [stack] "i"(s_stack), [stack_top] "i"(&s_stack[sizeof(s_stack)])
       : "r0", "r1", "r2", "r3", "cc");
 }
 

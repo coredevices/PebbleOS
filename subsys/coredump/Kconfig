@@ -12,6 +12,14 @@ config COREDUMP
 
 if COREDUMP
 
+config COREDUMP_STACK_SIZE
+    int "Stack size of the dump in bytes"
+    default 1024
+    help
+      Stack the dump is written on, its own so that it depends neither on
+      what the code that crashed left of its stack nor overwrites it. The
+      backends and the drivers they write through run on it.
+
 config COREDUMP_TEST_FAULT
     bool
     help
