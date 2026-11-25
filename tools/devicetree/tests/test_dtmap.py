@@ -2644,6 +2644,30 @@ def test_regs_of_the_enabled_node_of_a_compatible(tmp_path):
     assert "#define PBL_DT_CLK_ACME_LPTIMER_TIMER 5U" in text
 
 
+REGS_RESET_DTS = """/dts-v1/;
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    rcc: reset-controller@2000 {
+        reg = <0x2000 0x400>;
+        #reset-cells = <1>;
+    };
+
+    timer@3000 {
+        compatible = "acme,lptimer";
+        reg = <0x3000 0x400>;
+        resets = <&rcc 1161>;
+    };
+};
+"""
+
+
+def test_regs_of_the_reset_of_a_compatible(tmp_path):
+    text = regs(tmp_path, [], compatible="acme,lptimer", dts=REGS_RESET_DTS)
+    assert "#define PBL_DT_RST_ACME_LPTIMER 1161U" in text
+
+
 def test_regs_of_a_compatible_need_one_enabled_node(tmp_path):
     with pytest.raises(DtError, match="0 enabled 'acme,missing' nodes"):
         regs(tmp_path, [], compatible="acme,missing")
