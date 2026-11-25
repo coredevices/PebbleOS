@@ -10,6 +10,8 @@ args:
   - name: true
   - reg: 0
     child: gpio@0
+  - hwlock: 0
+    default: PBL_HWSPINLOCK_NONE
   - clock: 0
     child: gpio@0
   - clock: 0
