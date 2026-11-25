@@ -26,7 +26,7 @@ typedef struct PBL_PACKED {
 //! Handler for the "Set Discoverable & Pairable" command
 static void prv_handle_set_discoverable_pairable(
     BLEControlCommandSetDiscoverablePairable *cmd_data) {
-  bt_pairability_use_ble_for_period(cmd_data->duration);
+  bt_pairability_use_for_period(cmd_data->duration);
   PBL_LOG_DBG("Set Discoverable Pairable: %u, %u", cmd_data->discoverable_pairable,
               cmd_data->duration);
 }
