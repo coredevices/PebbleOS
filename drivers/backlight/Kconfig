@@ -42,6 +42,7 @@ config BACKLIGHT_PWM
     bool "PWM"
     default y
     depends on DT_HAS_PWM_BACKLIGHT_ENABLED
+    select GPIO
     select PWM
     help
       Support for a backlight driven by a PWM peripheral.
