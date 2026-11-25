@@ -42,7 +42,7 @@ static void prv_set_software_revision(struct pbl_bt_dis_info *info) {
   strncpy(info->sw_revision, sdk_version, PBL_BT_DIS_SW_REVISION_LEN);
 }
 
-void dis_get_info(struct pbl_bt_dis_info *info) {
+void bt_dis_get_info(struct pbl_bt_dis_info *info) {
   prv_set_model_number(info);
   prv_set_manufacturer_name(info);
   prv_set_serial_number(info);

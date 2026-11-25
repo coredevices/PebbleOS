@@ -135,7 +135,7 @@ static bool prv_event_type_subscribable_from_user(PebbleEventType type) {
   switch (type) {
     case PEBBLE_ACCEL_SHAKE_EVENT:
     case PEBBLE_ACCEL_DOUBLE_TAP_EVENT:
-    case PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT:
+    case PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT:
     case PEBBLE_BUTTON_DOWN_EVENT:
     case PEBBLE_BUTTON_UP_EVENT:
     case PEBBLE_COMM_SESSION_EVENT:

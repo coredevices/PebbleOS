@@ -22,6 +22,6 @@ struct pbl_bt_dis_info;
  *
  * @param[out] info Device information.
  */
-void dis_get_info(struct pbl_bt_dis_info *info);
+void bt_dis_get_info(struct pbl_bt_dis_info *info);
 
 /** @} */

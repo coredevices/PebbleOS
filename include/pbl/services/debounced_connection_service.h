@@ -12,7 +12,7 @@
  *
  * Tracks the connection to the mobile app (system session) and to third-party apps using
  * PebbleKit. Connections are reported right away with a
- * @c PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT, but a disconnection is only reported, with the
+ * @c PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT, but a disconnection is only reported, with the
  * disconnection vibe, if the connection is not restored within 25 seconds. This makes the
  * connection appear more reliable.
  * @{

@@ -179,16 +179,15 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
   SettingsBluetoothData *settings_data = (SettingsBluetoothData *)context;
   PBL_LOG_DBG("BT EVENT");
   switch (event->type) {
-    case PBL_BT_PEBBLE_CONNECTION_EVENT:
+    case PEBBLE_BT_CONNECTION_EVENT:
       // If BT Settings is open, update BLE device name upon connecting device:
-      if (event->bluetooth.connection.is_ble &&
-          event->bluetooth.connection.state == PebbleBluetoothConnectionEventStateConnected) {
+      if (event->bluetooth.connection.state == PebbleBluetoothConnectionEventStateConnected) {
         // iOS seems to respond with 0x0E (Unlikely Error) when performing this request while
         // the encryption set up is going on. For non-bonded devices it will work fine though.
         bt_link_read_peer_name();
       }
       [[fallthrough]];
-    case PBL_BT_PEBBLE_PAIRING_EVENT:
+    case PEBBLE_BT_PAIRING_EVENT:
     case PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT: {
       settings_bluetooth_update_remotes_private(settings_data);
 
@@ -196,7 +195,7 @@ static void prv_settings_bluetooth_event_handler(PebbleEvent *event, void *conte
       break;
     }
 
-    case PBL_BT_PEBBLE_STATE_EVENT: {
+    case PEBBLE_BT_STATE_EVENT: {
       settings_data->toggle_state = ToggleStateIdle;
       settings_menu_reload_data(SettingsMenuItemBluetooth);
       break;
@@ -428,17 +427,17 @@ static void prv_expand_cb(SettingsCallbacks *context) {
   }
 
   data->bt_airplane_event_info = (EventServiceInfo){
-    .type = PBL_BT_PEBBLE_STATE_EVENT,
+    .type = PEBBLE_BT_STATE_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };
   data->bt_connection_event_info = (EventServiceInfo){
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };
   data->bt_pairing_event_info = (EventServiceInfo){
-    .type = PBL_BT_PEBBLE_PAIRING_EVENT,
+    .type = PEBBLE_BT_PAIRING_EVENT,
     .handler = prv_settings_bluetooth_event_handler,
     .context = data,
   };

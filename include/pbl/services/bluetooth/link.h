@@ -19,7 +19,7 @@
  * The link becomes the gateway's once it is encrypted and its peer is bonded: only then are the
  * services of the phone used. That, and the loss of it, is reported with
  * @c PEBBLE_BLE_CONNECTION_EVENT; any connection and disconnection with
- * @c PBL_BT_PEBBLE_CONNECTION_EVENT.
+ * @c PEBBLE_BT_CONNECTION_EVENT.
  * @{
  */
 

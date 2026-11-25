@@ -46,7 +46,7 @@ void prf_idle_watchdog_init(void) {
   pbl_wallclock_work_init(&s_is_idle_timer, prv_handle_watchdog_timeout);
 
   s_bt_event_info = (EventServiceInfo){
-    .type = PBL_BT_PEBBLE_CONNECTION_EVENT,
+    .type = PEBBLE_BT_CONNECTION_EVENT,
     .handler = prv_watchdog_feed,
   };
   event_service_client_subscribe(&s_bt_event_info);

@@ -40,7 +40,7 @@ static bool s_debounced_state_is_connected[NumConnectionsToDebounce];
 
 static void prv_put_debounced_connection_event(DebounceConnection conn_id) {
   PebbleEvent event = {
-    .type = PBL_BT_PEBBLE_CONNECTION_DEBOUNCED_EVENT,
+    .type = PEBBLE_BT_CONNECTION_DEBOUNCED_EVENT,
     .bluetooth.comm_session_event.is_open = s_debounced_state_is_connected[conn_id],
     .bluetooth.comm_session_event.is_system = (conn_id == MobileAppDebounce),
   };
