@@ -72,6 +72,8 @@ class Setup:
     #: (for QEMU, any -serial spec).
     bt_hci: str = None
     phone: PhoneSetup = None
+    #: Where the watch's own USB device sits on the host's bus.
+    usb: str = None
 
     def lacks(self, need):
         """Why the setup cannot serve ``need`` (``phone``, ``power``), or
@@ -141,6 +143,7 @@ def resolve(build, device_type, options, lab=None):
         if watch is not None:
             setup.watch = watch.name
             setup.serial = [watch.serial] if watch.serial else []
+            setup.usb = watch.usb
             if watch.supply is not None:
                 supply = lab.supplies[watch.supply]
                 setup.supply_type, setup.supply_port = supply.type, supply.port

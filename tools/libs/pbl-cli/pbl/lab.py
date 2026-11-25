@@ -41,6 +41,9 @@ class Watch:
     serial: str = None
     probe: str = None
     supply: str = None
+    #: Where the watch's own USB device sits on the host's bus, as
+    #: ``<bus>-<port>[.<port>...]``.
+    usb: str = None
 
     def matches(self, board_target):
         return board_matches(self.board, board_target)

@@ -311,6 +311,7 @@ def usb_target(request, build, lab_setup, lab_locks, results_dir):
         build.config["CONFIG_USB_DEVICE_VID"],
         build.config["CONFIG_USB_DEVICE_PID"],
         match,
+        lab_setup.usb,
     )
 
 

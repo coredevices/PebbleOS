@@ -77,39 +77,60 @@ def flash(build, serial, log_path, attempts=FLASH_ATTEMPTS):
     raise HarnessError(f"flashing failed ({result.returncode}); see {log_path}")
 
 
-class UsbTarget:
-    """The build's device on the host's bus."""
+def location(dev):
+    """Where ``dev`` sits on the host's bus, as ``<bus>-<port>[.<port>...]``."""
+    ports = dev.port_numbers or ()
+    return f"{dev.bus}-{'.'.join(str(p) for p in ports)}"
 
-    def __init__(self, vid, pid, match=None):
+
+class UsbTarget:
+    """The build's device on the host's bus: the one at ``location`` (the
+    lab's), or else the only one with its IDs."""
+
+    def __init__(self, vid, pid, match=None, location=None):
         self.vid = vid
         self.pid = pid
         self._match = match
+        self.location = location
 
     def __str__(self):
-        return f"{self.vid:04x}:{self.pid:04x}"
+        text = f"{self.vid:04x}:{self.pid:04x}"
+        return f"{text} at {self.location}" if self.location else text
+
+    def _candidates(self):
+        """The devices with the IDs, at the location if given, that match."""
+        import usb.core
+
+        devs = usb.core.find(find_all=True, idVendor=self.vid, idProduct=self.pid)
+        return [
+            dev
+            for dev in devs
+            if (self.location is None or location(dev) == self.location)
+            and (self._match is None or self._match(dev))
+        ]
 
     def find(self, timeout=10.0):
         """The device, waiting up to ``timeout`` seconds for it to enumerate."""
-        import usb.core
-
         deadline = time.monotonic() + timeout
         while True:
-            for dev in usb.core.find(
-                find_all=True, idVendor=self.vid, idProduct=self.pid
-            ):
-                if self._match is None or self._match(dev):
-                    return dev
+            devs = self._candidates()
+            if len(devs) > 1:
+                where = ", ".join(location(dev) for dev in devs)
+                raise HarnessError(
+                    f"several matching USB devices {self} on the host's bus ({where}): "
+                    "give the watch's in the lab file (usb)"
+                )
+            if devs:
+                return devs[0]
             if time.monotonic() >= deadline:
                 raise HarnessError(f"no USB device {self} on the host's bus")
             time.sleep(0.2)
 
     def gone(self, timeout=5.0):
         """Wait for the device to leave the bus, returning whether it did."""
-        import usb.core
-
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
-            if usb.core.find(idVendor=self.vid, idProduct=self.pid) is None:
+            if not self._candidates():
                 return True
             time.sleep(0.05)
         return False
@@ -118,10 +139,13 @@ class UsbTarget:
 def is_test_function(dev):
     """Whether ``dev`` has the test function's interface."""
     try:
-        cfg = dev.get_active_configuration()
+        try:
+            cfg = dev.get_active_configuration()
+        except Exception:  # noqa: BLE001
+            cfg = dev[0]
+        intf = cfg[(INTERFACE, 0)]
     except Exception:  # noqa: BLE001
-        cfg = dev[0]
-    intf = cfg[(INTERFACE, 0)]
+        return False
     return intf.bInterfaceClass == VENDOR_CLASS and intf.bNumEndpoints == 5
 
 

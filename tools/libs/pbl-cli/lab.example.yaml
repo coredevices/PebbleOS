@@ -9,7 +9,10 @@
 # Watches, by name. `board` may leave out the revision to match any.
 # `serial` is the debug serial port (console, sftool, serial debuggers),
 # `probe` the debug probe as the probe-rs runner names it, `supply` the one
-# wired to its battery terminals.
+# wired to its battery terminals, `usb` where the board's own USB device
+# sits on the host's bus, as <bus>-<port>[.<port>...] (pyusb's bus and
+# port_numbers), for the USB tests to tell it from other boards with the
+# same IDs.
 watches:
   obelix:
     board: obelix@pvt
@@ -22,6 +25,10 @@ watches:
     board: asterix
     serial: /dev/tty.usbmodem0010500000001
     probe: 1366:1051:001050000000
+  stm32h747i-disco:
+    board: stm32h747i_disco
+    serial: /dev/tty.usbmodem113303
+    usb: 1-1.3.4
 
 # Power supplies (see docs/pbl/power.md for the types); one powers one
 # watch at a time.
