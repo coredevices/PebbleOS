@@ -7,6 +7,9 @@
 
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/drivers/nvmem/sf32lb.h>
+#include <pbl/logging/logging.h>
+
+PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 
 #define UID_SIZE  8U
 #define UID_MAGIC 0xA5U
@@ -38,8 +41,10 @@ int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type)
   for (size_t i = 0U; i < sizeof(addr->octets); i++) {
     chksum += uid[i];
   }
+  // Not worth refusing to boot over: as good as none.
   if (chksum != uid[6]) {
-    return -EIO;
+    PBL_LOG_ERR("The identity address in the eFUSE is corrupt");
+    return -ENOENT;
   }
 
   memcpy(addr->octets, uid, sizeof(addr->octets));
