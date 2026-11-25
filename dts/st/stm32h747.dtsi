@@ -72,3 +72,13 @@
 &rtc {
 	st,syscfg = <&pwr 0x00 0x100>;
 };
+
+// Both cores configure pins on the ports they share
+&pinctrl {
+	hwlocks = <&hsem 2>;
+};
+
+// Both cores set the triggers of the lines and route them from the ports
+&exti {
+	hwlocks = <&hsem 3>;
+};
