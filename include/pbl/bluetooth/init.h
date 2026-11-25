@@ -5,7 +5,6 @@
 
 #include <pbl/bluetooth/dis.h>
 #include <pbl/bluetooth/sm_types.h>
-#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
 
 /**
@@ -34,7 +33,7 @@
  *
  * struct pbl_bt_config *config = pbl_zalloc_check(sizeof(*config));
  * dis_get_info(&config->dis_info);
- * bool running = pbl_bt_start(config);
+ * int rc = pbl_bt_start(config);
  * pbl_free(config);
  *
  * // ...
@@ -45,14 +44,9 @@
  */
 
 /** @brief Stack configuration passed to pbl_bt_start(). */
-struct PBL_PACKED pbl_bt_config {
-  /**
-   * @brief Root keys, indexed by enum pbl_bt_sm_root_key_type.
-   *
-   * The identity root key is the local Identity Resolving Key. The encryption root key is not
-   * used: the keys of a bond are generated and stored by the host.
-   */
-  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+struct pbl_bt_config {
+  /** The local Identity Resolving Key. */
+  struct pbl_bt_sm_key irk;
   /** Values served by the Device Information Service. */
   struct pbl_bt_dis_info dis_info;
 };
@@ -70,17 +64,21 @@ void pbl_bt_init(void);
  * @brief Start the Bluetooth stack.
  *
  * Registers the GATT services, starts the host and waits for it to synchronize with the
- * controller, then sets up the identity address. Does nothing if the stack is already running.
+ * controller and set the identity address up. Does nothing if the stack is already running.
  *
  * @param config Stack configuration. Only read during the call.
- * @return true if the stack is running, false if it failed to start.
+ * @retval 0 The stack is running.
+ * @retval -EBUSY It is starting or stopping.
+ * @retval -EIO The GATT services could not be registered.
+ * @retval -EADDRNOTAVAIL There is no identity address.
  */
-bool pbl_bt_start(struct pbl_bt_config *config);
+int pbl_bt_start(const struct pbl_bt_config *config);
 
 /**
  * @brief Stop the Bluetooth stack.
  *
- * Blocks until the host has stopped, then resets the GATT server. Bonds are kept.
+ * Blocks until the host has stopped, then resets the GATT server. Bonds are kept. Does nothing if
+ * the stack is not running.
  */
 void pbl_bt_stop(void);
 
