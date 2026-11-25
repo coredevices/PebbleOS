@@ -71,6 +71,16 @@ typedef const struct HRMDevice {
 bool gh3x2x_ble_data_recv(void *context);
 
 /**
+ * @brief Send tuning protocol data over BLE, to the connection that wrote last.
+ *
+ * Implemented by the tuning service (@c CONFIG_BT_SERVICE_GH3X2X_TUNING) for the sensor's library.
+ *
+ * @param p_data The data.
+ * @param data_len Its length in bytes.
+ */
+void gh3x2x_ble_notify(const uint8_t *p_data, uint32_t data_len);
+
+/**
  * @brief Report the wear detection state.
  *
  * @param is_wear True if the watch is worn.
