@@ -3,3 +3,4 @@
 # <prefix>	<description>
 coredevices	Core Devices LLC
 sifli	SiFli Technologies (Nanjing) Co., Ltd.
+worldsemi	Worldsemi Co., Limited

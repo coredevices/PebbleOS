@@ -1,0 +1,120 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/leds/worldsemi,ws2812b.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Worldsemi WS2812B LED chain driven over SPI
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description: |
+  WS2812B RGB LEDs, chained through their data lines, take 800 kbit/s on a
+  single wire. The data line is a SPI MOSI line, each LED bit sent as three
+  SPI bits, so the SPI clock is between 2.105 MHz and 2.85 MHz. The MOSI
+  line idles low. The LEDs have no chip select: reg is the one of a
+  controller chip select left unconnected.
+
+  Each LED of the chain is a multi-led node, at its position in the chain,
+  with one led node per color at its position in the data of the LED.
+
+allOf:
+  - $ref: /schemas/spi/spi-peripheral-props.yaml#
+
+properties:
+  compatible:
+    const: worldsemi,ws2812b
+
+  reg:
+    maxItems: 1
+
+  spi-max-frequency:
+    minimum: 2105000
+    maximum: 2850000
+
+  "#address-cells":
+    const: 1
+
+  "#size-cells":
+    const: 0
+
+patternProperties:
+  "^multi-led@[0-9a-f]+$":
+    type: object
+    $ref: leds-class-multicolor.yaml#
+    unevaluatedProperties: false
+
+    properties:
+      reg:
+        description: Position of the LED in the chain.
+
+      "#address-cells":
+        const: 1
+
+      "#size-cells":
+        const: 0
+
+    patternProperties:
+      "^led@[0-2]$":
+        type: object
+        $ref: common.yaml#
+        unevaluatedProperties: false
+
+        properties:
+          reg:
+            description: Position of the color in the data of the LED.
+            maximum: 2
+
+        required:
+          - reg
+          - color
+
+    required:
+      - reg
+
+required:
+  - compatible
+  - reg
+  - spi-max-frequency
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/leds/common.h>
+
+    spi {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        led-controller@1 {
+            compatible = "worldsemi,ws2812b";
+            reg = <1>;
+            spi-max-frequency = <2500000>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            multi-led@0 {
+                reg = <0>;
+                color = <LED_COLOR_ID_RGB>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                led@0 {
+                    reg = <0>;
+                    color = <LED_COLOR_ID_GREEN>;
+                };
+
+                led@1 {
+                    reg = <1>;
+                    color = <LED_COLOR_ID_RED>;
+                };
+
+                led@2 {
+                    reg = <2>;
+                    color = <LED_COLOR_ID_BLUE>;
+                };
+            };
+        };
+    };
