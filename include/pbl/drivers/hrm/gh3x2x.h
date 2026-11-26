@@ -7,8 +7,6 @@
 #include <pbl/drivers/i2c.h>
 #include <pbl/drivers/intc.h>
 
-#include <applib/app_timer.h>
-
 /**
  * @defgroup drivers_hrm_gh3x2x GH3x2x
  * @ingroup drivers_hrm
@@ -39,8 +37,6 @@ typedef struct HRMDeviceState {
   bool spo2_assumed_wear; // is_wear is the SpO2 path's assumed-worn value, not an ADT verdict
   bool wear_before_spo2;  // ADT verdict to restore once the green path runs again
   int32_t work_mode;
-  uint16_t timer_period_ms;
-  AppTimer *timer;
   GH3x2xFTData *factory;
   bool initialized;
 } HRMDeviceState;
@@ -59,26 +55,6 @@ typedef const struct HRMDevice {
   /** Sensor reset line, optional. */
   struct pbl_gpio reset;
 } HRMDevice;
-
-/**
- * @brief Queue tuning protocol data received over BLE for processing on the background work queue.
- *
- * Only with @c CONFIG_BT_SERVICE_GH3X2X_TUNING.
- *
- * @param context Heap buffer holding a 32-bit length followed by the data; freed once processed.
- * @return True if queued.
- */
-bool gh3x2x_ble_data_recv(void *context);
-
-/**
- * @brief Send tuning protocol data over BLE, to the connection that wrote last.
- *
- * Implemented by the tuning service (@c CONFIG_BT_SERVICE_GH3X2X_TUNING) for the sensor's library.
- *
- * @param p_data The data.
- * @param data_len Its length in bytes.
- */
-void gh3x2x_ble_notify(const uint8_t *p_data, uint32_t data_len);
 
 /**
  * @brief Report the wear detection state.

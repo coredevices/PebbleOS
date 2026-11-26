@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2026 Core Devices LLC
-# SPDX-License-Identifier: Apache-2.0
-
-config BT_SERVICE_GH3X2X_TUNING
-    bool "GH3X2X tuning service"
-    depends on HRM_GH3X2X
-    help
-      GH3X2X heart-rate sensor tuning GATT service, used to tune the
-      sensor over BLE. Off by default.

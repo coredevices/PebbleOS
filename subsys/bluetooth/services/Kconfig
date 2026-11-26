@@ -1,11 +1,18 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
+config BT_GATT_SERVER
+    bool
+    depends on NIMBLE
+    help
+      What the GATT services of the device share (pbl/bluetooth/gatts.h).
+      It only needs NimBLE.
+
 menu "Services"
+    depends on BT
 
 rsource "bas/Kconfig"
 rsource "dis/Kconfig"
-rsource "gh3x2x_tuning/Kconfig"
 rsource "ppog_reversed/Kconfig"
 rsource "pps/Kconfig"
 

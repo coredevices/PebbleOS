@@ -26,12 +26,6 @@ int pbl_bt__services_init(const struct pbl_bt_dis_info *dis_info) {
     return rc;
   }
 #endif
-#ifdef CONFIG_BT_SERVICE_GH3X2X_TUNING
-  rc = pbl_bt__gh3x2x_tuning_init();
-  if (rc != 0) {
-    return rc;
-  }
-#endif
 
   return 0;
 }
