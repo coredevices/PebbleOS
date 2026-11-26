@@ -17,12 +17,14 @@ flowchart TD
   glue["Bluetooth subsystem<br/>subsys/bluetooth/"]
   nimble["NimBLE host and port<br/>third_party/nimble"]
   nrf["NimBLE controller<br/>nRF52 radio"]
+  sdc["SoftDevice Controller<br/>nRF54L, nonfree"]
   sifli["SiFli LCPU<br/>IPC, SF32LB52"]
   fake["Fake controller<br/>QEMU"]
   uart["H4 controller<br/>CONFIG_NIMBLE_HCI_UART"]
   fw --> glue --> nimble
   fw --> nimble
   nimble -- HCI --> nrf
+  nimble -- HCI --> sdc
   nimble -- HCI --> sifli
   nimble -- HCI --> fake
   nimble -- HCI --> uart
@@ -32,7 +34,7 @@ flowchart TD
   classDef base fill:#525252,stroke:#525252,color:#ffffff
   class fw app
   class glue,nimble system
-  class nrf,sifli,fake,uart base
+  class nrf,sdc,sifli,fake,uart base
 ```
 
 What the subsystem has:
@@ -52,8 +54,9 @@ own, with
 controller is in the image, on threads that `nimble_port_pebble_init()`
 starts, and the {doc}`NimBLE samples <../samples/index>` use its API
 directly. The HCI transport is chosen per SoC (`NIMBLE_HCI`): the
-NimBLE controller on the nRF52 radio, the SiFli LCPU over IPC on SF32LB52,
-and a fake controller on QEMU that acknowledges every command so the host
+NimBLE controller on the nRF52 radio, the Nordic SoftDevice Controller on
+the nRF54L, from the nonfree libraries and called directly with no HCI
+framing, the SiFli LCPU over IPC on SF32LB52, and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial
 channel, `pebble/comm/qemu/`.
 

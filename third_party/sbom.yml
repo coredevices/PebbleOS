@@ -132,6 +132,15 @@ components:
     license: LicenseRef-Nordic-5-Clause
     url: https://github.com/nrfconnect/sdk-nrfxlib
 
+  - name: nrf-softdevice-controller
+    path: nonfree/pebbleos-nonfree/nordic/softdevice_controller
+    type: library
+    supplier: Nordic Semiconductor ASA
+    description: Bluetooth LE controller for the nRF54L, from sdk-nrfxlib v3.4.2
+    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    license: LicenseRef-Nordic-5-Clause
+    url: https://github.com/nrfconnect/sdk-nrfxlib
+
   - name: cst816-firmware
     path: nonfree/pebbleos-nonfree/cst816
     type: firmware
