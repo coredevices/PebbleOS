@@ -3,6 +3,7 @@
 
 config BT_SERVICE_PPOG_REVERSED
     bool "Reversed PPoGATT service"
+    select BT_GATT_SERVER
     help
       PPoGATT service hosted by the watch, for phones whose GATT server
       API is broken (pbl/bluetooth/ppog_reversed.h).

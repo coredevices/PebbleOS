@@ -3,6 +3,7 @@
 
 config BT_SERVICE_PPS
     bool "Pebble Pairing Service"
+    select BT_GATT_SERVER
     help
       GATT service through which the phone app checks the connection
       status and triggers pairing (pbl/bluetooth/pebble_pairing_service.h).
