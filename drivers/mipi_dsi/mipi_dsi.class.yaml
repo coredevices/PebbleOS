@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+class: mipi_dsi
+type: struct pbl_mipi_dsi_host
+include: pbl/drivers/mipi_dsi.h
+provides:
+  mipi_dsi: "&{sym}"
