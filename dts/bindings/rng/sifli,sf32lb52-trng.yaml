@@ -6,12 +6,19 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
 
 title: SiFli SF32LB52 true random number generator
 
+description:
+  True random number generator of the SF32LB52, also found in the SF32LB57.
+
 maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 properties:
   compatible:
-    const: sifli,sf32lb52-trng
+    oneOf:
+      - const: sifli,sf32lb52-trng
+      - items:
+          - const: sifli,sf32lb57-trng
+          - const: sifli,sf32lb52-trng
 
   reg:
     maxItems: 1

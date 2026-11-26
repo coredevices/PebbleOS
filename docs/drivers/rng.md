@@ -18,6 +18,7 @@ source.
 | Nordic nRF5 | — | `CONFIG_RNG_NRF5` |
 | Nordic nRF54L CRACEN | `nordic,nrf54l15-cracen` | `CONFIG_RNG_NRF_CRACEN` |
 | SiFli SF32LB | `sifli,sf32lb52-trng` | `CONFIG_RNG_SF32LB` |
+| SiFli SF32LB | `sifli,sf32lb57-trng` | `CONFIG_RNG_SF32LB` |
 | ST STM32 | `st,stm32-rng` | `CONFIG_RNG_STM32` |
 | QEMU | — | `CONFIG_RNG_QEMU` |
 | POSIX | — | `CONFIG_RNG_POSIX` |
