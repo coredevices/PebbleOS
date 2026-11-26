@@ -6,6 +6,7 @@
 #include <dt-bindings/clock/nordic,nrf54l15-clock.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/regulator/nordic,nrf54l15-regulators.h>
 
 / {
 	#address-cells = <1>;
@@ -246,6 +247,12 @@
 		oscillators: oscillators@50120000 {
 			compatible = "nordic,nrf54l15-oscillators";
 			reg = <0x50120000 0x1000>;
+
+			vregmain: vregmain {
+				regulator-name = "VREGMAIN";
+				regulator-always-on;
+				regulator-initial-mode = <NRF54L15_REGULATOR_MODE_LDO>;
+			};
 		};
 
 		icache: cache-controller@e0082000 {
