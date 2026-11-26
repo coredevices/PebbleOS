@@ -2,7 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/bluetooth/bond.h>
-#include <pbl/bluetooth/clients/gatt.h>
+#include <pbl/bluetooth/clients/service_changed.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/transports/gatt.h>
@@ -23,15 +23,7 @@ PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 //! How long the connection is kept fast for the clients to find their services.
 #define DISCOVERY_RESPONSE_TIME_SECS 30
 
-// -------------------------------------------------------------------------------------------------
-// The Service Changed characteristic of the gateway: it indicates when its services change, and
-// the clients then look for theirs again.
-
-static const ble_uuid16_t s_gatt_svc_uuid = BLE_UUID16_INIT(0x1801);
-static const ble_uuid16_t s_service_changed_uuid = BLE_UUID16_INIT(0x2A05);
-static const ble_uuid_t *const s_gatt_chr_uuids[] = {&s_service_changed_uuid.u};
-
-PBL_BT_GATTC_SERVICE_DEFINE(s_gatt_service, &s_gatt_svc_uuid.u, s_gatt_chr_uuids, 0, 1U << 0);
+PBL_BT_SERVICE_CHANGED_CLIENT_DEFINE(s_service_changed);
 
 //! Tells the indications of a gateway that is gone from those of the current one.
 static uint32_t s_generation;
@@ -56,46 +48,15 @@ static void prv_services_changed_kernel_main_cb(void *data) {
 #endif
 }
 
-// On the host task, as the two below.
-static void prv_gatt_service_discovered(struct pbl_bt_gattc_service *svc, int status) {
-  if (status == 0) {
-    (void)pbl_bt_gattc_service_subscribe(svc, 0, true);
-  }
-}
-
-static void prv_gatt_service_subscribed(struct pbl_bt_gattc_service *svc, uint8_t chr, bool enable,
-                                        int status) {
-  if (status != 0) {
-    PBL_LOG_ERR("Failed to subscribe to service changed: %d", status);
-  }
-}
-
-static void prv_gatt_service_notified(struct pbl_bt_gattc_service *svc, uint8_t chr,
-                                      const uint8_t *data, uint16_t len) {
-  // The range of handles affected: whatever it is, each client looks for its service again.
-  if (len != 2 * sizeof(uint16_t)) {
-    PBL_LOG_ERR("Service Changed Indication incorrect length: %u", len);
-    return;
-  }
-
-  launcher_task_add_callback(prv_services_changed_kernel_main_cb, (void *)(uintptr_t)s_generation);
-}
-
 void bt_gateway_rediscover(void) {
   launcher_task_add_callback(prv_services_changed_kernel_main_cb, (void *)(uintptr_t)s_generation);
 }
 
-static const struct pbl_bt_gattc_service_cb s_gatt_service_cb = {
-  .discovered = prv_gatt_service_discovered,
-  .subscribed = prv_gatt_service_subscribed,
-  .notified = prv_gatt_service_notified,
-};
-
-static bool prv_notify_rx(uint16_t conn_handle, uint16_t attr_handle, struct os_mbuf *om) {
-  return pbl_bt_gattc_service_notify_rx(&s_gatt_service, conn_handle, attr_handle, om);
+// On the host task. Whatever the handles affected, each client looks for its service again.
+static void prv_services_changed(struct pbl_bt_service_changed_client *client,
+                                 uint16_t start_handle, uint16_t end_handle) {
+  bt_gateway_rediscover();
 }
-
-PBL_BT_GATTC_NOTIFY_LISTENER_DEFINE(gateway, prv_notify_rx);
 
 // -------------------------------------------------------------------------------------------------
 
@@ -119,9 +80,10 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     pbl_pp_gatt_create();
     pbl_pp_gatt_discover(conn_handle);
 #endif
-    const int rc = pbl_bt_gattc_service_start(&s_gatt_service, conn_handle, &s_gatt_service_cb);
+    const int rc =
+        pbl_bt_service_changed_client_start(&s_service_changed, conn_handle, prv_services_changed);
     if (rc != 0) {
-      PBL_LOG_ERR("Could not look for the GATT service (%d)", rc);
+      PBL_LOG_ERR("Could not look for Service Changed (%d)", rc);
     }
 #if defined(CONFIG_BT_ANCS_CLIENT)
     ancs_create(conn_handle);
@@ -133,7 +95,7 @@ static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
     PBL_LOG_DBG("Disconnected from Gateway!");
 
     s_is_connected = false;
-    pbl_bt_gattc_service_stop(&s_gatt_service);
+    pbl_bt_service_changed_client_stop(&s_service_changed);
 #if defined(CONFIG_PP_TRANSPORT_GATT)
     pbl_pp_gatt_destroy();
 #endif
