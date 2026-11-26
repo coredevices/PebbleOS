@@ -11,6 +11,7 @@
 
 #include <pbl/kernel/types.h>   // PBL_TICK_HZ
 #include <pbl/services/clock.h> // clock_is_24h_style
+#include <pbl/util/math.h>
 
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_transforms.h>
@@ -255,10 +256,10 @@ static GBitmap *prv_shrink_dial_icon(GBitmap *src) {
   }
   for (int y = 0; y < dw; y++) {
     const int sy0 = y * sh / dw;
-    const int sy1 = ((y + 1) * sh + dw - 1) / dw; // exclusive, >= sy0+1
+    const int sy1 = PBL_DIV_ROUND_UP((y + 1) * sh, dw); // exclusive, >= sy0+1
     for (int x = 0; x < dw; x++) {
       const int sx0 = x * sw / dw;
-      const int sx1 = ((x + 1) * sw + dw - 1) / dw;
+      const int sx1 = PBL_DIV_ROUND_UP((x + 1) * sw, dw);
       int n_dark = 0, n_light = 0, n_total = 0;
       for (int sy = sy0; sy < sy1 && sy < sh; sy++) {
         for (int sx = sx0; sx < sx1 && sx < sw; sx++) {
@@ -931,7 +932,7 @@ static const TextStamp *prv_text_stamp(GContext *ctx, const char *text, GFont fo
     }
     const int w = (x1 >= x0) ? x1 - x0 + 1 : 0;
     const int h = (y1 >= y0) ? y1 - y0 + 1 : 0;
-    const int stride = (w + 7) / 8;
+    const int stride = PBL_DIV_ROUND_UP(w, 8);
     uint8_t *bits = app_zalloc((size_t)PBL_MAX(1, stride * h)); // may fail: the caller falls back
     if (bits) {
       for (int j = 0; j < h; j++) {
@@ -974,7 +975,7 @@ static void prv_stamp_text(GContext *ctx, const TextStamp *st, GPoint at, GColor
   const int fb_h = gbitmap_get_bounds(fb).size.h;
   const int x0 = o.x + at.x + st->ox;
   const int y0 = o.y + at.y + st->oy;
-  const int stride = (st->w + 7) / 8;
+  const int stride = PBL_DIV_ROUND_UP(st->w, 8);
   const uint8_t ink = color.argb; // on BW weather_fb_row_set draws any colour but black as white
   for (int j = 0; j < st->h; j++) {
     const int y = y0 + j;
@@ -1088,7 +1089,7 @@ static void prv_capture_centre_image(GContext *ctx, GRect box, int cx, int cy, C
   if (fb) {
     // On BW the capture is 1-bit, rows padded to a multiple of 4 bytes as in a blank bitmap
     const uint16_t stride =
-        PBL_IF_COLOR_ELSE((uint16_t)box.size.w, (uint16_t)(((box.size.w + 31) / 32) * 4));
+        PBL_IF_COLOR_ELSE((uint16_t)box.size.w, (uint16_t)(PBL_DIV_ROUND_UP(box.size.w, 32) * 4));
     uint8_t *pixels = malloc_try((size_t)stride * box.size.h);
     if (pixels) {
       img->bmp = (GBitmap){0};

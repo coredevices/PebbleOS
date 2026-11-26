@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <pbl/services/light.h>
+#include <pbl/util/math.h>
 
 #include <applib/app.h>
 #include <applib/ui/app_window_stack.h>
@@ -23,7 +24,7 @@ static void handle_init(void) {
 
   uint8_t scale_granularity = 5; // 5 percent at a time
   uint8_t curr_percent =
-      scale_granularity * ((backlight_get_intensity() + scale_granularity - 1) / scale_granularity);
+      scale_granularity * PBL_DIV_ROUND_UP(backlight_get_intensity(), scale_granularity);
 
   number_window_set_value(light_num_window, curr_percent);
   number_window_set_max(light_num_window, 100);

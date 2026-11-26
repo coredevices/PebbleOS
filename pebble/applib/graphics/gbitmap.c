@@ -11,6 +11,7 @@
 #include <pbl/drivers/display.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
 #include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
@@ -51,13 +52,13 @@ uint8_t gbitmap_get_palette_size(GBitmapFormat format) {
 uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {
   switch (format) {
     case GBitmapFormat1Bit:
-      return ((width + 31) / 32) * 4; // word aligned bytes
+      return PBL_DIV_ROUND_UP(width, 32) * 4; // word aligned bytes
     case GBitmapFormat8Bit:
       return width;
     case GBitmapFormat1BitPalette:
     case GBitmapFormat2BitPalette:
     case GBitmapFormat4BitPalette:
-      return ((width * gbitmap_get_bits_per_pixel(format) + 7) / 8); // byte aligned
+      return PBL_DIV_ROUND_UP(width * gbitmap_get_bits_per_pixel(format), 8); // byte aligned
     case GBitmapFormat8BitCircular:
       return 0; // variable width
   }
@@ -432,7 +433,7 @@ static bool prv_init_with_pbi_data(GBitmap *bitmap, uint8_t *data, size_t data_s
   const uint32_t required_row_size_bits =
       (bitmap->bounds.size.w * gbitmap_get_bits_per_pixel(format));
   // Convert from 8 bits in a byte, taking care to round up to the next whole byte.
-  const uint32_t required_row_size_bytes = (required_row_size_bits + 7) / 8;
+  const uint32_t required_row_size_bytes = PBL_DIV_ROUND_UP(required_row_size_bits, 8);
 
   if (data_size != required_total_size_bytes || required_row_size_bytes > bitmap->row_size_bytes) {
     PBL_LOG_WRN("Bitmap metadata is inconsistent! data_size %u", (unsigned int)data_size);

@@ -300,7 +300,7 @@ static void prv_draw_latest(GContext *ctx, const ChartLayout *layout, int16_t x,
 //! leaves the readings nearer the edge
 static void prv_get_axis(uint8_t min_bpm, uint8_t max_bpm, int16_t *lo_bpm, int16_t *hi_bpm) {
   int16_t lo = (min_bpm / BPM_AXIS_STEP) * BPM_AXIS_STEP;
-  int16_t hi = ((max_bpm + BPM_AXIS_STEP - 1) / BPM_AXIS_STEP) * BPM_AXIS_STEP;
+  int16_t hi = PBL_DIV_ROUND_UP(max_bpm, BPM_AXIS_STEP) * BPM_AXIS_STEP;
   while (hi - lo < MIN_BPM_SPAN) {
     if (lo > 0 && (min_bpm - lo) <= (hi - max_bpm)) {
       lo -= BPM_AXIS_STEP;

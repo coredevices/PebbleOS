@@ -269,7 +269,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 #endif
 
   const uint32_t *const dest_block_x_begin =
-      base_addr + (left_clip ? PBL_MAX(0, (((x + left_clip + 31) / 32) - 1)) : (x / 32));
+      base_addr + (left_clip ? PBL_MAX(0, (PBL_DIV_ROUND_UP(x + left_clip, 32) - 1)) : (x / 32));
 
   if (clipped_glyph_target.size.h == 0 || clipped_glyph_target.size.w == 0) {
     return;
@@ -278,8 +278,7 @@ void render_glyph(GContext *const ctx, const uint32_t codepoint, FontInfo *const
 #if CONFIG_SCREEN_COLOR_DEPTH_BITS == 8
   // NOTE: Since all calculations are based on 1-bit calculation - use the row size from
   // the 1-bit frame buffer
-  const int row_size_bytes =
-      4 * ((dest_bitmap->bounds.size.w / 32) + ((dest_bitmap->bounds.size.w % 32) ? 1 : 0));
+  const int row_size_bytes = 4 * PBL_DIV_ROUND_UP(dest_bitmap->bounds.size.w, 32);
 #else
   const int row_size_bytes = dest_bitmap->row_size_bytes;
 #endif // CONFIG_SCREEN_COLOR_DEPTH_BITS == 8

@@ -805,7 +805,7 @@ static time_t prv_round(time_t round_me, time_t multiple, int round_type) {
     case RoundTypeHalfDown:
       return ((round_me + multiple / 2 - 1) / multiple) * multiple;
     case RoundTypeAlwaysUp:
-      return ((round_me + multiple - 1) / multiple) * multiple;
+      return PBL_DIV_ROUND_UP(round_me, multiple) * multiple;
     case RoundTypeAlwaysDown:
       return (round_me / multiple) * multiple;
     case RoundTypeHalfUp:

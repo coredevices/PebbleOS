@@ -1426,7 +1426,7 @@ static void draw_forward_space_fade(GContext *ctx, GRect bounds, int amount, Glo
   int relative = weather_scale_i32(amount, ANIMATION_NORMALIZED_MAX, full_at);
   int inv = ANIMATION_NORMALIZED_MAX - relative;
   int eased = ANIMATION_NORMALIZED_MAX - weather_norm_square(inv);
-  int coverage = (eased * 16 + (ANIMATION_NORMALIZED_MAX - 1)) / ANIMATION_NORMALIZED_MAX;
+  int coverage = PBL_DIV_ROUND_UP(eased * 16, ANIMATION_NORMALIZED_MAX);
   if (coverage <= 0)
     return;
   if (coverage >= 16) {

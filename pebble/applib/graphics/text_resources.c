@@ -310,10 +310,10 @@ static bool prv_load_glyph_bitmap(Codepoint codepoint, const FontResource *font_
   // bits and then dividing by the width. glyph.height_px must be updated!
   if (HAS_FEATURE(font_res->md.version, VERSION_FIELD_FEATURE_RLE4)) {
     // Two RLE4 units per byte. Round up to the next whole byte
-    glyph_size_bytes = (g->header.height_px + (RLE4_UNITS_PER_BYTE - 1)) / RLE4_UNITS_PER_BYTE;
+    glyph_size_bytes = PBL_DIV_ROUND_UP(g->header.height_px, RLE4_UNITS_PER_BYTE);
   } else {
     // Number of bytes, make sure we round up to the next whole byte
-    glyph_size_bytes = ((g->header.width_px * g->header.height_px) + (8 - 1)) / 8;
+    glyph_size_bytes = PBL_DIV_ROUND_UP(g->header.width_px * g->header.height_px, 8);
   }
 
   PBL_ASSERT(glyph_size_bytes <= CACHE_GLYPH_SIZE,

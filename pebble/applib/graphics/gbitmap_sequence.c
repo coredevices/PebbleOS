@@ -319,7 +319,7 @@ bool gbitmap_sequence_update_bitmap_next_frame(GBitmapSequence *bitmap_sequence,
   uint8_t *upng_buffer = (uint8_t *)upng_get_buffer(upng);
 
   // Byte aligned rows for image at bpp
-  uint16_t row_stride_bytes = (fctl.width * bpp + 7) / 8;
+  uint16_t row_stride_bytes = PBL_DIV_ROUND_UP(fctl.width * bpp, 8);
 
   if (png_format >= UPNG_INDEXED1 && png_format <= UPNG_INDEXED8) {
     const GColor8 *palette = png_decoder_data->palette;
