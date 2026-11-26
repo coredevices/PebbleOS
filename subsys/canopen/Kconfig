@@ -53,6 +53,19 @@ config CANOPEN_EMCY_QUEUE
     default 4
     range 1 255
 
+config CANOPEN_STORAGE
+    bool "Parameter storage"
+    depends on SETTINGS
+    help
+      Save the parameters, the entries the bus can write, to a settings
+      file on command (0x1010), load them on reset, and restore their
+      defaults (0x1011), for dictionaries with storage enabled.
+
+config CANOPEN_STORAGE_SIZE
+    int "Space for the stored parameters of a node, in bytes"
+    default 4096
+    depends on CANOPEN_STORAGE
+
 config CANOPEN_CIA402
     bool "CiA 402 drive profile"
     help

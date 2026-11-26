@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+storage: true
+
+heartbeat:
+  producer: 100
+
+objects:
+  - {index: 0x2000, name: gain, type: u32, access: rw, default: 10}
+  - {index: 0x2001, name: label, type: string, size: 8, access: rw, default: "abc"}
+  - {index: 0x2002, name: status, type: u8, access: ro, default: 1}

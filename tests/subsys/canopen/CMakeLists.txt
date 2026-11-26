@@ -8,8 +8,8 @@ file(MAKE_DIRECTORY ${od_dir})
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/od.yaml ${PBL_BASE}/tools/cmake/canopen_od.py)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_SOURCE_DIR}/cia402.yaml)
-foreach(name od cia402)
+  ${CMAKE_CURRENT_SOURCE_DIR}/cia402.yaml ${CMAKE_CURRENT_SOURCE_DIR}/storage.yaml)
+foreach(name od cia402 storage)
   execute_process(
     COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/canopen_od.py
             ${CMAKE_CURRENT_SOURCE_DIR}/${name}.yaml --name ${name} --source ${name}.yaml
@@ -61,7 +61,7 @@ set(canopen_defines
     CONFIG_CANOPEN=1
     CONFIG_CANOPEN_LOG_LEVEL=0
     CONFIG_CANOPEN_THREAD_PRIO=3
-    CONFIG_CANOPEN_THREAD_STACK_SIZE=8192
+    CONFIG_CANOPEN_THREAD_STACK_SIZE=65536
     CONFIG_CANOPEN_RX_QUEUE_SIZE=16
     CONFIG_CANOPEN_TX_QUEUE_SIZE=32
     CONFIG_CANOPEN_SDO_TIMEOUT_MS=1000
@@ -79,4 +79,11 @@ pbl_clar_test(test_cia402
   SOURCES ${canopen_sources} subsys/canopen/cia402.c ${od_dir}/cia402.c
   INCLUDES ${canopen_includes}
   DEFINES ${canopen_defines} CONFIG_CANOPEN_CIA402=1
+)
+
+pbl_clar_test(test_storage
+  MODULES settings
+  SOURCES ${canopen_sources} subsys/canopen/storage.c ${od_dir}/storage.c
+  INCLUDES ${canopen_includes}
+  DEFINES ${canopen_defines} CONFIG_CANOPEN_STORAGE=1 CONFIG_CANOPEN_STORAGE_SIZE=4096 DUMA_DISABLED
 )

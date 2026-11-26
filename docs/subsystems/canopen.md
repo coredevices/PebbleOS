@@ -56,11 +56,11 @@ It runs these services:
 | SYNC consumer | 0x1005, 0x1006, 0x1007 | With or without a counter, loss detection, synchronous window |
 | Error behavior | 0x1029 | NMT state on a communication error |
 | EMCY producer | 0x1001, 0x1003, 0x1014, 0x1015 | Error register, error history, inhibit time |
+| Parameter storage | 0x1010, 0x1011 | With `CONFIG_CANOPEN_STORAGE`, see {ref}`canopen-storage` |
 | CiA 402 drive | 0x6007, 0x603f-0x6502 | With `CONFIG_CANOPEN_CIA402`, see {ref}`canopen-cia402` |
 
 The node does not run SDO block transfers, an SDO client, an NMT master, a
-SYNC producer, LSS, node guarding, RTR-triggered PDOs, multiplexed PDOs or
-parameter storage (0x1010 and 0x1011).
+SYNC producer, LSS, node guarding, RTR-triggered PDOs or multiplexed PDOs.
 
 ## Quick start
 
@@ -442,6 +442,7 @@ device:
   serial: 0x00000000
 
 errors: 8                   # depth of the error history 0x1003, 0 for none
+storage: false              # 0x1010 and 0x1011, with CONFIG_CANOPEN_STORAGE
 
 emcy:
   cob_id: 0x85              # 0x1014, 0x80 + node-ID by default
@@ -558,6 +559,27 @@ register, and clears each one once its cause is gone:
 | 0x8210 | RPDO shorter than its mapping |
 | 0x8220 | RPDO longer than its mapping |
 | 0x8250 | RPDO deadline missed |
+
+(canopen-storage)=
+
+## Parameter storage
+
+With `CONFIG_CANOPEN_STORAGE` and `storage: true` in its dictionary, a node
+keeps its parameters, the entries the bus can write but the error history, in
+a settings file of `subsys/settings`, `/canopen<node-ID>`:
+
+| Object | Sub-index | Signature | Effect |
+| --- | --- | --- | --- |
+| 0x1010 | 1, 2, 3 | `save` (0x65766173) | Saves all parameters, the communication ones or the application ones |
+| 0x1011 | 1, 2, 3 | `load` (0x64616f6c) | Deletes them, for the defaults to come back on the next reset |
+
+The node loads them on each reset that restores their defaults, at start too.
+Both objects read 1: the node saves on command only. Parameters are stored by
+index, sub-index and size, so a new dictionary loads those it still has, and
+the others keep their defaults. Saving runs on the node's thread and writes
+flash, so it holds up the node for as long: the master saves while the node is
+pre-operational. A dictionary with storage is refused without
+`CONFIG_CANOPEN_STORAGE`.
 
 (canopen-cia402)=
 
@@ -854,4 +876,6 @@ disabled, unless it is in fault.
 | `CONFIG_CANOPEN_SDO_TIMEOUT_MS` | 1000 | Segmented transfer timeout |
 | `CONFIG_CANOPEN_EMCY_ACTIVE` | 8 | Errors raised at once per node |
 | `CONFIG_CANOPEN_EMCY_QUEUE` | 4 | Emergency messages held back by the inhibit time |
+| `CONFIG_CANOPEN_STORAGE` | n | Parameter storage, needs `CONFIG_SETTINGS` |
+| `CONFIG_CANOPEN_STORAGE_SIZE` | 4096 | Space for the parameters of a node, in bytes |
 | `CONFIG_CANOPEN_CIA402` | n | CiA 402 drive profile |

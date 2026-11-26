@@ -299,6 +299,13 @@ uint32_t pbl_canopen__od_write_bus(struct pbl_canopen *co, const struct pbl_cano
     val = &num;
   }
 
+#ifdef CONFIG_CANOPEN_STORAGE
+  /* Commands, not values: they read back as what the node supports. */
+  if (e->index == PBL_CANOPEN__IDX_STORE || e->index == PBL_CANOPEN__IDX_RESTORE) {
+    return pbl_canopen__storage_write(co, e, *(const uint32_t *)val);
+  }
+#endif
+
   abort = prv_check(co, e, val, len);
   if (abort != 0U) {
     return abort;

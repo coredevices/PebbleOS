@@ -348,7 +348,8 @@ struct pbl_canopen {
  *
  * @param co Node.
  * @param cfg Configuration, copied.
- * @return 0, @c -EINVAL for an invalid configuration, or another negative errno.
+ * @return 0, @c -EINVAL for an invalid configuration, @c -ENOTSUP for a dictionary with
+ * storage without @c CONFIG_CANOPEN_STORAGE, or another negative errno.
  */
 int pbl_canopen_init(struct pbl_canopen *co, const struct pbl_canopen_config *cfg);
 

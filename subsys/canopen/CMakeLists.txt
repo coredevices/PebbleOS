@@ -10,3 +10,4 @@ pbl_library_sources(
   sdo.c
 )
 pbl_library_sources_ifdef(CONFIG_CANOPEN_CIA402 cia402.c)
+pbl_library_sources_ifdef(CONFIG_CANOPEN_STORAGE storage.c)

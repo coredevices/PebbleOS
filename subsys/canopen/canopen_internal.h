@@ -44,6 +44,8 @@
 #define PBL_CANOPEN__IDX_SYNC        0x1005U
 #define PBL_CANOPEN__IDX_SYNC_PERIOD 0x1006U
 #define PBL_CANOPEN__IDX_SYNC_WINDOW 0x1007U
+#define PBL_CANOPEN__IDX_STORE       0x1010U
+#define PBL_CANOPEN__IDX_RESTORE     0x1011U
 #define PBL_CANOPEN__IDX_EMCY        0x1014U
 #define PBL_CANOPEN__IDX_EMCY_INH    0x1015U
 #define PBL_CANOPEN__IDX_HB_CONSUMER 0x1016U
@@ -124,6 +126,14 @@ int pbl_canopen__emcy_raise(struct pbl_canopen *co, uint16_t code, uint8_t reg,
 int pbl_canopen__emcy_clear(struct pbl_canopen *co, uint16_t code);
 uint32_t pbl_canopen__emcy_check(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e,
                                  const void *val);
+
+/* Parameter storage */
+
+#ifdef CONFIG_CANOPEN_STORAGE
+uint32_t pbl_canopen__storage_write(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e,
+                                    uint32_t val);
+void pbl_canopen__storage_load(struct pbl_canopen *co, bool app);
+#endif
 
 /* CiA 402 drive */
 

@@ -298,6 +298,9 @@ static void prv_reset(struct pbl_canopen *co, enum pbl_canopen_reset reset) {
   }
 
   pbl_canopen__od_reset(co, reset == PBL_CANOPEN_RESET_NODE);
+#ifdef CONFIG_CANOPEN_STORAGE
+  pbl_canopen__storage_load(co, reset == PBL_CANOPEN_RESET_NODE);
+#endif
   pbl_canopen__emcy_reset(co);
 #ifdef CONFIG_CANOPEN_CIA402
   pbl_canopen__cia402_reset(co);
@@ -482,6 +485,11 @@ int pbl_canopen_init(struct pbl_canopen *co, const struct pbl_canopen_config *cf
       cfg->bitrate == 0U) {
     return -EINVAL;
   }
+#ifndef CONFIG_CANOPEN_STORAGE
+  if (pbl_canopen__od_find(od, PBL_CANOPEN__IDX_STORE, 1U) != nullptr) {
+    return -ENOTSUP;
+  }
+#endif
 
   memset(co, 0, sizeof(*co));
   pbl_mutex_init(&co->lock);

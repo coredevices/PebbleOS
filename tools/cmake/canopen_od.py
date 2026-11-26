@@ -304,6 +304,7 @@ class Dictionary:
                 "heartbeat",
                 "sync",
                 "rpdos",
+                "storage",
                 "tpdos",
                 "objects",
             ),
@@ -400,6 +401,22 @@ class Dictionary:
         self.prv_comm_var(
             0x1007, "Synchronous window length", "u32", "rw", sync.get("window", 0)
         )
+
+        storage = doc.get("storage", False)
+        if not isinstance(storage, bool):
+            raise Error("storage: true or false")
+        for index, param, sub_param in (
+            (0x1010, "Store parameters", "Save"),
+            (0x1011, "Restore default parameters", "Restore"),
+        ):
+            if not storage:
+                break
+            # 1 on read: on command, not autonomously
+            entries = [
+                self.prv_sub(0, f"{sub_param} {what} parameters", "u32", "rw", 1)
+                for what in ("all", "communication", "application")
+            ]
+            self.prv_comm_array(index, param, "const", entries)
 
         for index, key, param in (
             (0x1008, "name", "Manufacturer device name"),
