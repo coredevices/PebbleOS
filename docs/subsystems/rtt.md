@@ -20,14 +20,14 @@ in the kernel's non-cacheable section ({doc}`../kernel/memory`).
 
 ## OpenOCD
 
-`tools/openocd/rtt.cfg` serves channel 0 on a TCP port, which `pbl console`
-opens:
+`tools/openocd/rtt.cfg` serves channel 0 on a TCP port. On boards with the
+OpenOCD runner, `pbl debugserver` and `pbl debug` load it for builds with
+`CONFIG_RTT`, with the address of `_SEGGER_RTT` from the build's ELF, and
+`pbl console --rtt` opens the port:
 
 ```shell
-openocd -f boards/<board>/support/openocd.cfg \
-  -c "set RTT_ADDR 0x$(arm-none-eabi-nm build/pebbleos.elf | awk '/ _SEGGER_RTT$/ {print $1}')" \
-  -f tools/openocd/rtt.cfg
-pbl console --tty socket://localhost:9090
+pbl debugserver
+pbl console --rtt
 ```
 
 OpenOCD finds the control block once, when it starts: restart it after

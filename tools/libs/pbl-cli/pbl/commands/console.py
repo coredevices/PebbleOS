@@ -8,6 +8,7 @@ import sys
 from pbl import lock
 from pbl.command import PblCommand
 from pbl.emulator import CONSOLE_PORT
+from pbl.runners.openocd import RTT_PORT
 
 DEFAULT_BAUDRATE = 115200
 
@@ -27,6 +28,12 @@ class Console(PblCommand):
         parser = self.add_subparser(parser_adder)
         parser.add_argument(
             "--tty", help="tty to use for the console (default: the lab's)"
+        )
+        parser.add_argument(
+            "--rtt",
+            action="store_true",
+            help="Attach to RTT channel 0, which 'pbl debugserver' serves with "
+            f"OpenOCD on TCP port {RTT_PORT}",
         )
         parser.add_argument(
             "--baudrate",
@@ -58,6 +65,8 @@ class Console(PblCommand):
         )
         if emulated:
             tty = f"socket://{args.qemu_host}"
+        elif args.rtt:
+            tty = f"socket://localhost:{RTT_PORT}"
         elif args.tty:
             tty = args.tty
         elif watch is not None and watch.serial:
