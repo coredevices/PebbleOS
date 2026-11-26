@@ -27,6 +27,8 @@ on its Arm application core, as secure code.
 - **LEDs**: four green user LEDs, LED0 the status LED
 - **Flash**: 8 MiB Macronix MX25R6435F SPI NOR, on SPIM00 (P2.01 SCK,
   P2.02 MOSI, P2.04 MISO, P2.05 CS) at 8 MHz
+- **RRAM**: the RRAM of the SoC is a second flash, which needs no erase;
+  data goes in partitions outside `code`, which the MPU keeps read-only
 - **Crypto**: the CRACEN of the SoC, for random numbers, SHA-256 and AES
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE20, P1.04 (TX) and P1.05 (RX), which also powers the kit

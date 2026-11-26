@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-rramc
+config: FLASH_NRF_RRAMC
+class: flash
+define: PBL_FLASH_NRF_RRAMC_DEFINE
+args:
+  - name: true
+  - reg: 0
+  - reg: 0
+    child: flash@0
+  - size: 0
+    child: flash@0

@@ -20,3 +20,11 @@ dummy and data operations, and maps reads, while the NOR protocol (SFDP, 4-byte
 addressing, quad enable, suspend, deep power-down, OTP) lives in the NOR driver.
 The OTP area is the part's security registers; `otp.c` exposes it as a linear
 range, and boards name the cells they keep factory data in.
+
+Memories that write any data over any data, as the RRAM of the nRF54L
+(`nrf_rramc.c`), set `PBL_FLASH_NO_ERASE`. Erasing one fills the range with
+the erased value, for code that needs to find it blank; code that erases only
+to write again checks `pbl_flash_needs_erase()`. The RRAM driver programs
+through the controller's write buffer, in timeslots of the radio scheduler
+when the MPSL runs, since the CPU cannot read the RRAM while it programs and
+the radio interrupts run from it.
