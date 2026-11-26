@@ -51,6 +51,11 @@ static int s_num_subscribed;
 static int s_num_written;
 static int s_written_status;
 
+int ble_gap_event_listener_register(struct ble_gap_event_listener *listener, ble_gap_event_fn *fn,
+                                    void *arg) {
+  return 0;
+}
+
 struct ble_npl_eventq *nimble_port_get_dflt_eventq(void) {
   return nullptr;
 }

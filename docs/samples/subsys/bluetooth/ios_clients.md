@@ -35,10 +35,7 @@ that did not fit comes cut, and the sample then reads the whole of it.
 
 ## Bluetooth
 
-The sample handles the GAP events of its connection itself, and so hands the
-notifications it receives to the listeners with `pbl_bt_gattc_notify_rx()`,
-which is how the clients get them. The clients call back on the NimBLE host
-thread.
+The clients call back on the NimBLE host thread.
 
 The bond is kept by NimBLE's config store in RAM, its default without
 settings: it is lost when the watch resets, and the iOS device, which keeps

@@ -258,7 +258,7 @@ struct pbl_bt_gattc_notify_listener {
 /**
  * @brief Define a listener of the notifications and indications of peers.
  *
- * Listeners are offered each one in turn by pbl_bt_gattc_notify_rx(), until one takes it.
+ * Listeners are offered each one in turn, until one takes it.
  *
  * @param _name Name of the listener.
  * @param _fn Its function, see struct pbl_bt_gattc_notify_listener.
@@ -267,18 +267,5 @@ struct pbl_bt_gattc_notify_listener {
   static const struct pbl_bt_gattc_notify_listener pbl_bt_gattc_notify_##_name  \
   PBL_ITERABLE_SECTION(const struct pbl_bt_gattc_notify_listener, bt_gattc_ntf, \
                        #_name) = {.fn = (_fn)}
-
-/**
- * @brief Offer a notification or indication of a peer to the listeners.
- *
- * Call it for each @c BLE_GAP_EVENT_NOTIFY_RX of the connections whose GAP events the caller
- * handles.
- *
- * @param conn_handle Connection.
- * @param attr_handle Handle of the characteristic value.
- * @param om The value.
- * @return true if a listener took it.
- */
-bool pbl_bt_gattc_notify_rx(uint16_t conn_handle, uint16_t attr_handle, struct os_mbuf *om);
 
 /** @} */
