@@ -19,6 +19,7 @@ input.md
 logging.md
 pp/index.md
 profiler.md
+rtt.md
 shell.md
 console.md
 task_watchdog.md
