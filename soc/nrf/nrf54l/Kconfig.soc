@@ -4,3 +4,7 @@
 config SOC_NRF54L15
     bool "Nordic nRF54L15"
     select SOC_NRF54L
+
+config SOC_NRF54LM20A
+    bool "Nordic nRF54LM20A"
+    select SOC_NRF54L

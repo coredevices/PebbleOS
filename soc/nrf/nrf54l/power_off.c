@@ -15,7 +15,9 @@
   // Waking from System OFF resets the SoC: no RAM, the RISC-V core's included, is kept
   for (uint32_t i = 0U; i < NRF54L_MEMCONF_POWER_COUNT; i++) {
     pbl_writel(0U, PBL_DT_REG_MEMCONF + NRF54L_MEMCONF_POWER_RET_OFFSET(i));
+#ifdef CONFIG_SOC_NRF54L15
     pbl_writel(0U, PBL_DT_REG_MEMCONF + NRF54L_MEMCONF_POWER_RET2_OFFSET(i));
+#endif
   }
 
   // The reasons are cleared so that the next boot sees the wake-up alone
