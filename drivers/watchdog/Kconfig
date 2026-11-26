@@ -21,6 +21,12 @@ config WATCHDOG_TIMEOUT_MS
 
 rsource "Kconfig.nrf5"
 
+config WATCHDOG_CALLBACK
+    bool
+    help
+      The watchdog interrupts before it resets, and reports it to the
+      watchdog_set_callback() subscriber.
+
 config WATCHDOG_RUNS_WHILE_HALTED
     bool
     help

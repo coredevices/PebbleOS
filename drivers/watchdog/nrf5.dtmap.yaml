@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf52832-wdt
+config: WATCHDOG_NRF5
+class: device
+symbol: pbl_watchdog_nrf5
+define: PBL_WATCHDOG_NRF5_DEFINE
+args:
+  - name: true

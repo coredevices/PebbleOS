@@ -21,6 +21,16 @@
  * @{
  */
 
+/**
+ * @brief Watchdog expiry callback.
+ *
+ * Called from the watchdog interrupt, just before the reset, preempting the thread that was
+ * running: there is only time to note where it was.
+ *
+ * @param arg Argument given to watchdog_set_callback().
+ */
+typedef void (*pbl_watchdog_callback_t)(void *arg);
+
 #ifdef CONFIG_WATCHDOG
 
 /** @brief Configure the watchdog, without starting it. */
@@ -52,6 +62,20 @@ struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void);
  * @return Cached reset cause.
  */
 struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void);
+
+#ifdef CONFIG_WATCHDOG_CALLBACK
+/**
+ * @brief Subscribe to the watchdog expiring.
+ *
+ * Only for a watchdog raising an interrupt before it resets. The callback does not run while
+ * interrupts are locked.
+ *
+ * @param cb Callback, or NULL to unsubscribe.
+ * @param arg Argument passed to @p cb.
+ * @retval 0 Subscribed.
+ */
+int watchdog_set_callback(pbl_watchdog_callback_t cb, void *arg);
+#endif
 
 #else
 
