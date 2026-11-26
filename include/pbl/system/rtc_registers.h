@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef CONFIG_SOC_NRF52
@@ -32,6 +33,8 @@
 #define NRF_RETAINED_REGISTER_CRC 31
 
 extern void retained_write(uint8_t id, uint32_t value);
+// Writes consecutive registers from id, updating the checksum once
+extern void retained_write_many(uint8_t id, const uint32_t *values, size_t count);
 extern uint32_t retained_read(uint8_t id);
 // Zeroes the registers, logging both checksums, unless their checksum holds: a power-on leaves
 // noise in them. Returns whether it held.

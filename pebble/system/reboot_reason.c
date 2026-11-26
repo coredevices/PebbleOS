@@ -30,10 +30,9 @@ void reboot_reason_set(RebootReason *reason) {
     return;
   }
 
-  retained_write(REBOOT_REASON_REGISTER_1, raw[0]);
-  retained_write(REBOOT_REASON_STUCK_TASK_PC, raw[1]);
-  retained_write(REBOOT_REASON_STUCK_TASK_LR, raw[2]);
-  retained_write(REBOOT_REASON_STUCK_TASK_CALLBACK, raw[3]);
+  // One checksum update: the hardware watchdog's expiry leaves little time to record a reason
+  static_assert(REBOOT_REASON_STUCK_TASK_CALLBACK == REBOOT_REASON_REGISTER_1 + 3);
+  retained_write_many(REBOOT_REASON_REGISTER_1, raw, 4U);
 #elifdef CONFIG_SOC_SF32LB52
   uint32_t *raw = (uint32_t *)reason;
 
