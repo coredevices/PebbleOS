@@ -52,12 +52,14 @@ pbl_clar_test(test_pairability
 pbl_clar_test(test_prf_backend
   SOURCES
     third_party/nimble/store/prf_backend.c
+    third_party/nimble/store/prf_sync.c
     tests/stubs/stubs_nimble_port.c
   INCLUDES
     third_party/nimble/port/include
     third_party/nimble/mynewt-nimble/nimble/include
     third_party/nimble/mynewt-nimble/nimble/host/include
     third_party/nimble/mynewt-nimble/nimble/host/store/config/src
+    third_party/nimble/store
     third_party/nimble/mynewt-nimble/nimble/transport/include
     third_party/nimble/mynewt-nimble/porting/nimble/include
   DEFINES
@@ -69,8 +71,7 @@ pbl_clar_test(test_prf_backend
 pbl_clar_test(test_bt_settings
   MODULES settings
   SOURCES
-    pebble/services/bluetooth/bt_settings_normal.c
-    tests/fakes/fake_events.c
+    pebble/services/bluetooth/bt_settings.c
     tests/fakes/fake_rtc.c
   OVERRIDES dummy_board
 )

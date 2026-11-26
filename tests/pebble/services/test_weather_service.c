@@ -38,7 +38,7 @@ void event_service_client_subscribe(EventServiceInfo *service_info) {
 void event_service_client_unsubscribe(EventServiceInfo *service_info) {
 }
 
-void bt_settings_get_capabilities(struct pbl_pp_capabilities *capabilities) {
+void app_session_get_system_capabilities(struct pbl_pp_capabilities *capabilities) {
   capabilities->weather_app_support = 1;
 }
 

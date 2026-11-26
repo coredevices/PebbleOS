@@ -6,3 +6,7 @@
 
 void PBL_WEAK app_session_capabilities_evict(const Uuid *app_uuid) {
 }
+
+void PBL_WEAK app_session_get_system_capabilities(struct pbl_pp_capabilities *capabilities_out) {
+  capabilities_out->flags = 0;
+}

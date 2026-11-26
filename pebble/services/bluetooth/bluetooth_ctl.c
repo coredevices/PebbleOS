@@ -172,7 +172,9 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
     return;
   }
   pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
+#ifdef CONFIG_SETTINGS
   bt_settings_set_airplane_mode(enabled);
+#endif
   s_comm_airplane_mode_on = enabled;
   bool should_schedule_eval = false;
   if (!s_comm_state_change_eval_is_scheduled) {
@@ -187,7 +189,9 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 
 void bt_ctl_init(void) {
   bt_dis_init();
+#ifdef CONFIG_SETTINGS
   s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
+#endif
   s_comm_initialized = true;
 }
 

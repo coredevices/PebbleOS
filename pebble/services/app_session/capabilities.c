@@ -7,6 +7,7 @@
 #include <pbl/settings/settings.h>
 #include <pbl/util/units.h>
 
+#include <kernel/events.h>
 #include <process_management/app_install_types.h>
 #include <process_management/app_manager.h>
 
@@ -87,10 +88,61 @@ void app_session_capabilities_evict(const Uuid *app_uuid) {
   }
 }
 
+// The capabilities of the system session are kept with those of the apps, under a UUID no app
+// has.
+static const Uuid s_system_key = UUID_INVALID_INIT;
+static struct pbl_pp_capabilities s_system_capabilities;
+
+void app_session_get_system_capabilities(struct pbl_pp_capabilities *capabilities_out) {
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  *capabilities_out = s_system_capabilities;
+  pbl_mutex_unlock(&s_mutex);
+}
+
+static void prv_set_system_capabilities(const struct pbl_pp_capabilities *capabilities) {
+  struct pbl_settings_file settings_file;
+  struct pbl_pp_capabilities diff;
+
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
+  diff.flags = s_system_capabilities.flags ^ capabilities->flags;
+  s_system_capabilities = *capabilities;
+  if (diff.flags != 0U && prv_open(&settings_file) == 0) {
+    pbl_settings_set(&settings_file, &s_system_key, sizeof(s_system_key), capabilities,
+                     sizeof(*capabilities));
+    pbl_settings_close(&settings_file);
+  }
+  pbl_mutex_unlock(&s_mutex);
+
+  if (diff.flags == 0U) {
+    return;
+  }
+
+  PebbleEvent event = {
+    .type = PEBBLE_CAPABILITIES_CHANGED_EVENT,
+    .capabilities.flags_diff = diff,
+  };
+  event_put(&event);
+}
+
+static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
+                           void *user_data) {
+  if (event == PBL_PP_SESSION_CAPABILITIES && pbl_pp_session_is_system(session)) {
+    const struct pbl_pp_capabilities capabilities = {
+      .flags = pbl_pp_session_get_capabilities(session),
+    };
+
+    prv_set_system_capabilities(&capabilities);
+  }
+}
+
+PBL_PP_SESSION_LISTENER_DEFINE(app_session_capabilities, prv_session_cb, nullptr);
+
 void app_session_capabilities_init(void) {
   struct pbl_settings_file settings_file;
   if (prv_open_locked(&settings_file) == 0) {
     pbl_settings_rewrite(&settings_file, prv_rewrite_cb, nullptr);
+    pbl_settings_get(&settings_file, &s_system_key, sizeof(s_system_key), &s_system_capabilities,
+                     sizeof(s_system_capabilities));
     prv_close_and_unlock(&settings_file);
   }
 }

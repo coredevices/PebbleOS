@@ -12,7 +12,6 @@
 #include <pbl/services/accel_manager.h>
 #include <pbl/services/app_session.h>
 #include <pbl/services/bluetooth/bonding.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/firmware_update.h>
 #include <pbl/services/hrm/hrm_manager.h>
 #include <pbl/services/light.h>
@@ -37,7 +36,6 @@ void services_common_init(void) {
   pbl_cron_init();
 
   pbl_bt_prf_store_init();
-  bt_settings_init();
   bt_bonding_init();
 
 #if !defined(CONFIG_RECOVERY_FW)
