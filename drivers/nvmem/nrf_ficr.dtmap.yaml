@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-compatible: nordic,nrf54l15-ficr
+compatible:
+  - nordic,nrf52832-ficr
+  - nordic,nrf54l15-ficr
 config: NVMEM_NRF_FICR
 class: nvmem
 symbol: pbl_nvmem_nrf_ficr

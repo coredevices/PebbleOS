@@ -12,6 +12,7 @@ config MCU_NRF5
     bool "Nordic nRF5"
     default y
     depends on SOC_NRF52
+    select NVMEM
     help
       Support for Nordic nRF5 MCU information.
 
