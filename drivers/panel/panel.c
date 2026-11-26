@@ -42,14 +42,14 @@ int pbl_panel_unprepare(const struct pbl_panel *panel) {
   return panel->ops->unprepare(panel);
 }
 
-int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip) {
+int pbl_panel_set_rotation(const struct pbl_panel *panel, uint32_t rotation) {
   if (!pbl_device_is_ready(&panel->dev)) {
     return -ENODEV;
   }
 
-  if (panel->ops->set_h_flip == nullptr) {
-    return -ENOTSUP;
+  if (panel->ops->set_rotation == nullptr) {
+    return rotation == PBL_PANEL_ROTATE_0 ? 0 : -ENOTSUP;
   }
 
-  return panel->ops->set_h_flip(panel, flip);
+  return panel->ops->set_rotation(panel, rotation);
 }

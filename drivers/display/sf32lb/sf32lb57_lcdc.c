@@ -566,7 +566,8 @@ static int prv_set_rotated(const struct pbl_display *disp, bool rotated) {
   struct pbl_display_sf32lb57_lcdc_state *state = lcdc->state;
   int ret;
 
-  ret = pbl_panel_set_h_flip(lcdc->panel, rotated);
+  ret = pbl_panel_set_rotation(lcdc->panel,
+                               PBL_PANEL_ROTATE_0 | (rotated ? PBL_PANEL_REFLECT_X : 0U));
   if (ret != 0 && ret != -ENOTSUP) {
     return ret;
   }

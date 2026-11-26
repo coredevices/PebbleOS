@@ -208,11 +208,16 @@ static int prv_unprepare(const struct pbl_panel *panel) {
   return pbl_gpio_set(&co5300->reset, true);
 }
 
-static int prv_set_h_flip(const struct pbl_panel *panel, bool flip) {
+// The panel only mirrors its frame left to right
+static int prv_set_rotation(const struct pbl_panel *panel, uint32_t rotation) {
   const struct pbl_panel_co5300 *co5300 = prv_co5300(panel);
   struct pbl_panel_co5300_state *state = co5300->state;
 
-  state->h_flip = flip;
+  if ((rotation & ~PBL_PANEL_REFLECT_X) != PBL_PANEL_ROTATE_0) {
+    return -ENOTSUP;
+  }
+
+  state->h_flip = (rotation & PBL_PANEL_REFLECT_X) != 0U;
 
   // A panel that is down takes it as it comes up
   return state->awake ? prv_set_address_mode(co5300) : 0;
@@ -223,7 +228,7 @@ const struct pbl_panel_ops pbl_panel_co5300_ops = {
   .enable = prv_enable,
   .disable = prv_disable,
   .unprepare = prv_unprepare,
-  .set_h_flip = prv_set_h_flip,
+  .set_rotation = prv_set_rotation,
 };
 
 static const struct pbl_panel_co5300 *prv_bl_co5300(const struct pbl_backlight *bl) {

@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/util/bits.h>
 
 /**
  * @defgroup drivers_panel Panel
@@ -46,6 +47,35 @@ enum pbl_panel_bus_format {
    */
   PBL_PANEL_BUS_FORMAT_MIPI_DSI_CMD_RGB888,
 };
+
+/**
+ * @brief Rotations and reflections of the frame a panel takes, as a mask of one rotation and any
+ * reflections.
+ *
+ * As the plane rotations of Linux: rotations are counterclockwise, and a reflection mirrors the
+ * frame before it is rotated.
+ */
+enum pbl_panel_rotation {
+  /** Not rotated. */
+  PBL_PANEL_ROTATE_0 = PBL_BIT(0),
+  /** Rotated by 90 degrees. */
+  PBL_PANEL_ROTATE_90 = PBL_BIT(1),
+  /** Rotated by 180 degrees. */
+  PBL_PANEL_ROTATE_180 = PBL_BIT(2),
+  /** Rotated by 270 degrees. */
+  PBL_PANEL_ROTATE_270 = PBL_BIT(3),
+  /** Mirrored left to right. */
+  PBL_PANEL_REFLECT_X = PBL_BIT(4),
+  /** Mirrored top to bottom. */
+  PBL_PANEL_REFLECT_Y = PBL_BIT(5),
+};
+
+/**
+ * @brief Rotation of a panel from degrees, as the devicetree @c rotation of a panel gives them.
+ *
+ * @param deg 0, 90, 180 or 270.
+ */
+#define PBL_PANEL_ROTATION(deg) PBL_BIT((deg) / 90U)
 
 /**
  * @brief Timing of a panel scanned by its controller.
@@ -91,10 +121,11 @@ struct pbl_panel_ops {
   /** Power the panel down. Returns 0 or a negative errno. */
   int (*unprepare)(const struct pbl_panel *panel);
   /**
-   * Flip what is written to the panel left to right, from the next frame and through power
-   * cycles. Optional. Returns 0 or a negative errno.
+   * Take the frame rotated and reflected, a mask of @ref pbl_panel_rotation, from the next frame
+   * and through power cycles. Optional. Returns 0, @c -ENOTSUP for one the panel cannot take, or
+   * another negative errno.
    */
-  int (*set_h_flip)(const struct pbl_panel *panel, bool flip);
+  int (*set_rotation)(const struct pbl_panel *panel, uint32_t rotation);
 };
 
 /** @brief A panel. */
@@ -166,14 +197,16 @@ int pbl_panel_disable(const struct pbl_panel *panel);
 int pbl_panel_unprepare(const struct pbl_panel *panel);
 
 /**
- * @brief Flip what is written to a panel left to right, if the panel can.
+ * @brief Take the frame rotated and reflected, if the panel can.
  *
- * Takes effect from the next frame written, and is kept through power cycles of the panel.
+ * Takes effect from the next frame written, and is kept through power cycles of the panel. A
+ * panel turned by 90 or 270 degrees has the active width and height of its timing exchanged, for
+ * a frame wider than tall on a panel taller than wide, or the other way around.
  *
  * @param panel Panel.
- * @param flip Flip the image.
+ * @param rotation Mask of one rotation and any reflections, from @ref pbl_panel_rotation.
  * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
  */
-int pbl_panel_set_h_flip(const struct pbl_panel *panel, bool flip);
+int pbl_panel_set_rotation(const struct pbl_panel *panel, uint32_t rotation);
 
 /** @} */
