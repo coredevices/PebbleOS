@@ -66,7 +66,7 @@ static void prv_schedule_from_isr(void) {
 }
 
 //! Runs from the device interrupt: queue the period, dropping the oldest samples when full.
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   const uint16_t bytes = PERIOD_FRAMES * MIC_MANAGER_CHANNELS * sizeof(int16_t);
   const uint16_t space = circular_buffer_get_write_space_remaining(&s_src.fifo);
@@ -75,7 +75,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
     circular_buffer_consume(&s_src.fifo, bytes - space);
   }
   (void)circular_buffer_write(&s_src.fifo, period, bytes);
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   if (!s_src.dispatch_pending &&
       circular_buffer_get_read_space_remaining(&s_src.fifo) >= s_src.buffer_len * sizeof(int16_t)) {
@@ -174,7 +174,7 @@ static bool prv_start_locked(void) {
   s_src.dispatch_pending = false;
   s_src.running = true;
 
-  ret = pbl_audio_start(MIC, &stream);
+  ret = pbl_audio_start(MIC, PBL_AUDIO_CAPTURE, &stream);
   if (ret != 0) {
     PBL_LOG_WRN("Mic failed to start (%d)", ret);
     s_src.running = false;
@@ -217,7 +217,7 @@ void mic_source_stop(void) {
   pbl_mutex_lock(&s_src.lock, PBL_FOREVER);
   if (s_src.running) {
     s_src.running = false;
-    (void)pbl_audio_stop(MIC);
+    (void)pbl_audio_stop(MIC, PBL_AUDIO_CAPTURE);
     prv_free_locked();
   }
   pbl_mutex_unlock(&s_src.lock);

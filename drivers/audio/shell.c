@@ -24,6 +24,7 @@
 
 struct prv_session {
   struct pbl_sem done;
+  uint8_t dir;
   uint32_t rate;
   uint8_t channels;
   size_t period_frames;
@@ -47,8 +48,8 @@ static void prv_high_load(bool on) {
 #endif
 }
 
-static const char *prv_dir_name(const struct pbl_audio *audio) {
-  return pbl_audio_dir(audio) == PBL_AUDIO_PLAYBACK ? "playback" : "capture";
+static const char *prv_dir_name(enum pbl_audio_dir dir) {
+  return dir == PBL_AUDIO_PLAYBACK ? "playback" : "capture";
 }
 
 static uint32_t prv_pick_rate(const struct pbl_audio_caps *caps) {
@@ -67,6 +68,7 @@ static const struct pbl_audio *prv_find(const struct pbl_shell *sh, const char *
                                         enum pbl_audio_dir dir) {
   const struct pbl_device *dev = pbl_device_find(&pbl_audio_class, name);
   const struct pbl_audio *audio;
+  struct pbl_audio_caps caps;
 
   if (dev == nullptr) {
     pbl_shell_error(sh, "unknown device '%s'", name);
@@ -74,9 +76,8 @@ static const struct pbl_audio *prv_find(const struct pbl_shell *sh, const char *
   }
 
   audio = PBL_CONTAINER_OF(dev, const struct pbl_audio, dev);
-  if (pbl_audio_dir(audio) != dir) {
-    pbl_shell_error(sh, "%s is not a %s device", name,
-                    dir == PBL_AUDIO_PLAYBACK ? "playback" : "capture");
+  if (pbl_audio_get_caps(audio, dir, &caps) == -ENOTSUP) {
+    pbl_shell_error(sh, "%s does not do %s", name, prv_dir_name(dir));
     return nullptr;
   }
 
@@ -88,25 +89,33 @@ static int prv_cmd_list(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   PBL_DEVICE_CLASS_FOREACH(&pbl_audio_class, dev) {
     const struct pbl_audio *audio = PBL_CONTAINER_OF(dev, const struct pbl_audio, dev);
-    struct pbl_audio_caps caps;
 
-    if (pbl_audio_get_caps(audio, &caps) != 0) {
-      pbl_shell_print(sh, "%s: %s (not ready)", pbl_device_name(dev), prv_dir_name(audio));
-      continue;
+    for (uint8_t dir = 0U; dir < PBL_AUDIO_DIRS; dir++) {
+      struct pbl_audio_caps caps;
+      int ret = pbl_audio_get_caps(audio, dir, &caps);
+
+      if (ret == -ENOTSUP) {
+        continue;
+      }
+
+      if (ret != 0) {
+        pbl_shell_print(sh, "%s: not ready", pbl_device_name(dev));
+        break;
+      }
+
+      pbl_shell_print(sh,
+                      "%s: %s rates 0x%" PRIx32 " channels %u-%u gain %" PRId32 "..%" PRId32
+                      " mdB step %" PRId32 "%s",
+                      pbl_device_name(dev), prv_dir_name(dir), caps.rates, caps.min_channels,
+                      caps.max_channels, caps.gain_min_mdb, caps.gain_max_mdb, caps.gain_step_mdb,
+                      pbl_audio_is_running(audio, dir) ? " (running)" : "");
     }
-
-    pbl_shell_print(sh,
-                    "%s: %s rates 0x%" PRIx32 " channels %u-%u gain %" PRId32 "..%" PRId32
-                    " mdB step %" PRId32 "%s",
-                    pbl_device_name(dev), prv_dir_name(audio), caps.rates, caps.min_channels,
-                    caps.max_channels, caps.gain_min_mdb, caps.gain_max_mdb, caps.gain_step_mdb,
-                    pbl_audio_is_running(audio) ? " (running)" : "");
   }
 
   return 0;
 }
 
-static void prv_record_done(const struct pbl_audio *audio, void *period,
+static void prv_record_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   struct prv_session *s = arg;
   const int16_t *samples = period;
@@ -124,7 +133,7 @@ static void prv_record_done(const struct pbl_audio *audio, void *period,
   s->xruns += pos->xrun ? 1U : 0U;
   s->frames += frames;
   s->frames_left -= frames;
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   if (s->frames_left == 0U && frames > 0U) {
     pbl_sem_give(&s->done);
@@ -149,13 +158,13 @@ static void prv_tone_fill(struct prv_session *s, int16_t *samples) {
   }
 }
 
-static void prv_tone_done(const struct pbl_audio *audio, void *period,
+static void prv_tone_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                           const struct pbl_audio_pos *pos, void *arg) {
   struct prv_session *s = arg;
 
   prv_tone_fill(s, period);
   s->xruns += pos->xrun ? 1U : 0U;
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   // Done once the ring has played out the last tone samples
   if (s->frames == PERIODS) {
@@ -181,7 +190,7 @@ static int prv_run(const struct pbl_shell *sh, const struct pbl_audio *audio, st
     return -ENOMEM;
   }
 
-  if (pbl_audio_dir(audio) == PBL_AUDIO_PLAYBACK) {
+  if (s->dir == PBL_AUDIO_PLAYBACK) {
     for (uint8_t i = 0U; i < PERIODS; i++) {
       prv_tone_fill(s, (int16_t *)stream.buf + i * s->period_frames * s->channels);
     }
@@ -189,7 +198,7 @@ static int prv_run(const struct pbl_shell *sh, const struct pbl_audio *audio, st
 
   pbl_sem_init(&s->done, 0, 1);
 
-  ret = pbl_audio_start(audio, &stream);
+  ret = pbl_audio_start(audio, s->dir, &stream);
   if (ret != 0) {
     pbl_shell_error(sh, "start failed (%d)", ret);
   } else {
@@ -197,7 +206,7 @@ static int prv_run(const struct pbl_shell *sh, const struct pbl_audio *audio, st
       pbl_shell_error(sh, "timed out");
       ret = -ETIMEDOUT;
     }
-    (void)pbl_audio_stop(audio);
+    (void)pbl_audio_stop(audio, s->dir);
   }
 
   pbl_sem_deinit(&s->done);
@@ -207,17 +216,18 @@ static int prv_run(const struct pbl_shell *sh, const struct pbl_audio *audio, st
 }
 
 static int prv_setup(const struct pbl_shell *sh, const struct pbl_audio *audio,
-                     struct prv_session *s, uint8_t channels) {
+                     enum pbl_audio_dir dir, struct prv_session *s, uint8_t channels) {
   struct pbl_audio_caps caps;
   int ret;
 
-  ret = pbl_audio_get_caps(audio, &caps);
+  ret = pbl_audio_get_caps(audio, dir, &caps);
   if (ret != 0) {
     pbl_shell_error(sh, "device not ready");
     return ret;
   }
 
   *s = (struct prv_session){
+    .dir = dir,
     .rate = prv_pick_rate(&caps),
     .channels = channels != 0U ? channels : PBL_MIN(caps.max_channels, MAX_CHANNELS),
   };
@@ -254,7 +264,7 @@ static int prv_cmd_rec(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -EINVAL;
   }
 
-  ret = prv_setup(sh, audio, &s, (uint8_t)channels);
+  ret = prv_setup(sh, audio, PBL_AUDIO_CAPTURE, &s, (uint8_t)channels);
   if (ret != 0) {
     return ret;
   }
@@ -303,14 +313,14 @@ static int prv_cmd_tone(const struct pbl_shell *sh, size_t argc, char **argv) {
     return -EINVAL;
   }
 
-  ret = prv_setup(sh, audio, &s, 0U);
+  ret = prv_setup(sh, audio, PBL_AUDIO_PLAYBACK, &s, 0U);
   if (ret != 0) {
     return ret;
   }
 
-  ret = pbl_audio_set_gain(audio, (int32_t)mdb);
+  ret = pbl_audio_set_gain(audio, PBL_AUDIO_PLAYBACK, (int32_t)mdb);
   if (ret == 0) {
-    ret = pbl_audio_set_mute(audio, false);
+    ret = pbl_audio_set_mute(audio, PBL_AUDIO_PLAYBACK, false);
   }
   if (ret != 0) {
     pbl_shell_error(sh, "gain failed (%d)", ret);

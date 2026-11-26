@@ -50,6 +50,8 @@ struct pbl_audio_stm32_sai_state {
 struct pbl_audio_stm32_sai {
   /** DAI. */
   struct pbl_audio_dai dai;
+  /** Direction of the sub-block, one of @ref pbl_audio_dir. */
+  uint8_t dir;
   /** Registers of the sub-block. */
   uintptr_t base;
   /** Common registers of the SAI. */
@@ -93,7 +95,7 @@ extern const struct pbl_audio_dai_ops pbl_audio_stm32_sai_ops;
   static struct pbl_audio_stm32_sai_state sym##_sai_state;                                     \
   static const struct pbl_pinctrl sym##_sai_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);          \
   PBL_DEVICE_INSTANCE(sym, struct pbl_audio_stm32_sai, struct pbl_audio_dai, dai) {            \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_stm32_sai_ops, _dir),            \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_stm32_sai_ops), .dir = (_dir),   \
     .base = (_base), .common = (_common), .clk = _clk,                                         \
     .dma = ((_dir) == PBL_AUDIO_PLAYBACK) ? (_tx) : (_rx), .pinctrl = &sym##_sai_pins,         \
     .ring = (_ring), .ring_size = (_ring_size), .state = &sym##_sai_state,                     \

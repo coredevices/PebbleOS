@@ -74,18 +74,19 @@ static inline void prv_putreg(const struct pbl_audio_stm32_sai *sai, uint32_t of
 }
 
 static bool prv_capture(const struct pbl_audio_stm32_sai *sai) {
-  return sai->dai.dir == PBL_AUDIO_CAPTURE;
+  return sai->dir == PBL_AUDIO_CAPTURE;
 }
 
 static void prv_dma_done(void *arg, int status) {
   const struct pbl_audio_dai *dai = arg;
+  const uint8_t dir = prv_dev(dai)->dir;
 
   if (status != 0) {
-    pbl_audio_report_xrun(pbl_audio_dai_card(dai));
+    pbl_audio_report_xrun(pbl_audio_dai_card(dai), dir);
     return;
   }
 
-  pbl_audio_period_elapsed(pbl_audio_dai_card(dai));
+  pbl_audio_period_elapsed(pbl_audio_dai_card(dai), dir);
 }
 
 // The raw samples of a half of the ring go through the filters into the periods of the stream
@@ -99,7 +100,7 @@ static void prv_pdm_done(void *arg, int status) {
   size_t frames;
 
   if (status != 0) {
-    pbl_audio_report_xrun(card);
+    pbl_audio_report_xrun(card, PBL_AUDIO_CAPTURE);
     return;
   }
 
@@ -128,7 +129,7 @@ static void prv_pdm_done(void *arg, int status) {
     if (st->frame == stream->period_frames) {
       st->frame = 0U;
       st->period = (st->period + 1U) % stream->periods;
-      pbl_audio_period_elapsed(card);
+      pbl_audio_period_elapsed(card, PBL_AUDIO_CAPTURE);
     }
   }
 }
@@ -155,8 +156,13 @@ static int prv_init(const struct pbl_audio_dai *dai) {
   return pbl_pinctrl_select_state(sai->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
 }
 
-static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
   const struct pbl_audio_stm32_sai *sai = prv_dev(dai);
+
+  if (dir != sai->dir) {
+    return;
+  }
 
   for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     caps->rates |= pbl_audio_rate_bit(s_rates[i]);
@@ -374,8 +380,8 @@ static int prv_pdm_start(const struct pbl_audio_stm32_sai *sai,
 }
 
 // The kernel clock stops in Stop
-static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                     int32_t gain_mdb, bool mute) {
+static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                     const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_stm32_sai *sai = prv_dev(dai);
   int ret;
 
@@ -404,7 +410,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   return ret;
 }
 
-static int prv_stop(const struct pbl_audio_dai *dai) {
+static int prv_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_stm32_sai *sai = prv_dev(dai);
 
   prv_disable(sai);
@@ -418,7 +424,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
 }
 
 // The gain and mute of a capture, those of playback being the codec's
-static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, int32_t gain_mdb) {
   struct pbl_audio_stm32_sai_state *st = prv_dev(dai)->state;
 
   if (!prv_capture(prv_dev(dai))) {
@@ -434,7 +440,7 @@ static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
   return 0;
 }
 
-static int prv_set_mute(const struct pbl_audio_dai *dai, bool mute) {
+static int prv_set_mute(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, bool mute) {
   if (!prv_capture(prv_dev(dai))) {
     return -ENOTSUP;
   }

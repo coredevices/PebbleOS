@@ -168,8 +168,13 @@ static const struct prv_rate s_rates[] = {
   {11025U, true, 1U, 7U, true, 10U, 2U, false, 3U},
 };
 
+// The DAC is the playback DAI, the ADC the capture one
+static uint8_t prv_dir(const struct pbl_audio_dai *dai) {
+  return dai->ops == &pbl_audio_sf32lb_audcodec_adc_ops ? PBL_AUDIO_CAPTURE : PBL_AUDIO_PLAYBACK;
+}
+
 static const struct pbl_audio_sf32lb_audcodec *prv_dev(const struct pbl_audio_dai *dai) {
-  return PBL_CONTAINER_OF(dai - dai->dir, const struct pbl_audio_sf32lb_audcodec, dai);
+  return PBL_CONTAINER_OF(dai - prv_dir(dai), const struct pbl_audio_sf32lb_audcodec, dai);
 }
 
 static inline uint32_t prv_read(uintptr_t reg) {
@@ -413,7 +418,8 @@ static void prv_clock_put(const struct pbl_audio_sf32lb_audcodec *dev) {
 }
 
 // Resets the clock dividers, unless the other direction streams from them
-static void prv_clock_reset(const struct pbl_audio_sf32lb_audcodec *dev, uint8_t dir, uint32_t us) {
+static void prv_clock_reset(const struct pbl_audio_sf32lb_audcodec *dev, enum pbl_audio_dir dir,
+                            uint32_t us) {
   if ((dev->state->running & ~PBL_BIT(dir)) != 0U) {
     return;
   }
@@ -427,16 +433,16 @@ static void prv_dma_done(void *arg, int status) {
   const struct pbl_audio_dai *dai = arg;
 
   if (status != 0) {
-    pbl_audio_report_xrun(pbl_audio_dai_card(dai));
+    pbl_audio_report_xrun(pbl_audio_dai_card(dai), prv_dir(dai));
     return;
   }
 
-  pbl_audio_period_elapsed(pbl_audio_dai_card(dai));
+  pbl_audio_period_elapsed(pbl_audio_dai_card(dai), prv_dir(dai));
 }
 
 static int prv_pointer(const struct pbl_audio_dai *dai, const struct pbl_dma_chan *dma,
                        uint32_t ring_bytes, size_t *frames) {
-  const struct pbl_audio_state *state = pbl_audio_dai_card(dai)->state;
+  const struct pbl_audio_stream *stream = pbl_audio_stream(pbl_audio_dai_card(dai), prv_dir(dai));
   size_t residue;
   int ret;
 
@@ -445,7 +451,7 @@ static int prv_pointer(const struct pbl_audio_dai *dai, const struct pbl_dma_cha
     return ret;
   }
 
-  *frames = ((ring_bytes - residue) % ring_bytes) / (state->stream.channels * sizeof(int16_t));
+  *frames = ((ring_bytes - residue) % ring_bytes) / (stream->channels * sizeof(int16_t));
 
   return 0;
 }
@@ -571,7 +577,12 @@ static void prv_dac_analog_off(const struct pbl_audio_sf32lb_audcodec *dev) {
   }
 }
 
-static void prv_dac_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_dac_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                             struct pbl_audio_caps *caps) {
+  if (dir != PBL_AUDIO_PLAYBACK) {
+    return;
+  }
+
   prv_get_rates(caps);
   caps->min_channels = 1U;
   caps->max_channels = 1U;
@@ -663,8 +674,8 @@ static int prv_dac_powered_start(const struct pbl_audio_sf32lb_audcodec *dev,
   return 0;
 }
 
-static int prv_dac_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                         int32_t gain_mdb, bool mute) {
+static int prv_dac_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
   struct pbl_audio_sf32lb_audcodec_state *state = dev->state;
   int ret;
@@ -693,7 +704,7 @@ static int prv_dac_start(const struct pbl_audio_dai *dai, const struct pbl_audio
   return ret;
 }
 
-static int prv_dac_stop(const struct pbl_audio_dai *dai) {
+static int prv_dac_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
   struct pbl_audio_sf32lb_audcodec_state *state = dev->state;
   int ret;
@@ -712,14 +723,15 @@ static int prv_dac_stop(const struct pbl_audio_dai *dai) {
   return ret;
 }
 
-static int prv_dac_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+static int prv_dac_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                            int32_t gain_mdb) {
   prv_set_volume(prv_dev(dai), gain_mdb);
 
   return 0;
 }
 
-static int prv_dac_set_mute(const struct pbl_audio_dai *dai, bool mute) {
-  prv_apply(prv_dev(dai), pbl_audio_dai_card(dai)->state->gain_mdb, mute);
+static int prv_dac_set_mute(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, bool mute) {
+  prv_apply(prv_dev(dai), pbl_audio_dai_card(dai)->state->streams[dir].gain_mdb, mute);
 
   return 0;
 }
@@ -728,7 +740,8 @@ static void prv_dac_sync_for_device(const struct pbl_audio_dai *dai, void *buf, 
   pbl_dcache_flush_range(buf, len);
 }
 
-static int prv_dac_pointer(const struct pbl_audio_dai *dai, size_t *frames) {
+static int prv_dac_pointer(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                           size_t *frames) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
 
   return prv_pointer(dai, dev->dac_dma, dev->state->dac_ring_bytes, frames);
@@ -910,11 +923,11 @@ static void prv_adc_analog_off(const struct pbl_audio_sf32lb_audcodec *dev) {
 
 static void prv_adc_copy(const struct pbl_audio_sf32lb_audcodec *dev, uint32_t period) {
   const struct pbl_audio *card = pbl_audio_dai_card(&dev->dai[PBL_AUDIO_CAPTURE]);
-  const struct pbl_audio_stream *stream = &card->state->stream;
+  const struct pbl_audio_stream *stream = pbl_audio_stream(card, PBL_AUDIO_CAPTURE);
   const size_t frames = stream->period_frames;
   int16_t *left = dev->state->adc_buf + period * frames;
   int16_t *right = left + frames * stream->periods;
-  int16_t *out = pbl_audio_period(card, (uint8_t)period);
+  int16_t *out = pbl_audio_period(card, PBL_AUDIO_CAPTURE, (uint8_t)period);
 
   pbl_dcache_invalidate_range(left, frames * sizeof(int16_t));
   pbl_dcache_invalidate_range(right, frames * sizeof(int16_t));
@@ -930,12 +943,12 @@ static void prv_adc_stereo_done(const struct pbl_audio_sf32lb_audcodec *dev, uin
                                 int status) {
   struct pbl_audio_sf32lb_audcodec_state *state = dev->state;
   const struct pbl_audio *card = pbl_audio_dai_card(&dev->dai[PBL_AUDIO_CAPTURE]);
-  uint32_t periods = card->state->stream.periods;
+  uint32_t periods = pbl_audio_stream(card, PBL_AUDIO_CAPTURE)->periods;
   uint32_t first;
   uint32_t last;
 
   if (status != 0) {
-    pbl_audio_report_xrun(card);
+    pbl_audio_report_xrun(card, PBL_AUDIO_CAPTURE);
     return;
   }
 
@@ -948,7 +961,7 @@ static void prv_adc_stereo_done(const struct pbl_audio_sf32lb_audcodec *dev, uin
 
   for (uint32_t period = first; period != last; period++) {
     prv_adc_copy(dev, period % periods);
-    pbl_audio_period_elapsed(card);
+    pbl_audio_period_elapsed(card, PBL_AUDIO_CAPTURE);
   }
 }
 
@@ -1031,7 +1044,12 @@ static void prv_adc_off(const struct pbl_audio_sf32lb_audcodec *dev) {
   state->adc_buf = nullptr;
 }
 
-static void prv_adc_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_adc_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                             struct pbl_audio_caps *caps) {
+  if (dir != PBL_AUDIO_CAPTURE) {
+    return;
+  }
+
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
 
   prv_get_rates(caps);
@@ -1072,8 +1090,8 @@ static int prv_adc_powered_start(const struct pbl_audio_sf32lb_audcodec *dev,
   return 0;
 }
 
-static int prv_adc_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                         int32_t gain_mdb, bool mute) {
+static int prv_adc_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
   struct pbl_audio_sf32lb_audcodec_state *state = dev->state;
   int ret;
@@ -1103,7 +1121,7 @@ static int prv_adc_start(const struct pbl_audio_dai *dai, const struct pbl_audio
   return ret;
 }
 
-static int prv_adc_stop(const struct pbl_audio_dai *dai) {
+static int prv_adc_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
   struct pbl_audio_sf32lb_audcodec_state *state = dev->state;
 
@@ -1119,7 +1137,8 @@ static int prv_adc_stop(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-static int prv_adc_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+static int prv_adc_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                            int32_t gain_mdb) {
   prv_adc_set_volume(prv_dev(dai), gain_mdb);
 
   return 0;
@@ -1132,7 +1151,8 @@ static void prv_adc_sync_for_cpu(const struct pbl_audio_dai *dai, void *buf, siz
   }
 }
 
-static int prv_adc_pointer(const struct pbl_audio_dai *dai, size_t *frames) {
+static int prv_adc_pointer(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                           size_t *frames) {
   const struct pbl_audio_sf32lb_audcodec *dev = prv_dev(dai);
 
   if (dev->state->adc_channels != 1U) {

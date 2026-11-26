@@ -28,6 +28,7 @@ static PBL_MUTEX_DEFINE(s_lock);
 
 struct prv_session {
   const struct pbl_audio *audio;
+  uint8_t dir;
   bool running;
   volatile bool pending;
   uint8_t channels;
@@ -80,19 +81,19 @@ static void prv_bottom_half(void *data) {
   pbl_mutex_unlock(&s_lock);
 }
 
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   struct prv_session *s = arg;
   const size_t bytes = prv_period_bytes(s);
 
-  if (pbl_audio_dir(audio) == PBL_AUDIO_CAPTURE) {
+  if (dir == PBL_AUDIO_CAPTURE) {
     (void)circular_buffer_write(&s->fifo, period, bytes);
   } else {
     const uint16_t avail = PBL_MIN(circular_buffer_get_read_space_remaining(&s->fifo), bytes);
     (void)circular_buffer_copy(&s->fifo, period, avail);
     circular_buffer_consume(&s->fifo, avail);
   }
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   if (!s->pending) {
     s->pending = true;
@@ -112,9 +113,9 @@ static void prv_free_cb(void *data) {
   prv_free(data);
 }
 
-static struct prv_session *prv_start(const struct pbl_audio *audio, uint8_t channels,
-                                     int32_t gain_mdb, MfgAudioCaptureCb capture_cb,
-                                     MfgAudioFillCb fill_cb) {
+static struct prv_session *prv_start(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                                     uint8_t channels, int32_t gain_mdb,
+                                     MfgAudioCaptureCb capture_cb, MfgAudioFillCb fill_cb) {
   struct prv_session *s = pbl_zalloc(sizeof(*s));
   struct pbl_audio_stream stream = {
     .rate = MFG_AUDIO_SAMPLE_RATE,
@@ -130,6 +131,7 @@ static struct prv_session *prv_start(const struct pbl_audio *audio, uint8_t chan
   }
 
   s->audio = audio;
+  s->dir = dir;
   s->channels = channels;
   s->capture_cb = capture_cb;
   s->fill_cb = fill_cb;
@@ -145,8 +147,8 @@ static struct prv_session *prv_start(const struct pbl_audio *audio, uint8_t chan
   stream.arg = s;
   s->running = true;
 
-  if (pbl_audio_set_gain(audio, gain_mdb) != 0 || pbl_audio_set_mute(audio, false) != 0 ||
-      pbl_audio_start(audio, &stream) != 0) {
+  if (pbl_audio_set_gain(audio, dir, gain_mdb) != 0 || pbl_audio_set_mute(audio, dir, false) != 0 ||
+      pbl_audio_start(audio, dir, &stream) != 0) {
     prv_free(s);
     return nullptr;
   }
@@ -156,7 +158,7 @@ static struct prv_session *prv_start(const struct pbl_audio *audio, uint8_t chan
 
 static void prv_stop(struct prv_session *s) {
   s->running = false;
-  (void)pbl_audio_stop(s->audio);
+  (void)pbl_audio_stop(s->audio, s->dir);
   // A queued bottom half may still reference the session
   (void)pbl_sys_work_call(prv_free_cb, s);
 }
@@ -171,7 +173,7 @@ int mfg_audio_capture_start(uint8_t channels, int32_t gain_mdb, MfgAudioCaptureC
   if (s_capture != nullptr) {
     ret = -EBUSY;
   } else {
-    s_capture = prv_start(MIC, channels, gain_mdb, cb, nullptr);
+    s_capture = prv_start(MIC, PBL_AUDIO_CAPTURE, channels, gain_mdb, cb, nullptr);
     if (s_capture == nullptr) {
       ret = -EIO;
     }
@@ -213,7 +215,7 @@ int mfg_audio_playback_start(int32_t gain_mdb, MfgAudioFillCb cb) {
     ret = -EBUSY;
   } else {
     prv_high_load(true);
-    s_playback = prv_start(SPEAKER, 1, gain_mdb, nullptr, cb);
+    s_playback = prv_start(SPEAKER, PBL_AUDIO_PLAYBACK, 1, gain_mdb, nullptr, cb);
     if (s_playback == nullptr) {
       prv_high_load(false);
       ret = -EIO;

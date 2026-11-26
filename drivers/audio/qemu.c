@@ -44,13 +44,15 @@ static uint32_t prv_volume(int32_t gain_mdb, bool mute) {
 }
 
 static void prv_push(const struct pbl_audio_qemu *dev) {
-  const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&dev->dai)->state;
+  const struct pbl_audio_stream *stream =
+      pbl_audio_stream(pbl_audio_dai_card(&dev->dai), PBL_AUDIO_PLAYBACK);
   struct pbl_audio_qemu_state *state = dev->state;
-  size_t period_samples = audio_state->stream.period_frames;
+  size_t period_samples = stream->period_frames;
   uint32_t avail = prv_read(dev, AUDIO_BUFAVAIL);
 
-  while (avail > 0U && pbl_audio_is_running(pbl_audio_dai_card(&dev->dai))) {
-    const int16_t *period = pbl_audio_period(pbl_audio_dai_card(&dev->dai), state->idx);
+  while (avail > 0U && pbl_audio_is_running(pbl_audio_dai_card(&dev->dai), PBL_AUDIO_PLAYBACK)) {
+    const int16_t *period =
+        pbl_audio_period(pbl_audio_dai_card(&dev->dai), PBL_AUDIO_PLAYBACK, state->idx);
 
     for (; avail > 0U && state->offset < period_samples; avail--, state->offset++) {
       prv_write(dev, AUDIO_DATA, (uint16_t)period[state->offset]);
@@ -58,8 +60,8 @@ static void prv_push(const struct pbl_audio_qemu *dev) {
 
     if (state->offset == period_samples) {
       state->offset = 0U;
-      state->idx = (state->idx + 1U) % audio_state->stream.periods;
-      pbl_audio_period_elapsed(pbl_audio_dai_card(&dev->dai));
+      state->idx = (state->idx + 1U) % stream->periods;
+      pbl_audio_period_elapsed(pbl_audio_dai_card(&dev->dai), PBL_AUDIO_PLAYBACK);
     }
   }
 }
@@ -75,7 +77,12 @@ static int prv_init(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
+  if (dir != PBL_AUDIO_PLAYBACK) {
+    return;
+  }
+
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 1U;
@@ -85,8 +92,8 @@ static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps 
   caps->gain_default_mdb = 0;
 }
 
-static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                     int32_t gain_mdb, bool mute) {
+static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                     const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_qemu *dev = prv_dev(dai);
 
   *dev->state = (struct pbl_audio_qemu_state){0};
@@ -106,7 +113,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio_dai *dai) {
+static int prv_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_qemu *dev = prv_dev(dai);
 
   prv_write(dev, AUDIO_CTRL, 0U);
@@ -116,14 +123,16 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
-  prv_write(prv_dev(dai), AUDIO_VOLUME, prv_volume(gain_mdb, pbl_audio_dai_card(dai)->state->mute));
+static int prv_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, int32_t gain_mdb) {
+  prv_write(prv_dev(dai), AUDIO_VOLUME,
+            prv_volume(gain_mdb, pbl_audio_dai_card(dai)->state->streams[dir].mute));
 
   return 0;
 }
 
-static int prv_set_mute(const struct pbl_audio_dai *dai, bool mute) {
-  prv_write(prv_dev(dai), AUDIO_VOLUME, prv_volume(pbl_audio_dai_card(dai)->state->gain_mdb, mute));
+static int prv_set_mute(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, bool mute) {
+  prv_write(prv_dev(dai), AUDIO_VOLUME,
+            prv_volume(pbl_audio_dai_card(dai)->state->streams[dir].gain_mdb, mute));
 
   return 0;
 }

@@ -51,11 +51,11 @@ static void prv_fill(int16_t *samples) {
 
 /* Runs in an interrupt, each time the hardware is done with a period: refill it and hand it back.
  */
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   prv_fill(period);
   s_play.xruns += pos->xrun ? 1U : 0U;
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   /* Done once the whole ring holds silence: the last notes have played out. */
   if (s_play.frame >= PBL_ARRAY_SIZE(s_notes) * NOTE_FRAMES && ++s_play.tail == PERIODS + 1U) {
@@ -74,7 +74,7 @@ int main(void) {
   struct pbl_audio_caps caps;
   int ret;
 
-  ret = pbl_audio_get_caps(SPEAKER, &caps);
+  ret = pbl_audio_get_caps(SPEAKER, PBL_AUDIO_PLAYBACK, &caps);
   if (ret != 0) {
     fprintf(stderr, "speaker: not ready (%d)\n", ret);
     return ret;
@@ -85,9 +85,9 @@ int main(void) {
     return -ENOTSUP;
   }
 
-  ret = pbl_audio_set_gain(SPEAKER, caps.gain_default_mdb);
+  ret = pbl_audio_set_gain(SPEAKER, PBL_AUDIO_PLAYBACK, caps.gain_default_mdb);
   if (ret == 0) {
-    ret = pbl_audio_set_mute(SPEAKER, false);
+    ret = pbl_audio_set_mute(SPEAKER, PBL_AUDIO_PLAYBACK, false);
   }
   if (ret != 0) {
     fprintf(stderr, "speaker: gain failed (%d)\n", ret);
@@ -113,10 +113,10 @@ int main(void) {
   (void)pbl_charger_high_load_request(CHARGER);
 #endif
 
-  ret = pbl_audio_start(SPEAKER, &stream);
+  ret = pbl_audio_start(SPEAKER, PBL_AUDIO_PLAYBACK, &stream);
   if (ret == 0) {
     ret = pbl_sem_take(&s_play.done, PBL_MSEC(PBL_ARRAY_SIZE(s_notes) * NOTE_MS + 1000U));
-    (void)pbl_audio_stop(SPEAKER);
+    (void)pbl_audio_stop(SPEAKER, PBL_AUDIO_PLAYBACK);
   }
 
 #ifdef CONFIG_CHARGER_HIGH_LOAD

@@ -15,8 +15,9 @@
  * @ingroup drivers
  * @brief Audio stream class.
  *
- * An audio device is a struct pbl_audio streaming one direction, playback or capture, between a
- * ring of periods in memory and the hardware. The client owns the ring: interleaved signed 16-bit
+ * An audio device is a struct pbl_audio with a stream per direction it supports, playback and
+ * capture, each between a ring of periods in memory and the hardware. The two run independently
+ * and calls name the one they act on. The client owns the ring: interleaved signed 16-bit
  * samples, @c periods periods of @c period_frames frames each, aligned and padded to
  * @ref PBL_AUDIO_BUF_ALIGN (pbl_audio_buf_alloc() returns such a buffer). The hardware works
  * through the periods in order and wraps around.
@@ -33,10 +34,10 @@
  *   period still held when the hardware needs it again is overwritten, and @c xrun is set.
  *
  * @code{.c}
- * static void prv_period_done(const struct pbl_audio *audio, void *period,
+ * static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
  *                             const struct pbl_audio_pos *pos, void *arg) {
  *   fill(period);
- *   (void)pbl_audio_period_ready(audio, period);
+ *   (void)pbl_audio_period_ready(audio, dir, period);
  * }
  *
  * const struct pbl_audio_stream stream = {
@@ -48,9 +49,9 @@
  *   .period_done = prv_period_done,
  * };
  *
- * ret = pbl_audio_start(SPEAKER, &stream);
+ * ret = pbl_audio_start(SPEAKER, PBL_AUDIO_PLAYBACK, &stream);
  * ...
- * ret = pbl_audio_stop(SPEAKER);
+ * ret = pbl_audio_stop(SPEAKER, PBL_AUDIO_PLAYBACK);
  * @endcode
  *
  * Positions count the frames the hardware has transferred since the stream started, stamped
@@ -59,14 +60,15 @@
  * @c f + (periods - 1) * period_frames; a capture period handed out at frame @c f holds frames
  * @c f - period_frames to @c f.
  *
- * Gain is in millibels (mdB) and mute is separate from it. Both take effect at once while
- * streaming and are kept for the next start otherwise.
+ * Gain is in millibels (mdB) and mute is separate from it, both per direction. They take effect
+ * at once while streaming and are kept for the next start otherwise.
  *
  * An audio device is a card, as in Linux: a digital audio interface (DAI) of the SoC, the
  * struct pbl_audio_dai a driver implements, linked to a codec and an amplifier by a struct
- * pbl_audio_link. The class powers them around the stream: the amplifier on before the stream
- * and off after it, the codec up once the stream runs (it may need its clocks) and down before
- * the stream stops, and routes gain and mute to the codec.
+ * pbl_audio_link. The link is full duplex: one DAI and one codec serve both directions, under
+ * the lock of the card. The class powers them around each stream: the amplifier on before a
+ * playback stream and off after it, the codec path of the direction up once its stream runs (it
+ * may need its clocks) and down before it stops, and routes gain and mute to the codec.
  *
  * Calls other than pbl_audio_period_ready() must not be made from interrupts. They return 0 or a
  * negative errno, @c -ENODEV if the device is not ready.
@@ -91,6 +93,9 @@ enum pbl_audio_dir {
   /** From the hardware to memory. */
   PBL_AUDIO_CAPTURE,
 };
+
+/** @brief Number of directions. */
+#define PBL_AUDIO_DIRS 2U
 
 /**
  * @name Sample rates
@@ -144,12 +149,13 @@ struct pbl_audio_pos {
  * @brief Period callback, called from the driver's interrupt.
  *
  * @param audio Device.
+ * @param dir Direction of the stream, one of @ref pbl_audio_dir.
  * @param period Period the client now owns.
  * @param pos Stream position.
  * @param arg Callback argument.
  */
-typedef void (*pbl_audio_period_cb)(const struct pbl_audio *audio, void *period,
-                                    const struct pbl_audio_pos *pos, void *arg);
+typedef void (*pbl_audio_period_cb)(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                                    void *period, const struct pbl_audio_pos *pos, void *arg);
 
 /** @brief A stream. */
 struct pbl_audio_stream {
@@ -193,35 +199,51 @@ struct pbl_audio_caps {
  * @brief DAI driver operations.
  *
  * Called with the lock of the card held, except the sync and pointer operations, which may be
- * called from the driver's interrupt.
+ * called from the driver's interrupt. Stream operations name their direction; the other one may
+ * be streaming, as pbl_audio_is_running() on the card of the DAI tells.
  */
 struct pbl_audio_dai_ops {
   /** Optional. Bring the hardware up. Returns 0, @c -ENODEV if absent, or a negative errno. */
   int (*init)(const struct pbl_audio_dai *dai);
-  /** Report the capabilities. Gain fields are ignored on a card with a codec. */
-  void (*get_caps)(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps);
   /**
-   * Start streaming the ring, applying @p gain_mdb and @p mute before any sample reaches the
-   * output. Returns 0, @c -EINVAL for a stream the hardware cannot run, or a negative errno.
+   * Report the capabilities of direction @p dir, leaving @c rates 0 for a direction it does not
+   * stream. Gain fields are ignored on a card with a codec.
    */
-  int (*start)(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-               int32_t gain_mdb, bool mute);
-  /** Stop streaming. pbl_audio_period_elapsed() is not called once it returns. */
-  int (*stop)(const struct pbl_audio_dai *dai);
-  /** Optional, required with a variable gain. Set the gain while streaming. */
-  int (*set_gain)(const struct pbl_audio_dai *dai, int32_t gain_mdb);
-  /** Optional. Set the mute while streaming; without it, mute sets the lowest gain. */
-  int (*set_mute)(const struct pbl_audio_dai *dai, bool mute);
+  void (*get_caps)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                   struct pbl_audio_caps *caps);
+  /**
+   * Start streaming the ring of direction @p dir, applying @p gain_mdb and @p mute before any
+   * sample reaches the output. Returns 0, @c -EINVAL for a stream the hardware cannot run, or a
+   * negative errno.
+   */
+  int (*start)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+               const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute);
+  /**
+   * Stop streaming direction @p dir. pbl_audio_period_elapsed() is not called for it once it
+   * returns.
+   */
+  int (*stop)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir);
+  /** Optional, required with a variable gain. Set the gain of direction @p dir while streaming. */
+  int (*set_gain)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, int32_t gain_mdb);
+  /**
+   * Optional. Set the mute of direction @p dir while streaming; without it, mute sets the lowest
+   * gain.
+   */
+  int (*set_mute)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, bool mute);
   /** Optional. Make CPU writes to a playback period visible to the hardware. */
   void (*sync_for_device)(const struct pbl_audio_dai *dai, void *buf, size_t len);
   /** Optional. Make hardware writes to a capture period visible to the CPU. */
   void (*sync_for_cpu)(const struct pbl_audio_dai *dai, void *buf, size_t len);
-  /** Optional. Report the frame position of the hardware within the ring. */
-  int (*pointer)(const struct pbl_audio_dai *dai, size_t *frames);
+  /** Optional. Report the frame position of the hardware within the ring of direction @p dir. */
+  int (*pointer)(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, size_t *frames);
 };
 
 /** @brief Codec configuration for a stream. */
 struct pbl_audio_codec_cfg {
+  /** Direction of the stream, one of @ref pbl_audio_dir. */
+  enum pbl_audio_dir dir;
+  /** Directions already streaming, with their path enabled, as @c PBL_BIT() of each. */
+  uint8_t streaming;
   /** Sample rate, in Hz. */
   uint32_t rate;
   /** Channels per frame on the link. */
@@ -237,26 +259,35 @@ struct pbl_audio_codec_cfg {
 /**
  * @brief Codec driver operations, called with the lock of the card held.
  *
- * A codec without @c set_gain leaves the gain and mute to the DAI.
+ * Stream operations act on the path of one direction; the class tells which others stream, so
+ * the codec powers down only once the last stops. A codec without @c set_gain leaves the gain and
+ * mute to the DAI.
  */
 struct pbl_audio_codec_ops {
-  /** Optional. Power up before the stream starts, as a microphone needs. */
-  int (*prepare)(const struct pbl_audio_codec *codec);
-  /** Optional, required with @c prepare. Power down after the stream stops. */
-  int (*unprepare)(const struct pbl_audio_codec *codec);
-  /** Optional, required with @c set_gain. Report the gain range in the gain fields of @p caps. */
-  void (*get_caps)(const struct pbl_audio_codec *codec, struct pbl_audio_caps *caps);
+  /** Optional. Power up before the stream of direction @p dir starts, as a microphone needs. */
+  int (*prepare)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir);
+  /** Optional, required with @c prepare. Power down after the stream of @p dir stops. */
+  int (*unprepare)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir);
   /**
-   * Optional. Power up for a stream whose clocks run, ending with the gain and mute applied.
-   * Powers down again on failure.
+   * Optional, required with @c set_gain. Report the gain range of direction @p dir in the gain
+   * fields of @p caps.
+   */
+  void (*get_caps)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                   struct pbl_audio_caps *caps);
+  /**
+   * Optional. Power up the path of @c cfg->dir for a stream whose clocks run, ending with its gain
+   * and mute applied. Powers it down again on failure.
    */
   int (*enable)(const struct pbl_audio_codec *codec, const struct pbl_audio_codec_cfg *cfg);
-  /** Optional, required with @c enable. Power down. */
-  int (*disable)(const struct pbl_audio_codec *codec);
-  /** Optional. Set the gain while enabled. */
-  int (*set_gain)(const struct pbl_audio_codec *codec, int32_t gain_mdb);
-  /** Optional, required with @c set_gain. Set the mute while enabled. */
-  int (*set_mute)(const struct pbl_audio_codec *codec, bool mute);
+  /**
+   * Optional, required with @c enable. Power down the path of direction @p dir, and the codec if
+   * @p streaming, the directions left streaming as @c PBL_BIT() of each, is 0.
+   */
+  int (*disable)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir, uint8_t streaming);
+  /** Optional. Set the gain of direction @p dir while enabled. */
+  int (*set_gain)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir, int32_t gain_mdb);
+  /** Optional, required with @c set_gain. Set the mute of direction @p dir while enabled. */
+  int (*set_mute)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir, bool mute);
 };
 
 /** @brief A codec: a separate chip converting between the link and the analog side. */
@@ -267,7 +298,7 @@ struct pbl_audio_codec {
   const struct pbl_audio_codec_ops *ops;
 };
 
-/** @brief Amplifier driver operations, called with the lock of the linked device held. */
+/** @brief Amplifier driver operations, called with the lock of the card held. */
 struct pbl_audio_amp_ops {
   /** Power up, or power down again on failure. */
   int (*enable)(const struct pbl_audio_amp *amp);
@@ -275,7 +306,7 @@ struct pbl_audio_amp_ops {
   int (*disable)(const struct pbl_audio_amp *amp);
 };
 
-/** @brief An amplifier between the output and the speaker. */
+/** @brief An amplifier between the output and the speaker, on while playing. */
 struct pbl_audio_amp {
   /** Device. */
   struct pbl_device dev;
@@ -329,8 +360,7 @@ struct pbl_audio_link {
 };
 
 /** @cond INTERNAL_HIDDEN */
-struct pbl_audio_state {
-  struct pbl_mutex lock;
+struct pbl_audio_stream_state {
   struct pbl_audio_stream stream;
   size_t period_bytes;
   int32_t gain_mdb;
@@ -343,6 +373,11 @@ struct pbl_audio_state {
   uint64_t frame;
   uint64_t ts_us;
 };
+
+struct pbl_audio_state {
+  struct pbl_mutex lock;
+  struct pbl_audio_stream_state streams[PBL_AUDIO_DIRS];
+};
 /** @endcond */
 
 /** @cond INTERNAL_HIDDEN */
@@ -351,7 +386,7 @@ struct pbl_audio_dai_state {
 };
 /** @endcond */
 
-/** @brief A digital audio interface of the SoC, streaming one direction. */
+/** @brief A digital audio interface of the SoC, streaming one direction or both. */
 struct pbl_audio_dai {
   /** Device. */
   struct pbl_device dev;
@@ -359,11 +394,9 @@ struct pbl_audio_dai {
   const struct pbl_audio_dai_ops *ops;
   /** Runtime state. */
   struct pbl_audio_dai_state *state;
-  /** Direction, one of @ref pbl_audio_dir. */
-  uint8_t dir;
 };
 
-/** @brief An audio device: a card, a DAI and what it is wired to. */
+/** @brief An audio device: a card, a DAI and what it is wired to, streaming both directions. */
 struct pbl_audio {
   /** Device. */
   struct pbl_device dev;
@@ -382,10 +415,10 @@ int pbl_audio_dev_init(const struct pbl_device *dev);
 int pbl_audio_dai_dev_init(const struct pbl_device *dev);
 /** @endcond */
 
-/** @brief The board's speaker, a playback device. */
+/** @brief The board's speaker, a device that plays. */
 extern const struct pbl_audio *const SPEAKER;
 
-/** @brief The board's microphone, a capture device. */
+/** @brief The board's microphone, a device that records; may be the speaker's card. */
 extern const struct pbl_audio *const MIC;
 
 /**
@@ -404,15 +437,13 @@ extern const struct pbl_audio *const MIC;
  * @param _name Device name.
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
- * @param _dir Direction, one of @ref pbl_audio_dir.
  */
-#define PBL_AUDIO_DAI_INIT(sym, _name, _parent, _ops, _dir)                                       \
+#define PBL_AUDIO_DAI_INIT(sym, _name, _parent, _ops)                                             \
   {                                                                                               \
     .dev =                                                                                        \
         PBL_DEVICE_INIT_CLASS(sym, _name, pbl_audio_dai_dev_init, _parent, &pbl_audio_dai_class), \
     .ops = (_ops),                                                                                \
     .state = &sym##_dai_state,                                                                    \
-    .dir = (_dir),                                                                                \
   }
 
 /**
@@ -443,16 +474,6 @@ extern const struct pbl_audio *const MIC;
   PBL_DEVICE_REGISTER(sym, &sym.dev)
 
 /**
- * @brief Get the direction of a card.
- *
- * @param audio Card.
- * @return One of @ref pbl_audio_dir.
- */
-static inline uint8_t pbl_audio_dir(const struct pbl_audio *audio) {
-  return audio->dai->dir;
-}
-
-/**
  * @brief Get the card of a DAI, for drivers.
  *
  * @param dai DAI.
@@ -468,8 +489,9 @@ static inline const struct pbl_audio *pbl_audio_dai_card(const struct pbl_audio_
  * Called by drivers from their interrupt handler, once per period, in ring order.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  */
-void pbl_audio_period_elapsed(const struct pbl_audio *audio);
+void pbl_audio_period_elapsed(const struct pbl_audio *audio, enum pbl_audio_dir dir);
 
 /**
  * @brief Report a hardware overrun or underrun, flagged in the next callback.
@@ -477,36 +499,56 @@ void pbl_audio_period_elapsed(const struct pbl_audio *audio);
  * Called by drivers, from any context.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  */
-void pbl_audio_report_xrun(const struct pbl_audio *audio);
+void pbl_audio_report_xrun(const struct pbl_audio *audio, enum pbl_audio_dir dir);
 
 /**
- * @brief Get a period of the running stream, for drivers.
+ * @brief Get a period of a running stream, for drivers.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param idx Period index, below the number of periods.
  * @return Period.
  */
-void *pbl_audio_period(const struct pbl_audio *audio, uint8_t idx);
+void *pbl_audio_period(const struct pbl_audio *audio, enum pbl_audio_dir dir, uint8_t idx);
 
 /**
- * @brief Get what a device can do, including its codec.
+ * @brief Get a running stream, for drivers.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
+ * @return Stream, valid while it runs.
+ */
+static inline const struct pbl_audio_stream *pbl_audio_stream(const struct pbl_audio *audio,
+                                                              enum pbl_audio_dir dir) {
+  return &audio->state->streams[dir].stream;
+}
+
+/**
+ * @brief Get what a device can do in a direction, including its codec.
+ *
+ * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param[out] caps Capabilities.
- * @return 0 or a negative errno.
+ * @return 0, @c -ENOTSUP if the device does not stream @p dir, or another negative errno.
  */
-int pbl_audio_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps);
+int pbl_audio_get_caps(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                       struct pbl_audio_caps *caps);
 
 /**
- * @brief Start streaming.
+ * @brief Start streaming a direction.
+ *
+ * The other direction keeps streaming, though the hardware of some devices pauses it briefly.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param stream Stream; copied, but the ring must stay valid until pbl_audio_stop() returns.
- * @return 0, @c -EBUSY if streaming, @c -EINVAL for a stream the device cannot run, or another
- * negative errno.
+ * @return 0, @c -EBUSY if streaming, @c -ENOTSUP if the device does not stream @p dir,
+ * @c -EINVAL for a stream the device cannot run, or another negative errno.
  */
-int pbl_audio_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream);
+int pbl_audio_start(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                    const struct pbl_audio_stream *stream);
 
 /**
  * @brief Give a period back to the hardware: refilled for playback, read for capture.
@@ -514,56 +556,64 @@ int pbl_audio_start(const struct pbl_audio *audio, const struct pbl_audio_stream
  * May be called from the period callback or any other context.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param period Period from the callback.
  * @return 0, @c -EINVAL if the client does not own @p period, or @c -EAGAIN if not streaming.
  */
-int pbl_audio_period_ready(const struct pbl_audio *audio, void *period);
+int pbl_audio_period_ready(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period);
 
 /**
- * @brief Stop streaming. No callback runs once it returns. A no-op if not streaming.
+ * @brief Stop streaming a direction. No callback of it runs once it returns. A no-op if not
+ * streaming.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @return 0 or a negative errno.
  */
-int pbl_audio_stop(const struct pbl_audio *audio);
+int pbl_audio_stop(const struct pbl_audio *audio, enum pbl_audio_dir dir);
 
 /**
- * @brief Set the gain.
+ * @brief Set the gain of a direction.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param gain_mdb Gain in mdB, clamped to the range of the device and rounded down to its step.
- * @return 0 or a negative errno.
+ * @return 0, @c -ENOTSUP if the device does not stream @p dir, or another negative errno.
  */
-int pbl_audio_set_gain(const struct pbl_audio *audio, int32_t gain_mdb);
+int pbl_audio_set_gain(const struct pbl_audio *audio, enum pbl_audio_dir dir, int32_t gain_mdb);
 
 /**
- * @brief Mute or unmute.
+ * @brief Mute or unmute a direction.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param mute True to mute.
- * @return 0 or a negative errno.
+ * @return 0, @c -ENOTSUP if the device does not stream @p dir, or another negative errno.
  */
-int pbl_audio_set_mute(const struct pbl_audio *audio, bool mute);
+int pbl_audio_set_mute(const struct pbl_audio *audio, enum pbl_audio_dir dir, bool mute);
 
 /**
- * @brief Get the current stream position.
+ * @brief Get the current position of a stream.
  *
  * Exact to the frame for drivers that report their progress within a period, otherwise the
  * position at the last period boundary.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @param[out] pos Position; @c xrun is not reported.
  * @return 0, or @c -EAGAIN if not streaming.
  */
-int pbl_audio_get_position(const struct pbl_audio *audio, struct pbl_audio_pos *pos);
+int pbl_audio_get_position(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                           struct pbl_audio_pos *pos);
 
 /**
- * @brief Check whether a device is streaming.
+ * @brief Check whether a direction is streaming.
  *
  * @param audio Device.
+ * @param dir Direction, one of @ref pbl_audio_dir.
  * @return True while streaming.
  */
-bool pbl_audio_is_running(const struct pbl_audio *audio);
+bool pbl_audio_is_running(const struct pbl_audio *audio, enum pbl_audio_dir dir);
 
 /**
  * @brief Get the bytes of a ring.

@@ -11,7 +11,7 @@ static const struct pbl_audio_dmic *prv_dmic(const struct pbl_audio_codec *codec
   return PBL_CONTAINER_OF(codec, const struct pbl_audio_dmic, codec);
 }
 
-static int prv_prepare(const struct pbl_audio_codec *codec) {
+static int prv_prepare(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir) {
   const struct pbl_audio_dmic *dmic = prv_dmic(codec);
   int ret;
 
@@ -36,7 +36,7 @@ static int prv_prepare(const struct pbl_audio_codec *codec) {
   return 0;
 }
 
-static int prv_unprepare(const struct pbl_audio_codec *codec) {
+static int prv_unprepare(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir) {
   const struct pbl_audio_dmic *dmic = prv_dmic(codec);
 
   return (dmic->vref != nullptr) ? pbl_regulator_disable(dmic->vref) : 0;

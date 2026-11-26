@@ -49,15 +49,15 @@ extern const struct pbl_audio_dai_ops pbl_audio_qemu_ops;
  * @param _base Base address of the registers.
  * @param _irq Interrupt line.
  */
-#define PBL_AUDIO_QEMU_DEFINE(sym, _name, _base, _irq)                                       \
-  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                           \
-  static struct pbl_audio_qemu_state sym##_qemu_state;                                       \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_qemu, struct pbl_audio_dai, dai){                \
-    .dai = PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_qemu_ops, PBL_AUDIO_PLAYBACK), \
-    .base = (_base),                                                                         \
-    .irq = (_irq),                                                                           \
-    .state = &sym##_qemu_state,                                                              \
-  };                                                                                         \
+#define PBL_AUDIO_QEMU_DEFINE(sym, _name, _base, _irq)                        \
+  PBL_AUDIO_DAI_STATE_DEFINE(sym);                                            \
+  static struct pbl_audio_qemu_state sym##_qemu_state;                        \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_audio_qemu, struct pbl_audio_dai, dai){ \
+    .dai = PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_qemu_ops),      \
+    .base = (_base),                                                          \
+    .irq = (_irq),                                                            \
+    .state = &sym##_qemu_state,                                               \
+  };                                                                          \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_QEMU_IRQ_PRIO, pbl_audio_qemu_irq_handler, &sym##_inst, 0)
 
 /**

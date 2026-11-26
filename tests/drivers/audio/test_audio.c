@@ -25,10 +25,15 @@ static int32_t s_codec_gain;
 static bool s_codec_mute;
 static int s_syncs;
 static size_t s_pointer;
+static uint8_t s_dai_dir;
+static uint8_t s_codec_dir;
+static uint8_t s_codec_streaming;
+static int32_t s_codec_gains[PBL_AUDIO_DIRS];
 
 static void *s_ring;
 static void *s_periods[8];
 static struct pbl_audio_pos s_pos[8];
+static uint8_t s_dirs[8];
 static int s_calls;
 static bool s_refill;
 
@@ -70,7 +75,8 @@ static void prv_log(char c) {
   }
 }
 
-static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 2U;
@@ -81,20 +87,22 @@ static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps 
   caps->gain_default_mdb = -6000;
 }
 
-static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                     int32_t gain_mdb, bool mute) {
+static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                     const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   prv_log('S');
+  s_dai_dir = dir;
   s_hw_gain = gain_mdb;
   s_hw_mute = mute;
   return s_start_ret;
 }
 
-static int prv_stop(const struct pbl_audio_dai *dai) {
+static int prv_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   prv_log('s');
+  s_dai_dir = dir;
   return 0;
 }
 
-static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, int32_t gain_mdb) {
   s_hw_gain = gain_mdb;
   return 0;
 }
@@ -103,7 +111,7 @@ static void prv_sync(const struct pbl_audio_dai *dai, void *buf, size_t len) {
   s_syncs++;
 }
 
-static int prv_pointer(const struct pbl_audio_dai *dai, size_t *frames) {
+static int prv_pointer(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, size_t *frames) {
   *frames = s_pointer;
   return 0;
 }
@@ -118,7 +126,21 @@ static const struct pbl_audio_dai_ops s_ops = {
   .pointer = prv_pointer,
 };
 
-static void prv_codec_get_caps(const struct pbl_audio_codec *codec, struct pbl_audio_caps *caps) {
+static void prv_playback_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                                  struct pbl_audio_caps *caps) {
+  if (dir == PBL_AUDIO_PLAYBACK) {
+    prv_get_caps(dai, dir, caps);
+  }
+}
+
+static const struct pbl_audio_dai_ops s_playback_ops = {
+  .get_caps = prv_playback_get_caps,
+  .start = prv_start,
+  .stop = prv_stop,
+};
+
+static void prv_codec_get_caps(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                               struct pbl_audio_caps *caps) {
   caps->gain_min_mdb = -78000;
   caps->gain_max_mdb = 12000;
   caps->gain_step_mdb = 750;
@@ -130,22 +152,31 @@ static int prv_codec_enable(const struct pbl_audio_codec *codec,
   prv_log('C');
   cl_assert_equal_i(cfg->rate, RATE);
   cl_assert_equal_i(cfg->fmt, PBL_AUDIO_FMT_I2S | PBL_AUDIO_FMT_CODEC_MASTER);
+  s_codec_dir = cfg->dir;
+  s_codec_streaming = cfg->streaming;
   s_codec_gain = cfg->gain_mdb;
+  s_codec_gains[cfg->dir] = cfg->gain_mdb;
   s_codec_mute = cfg->mute;
   return s_codec_enable_ret;
 }
 
-static int prv_codec_disable(const struct pbl_audio_codec *codec) {
+static int prv_codec_disable(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                             uint8_t streaming) {
   prv_log('c');
+  s_codec_dir = dir;
+  s_codec_streaming = streaming;
   return 0;
 }
 
-static int prv_codec_set_gain(const struct pbl_audio_codec *codec, int32_t gain_mdb) {
+static int prv_codec_set_gain(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                              int32_t gain_mdb) {
   s_codec_gain = gain_mdb;
+  s_codec_gains[dir] = gain_mdb;
   return 0;
 }
 
-static int prv_codec_set_mute(const struct pbl_audio_codec *codec, bool mute) {
+static int prv_codec_set_mute(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                              bool mute) {
   s_codec_mute = mute;
   return 0;
 }
@@ -179,12 +210,12 @@ static const struct pbl_audio_codec s_codec = {
   .ops = &s_codec_ops,
 };
 
-static int prv_dmic_prepare(const struct pbl_audio_codec *codec) {
+static int prv_dmic_prepare(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir) {
   prv_log('P');
   return 0;
 }
 
-static int prv_dmic_unprepare(const struct pbl_audio_codec *codec) {
+static int prv_dmic_unprepare(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir) {
   prv_log('p');
   return 0;
 }
@@ -208,33 +239,39 @@ static const struct pbl_audio_amp s_amp = {
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_out_dai);
 static const struct pbl_audio_dai s_out_dai =
-    PBL_AUDIO_DAI_INIT(s_out_dai, "out_dai", nullptr, &s_ops, PBL_AUDIO_PLAYBACK);
+    PBL_AUDIO_DAI_INIT(s_out_dai, "out_dai", nullptr, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_out, "out", &s_out_dai, nullptr, nullptr, 0, 0);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_in_dai);
 static const struct pbl_audio_dai s_in_dai =
-    PBL_AUDIO_DAI_INIT(s_in_dai, "in_dai", nullptr, &s_ops, PBL_AUDIO_CAPTURE);
+    PBL_AUDIO_DAI_INIT(s_in_dai, "in_dai", nullptr, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_in, "in", &s_in_dai, nullptr, nullptr, 0, 0);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_linked_dai);
 static const struct pbl_audio_dai s_linked_dai =
-    PBL_AUDIO_DAI_INIT(s_linked_dai, "linked_dai", nullptr, &s_ops, PBL_AUDIO_PLAYBACK);
+    PBL_AUDIO_DAI_INIT(s_linked_dai, "linked_dai", nullptr, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_linked, "linked", &s_linked_dai, &s_codec, &s_amp, PBL_AUDIO_FMT_I2S,
                       PBL_AUDIO_FMT_CODEC_MASTER);
 
 PBL_AUDIO_DAI_STATE_DEFINE(s_mic_dai);
 static const struct pbl_audio_dai s_mic_dai =
-    PBL_AUDIO_DAI_INIT(s_mic_dai, "mic_dai", nullptr, &s_ops, PBL_AUDIO_CAPTURE);
+    PBL_AUDIO_DAI_INIT(s_mic_dai, "mic_dai", nullptr, &s_ops);
 PBL_AUDIO_CARD_DEFINE(s_mic, "mic", &s_mic_dai, &s_dmic, nullptr, 0, 0);
 
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+PBL_AUDIO_DAI_STATE_DEFINE(s_play_dai);
+static const struct pbl_audio_dai s_play_dai =
+    PBL_AUDIO_DAI_INIT(s_play_dai, "play_dai", nullptr, &s_playback_ops);
+PBL_AUDIO_CARD_DEFINE(s_play, "play", &s_play_dai, nullptr, nullptr, 0, 0);
+
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   cl_assert_equal_i(s_lock_depth, 0);
   s_periods[s_calls] = period;
+  s_dirs[s_calls] = dir;
   s_pos[s_calls] = *pos;
   s_calls++;
   if (s_refill) {
-    cl_assert_equal_i(pbl_audio_period_ready(audio, period), 0);
+    cl_assert_equal_i(pbl_audio_period_ready(audio, dir, period), 0);
   }
 }
 
@@ -267,6 +304,10 @@ void test_audio__initialize(void) {
   s_codec_mute = false;
   s_syncs = 0;
   s_pointer = 0U;
+  s_dai_dir = UINT8_MAX;
+  s_codec_dir = UINT8_MAX;
+  s_codec_streaming = UINT8_MAX;
+  memset(s_codec_gains, 0, sizeof(s_codec_gains));
   s_calls = 0;
   s_refill = true;
   memset(s_periods, 0, sizeof(s_periods));
@@ -280,6 +321,8 @@ void test_audio__initialize(void) {
   memset(&s_in_dai_device_state, 0, sizeof(s_in_dai_device_state));
   memset(&s_linked_dai_device_state, 0, sizeof(s_linked_dai_device_state));
   memset(&s_mic_dai_device_state, 0, sizeof(s_mic_dai_device_state));
+  memset(&s_play_device_state, 0, sizeof(s_play_device_state));
+  memset(&s_play_dai_device_state, 0, sizeof(s_play_dai_device_state));
   memset(&s_dmic_device_state, 0, sizeof(s_dmic_device_state));
   memset(&s_codec_device_state, 0, sizeof(s_codec_device_state));
   memset(&s_amp_device_state, 0, sizeof(s_amp_device_state));
@@ -287,6 +330,7 @@ void test_audio__initialize(void) {
   cl_assert_equal_i(pbl_device_init(&s_in.dev), 0);
   cl_assert_equal_i(pbl_device_init(&s_linked.dev), 0);
   cl_assert_equal_i(pbl_device_init(&s_mic.dev), 0);
+  cl_assert_equal_i(pbl_device_init(&s_play.dev), 0);
 
   s_ring = nullptr;
   stream.buf = nullptr;
@@ -295,10 +339,13 @@ void test_audio__initialize(void) {
 }
 
 void test_audio__cleanup(void) {
-  (void)pbl_audio_stop(&s_out);
-  (void)pbl_audio_stop(&s_in);
-  (void)pbl_audio_stop(&s_linked);
-  (void)pbl_audio_stop(&s_mic);
+  const struct pbl_audio *const cards[] = {&s_out, &s_in, &s_linked, &s_mic, &s_play};
+
+  for (size_t i = 0U; i < sizeof(cards) / sizeof(cards[0]); i++) {
+    for (uint8_t dir = 0U; dir < PBL_AUDIO_DIRS; dir++) {
+      (void)pbl_audio_stop(cards[i], dir);
+    }
+  }
   pbl_audio_buf_free(s_ring);
 }
 
@@ -322,41 +369,41 @@ void test_audio__start_validates(void) {
   struct pbl_audio_stream stream = prv_stream();
 
   stream.rate = 48000U;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EINVAL);
 
   stream = prv_stream();
   stream.periods = 1U;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EINVAL);
 
   stream = prv_stream();
   stream.periods = 5U;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EINVAL);
 
   stream = prv_stream();
   stream.channels = 3U;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EINVAL);
 
   stream = prv_stream();
   stream.buf = (uint8_t *)s_ring + 2;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EINVAL);
 
   cl_assert_equal_s(s_log, "");
-  cl_assert(!pbl_audio_is_running(&s_out));
+  cl_assert(!pbl_audio_is_running(&s_out, PBL_AUDIO_PLAYBACK));
 
   stream = prv_stream();
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
-  cl_assert(pbl_audio_is_running(&s_out));
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EBUSY);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert(pbl_audio_is_running(&s_out, PBL_AUDIO_PLAYBACK));
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EBUSY);
 }
 
 void test_audio__start_failure(void) {
   struct pbl_audio_stream stream = prv_stream();
 
   s_start_ret = -EIO;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), -EIO);
-  cl_assert(!pbl_audio_is_running(&s_out));
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), -EIO);
+  cl_assert(!pbl_audio_is_running(&s_out, PBL_AUDIO_PLAYBACK));
 
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   cl_assert_equal_i(s_calls, 0);
 }
 
@@ -364,32 +411,32 @@ void test_audio__gain(void) {
   struct pbl_audio_stream stream = prv_stream();
   struct pbl_audio_caps caps;
 
-  cl_assert_equal_i(pbl_audio_get_caps(&s_out, &caps), 0);
+  cl_assert_equal_i(pbl_audio_get_caps(&s_out, PBL_AUDIO_PLAYBACK, &caps), 0);
   cl_assert_equal_i(caps.gain_default_mdb, -6000);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_out, -12345), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_out, PBL_AUDIO_PLAYBACK, -12345), 0);
   cl_assert_equal_i(s_hw_gain, 1);
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
   cl_assert_equal_i(s_hw_gain, -12500);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_out, 5000), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_out, PBL_AUDIO_PLAYBACK, 5000), 0);
   cl_assert_equal_i(s_hw_gain, 0);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_out, -99000), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_out, PBL_AUDIO_PLAYBACK, -99000), 0);
   cl_assert_equal_i(s_hw_gain, -36000);
 }
 
 void test_audio__mute_without_op_sets_lowest_gain(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
   cl_assert_equal_i(s_hw_gain, -6000);
 
-  cl_assert_equal_i(pbl_audio_set_mute(&s_out, true), 0);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_out, PBL_AUDIO_PLAYBACK, true), 0);
   cl_assert_equal_i(s_hw_gain, -36000);
 
-  cl_assert_equal_i(pbl_audio_set_mute(&s_out, false), 0);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_out, PBL_AUDIO_PLAYBACK, false), 0);
   cl_assert_equal_i(s_hw_gain, -6000);
 }
 
@@ -397,14 +444,14 @@ void test_audio__playback_positions_and_zero_fill(void) {
   struct pbl_audio_stream stream = prv_stream();
 
   memset(s_ring, 0x55, PERIODS * PERIOD_FRAMES * sizeof(int16_t));
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
 
   s_ticks = PBL_TICK_HZ;
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   s_ticks = 2U * PBL_TICK_HZ;
-  pbl_audio_period_elapsed(&s_out);
-  pbl_audio_period_elapsed(&s_out);
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
 
   cl_assert_equal_i(s_calls, 4);
   cl_assert(s_periods[0] == prv_period(0));
@@ -430,72 +477,72 @@ void test_audio__playback_positions_and_zero_fill(void) {
 void test_audio__playback_underrun(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
 
   s_refill = false;
-  pbl_audio_period_elapsed(&s_out);
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   cl_assert(!s_pos[0].xrun);
   cl_assert(!s_pos[1].xrun);
 
   // The hardware wraps back to period 0, which was never refilled
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   cl_assert(s_pos[2].xrun);
 
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0)), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(1)), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(2)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(1)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(2)), 0);
   s_refill = true;
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   cl_assert(!s_pos[3].xrun);
 }
 
 void test_audio__period_ready_checks_ownership(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0)), -EAGAIN);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0)), -EAGAIN);
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0)), -EINVAL);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0)), -EINVAL);
 
   s_refill = false;
-  pbl_audio_period_elapsed(&s_out);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0) + 2), -EINVAL);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(3)), -EINVAL);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0)), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_out, prv_period(0)), -EINVAL);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0) + 2), -EINVAL);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(3)), -EINVAL);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_out, PBL_AUDIO_PLAYBACK, prv_period(0)), -EINVAL);
 }
 
 void test_audio__capture_overrun(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_start(&s_in, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_in, PBL_AUDIO_CAPTURE, &stream), 0);
 
   s_refill = false;
-  pbl_audio_period_elapsed(&s_in);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
   cl_assert(!s_pos[0].xrun);
-  pbl_audio_period_elapsed(&s_in);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
   cl_assert(!s_pos[1].xrun);
 
   // Period 0 is still held while the hardware writes to it
-  pbl_audio_period_elapsed(&s_in);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
   cl_assert(s_pos[2].xrun);
 
-  cl_assert_equal_i(pbl_audio_period_ready(&s_in, prv_period(0)), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_in, prv_period(1)), 0);
-  cl_assert_equal_i(pbl_audio_period_ready(&s_in, prv_period(2)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_in, PBL_AUDIO_CAPTURE, prv_period(0)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_in, PBL_AUDIO_CAPTURE, prv_period(1)), 0);
+  cl_assert_equal_i(pbl_audio_period_ready(&s_in, PBL_AUDIO_CAPTURE, prv_period(2)), 0);
   s_refill = true;
-  pbl_audio_period_elapsed(&s_in);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
   cl_assert(!s_pos[3].xrun);
 }
 
 void test_audio__reported_xrun(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_start(&s_in, &stream), 0);
-  pbl_audio_report_xrun(&s_in);
-  pbl_audio_period_elapsed(&s_in);
-  pbl_audio_period_elapsed(&s_in);
+  cl_assert_equal_i(pbl_audio_start(&s_in, PBL_AUDIO_CAPTURE, &stream), 0);
+  pbl_audio_report_xrun(&s_in, PBL_AUDIO_CAPTURE);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
+  pbl_audio_period_elapsed(&s_in, PBL_AUDIO_CAPTURE);
   cl_assert(s_pos[0].xrun);
   cl_assert(!s_pos[1].xrun);
 }
@@ -503,15 +550,15 @@ void test_audio__reported_xrun(void) {
 void test_audio__stop(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_stop(&s_out), 0);
+  cl_assert_equal_i(pbl_audio_stop(&s_out, PBL_AUDIO_PLAYBACK), 0);
   cl_assert_equal_s(s_log, "");
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
-  cl_assert_equal_i(pbl_audio_stop(&s_out), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_i(pbl_audio_stop(&s_out, PBL_AUDIO_PLAYBACK), 0);
   cl_assert_equal_s(s_log, "Ss");
-  cl_assert(!pbl_audio_is_running(&s_out));
+  cl_assert(!pbl_audio_is_running(&s_out, PBL_AUDIO_PLAYBACK));
 
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   cl_assert_equal_i(s_calls, 0);
 }
 
@@ -519,17 +566,17 @@ void test_audio__position(void) {
   struct pbl_audio_stream stream = prv_stream();
   struct pbl_audio_pos pos;
 
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), -EAGAIN);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), -EAGAIN);
 
   s_ticks = PBL_TICK_HZ;
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, 0);
 
-  pbl_audio_period_elapsed(&s_out);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   s_pointer = PERIOD_FRAMES + 3U;
   s_ticks = 2U * PBL_TICK_HZ;
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, PERIOD_FRAMES + 3U);
   cl_assert_equal_i(pos.ts_us, 2000000);
 }
@@ -538,35 +585,35 @@ void test_audio__position_ahead_of_interrupt(void) {
   struct pbl_audio_stream stream = prv_stream();
   struct pbl_audio_pos pos;
 
-  cl_assert_equal_i(pbl_audio_start(&s_out, &stream), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_out, PBL_AUDIO_PLAYBACK, &stream), 0);
 
   s_pointer = PERIOD_FRAMES - 1U;
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, PERIOD_FRAMES - 1U);
 
   // Past the period end, before its interrupt
   s_pointer = PERIOD_FRAMES + 3U;
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, PERIOD_FRAMES + 3U);
 
-  pbl_audio_period_elapsed(&s_out);
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, PERIOD_FRAMES + 3U);
 
   // Wrapped around the ring
   s_pointer = 1U;
   for (size_t i = 1U; i < PERIODS; i++) {
-    pbl_audio_period_elapsed(&s_out);
+    pbl_audio_period_elapsed(&s_out, PBL_AUDIO_PLAYBACK);
   }
-  cl_assert_equal_i(pbl_audio_get_position(&s_out, &pos), 0);
+  cl_assert_equal_i(pbl_audio_get_position(&s_out, PBL_AUDIO_PLAYBACK, &pos), 0);
   cl_assert_equal_i(pos.frame, PERIODS * PERIOD_FRAMES + 1U);
 }
 
 void test_audio__link_sequencing(void) {
   struct pbl_audio_stream stream = prv_stream();
 
-  cl_assert_equal_i(pbl_audio_start(&s_linked, &stream), 0);
-  cl_assert_equal_i(pbl_audio_stop(&s_linked), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_i(pbl_audio_stop(&s_linked, PBL_AUDIO_PLAYBACK), 0);
   cl_assert_equal_s(s_log, "ASCasc");
 }
 
@@ -574,22 +621,22 @@ void test_audio__link_routes_gain_to_codec(void) {
   struct pbl_audio_stream stream = prv_stream();
   struct pbl_audio_caps caps;
 
-  cl_assert_equal_i(pbl_audio_get_caps(&s_linked, &caps), 0);
+  cl_assert_equal_i(pbl_audio_get_caps(&s_linked, PBL_AUDIO_PLAYBACK, &caps), 0);
   cl_assert_equal_i(caps.gain_min_mdb, -78000);
   cl_assert_equal_i(caps.gain_step_mdb, 750);
   cl_assert_equal_i(caps.rates, PBL_AUDIO_RATE_16000);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, -1000), 0);
-  cl_assert_equal_i(pbl_audio_set_mute(&s_linked, true), 0);
-  cl_assert_equal_i(pbl_audio_start(&s_linked, &stream), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, PBL_AUDIO_PLAYBACK, -1000), 0);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_linked, PBL_AUDIO_PLAYBACK, true), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &stream), 0);
   cl_assert_equal_i(s_codec_gain, -1500);
   cl_assert(s_codec_mute);
   cl_assert_equal_i(s_hw_gain, 0);
   cl_assert(!s_hw_mute);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, -48000), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, PBL_AUDIO_PLAYBACK, -48000), 0);
   cl_assert_equal_i(s_codec_gain, -48000);
-  cl_assert_equal_i(pbl_audio_set_mute(&s_linked, false), 0);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_linked, PBL_AUDIO_PLAYBACK, false), 0);
   cl_assert(!s_codec_mute);
   cl_assert_equal_i(s_hw_gain, 0);
 }
@@ -598,9 +645,9 @@ void test_audio__link_unwinds_on_codec_failure(void) {
   struct pbl_audio_stream stream = prv_stream();
 
   s_codec_enable_ret = -EIO;
-  cl_assert_equal_i(pbl_audio_start(&s_linked, &stream), -EIO);
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &stream), -EIO);
   cl_assert_equal_s(s_log, "ASCsa");
-  cl_assert(!pbl_audio_is_running(&s_linked));
+  cl_assert(!pbl_audio_is_running(&s_linked, PBL_AUDIO_PLAYBACK));
 }
 
 void test_audio__codec_without_gain_is_prepared_around_the_stream(void) {
@@ -608,14 +655,135 @@ void test_audio__codec_without_gain_is_prepared_around_the_stream(void) {
   struct pbl_audio_caps caps;
 
   stream.buf = s_ring;
-  cl_assert_equal_i(pbl_audio_get_caps(&s_mic, &caps), 0);
+  cl_assert_equal_i(pbl_audio_get_caps(&s_mic, PBL_AUDIO_CAPTURE, &caps), 0);
   cl_assert(caps.gain_step_mdb != 0);
 
-  cl_assert_equal_i(pbl_audio_set_gain(&s_mic, -12000), 0);
-  cl_assert_equal_i(pbl_audio_start(&s_mic, &stream), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_mic, PBL_AUDIO_CAPTURE, -12000), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_mic, PBL_AUDIO_CAPTURE, &stream), 0);
   cl_assert_equal_s(s_log, "PS");
   cl_assert_equal_i(s_hw_gain, -12000);
 
-  cl_assert_equal_i(pbl_audio_stop(&s_mic), 0);
+  cl_assert_equal_i(pbl_audio_stop(&s_mic, PBL_AUDIO_CAPTURE), 0);
   cl_assert_equal_s(s_log, "PSsp");
+}
+
+void test_audio__both_directions_on_one_card(void) {
+  struct pbl_audio_stream play = prv_stream();
+  struct pbl_audio_stream rec = prv_stream();
+
+  rec.buf = pbl_audio_buf_alloc(pbl_audio_ring_bytes(&rec));
+  cl_assert(rec.buf != nullptr);
+
+  // Playback powers the amplifier; the codec is told nothing else streams
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &play), 0);
+  cl_assert_equal_s(s_log, "ASC");
+  cl_assert_equal_i(s_dai_dir, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(s_codec_dir, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(s_codec_streaming, 0);
+
+  // Capture joins on the same card, without the amplifier, told playback streams
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_CAPTURE, &rec), 0);
+  cl_assert_equal_s(s_log, "ASCSC");
+  cl_assert_equal_i(s_dai_dir, PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_codec_dir, PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_codec_streaming, PBL_BIT(PBL_AUDIO_PLAYBACK));
+  cl_assert(pbl_audio_is_running(&s_linked, PBL_AUDIO_PLAYBACK));
+  cl_assert(pbl_audio_is_running(&s_linked, PBL_AUDIO_CAPTURE));
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_CAPTURE, &rec), -EBUSY);
+
+  // Each direction has its own ring and position
+  pbl_audio_period_elapsed(&s_linked, PBL_AUDIO_CAPTURE);
+  pbl_audio_period_elapsed(&s_linked, PBL_AUDIO_PLAYBACK);
+  pbl_audio_period_elapsed(&s_linked, PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_calls, 3);
+  cl_assert_equal_i(s_dirs[0], PBL_AUDIO_CAPTURE);
+  cl_assert(s_periods[0] == rec.buf);
+  cl_assert_equal_i(s_pos[0].frame, PERIOD_FRAMES);
+  cl_assert_equal_i(s_dirs[1], PBL_AUDIO_PLAYBACK);
+  cl_assert(s_periods[1] == prv_period(0));
+  cl_assert_equal_i(s_pos[1].frame, PERIOD_FRAMES);
+  cl_assert_equal_i(s_dirs[2], PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_pos[2].frame, 2 * PERIOD_FRAMES);
+
+  // Playback leaves: the codec keeps the capture path
+  cl_assert_equal_i(pbl_audio_stop(&s_linked, PBL_AUDIO_PLAYBACK), 0);
+  cl_assert_equal_s(s_log, "ASCSCasc");
+  cl_assert_equal_i(s_dai_dir, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(s_codec_dir, PBL_AUDIO_PLAYBACK);
+  cl_assert_equal_i(s_codec_streaming, PBL_BIT(PBL_AUDIO_CAPTURE));
+  cl_assert(!pbl_audio_is_running(&s_linked, PBL_AUDIO_PLAYBACK));
+  cl_assert(pbl_audio_is_running(&s_linked, PBL_AUDIO_CAPTURE));
+
+  pbl_audio_period_elapsed(&s_linked, PBL_AUDIO_PLAYBACK);
+  pbl_audio_period_elapsed(&s_linked, PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_calls, 4);
+  cl_assert_equal_i(s_dirs[3], PBL_AUDIO_CAPTURE);
+
+  // The last one powers the codec down
+  cl_assert_equal_i(pbl_audio_stop(&s_linked, PBL_AUDIO_CAPTURE), 0);
+  cl_assert_equal_s(s_log, "ASCSCascsc");
+  cl_assert_equal_i(s_codec_dir, PBL_AUDIO_CAPTURE);
+  cl_assert_equal_i(s_codec_streaming, 0);
+
+  pbl_audio_buf_free(rec.buf);
+}
+
+void test_audio__gain_and_mute_per_direction(void) {
+  struct pbl_audio_stream play = prv_stream();
+  struct pbl_audio_stream rec = prv_stream();
+
+  rec.buf = pbl_audio_buf_alloc(pbl_audio_ring_bytes(&rec));
+  cl_assert(rec.buf != nullptr);
+
+  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, PBL_AUDIO_PLAYBACK, -1500), 0);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, PBL_AUDIO_CAPTURE, 6000), 0);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_linked, PBL_AUDIO_CAPTURE, true), 0);
+
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &play), 0);
+  cl_assert(!s_codec_mute);
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_CAPTURE, &rec), 0);
+  cl_assert(s_codec_mute);
+  cl_assert_equal_i(s_codec_gains[PBL_AUDIO_PLAYBACK], -1500);
+  cl_assert_equal_i(s_codec_gains[PBL_AUDIO_CAPTURE], 6000);
+
+  cl_assert_equal_i(pbl_audio_set_gain(&s_linked, PBL_AUDIO_CAPTURE, -3000), 0);
+  cl_assert_equal_i(s_codec_gains[PBL_AUDIO_PLAYBACK], -1500);
+  cl_assert_equal_i(s_codec_gains[PBL_AUDIO_CAPTURE], -3000);
+
+  pbl_audio_buf_free(rec.buf);
+}
+
+void test_audio__direction_the_card_does_not_stream(void) {
+  struct pbl_audio_stream stream = prv_stream();
+  struct pbl_audio_caps caps;
+
+  cl_assert_equal_i(pbl_audio_get_caps(&s_play, PBL_AUDIO_CAPTURE, &caps), -ENOTSUP);
+  cl_assert_equal_i(pbl_audio_start(&s_play, PBL_AUDIO_CAPTURE, &stream), -ENOTSUP);
+  cl_assert_equal_i(pbl_audio_set_gain(&s_play, PBL_AUDIO_CAPTURE, 0), -ENOTSUP);
+  cl_assert_equal_i(pbl_audio_set_mute(&s_play, PBL_AUDIO_CAPTURE, true), -ENOTSUP);
+  cl_assert_equal_i(pbl_audio_start(&s_play, PBL_AUDIO_DIRS, &stream), -ENOTSUP);
+  cl_assert(!pbl_audio_is_running(&s_play, PBL_AUDIO_DIRS));
+  cl_assert_equal_s(s_log, "");
+
+  cl_assert_equal_i(pbl_audio_get_caps(&s_play, PBL_AUDIO_PLAYBACK, &caps), 0);
+  cl_assert_equal_i(pbl_audio_start(&s_play, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_s(s_log, "S");
+}
+
+void test_audio__capture_failure_leaves_playback_running(void) {
+  struct pbl_audio_stream play = prv_stream();
+  struct pbl_audio_stream rec = prv_stream();
+
+  rec.buf = pbl_audio_buf_alloc(pbl_audio_ring_bytes(&rec));
+  cl_assert(rec.buf != nullptr);
+
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_PLAYBACK, &play), 0);
+  s_codec_enable_ret = -EIO;
+  cl_assert_equal_i(pbl_audio_start(&s_linked, PBL_AUDIO_CAPTURE, &rec), -EIO);
+  cl_assert_equal_s(s_log, "ASCSCs");
+  cl_assert_equal_i(s_dai_dir, PBL_AUDIO_CAPTURE);
+  cl_assert(pbl_audio_is_running(&s_linked, PBL_AUDIO_PLAYBACK));
+  cl_assert(!pbl_audio_is_running(&s_linked, PBL_AUDIO_CAPTURE));
+
+  pbl_audio_buf_free(rec.buf);
 }

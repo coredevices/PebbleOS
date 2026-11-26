@@ -161,7 +161,8 @@ static int prv_power_down(const struct pbl_audio_wm8994 *wm) {
   return prv_write(wm, REG_RESET, 0x0000U);
 }
 
-static void prv_get_caps(const struct pbl_audio_codec *codec, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
   caps->gain_min_mdb = HP_VOL_MIN_MDB;
   caps->gain_max_mdb = HP_VOL_MAX_MDB;
   caps->gain_step_mdb = HP_VOL_STEP_MDB;
@@ -213,6 +214,10 @@ static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audi
   uint16_t rate = 0U;
   int ret;
 
+  if (cfg->dir != PBL_AUDIO_PLAYBACK) {
+    return -ENOTSUP;
+  }
+
   for (size_t i = 0U; i < PBL_ARRAY_SIZE(s_rates); i++) {
     if (s_rates[i].rate == cfg->rate) {
       rate = s_rates[i].val;
@@ -232,7 +237,8 @@ static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audi
   return ret;
 }
 
-static int prv_disable(const struct pbl_audio_codec *codec) {
+static int prv_disable(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                       uint8_t streaming) {
   const struct pbl_audio_wm8994 *wm = prv_dev(codec);
   int ret;
 
@@ -244,11 +250,12 @@ static int prv_disable(const struct pbl_audio_codec *codec) {
   return prv_power_down(wm);
 }
 
-static int prv_set_gain(const struct pbl_audio_codec *codec, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                        int32_t gain_mdb) {
   return prv_set_gain_reg(prv_dev(codec), gain_mdb);
 }
 
-static int prv_set_mute(const struct pbl_audio_codec *codec, bool mute) {
+static int prv_set_mute(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir, bool mute) {
   return prv_set_mute_reg(prv_dev(codec), mute);
 }
 

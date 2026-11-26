@@ -252,7 +252,7 @@ static void prv_bottom_half(struct pbl_work *work);
 static PBL_WORK_DEFINE(s_bottom_half_work, prv_bottom_half);
 
 //! Runs from the device interrupt: drain the queue into the period and wake SysWorkq once.
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   uint16_t avail = circular_buffer_get_read_space_remaining(&s_state.fifo);
   uint16_t bytes = PBL_MIN(avail, SPEAKER_PERIOD_FRAMES * sizeof(int16_t));
@@ -265,7 +265,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
     s_state.idle_periods++;
   }
 
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   pbl_work_submit_boosted(&pbl_sys_workq, &s_bottom_half_work);
 }
@@ -286,7 +286,7 @@ static void prv_device_down(void) {
     return;
   }
 
-  (void)pbl_audio_stop(SPEAKER);
+  (void)pbl_audio_stop(SPEAKER, PBL_AUDIO_PLAYBACK);
   prv_high_load(false);
   pbl_audio_buf_free(s_state.ring);
   pbl_free(s_state.fifo_storage);
@@ -324,7 +324,7 @@ static int prv_device_up(void) {
   s_state.idle_periods = 0;
 
   prv_high_load(true);
-  ret = pbl_audio_start(SPEAKER, &stream);
+  ret = pbl_audio_start(SPEAKER, PBL_AUDIO_PLAYBACK, &stream);
   if (ret != 0) {
     prv_high_load(false);
     pbl_audio_buf_free(s_state.ring);
@@ -344,20 +344,20 @@ static void prv_apply_volume(uint8_t vol) {
   struct pbl_audio_caps caps;
 
   if (vol == 0) {
-    (void)pbl_audio_set_mute(SPEAKER, true);
+    (void)pbl_audio_set_mute(SPEAKER, PBL_AUDIO_PLAYBACK, true);
     return;
   }
 
-  if (pbl_audio_get_caps(SPEAKER, &caps) == 0 && caps.gain_step_mdb > 0) {
+  if (pbl_audio_get_caps(SPEAKER, PBL_AUDIO_PLAYBACK, &caps) == 0 && caps.gain_step_mdb > 0) {
     const int32_t top = PBL_MIN(caps.gain_max_mdb, 0);
     const int32_t floor = PBL_MAX(caps.gain_min_mdb, SPEAKER_VOLUME_FLOOR_MDB);
     const int32_t span_steps = (top - floor) / caps.gain_step_mdb;
     const int32_t steps = (SPEAKER_VOLUME_MAX - (int32_t)vol) * span_steps / SPEAKER_VOLUME_MAX;
 
-    (void)pbl_audio_set_gain(SPEAKER, top - steps * caps.gain_step_mdb);
+    (void)pbl_audio_set_gain(SPEAKER, PBL_AUDIO_PLAYBACK, top - steps * caps.gain_step_mdb);
   }
 
-  (void)pbl_audio_set_mute(SPEAKER, false);
+  (void)pbl_audio_set_mute(SPEAKER, PBL_AUDIO_PLAYBACK, false);
 }
 
 static bool prv_start_audio(uint8_t vol) {

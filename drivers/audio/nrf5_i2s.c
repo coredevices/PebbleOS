@@ -62,9 +62,11 @@ static int prv_clocks_configure(const struct pbl_audio_nrf5_i2s *i2s, bool idle)
 // Send the next period of the ring as stereo, then hand it back to the client
 static void prv_fill(const struct pbl_audio_nrf5_i2s *i2s) {
   struct pbl_audio_nrf5_i2s_state *state = i2s->state;
-  const struct pbl_audio_state *audio_state = pbl_audio_dai_card(&i2s->dai)->state;
-  const size_t frames = audio_state->stream.period_frames;
-  const int16_t *period = pbl_audio_period(pbl_audio_dai_card(&i2s->dai), state->ring_idx);
+  const struct pbl_audio_stream *stream =
+      pbl_audio_stream(pbl_audio_dai_card(&i2s->dai), PBL_AUDIO_PLAYBACK);
+  const size_t frames = stream->period_frames;
+  const int16_t *period =
+      pbl_audio_period(pbl_audio_dai_card(&i2s->dai), PBL_AUDIO_PLAYBACK, state->ring_idx);
   int16_t *out = state->bounce[state->bounce_idx];
 
   for (size_t i = 0U; i < frames; i++) {
@@ -74,10 +76,10 @@ static void prv_fill(const struct pbl_audio_nrf5_i2s *i2s) {
 
   prv_putreg(i2s, NRF52_I2S_TXD_PTR_OFFSET, (uint32_t)(uintptr_t)out);
 
-  state->ring_idx = (state->ring_idx + 1U) % audio_state->stream.periods;
+  state->ring_idx = (state->ring_idx + 1U) % stream->periods;
   state->bounce_idx ^= 1U;
 
-  pbl_audio_period_elapsed(pbl_audio_dai_card(&i2s->dai));
+  pbl_audio_period_elapsed(pbl_audio_dai_card(&i2s->dai), PBL_AUDIO_PLAYBACK);
 }
 
 void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s) {
@@ -124,7 +126,12 @@ static int prv_init(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
+  if (dir != PBL_AUDIO_PLAYBACK) {
+    return;
+  }
+
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 1U;
@@ -137,8 +144,8 @@ static void prv_free(struct pbl_audio_nrf5_i2s_state *state) {
   }
 }
 
-static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                     int32_t gain_mdb, bool mute) {
+static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                     const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_nrf5_i2s *i2s = prv_dev(dai);
   struct pbl_audio_nrf5_i2s_state *state = i2s->state;
   int ret;
@@ -202,7 +209,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio_dai *dai) {
+static int prv_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_nrf5_i2s *i2s = prv_dev(dai);
   int ret;
 
