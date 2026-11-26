@@ -14,7 +14,11 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-cache
+    oneOf:
+      - const: nordic,nrf54l15-cache
+      - items:
+          - const: nordic,nrf54lm20a-cache
+          - const: nordic,nrf54l15-cache
 
   reg:
     maxItems: 1

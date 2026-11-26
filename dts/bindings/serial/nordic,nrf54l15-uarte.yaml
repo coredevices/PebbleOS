@@ -19,7 +19,11 @@ allOf:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-uarte
+    oneOf:
+      - const: nordic,nrf54l15-uarte
+      - items:
+          - const: nordic,nrf54lm20a-uarte
+          - const: nordic,nrf54l15-uarte
 
   reg:
     maxItems: 1

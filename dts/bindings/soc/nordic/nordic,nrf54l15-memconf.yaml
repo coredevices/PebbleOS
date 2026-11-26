@@ -15,7 +15,9 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-memconf
+    enum:
+      - nordic,nrf54l15-memconf
+      - nordic,nrf54lm20a-memconf
 
   reg:
     maxItems: 1

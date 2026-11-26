@@ -23,7 +23,11 @@ allOf:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-spim
+    oneOf:
+      - const: nordic,nrf54l15-spim
+      - items:
+          - const: nordic,nrf54lm20a-spim
+          - const: nordic,nrf54l15-spim
 
   reg:
     maxItems: 1
