@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-spim
+config: SPI_MEM_SPI
+class: spi_mem
+symbol: "{sym}_mem"
+define: PBL_SPI_MEM_SPI_DEFINE
+drives: jedec,spi-nor
+args:
+  - name: true
+  - self: spi
+  - prop: reg
+    child: 0
+  - prop: spi-max-frequency
+    child: 0
