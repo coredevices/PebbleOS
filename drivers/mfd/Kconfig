@@ -18,4 +18,11 @@ config MFD_NPM1300
       Support for the core of the Nordic nPM1300 PMIC: register access
       and its charger, GPIO and regulator cells.
 
+config MFD_NRF_CRACEN
+    bool
+    help
+      Core of the Nordic nRF54L CRACEN crypto accelerator, which turns
+      its random number generator and its engines on and off for their
+      drivers.
+
 endif # MFD
