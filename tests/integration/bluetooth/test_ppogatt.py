@@ -277,16 +277,10 @@ def test_forward_version_unsupported(dut, watch, phones):
 
 
 @BOTH
-def test_forward_app_session(dut, build, watch, phones):
-    """A third-party app's service opens an app session; PRF only talks to
-    the Pebble app."""
+def test_forward_app_session(dut, watch, phones):
+    """A third-party app's service opens an app session."""
     since = dut.logs.mark()
     phone = phones(ppogatt=FORWARD, forward_meta=_meta(0, 1, APP_UUID))
-    if build.variant == "prf":
-        with pytest.raises(WatchTimeout):
-            phone.connect()
-        dut.wait_for_log(r"not connecting in PRF", 10, since)
-        return
     phone.connect()
     prefix = str(APP_UUID)[:8]
     dut.wait_for_log(rf"is_open=1, destination=A, app_uuid=\{{{prefix}", 10, since)
