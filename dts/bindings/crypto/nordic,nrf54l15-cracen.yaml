@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/crypto/nordic,nrf54l15-cracen.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L CRACEN crypto accelerator
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Crypto accelerator with a true random number generator, a bus-mastering
+  cipher and hash engine (AES, SHA-2, SHA-3, ChaCha20-Poly1305) and a
+  public-key engine. A wrapper enables each part and gathers their events;
+  the engines sit behind it in their own address range.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-cracen
+
+  reg:
+    maxItems: 2
+
+  reg-names:
+    items:
+      - const: wrapper
+      - const: core
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    crypto@50048000 {
+        compatible = "nordic,nrf54l15-cracen";
+        reg = <0x50048000 0x1000>, <0x51800000 0x10000>;
+        reg-names = "wrapper", "core";
+        interrupts = <72>;
+    };
