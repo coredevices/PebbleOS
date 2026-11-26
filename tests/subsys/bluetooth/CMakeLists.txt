@@ -42,3 +42,15 @@ pbl_clar_test(test_responsiveness
     third_party/nimble/mynewt-nimble/porting/nimble/include
   DEFINES CONFIG_NIMBLE_LOG_LEVEL=0
 )
+
+pbl_clar_test(test_nimble_port
+  SOURCES
+    third_party/nimble/port/npl_os_pebble.c
+    tests/fakes/fake_rtc.c
+    tests/stubs/stubs_nimble_port.c
+  INCLUDES
+    third_party/nimble/port/include
+    third_party/nimble/mynewt-nimble/nimble/include
+    third_party/nimble/mynewt-nimble/porting/nimble/include
+  DEFINES CONFIG_NIMBLE_LOG_LEVEL=0
+)

@@ -174,7 +174,8 @@ void npl_pebble_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *
 }
 
 ble_npl_error_t npl_pebble_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks) {
-  co->ticks = ticks;
+  // The host compares it with the time a new timeout is due at.
+  co->ticks = ble_npl_time_get() + ticks;
 
   // Never run from here, so that a callout always runs from the same context.
   pbl_delayed_work_reschedule(&pbl_sys_workq_high, &co->work, PBL_TICKS(PBL_MAX(ticks, 1U)));
