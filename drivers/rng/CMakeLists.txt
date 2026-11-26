@@ -4,6 +4,8 @@
 set(sources)
 if(CONFIG_RNG_NRF5)
   list(APPEND sources nrf5.c)
+elseif(CONFIG_RNG_NRF_CRACEN)
+  list(APPEND sources nrf_cracen.c)
 elseif(CONFIG_RNG_SF32LB)
   list(APPEND sources sf32lb.c)
 elseif(CONFIG_RNG_STM32)

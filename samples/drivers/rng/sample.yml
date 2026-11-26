@@ -6,5 +6,5 @@ expect:
   - 'rng: 0x[0-9a-f]+'
   - 'rng: 1000 words, \d+ repeated, \d+ per mille of the bits set'
   - 'Sample done'
-skip: [sf32lb57_dpi_hdk, stm32h747i_disco/m4, nrf54l15dk]
-integration: [qemu_emery, asterix, obelix@pvt, stm32h747i_disco/m7, nrf52840dk, nrf52dk]
+skip: [sf32lb57_dpi_hdk, stm32h747i_disco/m4]
+integration: [qemu_emery, asterix, obelix@pvt, stm32h747i_disco/m7, nrf52840dk, nrf52dk, nrf54l15dk]

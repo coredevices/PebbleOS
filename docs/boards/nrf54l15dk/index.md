@@ -24,11 +24,11 @@ on its Arm application core, as secure code.
 - **Buttons**: four user buttons, Button 0 to 3 as keys 0 to 3, and a
   reset button
 - **LEDs**: four green user LEDs, LED0 the status LED
+- **Crypto**: the CRACEN of the SoC, for random numbers
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE20, P1.04 (TX) and P1.05 (RX), which also powers the kit
 
-The radio, the coprocessor and the external flash are not supported yet, nor
-is the random number generator of the CRACEN.
+The radio, the coprocessor and the external flash are not supported yet.
 
 ## Flashing
 
