@@ -142,4 +142,11 @@
 			slew-rate = <3>;
 		};
 	};
+
+	dsi_default: dsi-0 {
+		pins {
+			pinmux = <STM32_PINMUX('J', 2, AF13)>; /* DSI_TE */
+			bias-disable;
+		};
+	};
 };

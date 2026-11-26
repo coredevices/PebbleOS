@@ -8,3 +8,5 @@ die_temp: adc3
 rtc: rtc
 udc: usbotg_hs
 extram: fmc
+display: ltdc
+backlight: panel

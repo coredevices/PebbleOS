@@ -18,6 +18,29 @@
 		clock-names = "main_clk";
 	};
 
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		// The framebuffer, at the start of the SDRAM
+		fb_mem: framebuffer@70000000 {
+			reg = <0x70000000 0xbb800>;
+			no-map;
+		};
+	};
+
+	// What the LTDC sends to the panel, landscape: the panel is turned a quarter turn
+	framebuffer {
+		compatible = "simple-framebuffer";
+		memory-region = <&fb_mem>;
+		width = <800>;
+		height = <480>;
+		stride = <1600>;
+		format = "r5g6b5";
+		display = <&ltdc>;
+	};
+
 	// The joystick, as the four buttons of a watch
 	buttons: gpio-keys {
 		compatible = "gpio-keys";
@@ -71,11 +94,12 @@
 &rcc {
 	assigned-clocks = <&rcc PLLSRC>, <&rcc PLL1_P>, <&rcc SYS_CK>, <&rcc HCLK>,
 			  <&rcc PCLK1>, <&rcc PCLK2>, <&rcc PCLK3>, <&rcc PCLK4>,
-			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc USB1OTG_CK>;
+			  <&rcc LPTIM1_CK>, <&rcc RTC_CK>, <&rcc USB1OTG_CK>, <&rcc PLL3_R>;
 	assigned-clock-parents = <&rcc HSE_CK>, <0>, <&rcc PLL1_P>, <0>, <0>, <0>, <0>, <0>,
-				 <&rcc LSE_CK>, <&rcc LSE_CK>, <&rcc RC48_CK>;
+				 <&rcc LSE_CK>, <&rcc LSE_CK>, <&rcc RC48_CK>, <0>;
+	// PLL3 R is the pixel clock of the frames to the panel
 	assigned-clock-rates = <0>, <400000000>, <0>, <200000000>, <100000000>, <100000000>,
-			       <100000000>, <100000000>, <0>, <0>, <0>;
+			       <100000000>, <100000000>, <0>, <0>, <0>, <42000000>;
 };
 
 &dma1 {
@@ -189,6 +213,58 @@
 		tXSR = <70000>;
 		tREF-ms = <64>;
 		cas-latency-freqs = <2 100000000>, <3 166000000>;
+	};
+};
+
+&ltdc {
+	status = "okay";
+
+	port {
+		ltdc_out_dsi: endpoint {
+			remote-endpoint = <&dsi_in>;
+		};
+	};
+};
+
+// The 4" 480x800 panel of the MB1166 daughterboard, with its tearing effect on the TE pin
+&dsi {
+	pinctrl-0 = <&dsi_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			dsi_in: endpoint {
+				remote-endpoint = <&ltdc_out_dsi>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			dsi_out: endpoint {
+				remote-endpoint = <&panel_in>;
+				data-lanes = <1 2>;
+			};
+		};
+	};
+
+	panel: panel@0 {
+		compatible = "orisetech,otm8009a";
+		reg = <0>;
+		reset-gpios = <&gpiog 3 GPIO_ACTIVE_LOW>;
+		rotation = <270>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
 	};
 };
 
