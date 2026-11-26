@@ -214,10 +214,20 @@ void pbl_rtc_stm32_isr(const struct pbl_rtc_stm32 *rtc) {
 }
 
 // The alarms interrupt through their EXTI line, on the rising edge of the alarm flag
-static void prv_alarm_irq_init(const struct pbl_rtc_stm32 *rtc) {
+static int prv_alarm_irq_init(const struct pbl_rtc_stm32 *rtc) {
+  int ret;
+
+  ret = pbl_hwspinlock_lock(&rtc->exti_hwlock);
+  if (ret != 0) {
+    return ret;
+  }
   pbl_modifyl(0U, PBL_BIT(rtc->exti_line), rtc->exti + STM32H7_EXTI_RTSR1_OFFSET);
+  pbl_hwspinlock_unlock(&rtc->exti_hwlock);
+
   pbl_modifyl(0U, PBL_BIT(rtc->exti_line), rtc->exti + STM32H7_EXTI_CORE_IMR1_OFFSET);
   pbl_irq_enable(rtc->irq);
+
+  return 0;
 }
 
 // The calendar keeps counting across resets: it is only set up when its prescaler does not match
@@ -251,7 +261,10 @@ int pbl_rtc_stm32_init(const struct pbl_device *dev) {
   prer = PBL_FIELD_PREP(RTC_PRER_PREDIV_A_MASK, PREDIV_A) |
          PBL_FIELD_PREP(RTC_PRER_PREDIV_S_MASK,
                         (uint32_t)(rate_mhz / MHZ_PER_HZ / (PREDIV_A + 1U)) - 1U);
-  prv_alarm_irq_init(rtc);
+  ret = prv_alarm_irq_init(rtc);
+  if (ret != 0) {
+    return ret;
+  }
 
   if (prv_getreg(rtc, STM32_RTC_PRER_OFFSET) == prer &&
       (prv_getreg(rtc, STM32_RTC_CR_OFFSET) & RTC_CR_BYPSHAD) != 0U &&
