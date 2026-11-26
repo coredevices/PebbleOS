@@ -10,6 +10,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/util/math.h>
 
 #define BARS    8
 #define SQUARE  16
@@ -92,7 +93,7 @@ int main(void) {
   /* The frame the board reserves for the display, if any, or one from the heap. */
   bool reserved = pbl_display_get_framebuffer(DISPLAY, &fb) == 0;
   if (!reserved) {
-    fb.pitch = props->format == PBL_DISPLAY_FORMAT_MONO     ? (props->width + 7U) / 8U
+    fb.pitch = props->format == PBL_DISPLAY_FORMAT_MONO     ? PBL_DIV_ROUND_UP(props->width, 8U)
                : props->format == PBL_DISPLAY_FORMAT_RGB565 ? props->width * 2U
                                                             : props->width;
     fb.data = pbl_zalloc(fb.pitch * props->height);
