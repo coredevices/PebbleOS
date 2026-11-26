@@ -175,6 +175,11 @@
 			status = "disabled";
 		};
 
+		memconf: memconf@500cf000 {
+			compatible = "nordic,nrf54l15-memconf";
+			reg = <0x500cf000 0x1000>;
+		};
+
 		gpio1: gpio@500d8200 {
 			compatible = "nordic,nrf54l15-gpio";
 			reg = <0x500d8200 0x300>;

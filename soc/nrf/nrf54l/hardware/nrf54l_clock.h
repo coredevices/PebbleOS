@@ -22,6 +22,10 @@
 #define NRF54L_POWER_TASKS_CONSTLAT_OFFSET 0x0030
 #define NRF54L_POWER_TASKS_LOWPWR_OFFSET   0x0034
 
+/* RESET, at the same address */
+
+#define NRF54L_RESET_RESETREAS_OFFSET 0x0600
+
 /* Register bit definitions */
 
 #define CLOCK_XO_STAT_STATE PBL_BIT(16)

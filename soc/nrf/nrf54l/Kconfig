@@ -6,6 +6,7 @@ config SOC_NRF54L
     select SOC_FAMILY_NRF
     select CPU_CORTEX_M33
     select CPU_HAS_FPU
+    select SOC_HAS_POWER_OFF
     select SOC_HAS_UNIQUE_ID
     select NVMEM
     select TIMER_NRF_GRTC
