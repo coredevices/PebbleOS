@@ -142,14 +142,6 @@ static void prv_handle_connect(const struct ble_gap_event *event) {
   s_peer_name[0] = '\0';
   pbl_mutex_unlock(&s_lock);
 
-#ifdef CONFIG_RECOVERY_FW
-  static struct pbl_bt_responsiveness_req s_response_time_req;
-
-  /* Power matters little, and firmware updates are to be quick. */
-  pbl_bt_responsiveness_request(desc.conn_handle, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
-                                PBL_BT_RESPONSE_TIME_FOREVER);
-#endif
-
   prv_start_interval_timers(&desc);
   bt_advertising_handle_connect();
   prv_put_connection_event(true);
