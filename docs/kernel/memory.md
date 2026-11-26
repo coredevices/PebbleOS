@@ -35,8 +35,8 @@ map, and unprivileged code only what a region grants.
 
 Static regions apply to every thread and last until reset:
 
-- The kernel adds the firmware image, the read-only BSS and the ISR stack guard
-  first thing on boot, before the SoC init.
+- The kernel adds the firmware image, the read-only BSS, the ISR stack guard
+  and the non-cacheable section first thing on boot, before the SoC init.
 - A SoC with `CONFIG_SOC_HAS_MPU_REGIONS` declares `pbl_soc_mpu_regions`, which
   the kernel adds next. Peripherals and memory shared with other cores go here.
 - Anything else calls `pbl_mpu_region_add()` once the kernel runs, which is how
@@ -53,6 +53,25 @@ go through `PBL_KERNEL_READONLY_DATA_SET()` or `pbl_mpu_user_ro_write()`, which 
 the region around the copy with interrupts masked.
 
 `sys mpu` prints the programmed regions, as does a memory fault.
+
+## Non-cacheable memory
+
+Cache maintenance keeps memory that another bus master uses coherent only
+when the two take turns, as with a DMA transfer: flush before it reads,
+invalidate after it writes. Memory both sides write at once, in the same
+cache line, cannot be kept coherent that way: cleaning the line to publish the
+CPU's write also writes back its stale copy of the other side's.
+
+Such memory goes in the kernel's non-cacheable section: a variable marked
+`PBL_NOCACHE` (`pbl/kernel/section.h`) lands in `.kernel_nocache`, which comes
+first in RAM, padded so that one static MPU region covers it exactly, as
+non-cacheable normal memory. The section is zeroed at boot, so its variables
+cannot have initializers.
+
+It exists with `CONFIG_KERNEL_NOCACHE`, which only cores with a data cache
+(`CONFIG_CPU_HAS_DCACHE`) have, and which what needs it selects, e.g.
+`select KERNEL_NOCACHE if CPU_HAS_DCACHE`. Without it, `PBL_NOCACHE` places
+nothing specially, and neither the section nor its MPU slot exists.
 
 ## Heaps
 

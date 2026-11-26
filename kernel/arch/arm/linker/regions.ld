@@ -19,3 +19,16 @@ __unpriv_ro_bss_size__ = 2K;
 #else
 __unpriv_ro_bss_size__ = 0;
 #endif
+
+/*
+The size to pad a section to so a single MPU region covers it exactly, and its start alignment:
+ARMv8-M regions have a 32-byte granularity; an ARMv7-M region is a power-of-two block aligned to
+its size, of which it can leave out whole eighths at either end.
+*/
+#ifdef CONFIG_ARMV8_M_MAINLINE
+#define PBL_MPU_REGION_SIZE(size)  ALIGN(MAX(32, (size)), 32)
+#define PBL_MPU_REGION_ALIGN(size) 32
+#else
+#define PBL_MPU_REGION_ALIGN(size) (1 << LOG2CEIL(MAX(32, (size))))
+#define PBL_MPU_REGION_SIZE(size)  ALIGN(MAX(32, (size)), PBL_MPU_REGION_ALIGN(size) / 8)
+#endif

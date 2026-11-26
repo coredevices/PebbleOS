@@ -43,6 +43,8 @@ We lay out our LMAs like the following (some sections are skipped because they'r
     This must be last since we read it out of SPI flash before we load the rest of the image.
 
 We take that image and load part of it into RAM. That lay out looks like...
+ .kernel_nocache (with CONFIG_KERNEL_NOCACHE, not cached)
+ .ramfunc (with CONFIG_RAMFUNC)
  .kernel_data
  .kernel_bss (A small portion of which is read only from unprivileged code)
  stacks (not all of our stacks are fixed, some are on the heap and some are statically located here.
@@ -59,6 +61,10 @@ SECTIONS {
 #include <vectors.ld>
 
 #include <snippets-rom-start.ld>
+
+#ifdef CONFIG_KERNEL_NOCACHE
+#include <sections/nocache.ld>
+#endif
 
 #ifdef CONFIG_RAMFUNC
 #include <sections/ramfunc.ld>

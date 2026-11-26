@@ -67,6 +67,10 @@ extern uint8_t __data_start[];
 extern uint8_t __data_end[];
 extern uint8_t __bss_start[];
 extern uint8_t __bss_end[];
+#ifdef CONFIG_KERNEL_NOCACHE
+extern uint8_t __nocache_start[];
+extern uint8_t __nocache_end[];
+#endif
 
 #ifdef CONFIG_RAMFUNC
 extern uint8_t __ramfunc_load_start[];
@@ -82,6 +86,9 @@ void kernel_prep_c(void) {
   memcpy(__ramfunc_start, __ramfunc_load_start, __ramfunc_end - __ramfunc_start);
 #endif
   memset(__bss_start, 0, __bss_end - __bss_start);
+#ifdef CONFIG_KERNEL_NOCACHE
+  memset(__nocache_start, 0, __nocache_end - __nocache_start);
+#endif
 
   kernel_init(main);
 }
