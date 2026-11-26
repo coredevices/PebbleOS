@@ -4,6 +4,7 @@
 config WATCHDOG_NRF5
     bool "Nordic nRF5"
     default y
-    depends on SOC_NRF52
+    depends on DT_HAS_NORDIC_NRF52832_WDT_ENABLED
+    select WATCHDOG_CALLBACK
     help
       Support for the Nordic nRF5 watchdog.

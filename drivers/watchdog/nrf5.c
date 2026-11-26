@@ -3,7 +3,10 @@
 
 #include <stdint.h>
 
+#include <pbl/devicetree.h>
 #include <pbl/drivers/watchdog.h>
+#include <pbl/drivers/watchdog/nrf5.h>
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 
 #include <devicetree/regs.h>
@@ -26,10 +29,36 @@ static inline void prv_power_putreg(uint32_t offset, uint32_t value) {
   pbl_writel(value, PBL_DT_REG_CLOCK + offset);
 }
 
+static pbl_watchdog_callback_t s_callback;
+static void *s_callback_arg;
+
+// Two 32.768 kHz cycles before the reset: only time for the callback to note where the CPU was
+static void prv_timeout_isr(void) {
+  if (s_callback != nullptr) {
+    s_callback(s_callback_arg);
+  }
+}
+
+// Most urgent kernel priority, still masked by pbl_irq_lock(): the reset follows ~61 us after
+PBL_IRQ_CONNECT(WDT, 0, prv_timeout_isr, , 0);
+
+int watchdog_set_callback(pbl_watchdog_callback_t cb, void *arg) {
+  pbl_irq_lock();
+  s_callback = cb;
+  s_callback_arg = arg;
+  pbl_irq_unlock();
+
+  return 0;
+}
+
 void watchdog_init(void) {
   // No effect if the bootloader already started it: a running WDT keeps its configuration.
   prv_wdt_putreg(NRF52_WDT_RREN_OFFSET, prv_wdt_getreg(NRF52_WDT_RREN_OFFSET) | WDT_RREN_RR(0));
   prv_wdt_putreg(NRF52_WDT_CRV_OFFSET, (32768ULL * CONFIG_WATCHDOG_TIMEOUT_MS) / 1000U);
+
+  // Unlike the rest, the interrupt can be enabled while it runs
+  prv_wdt_putreg(NRF52_WDT_INTENSET_OFFSET, WDT_INT_TIMEOUT);
+  pbl_irq_enable(PBL_IRQN(WDT));
 }
 
 void watchdog_start(void) {
@@ -66,3 +95,15 @@ struct pbl_mcu_reboot_reason watchdog_clear_reset_flag(void) {
 struct pbl_mcu_reboot_reason watchdog_get_reset_flag(void) {
   return s_cached_reset_flag;
 }
+
+int pbl_watchdog_nrf5_init(const struct pbl_device *dev) {
+  (void)dev;
+
+  // Already running if the bootloader started it
+  watchdog_init();
+  watchdog_start();
+
+  return 0;
+}
+
+#include PBL_DT_INSTANCES(nordic_nrf52832_wdt)
