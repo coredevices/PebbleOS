@@ -2,4 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library()
+pbl_library_sources_ifdef(CONFIG_CRYPTO_NRF_CRACEN nrf_cracen.c)
 pbl_library_sources_ifdef(CONFIG_CRYPTO_SF32LB sf32lb.c)
