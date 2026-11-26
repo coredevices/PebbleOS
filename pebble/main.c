@@ -40,6 +40,7 @@
 #include <resource/system_resource.h>
 #include <system/bootbits.h>
 #include <system/firmware_storage.h>
+#include <system/task_wdt.h>
 #include <system/version.h>
 #ifdef CONFIG_QEMU_SERIAL
 #include <comm/qemu/serial.h>
@@ -134,6 +135,9 @@ int main(void) {
 
   static struct pbl_mcu_reboot_reason s_mcu_reboot_reason;
   s_mcu_reboot_reason = watchdog_clear_reset_flag();
+#ifdef CONFIG_WATCHDOG_CALLBACK
+  task_wdt_watch_hw_expiry();
+#endif
 
   task_init();
 
