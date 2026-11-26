@@ -80,6 +80,17 @@
 			interrupts = <72>;
 		};
 
+		spi00: spi@5004a000 {
+			compatible = "nordic,nrf54l15-spim";
+			reg = <0x5004a000 0x1000>;
+			interrupts = <74>;
+			clock-frequency = <128000000>;
+			max-frequency = <32000000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		rramc: flash-controller@5004b000 {
 			compatible = "nordic,nrf54l15-rramc";
 			reg = <0x5004b000 0x1000>;

@@ -23,6 +23,21 @@ config SPI_NRF5_IRQ_PRIO
     help
       Priority of the controller interrupts.
 
+config SPI_NRF54L
+    bool "Nordic nRF54L SPI controller"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_SPIM_ENABLED
+    select GPIO
+    help
+      Support for the Nordic nRF54L SPIM controller.
+
+config SPI_NRF54L_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on SPI_NRF54L
+    help
+      Priority of the controller interrupts.
+
 config SPI_SF32LB57
     bool "SiFli SF32LB57 SPI Controller"
     default y

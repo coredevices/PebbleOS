@@ -15,3 +15,4 @@ asserted throughout.
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
 | Nordic nRF5 SPI Controller | `nordic,nrf52832-spim` | `CONFIG_SPI_NRF5` |
+| Nordic nRF54L SPI Controller | `nordic,nrf54l15-spim` | `CONFIG_SPI_NRF54L` |
