@@ -33,6 +33,7 @@ HOST_NAME = "pbl-itest"
 PEBBLE_UUID_BASE = "-328E-0FBB-C642-1AA6699BDADA"
 PAIRING_SERVICE = "FED9"
 CONNECTIVITY_CHARACTERISTIC = "00000001" + PEBBLE_UUID_BASE
+TRIGGER_PAIRING_CHARACTERISTIC = "00000002" + PEBBLE_UUID_BASE
 PPOG_SERVICE = "40000000" + PEBBLE_UUID_BASE
 PPOG_NOTIFY_CHARACTERISTIC = "40000001" + PEBBLE_UUID_BASE
 PPOG_WRITE_CHARACTERISTIC = "40000003" + PEBBLE_UUID_BASE
@@ -157,6 +158,8 @@ class BleLink:
         self.snoop = snoop
         #: The watch's connection parameter update requests, granted or not.
         self.parameter_requests = []
+        #: The parameters the link changed to (as ``connection_parameters``).
+        self.parameter_updates = []
         self.on_reset = None
         self._disconnected = threading.Event()
         self._loop = None
@@ -432,6 +435,10 @@ class BleLink:
             self._connection = await self._connect(address)
             self._disconnected.clear()
             self._connection.on("disconnection", self._on_disconnection)
+            self._connection.on(
+                "connection_parameters_update",
+                lambda: self.parameter_updates.append(self._connection.parameters),
+            )
             self._peer = Peer(self._connection)
             try:
                 mtu = await asyncio.wait_for(
@@ -690,6 +697,29 @@ class BleLink:
         if not characteristics:
             return None
         return bytes(await characteristics[0].read_value())
+
+    def write_value(self, service, characteristic, value, timeout=10.0):
+        """Write ``value`` to a characteristic of the watch's GATT server, by
+        UUID, with a response: None once written, or the ATT error the watch
+        answered with."""
+        return self._run(self._write_value(service, characteristic, value), timeout)
+
+    async def _write_value(self, service, characteristic, value):
+        from bumble.att import ATT_Error
+        from bumble.core import UUID
+
+        services = self._peer.get_services_by_uuid(UUID(service))
+        if not services:
+            raise HarnessError(f"the watch has no service {service}")
+        await services[0].discover_characteristics()
+        characteristics = services[0].get_characteristics_by_uuid(UUID(characteristic))
+        if not characteristics:
+            raise HarnessError(f"the watch has no characteristic {characteristic}")
+        try:
+            await characteristics[0].write_value(bytes(value), with_response=True)
+        except ATT_Error as error:
+            return error.error_code
+        return None
 
     def reset_session(self, timeout=SESSION_TIMEOUT_S):
         """Restart the PPoGATT session from the phone, as the app does after

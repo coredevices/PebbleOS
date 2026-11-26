@@ -6,12 +6,18 @@ connected, takes it back without asking after the phone leaves, the link
 drops or the watch restarts, and lets it go in airplane mode or when it is
 forgotten."""
 
+import struct
 import time
 
 import pytest
-from harness.ble import ParameterRequest
+from harness.ble import (
+    PAIRING_SERVICE,
+    TRIGGER_PAIRING_CHARACTERISTIC,
+    ParameterRequest,
+)
 from harness.errors import HarnessError, WatchTimeout
 from harness.helpers.pairing import CONFIRM, FAILED, SUCCESS
+from harness.helpers.ui import Ui
 
 pytestmark = pytest.mark.integration_boards("qemu_emery", "getafix@dvt2")
 BOTH = pytest.mark.variants("normal", "prf")
@@ -22,6 +28,20 @@ SESSION_OPENED = r"PPoGATT Session is opened"
 SESSION_CLOSED = r"Session event: is_open=0"
 # Past the 30 s the watch keeps the link fast for service discovery.
 PRF_IDLE_WAIT_S = 45
+
+ATT_INVALID_ATTRIBUTE_LENGTH = 0x0D
+TRIGGER_NO_SECURITY_REQUEST = 0x02
+
+SYSTEM_MESSAGE_ENDPOINT = 0x0012
+FIRMWARE_UPDATE_START = 0x01
+FIRMWARE_UPDATE_FAILED = 0x03
+FIRMWARE_UPDATE_START_RESPONSE = 0x0A
+PUT_BYTES_INIT = 0x01
+PUT_BYTES_ABORT = 0x04
+OBJECT_FIRMWARE = 0x01
+PROGRESS_WINDOW = "Progress UI App"
+# Erasing where a firmware goes takes the watch seconds.
+ERASE_TIMEOUT_S = 120
 
 
 def _bt_status(dut):
@@ -136,6 +156,23 @@ def test_connectivity_status(watch, phones):
     assert not pairing.result()
 
 
+@BOTH
+def test_pairing_trigger_write(watch, phones):
+    """The pairing trigger takes its flags from the first byte written; a
+    write of none is refused for its length."""
+    phone = _bonded(watch, phones)
+
+    def write(value):
+        return phone.link.write_value(
+            PAIRING_SERVICE, TRIGGER_PAIRING_CHARACTERISTIC, value
+        )
+
+    assert write(b"") == ATT_INVALID_ATTRIBUTE_LENGTH
+    assert write(bytes([TRIGGER_NO_SECURITY_REQUEST])) is None
+    assert write(bytes([TRIGGER_NO_SECURITY_REQUEST, 0])) is None
+    assert phone.watch_version() is not None
+
+
 @pytest.mark.variants("prf")
 def test_declined_second_phone_leaves_bond(dut, watch, phones):
     """The recovery firmware asks the user before another phone gets in:
@@ -243,8 +280,9 @@ def test_asks_for_idle_parameters(build, watch, phones):
     assert phone.watch_version() is not None
 
 
-def test_session_on_idle_parameters(watch, phones):
-    """With the relaxed parameters granted, the session carries on."""
+def _on_idle_parameters(phones):
+    """A phone that grants the watch's parameters, once the link is on the
+    relaxed ones."""
     phone = phones(accept_parameters=True).connect()
     _wait_idle_parameters(phone)
     deadline = time.monotonic() + 15
@@ -252,5 +290,95 @@ def test_session_on_idle_parameters(watch, phones):
         if time.monotonic() > deadline:
             raise WatchTimeout("the relaxed parameters were not applied")
         time.sleep(0.5)
+    return phone
+
+
+def test_session_on_idle_parameters(watch, phones):
+    """With the relaxed parameters granted, the session carries on."""
+    phone = _on_idle_parameters(phones)
     _assert_idle(phone.link.connection_parameters)
+    assert phone.watch_version() is not None
+
+
+def _put_bytes(phone, command, data, timeout=10):
+    from libpebble2.protocol import transfers
+
+    response = phone.pebble.send_and_read(
+        transfers.PutBytes(command=command, data=data),
+        transfers.PutBytesResponse,
+        timeout=timeout,
+    )
+    assert response.result == transfers.PutBytesResponse.Result.ACK
+    return response.cookie
+
+
+def test_link_relaxed_for_erase(dut, build, watch, phones):
+    """A firmware transfer starts by erasing where it goes, which blocks the
+    watch for seconds: the link is fast for the transfer, but relaxed for
+    as long as the erase takes."""
+    from libpebble2.protocol import transfers
+
+    if build.emulated:
+        pytest.skip("the emulator erases at once")
+    phone = _on_idle_parameters(phones)
+    watch.close_success()
+
+    def init():
+        return _put_bytes(
+            phone,
+            PUT_BYTES_INIT,
+            transfers.PutBytesInit(
+                object_size=4096, object_type=OBJECT_FIRMWARE, bank=0, filename=""
+            ),
+            ERASE_TIMEOUT_S,
+        )
+
+    def abort(cookie):
+        _put_bytes(phone, PUT_BYTES_ABORT, transfers.PutBytesAbort(cookie=cookie))
+
+    def start_update():
+        since = phone.inbox.mark()
+        phone.send(
+            SYSTEM_MESSAGE_ENDPOINT,
+            bytes([0, FIRMWARE_UPDATE_START]) + struct.pack("<II", 0, 4096),
+        )
+        phone.inbox.wait(
+            SYSTEM_MESSAGE_ENDPOINT,
+            lambda p: p[1] == FIRMWARE_UPDATE_START_RESPONSE,
+            10,
+            since,
+        )
+
+    try:
+        # A first transfer gets the link fast, so that the next one has no
+        # request with the phone when its erase starts. Aborting it fails
+        # the update.
+        start_update()
+        abort(init())
+        deadline = time.monotonic() + 15
+        while phone.link.connection_parameters.peripheral_latency:
+            assert time.monotonic() < deadline, "the link did not get fast"
+            time.sleep(0.2)
+
+        start_update()
+        applied = len(phone.link.parameter_updates)
+        cookie = init()
+        deadline = time.monotonic() + 15
+        while True:
+            latencies = [
+                p.peripheral_latency for p in phone.link.parameter_updates[applied:]
+            ]
+            if any(latencies) and not latencies[-1]:
+                break
+            assert time.monotonic() < deadline, f"the link's latency went {latencies}"
+            time.sleep(0.2)
+        abort(cookie)
+    finally:
+        phone.send(SYSTEM_MESSAGE_ENDPOINT, bytes([0, FIRMWARE_UPDATE_FAILED]))
+        # The failure is shown for 10 s before the watch is back to normal.
+        ui = Ui(dut)
+        deadline = time.monotonic() + 30
+        while PROGRESS_WINDOW in ui.window_stack():
+            assert time.monotonic() < deadline, "the update's progress stayed up"
+            time.sleep(0.5)
     assert phone.watch_version() is not None
