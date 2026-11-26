@@ -16,14 +16,17 @@
 #define ARCH_IRQ_PRIO_BITS  PBL_DT_PROP_NVIC_ARM_NUM_IRQ_PRIORITY_BITS
 #define ARCH_IRQ_PRIO_SHIFT (8U - ARCH_IRQ_PRIO_BITS)
 
-// Controller levels: the faults take the most urgent one, so that they are taken in an ISR or
-// with the kernel locked, then come the zero-latency interrupts, if any, then all the others,
-// priority 0 being the first level the kernel lock masks.
-#define ARCH_IRQ_PRIO_FAULT 0U
-#define ARCH_IRQ_PRIO_ZLI   1U
+// Controller levels: the zero-latency interrupts, if any, take the most urgent one, as radio
+// schedulers require, then the faults, so that they are taken in an ISR or with the kernel
+// locked, then all the others, priority 0 being the first level the kernel lock masks. A fault
+// in a zero-latency handler escalates to a HardFault.
 #ifdef CONFIG_KERNEL_ZERO_LATENCY_IRQS
+#define ARCH_IRQ_PRIO_ZLI    0U
+#define ARCH_IRQ_PRIO_FAULT  1U
 #define ARCH_IRQ_PRIO_OFFSET 2U
 #else
+#define ARCH_IRQ_PRIO_ZLI    1U
+#define ARCH_IRQ_PRIO_FAULT  0U
 #define ARCH_IRQ_PRIO_OFFSET 1U
 #endif
 #define ARCH_IRQ_PRIO_LOWEST ((1U << ARCH_IRQ_PRIO_BITS) - 1U - ARCH_IRQ_PRIO_OFFSET)

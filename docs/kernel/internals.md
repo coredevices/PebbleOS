@@ -58,7 +58,8 @@ level of interrupt priority 0 with `arch_irq_lock()`, which returns
 the previous level for `arch_irq_unlock()` to restore: a few inline
 instructions, and nothing to keep count of. `pbl_irq_lock()` is that plus a
 nesting counter, for callers with nowhere to keep the key. Zero-latency
-ISRs, above that level, may not call the kernel. Object operations run under that lock;
+ISRs, above that level, may not call the kernel. They take the most
+urgent level, above the configurable faults, as radio schedulers require. Object operations run under that lock;
 there is no separate scheduler lock inside the kernel. `pbl_sched_lock()` defers switches until unlocked.
 
 **Idle.** The idle thread yields to other threads at its priority, then
