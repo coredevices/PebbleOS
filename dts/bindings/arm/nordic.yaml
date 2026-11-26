@@ -34,4 +34,9 @@ properties:
           - const: nordic,nrf54l15-dk
           - const: nordic,nrf54l15
 
+      - description: Nordic nRF54LM20 DK
+        items:
+          - const: nordic,nrf54lm20-dk
+          - const: nordic,nrf54lm20a
+
 additionalProperties: true

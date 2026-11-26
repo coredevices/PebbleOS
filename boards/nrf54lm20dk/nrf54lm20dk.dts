@@ -1,0 +1,116 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+#include "nordic/nrf54lm20a.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+
+/ {
+	model = "Nordic nRF54LM20 DK";
+	compatible = "nordic,nrf54lm20-dk", "nordic,nrf54lm20a";
+
+	lfxo: clock-32768 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led0: led-0 {
+			label = "LED0";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>;
+		};
+
+		led1: led-1 {
+			label = "LED1";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio1 25 GPIO_ACTIVE_HIGH>;
+		};
+
+		led2: led-2 {
+			label = "LED2";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio1 27 GPIO_ACTIVE_HIGH>;
+		};
+
+		led3: led-3 {
+			label = "LED3";
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&gpio1 28 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	// Buttons 0 to 3, as the four buttons of a watch
+	buttons: gpio-keys {
+		compatible = "gpio-keys";
+
+		button-0 {
+			label = "Button0";
+			gpios = <&gpio1 26 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_0>;
+			debounce-interval = <40>;
+			wakeup-source;
+		};
+
+		button-1 {
+			label = "Button1";
+			gpios = <&gpio1 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_1>;
+			debounce-interval = <40>;
+		};
+
+		button-2 {
+			label = "Button2";
+			gpios = <&gpio1 8 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_2>;
+			debounce-interval = <40>;
+		};
+
+		button-3 {
+			label = "Button3";
+			gpios = <&gpio0 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_3>;
+			debounce-interval = <40>;
+		};
+	};
+};
+
+&clock {
+	clocks = <&hfxo>, <&lfxo>;
+	clock-names = "hfxo", "lfxo";
+	nordic,hfxo-load-capacitance-femtofarads = <15000>;
+	nordic,lfxo-load-capacitance-femtofarads = <17000>;
+};
+
+&internal_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "code";
+			reg = <0x0 0x1fd000>;
+		};
+	};
+};
+
+// The interface MCU's virtual COM port 0
+&uart20 {
+	current-speed = <1000000>;
+	tx-gpios = <&gpio1 16 GPIO_ACTIVE_HIGH>;
+	rx-gpios = <&gpio1 17 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+};
+
+// The DC/DC inductor is fitted
+&vregmain {
+	regulator-initial-mode = <NRF54L15_REGULATOR_MODE_DCDC>;
+};
