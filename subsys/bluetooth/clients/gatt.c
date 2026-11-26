@@ -175,14 +175,20 @@ static int prv_start(void *ctx) {
 
 PBL_ITERABLE_SECTION_DECLARE(const struct pbl_bt_gattc_notify_listener, bt_gattc_ntf);
 
-bool pbl_bt_gattc_notify_rx(uint16_t conn_handle, uint16_t attr_handle, struct os_mbuf *om) {
+static struct ble_gap_event_listener s_gap_listener;
+
+static int prv_gap_event(struct ble_gap_event *event, void *arg) {
+  if (event->type != BLE_GAP_EVENT_NOTIFY_RX) {
+    return 0;
+  }
+
   PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_gattc_notify_listener, bt_gattc_ntf, l) {
-    if (l->fn(conn_handle, attr_handle, om)) {
-      return true;
+    if (l->fn(event->notify_rx.conn_handle, event->notify_rx.attr_handle, event->notify_rx.om)) {
+      break;
     }
   }
 
-  return false;
+  return 0;
 }
 
 int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint8_t instance,
@@ -195,6 +201,9 @@ int pbl_bt_gattc_discover(uint16_t conn_handle, const ble_uuid_t *svc_uuid, uint
   if (d == nullptr) {
     return -ENOMEM;
   }
+
+  /* Nothing is notified before something is found. Refused once registered. */
+  (void)ble_gap_event_listener_register(&s_gap_listener, prv_gap_event, nullptr);
 
   d->chr_end_handles = (uint16_t *)&d->chrs[num_chrs];
   d->open_chr = NO_CHR;

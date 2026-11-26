@@ -9,7 +9,6 @@
 
 #include <pbl/bluetooth/ams.h>
 #include <pbl/bluetooth/ancs.h>
-#include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/util/size.h>
@@ -107,10 +106,6 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
 #if defined(CONFIG_SAMPLE_AMS)
       sample_ams_start(event->enc_change.conn_handle);
 #endif
-      break;
-    case BLE_GAP_EVENT_NOTIFY_RX:
-      (void)pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
-                                   event->notify_rx.om);
       break;
     case BLE_GAP_EVENT_REPEAT_PAIRING:
       /* A bonded peer that lost its keys: forget ours, and pair again. */

@@ -8,7 +8,6 @@
 
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/clients/gap.h>
-#include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/bluetooth/types.h>
@@ -132,10 +131,6 @@ int pbl_bt_gap_event_handler(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_PAIRING_COMPLETE:
       PBL_LOG_INFO("Pairing complete: status=0x%04x", (uint16_t)event->pairing_complete.status);
       prv_end_pairing(event->pairing_complete.conn_handle, event->pairing_complete.status == 0);
-      break;
-    case BLE_GAP_EVENT_NOTIFY_RX:
-      (void)pbl_bt_gattc_notify_rx(event->notify_rx.conn_handle, event->notify_rx.attr_handle,
-                                   event->notify_rx.om);
       break;
     case BLE_GAP_EVENT_PAIRING_REQUEST:
       return prv_handle_pairing_request(event);

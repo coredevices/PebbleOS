@@ -164,9 +164,8 @@ used without the rest of the subsystem:
   Discoveries, subscriptions, reads and writes with a response are queued and
   run one at a time on the host task, since NimBLE cannot tell the responses
   of concurrent procedures apart; a write without a response is sent at once.
-  Notification listeners are fed by
-  whoever handles the GAP events of a connection, with
-  `pbl_bt_gattc_notify_rx()`.
+  Notification listeners are fed from a GAP event listener of the clients'
+  own, whoever handles the GAP events of a connection.
 - `pbl/bluetooth/clients/gap.h` reads the device name of a peer.
 - `pbl/bluetooth/clients/ancs.h` (`BT_ANCS_CLIENT`) is the client of the Apple
   Notification Center Service. It reports the notifications of the device,
