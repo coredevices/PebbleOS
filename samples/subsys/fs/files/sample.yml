@@ -10,4 +10,4 @@ expect:
   - 'fs: after removing it, stat returns -ENOENT'
   - 'Sample done'
 roles: [flash]
-integration: [qemu_emery, stm32h747i_disco/m7, nrf52840dk]
+integration: [qemu_emery, stm32h747i_disco/m7, nrf52840dk, nrf54l15dk]

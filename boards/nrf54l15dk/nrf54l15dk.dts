@@ -108,3 +108,18 @@
 	rx-gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
+
+// Macronix MX25R6435F, 8 MiB
+&spi00 {
+	sck-gpios = <&gpio2 1 GPIO_ACTIVE_HIGH>;
+	mosi-gpios = <&gpio2 2 GPIO_ACTIVE_HIGH>;
+	miso-gpios = <&gpio2 4 GPIO_ACTIVE_HIGH>;
+	cs-gpios = <&gpio2 5 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+	flash0: flash@0 {
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+	};
+};
