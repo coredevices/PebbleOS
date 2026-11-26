@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/drivers/clk.h>
+#include <pbl/drivers/hwspinlock.h>
 #include <pbl/drivers/rtc.h>
 #include <pbl/kernel/irq.h>
 
@@ -39,6 +40,8 @@ struct pbl_rtc_stm32 {
   uintptr_t exti;
   /** EXTI line of the alarms. */
   uint8_t exti_line;
+  /** Lock of the EXTI, shared with the other cores. */
+  struct pbl_hwspinlock exti_hwlock;
   /** Alarm interrupt. */
   pbl_irq_t irq;
   /** State. */
@@ -61,21 +64,24 @@ void pbl_rtc_stm32_isr(const struct pbl_rtc_stm32 *rtc);
  * @param _clk Kernel clock, from PBL_CLK().
  * @param _exti EXTI registers.
  * @param _exti_line EXTI line of the alarms.
+ * @param _exti_hwlock Lock of the EXTI, from PBL_HWSPINLOCK(), or PBL_HWSPINLOCK_NONE.
  * @param _irq Alarm interrupt.
  */
-#define PBL_RTC_STM32_DEFINE(sym, _name, _base, _pclk, _clk, _exti, _exti_line, _irq) \
-  PBL_DEVICE_STATE_DEFINE(sym);                                                       \
-  static struct pbl_rtc_stm32_state sym##_rtc_state;                                  \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_rtc_stm32, struct pbl_rtc, rtc){                \
-    .rtc = PBL_RTC_INIT(sym, _name, pbl_rtc_stm32_init, nullptr, &pbl_rtc_stm32_ops), \
-    .base = (_base),                                                                  \
-    .pclk = _pclk,                                                                    \
-    .clk = _clk,                                                                      \
-    .exti = (_exti),                                                                  \
-    .exti_line = (_exti_line),                                                        \
-    .irq = (_irq),                                                                    \
-    .state = &sym##_rtc_state,                                                        \
-  };                                                                                  \
+#define PBL_RTC_STM32_DEFINE(sym, _name, _base, _pclk, _clk, _exti, _exti_line, _exti_hwlock, \
+                             _irq)                                                            \
+  PBL_DEVICE_STATE_DEFINE(sym);                                                               \
+  static struct pbl_rtc_stm32_state sym##_rtc_state;                                          \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_rtc_stm32, struct pbl_rtc, rtc){                        \
+    .rtc = PBL_RTC_INIT(sym, _name, pbl_rtc_stm32_init, nullptr, &pbl_rtc_stm32_ops),         \
+    .base = (_base),                                                                          \
+    .pclk = _pclk,                                                                            \
+    .clk = _clk,                                                                              \
+    .exti = (_exti),                                                                          \
+    .exti_line = (_exti_line),                                                                \
+    .exti_hwlock = _exti_hwlock,                                                              \
+    .irq = (_irq),                                                                            \
+    .state = &sym##_rtc_state,                                                                \
+  };                                                                                          \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_RTC_STM32_IRQ_PRIO, pbl_rtc_stm32_isr, &sym##_inst, 0)
 
 /** @} */

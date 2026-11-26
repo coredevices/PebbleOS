@@ -15,4 +15,7 @@ args:
     of: interrupt-parent
   - prop: interrupts
     index: 0
+  - hwlock: 0
+    of: interrupt-parent
+    default: PBL_HWSPINLOCK_NONE
   - irq: 0
