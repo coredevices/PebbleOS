@@ -11,6 +11,7 @@
 #ifdef CONFIG_GH3X2X_ALGO
 #include <math.h>
 
+#include <pbl/kernel/irq.h>
 #include <pbl/kernel/work.h>
 #include <pbl/services/hrm/hrm_manager.h>
 
@@ -97,6 +98,25 @@ void gh3026_gsensor_data_get(STGsensorRawdata gsensor_buffer[], GU16 *gsensor_bu
 static void gh3026_int_callback_function(void *context) {
   s_hrm_int_flag = false;
   Gh3x2xDemoInterruptProcess();
+}
+
+// Called by the Goodix interrupt process between passes over a FIFO backlog.
+// Queue the remaining passes behind other system work (e.g. touch reads)
+// instead of running them all in one item, which can trip the SysWorkq
+// watchdog. If no slot is free, the passes simply continue here.
+uint8_t gh3x2x_int_process_yield(void) {
+  bool queued = true;
+
+  pbl_irq_lock();
+  if (!s_hrm_int_flag) {
+    queued = pbl_sys_work_try_call(gh3026_int_callback_function, nullptr);
+    if (queued) {
+      s_hrm_int_flag = true;
+    }
+  }
+  pbl_irq_unlock();
+
+  return queued;
 }
 
 static void gh3026_int_irq_callback(void *arg) {

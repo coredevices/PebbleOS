@@ -78,6 +78,16 @@ bool gh3x2x_ble_data_recv(void *context);
 void gh3x2x_wear_evt_notify(bool is_wear);
 
 /**
+ * @brief Hand the system work queue back between passes of the Goodix interrupt process.
+ *
+ * Queues another run of the interrupt process so a multi-pass FIFO backlog is
+ * processed across several work items.
+ *
+ * @return Non-zero if a run is queued or already pending, so the current one may return.
+ */
+uint8_t gh3x2x_int_process_yield(void);
+
+/**
  * @brief Feed raw PPG data to the factory tests.
  *
  * Does nothing unless a factory test is running (@c CONFIG_HRM_GH3X2X_FACTORY_TEST only).
