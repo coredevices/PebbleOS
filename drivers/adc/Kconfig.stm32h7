@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config ADC_STM32H7
+    bool "STM32H7 ADC"
+    default y
+    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
+    select CLK
+    help
+      ADCs of the STM32H7, converting one channel at a time at 16 bits,
+      clocked from the bus in synchronous mode.

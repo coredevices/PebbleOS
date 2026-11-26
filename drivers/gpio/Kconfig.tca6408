@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config GPIO_TCA6408
+    bool "TI TCA6408"
+    default y
+    depends on DT_HAS_TI_TCA6408_ENABLED
+    select I2C
+    help
+      Support for the TI TCA6408 I2C GPIO expander.

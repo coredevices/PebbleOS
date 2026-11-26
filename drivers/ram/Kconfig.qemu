@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RAM_QEMU
+    bool "QEMU PSRAM"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_PSRAM_ENABLED
+    help
+      Support for the PSRAM of the QEMU Pebble machines.

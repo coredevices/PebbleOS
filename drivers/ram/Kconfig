@@ -18,30 +18,8 @@ config RAM_SHELL
       The ram shell command, to show the use and power state of the
       external RAM, and to check that it keeps what is written to it.
 
-config RAM_HYPERRAM
-    bool "HyperRAM"
-    default y
-    depends on DT_HAS_CYPRESS_HYPERRAM_ENABLED
-    select REGULATOR
-    select HYPERBUS
-    help
-      Support for HyperRAM, PSRAM with a HyperBus interface, on a
-      HyperBus controller.
-
-config RAM_STM32_FMC
-    bool "ST STM32H7 FMC SDRAM"
-    default y
-    depends on DT_HAS_ST_STM32H7_FMC_ENABLED
-    select CLK
-    select PINCTRL
-    help
-      Support for an SDRAM on the STM32H7 flexible memory controller.
-
-config RAM_QEMU
-    bool "QEMU PSRAM"
-    default y
-    depends on DT_HAS_QEMU_PEBBLE_PSRAM_ENABLED
-    help
-      Support for the PSRAM of the QEMU Pebble machines.
+rsource "Kconfig.hyperram"
+rsource "Kconfig.stm32_fmc"
+rsource "Kconfig.qemu"
 
 endif # RAM

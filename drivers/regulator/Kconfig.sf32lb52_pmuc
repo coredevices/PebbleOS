@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Not only for its consumers: it also switches off a regulator nothing uses
+config REGULATOR_SF32LB52_PMUC
+    bool "SiFli SF32LB52 PMUC regulators"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
+    select REGULATOR
+    help
+      Support for LDO18, the supply of the package memory in the
+      SF32LB52 PMUC.

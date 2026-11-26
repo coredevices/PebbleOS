@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config ACCEL_LIS2DW12
+    bool "ST LIS2DW12"
+    default y
+    depends on DT_HAS_ST_LIS2DW12_ENABLED
+    select I2C
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Support for the ST LIS2DW12 accelerometer.
+
+if ACCEL_LIS2DW12
+
+config ACCEL_LIS2DW12_WK_DUR_DEFAULT
+    int "Default wake duration"
+    range 0 3
+    default 0
+    help
+      Default wake duration applied at init.
+
+config ACCEL_LIS2DW12_WK_THS_MIN
+    int "Minimum wake threshold"
+    range 0 63
+    default 0
+    help
+      Minimum (highest sensitivity) wake-up threshold.
+
+config ACCEL_LIS2DW12_WK_THS_MAX
+    int "Maximum wake threshold"
+    range 0 63
+    default 63
+    help
+      Maximum (lowest sensitivity) wake-up threshold.
+
+config ACCEL_LIS2DW12_WK_THS_DEFAULT
+    int "Default wake threshold"
+    range 0 63
+    default 0
+    help
+      Default wake-up threshold applied at init.
+
+config ACCEL_LIS2DW12_SCALE_MG
+    int "Full-scale range (mg)"
+    default 2000
+    help
+      Acceleration full-scale range in mg (2000, 4000, 8000 or 16000).
+
+endif # ACCEL_LIS2DW12

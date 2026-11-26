@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PANEL_CO5300
+    bool "ChipOne CO5300 AMOLED panels"
+    default y
+    depends on DT_HAS_CHIPONE_CO5300_ENABLED
+    depends on PANEL
+    select BACKLIGHT
+    select GPIO
+    select MIPI_DBI
+    help
+      Support for AMOLED panels on the ChipOne CO5300 driver IC, over quad
+      SPI, with their brightness as a backlight.

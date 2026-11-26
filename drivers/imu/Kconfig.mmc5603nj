@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MAG_MMC5603NJ
+    bool "MEMSIC MMC5603NJ"
+    default y
+    depends on DT_HAS_MEMSIC_MMC5603_ENABLED
+    select I2C
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Support for the MEMSIC MMC5603NJ magnetometer.

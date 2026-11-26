@@ -23,64 +23,11 @@ config FLASH_CRC
     help
       pbl_flash_crc32() and pbl_flash_crc32_legacy().
 
-config FLASH_OTP
-    bool
-    help
-      Selected by drivers with a user one-time programmable area, see
-      pbl_flash_otp_*().
-
-config FLASH_SPI_NOR
-    bool "SPI NOR"
-    default y
-    depends on DT_HAS_JEDEC_SPI_NOR_ENABLED
-    select SPI_MEM
-    select FLASH_OTP
-    select REGULATOR
-    help
-      Support for a JEDEC NOR flash on a SPI memory controller, described
-      by its SFDP tables and the description of the part it is identified
-      as by its JEDEC ID, among the parts enabled below. Boards enable the
-      parts they can be fitted with.
-
-if FLASH_SPI_NOR
-
-config FLASH_SPI_NOR_GD25LQ255E
-    bool "GigaDevice GD25LQ255E"
-
-config FLASH_SPI_NOR_GD25Q256E
-    bool "GigaDevice GD25Q256E"
-
-config FLASH_SPI_NOR_MT25QL512A
-    bool "Micron MT25QL512A"
-
-config FLASH_SPI_NOR_MX25R6435F
-    bool "Macronix MX25R6435F"
-
-config FLASH_SPI_NOR_PY25Q128HA
-    bool "Puya PY25Q128HA"
-
-endif
-
-config FLASH_QEMU
-    bool "QEMU external flash"
-    default y
-    depends on DT_HAS_QEMU_PEBBLE_EXTFLASH_ENABLED
-    help
-      Support for the QEMU external flash peripheral.
-
-config FLASH_NRF_RRAMC
-    bool "nRF RRAM"
-    default y
-    depends on DT_HAS_NORDIC_NRF54L15_RRAMC_ENABLED
-    help
-      Support for the internal RRAM of the nRF54L, which needs no erase.
-
-config FLASH_POSIX
-    bool "POSIX external flash"
-    default y
-    depends on SOC_POSIX
-    help
-      External flash backed by a file on the host.
+rsource "Kconfig.otp"
+rsource "Kconfig.spi_nor"
+rsource "Kconfig.qemu"
+rsource "Kconfig.nrf_rramc"
+rsource "Kconfig.posix"
 
 config FLASH_SHELL
     bool "Shell commands"

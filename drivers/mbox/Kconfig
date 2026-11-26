@@ -9,35 +9,8 @@ menuconfig MBOX
 
 if MBOX
 
-config MBOX_SF32LB
-    bool "SiFli SF32LB mailbox"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_MAILBOX_ENABLED
-    select CLK
-    help
-      SF32LB52 and SF32LB57 mailbox blocks (MAILBOX1, MAILBOX2), channel 1
-      doorbells.
-
-config MBOX_SF32LB_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on MBOX_SF32LB
-    help
-      Priority of the interrupt of the blocks rung by the remote.
-
-config MBOX_STM32_HSEM
-    bool "STM32H7 hardware semaphore doorbells"
-    default y
-    depends on DT_HAS_ST_STM32_HWSPINLOCK_ENABLED
-    select CLK
-    help
-      Doorbells between the cores of a dual-core STM32H7, rung by
-      releasing a hardware semaphore.
-
-config MBOX_STM32_HSEM_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on MBOX_STM32_HSEM
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32_hsem"
 
 config MBOX_SHELL
     bool "Mailbox shell commands"

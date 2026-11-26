@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_WM8994
+    bool "Cirrus Logic WM8994 codec"
+    default y
+    depends on DT_HAS_WLF_WM8994_ENABLED
+    select I2C
+    help
+      The WM8994 codec, playing to its headphone output.

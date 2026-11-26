@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config HRM_GH3X2X
+    bool "Goodix GH3X2X"
+    select KERNEL_SYS_WORKQ
+    help
+      Support for the Goodix GH3X2X heart rate sensor.
+
+config HRM_GH3X2X_FACTORY_TEST
+    bool "GH3X2X factory tests"
+    depends on GH3X2X_ALGO
+    help
+      The GH3X2X CTR, light leakage and noise factory tests, sampling heart
+      rate and SpO2 together.

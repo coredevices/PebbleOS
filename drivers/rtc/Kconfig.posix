@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RTC_POSIX
+    bool "POSIX RTC"
+    default y
+    depends on SOC_POSIX
+    help
+      RTC following the host clock.

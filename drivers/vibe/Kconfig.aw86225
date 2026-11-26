@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config VIBE_AW86225
+    bool "Awinic AW86225"
+    default y
+    depends on DT_HAS_AWINIC_AW86225_ENABLED
+    select GPIO
+    select I2C
+    select REGULATOR
+    help
+      Support for the Awinic AW86225 haptic driver.

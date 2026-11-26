@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TIMER_NRF5_RTC
+    bool
+    select CLK
+    help
+      Clock source and clock event device on RTC1, counting the 32.768 kHz
+      low-frequency clock. It keeps running in every sleep mode. Selected
+      by the SoC.
+
+config TIMER_NRF5_RTC_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on TIMER_NRF5_RTC
+    help
+      Priority of the RTC1 interrupt.

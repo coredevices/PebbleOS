@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DMA_STM32H7_BDMA
+    bool "ST STM32H7 BDMA and DMAMUX2"
+    default y
+    depends on DT_HAS_ST_STM32H7_DMAMUX_ENABLED && DT_HAS_ST_STM32H7_BDMA_ENABLED
+    select CLK
+    help
+      The STM32H7 BDMA controller of the D3 domain, behind the DMAMUX2
+      request router.
+
+config DMA_STM32H7_BDMA_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on DMA_STM32H7_BDMA
+    help
+      Priority of the channel interrupts.

@@ -8,11 +8,4 @@ config MEMC
       one kind, each kind with a driver in its own subsystem. Selected
       by those drivers.
 
-config MEMC_SF32LB_MPI
-    bool
-    select MEMC
-    select CLK
-    select PINCTRL
-    help
-      Core of the SiFli SF32LB52 and SF32LB57 MPI controllers: what
-      their SPI memory and HyperBus drivers share.
+rsource "Kconfig.sf32lb_mpi"

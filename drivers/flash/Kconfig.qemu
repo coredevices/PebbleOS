@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config FLASH_QEMU
+    bool "QEMU external flash"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_EXTFLASH_ENABLED
+    help
+      Support for the QEMU external flash peripheral.

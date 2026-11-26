@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BACKLIGHT_LED
+    bool "LED"
+    default y
+    depends on DT_HAS_LED_BACKLIGHT_ENABLED
+    select LED
+    select BACKLIGHT_HAS_COLOR if LED_HAS_COLOR
+    help
+      Backlight on an LED, its color mixed by multicolor LEDs.

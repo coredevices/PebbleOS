@@ -9,20 +9,6 @@ menuconfig GPU
 
 if GPU
 
-config GPU_SF32LB57_EPIC
-    bool "SiFli SF32LB57 ePIC"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB57_EPIC_ENABLED
-    select CLK
-    select RESET
-    help
-      Support for the ePIC graphics accelerator of the SiFli SF32LB57.
-
-config GPU_SF32LB57_EPIC_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on GPU_SF32LB57_EPIC
-    help
-      Priority of the accelerator interrupt.
+rsource "Kconfig.sf32lb57_epic"
 
 endif # GPU

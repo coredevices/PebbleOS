@@ -189,7 +189,8 @@ GPIO port, a display. It lives in `drivers/<class>/`, with its interface in
 - **Roles**: pointers the class header declares, one per purpose a device of
   the class may serve, as `DIE_TEMP`; see {ref}`device-model-roles`.
 - **Kconfig**, in `drivers/<class>/Kconfig`: a `menuconfig` for the class,
-  sourced from `drivers/Kconfig`, enclosing its drivers. A class that logs
+  sourced from `drivers/Kconfig`, enclosing its drivers, each in its own
+  `Kconfig.<driver>` next to it. A class that logs
   defines its log module there, `module = DRIVER_<CLASS>` with
   `subsys/logging/Kconfig.template.log_level`; the class source defines it
   with `PBL_LOG_MODULE_DEFINE(driver_<class>, ...)` and its drivers declare
@@ -822,7 +823,7 @@ include/pbl/drivers/humidity/vendor.h      driver struct, instance macro
 drivers/humidity/vendor.c                  ops
 drivers/humidity/vendor.dtmap.yaml         devicetree spec
 dts/bindings/iio/humidity/vendor,humidity.yaml
-drivers/humidity/Kconfig                   driver symbol
+drivers/humidity/Kconfig.vendor            driver symbol
 drivers/humidity/CMakeLists.txt            driver source
 ```
 
@@ -906,7 +907,9 @@ args:
 
 **Kconfig and the build**: the driver is on by default when the tree has a
 node it binds to, can still be enabled by hand for a board without a tree,
-and selects the bus it needs:
+and selects the bus it needs. Its options go in
+`drivers/humidity/Kconfig.vendor`, sourced from the class `Kconfig` with
+`rsource "Kconfig.vendor"`:
 
 ```kconfig
 config HUMIDITY_VENDOR

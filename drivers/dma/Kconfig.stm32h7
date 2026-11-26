@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DMA_STM32H7
+    bool "ST STM32H7 DMA1, DMA2 and DMAMUX1"
+    default y
+    depends on DT_HAS_ST_STM32H7_DMAMUX_ENABLED && DT_HAS_ST_STM32_DMA_ENABLED
+    select CLK
+    help
+      The STM32H7 DMA1 and DMA2 controllers, behind the DMAMUX1 request
+      router.
+
+config DMA_STM32H7_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on DMA_STM32H7
+    help
+      Priority of the stream interrupts.

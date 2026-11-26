@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_CAL
+    bool
+    help
+      Calibrated clocks (pbl/drivers/clk/cal.h), selected by the drivers
+      of oscillators whose rate is measured against a reference.

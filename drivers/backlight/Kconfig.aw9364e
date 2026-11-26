@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BACKLIGHT_AW9364E
+    bool "AW9364E"
+    default y
+    depends on DT_HAS_AWINIC_AW9364E_ENABLED
+    select GPIO
+    help
+      Support for the AW9364E LED controller.

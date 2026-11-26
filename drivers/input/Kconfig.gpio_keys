@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config INPUT_GPIO_KEYS
+    bool "GPIO keys"
+    default y
+    depends on DT_HAS_GPIO_KEYS_ENABLED
+    depends on INPUT
+    select GPIO
+    help
+      Keys on GPIOs with interrupts, debounced in software.

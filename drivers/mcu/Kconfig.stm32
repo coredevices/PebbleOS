@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MCU_STM32
+    bool "ST STM32"
+    default y
+    depends on SOC_STM32H7
+    select NVMEM
+    help
+      Support for ST STM32 MCU information.

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_SF32LB_LPSYS_RCC
+    bool "SiFli SF32LB LPSYS RCC"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_LPSYS_RCC_ENABLED
+    help
+      Clocks of the SiFli SF32LB52 and SF32LB57 LPSYS, which the LCPU runs
+      from.

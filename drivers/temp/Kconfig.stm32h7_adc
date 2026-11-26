@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TEMP_STM32H7_ADC
+    bool "STM32H7 temperature sensor"
+    default y
+    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
+    select ADC
+    select NVMEM
+    help
+      The temperature sensor on ADC3 of the STM32H7, read against VREFINT
+      with its factory calibration.

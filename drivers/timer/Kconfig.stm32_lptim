@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TIMER_STM32_LPTIM
+    bool
+    select CLK
+    select RESET
+    help
+      Clock source and clock event device on the LPTIM of the STM32H7 the
+      board enables its timer function on, counting its kernel clock,
+      the 32.768 kHz crystal on boards that have one. It keeps running and
+      wakes the CPU up in Stop mode. Selected by the SoC.
+
+config TIMER_STM32_LPTIM_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on TIMER_STM32_LPTIM
+    help
+      Priority of the LPTIM interrupt.

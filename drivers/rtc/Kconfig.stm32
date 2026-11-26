@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RTC_STM32
+    bool "STM32 RTC"
+    default y
+    depends on DT_HAS_ST_STM32H7_RTC_ENABLED
+    select CLK
+    help
+      STM32H7 calendar RTC in the backup domain, counting the LSE across
+      resets and in Standby, with alarm A, which wakes the system from
+      Standby.
+
+config RTC_STM32_IRQ_PRIO
+    int "Alarm interrupt priority"
+    default 0
+    depends on RTC_STM32

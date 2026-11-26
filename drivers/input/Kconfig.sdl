@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config INPUT_SDL
+    bool "SDL keyboard"
+    default y
+    depends on SOC_POSIX
+    depends on INPUT
+    select SDL
+    help
+      Watch buttons driven by the keyboard, through SDL, in a native build.

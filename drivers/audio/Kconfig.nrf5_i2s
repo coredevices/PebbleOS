@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_NRF5_I2S
+    bool "Nordic nRF5 I2S"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_I2S_ENABLED
+    select CLK
+    help
+      Playback through the nRF5 I2S interface.
+
+config AUDIO_NRF5_I2S_IRQ_PRIO
+    int "I2S interrupt priority"
+    default 1
+    depends on AUDIO_NRF5_I2S
+    help
+      Priority of the I2S interrupt.

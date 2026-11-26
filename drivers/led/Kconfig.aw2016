@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config LED_AW2016
+    bool "Awinic AW2016"
+    default y
+    depends on DT_HAS_AWINIC_AW2016_ENABLED
+    select I2C
+    select LED_HAS_COLOR
+    help
+      Support for the Awinic AW2016 RGB LED controller.

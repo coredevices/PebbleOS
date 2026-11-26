@@ -8,51 +8,11 @@ menuconfig MCU
 
 if MCU
 
-config MCU_NRF5
-    bool "Nordic nRF5"
-    default y
-    depends on SOC_NRF52
-    select NVMEM
-    help
-      Support for Nordic nRF5 MCU information.
-
-config MCU_NRF54L
-    bool "Nordic nRF54L"
-    default y
-    depends on SOC_NRF54L
-    select NVMEM
-    help
-      Support for Nordic nRF54L MCU information.
-
-config MCU_SF32LB
-    bool "SiFli SF32LB"
-    default y
-    depends on SOC_SF32LB52 || SOC_SF32LB57
-    select NVMEM
-    help
-      Support for SiFli SF32LB MCU information.
-
-config MCU_STM32
-    bool "ST STM32"
-    default y
-    depends on SOC_STM32H7
-    select NVMEM
-    help
-      Support for ST STM32 MCU information.
-
-config MCU_QEMU
-    bool "QEMU"
-    default y
-    depends on SOC_QEMU_PEBBLE
-    help
-      QEMU MCU information. QEMU emulates no unique ID, so it reports a
-      fixed serial.
-
-config MCU_POSIX
-    bool "POSIX"
-    default y
-    depends on SOC_POSIX
-    help
-      MCU information for a native build.
+rsource "Kconfig.nrf5"
+rsource "Kconfig.nrf54l"
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32"
+rsource "Kconfig.qemu"
+rsource "Kconfig.posix"
 
 endif # MCU

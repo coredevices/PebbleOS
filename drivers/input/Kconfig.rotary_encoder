@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config INPUT_ROTARY_ENCODER
+    bool "Rotary encoder"
+    default y
+    depends on DT_HAS_ROTARY_ENCODER_ENABLED
+    depends on INPUT
+    select GPIO
+    help
+      Gray-coded quadrature encoder on two GPIOs with interrupts,
+      reporting relative axis steps.

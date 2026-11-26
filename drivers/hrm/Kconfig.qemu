@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config HRM_QEMU
+    bool "QEMU"
+    default y
+    depends on SOC_QEMU_PEBBLE
+    help
+      QEMU heart rate monitor. QEMU emulates none, so it can be enabled
+      but never delivers samples.

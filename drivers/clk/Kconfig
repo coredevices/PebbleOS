@@ -21,132 +21,16 @@ module = DRIVER_CLK
 module-str = Clock controllers
 source "subsys/logging/Kconfig.template.log_level"
 
-config CLK_FIXED
-    bool "Fixed-rate clocks"
-    default y
-    depends on DT_HAS_FIXED_CLOCK_ENABLED
-    help
-      Clocks that always run at the same rate, as crystals.
-
-config CLK_SF32LB
-    bool "SiFli SF32LB RCC"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED || DT_HAS_SIFLI_SF32LB57_HPSYS_RCC_ENABLED
-    select POWER_DOMAIN
-    help
-      Clock controller of the SiFli SF32LB52 and SF32LB57 HPSYS RCC.
-
-config CLK_STM32H7
-    bool "ST STM32H7 RCC"
-    default y
-    depends on DT_HAS_ST_STM32H743_RCC_ENABLED
-    help
-      Clock controller of the ST STM32H7 RCC.
-
-config CLK_NRF52
-    bool "Nordic nRF52 clock control"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_CLOCK_ENABLED
-    help
-      HFCLK and LFCLK of the Nordic nRF52, from their crystal oscillators.
-
-config CLK_NRF54L
-    bool "Nordic nRF54L clock control"
-    default y
-    depends on DT_HAS_NORDIC_NRF54L15_CLOCK_ENABLED
-    help
-      HFCLK and LFCLK of the Nordic nRF54L, from their crystal oscillators.
-
-config CLK_CAL
-    bool
-    help
-      Calibrated clocks (pbl/drivers/clk/cal.h), selected by the drivers
-      of oscillators whose rate is measured against a reference.
-
-config CLK_SF32LB52_PMUC
-    bool "SiFli SF32LB52 PMUC"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
-    select CLK_CAL
-    help
-      Oscillators of the SiFli SF32LB52 PMUC: the LRC10 low-power RC
-      oscillator, whose rate is calibrated against the 48 MHz crystal, the
-      LRC32 and HRC48 RC oscillators, the crystal oscillators and clk_wdt.
-
-if CLK_SF32LB52_PMUC
-
-config CLK_SF32LB52_PMUC_LRC10_CAL_GATE_CYCLES
-    int "LRC10 calibration gate (LRC10 cycles)"
-    range 200 65535
-    default 2000
-    help
-      Length of each LRC10 measurement against the 48 MHz crystal. The
-      LRC10 frequency noise averages down as the square root of the gate
-      time; the crystal and the low-power domain stay on for the gate.
-
-config CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S
-    int "LRC10 calibration period (seconds)"
-    range 10 3600
-    default 60
-    help
-      Time between LRC10 measurements, which follow its drift with
-      temperature.
-
-endif # CLK_SF32LB52_PMUC
-
-config CLK_SF32LB52_HXT
-    bool "SiFli SF32LB52 crystal trim"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED && CLK_SF32LB && FLASH_OTP
-    help
-      Apply the 48 MHz crystal load capacitance trim from the SoC factory
-      configuration in the flash OTP area, once the flash is up.
-
-config CLK_SF32LB57_PMUC
-    bool "SiFli SF32LB57 PMUC"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB57_PMUC_ENABLED
-    select CLK_CAL
-    help
-      Oscillators of the SiFli SF32LB57 PMUC: the LRC10 low-power RC
-      oscillator, whose rate is calibrated against the 48 MHz crystal, the
-      LRC32 and HRC48 RC oscillators at their nominal rates, the crystal
-      oscillators, clk_wdt and clk_rtc.
-
-if CLK_SF32LB57_PMUC
-
-config CLK_SF32LB57_PMUC_LRC10_CAL_GATE_CYCLES
-    int "LRC10 calibration gate (LRC10 cycles)"
-    range 200 65535
-    default 2000
-    help
-      Length of each LRC10 measurement against the 48 MHz crystal, by the
-      RC10CAL counter of the HPSYS RCC. Deep WFI is held off for the gate.
-
-config CLK_SF32LB57_PMUC_LRC10_CAL_PERIOD_S
-    int "LRC10 calibration period (seconds)"
-    range 10 3600
-    default 60
-    help
-      Time between LRC10 measurements, which follow its drift with
-      temperature.
-
-endif # CLK_SF32LB57_PMUC
-
-config CLK_SF32LB_LPSYS_RCC
-    bool "SiFli SF32LB LPSYS RCC"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_LPSYS_RCC_ENABLED
-    help
-      Clocks of the SiFli SF32LB52 and SF32LB57 LPSYS, which the LCPU runs
-      from.
-
-config CLK_SF32LB52_RTC
-    bool "SiFli SF32LB52 RTC clock"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_RTC_ENABLED
-    help
-      clk_rtc of the SiFli SF32LB52 RTC, LRC10 or LXT32, which the RTC and
-      the low-power timers count.
+rsource "Kconfig.fixed"
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32h7"
+rsource "Kconfig.nrf52"
+rsource "Kconfig.nrf54l"
+rsource "Kconfig.cal"
+rsource "Kconfig.sf32lb52_pmuc"
+rsource "Kconfig.sf32lb52_hxt"
+rsource "Kconfig.sf32lb57_pmuc"
+rsource "Kconfig.sf32lb_lpsys_rcc"
+rsource "Kconfig.sf32lb52_rtc"
 
 endif # CLK

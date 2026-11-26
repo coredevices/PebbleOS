@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MFD_NRF_CRACEN
+    bool
+    help
+      Core of the Nordic nRF54L CRACEN crypto accelerator, which turns
+      its random number generator and its engines on and off for their
+      drivers.

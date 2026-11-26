@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_NRF5_PDM
+    bool "Nordic nRF5 PDM"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_PDM_ENABLED
+    select CLK
+    help
+      Capture from digital microphones on the nRF5 PDM interface.
+
+config AUDIO_NRF5_PDM_IRQ_PRIO
+    int "PDM interrupt priority"
+    default 1
+    depends on AUDIO_NRF5_PDM
+    help
+      Priority of the PDM interrupt.

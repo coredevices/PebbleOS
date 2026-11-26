@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config LED_WS2812B
+    bool "Worldsemi WS2812B"
+    default y
+    depends on DT_HAS_WORLDSEMI_WS2812B_ENABLED
+    select SPI
+    select LED_HAS_COLOR
+    help
+      Support for a Worldsemi WS2812B RGB LED on a SPI MOSI line.

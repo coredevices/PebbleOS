@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MCU_NRF54L
+    bool "Nordic nRF54L"
+    default y
+    depends on SOC_NRF54L
+    select NVMEM
+    help
+      Support for Nordic nRF54L MCU information.

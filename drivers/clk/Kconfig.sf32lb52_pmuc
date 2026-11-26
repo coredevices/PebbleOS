@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_SF32LB52_PMUC
+    bool "SiFli SF32LB52 PMUC"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED
+    select CLK_CAL
+    help
+      Oscillators of the SiFli SF32LB52 PMUC: the LRC10 low-power RC
+      oscillator, whose rate is calibrated against the 48 MHz crystal, the
+      LRC32 and HRC48 RC oscillators, the crystal oscillators and clk_wdt.
+
+if CLK_SF32LB52_PMUC
+
+config CLK_SF32LB52_PMUC_LRC10_CAL_GATE_CYCLES
+    int "LRC10 calibration gate (LRC10 cycles)"
+    range 200 65535
+    default 2000
+    help
+      Length of each LRC10 measurement against the 48 MHz crystal. The
+      LRC10 frequency noise averages down as the square root of the gate
+      time; the crystal and the low-power domain stay on for the gate.
+
+config CLK_SF32LB52_PMUC_LRC10_CAL_PERIOD_S
+    int "LRC10 calibration period (seconds)"
+    range 10 3600
+    default 60
+    help
+      Time between LRC10 measurements, which follow its drift with
+      temperature.
+
+endif # CLK_SF32LB52_PMUC

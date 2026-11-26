@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config WATCHDOG_STM32_IWDG
+    bool "ST STM32 IWDG"
+    default y
+    depends on DT_HAS_ST_STM32_IWDG_ENABLED
+    depends on CLK_STM32H7
+    help
+      Support for the ST STM32H7 independent watchdog.

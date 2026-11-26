@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config VIBE_SIM
+    bool "Simulator"
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    help
+      Simulated vibration motor, reporting its state through its
+      simulator API (pbl/drivers/vibe/sim.h).

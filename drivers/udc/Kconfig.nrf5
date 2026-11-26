@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UDC_NRF5
+    bool "Nordic nRF5 USBD"
+    default y
+    depends on DT_HAS_NORDIC_NRF52840_USBD_ENABLED
+    select CLK
+    help
+      USB device controller of the Nordic nRF52840, at full speed, moving
+      packets through EasyDMA, connected while VBUS powers its regulator.
+
+config UDC_NRF5_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UDC_NRF5
+    help
+      Priority of the USBD and POWER interrupts.

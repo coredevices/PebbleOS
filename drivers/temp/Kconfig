@@ -15,37 +15,9 @@ config TEMP_SHELL
     help
       The temp shell command, to read the die temperature.
 
-config TEMP_NRF5
-    bool "Nordic nRF5"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_TEMP_ENABLED
-    help
-      Support for the Nordic nRF5 die temperature sensor.
-
-config TEMP_SF32LB
-    bool "SiFli SF32LB"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_TSEN_ENABLED
-    select CLK
-    help
-      Support for the SiFli SF32LB temperature sensor.
-
-config TEMP_STM32H7_ADC
-    bool "STM32H7 temperature sensor"
-    default y
-    depends on DT_HAS_ST_STM32H7_ADC_ENABLED
-    select ADC
-    select NVMEM
-    help
-      The temperature sensor on ADC3 of the STM32H7, read against VREFINT
-      with its factory calibration.
-
-config TEMP_SIM
-    bool "Simulator"
-    default y
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
-    help
-      Simulated temperature sensor, reading a value set through its
-      simulator API (pbl/drivers/temp/sim.h).
+rsource "Kconfig.nrf5"
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32h7_adc"
+rsource "Kconfig.sim"
 
 endif # TEMP

@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_SF32LB
+    bool "SiFli SF32LB UART controller"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_USART_ENABLED
+    select CLK
+    select DMA
+    select PINCTRL
+    help
+      Support for the SiFli SF32LB UART controller.
+
+config UART_SF32LB_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UART_SF32LB
+    help
+      Priority of the port interrupts.

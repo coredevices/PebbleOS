@@ -14,31 +14,9 @@ config LED_HAS_COLOR
     help
       Selected by the drivers of multicolor LEDs.
 
-config LED_AW2016
-    bool "Awinic AW2016"
-    default y
-    depends on DT_HAS_AWINIC_AW2016_ENABLED
-    select I2C
-    select LED_HAS_COLOR
-    help
-      Support for the Awinic AW2016 RGB LED controller.
-
-config LED_WS2812B
-    bool "Worldsemi WS2812B"
-    default y
-    depends on DT_HAS_WORLDSEMI_WS2812B_ENABLED
-    select SPI
-    select LED_HAS_COLOR
-    help
-      Support for a Worldsemi WS2812B RGB LED on a SPI MOSI line.
-
-config LED_GPIO
-    bool "GPIO LEDs"
-    default y
-    depends on DT_HAS_GPIO_LEDS_ENABLED
-    select GPIO
-    help
-      Support for LEDs switched by GPIOs.
+rsource "Kconfig.aw2016"
+rsource "Kconfig.ws2812b"
+rsource "Kconfig.gpio"
 
 module = DRIVER_LED
 module-str = LED

@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_FIXED
+    bool "Fixed-rate clocks"
+    default y
+    depends on DT_HAS_FIXED_CLOCK_ENABLED
+    help
+      Clocks that always run at the same rate, as crystals.

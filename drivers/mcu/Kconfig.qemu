@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MCU_QEMU
+    bool "QEMU"
+    default y
+    depends on SOC_QEMU_PEBBLE
+    help
+      QEMU MCU information. QEMU emulates no unique ID, so it reports a
+      fixed serial.

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CHARGER_SIM
+    bool "Simulator"
+    default y
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    help
+      Simulated charger, set through its simulator API
+      (pbl/drivers/charger/sim.h).

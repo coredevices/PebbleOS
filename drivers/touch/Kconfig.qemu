@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TOUCH_QEMU
+    bool "QEMU touchscreen"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_TOUCH_ENABLED
+    select KERNEL_SYS_WORKQ
+    help
+      Support for the QEMU touchscreen peripheral.
+
+config TOUCH_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on TOUCH_QEMU
+    help
+      Priority of the touchscreen interrupt.

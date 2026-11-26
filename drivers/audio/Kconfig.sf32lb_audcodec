@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_SF32LB_AUDCODEC
+    bool "SiFli SF32LB audio codec"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED || DT_HAS_SIFLI_SF32LB57_AUDCODEC_ENABLED
+    select CLK
+    select DMA
+    select PINCTRL
+    select RESET
+    help
+      Playback through the DAC of the SF32LB audio codec, and capture from
+      analog microphones through its ADC.

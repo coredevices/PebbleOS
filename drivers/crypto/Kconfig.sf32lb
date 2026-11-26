@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CRYPTO_SF32LB
+    bool "SiFli SF32LB AES and hash accelerator"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_AES_ENABLED
+    select CLK
+    select CRYPTO_SHA256_HW_ACCEL
+    select CRYPTO_AES_HW_ACCEL
+    help
+      Computes SHA-256 and AES in ECB mode on the SF32LB crypto engine.

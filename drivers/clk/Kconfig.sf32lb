@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_SF32LB
+    bool "SiFli SF32LB RCC"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_HPSYS_RCC_ENABLED || DT_HAS_SIFLI_SF32LB57_HPSYS_RCC_ENABLED
+    select POWER_DOMAIN
+    help
+      Clock controller of the SiFli SF32LB52 and SF32LB57 HPSYS RCC.

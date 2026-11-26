@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config FLASH_OTP
+    bool
+    help
+      Selected by drivers with a user one-time programmable area, see
+      pbl_flash_otp_*().

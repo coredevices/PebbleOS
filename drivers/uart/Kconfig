@@ -8,97 +8,12 @@ menuconfig UART
 
 if UART
 
-config UART_NRF5
-    bool "Nordic nRF5 UART controller"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_UARTE_ENABLED
-    select GPIO
-    help
-      Support for the Nordic nRF5 UART controller.
-
-config UART_NRF5_IRQ_PRIO
-    int "Interrupt priority"
-    default 1
-    depends on UART_NRF5
-    help
-      Priority of the port interrupts.
-
-config UART_NRF54L
-    bool "Nordic nRF54L UART controller"
-    default y
-    depends on DT_HAS_NORDIC_NRF54L15_UARTE_ENABLED
-    select GPIO
-    help
-      Support for the Nordic nRF54L UART controller.
-
-config UART_NRF54L_IRQ_PRIO
-    int "Interrupt priority"
-    default 1
-    depends on UART_NRF54L
-    help
-      Priority of the port interrupts.
-
-config UART_SF32LB
-    bool "SiFli SF32LB UART controller"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_USART_ENABLED
-    select CLK
-    select DMA
-    select PINCTRL
-    help
-      Support for the SiFli SF32LB UART controller.
-
-config UART_SF32LB_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UART_SF32LB
-    help
-      Priority of the port interrupts.
-
-config UART_STM32
-    bool "ST STM32 UART Controller"
-    default y
-    depends on DT_HAS_ST_STM32H7_UART_ENABLED
-    select CLK
-    select DMA
-    select PINCTRL
-    help
-      Support for the ST STM32H7 USART and UART controllers.
-
-config UART_STM32_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UART_STM32
-    help
-      Priority of the port interrupts.
-
-config UART_QEMU
-    bool "QEMU simple UART"
-    default y
-    depends on DT_HAS_QEMU_PEBBLE_SIMPLE_UART_ENABLED
-    help
-      Support for the QEMU simple UART peripheral.
-
-config UART_QEMU_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UART_QEMU
-    help
-      Priority of the port interrupts.
-
-config UART_POSIX
-    bool "POSIX UART"
-    default y
-    depends on SOC_POSIX
-    help
-      UART backed by a host file descriptor.
-
-config UART_POSIX_BT_HCI
-    bool "Bluetooth HCI port"
-    default y
-    depends on UART_POSIX
-    help
-      Port for a host Bluetooth controller, attached with the -b option.
+rsource "Kconfig.nrf5"
+rsource "Kconfig.nrf54l"
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32"
+rsource "Kconfig.qemu"
+rsource "Kconfig.posix"
 
 config UART_SHELL
     bool "Shell commands"

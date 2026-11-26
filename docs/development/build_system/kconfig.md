@@ -24,7 +24,8 @@ source `Kconfig.pebbleos`, which sources the rest of the tree:
   a `Kconfig` that sources its own subdirectories.
 
 A symbol is defined next to the code it enables: a driver class's
-`Kconfig` lives in `drivers/<class>/`, a subsystem's in `subsys/<name>/`.
+`Kconfig` lives in `drivers/<class>/`, with one `Kconfig.<driver>` per
+driver next to it, a subsystem's in `subsys/<name>/`.
 {doc}`../../reference/kconfig` lists every option, with its dependencies,
 defaults and location.
 

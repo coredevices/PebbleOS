@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CRC_STM32
+    bool "STM32 CRC unit"
+    default y
+    depends on DT_HAS_ST_STM32F7_CRC_ENABLED
+    select CLK
+    select CRC_HW_ACCEL
+    help
+      Computes CRC-32 and the legacy checksum on the STM32 CRC unit.

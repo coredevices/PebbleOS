@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SPI_MEM_STM32_QSPI
+    bool "ST STM32 QUADSPI"
+    default y
+    depends on DT_HAS_ST_STM32F469_QSPI_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for the ST STM32 QUADSPI controller.

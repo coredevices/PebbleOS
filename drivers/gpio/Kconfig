@@ -9,101 +9,13 @@ menuconfig GPIO
 
 if GPIO
 
-config GPIO_NRF5
-    bool "Nordic nRF5"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_GPIO_ENABLED
-    select INTC
-    help
-      Support for the Nordic nRF5 GPIO controller.
-
-config GPIO_NRF5_IRQ_PRIO
-    int "Interrupt priority"
-    default 1
-    depends on GPIO_NRF5
-    help
-      Priority of the GPIOTE interrupt.
-
-config GPIO_NRF54L
-    bool "Nordic nRF54L"
-    default y
-    depends on DT_HAS_NORDIC_NRF54L15_GPIO_ENABLED
-    select INTC
-    help
-      Support for the Nordic nRF54L GPIO controller.
-
-config GPIO_NRF54L_IRQ_PRIO
-    int "Interrupt priority"
-    default 1
-    depends on GPIO_NRF54L
-    help
-      Priority of the GPIOTE interrupts.
-
-config GPIO_SF32LB
-    bool "SiFli SF32LB"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_GPIO_ENABLED || DT_HAS_SIFLI_SF32LB57_GPIO_ENABLED
-    select CLK
-    select INTC
-    select PINCTRL
-    select PINCTRL_SF32LB52_OUTPUT_LOW if PINCTRL_SF32LB52
-    help
-      Support for the SiFli SF32LB GPIO controller.
-
-config GPIO_SF32LB_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on GPIO_SF32LB
-    help
-      Priority of the port interrupt.
-
-config GPIO_STM32
-    bool "ST STM32"
-    default y
-    depends on DT_HAS_ST_STM32H743_PINCTRL_ENABLED
-    select CLK
-    select HWSPINLOCK
-    select INTC
-    help
-      Support for the ST STM32 GPIO ports, and their interrupts through
-      EXTI.
-
-config GPIO_STM32_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on GPIO_STM32
-    help
-      Priority of the EXTI interrupts.
-
-config GPIO_QEMU
-    bool "QEMU GPIO"
-    default y
-    depends on DT_HAS_QEMU_PEBBLE_GPIO_ENABLED
-    select INTC
-    help
-      Support for the QEMU GPIO peripheral.
-
-config GPIO_QEMU_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on GPIO_QEMU
-    help
-      Priority of the port interrupt.
-
-config GPIO_NPM1300
-    bool "Nordic nPM1300 GPIO"
-    default y
-    depends on MFD_NPM1300
-    help
-      Support for the GPIOs of the Nordic nPM1300 PMIC.
-
-config GPIO_TCA6408
-    bool "TI TCA6408"
-    default y
-    depends on DT_HAS_TI_TCA6408_ENABLED
-    select I2C
-    help
-      Support for the TI TCA6408 I2C GPIO expander.
+rsource "Kconfig.nrf5"
+rsource "Kconfig.nrf54l"
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32"
+rsource "Kconfig.qemu"
+rsource "Kconfig.npm1300"
+rsource "Kconfig.tca6408"
 
 config GPIO_SHELL
     bool "Shell commands"

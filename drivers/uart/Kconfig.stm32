@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_STM32
+    bool "ST STM32 UART Controller"
+    default y
+    depends on DT_HAS_ST_STM32H7_UART_ENABLED
+    select CLK
+    select DMA
+    select PINCTRL
+    help
+      Support for the ST STM32H7 USART and UART controllers.
+
+config UART_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UART_STM32
+    help
+      Priority of the port interrupts.

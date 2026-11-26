@@ -8,23 +8,7 @@ menuconfig CAN
 
 if CAN
 
-config CAN_IPMS_CANFD
-    bool "IPMS CAN-CTRL controller"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB57_CAN_ENABLED
-    select CLK
-    select PINCTRL
-    select RESET
-    help
-      Support for the Fraunhofer IPMS CAN-CTRL controller, as the CAN
-      controllers of the SiFli SF32LB57, for classic CAN.
-
-config CAN_IPMS_CANFD_IRQ_PRIO
-    int "Interrupt priority"
-    default 1
-    depends on CAN_IPMS_CANFD
-    help
-      Priority of the controller interrupt.
+rsource "Kconfig.ipms_canfd"
 
 config CAN_SHELL
     bool "Shell commands"

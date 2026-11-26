@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RESET_STM32H7
+    bool "STM32H7 RCC"
+    default y
+    depends on DT_HAS_ST_STM32H743_RCC_ENABLED
+    help
+      Reset controller of the STM32H7 RCC.

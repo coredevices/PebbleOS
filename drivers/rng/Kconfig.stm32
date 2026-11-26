@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RNG_STM32
+    bool "ST STM32"
+    default y
+    depends on DT_HAS_ST_STM32_RNG_ENABLED
+    select CLK
+    help
+      Support for the ST STM32 RNG.

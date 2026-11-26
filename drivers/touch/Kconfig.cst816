@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TOUCH_CST816
+    bool "Hynitron CST816"
+    default y
+    depends on DT_HAS_HYNITRON_CST816S_ENABLED
+    select I2C
+    select CST816_FW
+    select KERNEL_SYS_WORKQ
+    select PINCTRL
+    help
+      Support for the Hynitron CST816 touch controller.

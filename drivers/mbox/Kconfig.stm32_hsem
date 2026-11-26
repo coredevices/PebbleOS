@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MBOX_STM32_HSEM
+    bool "STM32H7 hardware semaphore doorbells"
+    default y
+    depends on DT_HAS_ST_STM32_HWSPINLOCK_ENABLED
+    select CLK
+    help
+      Doorbells between the cores of a dual-core STM32H7, rung by
+      releasing a hardware semaphore.
+
+config MBOX_STM32_HSEM_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on MBOX_STM32_HSEM
