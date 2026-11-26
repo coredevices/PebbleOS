@@ -88,6 +88,12 @@ struct pbl_usbd_function {
    */
   void (*xfer_done)(uint8_t ep, int ret);
   /**
+   * Optional. The host clears the halt of endpoint @p ep of the function, its own address, with
+   * CLEAR_FEATURE. Returns whether to clear it: false keeps the endpoint halted, as a class may
+   * require until the host resets it another way, though the request succeeds.
+   */
+  bool (*clear_halt)(uint8_t ep);
+  /**
    * Optional, with @c CONFIG_USB_DEVICE_MS_OS_20. Device interface GUID of the function, as
    * "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}": Windows binds the function to WinUSB, and
    * applications find it by this GUID.
@@ -142,5 +148,16 @@ uint16_t pbl_usbd_bulk_mps(void);
  * @return Endpoint address, once pbl_usbd_enable() succeeded; else one no controller has.
  */
 uint8_t pbl_usbd_ep(const struct pbl_usbd_function *fn, uint8_t ep);
+
+/**
+ * @brief Halt an endpoint of a function, or clear its halt, as the host would with SET_FEATURE or
+ * CLEAR_FEATURE: GET_STATUS then reports it, and a transfer queued on a halted IN endpoint waits
+ * until the host clears the halt.
+ *
+ * @param ep Endpoint address, as pbl_usbd_ep() gives it.
+ * @param halt Whether to halt it.
+ * @return 0 or a negative errno.
+ */
+int pbl_usbd_ep_set_halt(uint8_t ep, bool halt);
 
 /** @} */

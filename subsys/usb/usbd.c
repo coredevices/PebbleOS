@@ -601,6 +601,20 @@ static int prv_set_interface(uint16_t iface, uint16_t alt) {
   return 0;
 }
 
+// The function owning an endpoint of the controller, and its own address for it
+static const struct pbl_usbd_function *prv_ep_function(uint8_t ep, uint8_t *local) {
+  bool in = (ep & PBL_UDC_EP_IN) != 0U;
+  uint8_t n = ep & ~PBL_UDC_EP_IN;
+
+  if (n == 0U || n >= MAX_EPS || s_num.eps[in][n].fn == 0U) {
+    return nullptr;
+  }
+
+  *local = s_num.eps[in][n].ep;
+
+  return &PBL_ITERABLE_SECTION_START(usbd_functions)[s_num.eps[in][n].fn - 1U];
+}
+
 static int prv_set_halt(uint8_t ep, bool halt) {
   int ret;
 
@@ -616,6 +630,23 @@ static int prv_set_halt(uint8_t ep, bool halt) {
   }
 
   return 0;
+}
+
+// A function may keep its endpoint halted, the request still done
+static int prv_clear_halt(uint8_t ep) {
+  const struct pbl_usbd_function *fn;
+  uint8_t local;
+
+  fn = prv_ep_function(ep, &local);
+  if (fn != nullptr && fn->clear_halt != nullptr && !fn->clear_halt(local)) {
+    return 0;
+  }
+
+  return prv_set_halt(ep, false);
+}
+
+int pbl_usbd_ep_set_halt(uint8_t ep, bool halt) {
+  return prv_set_halt(ep, halt);
 }
 
 static int prv_standard(uint8_t **data, uint16_t *len) {
@@ -675,7 +706,10 @@ static int prv_standard(uint8_t **data, uint16_t *len) {
       if (recip != PBL_USB_RECIP_ENDPOINT || setup->wValue != PBL_USB_FEATURE_ENDPOINT_HALT) {
         return -ENOTSUP;
       }
-      return prv_set_halt((uint8_t)setup->wIndex, setup->bRequest == PBL_USB_REQ_SET_FEATURE);
+      if (setup->bRequest == PBL_USB_REQ_SET_FEATURE) {
+        return prv_set_halt((uint8_t)setup->wIndex, true);
+      }
+      return prv_clear_halt((uint8_t)setup->wIndex);
     default:
       return -ENOTSUP;
   }
@@ -839,22 +873,17 @@ static void prv_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const u
 }
 
 static void prv_xfer_done(const struct pbl_udc *udc, uint8_t ep, int ret, void *arg) {
-  bool in = (ep & PBL_UDC_EP_IN) != 0U;
-  uint8_t n = ep & ~PBL_UDC_EP_IN;
   const struct pbl_usbd_function *fn;
+  uint8_t local;
 
-  if (n == 0U) {
+  if ((ep & ~PBL_UDC_EP_IN) == 0U) {
     prv_ep0_done(ep, ret);
     return;
   }
 
-  if (n >= MAX_EPS || s_num.eps[in][n].fn == 0U) {
-    return;
-  }
-
-  fn = &PBL_ITERABLE_SECTION_START(usbd_functions)[s_num.eps[in][n].fn - 1U];
-  if (fn->xfer_done != nullptr) {
-    fn->xfer_done(s_num.eps[in][n].ep, ret);
+  fn = prv_ep_function(ep, &local);
+  if (fn != nullptr && fn->xfer_done != nullptr) {
+    fn->xfer_done(local, ret);
   }
 }
 

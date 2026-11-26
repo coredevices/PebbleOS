@@ -138,6 +138,14 @@ static void prv_rx_start(void) {
 }
 ```
 
+A function halts its own endpoints with `pbl_usbd_ep_set_halt()`, as the
+host would with `SET_FEATURE`: `GET_STATUS` then reports the halt, and a
+transfer queued on a halted IN endpoint goes once the host clears it. When
+the host clears the halt of an endpoint with `CLEAR_FEATURE`, the stack asks
+the function's `clear_halt(ep)` first, if it has one: returning false keeps
+the endpoint halted, though the request succeeds, as a class may need until
+the host resets it another way.
+
 `PBL_USBD_FUNCTION_DECLARE()` lets code refer to the function before
 `PBL_USBD_FUNCTION_DEFINE()`. The host reads the numbers of the device from
 the descriptors; tools that select an endpoint should look it up there
