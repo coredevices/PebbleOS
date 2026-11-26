@@ -132,7 +132,7 @@ static int prv_erase(uint32_t end) {
   uint32_t to = PBL_MIN(PBL_DIV_ROUND_UP(end, ss) * ss, part.size);
   int ret;
 
-  if (end <= s_dfu.erased_end) {
+  if (end <= s_dfu.erased_end || !pbl_flash_needs_erase(FLASH)) {
     return 0;
   }
 
