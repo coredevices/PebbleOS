@@ -41,7 +41,7 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
   int ret;
 
   if ((flags & (PBL_GPIO_INPUT | PBL_GPIO_OUTPUT)) == 0U) {
-    return -EINVAL;
+    return -ENOTSUP;
   }
 
   if ((flags & PBL_GPIO_PULL_UP) != 0U) {

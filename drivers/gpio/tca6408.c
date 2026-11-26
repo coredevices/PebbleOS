@@ -46,7 +46,7 @@ static int prv_configure_locked(const struct pbl_tca6408 *dev, uint8_t pin, uint
   } else if (flags & PBL_GPIO_INPUT) {
     config = prv_update(state->config, pin, true);
   } else {
-    return -EINVAL;
+    return -ENOTSUP;
   }
 
   if (config == state->config) {

@@ -51,10 +51,6 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
   const struct pbl_gpio_nrf54l *gpio = prv_port(port);
   uint32_t cnf;
 
-  if ((flags & (PBL_GPIO_INPUT | PBL_GPIO_OUTPUT)) == 0U) {
-    return -EINVAL;
-  }
-
   if ((flags & PBL_GPIO_PULL_UP) != 0U) {
     cnf = PBL_FIELD_PREP(GPIO_PIN_CNF_PULL_MASK, GPIO_PIN_CNF_PULL_UP);
   } else if ((flags & PBL_GPIO_PULL_DOWN) != 0U) {

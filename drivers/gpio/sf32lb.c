@@ -209,7 +209,7 @@ static int prv_configure(const struct pbl_gpio_port *port, uint8_t pin, uint32_t
   uint32_t bit = GPIO_PIN_BIT(pin);
 
   if ((flags & (PBL_GPIO_INPUT | PBL_GPIO_OUTPUT)) == 0U) {
-    return -EINVAL;
+    return -ENOTSUP;
   }
 
   pbl_irq_lock();

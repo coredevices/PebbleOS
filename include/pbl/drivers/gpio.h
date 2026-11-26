@@ -28,6 +28,11 @@
  * bool active = pbl_gpio_get(&dev->int_gpio) > 0;
  * @endcode
  *
+ * A pin configured with neither @ref PBL_GPIO_INPUT nor @ref PBL_GPIO_OUTPUT, i.e.
+ * @ref PBL_GPIO_DISCONNECTED, is released: not driven and its input buffer off, with only the
+ * pulls of its wiring flags applied. The board then sets the level of the line, e.g. through
+ * @c GPIO_PULL_DOWN or an external pull.
+ *
  * A port that can interrupt has a child interrupt controller whose line numbers are the pin
  * numbers. Drivers whose pin is described as a GPIO, such as buttons, get its line with
  * pbl_gpio_to_irq():
@@ -61,6 +66,8 @@
  * Passed to pbl_gpio_configure(), OR'ed with the wiring flags.
  * @{
  */
+/** Not driven, input buffer off; only the wiring pulls apply. */
+#define PBL_GPIO_DISCONNECTED 0U
 /** Input. */
 #define PBL_GPIO_INPUT (1U << 4)
 /** Output, keeping the current level. */
@@ -89,7 +96,10 @@ extern const struct pbl_device_class pbl_gpio_port_class;
 
 /** @brief Port driver operations. Levels and flags are physical. */
 struct pbl_gpio_port_ops {
-  /** Configure a pin. Returns 0 or a negative errno. */
+  /**
+   * Configure a pin. Returns 0 or a negative errno, @c -ENOTSUP for a mode the port lacks,
+   * e.g. disconnected.
+   */
   int (*configure)(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags);
   /** Read a pin. Returns 0 or 1, or a negative errno. */
   int (*get)(const struct pbl_gpio_port *port, uint8_t pin);
@@ -172,7 +182,8 @@ static inline bool pbl_gpio_is_connected(const struct pbl_gpio *gpio) {
  *
  * @param gpio Pin, on a ready port.
  * @param flags Configuration flags, OR'ed with the pin's wiring flags.
- * @return 0, @c -EINVAL if the pin is not on the port, or another negative errno.
+ * @return 0, @c -EINVAL if the pin is not on the port, @c -ENOTSUP if the port does not
+ * support the configuration, or another negative errno.
  */
 int pbl_gpio_configure(const struct pbl_gpio *gpio, uint32_t flags);
 
