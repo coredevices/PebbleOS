@@ -39,6 +39,10 @@
   - Nordic nRF54L15 DK development kit
   - ```{thumbnail} nrf54l15dk/images/nrf54l15dk.webp
     ```
+* - [`nrf54lm20dk`](nrf54lm20dk/index.md)
+  - Nordic nRF54LM20 DK development kit
+  - ```{thumbnail} nrf54lm20dk/images/nrf54lm20dk.webp
+    ```
 * - `qemu_flint`
   - Flint platform emulator (e.g. Pebble 2 Duo)
   -
@@ -73,4 +77,5 @@ stm32h747i_disco/index.md
 nrf52840dk/index.md
 nrf52dk/index.md
 nrf54l15dk/index.md
+nrf54lm20dk/index.md
 ```
