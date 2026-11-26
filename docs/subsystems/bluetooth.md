@@ -45,8 +45,16 @@ What the subsystem has:
 | Bonds | `pbl/bluetooth/bond.h` | The store, and what is in it |
 | Pairing | `pbl/bluetooth/gap.h`, `pairing_confirm.h`, `pairability.h` | Who may pair, and the confirmation by the user |
 | Response time | `pbl/bluetooth/responsiveness.h` | The connection parameters, see below |
-| GATT services | `subsys/bluetooth/services/` | What the watch serves |
+| Advertising | `pbl/bluetooth/adv.h` | What is on air, and at which interval, see below |
+| GATT services | `pbl/bluetooth/gatts.h`, `subsys/bluetooth/services/` | What the device serves, see below |
 | GATT clients | `pbl/bluetooth/clients/` | What it uses of a peer, see below |
+
+The first four are the subsystem proper, `CONFIG_BT`. Advertising, the GATT
+server helpers and the clients each have an option of their own and build
+with NimBLE alone. Changes to the bonds and pairings are reported to listeners
+(`PBL_BT_BOND_LISTENER_DEFINE()`, `PBL_BT_PAIRING_LISTENER_DEFINE()`). With
+`CONFIG_SHELL` the subsystem has the `bt` command set, to which its users add
+their commands.
 
 Beneath it sits NimBLE (`third_party/nimble`), which can also be used on its
 own, with
@@ -83,6 +91,10 @@ peers and their CCCDs where its backend, `NIMBLE_STORE_BACKEND`, says:
 | `NIMBLE_STORE_BACKEND_SETTINGS` | Everything in `/nimble_store`, along with a local IRK generated once. The default with `CONFIG_SETTINGS` |
 | `NIMBLE_STORE_BACKEND_PRF` | One bonding in the PRF store; the local IRK is left to whoever uses the store |
 
+With `NIMBLE_STORE_SETTINGS_PRF_MIRROR` the settings backend shares its
+bonding with the PRF store as well: the one written last goes there, and the
+one found there is taken when the store loads.
+
 The PRF store (`pbl/bluetooth/prf_store.h`, `BT_PRF_STORE`, in
 `subsys/bluetooth/prf_store`) is a flash partition of its own with the one
 bonding and the root keys the recovery firmware and the normal firmware
@@ -106,10 +118,9 @@ deletes them, and reports the ones the stack adds, changes and deletes.
 The firmware builds on that in its Bluetooth service:
 
 - It keeps one bond, the phone's: a new one replaces the others.
-- The normal firmware keeps the store in the settings file and copies its bond
-  to the PRF store, for the recovery firmware. At start it takes the pairing
-  of the PRF store instead, which is how a bond made in recovery firmware, or
-  by firmware that kept bonds in a database of its own, comes in.
+- The normal firmware keeps the store in the settings file, mirrored to the PRF
+  store for the recovery firmware. That is also how a bond made in recovery
+  firmware, or by firmware that kept bonds in a database of its own, comes in.
 - The recovery firmware has no filesystem and uses the PRF backend.
 - Both take the local IRK from the root keys in the PRF store, so that a phone
   sees one watch. The phone's name is kept there as well.
@@ -125,6 +136,8 @@ connection with `pbl_bt_responsiveness_request()`, with a request it owns
 | --- | --- | --- | --- |
 | `PBL_BT_RESPONSE_TIME_MAX` | 45 to 60 ms | 4 | 6 s |
 | `PBL_BT_RESPONSE_TIME_MIN` | 15 ms | 0 | 6 s |
+
+These are the defaults of the `BT_RESPONSE_TIME_*` options.
 
 The interval is the time between two connection events, where both ends meet
 on a channel; the latency is the number of them the peripheral may skip when
@@ -192,7 +205,7 @@ gateway connects, and stops them when it goes:
 | Service | Client | What for |
 | --- | --- | --- |
 | PPoGATT | `subsys/pp/transports/gatt/` | Sessions with the phone app, and with other apps: each hosts an instance of the service |
-| Generic Attribute | `gateway.c` | Service Changed: when the phone indicates it, every client looks for its service again |
+| Generic Attribute | The Service Changed client | When the phone indicates it, every client looks for its service again |
 | ANCS | `pebble/services/notifications/ancs/ancs.c`, on the ANCS client | iOS notifications |
 | AMS | `pebble/services/music/ams.c`, on the AMS client | iOS media control |
 
@@ -201,13 +214,41 @@ phone app comes first. What a client reports on the NimBLE host thread is
 passed on to KernelMain, where the sessions (queueing, timeouts, the liveness
 check, the music service, the PPoGATT state machine) run.
 
+## GATT services
+
+`pbl/bluetooth/gatts.h` (`BT_GATT_SERVER`) is what the services of the device
+share: adding their definitions, notifying a value, and the order they are
+added in. Each service is defined with `PBL_BT_GATTS_SERVICE_DEFINE()` and a
+position, and `pbl_bt_start()` adds them by it. The order sets the attribute
+handles, which bonded peers cache, so it does not change for services that
+shipped:
+
+| Position | Service | Where |
+| --- | --- | --- |
+| 10 | Device Information | `subsys/bluetooth/services/dis` |
+| 20 | Pebble Pairing | `subsys/bluetooth/services/pps` |
+| 30 | Battery | `subsys/bluetooth/services/bas` |
+| 40 | Reversed PPoGATT | `subsys/pp/transports/gatt`, with the transport that uses it |
+
 ## Advertising
 
-The firmware advertises with NimBLE directly, from its Bluetooth service
-(`pebble/services/bluetooth/advertising.c`): to be discovered while there is
-no bond or a pairing screen is open, and for the bonded phone to reconnect
-otherwise, with an empty payload. It starts at a 20 ms interval and falls back
-to 1022.5 ms, and is silent while connected.
+`pbl/bluetooth/adv.h` (`BT_ADV`) keeps connectable advertising in line with
+what there is to advertise. Whoever advertises describes its advertisements,
+each a function that sets the payloads, in order of priority, and enables them
+as they apply. The first one enabled is on air while there is no connection:
+at a short interval for a while, then at a long one. Advertising resumes when
+a connection ends or fails to establish, is tried again a second later when
+the stack refuses it, and is aired anew when the host synchronizes with its
+controller again. A peer that connects and drops over and over stops bringing
+the short interval back.
+
+The firmware has two (`pebble/services/bluetooth/advertising.c`): one to be
+discovered, while there is no bond or a pairing screen is open, and one for
+the bonded phone to reconnect to, with an empty payload. They air at 20 ms,
+then at 1022.5 ms. The second one is behind
+`SERVICE_BLUETOOTH_ADV_RECONNECT`, which the recovery firmware leaves off: it
+only advertises to be discovered. A new phone, or the bonded one after it
+deleted its side of the bond, can then always find it.
 
 ## Modules
 
