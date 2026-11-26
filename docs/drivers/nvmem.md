@@ -15,4 +15,5 @@ devicetree `nvmem-cells` entry.
 
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
+| Nordic nRF FICR | `nordic,nrf54l15-ficr` | `CONFIG_NVMEM_NRF_FICR` |
 | SiFli SF32LB eFuse | `sifli,sf32lb57-efuse`, `sifli,sf32lb52-efuse` | `CONFIG_NVMEM_SF32LB` |
