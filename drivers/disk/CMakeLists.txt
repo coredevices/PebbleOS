@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(disk.c)
+pbl_library_sources_ifdef(CONFIG_DISK_RAM ram.c)

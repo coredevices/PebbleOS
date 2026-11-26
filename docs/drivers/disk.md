@@ -15,3 +15,13 @@ them itself.
 | Header | `pbl/drivers/disk.h` |
 | Kconfig | `CONFIG_DISK`, enabled by the application |
 | API | {apidoc}`API reference <drivers_disk>` |
+
+## Drivers
+
+| Driver | Device | Kconfig |
+| --- | --- | --- |
+| RAM disk | `pbl_disk_ram` (`pbl/drivers/disk/ram.h`) | `CONFIG_DISK_RAM` |
+
+The RAM disk has no hardware to describe, so it is not a devicetree node: the
+driver defines its one device, `CONFIG_DISK_RAM_SIZE` KiB of the
+application's RAM in 512-byte sectors, zeroed at boot.
