@@ -27,6 +27,8 @@
 struct pbl_gpio_nrf54l_state {
   // Pin of each GPIOTE channel
   uint8_t channels[PBL_GPIO_NRF54L_GPIOTE_CHANNELS];
+  // Pins that wake the system from System OFF
+  uint32_t wake;
 };
 /** @endcond */
 

@@ -7,6 +7,7 @@
 #include <pbl/drivers/gpio/nrf54l.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/reboot.h>
 #include <pbl/util/bits.h>
 
 #include <hardware/nrf54l_gpio.h>
@@ -15,6 +16,11 @@
 static_assert(PBL_GPIO_NRF54L_GPIOTE_CHANNELS >= NRF54L_GPIOTE_NUM_CHANNELS);
 
 #define CHANNEL_FREE 0xffU
+
+#define MAX_PORTS 3U
+
+// The ports, by index, for arming their wake pins at power-off
+static const struct pbl_gpio_nrf54l *s_ports[MAX_PORTS];
 
 static const struct pbl_gpio_nrf54l *prv_port(const struct pbl_gpio_port *port) {
   return PBL_CONTAINER_OF(port, const struct pbl_gpio_nrf54l, port);
@@ -181,11 +187,62 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+  const struct pbl_gpio_nrf54l *gpio = prv_intc_port(intc);
+
+  pbl_irq_lock();
+  if (on) {
+    gpio->state->wake |= PBL_BIT(hwirq);
+  } else {
+    gpio->state->wake &= ~PBL_BIT(hwirq);
+  }
+  pbl_irq_unlock();
+
+  return 0;
+}
+
 const struct pbl_intc_ops pbl_gpio_nrf54l_intc_ops = {
   .configure = prv_intc_configure,
   .enable = prv_intc_enable,
   .disable = prv_intc_disable,
+  .set_wake = prv_intc_set_wake,
 };
+
+// Only SENSE wakes from System OFF; sensing the level opposite to the current one keeps a pin
+// held at power-off from waking at once
+static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
+  for (uint32_t index = 0U; index < MAX_PORTS; index++) {
+    const struct pbl_gpio_nrf54l *gpio = s_ports[index];
+
+    if (gpio == nullptr) {
+      continue;
+    }
+
+    for (uint32_t pin = 0U; pin < 32U; pin++) {
+      int ch;
+      bool high;
+
+      if ((gpio->state->wake & PBL_BIT(pin)) == 0U) {
+        continue;
+      }
+
+      ch = prv_channel_find(gpio, (uint8_t)pin);
+      if (ch >= 0) {
+        prv_gpiote_putreg(gpio, NRF54L_GPIOTE_CONFIG_OFFSET(ch), 0U);
+      }
+
+      high = (prv_getreg(gpio, NRF54L_GPIO_IN_OFFSET) & PBL_BIT(pin)) != 0U;
+      pbl_modifyl(GPIO_PIN_CNF_SENSE_MASK,
+                  PBL_FIELD_PREP(GPIO_PIN_CNF_SENSE_MASK,
+                                 high ? GPIO_PIN_CNF_SENSE_LOW : GPIO_PIN_CNF_SENSE_HIGH),
+                  gpio->base + NRF54L_GPIO_PIN_CNF_OFFSET(pin));
+    }
+  }
+}
+
+// Last, so that power-off handlers that end the system run first
+PBL_SYS_OFF_HANDLER_DEFINE(gpio_nrf54l_wake, PBL_SYS_OFF_POWER_OFF, PBL_SYS_OFF_PRIO_LOW,
+                           prv_arm_wake, nullptr);
 
 void pbl_gpio_nrf54l_irq_handler(const struct pbl_gpio_nrf54l *gpio) {
   uint32_t inten = prv_gpiote_getreg(gpio, NRF54L_GPIOTE_INTENSET_OFFSET);
@@ -213,6 +270,10 @@ int pbl_gpio_nrf54l_init(const struct pbl_device *dev) {
 
   for (uint32_t ch = 0U; ch < gpio->num_channels; ch++) {
     gpio->state->channels[ch] = CHANNEL_FREE;
+  }
+
+  if (gpio->index < MAX_PORTS) {
+    s_ports[gpio->index] = gpio;
   }
 
   if (gpio->gpiote != 0U) {
