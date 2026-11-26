@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/spi/nordic,nrf54l15-spim.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L SPIM
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  SPI controller with EasyDMA of the nRF54L series. Its pins are selected in
+  its own registers, from sck-gpios, mosi-gpios, miso-gpios and cs-gpios.
+  The prescaler divides its core clock by an even number. SPIM00 runs from
+  the 128 MHz clock of the CPU domain up to 32 MHz; the others run from
+  16 MHz up to 8 MHz, and share their registers, interrupt and address with
+  the TWIM, UARTE and other serial functions of the same instance, each a
+  sibling node of its own, of which only one may be enabled.
+
+allOf:
+  - $ref: /schemas/spi/spi-controller.yaml#
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-spim
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clock-frequency:
+    description: Core clock the prescaler divides, in Hz.
+
+  max-frequency:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: Highest SCK frequency, in Hz.
+
+  sck-gpios:
+    maxItems: 1
+
+  mosi-gpios:
+    maxItems: 1
+
+  miso-gpios:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clock-frequency
+  - max-frequency
+  - sck-gpios
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    spi@5004a000 {
+        compatible = "nordic,nrf54l15-spim";
+        reg = <0x5004a000 0x1000>;
+        interrupts = <74>;
+        clock-frequency = <128000000>;
+        max-frequency = <32000000>;
+        sck-gpios = <&gpio2 1 0>;
+        mosi-gpios = <&gpio2 2 0>;
+        miso-gpios = <&gpio2 4 0>;
+        cs-gpios = <&gpio2 5 1>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+    };
