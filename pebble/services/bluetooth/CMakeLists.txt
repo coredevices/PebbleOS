@@ -10,9 +10,10 @@ set(sources
   link.c
   local_id.c
   pairability.c
+  pp_ble_control.c
 )
 if(NOT CONFIG_RECOVERY_FW)
-  list(APPEND sources bt_settings_normal.c pp_ble_control.c)
+  list(APPEND sources bt_settings_normal.c)
 else()
   list(APPEND sources bt_settings_prf.c)
 endif()
