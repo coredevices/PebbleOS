@@ -26,7 +26,9 @@ seconds it gets (default 10). ``boards`` limits it to the boards that have
 what it needs (default: all of them), and ``skip`` names those that lack it.
 ``roles`` names the roles it uses: boards without them, after the board's and
 the sample's roles files, are skipped too. ``addons`` are plugged into the
-board, from ``boards/addons``, and give it roles too. ``integration`` names
+board, from ``boards/addons``, and give it roles too: a list for every board,
+or a mapping of board names to lists, as ``{sf32lb57_dpi_hdk: [sifli_lcm_1p85]}``,
+for boards that take different ones. ``integration`` names
 the boards it covers enough to check on, with their revision for boards that
 have revisions: with ``--integration`` it is built and run on each of those,
 and a sample naming none is an error. With ``build_only`` it is only built.
@@ -77,7 +79,7 @@ class Sample:
     boards: tuple = ()
     skip: tuple = ()
     roles: tuple = ()
-    addons: tuple = ()
+    addons: tuple | dict = ()
     integration: tuple = ()
     build_only: bool = False
 
@@ -102,6 +104,13 @@ class Sample:
         """Whether ``board`` is one to check the sample on in integration mode."""
         return any(_names_board(entry, board) for entry in self.integration)
 
+    def addons_for(self, board):
+        """The add-ons plugged into ``board``, given as ``name[@revision][/core]``."""
+        if isinstance(self.addons, dict):
+            name = board.partition("/")[0].partition("@")[0]
+            return tuple(self.addons.get(name, ()))
+        return self.addons
+
     def missing_roles(self, srcdir, board):
         """The roles the sample uses that ``board`` gives no device."""
         if not self.roles:
@@ -116,7 +125,7 @@ class Sample:
                 spec.name,
                 spec.revision,
                 self.path,
-                self.addons,
+                self.addons_for(board),
                 spec.core,
                 spec.variant,
             )
@@ -225,7 +234,6 @@ def load(path, name=None):
         ("boards", "board"),
         ("skip", "board"),
         ("roles", "role"),
-        ("addons", "add-on"),
         ("integration", "board"),
     ):
         lists[key] = data.get(key, [])
@@ -235,6 +243,19 @@ def load(path, name=None):
             raise SampleError(
                 f"invalid {manifest}: {key} must be a list of {what} names"
             )
+
+    addons = data.get("addons", [])
+    per_board = isinstance(addons, dict)
+    if not all(
+        isinstance(k, str)
+        and isinstance(v, list)
+        and all(isinstance(a, str) for a in v)
+        for k, v in (addons.items() if per_board else [("", addons)])
+    ):
+        raise SampleError(
+            f"invalid {manifest}: addons must be a list of add-on names, or a mapping "
+            "of board names to such lists"
+        )
 
     build_only = data.get("build_only", False)
     if not isinstance(build_only, bool):
@@ -249,7 +270,7 @@ def load(path, name=None):
         boards=tuple(lists["boards"]),
         skip=tuple(lists["skip"]),
         roles=tuple(lists["roles"]),
-        addons=tuple(lists["addons"]),
+        addons={k: tuple(v) for k, v in addons.items()} if per_board else tuple(addons),
         integration=tuple(lists["integration"]),
         build_only=build_only,
     )

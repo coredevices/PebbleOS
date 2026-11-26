@@ -84,3 +84,28 @@ def test_integration_rejects_sample_without_boards(found):
     with pytest.raises(samples.SampleError, match="board: c$"):
         samples.plan(found + [sample("c")], integration=True)
     assert samples.plan(found + [sample("c")], "asterix")[-1][1].name == "c"
+
+
+def test_addons_per_board(tmp_path):
+    (tmp_path / "sample.yml").write_text(
+        "description: d\nexpect: [x]\naddons: {hdk: [lcd]}\nintegration: [hdk]\n"
+    )
+    s = samples.load(str(tmp_path))
+    assert s.addons_for("hdk") == ("lcd",)
+    assert s.addons_for("hdk@v2/m7") == ("lcd",)
+    assert s.addons_for("disco/m7") == ()
+
+
+def test_addons_for_every_board(tmp_path):
+    (tmp_path / "sample.yml").write_text(
+        "description: d\nexpect: [x]\naddons: [lcd]\nintegration: [hdk]\n"
+    )
+    assert samples.load(str(tmp_path)).addons_for("disco") == ("lcd",)
+
+
+def test_addons_must_name_lists(tmp_path):
+    (tmp_path / "sample.yml").write_text(
+        "description: d\nexpect: [x]\naddons: {hdk: lcd}\nintegration: [hdk]\n"
+    )
+    with pytest.raises(samples.SampleError, match="addons must be"):
+        samples.load(str(tmp_path))
