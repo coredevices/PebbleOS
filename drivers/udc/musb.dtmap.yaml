@@ -19,6 +19,6 @@ args:
   - prop: sifli,fifo-size
   - phandle: vbus-charger
     as: charger
-    default: nullptr
+    optional: true
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true

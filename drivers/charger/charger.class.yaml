@@ -6,5 +6,7 @@ type: struct pbl_charger
 include: pbl/drivers/charger.h
 provides:
   charger: "&{sym}"
+absent:
+  charger: nullptr
 roles:
   charger: CHARGER

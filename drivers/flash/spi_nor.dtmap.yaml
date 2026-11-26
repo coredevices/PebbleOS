@@ -9,7 +9,7 @@ args:
   - name: true
   - parent: spi_mem
   - supply: vcc
-    default: nullptr
+    optional: true
   - prop: parallel-memories
     item: "1"
     cells: 2

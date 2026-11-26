@@ -14,4 +14,4 @@ args:
     default: 100000
   - pinctrl: default
   - dma: rx
-    default: nullptr
+    optional: true

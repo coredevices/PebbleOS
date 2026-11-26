@@ -17,5 +17,5 @@ args:
     index: 0
   - hwlock: 0
     of: interrupt-parent
-    default: PBL_HWSPINLOCK_NONE
+    optional: true
   - irq: 0

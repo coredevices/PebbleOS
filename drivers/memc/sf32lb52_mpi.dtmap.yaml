@@ -13,6 +13,6 @@ args:
   - reg: mpi_mm_sbus
   - clock: 0
   - pinctrl: default
-    default: nullptr
+    optional: true
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true

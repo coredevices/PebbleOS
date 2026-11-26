@@ -30,5 +30,5 @@ args:
     of: memory-region
     default: 0
   - memory: memory-region
-    default: nullptr
+    optional: true
   - pinctrl: default

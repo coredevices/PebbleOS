@@ -11,7 +11,7 @@ args:
   - prop: keyup-threshold-microvolt
   - irq: 0
   - pinctrl: default
-    default: nullptr
+    optional: true
   - list: []
     item:
       define: PBL_ADC_KEYS_KEY

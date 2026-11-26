@@ -6,3 +6,5 @@ type: struct pbl_audio_codec
 include: pbl/drivers/audio.h
 provides:
   codec: "&{sym}"
+absent:
+  codec: nullptr

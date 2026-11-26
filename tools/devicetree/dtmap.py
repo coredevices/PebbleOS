@@ -60,9 +60,7 @@ SPEC_KEYS = {
     "masters",
 }
 CHILDREN_KEYS = {"node", "names", "property"}
-# A GPIO list entry with a 0 phandle
-UNCONNECTED_GPIO = "PBL_GPIO(nullptr, 0, 0)"
-CLASS_KEYS = {"class", "type", "include", "provides", "device", "roles"}
+CLASS_KEYS = {"class", "type", "include", "provides", "absent", "device", "roles"}
 ROLE_KEYS = {"symbol", "include"}
 PINCTRL_KEYS = {"define", "pin", "pinmux", "flags", "values"}
 IDS_KEYS = {"cell", "header", "prefix", "values"}
@@ -118,7 +116,37 @@ ARG_OPTIONS = {
     "all",
     "values",
     "cells",
+    "variadic",
 }
+# What other kinds of argument refer to, when not themselves
+PROVIDED_KINDS = {"supply": "regulator", "memory": "ram"}
+
+
+def absent_values(classes):
+    """What each kind of argument stands for without a provider, from the classes."""
+    values = {}
+    for cls in classes.values():
+        for kind, value in cls.get("absent", {}).items():
+            if values.setdefault(kind, value) != value:
+                raise DtError(
+                    f"class '{cls['class']}': another class has absent '{kind}'"
+                )
+    return values
+
+
+def provided_kind(arg):
+    """The kind of what an argument refers to, as a class provides it."""
+    kind = next(iter(arg.keys() & ARG_KINDS))
+    if kind in ("self", "parent", "phandle"):
+        return arg.get("as", arg[kind])
+    return arg.get("as", PROVIDED_KINDS.get(kind, kind))
+
+
+def absent_value(absent, arg):
+    """What an absent optional argument stands for, None to leave it out."""
+    if arg.get("all") or arg.get("variadic") or "list" in arg:
+        return None
+    return absent.get(provided_kind(arg))
 
 
 def c_ident(name):
@@ -191,6 +219,7 @@ class Spec:
             if name not in classes:
                 raise self._error(f"unknown class '{name}'")
         self.class_info = {name: classes[name] for name in self.classes}
+        self.absent = absent_values(classes)
         symbol = data.get("symbol", {})
         if not isinstance(symbol, dict):
             if len(self.classes) != 1:
@@ -227,7 +256,7 @@ class Spec:
         self._check_args(self.args)
         # Arguments a node may lack end a variadic macro, so only they may follow one
         trailing = [
-            bool(arg.get("optional"))
+            (bool(arg.get("optional")) and absent_value(self.absent, arg) is None)
             or "list" in arg
             or ("prop" in arg and "item" in arg)
             for arg in self.args
@@ -319,6 +348,14 @@ def load_class(path, data):
         raise error(
             "roles: not a mapping of each role to the Kconfig symbol needing it"
         )
+    absent = data.get("absent", {})
+    if not isinstance(absent, dict) or not all(
+        isinstance(value, str) for value in absent.values()
+    ):
+        raise error("absent: not a mapping of each kind to its C value")
+    unknown = sorted(absent.keys() - data.get("provides", {}).keys() - {data["class"]})
+    if unknown:
+        raise error(f"absent: {unknown} neither provided nor the class")
     for role, config in roles.items():
         if not re.fullmatch(r"[a-z][a-z0-9_]*", str(role)):
             raise error(f"role '{role}': not a lowercase C identifier")
@@ -565,6 +602,12 @@ class Generator:
         self.tree = tree
         self.specs = as_spec_lists(specs)
         self.config = config
+        self.absent = {
+            kind: value
+            for found in self.specs.values()
+            for spec in found
+            for kind, value in spec.absent.items()
+        }
         self.outputs = {name: Output() for name in instance_files(specs)}
         self.out = None
         self.declarations = []
@@ -1420,7 +1463,7 @@ class Generator:
             entries = self._phandles(src, prop, "#gpio-cells", empty=True)
             if arg.get("all"):
                 return ", ".join(
-                    UNCONNECTED_GPIO
+                    self._unconnected(src, prop)
                     if entry is None
                     else self._provided(src, entry[0], "gpio", entry[1])
                     for entry in entries
@@ -1429,12 +1472,19 @@ class Generator:
             if index >= len(entries):
                 raise src.error(f"no entry {index} in '{prop}'")
             if entries[index] is None:
-                return UNCONNECTED_GPIO
+                return self._unconnected(src, prop)
             target, cells = entries[index]
             return self._provided(src, target, "gpio", cells)
         if kind == "pinctrl":
             return self._pinctrl(src, key) if node.has("pinctrl-names") else None
         raise AssertionError(kind)
+
+    def _unconnected(self, src, prop):
+        if "gpio" not in self.absent:
+            raise src.error(
+                f"a 0 phandle in '{prop}', but no class has an absent 'gpio'"
+            )
+        return self.absent["gpio"]
 
     @staticmethod
     def _may_lack(arg):
@@ -1443,7 +1493,9 @@ class Generator:
     def _arg(self, dev, arg):
         value = self._value(dev, arg)
         if value is None and arg.get("optional"):
-            return None
+            value = absent_value(self.absent, arg)
+            if value is None:
+                return None
         if value is None:
             if "default" not in arg:
                 raise dev.error(f"missing what {arg} needs")

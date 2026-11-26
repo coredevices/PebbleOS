@@ -9,7 +9,7 @@ args:
   - name: true
   - reg: 0
   - clock: 0
-    default: PBL_CLK(nullptr, 0)
+    optional: true
   - consumers: mboxes
     default: "1"
   - irq: 0

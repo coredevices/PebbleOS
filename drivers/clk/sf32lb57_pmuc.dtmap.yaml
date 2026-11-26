@@ -13,7 +13,7 @@ args:
     of: sifli,hpsys-rcc
   - clock: hxt48
   - clock: lxt32
-    default: "{}"
+    optional: true
   - assigned-clocks: PBL_CLK_ASSIGNED
     optional: true
 ids:

@@ -54,6 +54,7 @@ CLASSES = {
         "type": "struct port",
         "include": "gpio.h",
         "provides": {"gpio": "PIN(&{sym}, {0}, {1})"},
+        "absent": {"gpio": "NO_PIN"},
     },
 }
 
@@ -1481,7 +1482,7 @@ def test_disabled_remote_fails(tmp_path):
         # A 0 phandle leaves a chip select without a GPIO
         (
             "<&gpio 1 0>, <0>, <&gpio 2 1>",
-            "PIN(&dt_gpio, 1, 0), PBL_GPIO(nullptr, 0, 0), PIN(&dt_gpio, 2, 1)",
+            "PIN(&dt_gpio, 1, 0), NO_PIN, PIN(&dt_gpio, 2, 1)",
         ),
     ],
 )
@@ -1875,17 +1876,71 @@ OPTIONAL_ARGS = [
 ]
 
 
-def test_argument_after_an_absent_optional_fails(tmp_path):
-    with pytest.raises(DtError, match=r"/bus@2000/sensor@30: has what .*enable"):
-        sensor_generate(tmp_path, OPTIONAL_ARGS, "enable-gpios = <&gpio 5 0>;")
-
-
-def test_trailing_optionals_may_be_absent(tmp_path):
-    gen = sensor_generate(tmp_path, OPTIONAL_ARGS, "reset-gpios = <&gpio 5 0>;")
-    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30, PIN(&dt_gpio, 5, 0));" in body(gen)
-    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30);" in body(
+def test_absent_optional_is_the_absent_value_of_its_class(tmp_path):
+    gen = sensor_generate(tmp_path, OPTIONAL_ARGS, "enable-gpios = <&gpio 5 0>;")
+    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30, NO_PIN, PIN(&dt_gpio, 5, 0));" in body(
+        gen
+    )
+    assert "SENSOR_DT_DEFINE(dt_sensor, 0x30, NO_PIN, NO_PIN);" in body(
         sensor_generate(tmp_path, OPTIONAL_ARGS)
     )
+
+
+OPTIONAL_FIRST = {
+    **LIST_SPECS["acme,mem"],
+    "args": [{"gpio": "reset", "optional": True}, {"reg": 0}],
+}
+
+
+def test_optional_with_an_absent_value_may_come_first():
+    spec("acme,mem", OPTIONAL_FIRST)
+
+
+def test_optional_without_an_absent_value_must_come_last():
+    gpio = {k: v for k, v in CLASSES["gpio"].items() if k != "absent"}
+    with pytest.raises(DtError, match="must come last"):
+        dtmap.Spec("acme,mem", OPTIONAL_FIRST, {**CLASSES, "gpio": gpio})
+
+
+def test_absent_of_a_kind_the_class_does_not_provide_fails():
+    with pytest.raises(
+        DtError, match=r"absent: \['irq'\] neither provided nor the class"
+    ):
+        dtmap.load_class(
+            "x.class.yaml", {**CLASSES["gpio"], "absent": {"irq": "NO_IRQ"}}
+        )
+
+
+def test_absent_of_the_class_itself():
+    data = {"class": "pin", "type": "struct pin", "include": "pin.h"}
+    dtmap.load_class("x.class.yaml", {**data, "absent": {"pin": "nullptr"}})
+
+
+@pytest.mark.parametrize(
+    ("arg", "expected"),
+    [
+        ({"supply": "vdd"}, "NO_REG"),
+        ({"memory": "memory-region"}, "NO_RAM"),
+        ({"self": "codec"}, "NO_CODEC"),
+        ({"phandle": "vbus-charger", "as": "charger"}, "NO_CHARGER"),
+        ({"dma": "rx", "variadic": True}, None),
+    ],
+)
+def test_absent_value_of_what_an_argument_refers_to(arg, expected):
+    absent = {
+        "regulator": "NO_REG",
+        "ram": "NO_RAM",
+        "codec": "NO_CODEC",
+        "charger": "NO_CHARGER",
+        "dma": "NO_DMA",
+    }
+    assert dtmap.absent_value(absent, {**arg, "optional": True}) == expected
+
+
+def test_classes_disagreeing_on_an_absent_value_fail():
+    other = {**CLASSES["gpio"], "class": "gpio2", "absent": {"gpio": "NONE"}}
+    with pytest.raises(DtError, match="another class has absent 'gpio'"):
+        dtmap.absent_values({**CLASSES, "gpio2": other})
 
 
 def test_first_compatible_with_an_enabled_driver_binds(tmp_path):

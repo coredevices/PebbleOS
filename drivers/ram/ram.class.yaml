@@ -6,5 +6,7 @@ type: struct pbl_ram
 include: pbl/drivers/ram.h
 provides:
   ram: "&{sym}"
+absent:
+  ram: nullptr
 roles:
   extram: RAM

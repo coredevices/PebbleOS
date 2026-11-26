@@ -15,3 +15,4 @@ args:
   - pinctrl: default
   - dma: rx
     optional: true
+    variadic: true

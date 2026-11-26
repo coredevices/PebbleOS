@@ -9,3 +9,5 @@ provides:
   gpio: "PBL_GPIO(&{sym}, {0}, PBL_GPIO_DT_FLAGS({1}))"
   # Level read-back on the pad of an interrupt
   irq-gpio: "PBL_GPIO(&{sym}, {0}, 0)"
+absent:
+  gpio: PBL_GPIO_NONE

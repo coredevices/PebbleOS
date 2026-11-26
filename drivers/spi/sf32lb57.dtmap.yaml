@@ -12,7 +12,7 @@ args:
   - clock: 0
   - pinctrl: default
   - dma: tx
-    default: nullptr
+    optional: true
   - gpio: cs
     all: true
     optional: true

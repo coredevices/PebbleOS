@@ -34,5 +34,5 @@ args:
     default: 0
   - clock: 0
     of: st,wwdg
-    default: "{}"
+    optional: true
   - flag: st,auto-boot

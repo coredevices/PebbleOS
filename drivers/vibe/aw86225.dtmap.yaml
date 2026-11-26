@@ -15,4 +15,4 @@ args:
   - prop: awinic,output-gain-percent
     default: 100
   - supply: vdd
-    default: nullptr
+    optional: true

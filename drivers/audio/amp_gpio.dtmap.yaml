@@ -10,4 +10,4 @@ args:
   - gpio: mode
   - prop: awinic,mode
   - supply: vdd
-    default: nullptr
+    optional: true

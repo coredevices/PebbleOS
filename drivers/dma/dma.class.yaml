@@ -6,3 +6,6 @@ type: struct pbl_dma_controller
 include: pbl/drivers/dma.h
 provides:
   dma: "PBL_DMA_CHAN(&{sym}, {0}, {1}, {2})"
+absent:
+  # A channel argument points at its channel
+  dma: nullptr

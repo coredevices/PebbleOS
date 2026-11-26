@@ -61,7 +61,7 @@ extern const struct pbl_touch_ops pbl_ft6236_ops;
  * @param _bus I2C bus.
  * @param _addr 7-bit I2C address.
  * @param _irq Interrupt, from PBL_IRQ_SPEC().
- * @param _reset Reset line, from PBL_GPIO(), or PBL_GPIO(nullptr, 0, 0) without one.
+ * @param _reset Reset line, from PBL_GPIO(), or PBL_GPIO_NONE without one.
  * @param _size_x Number of X coordinates it reports.
  * @param _size_y Number of Y coordinates it reports.
  * @param _inverted_x X axis is inverted.

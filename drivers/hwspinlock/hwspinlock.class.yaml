@@ -6,3 +6,5 @@ type: struct pbl_hwspinlock_controller
 include: pbl/drivers/hwspinlock.h
 provides:
   hwlock: "PBL_HWSPINLOCK(&{sym}, {0})"
+absent:
+  hwlock: PBL_HWSPINLOCK_NONE

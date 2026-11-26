@@ -9,4 +9,4 @@ args:
   - name: true
   - parent: hyperbus
   - supply: vcc
-    default: nullptr
+    optional: true
