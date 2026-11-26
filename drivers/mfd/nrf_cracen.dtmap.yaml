@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-cracen
+config: MFD_NRF_CRACEN
+class: device
+symbol: pbl_nrf_cracen
+define: PBL_NRF_CRACEN_DEFINE
+args:
+  - name: true
+  - reg: wrapper
+  - reg: core
