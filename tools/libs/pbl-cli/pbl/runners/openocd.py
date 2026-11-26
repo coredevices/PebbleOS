@@ -12,6 +12,20 @@ from .core import Runner, RunnerCaps, RunnerError, UnsupportedOperation
 OPENOCD_TELNET_PORT = 4444
 OPENOCD_GDB_PORT = 3333
 OPENOCD_LOG = ".openocd.log"
+#: TCP port of RTT channel 0, for 'pbl console --rtt'
+RTT_PORT = 9090
+
+
+def rtt_address(elf):
+    """Address of the RTT control block, ``_SEGGER_RTT``, in ``elf``."""
+    from elftools.elf.elffile import ELFFile
+
+    with open(elf, "rb") as f:
+        symtab = ELFFile(f).get_section_by_name(".symtab")
+        symbols = symtab.get_symbol_by_name("_SEGGER_RTT") if symtab else None
+        if not symbols:
+            raise RunnerError(f"no _SEGGER_RTT in {elf}")
+        return symbols[0]["st_value"]
 
 
 # How long the daemon may take to answer each expectation
@@ -160,7 +174,21 @@ class OpenOcdRunner(Runner):
             return self.run_program(self._server(self.gdb_port(OPENOCD_GDB_PORT)))
 
     def _server(self, port):
-        return ["openocd", "-f", self._cfg_file, "-c", f"gdb_port {port}"]
+        argv = ["openocd", "-f", self._cfg_file, "-c", f"gdb_port {port}"]
+        build = self.cfg.build
+        if build is not None and build.config.get("CONFIG_RTT"):
+            # Also serve RTT channel 0, from the control block of the build
+            if self.cfg.dry_run and not os.path.exists(self.cfg.elf_file):
+                address = "$RTT_ADDR"
+            else:
+                address = f"{rtt_address(self.cfg.elf_file):#x}"
+            rtt_cfg = os.path.join(build.topdir, "tools", "openocd", "rtt.cfg")
+            argv += [
+                "-c", f"set RTT_ADDR {address}",
+                "-c", f"set RTT_PORT {RTT_PORT}",
+                "-f", rtt_cfg,
+            ]  # fmt: skip
+        return argv
 
     def _run_command(
         self, cmd, ignore_fail=False, expect=(), shutdown=True, enforce_expect=False
