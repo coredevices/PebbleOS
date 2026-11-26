@@ -174,4 +174,4 @@ const struct pbl_spi_bus_ops pbl_spi_nrf54l_ops = {
   .start = prv_start,
 };
 
-#include PBL_DT_INSTANCES(nordic_nrf54l15_spim)
+#include PBL_DT_INSTANCES(nordic_nrf54l15_spim_spi)
