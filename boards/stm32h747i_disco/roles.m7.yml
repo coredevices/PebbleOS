@@ -9,4 +9,5 @@ rtc: rtc
 udc: usbotg_hs
 extram: fmc
 display: ltdc
+touch: touchscreen
 backlight: panel
