@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MPSL
+    bool
+    depends on SOC_NRF54L
+    select HAL_NORDIC
+    select KERNEL_ZERO_LATENCY_IRQS
+    help
+      The Nordic multiprotocol service layer, from the nonfree libraries,
+      and its glue (mpsl_pebble.h). Selected by the radio protocol stacks
+      that run on it. The clock driver starts it, and then takes the
+      crystals through it.
+
+config MPSL_LOW_PRIO
+    int "MPSL low-priority interrupt priority"
+    depends on MPSL
+    default 4
+    help
+      Priority of the SWI00 interrupt through which the MPSL asks for its
+      low-priority processing.
+
+config MPSL_WORKQ_STACK_SIZE
+    int "MPSL work queue stack size in bytes"
+    depends on MPSL
+    default 1024
+    help
+      Stack of the thread that runs the low-priority processing of the
+      MPSL.
+
+config MPSL_WORKQ_PRIO
+    int "MPSL work queue priority"
+    depends on MPSL
+    default 4
+    help
+      Priority of the thread that runs the low-priority processing of the
+      MPSL.
