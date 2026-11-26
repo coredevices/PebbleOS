@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "USB mass storage sample"
+
+source "Kconfig.pebbleos"
+
+config SAMPLE_READ_ONLY
+    bool "Read-only disk"
+    help
+      Give the host the RAM disk read-only.

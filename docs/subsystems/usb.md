@@ -369,6 +369,8 @@ is ready.
 | `CONFIG_USB_MSC_VENDOR` | `PebbleOS` | Vendor, in the inquiry data, up to 8 characters |
 | `CONFIG_USB_MSC_PRODUCT` | `Disk` | Product, in the inquiry data, up to 16 characters |
 
+{doc}`../samples/subsys/usb/msc` is a RAM disk with a FAT file system.
+
 ## Test function
 
 `CONFIG_USB_TEST` adds a vendor-class function for testing the stack and the

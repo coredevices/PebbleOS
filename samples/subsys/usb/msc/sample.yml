@@ -1,0 +1,6 @@
+description: A USB disk in RAM, formatted with a FAT file system, that the host mounts, writes and reads
+expect:
+  - 'msc: RAM disk of \d+ KiB, FAT12 with README.TXT'
+  - 'msc: ready'
+roles: [udc]
+integration: [sf32lb57_dpi_hdk, stm32h747i_disco/m7]

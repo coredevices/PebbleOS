@@ -14,6 +14,7 @@ them itself.
 | Directory | `drivers/disk` |
 | Header | `pbl/drivers/disk.h` |
 | Kconfig | `CONFIG_DISK`, enabled by the application |
+| Sample | {doc}`../samples/subsys/usb/msc` |
 | API | {apidoc}`API reference <drivers_disk>` |
 
 ## Drivers
