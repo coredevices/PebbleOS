@@ -5,7 +5,6 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/init.h>
-#include <pbl/kernel/malloc.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
@@ -67,16 +66,11 @@ static void prv_comm_start(void) {
     return;
   }
   struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
-  // Heap allocated to reduce stack usage
-  struct pbl_bt_config *config = pbl_zalloc_check(sizeof(struct pbl_bt_config));
-  bt_dis_get_info(&config->dis_info);
 
   // Without root keys the stack would run with an identity anyone can resolve.
   if (bt_bonding_get_root_keys(root_keys) == 0) {
-    config->irk = root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY];
-    s_comm_is_running = (pbl_bt_start(config) == 0);
+    s_comm_is_running = (pbl_bt_start(&root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]) == 0);
   }
-  pbl_free(config);
 
   if (s_comm_is_running) {
     bt_link_init();
@@ -192,6 +186,7 @@ void bt_ctl_set_airplane_mode_async(bool enabled) {
 }
 
 void bt_ctl_init(void) {
+  bt_dis_init();
   s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
   s_comm_initialized = true;
 }

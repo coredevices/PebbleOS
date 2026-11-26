@@ -10,7 +10,6 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/pebble_bt.h>
-#include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -1112,15 +1111,15 @@ static void prv_reversed_data_main_cb(void *data) {
   pbl_free(ctx);
 }
 
-void pbl_bt_cb_ppog_reversed_subscribed(uint16_t conn_handle) {
+void ppogatt_reversed_service_subscribed(uint16_t conn_handle) {
   pbl_pp_main_call(prv_reversed_subscribed_main_cb, (void *)(uintptr_t)conn_handle);
 }
 
-void pbl_bt_cb_ppog_reversed_unsubscribed(uint16_t conn_handle) {
+void ppogatt_reversed_service_unsubscribed(uint16_t conn_handle) {
   pbl_pp_main_call(prv_reversed_unsubscribed_main_cb, (void *)(uintptr_t)conn_handle);
 }
 
-void pbl_bt_cb_ppog_reversed_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
+void ppogatt_reversed_service_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len) {
   ReversedDataCtx *ctx = pbl_malloc(sizeof(*ctx));
   if (!ctx) {
     PBL_LOG_ERR("Reversed PPoG data: out of memory");
@@ -1659,10 +1658,10 @@ static int prv_write_packet(PPoGATTClient *client, const PPoGATTPacket *packet, 
   pbl_mutex_assert_held(&s_lock, true);
 
   int ret;
-#ifdef CONFIG_BT_SERVICE_PPOG_REVERSED
+#ifdef CONFIG_PP_TRANSPORT_GATT_REVERSED
   if (client->role == PPoGATTRoleReversed) {
     prv_unlock();
-    ret = pbl_bt_ppog_reversed_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
+    ret = ppogatt_reversed_service_notify(client->rev.conn_handle, (const uint8_t *)packet, length);
   } else
 #endif
   {

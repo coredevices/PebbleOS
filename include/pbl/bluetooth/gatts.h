@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <pbl/kernel/section.h>
+
 /**
  * @defgroup bluetooth_gatts GATT server
  * @ingroup bluetooth
@@ -13,6 +15,37 @@
  */
 
 struct ble_gatt_svc_def;
+
+/** @brief A service of the device. Define it with PBL_BT_GATTS_SERVICE_DEFINE(). */
+struct pbl_bt_gatts_service {
+  /**
+   * @brief Add the service to the GATT server, e.g. with pbl_bt_gatts_add().
+   *
+   * @return 0 on success, negative errno otherwise.
+   */
+  int (*add)(void);
+};
+
+/**
+ * @brief Define a service of the device, added by pbl_bt_gatts_add_services().
+ *
+ * Services are added by increasing order, which sets their attribute handles. Peers cache the
+ * handles of a bonded device, so the order of services that shipped must not change.
+ *
+ * @param _name Name of the service.
+ * @param _order Two digits that place it among the others.
+ * @param _add Its function, see struct pbl_bt_gatts_service.
+ */
+#define PBL_BT_GATTS_SERVICE_DEFINE(_name, _order, _add)                                      \
+  static const struct pbl_bt_gatts_service pbl_bt_gatts_service_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_bt_gatts_service, bt_gatts, #_order "_" #_name) = {.add = (_add)}
+
+/**
+ * @brief Add the services defined with PBL_BT_GATTS_SERVICE_DEFINE(), before the host starts.
+ *
+ * @return 0 on success, or what the first service that failed returned.
+ */
+int pbl_bt_gatts_add_services(void);
 
 /**
  * @brief Add services to the GATT server, before the host starts.

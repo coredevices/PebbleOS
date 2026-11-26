@@ -113,3 +113,16 @@ typedef struct PBL_PACKED {
   Uuid app_uuid;
   PPoGATTSessionType pp_session_type : 8;
 } PPoGATTMetaV1;
+
+//! The reversed service, where the phone is the client (CONFIG_PP_TRANSPORT_GATT_REVERSED).
+
+//! Notify a packet to the phone.
+//! @return 0, -ENOMEM if there is no buffer for it now, -ENOTCONN if the connection is gone,
+//! another negative errno otherwise.
+int ppogatt_reversed_service_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len);
+
+//! What the service reports, on the NimBLE host task.
+void ppogatt_reversed_service_subscribed(uint16_t conn_handle);
+void ppogatt_reversed_service_unsubscribed(uint16_t conn_handle);
+//! @param buf The packet, on the kernel heap: freed by the callee.
+void ppogatt_reversed_service_data_written(uint16_t conn_handle, uint8_t *buf, uint16_t len);

@@ -87,7 +87,7 @@ bool pbl_bt_gattc_service_notify_rx(struct pbl_bt_gattc_service *svc, uint16_t c
   return false;
 }
 
-int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+int ppogatt_reversed_service_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   return 0;
 }
 

@@ -38,7 +38,7 @@
  */
 
 /**
- * @brief Service UUID of the V2 "reversed" PPoGATT, see @ref bluetooth_ppog_reversed.
+ * @brief Service UUID of the V2 "reversed" PPoGATT, hosted by the device.
  *
  * The phone is the GATT client and sends the first ResetRequest after subscribing. There is no
  * meta characteristic; 0x40000002 is reserved in case a future revision needs one.

@@ -40,4 +40,11 @@ struct PBL_PACKED pbl_bt_dis_info {
   char sw_revision[PBL_BT_DIS_SW_REVISION_LEN];
 };
 
+/**
+ * @brief Set the values the service serves, before the stack starts.
+ *
+ * @param info The values, which must outlive the stack.
+ */
+void pbl_bt_dis_set_info(const struct pbl_bt_dis_info *info);
+
 /** @} */

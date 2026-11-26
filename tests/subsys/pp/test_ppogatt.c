@@ -64,7 +64,7 @@ bool pbl_pp_main_is_current(void) {
 }
 
 // Reversed PPoG only fires from a reversed-role client, which this test never creates.
-int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+int ppogatt_reversed_service_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   cl_fail("unexpected call: no reversed client in this test");
   return 0;
 }

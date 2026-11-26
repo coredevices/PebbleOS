@@ -9,6 +9,20 @@
 #include <host/ble_hs.h>
 #include <os/os_mbuf.h>
 
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_bt_gatts_service, bt_gatts);
+
+int pbl_bt_gatts_add_services(void) {
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_gatts_service, bt_gatts, svc) {
+    int ret = svc->add();
+
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  return 0;
+}
+
 int pbl_bt_gatts_add(const struct ble_gatt_svc_def *svcs) {
   int rc;
 

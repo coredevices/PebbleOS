@@ -3,12 +3,12 @@
 
 #include "clients/op_queue.h"
 #include "responsiveness.h"
-#include "services/services.h"
 #include "shell.h"
 #include "store.h"
 
 #include <errno.h>
 
+#include <pbl/bluetooth/gatts.h>
 #include <pbl/bluetooth/id_addr.h>
 #include <pbl/bluetooth/init.h>
 #include <pbl/kernel/assert.h>
@@ -147,7 +147,7 @@ static void prv_stop_host(void) {
   (void)ble_gatts_reset();
 }
 
-int pbl_bt_start(const struct pbl_bt_config *config) {
+int pbl_bt_start(const struct pbl_bt_sm_key *irk) {
   int rc;
 
   if (s_state == STATE_STARTED) {
@@ -162,11 +162,11 @@ int pbl_bt_start(const struct pbl_bt_config *config) {
   // One left by a host that synchronized again on its own.
   (void)pbl_sem_take(&s_host_started, PBL_NO_WAIT);
 
-  pbl_bt__store_set_local_irk(&config->irk);
+  pbl_bt__store_set_local_irk(irk);
 
   ble_svc_gap_init();
   ble_svc_gatt_init();
-  rc = pbl_bt__services_init(&config->dis_info);
+  rc = pbl_bt_gatts_add_services();
   if (rc != 0) {
     (void)ble_gatts_reset();
     s_state = STATE_STOPPED;
