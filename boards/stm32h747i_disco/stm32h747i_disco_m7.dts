@@ -261,6 +261,10 @@
 	};
 };
 
+&dma2d {
+	status = "okay";
+};
+
 &ltdc {
 	status = "okay";
 

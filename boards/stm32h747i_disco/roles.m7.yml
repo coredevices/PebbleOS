@@ -13,3 +13,4 @@ touch: touchscreen
 backlight: panel
 speaker: speaker
 mic: mic
+gpu: dma2d
