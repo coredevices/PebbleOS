@@ -68,6 +68,13 @@ config FLASH_QEMU
     help
       Support for the QEMU external flash peripheral.
 
+config FLASH_NRF_RRAMC
+    bool "nRF RRAM"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_RRAMC_ENABLED
+    help
+      Support for the internal RRAM of the nRF54L, which needs no erase.
+
 config FLASH_POSIX
     bool "POSIX external flash"
     default y
