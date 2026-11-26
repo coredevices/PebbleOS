@@ -36,6 +36,10 @@ made-up serial number, and leaves the connection as the phone set it.
 
 ## Bluetooth
 
+The sample advertises with `pbl/bluetooth/adv.h`: one advertisement, on air
+whenever there is no connection, at 100 ms for a minute and at 1 s from then
+on.
+
 The bond is kept by NimBLE's config store in RAM, its default without
 settings: it is lost when the watch resets, and the phone, which keeps its
 own, then has to forget the watch and pair again.
