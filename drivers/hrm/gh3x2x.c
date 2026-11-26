@@ -55,7 +55,6 @@ extern void Gh3x2xSetHbaMode(GS32 nHbaScenario);
 #define GH3X2X_HRV_MAX_RRI_PER_RESULT 4
 
 static volatile uint32_t s_hrm_int_flag = false;
-static volatile uint32_t s_hrm_timer_flag = false;
 
 // GH3X2X library glue code
 
@@ -231,89 +230,6 @@ void gh3x2x_wear_evt_notify(bool is_wear) {
 
   HRM->state->is_wear = is_wear;
 }
-
-#ifdef CONFIG_BT_SERVICE_GH3X2X_TUNING
-void gh3x2x_timer_init(uint32_t period_ms) {
-  if (HRM) {
-    HRM->state->timer_period_ms = period_ms;
-  }
-}
-
-static void gh3x2x_timer_callback(void *data) {
-  uint32_t param = (uint32_t)data;
-  if (param != 0x87965421) {
-    // Coalesce repeated timer firings - only queue one callback at a time
-    if (s_hrm_timer_flag == false) {
-      if (pbl_sys_work_call(gh3x2x_timer_callback, (void *)0x87965421)) {
-        s_hrm_timer_flag = true;
-      }
-    }
-    return;
-  }
-  s_hrm_timer_flag = false;
-  Gh3x2xSerialSendTimerHandle();
-}
-
-static void gh3x2x_timer_start_handle(void *arg) {
-  if (HRM == nullptr || HRM->state->timer != nullptr) {
-    return;
-  }
-  if (HRM->state->timer_period_ms == 0) {
-    return;
-  }
-  HRM->state->timer = app_timer_register_repeatable(HRM->state->timer_period_ms,
-                                                    gh3x2x_timer_callback, nullptr, true);
-}
-
-static void gh3x2x_timer_stop_handle(void *arg) {
-  if (HRM && HRM->state->timer) {
-    app_timer_cancel(HRM->state->timer);
-    HRM->state->timer = nullptr;
-  }
-}
-
-void gh3x2x_timer_start(void) {
-  return;
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_start_handle,
-  };
-  event_put(&e);
-}
-
-void gh3x2x_timer_stop(void) {
-  return;
-  PebbleEvent e = {
-    .type = PEBBLE_CALLBACK_EVENT,
-    .callback.callback = gh3x2x_timer_stop_handle,
-  };
-  event_put(&e);
-}
-
-static void gh3x2x_ble_data_recv_handle(void *context) {
-  if (context == nullptr) {
-    return;
-  }
-
-  uint32_t data_len;
-  uint8_t *p_data = (uint8_t *)context;
-  memcpy(&data_len, p_data, sizeof(uint32_t));
-  p_data += sizeof(uint32_t);
-  Gh3x2xDemoProtocolProcess((GU8 *)p_data, data_len);
-  free(context);
-}
-
-bool gh3x2x_ble_data_recv(void *context) {
-  if (context == nullptr) {
-    return false;
-  }
-
-  if (!pbl_sys_work_call(gh3x2x_ble_data_recv_handle, context)) {
-    return false;
-  }
-  return true;
-}
-#endif
 
 // GH3X2X calibration/factory testing
 

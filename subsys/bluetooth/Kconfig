@@ -19,11 +19,10 @@ module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
 
-rsource "services/Kconfig"
-
 endif
 
 rsource "clients/Kconfig"
+rsource "services/Kconfig"
 rsource "prf_store/Kconfig"
 
 endmenu
