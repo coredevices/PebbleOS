@@ -14,6 +14,7 @@ config FLASH_SIZE
     default $(dt_nodelabel_reg_size,internal_flash)
 
 config NUM_IRQS
+    default 290 if SOC_NRF54LM20A
     default 270
 
 endif # SOC_NRF54L

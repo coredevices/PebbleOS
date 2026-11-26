@@ -66,13 +66,16 @@ static void prv_trim_init(void) {
 }
 
 static void prv_errata_init(void) {
+  if (pbl_readl(PBL_DT_REG_FICR + FICR_UNDOC_340_OFFSET) != FICR_PART_NRF54L15) {
+    return;
+  }
+
   if (pbl_readl(PBL_DT_REG_OSCILLATORS + OSCILLATORS_UNDOC_440_OFFSET) == 0U) {
     pbl_writel(0xc8U, PBL_DT_REG_OSCILLATORS + OSCILLATORS_UNDOC_440_OFFSET);
   }
 
   // Errata 31, 32 and 40 are of the first revision only
-  if (pbl_readl(PBL_DT_REG_FICR + FICR_UNDOC_340_OFFSET) != FICR_PART_NRF54L15 ||
-      pbl_readl(PBL_DT_REG_FICR + FICR_UNDOC_344_OFFSET) != FICR_REVISION_1) {
+  if (pbl_readl(PBL_DT_REG_FICR + FICR_UNDOC_344_OFFSET) != FICR_REVISION_1) {
     return;
   }
 

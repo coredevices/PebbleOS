@@ -28,4 +28,11 @@ config HAL_NORDIC_NRF54L15
       Configure the nrfx HAL headers for the application core of the
       Nordic nRF54L15 SoC.
 
+config HAL_NORDIC_NRF54LM20A
+    bool
+    default y if SOC_NRF54LM20A
+    help
+      Configure the nrfx HAL headers for the application core of the
+      Nordic nRF54LM20A SoC.
+
 endif # HAL_NORDIC
