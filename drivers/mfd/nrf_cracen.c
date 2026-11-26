@@ -36,4 +36,4 @@ int pbl_nrf_cracen_init(const struct pbl_device *dev) {
   return 0;
 }
 
-#include PBL_DT_INSTANCES(nordic_nrf54l15_cracen)
+#include PBL_DT_INSTANCES(nrf_cracen)
