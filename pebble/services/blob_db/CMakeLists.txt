@@ -9,6 +9,7 @@ set(sources
   endpoint.c
   endpoint2.c
   endpoint_private.c
+  faithful.c
   health_db.c
   ios_notif_pref_db.c
   notif_db.c

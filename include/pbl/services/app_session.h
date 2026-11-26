@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <pbl/pp/protocol.h>
 #include <pbl/pp/session.h>
 #include <pbl/util/uuid.h>
 
@@ -48,6 +49,16 @@ bool app_session_has_capability(enum pbl_pp_capability capability);
  * @param app_uuid UUID of the app.
  */
 void app_session_capabilities_evict(const Uuid *app_uuid);
+
+/**
+ * @brief Get the capabilities of the phone app, as its last system session gave them.
+ *
+ * They are kept across disconnections and reboots, and a capabilities changed event is emitted
+ * when they change. Prefer pbl_pp_session_get_capabilities() when connected.
+ *
+ * @param[out] capabilities_out Capabilities, zero if none are known.
+ */
+void app_session_get_system_capabilities(struct pbl_pp_capabilities *capabilities_out);
 
 /** @brief Compact the capability cache. Called once at boot. */
 void app_session_capabilities_init(void);

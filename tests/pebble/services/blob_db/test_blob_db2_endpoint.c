@@ -8,7 +8,6 @@
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint.h>
 #include <pbl/services/blob_db/sync.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 
 #include <clar.h>
 

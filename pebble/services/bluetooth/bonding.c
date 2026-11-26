@@ -11,7 +11,6 @@
 #include <pbl/services/bluetooth/advertising.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/pairability.h>
 #include <pbl/util/size.h>
@@ -133,9 +132,6 @@ void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name) {
 
 static void prv_bond_added(const struct pbl_bt_bond_info *info) {
   prv_delete_others(&info->addr);
-
-  // Only one bond is kept, so a new one means a new phone.
-  bt_settings_set_unfaithful(true);
 
   if (!bt_ctl_is_bluetooth_running()) {
     return;

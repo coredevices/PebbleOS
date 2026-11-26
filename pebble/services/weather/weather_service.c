@@ -7,9 +7,9 @@
 #include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/protocol.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/blob_db/watch_app_prefs_db.h>
 #include <pbl/services/blob_db/weather_db.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/time.h>
 #include <pbl/services/weather/weather_service.h>
 #include <pbl/services/weather/weather_service_private.h>
@@ -308,7 +308,7 @@ bool weather_service_supported_by_phone(void) {
   return true;
 #endif
   struct pbl_pp_capabilities capabilities;
-  bt_settings_get_capabilities(&capabilities);
+  app_session_get_system_capabilities(&capabilities);
   if (!capabilities.weather_app_support) {
     PBL_LOG_WRN("No weather support on phone");
   }

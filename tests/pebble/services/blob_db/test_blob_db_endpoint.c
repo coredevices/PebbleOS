@@ -7,7 +7,7 @@
 #include <pbl/pp/session.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/endpoint.h>
-#include <pbl/services/bluetooth/bt_settings.h>
+#include <pbl/services/blob_db/faithful.h>
 
 #include <clar.h>
 
@@ -19,7 +19,7 @@
 // Stubs
 ////////////////////////////////////
 
-void bt_settings_set_unfaithful(bool is_unfaithful) {
+void blob_db_set_faithful(bool faithful) {
   return;
 }
 

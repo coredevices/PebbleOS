@@ -8,7 +8,6 @@
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/services/bluetooth/bonding.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/bluetooth/gateway.h>
 #include <pbl/util/size.h>
 
@@ -93,9 +92,6 @@ int rng_rand(uint32_t *rand_out) {
   *rand_out = s_next++;
 
   return 0;
-}
-
-void bt_settings_set_unfaithful(bool is_unfaithful) {
 }
 
 bool bt_ctl_is_bluetooth_running(void) {

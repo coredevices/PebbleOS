@@ -16,10 +16,10 @@
 #include <pbl/kernel/time.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/evented_timer.h>
 #include <pbl/services/imaging.h>
 #include <pbl/services/light.h>
@@ -864,7 +864,7 @@ static void prv_mute_notification_today(ActionMenu *action_menu,
 
 static bool prv_has_mute_action(TimelineItem *item) {
   struct pbl_pp_capabilities capabilities;
-  bt_settings_get_capabilities(&capabilities);
+  app_session_get_system_capabilities(&capabilities);
 
   return timeline_item_is_ancs_notif(item) && capabilities.notification_filtering_support;
 }

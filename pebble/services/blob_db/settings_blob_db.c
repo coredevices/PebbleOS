@@ -8,10 +8,10 @@
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/app_session.h>
 #include <pbl/services/blob_db/api.h>
 #include <pbl/services/blob_db/settings_blob_db.h>
 #include <pbl/services/blob_db/sync.h>
-#include <pbl/services/bluetooth/bt_settings.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
 #include <pbl/settings/settings.h>
 #include <pbl/util/list.h>
@@ -190,7 +190,7 @@ struct prv_syncable_keys {
 //! Returns true if the phone advertises settings_sync_support capability
 bool settings_blob_db_phone_supports_sync(void) {
   struct pbl_pp_capabilities capabilities;
-  bt_settings_get_capabilities(&capabilities);
+  app_session_get_system_capabilities(&capabilities);
   return capabilities.settings_sync_support;
 }
 
