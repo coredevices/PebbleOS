@@ -149,7 +149,7 @@ static void prv_rx(const struct pbl_can_ipms_canfd *c) {
     frame.len = (uint8_t)PBL_MIN(dlc, PBL_CAN_MAX_LEN);
 
     if ((frame.flags & PBL_CAN_FRAME_RTR) == 0U) {
-      for (uint32_t i = 0U; i < (frame.len + 3U) / 4U; i++) {
+      for (uint32_t i = 0U; i < PBL_DIV_ROUND_UP(frame.len, 4U); i++) {
         frame.data32[i] = prv_read(c, CANFD_RBUF + (CANFD_BUF_DATA + i) * 4U);
       }
     }
@@ -453,7 +453,7 @@ static int prv_send(const struct pbl_can *can, const struct pbl_can_frame *frame
   if ((frame->flags & PBL_CAN_FRAME_RTR) != 0U) {
     ctrl |= CANFD_BUF_CTRL_RTR;
   } else {
-    words = (frame->len + 3U) / 4U;
+    words = PBL_DIV_ROUND_UP(frame->len, 4U);
   }
 
   prv_write(c, CANFD_TBUF, frame->id);

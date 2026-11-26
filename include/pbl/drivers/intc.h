@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <pbl/device.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 /**
@@ -107,7 +108,7 @@ struct pbl_intc {
 #define PBL_INTC_STATE_DEFINE(sym, _num_irqs)              \
   PBL_DEVICE_STATE_DEFINE(sym);                            \
   static struct pbl_intc_line sym##_intc_lines[_num_irqs]; \
-  static uint32_t sym##_intc_enabled[((_num_irqs) + 31U) / 32U]
+  static uint32_t sym##_intc_enabled[PBL_DIV_ROUND_UP(_num_irqs, 32U)]
 
 /**
  * @brief Initializer for the struct pbl_intc of controller @p sym.

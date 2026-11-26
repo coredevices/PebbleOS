@@ -270,7 +270,7 @@ static int prv_erase_check(const struct pbl_flash *flash, uint32_t addr, size_t 
     return -EINVAL;
   }
 
-  *len = ((*len + subsector_size - 1U) / subsector_size) * subsector_size;
+  *len = PBL_DIV_ROUND_UP(*len, subsector_size) * subsector_size;
   if (!prv_in_range(flash, addr, *len)) {
     return -EINVAL;
   }

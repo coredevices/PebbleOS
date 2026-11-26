@@ -12,6 +12,7 @@
 #include <pbl/kernel/timer.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
 PBL_LOG_MODULE_DEFINE(driver_display, CONFIG_DRIVER_DISPLAY_LOG_LEVEL);
@@ -26,7 +27,7 @@ struct prv_sync {
 static uint32_t prv_pitch(const struct pbl_display_props *props) {
   switch (props->format) {
     case PBL_DISPLAY_FORMAT_MONO:
-      return (props->width + 7U) / 8U;
+      return PBL_DIV_ROUND_UP(props->width, 8U);
     case PBL_DISPLAY_FORMAT_RGB565:
       return props->width * 2U;
     default:

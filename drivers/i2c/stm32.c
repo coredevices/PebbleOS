@@ -38,13 +38,13 @@ static inline void prv_putreg(const struct pbl_i2c_stm32 *i2c, uint32_t offset, 
 }
 
 static uint32_t prv_ticks(uint32_t ns, uint32_t tick_hz) {
-  return (uint32_t)(((uint64_t)ns * tick_hz + 999999999U) / 1000000000U);
+  return (uint32_t)PBL_DIV_ROUND_UP((uint64_t)ns * tick_hz, PBL_NSEC_PER_SEC);
 }
 
 // SCL low and high times within the period, no shorter than the minimums of the bus mode
 static int prv_timing(uint32_t ker_hz, uint32_t bus_hz, uint32_t *timingr) {
   const bool fast = bus_hz > 100000U;
-  uint32_t presc = (ker_hz + TICK_MAX_HZ - 1U) / TICK_MAX_HZ - 1U;
+  uint32_t presc = PBL_DIV_ROUND_UP(ker_hz, TICK_MAX_HZ) - 1U;
   uint32_t tick_hz;
   uint32_t period;
   uint32_t low;

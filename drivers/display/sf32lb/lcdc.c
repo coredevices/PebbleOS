@@ -15,6 +15,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/soc/sf32lb/idle.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
 #include <hardware/sf32lb52_lcdc.h>
@@ -65,7 +66,7 @@ static int prv_hw_init(const struct pbl_display_sf32lb_lcdc *lcdc) {
     return ret;
   }
 
-  hck = (((uint32_t)(rate_mhz / 1000U) + timing->clock_hz - 1U) / timing->clock_hz) / 2U;
+  hck = PBL_DIV_ROUND_UP((uint32_t)(rate_mhz / 1000U), timing->clock_hz) / 2U;
   vck = hck * max_col;
 
   if (hck == 0U || vck > PBL_FIELD_GET(LCDC_JDI_PAR_CONF5_VCK_WIDTH_MASK, UINT32_MAX)) {

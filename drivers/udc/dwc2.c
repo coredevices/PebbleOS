@@ -229,7 +229,7 @@ static void prv_tx_fill(const struct pbl_udc_dwc2 *d, uint8_t n) {
 
   while (ep->done < end) {
     size_t chunk = PBL_MIN(end - ep->done, (size_t)ep->mps);
-    size_t words = (chunk + 3U) / 4U;
+    size_t words = PBL_DIV_ROUND_UP(chunk, 4U);
 
     if (PBL_FIELD_GET(DTXFSTS_INEPTFSAV_MASK, prv_getreg(d, DWC2_DTXFSTS(n))) < words) {
       return;
@@ -626,7 +626,7 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
     return -EINVAL;
   }
 
-  pkts = len == 0U ? 1U : (uint32_t)((len + ep->mps - 1U) / ep->mps);
+  pkts = len == 0U ? 1U : (uint32_t)PBL_DIV_ROUND_UP(len, ep->mps);
   if (pkts > PBL_FIELD_GET(DEPTSIZ_PKTCNT_MASK, UINT32_MAX)) {
     return -EINVAL;
   }

@@ -12,6 +12,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/units.h>
 
 #include <hardware/sf32lb52_mpi.h>
 
@@ -238,7 +239,7 @@ static int prv_calibrate(uintptr_t base, uint8_t *sck, uint8_t *dqs) {
 
 // Clock cycles covering a time, less the one the controller adds
 static uint32_t prv_cycles(uint32_t ns, uint32_t rate_hz) {
-  return (uint32_t)PBL_DIV_ROUND_UP((uint64_t)ns * rate_hz, 1000000000ULL) - 1U;
+  return (uint32_t)PBL_DIV_ROUND_UP((uint64_t)ns * rate_hz, PBL_NSEC_PER_SEC) - 1U;
 }
 
 static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperbus_config *cfg,
@@ -276,7 +277,8 @@ static int prv_configure(const struct pbl_hyperbus *bus, const struct pbl_hyperb
   }
 #endif
 
-  cs_low_max = (uint32_t)(((uint64_t)cfg->cs_low_max_ns * rate_hz) / 1000000000ULL) - CS_LOW_MARGIN;
+  cs_low_max =
+      (uint32_t)(((uint64_t)cfg->cs_low_max_ns * rate_hz) / PBL_NSEC_PER_SEC) - CS_LOW_MARGIN;
   pbl_modifyl(MPI_DCR_CSLMIN_MASK | MPI_DCR_CSLMAX_MASK | MPI_DCR_CSHMIN_MASK |
                   MPI_DCR_TRCMIN_MASK | MPI_DCR_RBSIZE_MASK | DCR_PROTOCOL,
               PBL_FIELD_PREP(MPI_DCR_CSLMIN_MASK, CS_LOW_MIN) |
