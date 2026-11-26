@@ -9,6 +9,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/reboot.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/timer.h>
 #include <pbl/kernel/types.h>
 #include <pbl/logging/logging.h>
 #include <pbl/util/misc.h>
@@ -72,11 +73,34 @@ static void prv_framebuffer_deinit(const struct pbl_display *disp) {
 #endif
 }
 
+// An update its driver does not complete is stopped, and ends with the timeout
+static void prv_timeout(struct pbl_timer *timer) {
+  struct pbl_display_state *state = PBL_CONTAINER_OF(timer, struct pbl_display_state, timeout);
+  const struct pbl_display *disp = state->disp;
+  pbl_display_callback_t cb;
+  void *arg;
+
+  pbl_irq_lock();
+  if (!state->busy) {
+    pbl_irq_unlock();
+    return;
+  }
+  disp->ops->abort(disp);
+  state->busy = false;
+  cb = state->cb;
+  arg = state->arg;
+  pbl_irq_unlock();
+
+  PBL_LOG_WRN("display: update timed out");
+  cb(-ETIMEDOUT, arg);
+}
+
 int pbl_display_dev_init(const struct pbl_device *dev) {
   const struct pbl_display *disp = PBL_CONTAINER_OF(dev, const struct pbl_display, dev);
   int ret;
 
-  *disp->state = (struct pbl_display_state){0};
+  *disp->state = (struct pbl_display_state){.disp = disp};
+  pbl_timer_init(&disp->state->timeout, prv_timeout);
 
   ret = prv_framebuffer_init(disp);
   if (ret != 0) {
@@ -94,12 +118,25 @@ int pbl_display_dev_init(const struct pbl_device *dev) {
   return ret;
 }
 
+// An update that timed out was completed already
 void pbl_display_complete(const struct pbl_display *disp, int status) {
   struct pbl_display_state *state = disp->state;
-  pbl_display_callback_t cb = state->cb;
-  void *arg = state->arg;
+  pbl_display_callback_t cb;
+  void *arg;
 
+  pbl_irq_lock();
+  if (!state->busy) {
+    pbl_irq_unlock();
+    return;
+  }
+  if (disp->ops->abort != nullptr) {
+    pbl_timer_stop(&state->timeout);
+  }
   state->busy = false;
+  cb = state->cb;
+  arg = state->arg;
+  pbl_irq_unlock();
+
   cb(status, arg);
 }
 
@@ -193,9 +230,18 @@ int pbl_display_update(const struct pbl_display *disp, const struct pbl_display_
   state->cb = cb;
   state->arg = arg;
 
+  if (disp->ops->abort != nullptr) {
+    pbl_timer_start(&state->timeout, PBL_MSEC(CONFIG_DISPLAY_UPDATE_TIMEOUT_MS));
+  }
+
   ret = disp->ops->update(disp, buf, y0, y1);
   if (ret != 0) {
+    pbl_irq_lock();
+    if (disp->ops->abort != nullptr) {
+      pbl_timer_stop(&state->timeout);
+    }
     state->busy = false;
+    pbl_irq_unlock();
   }
 
   return ret;

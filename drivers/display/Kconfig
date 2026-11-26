@@ -9,6 +9,13 @@ menuconfig DISPLAY
 
 if DISPLAY
 
+config DISPLAY_UPDATE_TIMEOUT_MS
+    int "Update timeout, in milliseconds"
+    default 200
+    help
+      Time an update has to complete, for the displays whose driver can
+      abort one: past it, the update is stopped and ends with -ETIMEDOUT.
+
 config DISPLAY_SF32LB_LCDC
     bool "SiFli SF32LB LCD controller"
     default y

@@ -9,6 +9,7 @@
 
 #include <pbl/device.h>
 #include <pbl/drivers/ram.h>
+#include <pbl/kernel/timer.h>
 
 /**
  * @defgroup drivers_display Display
@@ -38,8 +39,11 @@
  *
  * An update runs in the background and reports its outcome to a callback run from the display's
  * interrupt, or before pbl_display_update() returns for displays that update synchronously. The
- * display may modify the updated rows while it runs, but restores them before the callback. Calls
- * are made from task context and return 0 or a negative errno: @c -EBUSY while an update is in
+ * display may modify the updated rows while it runs, but restores them before the callback.
+ *
+ * An update of a display whose driver can abort one ends with @c -ETIMEDOUT when it does not
+ * complete within CONFIG_DISPLAY_UPDATE_TIMEOUT_MS, as when the panel stops answering. Calls are
+ * made from task context and return 0 or a negative errno: @c -EBUSY while an update is in
  * progress, @c -EINVAL for an invalid row range and @c -ENODEV if the display is not ready.
  * @{
  */
@@ -99,6 +103,9 @@ struct pbl_display_state {
   bool rotated;
   pbl_display_callback_t cb;
   void *arg;
+  // Ends an update the driver does not complete
+  struct pbl_timer timeout;
+  const struct pbl_display *disp;
 };
 /** @endcond */
 
@@ -128,6 +135,11 @@ struct pbl_display_ops {
                 uint16_t y1);
   /** Clear the image held by the panel. Optional. Returns 0 or a negative errno. */
   int (*clear)(const struct pbl_display *disp);
+  /**
+   * Optional. Stop the update in progress, which the class then completes with @c -ETIMEDOUT:
+   * pbl_display_complete() is not called for it anymore. Called with interrupts locked.
+   */
+  void (*abort)(const struct pbl_display *disp);
 };
 
 /** @brief A display. */
