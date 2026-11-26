@@ -39,6 +39,12 @@ enum pbl_panel_bus_format {
    * middle byte of a 24-bit address, and reads with opcode 0x03.
    */
   PBL_PANEL_BUS_FORMAT_QSPI_RGB565,
+  /**
+   * MIPI DSI in command mode: RGB888 frames of a display controller into the frame memory of
+   * the panel, each on a refresh of the @ref drivers_mipi_dsi host, written in windows timed by
+   * the tearing effect of the panel.
+   */
+  PBL_PANEL_BUS_FORMAT_MIPI_DSI_CMD_RGB888,
 };
 
 /**
