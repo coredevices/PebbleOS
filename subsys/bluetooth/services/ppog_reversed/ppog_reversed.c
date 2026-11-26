@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/bluetooth/gatts.h>
 #include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/malloc.h>
@@ -116,15 +117,11 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
 static struct ble_gap_event_listener s_gap_event_listener;
 
 int pbl_bt__ppog_reversed_init(void) {
-  int rc = ble_gatts_count_cfg(s_ppog_reversed_svc);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to count reversed PPoG service: 0x%04x", (uint16_t)rc);
-    return rc;
-  }
+  int rc;
 
-  rc = ble_gatts_add_svcs(s_ppog_reversed_svc);
+  rc = pbl_bt_gatts_add(s_ppog_reversed_svc);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to add reversed PPoG service: 0x%04x", (uint16_t)rc);
+    PBL_LOG_ERR("Failed to add reversed PPoG service: %d", rc);
     return rc;
   }
 
@@ -133,28 +130,12 @@ int pbl_bt__ppog_reversed_init(void) {
   rc = ble_gap_event_listener_register(&s_gap_event_listener, prv_handle_gap_event, nullptr);
   if (rc != 0 && rc != BLE_HS_EALREADY) {
     PBL_LOG_ERR("Failed to register reversed PPoG GAP listener: 0x%04x", (uint16_t)rc);
-    return rc;
+    return -EIO;
   }
 
   return 0;
 }
 
 int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
-  struct os_mbuf *om = ble_hs_mbuf_from_flat(buf, len);
-  if (!om) {
-    return -ENOMEM;
-  }
-  int rc = ble_gatts_notify_custom(conn_handle, s_data_notify_handle, om);
-  // ble_gatts_notify_custom always consumes the mbuf, even on error.
-  switch (rc) {
-    case 0:
-      return 0;
-    case BLE_HS_ENOMEM:
-      return -ENOMEM;
-    case BLE_HS_ENOTCONN:
-      return -ENOTCONN;
-    default:
-      PBL_LOG_ERR("ble_gatts_notify_custom failed: 0x%04x", (uint16_t)rc);
-      return -EIO;
-  }
+  return pbl_bt_gatts_notify(conn_handle, s_data_notify_handle, buf, len);
 }

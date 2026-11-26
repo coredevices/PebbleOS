@@ -1,15 +1,18 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
+#include <pbl/bluetooth/bond.h>
+#include <pbl/bluetooth/gatts.h>
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/logging/logging.h>
 
 #include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
-#include <host/ble_store.h>
+#include <host/ble_hs.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
 
@@ -21,10 +24,7 @@ static const ble_uuid128_t s_trigger_uuid =
     PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PPS_TRIGGER_PAIRING_UUID_32BIT);
 
 static int prv_get_status(uint16_t conn_handle, uint8_t *status) {
-  struct ble_store_value_sec value_sec;
-  struct ble_store_key_sec key_sec = {};
   struct ble_gap_conn_desc desc;
-  int bond_count = 0;
   int rc;
 
   rc = ble_gap_conn_find(conn_handle, &desc);
@@ -32,18 +32,15 @@ static int prv_get_status(uint16_t conn_handle, uint8_t *status) {
     return rc;
   }
 
-  key_sec.peer_addr = desc.peer_id_addr;
-  (void)ble_store_util_count(BLE_STORE_OBJ_TYPE_PEER_SEC, &bond_count);
-
   memset(status, 0, PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE);
   status[0] = PBL_BT_PPS_STATUS_CONNECTED | PBL_BT_PPS_STATUS_NO_SECURITY_REQUEST_SUPPORTED;
-  if (ble_store_read_peer_sec(&key_sec, &value_sec) == 0) {
+  if (pbl_bt_bond_get(&desc.peer_id_addr, nullptr) == 0) {
     status[0] |= PBL_BT_PPS_STATUS_BONDED;
   }
   if (desc.sec_state.encrypted) {
     status[0] |= PBL_BT_PPS_STATUS_ENCRYPTED;
   }
-  if (bond_count > 0) {
+  if (pbl_bt_bond_count() > 0U) {
     status[0] |= PBL_BT_PPS_STATUS_HAS_BONDED_GATEWAY;
   }
 
@@ -52,22 +49,15 @@ static int prv_get_status(uint16_t conn_handle, uint8_t *status) {
 
 static void prv_notify_status(uint16_t conn_handle, uint16_t attr_handle) {
   uint8_t status[PBL_BT_PPS_CONNECTIVITY_STATUS_SIZE];
-  struct os_mbuf *om;
-  int rc;
+  int ret;
 
   if (prv_get_status(conn_handle, status) != 0) {
     return;
   }
 
-  om = ble_hs_mbuf_from_flat(status, sizeof(status));
-  if (om == nullptr) {
-    PBL_LOG_ERR("No buffer for the connectivity status");
-    return;
-  }
-
-  rc = ble_gatts_notify_custom(conn_handle, attr_handle, om);
-  if (rc != 0) {
-    PBL_LOG_ERR("Connectivity status notification failed: %d", rc);
+  ret = pbl_bt_gatts_notify(conn_handle, attr_handle, status, sizeof(status));
+  if (ret != 0) {
+    PBL_LOG_ERR("Connectivity status notification failed: %d", ret);
   }
 }
 
@@ -180,22 +170,18 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
 static struct ble_gap_event_listener s_listener;
 
 int pbl_bt__pps_init(void) {
-  int rc = ble_gatts_count_cfg(pebble_pairing_svc);
-  if (rc != 0) {
-    PBL_LOG_ERR("Failed to count Pebble Pairing Service: 0x%04x", (uint16_t)rc);
-    return rc;
-  }
+  int rc;
 
-  rc = ble_gatts_add_svcs(pebble_pairing_svc);
+  rc = pbl_bt_gatts_add(pebble_pairing_svc);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to add Pebble Pairing Service: 0x%04x", (uint16_t)rc);
+    PBL_LOG_ERR("Failed to add Pebble Pairing Service: %d", rc);
     return rc;
   }
 
   /* Listeners outlive the services, which are added each time the stack starts. */
   rc = ble_gap_event_listener_register(&s_listener, prv_gap_event, nullptr);
   if (rc != 0 && rc != BLE_HS_EALREADY) {
-    return rc;
+    return -EIO;
   }
 
   return 0;
