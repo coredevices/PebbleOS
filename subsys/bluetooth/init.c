@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2025 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "adv/adv.h"
 #include "clients/op_queue.h"
 #include "responsiveness.h"
 #include "shell.h"
@@ -93,7 +94,9 @@ static void prv_sync_cb(void) {
   }
 
   pbl_sem_give(&s_host_started);
-  pbl_bt_cb_host_synced();
+#ifdef CONFIG_BT_ADV
+  pbl_bt__adv_handle_sync();
+#endif
 }
 
 static void prv_reset_cb(int reason) {

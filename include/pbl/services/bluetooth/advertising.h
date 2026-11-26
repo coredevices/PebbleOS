@@ -41,16 +41,8 @@ void bt_advertising_set_discoverable(bool discoverable);
  *
  * Does nothing without `SERVICE_BLUETOOTH_ADV_RECONNECT`.
  *
- * The recovery firmware never does, it stays discoverable instead.
- *
  * @param reconnectable true while there is a bond.
  */
 void bt_advertising_set_reconnectable(bool reconnectable);
-
-/** @brief Tell that a central connected: the stack stopped advertising. */
-void bt_advertising_handle_connect(void);
-
-/** @brief Tell that the central disconnected: advertising resumes. */
-void bt_advertising_handle_disconnect(void);
 
 /** @} */

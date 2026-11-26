@@ -22,6 +22,7 @@ source "subsys/logging/Kconfig.template.log_level"
 
 endif
 
+rsource "adv/Kconfig"
 rsource "clients/Kconfig"
 rsource "services/Kconfig"
 rsource "prf_store/Kconfig"
