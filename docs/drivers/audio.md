@@ -1,10 +1,15 @@
 # Audio
 
-An audio device streams one direction, playback or capture, between a ring of
-periods in memory and the hardware. The class calls the client back as each
-period completes, and the client refills or releases it. Codecs, digital
-audio interfaces and amplifiers are devices of their own, chained by the
-devicetree.
+An audio device has a stream per direction it supports, playback and capture,
+each between a ring of periods in memory and the hardware. The class calls the
+client back as each period completes, and the client refills or releases it.
+Codecs, digital audio interfaces and amplifiers are devices of their own,
+chained by the devicetree.
+
+A device is a card describing one link, which is full duplex: the DAI and the
+codec on it serve both directions, under the lock of the card, and each call
+names the direction it acts on. A board whose speaker and microphone share a
+link has its `speaker` and `mic` roles on the same card.
 
 | | |
 | --- | --- |

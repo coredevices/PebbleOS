@@ -101,11 +101,10 @@ extern const struct pbl_audio_dai_ops pbl_audio_sf32lb_audcodec_adc_ops;
                       dai[PBL_AUDIO_PLAYBACK]){                                                   \
     .dai =                                                                                        \
         {                                                                                         \
-          [PBL_AUDIO_PLAYBACK] = PBL_AUDIO_DAI_INIT(                                              \
-              sym, _name, nullptr, &pbl_audio_sf32lb_audcodec_dac_ops, PBL_AUDIO_PLAYBACK),       \
-          [PBL_AUDIO_CAPTURE] =                                                                   \
-              PBL_AUDIO_DAI_INIT(sym##_adc, _name "-adc", nullptr,                                \
-                                 &pbl_audio_sf32lb_audcodec_adc_ops, PBL_AUDIO_CAPTURE),          \
+          [PBL_AUDIO_PLAYBACK] =                                                                  \
+              PBL_AUDIO_DAI_INIT(sym, _name, nullptr, &pbl_audio_sf32lb_audcodec_dac_ops),        \
+          [PBL_AUDIO_CAPTURE] = PBL_AUDIO_DAI_INIT(sym##_adc, _name "-adc", nullptr,              \
+                                                   &pbl_audio_sf32lb_audcodec_adc_ops),           \
         },                                                                                        \
     .base = (_base),                                                                              \
     .clk = _clk,                                                                                  \

@@ -34,7 +34,7 @@ static struct {
   bool xrun;
 } s_win;
 
-static void prv_period_done(const struct pbl_audio *audio, void *period,
+static void prv_period_done(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period,
                             const struct pbl_audio_pos *pos, void *arg) {
   const int16_t *samples = period;
 
@@ -47,7 +47,7 @@ static void prv_period_done(const struct pbl_audio *audio, void *period,
   s_win.xrun |= pos->xrun;
 
   /* Done with the period: the hardware may fill it again. */
-  (void)pbl_audio_period_ready(audio, period);
+  (void)pbl_audio_period_ready(audio, dir, period);
 
   if (++s_win.periods == WINDOW_PERIODS) {
     struct level level = {
@@ -75,7 +75,7 @@ int main(void) {
   struct pbl_audio_caps caps;
   int ret;
 
-  ret = pbl_audio_get_caps(MIC, &caps);
+  ret = pbl_audio_get_caps(MIC, PBL_AUDIO_CAPTURE, &caps);
   if (ret != 0) {
     fprintf(stderr, "mic: not ready (%d)\n", ret);
     return ret;
@@ -95,7 +95,7 @@ int main(void) {
 
   printf("mic: capturing %d ms at %d Hz\n", (int)(WINDOWS * WINDOW_MS), (int)RATE);
 
-  ret = pbl_audio_start(MIC, &stream);
+  ret = pbl_audio_start(MIC, PBL_AUDIO_CAPTURE, &stream);
   for (unsigned int i = 0U; ret == 0 && i < WINDOWS; i++) {
     struct level level;
 
@@ -106,7 +106,7 @@ int main(void) {
     }
   }
 
-  (void)pbl_audio_stop(MIC);
+  (void)pbl_audio_stop(MIC, PBL_AUDIO_CAPTURE);
   pbl_audio_buf_free(stream.buf);
 
   if (ret != 0) {

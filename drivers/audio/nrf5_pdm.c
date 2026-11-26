@@ -51,8 +51,10 @@ static void prv_queue(const struct pbl_audio_nrf5_pdm *pdm) {
   struct pbl_audio_nrf5_pdm_state *state = pdm->state;
 
   prv_putreg(pdm, NRF52_PDM_SAMPLE_PTR_OFFSET,
-             (uint32_t)(uintptr_t)pbl_audio_period(pbl_audio_dai_card(&pdm->dai), state->next));
-  state->next = (state->next + 1U) % pbl_audio_dai_card(&pdm->dai)->state->stream.periods;
+             (uint32_t)(uintptr_t)pbl_audio_period(pbl_audio_dai_card(&pdm->dai), PBL_AUDIO_CAPTURE,
+                                                   state->next));
+  state->next = (state->next + 1U) %
+                pbl_audio_stream(pbl_audio_dai_card(&pdm->dai), PBL_AUDIO_CAPTURE)->periods;
 }
 
 void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm) {
@@ -67,7 +69,7 @@ void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm) {
   // Each start latches the queued period, so the one before it is complete
   prv_queue(pdm);
   if (state->started) {
-    pbl_audio_period_elapsed(pbl_audio_dai_card(&pdm->dai));
+    pbl_audio_period_elapsed(pbl_audio_dai_card(&pdm->dai), PBL_AUDIO_CAPTURE);
   }
   state->started = true;
 }
@@ -96,7 +98,12 @@ static int prv_init(const struct pbl_audio_dai *dai) {
   return 0;
 }
 
-static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
+  if (dir != PBL_AUDIO_CAPTURE) {
+    return;
+  }
+
   caps->rates = PBL_AUDIO_RATE_16000;
   caps->min_channels = 1U;
   caps->max_channels = 2U;
@@ -106,8 +113,8 @@ static void prv_get_caps(const struct pbl_audio_dai *dai, struct pbl_audio_caps 
   caps->gain_default_mdb = 0;
 }
 
-static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_stream *stream,
-                     int32_t gain_mdb, bool mute) {
+static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
+                     const struct pbl_audio_stream *stream, int32_t gain_mdb, bool mute) {
   const struct pbl_audio_nrf5_pdm *pdm = prv_dev(dai);
   const uint32_t samples = stream->period_frames * stream->channels;
   const uint32_t gain = prv_gain(mute ? GAIN_MIN_MDB : gain_mdb);
@@ -150,7 +157,7 @@ static int prv_start(const struct pbl_audio_dai *dai, const struct pbl_audio_str
   return 0;
 }
 
-static int prv_stop(const struct pbl_audio_dai *dai) {
+static int prv_stop(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir) {
   const struct pbl_audio_nrf5_pdm *pdm = prv_dev(dai);
   int ret;
 
@@ -172,7 +179,7 @@ static int prv_stop(const struct pbl_audio_dai *dai) {
   return ret;
 }
 
-static int prv_set_gain(const struct pbl_audio_dai *dai, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir, int32_t gain_mdb) {
   const struct pbl_audio_nrf5_pdm *pdm = prv_dev(dai);
 
   prv_putreg(pdm, NRF52_PDM_GAINL_OFFSET, prv_gain(gain_mdb));

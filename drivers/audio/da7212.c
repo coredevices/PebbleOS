@@ -185,20 +185,22 @@ int pbl_audio_da7212_init(const struct pbl_device *dev) {
   return prv_write(da7212, DA7212_SYSTEM_ACTIVE, 0U);
 }
 
-static void prv_get_caps(const struct pbl_audio_codec *codec, struct pbl_audio_caps *caps) {
+static void prv_get_caps(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                         struct pbl_audio_caps *caps) {
   caps->gain_min_mdb = GAIN_MIN_MDB;
   caps->gain_max_mdb = GAIN_MAX_MDB;
   caps->gain_step_mdb = GAIN_STEP_MDB;
   caps->gain_default_mdb = 0;
 }
 
-static int prv_set_gain(const struct pbl_audio_codec *codec, int32_t gain_mdb) {
+static int prv_set_gain(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                        int32_t gain_mdb) {
   return prv_write(
       prv_dev(codec), DA7212_DAC_R_GAIN,
       (uint8_t)(GAIN_CODE_MIN + pbl_audio_gain_to_step(gain_mdb, GAIN_MIN_MDB, GAIN_STEP_MDB)));
 }
 
-static int prv_set_mute(const struct pbl_audio_codec *codec, bool mute) {
+static int prv_set_mute(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir, bool mute) {
   return prv_write(prv_dev(codec), DA7212_DAC_FILTERS5, mute ? DA7212_DAC_FILTERS5_SOFTMUTE : 0U);
 }
 
@@ -228,12 +230,12 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
     return ret;
   }
 
-  ret = prv_set_gain(codec, cfg->gain_mdb);
+  ret = prv_set_gain(codec, cfg->dir, cfg->gain_mdb);
   if (ret != 0) {
     return ret;
   }
 
-  ret = prv_set_mute(codec, cfg->mute);
+  ret = prv_set_mute(codec, cfg->dir, cfg->mute);
   if (ret != 0) {
     return ret;
   }
@@ -248,6 +250,10 @@ static int prv_power_up(const struct pbl_audio_codec *codec,
 static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audio_codec_cfg *cfg) {
   int ret;
 
+  if (cfg->dir != PBL_AUDIO_PLAYBACK) {
+    return -ENOTSUP;
+  }
+
   if (cfg->rate != RATE || (cfg->fmt & PBL_AUDIO_FMT_I2S) == 0U) {
     return -EINVAL;
   }
@@ -260,7 +266,8 @@ static int prv_enable(const struct pbl_audio_codec *codec, const struct pbl_audi
   return ret;
 }
 
-static int prv_disable(const struct pbl_audio_codec *codec) {
+static int prv_disable(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
+                       uint8_t streaming) {
   const struct pbl_audio_da7212 *dev = prv_dev(codec);
   int ret;
 

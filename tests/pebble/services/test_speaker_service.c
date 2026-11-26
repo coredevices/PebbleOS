@@ -90,7 +90,9 @@ static uint32_t s_nonzero_samples;
 static int16_t s_output[4096];
 static unsigned s_output_count;
 
-int pbl_audio_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *caps) {
+int pbl_audio_get_caps(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                       struct pbl_audio_caps *caps) {
+  cl_assert_equal_i(dir, PBL_AUDIO_PLAYBACK);
   *caps = (struct pbl_audio_caps){
     .rates = PBL_AUDIO_RATE_16000,
     .min_channels = 1,
@@ -102,7 +104,9 @@ int pbl_audio_get_caps(const struct pbl_audio *audio, struct pbl_audio_caps *cap
   return 0;
 }
 
-int pbl_audio_start(const struct pbl_audio *audio, const struct pbl_audio_stream *stream) {
+int pbl_audio_start(const struct pbl_audio *audio, enum pbl_audio_dir dir,
+                    const struct pbl_audio_stream *stream) {
+  cl_assert_equal_i(dir, PBL_AUDIO_PLAYBACK);
   cl_assert(!s_running);
   s_stream = *stream;
   s_running = true;
@@ -110,22 +114,22 @@ int pbl_audio_start(const struct pbl_audio *audio, const struct pbl_audio_stream
   return 0;
 }
 
-int pbl_audio_stop(const struct pbl_audio *audio) {
+int pbl_audio_stop(const struct pbl_audio *audio, enum pbl_audio_dir dir) {
   s_running = false;
   s_stop_count++;
   return 0;
 }
 
-int pbl_audio_period_ready(const struct pbl_audio *audio, void *period) {
+int pbl_audio_period_ready(const struct pbl_audio *audio, enum pbl_audio_dir dir, void *period) {
   return 0;
 }
 
-int pbl_audio_set_gain(const struct pbl_audio *audio, int32_t gain_mdb) {
+int pbl_audio_set_gain(const struct pbl_audio *audio, enum pbl_audio_dir dir, int32_t gain_mdb) {
   s_gain = gain_mdb;
   return 0;
 }
 
-int pbl_audio_set_mute(const struct pbl_audio *audio, bool mute) {
+int pbl_audio_set_mute(const struct pbl_audio *audio, enum pbl_audio_dir dir, bool mute) {
   s_mute = mute;
   return 0;
 }
@@ -163,7 +167,7 @@ static void prv_hw_period(void) {
   for (unsigned i = 0; i < PERIOD_FRAMES; i++) {
     period[i] = NOT_QUEUED;
   }
-  s_stream.period_done(SPEAKER, period, &pos, s_stream.arg);
+  s_stream.period_done(SPEAKER, PBL_AUDIO_PLAYBACK, period, &pos, s_stream.arg);
 
   for (unsigned i = 0; i < PERIOD_FRAMES && period[i] != NOT_QUEUED; i++) {
     s_samples_written++;
