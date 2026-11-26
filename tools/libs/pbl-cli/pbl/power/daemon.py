@@ -165,6 +165,14 @@ class _Daemon:
         elif op == "cycle":
             supply.cycle(args.get("off_s", power.DEFAULT_OFF_S))
         elif op == "voltage":
+            if args["voltage_mv"] == supply.voltage_mv:
+                return self.status()
+            # A recording holds the supply, and measures at its voltage.
+            if self.recording:
+                raise power.PowerError(
+                    f"recording {self.recording[2]} runs at {supply.voltage_mv} mV: "
+                    "stop it first"
+                )
             supply.set_voltage(args["voltage_mv"])
         elif op == "measure":
             if self.recording:
