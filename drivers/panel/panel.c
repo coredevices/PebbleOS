@@ -53,3 +53,12 @@ int pbl_panel_set_rotation(const struct pbl_panel *panel, uint32_t rotation) {
 
   return panel->ops->set_rotation(panel, rotation);
 }
+
+int pbl_panel_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                         uint16_t y1) {
+  if (panel->ops->set_window == nullptr) {
+    return -ENOTSUP;
+  }
+
+  return panel->ops->set_window(panel, x0, y0, x1, y1);
+}
