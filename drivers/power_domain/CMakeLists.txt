@@ -2,8 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 pbl_library()
-set(sources power_domain.c)
-if(CONFIG_POWER_DOMAIN_SF32LB_PMUC)
-  list(APPEND sources sf32lb_pmuc.c)
-endif()
-pbl_library_sources(${sources})
+pbl_library_sources(power_domain.c)
+pbl_library_sources_ifdef(CONFIG_POWER_DOMAIN_SF32LB_PMUC sf32lb_pmuc.c)
