@@ -62,9 +62,11 @@ int battery_state_store_save(const void *state, size_t size) {
     return -EINVAL;
   }
 
-  ret = pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
-  if (ret < 0) {
-    return ret;
+  if (pbl_flash_needs_erase(FLASH)) {
+    ret = pbl_flash_partition_erase(PART_MFG_BATTERY_STATE, 0U, PART_MFG_BATTERY_STATE_SIZE);
+    if (ret < 0) {
+      return ret;
+    }
   }
 
   ret = pbl_flash_partition_write(PART_MFG_BATTERY_STATE, 0U, state, size);
