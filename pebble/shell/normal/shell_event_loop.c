@@ -23,6 +23,7 @@
 #include <popups/mic_banner.h>
 #include <popups/notifications/notification_window.h>
 #include <popups/timeline/peek.h>
+#include <popups/timer_popup.h>
 #include <process_management/app_install_manager.h>
 #include <process_management/app_manager.h>
 #include <shell/normal/app_idle_timeout.h>
@@ -77,6 +78,11 @@ void shell_event_loop_handle_event(PebbleEvent *e) {
     case PEBBLE_ALARM_CLOCK_EVENT:
       stationary_wake_up();
       alarm_popup_push_window(&e->alarm_clock);
+      return;
+
+    case PEBBLE_TIMER_EVENT:
+      stationary_wake_up();
+      timer_popup_push_window(&e->timer);
       return;
 
     case PBL_BT_PEBBLE_PAIRING_EVENT:

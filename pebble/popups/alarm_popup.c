@@ -3,6 +3,8 @@
 
 #include "alarm_popup.h"
 
+#include "timer_popup.h"
+
 #include <stdio.h>
 
 #include <pbl/i18n/i18n.h>
@@ -113,6 +115,30 @@ typedef struct {
 } AlarmPopupData;
 
 AlarmPopupData *s_alarm_popup_data = nullptr;
+
+typedef struct PendingAlarm {
+  PebbleAlarmClockEvent event;
+  struct PendingAlarm *next;
+} PendingAlarm;
+
+// Alarms that fired while a modal lockout kept the popup stack closed.
+static PendingAlarm *s_pending_alarms;
+static PendingAlarm *s_pending_alarms_tail;
+
+static void prv_enqueue_alarm(const PebbleAlarmClockEvent *event) {
+  PendingAlarm *pending = pbl_malloc(sizeof(*pending));
+  if (!pending) {
+    PBL_LOG_WRN("Dropping alarm alert: out of memory");
+    return;
+  }
+  *pending = (PendingAlarm){.event = *event};
+  if (s_pending_alarms_tail) {
+    s_pending_alarms_tail->next = pending;
+  } else {
+    s_pending_alarms = pending;
+  }
+  s_pending_alarms_tail = pending;
+}
 
 static void prv_vibe(struct pbl_work *work);
 
@@ -329,6 +355,11 @@ static void prv_setup_action_bar(void) {
   action_bar_layer_set_click_config_provider(action_bar, prv_click_provider);
 }
 
+static void prv_push_pending_alerts_cb(void *callback_context) {
+  alarm_popup_push_pending();
+  timer_popup_push_pending();
+}
+
 static void prv_cleanup_alarm_popup(void *callback_context) {
   if (s_alarm_popup_data) {
     prv_stop_vibes();
@@ -345,16 +376,31 @@ static void prv_cleanup_alarm_popup(void *callback_context) {
     gbitmap_destroy(s_alarm_popup_data->action_bar_dismiss);
     pbl_free(s_alarm_popup_data);
     s_alarm_popup_data = nullptr;
+    // Let an alarm that fired during the alarm show now, then a timer.
+    launcher_task_add_callback(prv_push_pending_alerts_cb, nullptr);
   }
 }
 
 // ----------------------------------------------------------------------------------------------
 //! API
 void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
+  if (!event) {
+    return;
+  }
+  if (!modal_manager_is_priority_enabled(ALARM_PRIORITY)) {
+    // Battery-critical and other modal lockouts disable the alarm stack; defer
+    // the alarm until the lockout ends instead of losing it.
+    prv_enqueue_alarm(event);
+    return;
+  }
   if (s_alarm_popup_data) {
     // The window is already visible, don't show another one
     return;
   }
+
+  // An active timer popup owns the vibration and backlight; hand them over to
+  // the alarm instead of letting both alerts tear each other down.
+  timer_popup_abort();
 
   s_alarm_popup_data = pbl_malloc_check(sizeof(AlarmPopupData));
   *s_alarm_popup_data = (AlarmPopupData){};
@@ -392,11 +438,18 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 #endif
   actionable_dialog_push(s_alarm_popup_data->alarm_popup, prv_get_window_stack());
 
-  // The alarm id isn't carried in the event (PebbleEvent must stay <= 12 bytes
-  // — see static_assert in events.c). Fall back to the most-recently-fired
-  // alarm tracked in the alarm service. Synthetic events (trigger_alarm demo)
-  // get ALARM_INVALID_ID and skip the per-alarm config lookup.
-  const AlarmId alarm_id = alarm_get_most_recent_id();
+  // The event carries the firing alarm's ID. Synthetic events (trigger_alarm
+  // demo) use ALARM_INVALID_ID and fall back to the most-recently-fired alarm
+  // tracked in the alarm service.
+  AlarmId alarm_id = event->alarm_id;
+  if (alarm_id == ALARM_INVALID_ID) {
+    // Synthetic events, e.g. the trigger_alarm demo, have no configuration.
+    alarm_id = alarm_get_most_recent_id();
+  } else if (alarm_id != alarm_get_most_recent_id()) {
+    // This alarm was deferred behind another, so make it the one snooze and
+    // dismiss act on before the popup handles it.
+    alarm_set_most_recent_alarm(alarm_id);
+  }
   AlarmInfo info;
   const bool have_info = (alarm_id != ALARM_INVALID_ID) && alarm_get_info(alarm_id, &info);
   const bool vibe_on = !have_info || info.vibrate_enabled;
@@ -413,4 +466,24 @@ void alarm_popup_push_window(PebbleAlarmClockEvent *event) {
 #endif
 
   light_enable(true);
+}
+
+bool alarm_popup_is_active(void) {
+  return s_alarm_popup_data != nullptr;
+}
+
+void alarm_popup_push_pending(void) {
+  if (s_alarm_popup_data || !s_pending_alarms ||
+      !modal_manager_is_priority_enabled(ALARM_PRIORITY)) {
+    return;
+  }
+
+  PendingAlarm *pending = s_pending_alarms;
+  s_pending_alarms = pending->next;
+  if (!s_pending_alarms) {
+    s_pending_alarms_tail = nullptr;
+  }
+  PebbleAlarmClockEvent event = pending->event;
+  pbl_free(pending);
+  alarm_popup_push_window(&event);
 }

@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "117",
+  "revision" : "119",
   "version" : "2.0",
   "files": [
     "pebble/applib/status.h",
@@ -29,6 +29,7 @@
     "pebble/applib/battery_state_service.h",
     "pebble/applib/dark_mode_service.h",
     "pebble/applib/alarm_service.h",
+    "pebble/applib/timer_service.h",
     "pebble/applib/compass_service.h",
     "pebble/applib/connection_service.h",
     "pebble/applib/data_logging.h",
@@ -351,6 +352,65 @@
                 { "type": "function",
                   "name": "alarm_service_peek_next",
                   "addedRevision": "105"
+                }
+              ]
+            }, {
+              "type": "group",
+              "name": "TimerService",
+              "exports": [
+                {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_MAX_DURATION_S",
+                  "addedRevision": "119"
+                }, {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_INVALID_ID",
+                  "addedRevision": "119"
+                }, {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_MAX_TIMERS",
+                  "addedRevision": "119"
+                }, {
+                  "type": "define",
+                  "name": "TIMER_SERVICE_DESCRIPTION_SIZE",
+                  "addedRevision": "119"
+                }, {
+                  "type": "type",
+                  "name": "TimerServiceId",
+                  "addedRevision": "119"
+                }, {
+                  "type": "type",
+                  "name": "TimerServiceInfo",
+                  "addedRevision": "119"
+                }, {
+                  "type": "type",
+                  "name": "TimerServiceCreateResult",
+                  "addedRevision": "119"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_can_create",
+                  "addedRevision": "119",
+                  "stubReturn": "false"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_create",
+                  "addedRevision": "119",
+                  "stubDefinition": "static inline TimerServiceCreateResult timer_service_create(uint32_t duration_s, TimerServiceId *id_out) { (void)duration_s; if (id_out) { *id_out = TIMER_SERVICE_INVALID_ID; } return TimerServiceCreateErrUnavailable; }"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_cancel",
+                  "addedRevision": "119",
+                  "stubReturn": "false"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_cancel_all",
+                  "addedRevision": "119",
+                  "stubReturn": "0"
+                }, {
+                  "type": "function",
+                  "name": "timer_service_get_timers",
+                  "addedRevision": "119",
+                  "stubReturn": "0"
                 }
               ]
             }, {

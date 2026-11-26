@@ -96,6 +96,11 @@ pbl_clar_test(test_alarm_smart
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_timer
+  SOURCES
+    pebble/services/timers/timer.c
+)
+
 pbl_clar_test(test_battery_monitor
   SOURCES
     pebble/services/battery/voltage/battery_state.c

@@ -128,6 +128,8 @@ typedef enum {
   //! Emitted when the effective dark mode flips, whether the cause is the mode pref or the
   //! schedule. Only emitted on changes of \ref system_theme_is_dark_mode.
   PEBBLE_DARK_MODE_CHANGE_EVENT,
+  //! A disposable timer created through the TimerService expired.
+  PEBBLE_TIMER_EVENT,
 
   PEBBLE_NUM_EVENTS
 } PebbleEventType;
@@ -345,8 +347,13 @@ typedef struct PBL_PACKED { // 8 bytes
 
 typedef struct PBL_PACKED { // 8 bytes
   uint32_t alarm_time; //!< Needs to be converted to 'struct pbl_tm' in the event service handler
-  const char *alarm_label;
+  int32_t alarm_id;    //!< Alarm that fired, or ALARM_INVALID_ID for a synthetic event.
 } PebbleAlarmClockEvent;
+
+typedef struct PBL_PACKED { // 8 bytes
+  int32_t id;               //!< ID of the timer that expired.
+  uint32_t duration_s;      //!< Length of the timer that expired.
+} PebbleTimerEvent;
 
 typedef void (*CallbackEventCallback)(void *data);
 
@@ -698,6 +705,7 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
     PebbleLaunchAppEvent launch_app;
     PebbleSystemMessageEvent firmware_update;
     PebbleAlarmClockEvent alarm_clock;
+    PebbleTimerEvent timer;
     PebbleAppOutboxSentEvent app_outbox_sent;
     PebbleCallbackEvent app_outbox_msg;
     union {

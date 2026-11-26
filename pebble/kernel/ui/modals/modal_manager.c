@@ -254,6 +254,10 @@ bool modal_manager_get_enabled(void) {
   return s_modal_min_priority < ModalPriorityMax;
 }
 
+bool modal_manager_is_priority_enabled(ModalPriority priority) {
+  return priority >= s_modal_min_priority && priority < NumModalPriorities;
+}
+
 ClickManager *modal_manager_get_click_manager(void) {
   return &s_modal_window_click_manager;
 }

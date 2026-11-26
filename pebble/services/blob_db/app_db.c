@@ -514,6 +514,15 @@ bool app_db_health_allowed(const Uuid *uuid) {
          (permissions & APP_DB_PERMISSION_HEALTH_GRANTED);
 }
 
+bool app_db_timer_granted(const Uuid *uuid) {
+  if (!uuid || (prv_lock_mutex_and_open_file() != 0)) {
+    return false;
+  }
+  const uint32_t permissions = prv_read_permissions(&s_app_db.settings_file, uuid);
+  prv_close_file_and_unlock_mutex();
+  return (permissions & APP_DB_PERMISSION_TIMER) != 0;
+}
+
 int app_db_compact(void) {
   int rv = prv_lock_mutex_and_open_file();
   if (rv != 0) {

@@ -108,6 +108,7 @@ static bool launcher_is_popup_event(PebbleEvent *e) {
   switch (e->type) {
     case PEBBLE_SYS_NOTIFICATION_EVENT:
     case PEBBLE_ALARM_CLOCK_EVENT:
+    case PEBBLE_TIMER_EVENT:
     case PEBBLE_BATTERY_CONNECTION_EVENT:
     case PEBBLE_BATTERY_STATE_CHANGE_EVENT:
       return true;

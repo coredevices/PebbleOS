@@ -31,6 +31,7 @@
 #include <pbl/services/speaker/speaker_service.h>
 #include <pbl/services/stationary.h>
 #include <pbl/services/timeline/event.h>
+#include <pbl/services/timers/timer.h>
 #include <pbl/services/wakeup.h>
 #include <pbl/services/weather/weather_service.h>
 
@@ -99,6 +100,9 @@ void services_normal_init(void) {
   music_init();
   alarm_init();
   timeline_event_init();
+#ifdef CONFIG_SERVICE_TIMERS
+  timer_init();
+#endif
   dls_init();
 
   wakeup_init();
