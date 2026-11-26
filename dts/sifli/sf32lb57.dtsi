@@ -422,6 +422,16 @@
 			status = "disabled";
 		};
 
+		pdm1: audio-controller@5009a000 {
+			compatible = "sifli,sf32lb57-pdm";
+			reg = <0x5009a000 0x1000>;
+			interrupts = <82>;
+			clocks = <&hpsys_rcc SF32LB57_HPSYS_RCC_CLK_PDM1>;
+			resets = <&hpsys_rcc SF32LB57_HPSYS_RCC_RST_PDM1>;
+			#sound-dai-cells = <0>;
+			status = "disabled";
+		};
+
 		i2c1: i2c@5009c000 {
 			compatible = "sifli,sf32lb57-i2c", "sifli,sf32lb52-i2c";
 			reg = <0x5009c000 0x1000>;
