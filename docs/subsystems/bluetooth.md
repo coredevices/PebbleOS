@@ -167,6 +167,8 @@ used without the rest of the subsystem:
   Notification listeners are fed from a GAP event listener of the clients'
   own, whoever handles the GAP events of a connection.
 - `pbl/bluetooth/clients/gap.h` reads the device name of a peer.
+- `pbl/bluetooth/clients/service_changed.h` tells when the services of a peer
+  change, for the other clients to look for theirs again.
 - `pbl/bluetooth/clients/ancs.h` (`BT_ANCS_CLIENT`) is the client of the Apple
   Notification Center Service. It reports the notifications of the device,
   and on request gets their attributes and those of their apps, gathering
