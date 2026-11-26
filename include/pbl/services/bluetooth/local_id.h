@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/bluetooth/id.h>
 #include <pbl/bluetooth/types.h>
 
 /**
@@ -14,11 +13,11 @@
  */
 
 /**
- * @brief Configure the local name and cache the identity address, right after the stack starts.
+ * @brief Set the local name and read the identity address, right after the stack starts.
  *
- * Uses the stored device name, or "Pebble XXXX" from the last two address bytes.
+ * The name is the one set last, or "Pebble XXXX" from the last two address bytes.
  */
-void bt_local_id_configure_driver(void);
+void bt_local_id_handle_start(void);
 
 /**
  * @brief Override the device name.
@@ -39,24 +38,15 @@ void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE])
 /**
  * @brief Copy the local identity address.
  *
- * @param[out] addr_out Address.
+ * @param[out] addr_out Its octets, least significant first.
  */
-void bt_local_id_copy_address(struct pbl_bt_addr *addr_out);
+void bt_local_id_copy_address(uint8_t addr_out[6]);
 
 /**
- * @brief Format the local address as a hex string ("0x000000000000").
+ * @brief Format the local identity address ("00:00:00:00:00:00").
  *
- * Writes "Unknown" if the address is not known.
- *
- * @param[out] addr_hex_str_out Destination buffer.
+ * @param[out] addr_str_out Destination buffer.
  */
-void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]);
-
-/**
- * @brief Format the local address as a MAC string ("00:00:00:00:00:00").
- *
- * @param[out] addr_mac_str_out Destination buffer.
- */
-void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]);
+void bt_local_id_copy_address_string(char addr_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]);
 
 /** @} */

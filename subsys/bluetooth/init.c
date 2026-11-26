@@ -50,11 +50,10 @@ static int s_addr_rc;
 
 static int prv_ensure_addr(void) {
 #ifdef CONFIG_NIMBLE_ID_ADDR
-  struct pbl_bt_addr addr;
-  enum pbl_bt_id_addr_type type;
+  ble_addr_t addr;
   int rc;
 
-  rc = pbl_bt_id_addr_get(&addr, &type);
+  rc = pbl_bt_id_addr_get(&addr);
   if (rc == -ENOENT) {
     return ble_hs_util_ensure_addr(0);
   }
@@ -64,8 +63,8 @@ static int prv_ensure_addr(void) {
   }
 
   // A public one is programmed into the controller by its transport.
-  if (type == PBL_BT_ID_ADDR_RANDOM_STATIC) {
-    rc = ble_hs_id_set_rnd(addr.octets);
+  if (addr.type == BLE_ADDR_RANDOM) {
+    rc = ble_hs_id_set_rnd(addr.val);
     if (rc != 0) {
       return rc;
     }

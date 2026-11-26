@@ -81,7 +81,7 @@ static void prv_handle_init(void) {
   strncpy(data->serial_buffer, serial_number, MFG_SERIAL_NUMBER_SIZE);
   data->serial_buffer[MFG_SERIAL_NUMBER_SIZE] = '\0';
 
-  bt_local_id_copy_address_mac_string(data->bt_mac_buffer);
+  bt_local_id_copy_address_string(data->bt_mac_buffer);
 
   BatteryChargeState battery_state = battery_get_charge_state();
   uint16_t battery_mv = battery_state_get_voltage();

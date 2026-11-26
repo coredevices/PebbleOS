@@ -82,7 +82,7 @@ static void prv_comm_start(void) {
     bt_link_init();
     bt_advertising_init();
     bt_gateway_init();
-    bt_local_id_configure_driver();
+    bt_local_id_handle_start();
 #ifdef CONFIG_BT_SERVICE_BAS
     bt_battery_level_start();
 #endif

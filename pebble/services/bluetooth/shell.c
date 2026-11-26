@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
-#include <pbl/bluetooth/id.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/bluetooth/responsiveness.h>
 #include <pbl/bluetooth/types.h>
@@ -30,10 +29,10 @@ PBL_SHELL_CMD_REGISTER(bt, sub_bt, "Bluetooth", nullptr);
 static struct pbl_bt_responsiveness_req s_response_time_req;
 
 static int prv_cmd_mac(const struct pbl_shell *sh, size_t argc, char **argv) {
-  char addr_hex_str[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE];
+  uint8_t addr[6];
 
-  bt_local_id_copy_address_hex_string(addr_hex_str);
-  pbl_shell_print(sh, "%s", addr_hex_str);
+  bt_local_id_copy_address(addr);
+  pbl_shell_print(sh, "0x%02X%02X%02X%02X%02X%02X", PBL_BT_ADDR_XPLODE(addr));
   return 0;
 }
 
@@ -141,7 +140,7 @@ static void prv_print_bond(const struct pbl_bt_bond_info *info, void *user_data)
   }
 
   pbl_shell_print(sh, "Bond: " PBL_BT_ADDR_FMT " random=%u irk=%u",
-                  PBL_BT_ADDR_XPLODE_VAL(info->addr.val), info->addr.type == BLE_ADDR_RANDOM,
+                  PBL_BT_ADDR_XPLODE(info->addr.val), info->addr.type == BLE_ADDR_RANDOM,
                   info->irk_valid);
   pbl_shell_print(sh, " Name: %s", name);
 }
@@ -154,8 +153,8 @@ static int prv_cmd_bonds(const struct pbl_shell *sh, size_t argc, char **argv) {
 
   if (pbl_bt_prf_store_get_pairing(&peer, nullptr, name)) {
     pbl_shell_print(sh, "PRF store: " PBL_BT_ADDR_FMT " random=%u sc=%u authenticated=%u",
-                    PBL_BT_ADDR_XPLODE_VAL(peer.peer_addr.val),
-                    peer.peer_addr.type == BLE_ADDR_RANDOM, peer.sc, peer.authenticated);
+                    PBL_BT_ADDR_XPLODE(peer.peer_addr.val), peer.peer_addr.type == BLE_ADDR_RANDOM,
+                    peer.sc, peer.authenticated);
     pbl_shell_print(sh, " Name: %s", name);
   } else {
     pbl_shell_print(sh, "PRF store: no pairing");

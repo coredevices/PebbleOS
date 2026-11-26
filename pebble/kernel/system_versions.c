@@ -45,7 +45,7 @@ struct PBL_PACKED VersionsMessage {
   uint32_t boot_version;
   char hw_version[MFG_HW_VERSION_SIZE];
   char serial_number[MFG_SERIAL_NUMBER_SIZE];
-  struct pbl_bt_addr device_address;
+  uint8_t device_address[6];
   ResourceVersion system_resources_version;
   char iso_locale[PBL_I18N_LOCALE_LEN];
   uint16_t lang_version;
@@ -160,7 +160,7 @@ static void prv_send_watch_versions(struct pbl_pp_session *session) {
 #ifndef CONFIG_RECOVERY_FW
   versions_msg.capabilities.multiple_language_packs_support = 1;
 #endif
-  bt_local_id_copy_address(&versions_msg.device_address);
+  bt_local_id_copy_address(versions_msg.device_address);
 
   versions_msg.system_resources_version = resource_get_system_version();
   resource_version_to_network_endian(&versions_msg.system_resources_version);

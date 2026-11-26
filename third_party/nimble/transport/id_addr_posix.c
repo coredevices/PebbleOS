@@ -7,12 +7,12 @@
 
 #include <pbl/bluetooth/id_addr.h>
 
-int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type) {
-  if (!id_addr_posix_bottom_get(addr->octets)) {
+int pbl_bt_id_addr_get(ble_addr_t *addr) {
+  if (!id_addr_posix_bottom_get(addr->val)) {
     return -ENOENT;
   }
 
-  *type = PBL_BT_ID_ADDR_RANDOM_STATIC;
+  addr->type = BLE_ADDR_RANDOM;
 
   return 0;
 }

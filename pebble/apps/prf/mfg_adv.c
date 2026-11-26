@@ -30,7 +30,7 @@ static void prv_handle_init(void) {
   window_init(window, "BLE Adv");
   window_set_fullscreen(window, true);
 
-  bt_local_id_copy_address_mac_string(data->mac_buffer);
+  bt_local_id_copy_address_string(data->mac_buffer);
 
   QRCode *qr_code = &data->qr_code;
   qr_code_init_with_parameters(
