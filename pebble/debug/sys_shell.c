@@ -14,6 +14,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mpu.h>
 #include <pbl/kernel/reboot.h>
+#include <pbl/kernel/sched.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 #include <pbl/shell/shell.h>
@@ -98,6 +99,23 @@ static int prv_cmd_fault(const struct pbl_shell *sh, size_t argc, char **argv) {
   return 0;
 }
 #endif
+
+static int prv_cmd_hang(const struct pbl_shell *sh, size_t argc, char **argv) {
+  if (strcmp(argv[1], "thread") == 0) {
+    // No other thread runs, the task watchdog's included
+    pbl_shell_print(sh, "Spinning with the scheduler locked");
+    pbl_sched_lock();
+  } else if (strcmp(argv[1], "locked") == 0) {
+    pbl_shell_print(sh, "Spinning with the kernel locked");
+    pbl_irq_lock();
+  } else {
+    pbl_shell_error(sh, "invalid mode '%s'", argv[1]);
+    return -EINVAL;
+  }
+
+  for (;;) {
+  }
+}
 
 static int prv_cmd_factory_reset(const struct pbl_shell *sh, size_t argc, char **argv) {
   if (argc < 2) {
@@ -264,6 +282,8 @@ PBL_SHELL_SUBCMD_ADD(sub_sys, panic, nullptr, "Trigger a panic", prv_cmd_panic, 
 PBL_SHELL_SUBCMD_ADD(sub_sys, fault, nullptr, "Trigger a fault with known registers", prv_cmd_fault,
                      0, 0);
 #endif
+PBL_SHELL_SUBCMD_ADD(sub_sys, hang, nullptr, "Spin until the watchdog resets <thread|locked>",
+                     prv_cmd_hang, 2, 0);
 #ifdef CONFIG_RECOVERY_FW
 PBL_SHELL_SUBCMD_ADD(sub_sys, factory_reset, nullptr, "Factory reset", prv_cmd_factory_reset, 1, 0);
 #else
