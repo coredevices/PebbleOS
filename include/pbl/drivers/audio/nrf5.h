@@ -17,8 +17,14 @@
  *
  * The PDM interface records one or two digital microphones at 16 kHz from a 1.28 MHz clock;
  * its gain runs from -20 to +20 dB. The I2S interface plays mono at 16 kHz, sent as stereo with
- * both channels equal, and runs as a slave when the link has @ref PBL_AUDIO_FMT_CODEC_MASTER,
- * still providing a 4 MHz master clock. Both run HFCLK from the crystal while streaming.
+ * both channels equal, and records one or two channels at 16 kHz, mono taking the left channel.
+ * It runs as a slave when the link has @ref PBL_AUDIO_FMT_CODEC_MASTER, still providing a 4 MHz
+ * master clock. Both run HFCLK from the crystal while streaming.
+ *
+ * The I2S interface is one DAI streaming both directions of its link, each needing its data pin.
+ * Its configuration cannot change while it runs, so a direction joining or leaving the other
+ * restarts it: the capture path runs only while something records, and the direction that goes
+ * on loses the rest of the block in flight, flagged as an xrun.
  * @{
  */
 
@@ -84,14 +90,22 @@ void pbl_audio_nrf5_pdm_irq_handler(const struct pbl_audio_nrf5_pdm *pdm);
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_PDM_IRQ_PRIO, pbl_audio_nrf5_pdm_irq_handler, \
                       &sym##_inst, 0)
 
-/** @brief Stereo frames of an I2S bounce buffer. */
+/** @brief Most frames in a period of the first I2S stream, the size of its DMA blocks. */
 #define PBL_AUDIO_NRF5_I2S_BOUNCE_FRAMES 512U
 
 /** @cond INTERNAL_HIDDEN */
-struct pbl_audio_nrf5_i2s_state {
+struct pbl_audio_nrf5_i2s_dir {
   int16_t *bounce[2];
   uint8_t bounce_idx;
   uint8_t ring_idx;
+  size_t offset;
+  bool started;
+};
+
+struct pbl_audio_nrf5_i2s_state {
+  struct pbl_audio_nrf5_i2s_dir dirs[PBL_AUDIO_DIRS];
+  size_t block_frames;
+  uint8_t running;
 };
 /** @endcond */
 
@@ -111,8 +125,10 @@ struct pbl_audio_nrf5_i2s {
   struct pbl_gpio lrck;
   /** Master clock pin. */
   struct pbl_gpio mck;
-  /** Data out pin. */
+  /** Data out pin, or none without playback. */
   struct pbl_gpio sdout;
+  /** Data in pin, or none without capture. */
+  struct pbl_gpio sdin;
   /** Driver runtime state. */
   struct pbl_audio_nrf5_i2s_state *state;
 };
@@ -129,9 +145,10 @@ extern const struct pbl_audio_dai_ops pbl_audio_nrf5_i2s_ops;
 void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
 
 /**
- * @brief Define the I2S interface, a playback DAI.
+ * @brief Define the I2S interface, a DAI playing, recording or both.
  *
- * Periods are copied into stereo bounce buffers, so a period must fit one.
+ * The first stream sets the size of the DMA blocks both directions move, so its periods must fit
+ * @ref PBL_AUDIO_NRF5_I2S_BOUNCE_FRAMES.
  *
  * @param sym Symbol of the DAI.
  * @param _name Device name.
@@ -141,9 +158,11 @@ void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
  * @param _sck Bit clock pin, from PBL_GPIO().
  * @param _lrck Frame clock pin, from PBL_GPIO().
  * @param _mck Master clock pin, from PBL_GPIO().
- * @param _sdout Data out pin, from PBL_GPIO().
+ * @param _sdout Data out pin, from PBL_GPIO(), with a null port without playback.
+ * @param _sdin Data in pin, from PBL_GPIO(), with a null port without capture.
  */
-#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _hfclk, _sck, _lrck, _mck, _sdout) \
+#define PBL_AUDIO_NRF5_I2S_DEFINE(sym, _name, _base, _irq, _hfclk, _sck, _lrck, _mck, _sdout, \
+                                  _sdin)                                                      \
   PBL_AUDIO_DAI_STATE_DEFINE(sym);                                                            \
   static struct pbl_audio_nrf5_i2s_state sym##_i2s_state;                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_audio_nrf5_i2s, struct pbl_audio_dai, dai){             \
@@ -155,6 +174,7 @@ void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
     .lrck = _lrck,                                                                            \
     .mck = _mck,                                                                              \
     .sdout = _sdout,                                                                          \
+    .sdin = _sdin,                                                                            \
     .state = &sym##_i2s_state,                                                                \
   };                                                                                          \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_AUDIO_NRF5_I2S_IRQ_PRIO, pbl_audio_nrf5_i2s_irq_handler,   \

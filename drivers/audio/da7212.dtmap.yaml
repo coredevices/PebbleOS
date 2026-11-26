@@ -10,3 +10,6 @@ args:
   - parent: i2c
   - reg: 0
   - supply: VDDA
+  # 0: the board does not record
+  - prop: dlg,micbias1-lvl
+    default: 0

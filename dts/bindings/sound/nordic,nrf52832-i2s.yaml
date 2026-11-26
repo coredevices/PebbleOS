@@ -10,7 +10,9 @@ maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Plays through I2S, as a master or a slave to the codec. It selects its own pins, given as GPIO properties named after the signals.
+  Plays and records through I2S, as a master or a slave to the codec, in both
+  directions at once if needed. It selects its own pins, given as GPIO
+  properties named after the signals.
 
 allOf:
   - $ref: dai-common.yaml#
@@ -49,9 +51,11 @@ properties:
 
   sdout-gpios:
     maxItems: 1
+    description: Data out, needed for playback.
 
   sdin-gpios:
     maxItems: 1
+    description: Data in, needed for capture.
 
 required:
   - compatible
@@ -76,4 +80,5 @@ examples:
         lrck-gpios = <&gpio0 7 0>;
         mck-gpios = <&gpio1 9 0>;
         sdout-gpios = <&gpio0 13 0>;
+        sdin-gpios = <&gpio0 14 0>;
     };

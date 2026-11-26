@@ -8,4 +8,5 @@ config AUDIO_DA7212
     select I2C
     select REGULATOR
     help
-      The Dialog DA7212 codec, playing to its line output.
+      The Dialog DA7212 codec, playing to its line output and recording
+      from its first microphone input.
