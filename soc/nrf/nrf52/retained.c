@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <pbl/crc/crc.h>
+#include <pbl/kernel/assert.h>
 #include <pbl/kernel/section.h>
 #include <pbl/logging/logging.h>
 #include <pbl/system/rtc_registers.h>
@@ -20,6 +21,15 @@ static uint32_t prv_crc(void) {
 
 void retained_write(uint8_t id, uint32_t value) {
   s_retained[id] = value;
+  s_retained[NRF_RETAINED_REGISTER_CRC] = prv_crc();
+}
+
+void retained_write_many(uint8_t id, const uint32_t *values, size_t count) {
+  PBL_ASSERTN((size_t)id + count <= NRF_RETAINED_REGISTER_CRC);
+
+  for (size_t i = 0U; i < count; i++) {
+    s_retained[id + i] = values[i];
+  }
   s_retained[NRF_RETAINED_REGISTER_CRC] = prv_crc();
 }
 
