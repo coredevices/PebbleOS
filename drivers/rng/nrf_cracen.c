@@ -25,7 +25,8 @@ PBL_LOG_MODULE_DEFINE(driver_rng_nrf_cracen, CONFIG_DRIVER_RNG_LOG_LEVEL);
 #define KEY_WORDS   4U
 #define CACHE_WORDS 8U
 
-#define TIMEOUT_US 10000U
+// Covers the start-up health tests, which take 33 ms on the nRF54LM20A
+#define TIMEOUT_US 100000U
 #define ATTEMPTS   3U
 
 static const struct pbl_nrf_cracen *const s_cracen = &pbl_nrf_cracen_inst;
@@ -62,9 +63,12 @@ static int prv_fill(void) {
   int ret;
 
   prv_putreg(NRF54L_CRACEN_RNG_CONTROL_OFFSET, CRACEN_RNG_CONTROL_SOFTRST);
+#ifdef CONFIG_SOC_NRF54L15
+  // The generator of the nRF54LM20A has none of these, and warms up for as long out of reset
   prv_putreg(NRF54L_CRACEN_RNG_SWOFFTMRVAL_OFFSET, 0U);
   prv_putreg(NRF54L_CRACEN_RNG_CLKDIV_OFFSET, 0U);
   prv_putreg(NRF54L_CRACEN_RNG_INITWAITVAL_OFFSET, INIT_WAIT_CYCLES);
+#endif
   prv_putreg(NRF54L_CRACEN_RNG_CONTROL_OFFSET,
              CRACEN_RNG_CONTROL_ENABLE |
                  PBL_FIELD_PREP(CRACEN_RNG_CONTROL_NB128BITBLOCKS_MASK, NB128BITBLOCKS));
