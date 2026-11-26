@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_QEMU
+    bool "QEMU audio device"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
+    help
+      Playback through the QEMU audio device.
+
+config AUDIO_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on AUDIO_QEMU
+    help
+      Priority of the device interrupt.

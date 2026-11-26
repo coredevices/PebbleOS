@@ -19,111 +19,11 @@ menuconfig ACCEL
 
 if ACCEL
 
-config ACCEL_LIS2DW12
-    bool "ST LIS2DW12"
-    default y
-    depends on DT_HAS_ST_LIS2DW12_ENABLED
-    select I2C
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Support for the ST LIS2DW12 accelerometer.
-
-config ACCEL_LSM6DSO
-    bool "ST LSM6DSO"
-    default y
-    depends on DT_HAS_ST_LSM6DSO_ENABLED
-    select GPIO
-    select I2C
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Support for the ST LSM6DSO accelerometer/gyroscope.
-
-config ACCEL_SIM
-    bool "Simulator"
-    default y
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Simulated accelerometer, replaying samples and events fed through
-      its simulator API (pbl/drivers/imu/sim.h).
+rsource "Kconfig.lis2dw12"
+rsource "Kconfig.lsm6dso"
+rsource "Kconfig.accel_sim"
 
 endif # ACCEL
-
-if ACCEL_LIS2DW12
-
-config ACCEL_LIS2DW12_WK_DUR_DEFAULT
-    int "Default wake duration"
-    range 0 3
-    default 0
-    help
-      Default wake duration applied at init.
-
-config ACCEL_LIS2DW12_WK_THS_MIN
-    int "Minimum wake threshold"
-    range 0 63
-    default 0
-    help
-      Minimum (highest sensitivity) wake-up threshold.
-
-config ACCEL_LIS2DW12_WK_THS_MAX
-    int "Maximum wake threshold"
-    range 0 63
-    default 63
-    help
-      Maximum (lowest sensitivity) wake-up threshold.
-
-config ACCEL_LIS2DW12_WK_THS_DEFAULT
-    int "Default wake threshold"
-    range 0 63
-    default 0
-    help
-      Default wake-up threshold applied at init.
-
-config ACCEL_LIS2DW12_SCALE_MG
-    int "Full-scale range (mg)"
-    default 2000
-    help
-      Acceleration full-scale range in mg (2000, 4000, 8000 or 16000).
-
-endif # ACCEL_LIS2DW12
-
-if ACCEL_LSM6DSO
-
-config ACCEL_LSM6DSO_WK_DUR_DEFAULT
-    int "Default wake duration"
-    range 0 3
-    default 0
-    help
-      Default wake duration applied at init.
-
-config ACCEL_LSM6DSO_WK_THS_MIN
-    int "Minimum wake threshold"
-    range 0 63
-    default 0
-    help
-      Minimum (highest sensitivity) wake-up threshold.
-
-config ACCEL_LSM6DSO_WK_THS_MAX
-    int "Maximum wake threshold"
-    range 0 63
-    default 63
-    help
-      Maximum (lowest sensitivity) wake-up threshold.
-
-config ACCEL_LSM6DSO_WK_THS_DEFAULT
-    int "Default wake threshold"
-    range 0 63
-    default 0
-    help
-      Default wake-up threshold applied at init.
-
-config ACCEL_LSM6DSO_SCALE_MG
-    int "Full-scale range (mg)"
-    default 2000
-    help
-      Acceleration full-scale range in mg (2000, 4000, 8000 or 16000).
-
-endif # ACCEL_LSM6DSO
 
 menuconfig MAG
     bool "Magnetometer"
@@ -133,22 +33,8 @@ menuconfig MAG
 
 if MAG
 
-config MAG_MMC5603NJ
-    bool "MEMSIC MMC5603NJ"
-    default y
-    depends on DT_HAS_MEMSIC_MMC5603_ENABLED
-    select I2C
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Support for the MEMSIC MMC5603NJ magnetometer.
-
-config MAG_SIM
-    bool "Simulator"
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Simulated magnetometer, measuring a field set through its
-      simulator API (pbl/drivers/imu/sim.h).
+rsource "Kconfig.mmc5603nj"
+rsource "Kconfig.mag_sim"
 
 endif # MAG
 

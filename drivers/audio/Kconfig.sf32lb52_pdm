@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_SF32LB52_PDM
+    bool "SiFli SF32LB52 and SF32LB57 PDM"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PDM_ENABLED || DT_HAS_SIFLI_SF32LB57_PDM_ENABLED
+    select CLK
+    select DMA
+    select PINCTRL
+    select RESET
+    help
+      Capture from digital microphones on the SF32LB52 and SF32LB57 PDM
+      interface.
+
+config AUDIO_SF32LB52_PDM_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on AUDIO_SF32LB52_PDM
+    help
+      Priority of the PDM interrupt.

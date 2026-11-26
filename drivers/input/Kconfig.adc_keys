@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config INPUT_ADC_KEYS
+    bool "ADC keys"
+    default y
+    depends on DT_HAS_ADC_KEYS_IRQ_ENABLED
+    depends on INPUT
+    select ADC
+    select GPIO
+    select KERNEL_SYS_WORKQ
+    help
+      Keys on a resistor ladder read through an ADC channel on an
+      interrupt that a press or release raises.

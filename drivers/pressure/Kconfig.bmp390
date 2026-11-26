@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PRESSURE_BMP390
+    bool "Bosch BMP380 and BMP390"
+    default y
+    depends on DT_HAS_BOSCH_BMP380_ENABLED
+    select I2C
+    help
+      Support for the Bosch BMP380 and BMP390 barometric pressure sensors
+      (devicetree compatible bosch,bmp380).

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PINCTRL_SF32LB57
+    bool "SiFli SF32LB57 pin controller"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_PINCTRL_ENABLED
+    help
+      Pin multiplexer and pad configuration of the SiFli SF32LB57 HPSYS
+      pads.

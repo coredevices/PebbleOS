@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_QEMU
+    bool "QEMU simple UART"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_SIMPLE_UART_ENABLED
+    help
+      Support for the QEMU simple UART peripheral.
+
+config UART_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UART_QEMU
+    help
+      Priority of the port interrupts.

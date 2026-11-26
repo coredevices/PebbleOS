@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REGULATOR_STM32H7_PWR
+    bool "STM32H7 PWR regulators"
+    default y
+    depends on DT_HAS_ST_STM32H747_PWR_ENABLED
+    help
+      Support for USB33, the supply of the USB transceivers, which the
+      voltage detector of the STM32H7 PWR lets through.

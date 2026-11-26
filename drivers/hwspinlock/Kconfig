@@ -16,13 +16,6 @@ config HWSPINLOCK_TIMEOUT_US
       How long a processor waits for a lock another one holds before giving
       up, which only happens when the holder stopped with it.
 
-config HWSPINLOCK_STM32_HSEM
-    bool "STM32H7 hardware semaphores"
-    default y
-    depends on DT_HAS_ST_STM32_HWSPINLOCK_ENABLED
-    select CLK
-    help
-      Hardware spinlocks between the cores of a dual-core STM32H7, taken
-      with the hardware semaphores.
+rsource "Kconfig.stm32_hsem"
 
 endif # HWSPINLOCK

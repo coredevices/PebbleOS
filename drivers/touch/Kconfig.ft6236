@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TOUCH_FT6236
+    bool "FocalTech FT6x36"
+    default y
+    depends on DT_HAS_FOCALTECH_FT6236_ENABLED
+    select I2C
+    select KERNEL_SYS_WORKQ
+    select PINCTRL
+    help
+      Support for the FocalTech FT6x36 touch controllers, such as the
+      FT6236 and the FT6146.

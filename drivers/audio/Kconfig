@@ -20,137 +20,17 @@ menuconfig AUDIO
 
 if AUDIO
 
-config AUDIO_AMP_GPIO
-    bool "GPIO amplifier"
-    default y
-    depends on DT_HAS_AWINIC_AW8155_ENABLED || DT_HAS_SIMPLE_AUDIO_AMPLIFIER_ENABLED
-    select GPIO
-    select REGULATOR
-    help
-      Amplifier switched by an enable GPIO, with an optional supply and
-      enable mode pulses.
-
-config AUDIO_SF32LB_AUDCODEC
-    bool "SiFli SF32LB audio codec"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_AUDCODEC_ENABLED || DT_HAS_SIFLI_SF32LB57_AUDCODEC_ENABLED
-    select CLK
-    select DMA
-    select PINCTRL
-    select RESET
-    help
-      Playback through the DAC of the SF32LB audio codec, and capture from
-      analog microphones through its ADC.
-
-config AUDIO_SF32LB52_PDM
-    bool "SiFli SF32LB52 and SF32LB57 PDM"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_PDM_ENABLED || DT_HAS_SIFLI_SF32LB57_PDM_ENABLED
-    select CLK
-    select DMA
-    select PINCTRL
-    select RESET
-    help
-      Capture from digital microphones on the SF32LB52 and SF32LB57 PDM
-      interface.
-
-config AUDIO_SF32LB52_PDM_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on AUDIO_SF32LB52_PDM
-    help
-      Priority of the PDM interrupt.
-
-config AUDIO_STM32_SAI
-    bool "STM32 SAI"
-    default y
-    depends on DT_HAS_ST_STM32_SAI_SUB_A_ENABLED || DT_HAS_ST_STM32_SAI_SUB_B_ENABLED
-    select CLK
-    select DMA
-    select PDM
-    select PINCTRL
-    help
-      Playback through a sub-block of an STM32 serial audio interface,
-      the master of an I2S link to a codec, and capture of PDM
-      microphones on its PDM interface.
-
-config AUDIO_QEMU
-    bool "QEMU audio device"
-    default y
-    depends on DT_HAS_QEMU_PEBBLE_AUDIO_ENABLED
-    help
-      Playback through the QEMU audio device.
-
-config AUDIO_QEMU_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on AUDIO_QEMU
-    help
-      Priority of the device interrupt.
-
-config AUDIO_SIM_MIC
-    bool "Simulated microphone"
-    default y if MIC
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
-    select KERNEL_SYS_WORKQ_HIGH
-    help
-      Simulated microphone, recording the audio written through its
-      simulator API (pbl/drivers/audio/sim.h), and silence when none is.
-
-config AUDIO_NRF5_PDM
-    bool "Nordic nRF5 PDM"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_PDM_ENABLED
-    select CLK
-    help
-      Capture from digital microphones on the nRF5 PDM interface.
-
-config AUDIO_NRF5_I2S
-    bool "Nordic nRF5 I2S"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_I2S_ENABLED
-    select CLK
-    help
-      Playback through the nRF5 I2S interface.
-
-config AUDIO_NRF5_PDM_IRQ_PRIO
-    int "PDM interrupt priority"
-    default 1
-    depends on AUDIO_NRF5_PDM
-    help
-      Priority of the PDM interrupt.
-
-config AUDIO_NRF5_I2S_IRQ_PRIO
-    int "I2S interrupt priority"
-    default 1
-    depends on AUDIO_NRF5_I2S
-    help
-      Priority of the I2S interrupt.
-
-config AUDIO_DMIC
-    bool "Digital microphones"
-    default y
-    depends on DT_HAS_DMIC_CODEC_ENABLED
-    select REGULATOR
-    help
-      Digital microphones on a PDM interface, powered while recording.
-
-config AUDIO_DA7212
-    bool "Dialog DA7212 codec"
-    default y
-    depends on DT_HAS_DLG_DA7212_ENABLED
-    select I2C
-    select REGULATOR
-    help
-      The Dialog DA7212 codec, playing to its line output.
-
-config AUDIO_WM8994
-    bool "Cirrus Logic WM8994 codec"
-    default y
-    depends on DT_HAS_WLF_WM8994_ENABLED
-    select I2C
-    help
-      The WM8994 codec, playing to its headphone output.
+rsource "Kconfig.amp_gpio"
+rsource "Kconfig.sf32lb_audcodec"
+rsource "Kconfig.sf32lb52_pdm"
+rsource "Kconfig.stm32_sai"
+rsource "Kconfig.qemu"
+rsource "Kconfig.sim_mic"
+rsource "Kconfig.nrf5_pdm"
+rsource "Kconfig.nrf5_i2s"
+rsource "Kconfig.dmic"
+rsource "Kconfig.da7212"
+rsource "Kconfig.wm8994"
 
 config AUDIO_SHELL
     bool "Shell commands"

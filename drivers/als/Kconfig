@@ -9,38 +9,9 @@ menuconfig ALS
 
 if ALS
 
-config ALS_OPT3001
-    bool "TI OPT3001"
-    default y
-    depends on DT_HAS_TI_OPT3001_ENABLED
-    select I2C
-    select REGULATOR
-    help
-      Support for the TI OPT3001 ambient light sensor.
-
-config ALS_OPT3001_ALWAYS_ON
-    bool "Convert continuously"
-    depends on ALS_OPT3001
-    help
-      Keep converting instead of converting once per read, for faster reads
-      at the cost of power.
-
-config ALS_W1160
-    bool "Sensortek W1160"
-    default y
-    depends on DT_HAS_SENSORTEK_W1160_ENABLED
-    select I2C
-    select REGULATOR
-    help
-      Support for the Sensortek W1160 ambient light sensor.
-
-config ALS_SIM
-    bool "Simulator"
-    default y
-    depends on SOC_QEMU_PEBBLE || SOC_POSIX
-    help
-      Simulated ambient light sensor, reading a level set through its
-      simulator API (pbl/drivers/als/sim.h).
+rsource "Kconfig.opt3001"
+rsource "Kconfig.w1160"
+rsource "Kconfig.sim"
 
 config ALS_BITS
     int

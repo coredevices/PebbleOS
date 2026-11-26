@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_DMIC
+    bool "Digital microphones"
+    default y
+    depends on DT_HAS_DMIC_CODEC_ENABLED
+    select REGULATOR
+    help
+      Digital microphones on a PDM interface, powered while recording.

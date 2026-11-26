@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TIMER_SF32LB_LPTIM
+    bool
+    select CLK
+    help
+      Clock source and clock event device on LPTIM1, counting clk_rtc, the
+      calibrated LRC10 or the 32 kHz crystal. It keeps running and wakes the
+      CPU up in deep sleep. Selected by the SoC.
+
+config TIMER_SF32LB_LPTIM_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on TIMER_SF32LB_LPTIM
+    help
+      Priority of the LPTIM1 interrupt.

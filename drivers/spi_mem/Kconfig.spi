@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config SPI_MEM_SPI
+    bool "Memories on a SPI bus"
+    default y
+    depends on DT_HAS_JEDEC_SPI_NOR_ENABLED
+    depends on DT_HAS_NORDIC_NRF54L15_SPIM_ENABLED
+    select SPI
+    help
+      Run single-line memory operations as transfers on a SPI controller
+      with no memory operations of its own, for a memory that is a child
+      of the controller in the devicetree.

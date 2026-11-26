@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RNG_QEMU
+    bool "QEMU"
+    default y
+    depends on SOC_QEMU_PEBBLE
+    help
+      QEMU RNG. QEMU emulates no RNG, so it returns a fixed value.

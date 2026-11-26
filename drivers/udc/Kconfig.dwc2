@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UDC_DWC2
+    bool "Synopsys DesignWare USB 2.0 OTG (DWC2)"
+    default y
+    depends on DT_HAS_ST_STM32F7_HSOTG_ENABLED
+    select CLK
+    select PINCTRL
+    select REGULATOR
+    help
+      Device mode of the DesignWare USB 2.0 OTG controller, as the USB OTG
+      HS of the STM32F7 and STM32H7, by DMA, or through its FIFOs on cores
+      without it, with an external ULPI PHY at high speed or its internal PHY
+      at full speed.
+
+config UDC_DWC2_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UDC_DWC2
+    help
+      Priority of the controller interrupt.

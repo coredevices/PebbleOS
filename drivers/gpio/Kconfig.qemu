@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config GPIO_QEMU
+    bool "QEMU GPIO"
+    default y
+    depends on DT_HAS_QEMU_PEBBLE_GPIO_ENABLED
+    select INTC
+    help
+      Support for the QEMU GPIO peripheral.
+
+config GPIO_QEMU_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on GPIO_QEMU
+    help
+      Priority of the port interrupt.

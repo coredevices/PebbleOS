@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DISPLAY_SHARP_MEMORY
+    bool "Sharp memory LCDs"
+    default y
+    depends on DT_HAS_SHARP_LS010B7DH04_ENABLED || \
+               DT_HAS_SHARP_LS011B7DH03_ENABLED || \
+               DT_HAS_SHARP_LS012B7DD01_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH01_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH03_ENABLED || \
+               DT_HAS_SHARP_LS013B7DH05_ENABLED || \
+               DT_HAS_SHARP_LS027B7DH01_ENABLED || \
+               DT_HAS_SHARP_LS027B7DH01A_ENABLED || \
+               DT_HAS_SHARP_LS044Q7DH01_ENABLED
+    select GPIO
+    select PWM
+    select SPI
+    help
+      Support for the Sharp memory LCDs addressing their lines with 8 bits:
+      LS010B7DH04, LS011B7DH03, LS012B7DD01, LS013B7DH01, LS013B7DH03,
+      LS013B7DH05, LS027B7DH01, LS027B7DH01A and LS044Q7DH01.

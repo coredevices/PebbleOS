@@ -9,36 +9,9 @@ menuconfig PINCTRL
 
 if PINCTRL
 
-config PINCTRL_SF32LB52
-    bool "SiFli SF32LB52 pin controller"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_PINCTRL_ENABLED
-    help
-      Pin multiplexer and pad configuration of the SiFli SF32LB52 HPSYS
-      pads.
-
-config PINCTRL_SF32LB52_OUTPUT_LOW
-    bool
-    depends on PINCTRL_SF32LB52
-    help
-      Pins of a state can be driven low, through the GPIO driver.
-
-config PINCTRL_SF32LB57
-    bool "SiFli SF32LB57 pin controller"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB57_PINCTRL_ENABLED
-    help
-      Pin multiplexer and pad configuration of the SiFli SF32LB57 HPSYS
-      pads.
-
-config PINCTRL_STM32
-    bool "ST STM32 pin controller"
-    default y
-    depends on DT_HAS_ST_STM32H743_PINCTRL_ENABLED
-    select CLK
-    select HWSPINLOCK
-    help
-      Pin multiplexer and pad configuration of the ST STM32 GPIO ports.
+rsource "Kconfig.sf32lb52"
+rsource "Kconfig.sf32lb57"
+rsource "Kconfig.stm32"
 
 config PINCTRL_SHELL
     bool "Pin controller shell commands"

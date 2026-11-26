@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RNG_NRF_CRACEN
+    bool "Nordic nRF54L CRACEN"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_CRACEN_ENABLED
+    select MFD
+    select MFD_NRF_CRACEN
+    help
+      Support for the true random number generator of the Nordic nRF54L
+      CRACEN.

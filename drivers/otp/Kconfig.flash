@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config OTP_FLASH
+    bool "Flash security registers"
+    default y
+    depends on FLASH_OTP
+    help
+      OTP slots in the cells the board lays out in the flash OTP area
+      (security registers on SPI NOR parts). Driver: otp_flash.c.

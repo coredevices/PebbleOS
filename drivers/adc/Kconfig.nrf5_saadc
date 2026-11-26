@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config ADC_NRF5_SAADC
+    bool "Nordic nRF5 SAADC"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_SAADC_ENABLED
+    help
+      Successive approximation ADC of the Nordic nRF52 series, one input
+      converted at a time, in 12 bits over 3.6 V.

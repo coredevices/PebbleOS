@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RTC_QEMU
+    bool "QEMU RTC"
+    default y
+    depends on SOC_QEMU_PEBBLE
+    help
+      QEMU RTC, following the host clock.

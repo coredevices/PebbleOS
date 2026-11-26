@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CRC_SF32LB
+    bool "SiFli SF32LB CRC unit"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_CRC_ENABLED
+    select CLK
+    select CRC_HW_ACCEL
+    help
+      Computes CRC-32 and the legacy checksum on the SF32LB CRC unit.
+
+if CRC_SF32LB || CRC_STM32
+
+module = DRIVER_CRC
+module-str = CRC
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

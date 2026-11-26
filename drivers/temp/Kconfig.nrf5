@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TEMP_NRF5
+    bool "Nordic nRF5"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_TEMP_ENABLED
+    help
+      Support for the Nordic nRF5 die temperature sensor.

@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TOUCH_SDL
+    bool "SDL mouse"
+    default y
+    depends on DISPLAY_SDL
+    select KERNEL_SYS_WORKQ
+    select SDL
+    help
+      Touchscreen driven by the mouse, through SDL, in a native build.
+
+if TOUCH_SDL
+
+config TOUCH_SDL_SIZE_X
+    int "SDL touchscreen X coordinates"
+    default DISPLAY_SDL_WIDTH
+    help
+      Number of X coordinates the SDL touchscreen reports.
+
+config TOUCH_SDL_SIZE_Y
+    int "SDL touchscreen Y coordinates"
+    default DISPLAY_SDL_HEIGHT
+    help
+      Number of Y coordinates the SDL touchscreen reports.
+
+endif # TOUCH_SDL

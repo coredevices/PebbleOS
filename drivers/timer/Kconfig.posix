@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TIMER_POSIX
+    bool
+    help
+      Clock source and clock event device on the host monotonic clock.
+      Selected by the SoC.

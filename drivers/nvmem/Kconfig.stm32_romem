@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config NVMEM_STM32_ROMEM
+    bool "STM32 factory-programmed data"
+    default y
+    depends on DT_HAS_ST_STM32F4_OTP_ENABLED
+    help
+      Read access to the read-only memory an STM32 holds its factory data
+      in, as the unique ID and the calibration of the analog blocks of the
+      STM32H7.

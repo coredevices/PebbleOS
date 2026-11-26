@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_POSIX
+    bool "POSIX UART"
+    default y
+    depends on SOC_POSIX
+    help
+      UART backed by a host file descriptor.
+
+config UART_POSIX_BT_HCI
+    bool "Bluetooth HCI port"
+    default y
+    depends on UART_POSIX
+    help
+      Port for a host Bluetooth controller, attached with the -b option.

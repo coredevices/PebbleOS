@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config WATCHDOG_QEMU
+    bool "QEMU watchdog"
+    default y
+    depends on SOC_QEMU_PEBBLE
+    help
+      Support for the CMSDK APB watchdog of the QEMU Pebble machines.

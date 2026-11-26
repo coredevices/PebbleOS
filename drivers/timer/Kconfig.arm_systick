@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TIMER_ARM_SYSTICK
+    bool "Arm SysTick"
+    depends on CPU_CORTEX_M
+    help
+      Clock event device on the Arm SysTick timer, counting CPU cycles. It
+      stops in deep sleep.
+
+config TIMER_ARM_SYSTICK_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on TIMER_ARM_SYSTICK
+    help
+      Priority of the SysTick exception.

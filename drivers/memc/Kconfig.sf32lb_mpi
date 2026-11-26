@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MEMC_SF32LB_MPI
+    bool
+    select MEMC
+    select CLK
+    select PINCTRL
+    help
+      Core of the SiFli SF32LB52 and SF32LB57 MPI controllers: what
+      their SPI memory and HyperBus drivers share.

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config TEMP_SF32LB
+    bool "SiFli SF32LB"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_TSEN_ENABLED
+    select CLK
+    help
+      Support for the SiFli SF32LB temperature sensor.

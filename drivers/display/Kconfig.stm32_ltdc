@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DISPLAY_STM32_LTDC
+    bool "ST STM32 LTDC"
+    default y
+    depends on DT_HAS_ST_STM32_LTDC_ENABLED
+    select CLK
+    select DISPLAY_BRIDGE
+    select PANEL
+    help
+      Support for the STM32 LCD-TFT display controller, sending frames
+      through a DSI host in adapted command mode to a panel with frame
+      memory.

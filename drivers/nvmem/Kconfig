@@ -9,31 +9,9 @@ menuconfig NVMEM
 
 if NVMEM
 
-config NVMEM_SF32LB
-    bool "SiFli SF32LB eFuse"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_EFUSE_ENABLED || DT_HAS_SIFLI_SF32LB57_EFUSE_ENABLED
-    select CLK
-    help
-      Read access to the SF32LB52 and SF32LB57 eFuse, which holds the unique
-      ID and the factory calibration.
-
-config NVMEM_NRF_FICR
-    bool "Nordic nRF FICR"
-    default y
-    depends on DT_HAS_NORDIC_NRF52832_FICR_ENABLED || DT_HAS_NORDIC_NRF54L15_FICR_ENABLED
-    help
-      Read access to the factory information of the Nordic nRF SoCs, as
-      their device ID and the trims of their crystal oscillators.
-
-config NVMEM_STM32_ROMEM
-    bool "STM32 factory-programmed data"
-    default y
-    depends on DT_HAS_ST_STM32F4_OTP_ENABLED
-    help
-      Read access to the read-only memory an STM32 holds its factory data
-      in, as the unique ID and the calibration of the analog blocks of the
-      STM32H7.
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.nrf_ficr"
+rsource "Kconfig.stm32_romem"
 
 config NVMEM_SHELL
     bool "Non-volatile memory shell commands"

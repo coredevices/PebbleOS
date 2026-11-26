@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REGULATOR_FIXED
+    bool "Fixed regulators"
+    default y
+    depends on DT_HAS_REGULATOR_FIXED_ENABLED
+    select GPIO
+    help
+      Support for rails switched by a GPIO.

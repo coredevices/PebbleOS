@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config WATCHDOG_NRF5
+    bool "Nordic nRF5"
+    default y
+    depends on SOC_NRF52
+    help
+      Support for the Nordic nRF5 watchdog.

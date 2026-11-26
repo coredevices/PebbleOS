@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config I2C_STM32
+    bool "ST STM32 I2C Controller"
+    default y
+    depends on DT_HAS_ST_STM32F7_I2C_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for the I2C controllers of the STM32H7, in master mode.
+
+config I2C_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on I2C_STM32
+    help
+      Priority of the controller interrupts.

@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config ALS_OPT3001
+    bool "TI OPT3001"
+    default y
+    depends on DT_HAS_TI_OPT3001_ENABLED
+    select I2C
+    select REGULATOR
+    help
+      Support for the TI OPT3001 ambient light sensor.
+
+config ALS_OPT3001_ALWAYS_ON
+    bool "Convert continuously"
+    depends on ALS_OPT3001
+    help
+      Keep converting instead of converting once per read, for faster reads
+      at the cost of power.

@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_SF32LB52_HXT
+    bool "SiFli SF32LB52 crystal trim"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_PMUC_ENABLED && CLK_SF32LB && FLASH_OTP
+    help
+      Apply the 48 MHz crystal load capacitance trim from the SoC factory
+      configuration in the flash OTP area, once the flash is up.

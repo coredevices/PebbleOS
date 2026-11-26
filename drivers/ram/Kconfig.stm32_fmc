@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RAM_STM32_FMC
+    bool "ST STM32H7 FMC SDRAM"
+    default y
+    depends on DT_HAS_ST_STM32H7_FMC_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Support for an SDRAM on the STM32H7 flexible memory controller.

@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PANEL_OTM8009A
+    bool "Orise Tech OTM8009A"
+    default y
+    depends on DT_HAS_ORISETECH_OTM8009A_ENABLED
+    depends on PANEL
+    select BACKLIGHT
+    select GPIO
+    select MIPI_DSI
+    help
+      Support for 480x800 panels on the Orise Tech OTM8009A driver IC,
+      over MIPI DSI.

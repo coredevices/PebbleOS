@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config GPIO_NRF54L
+    bool "Nordic nRF54L"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_GPIO_ENABLED
+    select INTC
+    help
+      Support for the Nordic nRF54L GPIO controller.
+
+config GPIO_NRF54L_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on GPIO_NRF54L
+    help
+      Priority of the GPIOTE interrupts.

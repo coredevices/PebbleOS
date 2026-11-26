@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config NVMEM_NRF_FICR
+    bool "Nordic nRF FICR"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_FICR_ENABLED || DT_HAS_NORDIC_NRF54L15_FICR_ENABLED
+    help
+      Read access to the factory information of the Nordic nRF SoCs, as
+      their device ID and the trims of their crystal oscillators.

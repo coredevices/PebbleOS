@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config AUDIO_STM32_SAI
+    bool "STM32 SAI"
+    default y
+    depends on DT_HAS_ST_STM32_SAI_SUB_A_ENABLED || DT_HAS_ST_STM32_SAI_SUB_B_ENABLED
+    select CLK
+    select DMA
+    select PDM
+    select PINCTRL
+    help
+      Playback through a sub-block of an STM32 serial audio interface,
+      the master of an I2S link to a codec, and capture of PDM
+      microphones on its PDM interface.

@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UDC_MUSB
+    bool "Mentor Graphics MUSB"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB57_USB_ENABLED
+    select CLK
+    select PINCTRL
+    help
+      Device mode of the Mentor Graphics MUSB controller, as the USB
+      controller of the SiFli SF32LB57, at full speed, through its FIFOs.
+
+config UDC_MUSB_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on UDC_MUSB
+    help
+      Priority of the controller interrupt.

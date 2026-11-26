@@ -10,23 +10,8 @@ menuconfig CRC_HW
 
 if CRC_HW
 
-config CRC_SF32LB
-    bool "SiFli SF32LB CRC unit"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB52_CRC_ENABLED
-    select CLK
-    select CRC_HW_ACCEL
-    help
-      Computes CRC-32 and the legacy checksum on the SF32LB CRC unit.
-
-config CRC_STM32
-    bool "STM32 CRC unit"
-    default y
-    depends on DT_HAS_ST_STM32F7_CRC_ENABLED
-    select CLK
-    select CRC_HW_ACCEL
-    help
-      Computes CRC-32 and the legacy checksum on the STM32 CRC unit.
+rsource "Kconfig.sf32lb"
+rsource "Kconfig.stm32"
 
 config CRC_SHELL
     bool "Shell commands"
@@ -35,13 +20,5 @@ config CRC_SHELL
     help
       The crc shell command, to check the CRC unit against the software
       implementation and time both.
-
-if CRC_SF32LB || CRC_STM32
-
-module = DRIVER_CRC
-module-str = CRC
-source "subsys/logging/Kconfig.template.log_level"
-
-endif
 
 endif # CRC_HW

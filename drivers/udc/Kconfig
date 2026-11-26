@@ -9,21 +9,7 @@ menuconfig UDC
 
 if UDC
 
-config UDC_NRF5
-    bool "Nordic nRF5 USBD"
-    default y
-    depends on DT_HAS_NORDIC_NRF52840_USBD_ENABLED
-    select CLK
-    help
-      USB device controller of the Nordic nRF52840, at full speed, moving
-      packets through EasyDMA, connected while VBUS powers its regulator.
-
-config UDC_NRF5_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UDC_NRF5
-    help
-      Priority of the USBD and POWER interrupts.
+rsource "Kconfig.nrf5"
 
 config UDC_VBUS_CHARGER
     bool
@@ -33,42 +19,8 @@ config UDC_VBUS_CHARGER
       Sense USB power through the charger a controller's vbus-charger
       property points to.
 
-config UDC_MUSB
-    bool "Mentor Graphics MUSB"
-    default y
-    depends on DT_HAS_SIFLI_SF32LB57_USB_ENABLED
-    select CLK
-    select PINCTRL
-    help
-      Device mode of the Mentor Graphics MUSB controller, as the USB
-      controller of the SiFli SF32LB57, at full speed, through its FIFOs.
-
-config UDC_MUSB_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UDC_MUSB
-    help
-      Priority of the controller interrupt.
-
-config UDC_DWC2
-    bool "Synopsys DesignWare USB 2.0 OTG (DWC2)"
-    default y
-    depends on DT_HAS_ST_STM32F7_HSOTG_ENABLED
-    select CLK
-    select PINCTRL
-    select REGULATOR
-    help
-      Device mode of the DesignWare USB 2.0 OTG controller, as the USB OTG
-      HS of the STM32F7 and STM32H7, by DMA, or through its FIFOs on cores
-      without it, with an external ULPI PHY at high speed or its internal PHY
-      at full speed.
-
-config UDC_DWC2_IRQ_PRIO
-    int "Interrupt priority"
-    default 0
-    depends on UDC_DWC2
-    help
-      Priority of the controller interrupt.
+rsource "Kconfig.musb"
+rsource "Kconfig.dwc2"
 
 module = DRIVER_UDC
 module-str = USB device controller

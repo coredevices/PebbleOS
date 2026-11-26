@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config I2C_NRF5
+    bool "Nordic nRF5 I2C controller"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_TWIM_ENABLED
+    help
+      Support for the Nordic nRF5 I2C controller.
+
+config I2C_NRF5_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on I2C_NRF5
+    help
+      Priority of the controller interrupts.

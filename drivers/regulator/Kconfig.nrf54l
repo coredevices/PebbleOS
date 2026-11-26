@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Not only for its consumers: it also applies the mode of VREGMAIN
+config REGULATOR_NRF54L
+    bool "Nordic nRF54L VREGMAIN"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_OSCILLATORS_ENABLED
+    select REGULATOR
+    help
+      Support for VREGMAIN, the main supply of the nRF54L, which runs from
+      its LDO or, with an inductor fitted, from its DC/DC converter, as
+      regulator-initial-mode says.

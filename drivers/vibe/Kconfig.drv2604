@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config VIBE_DRV2604
+    bool "TI DRV2604"
+    default y
+    depends on DT_HAS_TI_DRV2604_ENABLED
+    select I2C
+    help
+      Support for the TI DRV2604 haptic driver.

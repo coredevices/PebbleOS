@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config CLK_SF32LB52_RTC
+    bool "SiFli SF32LB52 RTC clock"
+    default y
+    depends on DT_HAS_SIFLI_SF32LB52_RTC_ENABLED
+    help
+      clk_rtc of the SiFli SF32LB52 RTC, LRC10 or LXT32, which the RTC and
+      the low-power timers count.

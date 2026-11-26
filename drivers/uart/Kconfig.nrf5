@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_NRF5
+    bool "Nordic nRF5 UART controller"
+    default y
+    depends on DT_HAS_NORDIC_NRF52832_UARTE_ENABLED
+    select GPIO
+    help
+      Support for the Nordic nRF5 UART controller.
+
+config UART_NRF5_IRQ_PRIO
+    int "Interrupt priority"
+    default 1
+    depends on UART_NRF5
+    help
+      Priority of the port interrupts.
