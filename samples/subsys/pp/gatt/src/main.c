@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/adv.h>
 #include <pbl/kernel/sem.h>
 #include <pbl/kernel/types.h>
 #include <pbl/util/size.h>
@@ -20,12 +21,16 @@
 
 #define NAME "PebbleOS"
 
+/* A minute at 100 ms to be found fast, then at 1 s. */
+#define SHORT_INTERVAL_MS 100
+#define LONG_INTERVAL_MS  1000
+#define SHORT_S           60
+
 static PBL_SEM_DEFINE(s_synced, 0, 1);
-static uint8_t s_own_addr_type;
 
 static int prv_gap_event(struct ble_gap_event *event, void *arg);
 
-static void prv_advertise(void) {
+static int prv_set_adv_data(void) {
   const struct ble_hs_adv_fields fields = {
     .flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP,
   };
@@ -34,27 +39,38 @@ static void prv_advertise(void) {
     .name_len = strlen(NAME),
     .name_is_complete = 1,
   };
-  const struct ble_gap_adv_params params = {
-    .conn_mode = BLE_GAP_CONN_MODE_UND,
-    .disc_mode = BLE_GAP_DISC_MODE_GEN,
-  };
   int rc;
 
   rc = ble_gap_adv_set_fields(&fields);
-  if (rc == 0) {
-    rc = ble_gap_adv_rsp_set_fields(&rsp_fields);
-  }
-  if (rc == 0) {
-    rc = ble_gap_adv_start(s_own_addr_type, nullptr, BLE_HS_FOREVER, &params, prv_gap_event,
-                           nullptr);
-  }
   if (rc != 0) {
-    printf("pp_gatt: advertising failed (%d)\n", rc);
-    return;
+    return rc;
   }
 
-  printf("pp_gatt: advertising as %s\n", NAME);
+  return ble_gap_adv_rsp_set_fields(&rsp_fields);
 }
+
+static void prv_adv_changed(const struct pbl_bt_adv *adv, bool short_interval) {
+  if (adv != nullptr && short_interval) {
+    printf("pp_gatt: advertising as %s\n", NAME);
+  }
+}
+
+/* The one advertisement: on air whenever there is no connection. */
+static struct pbl_bt_adv s_adv = {
+  .set_data = prv_set_adv_data,
+  .resume_short_secs = SHORT_S,
+};
+
+static struct pbl_bt_adv *const s_advs[] = {&s_adv};
+
+static const struct pbl_bt_adv_config s_adv_config = {
+  .advs = s_advs,
+  .num_advs = PBL_ARRAY_SIZE(s_advs),
+  .short_interval_ms = SHORT_INTERVAL_MS,
+  .long_interval_ms = LONG_INTERVAL_MS,
+  .gap_event = prv_gap_event,
+  .changed = prv_adv_changed,
+};
 
 /* Runs on the host thread. */
 static int prv_gap_event(struct ble_gap_event *event, void *arg) {
@@ -63,7 +79,6 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
       if (event->connect.status != 0) {
-        prv_advertise();
         break;
       }
       printf("pp_gatt: connected\n");
@@ -73,7 +88,6 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_DISCONNECT:
       printf("pp_gatt: disconnected, reason 0x%03x\n", event->disconnect.reason);
       sample_pp_stop();
-      prv_advertise();
       break;
     case BLE_GAP_EVENT_ENC_CHANGE:
       if (event->enc_change.status != 0) {
@@ -123,15 +137,13 @@ int main(void) {
   pbl_sem_take(&s_synced, PBL_FOREVER);
 
   rc = ble_hs_util_ensure_addr(0);
-  if (rc == 0) {
-    rc = ble_hs_id_infer_auto(0, &s_own_addr_type);
-  }
   if (rc != 0) {
     printf("pp_gatt: no address (%d)\n", rc);
     return rc;
   }
 
-  prv_advertise();
+  pbl_bt_adv_start(&s_adv_config);
+  pbl_bt_adv_enable(&s_adv, SHORT_S);
 
   return 0;
 }
