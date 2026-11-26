@@ -223,7 +223,7 @@ void *pbl_heap_alloc(struct pbl_heap *heap, size_t nbytes, uintptr_t caller) {
 
   /* Convert the requested memory allocation in bytes to alignment     */
   /* size.                                                             */
-  unsigned long allocation_size = (nbytes + (ALIGNMENT_SIZE - 1)) / ALIGNMENT_SIZE;
+  unsigned long allocation_size = PBL_DIV_ROUND_UP(nbytes, ALIGNMENT_SIZE);
 
   /* Add the beginner size to the requested size.                        */
   allocation_size += HEAP_INFO_BLOCK_SIZE(0);

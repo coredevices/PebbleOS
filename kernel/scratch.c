@@ -20,7 +20,7 @@
 // memory itself, which is only powered while something is allocated.
 #define GRANULE  1024U
 #define GRANULES (CONFIG_SCRATCH_HEAP_SIZE / GRANULE)
-#define WORDS    ((GRANULES + 31U) / 32U)
+#define WORDS    PBL_DIV_ROUND_UP(GRANULES, 32U)
 
 static uint32_t s_used[WORDS];
 // Last granule of each block
@@ -70,7 +70,7 @@ static void prv_set(uint32_t *map, size_t i, bool set) {
   }
 
   for (size_t i = (PBL_MAX(rbase, base) - base) / GRANULE;
-       i < (PBL_MIN(rend, end) - base + GRANULE - 1U) / GRANULE; i++) {
+       i < PBL_DIV_ROUND_UP(PBL_MIN(rend, end) - base, GRANULE); i++) {
     if (!prv_test(s_used, i)) {
       prv_set(s_used, i, true);
       prv_set(s_last, i, true);
@@ -118,7 +118,7 @@ static size_t prv_find(size_t n, size_t *largest) {
 }
 
 void *pbl_scratch_malloc(size_t size) {
-  const size_t n = (size + GRANULE - 1U) / GRANULE;
+  const size_t n = PBL_DIV_ROUND_UP(size, GRANULE);
   size_t largest;
   size_t first;
 

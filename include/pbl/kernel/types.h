@@ -7,6 +7,8 @@
 #include <stdint.h>
 
 #include <pbl/kernel/backend.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 /**
  * @defgroup kernel_types Time and priorities
@@ -87,7 +89,8 @@ uint32_t pbl_ticks_to_ms(pbl_tick_t ticks);
  *
  * @param us Microseconds.
  */
-#define PBL_US_TO_TICKS_CEIL(us) ((pbl_tick_t)(((uint64_t)(us) * PBL_TICK_HZ + 999999U) / 1000000U))
+#define PBL_US_TO_TICKS_CEIL(us) \
+  ((pbl_tick_t)PBL_DIV_ROUND_UP((uint64_t)(us) * PBL_TICK_HZ, PBL_USEC_PER_SEC))
 
 /**
  * @brief Check whether a timeout is @ref PBL_FOREVER.

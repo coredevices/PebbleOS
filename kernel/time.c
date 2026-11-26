@@ -5,6 +5,8 @@
 #include <pbl/kernel/section.h>
 #include <pbl/kernel/thread.h>
 #include <pbl/kernel/time.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #include <arch.h>
 
@@ -12,7 +14,7 @@
 
 // Whole ticks covering @p n units of @p hz, plus the partial tick in progress.
 static pbl_tick_t prv_sleep_ticks(uint32_t n, uint32_t hz) {
-  uint64_t ticks = ((uint64_t)n * PBL_TICK_HZ + hz - 1) / hz + 1;
+  uint64_t ticks = PBL_DIV_ROUND_UP((uint64_t)n * PBL_TICK_HZ, hz) + 1;
   return ticks < PBL_TICK_FOREVER ? (pbl_tick_t)ticks : PBL_TICK_FOREVER - 1;
 }
 
@@ -32,7 +34,7 @@ void pbl_cycles_per_sec_set(uint32_t hz) {
 
 PBL_SECTION_RAM void pbl_busy_wait_us(uint32_t us) {
   // Cycles per microsecond, rounded up.
-  uint32_t per_us = (s_cycles_per_sec + 999999U) / 1000000U;
+  uint32_t per_us = PBL_DIV_ROUND_UP(s_cycles_per_sec, PBL_USEC_PER_SEC);
   uint64_t cycles = (uint64_t)us * per_us;
   uint32_t start = arch_cycle_get_32();
 
