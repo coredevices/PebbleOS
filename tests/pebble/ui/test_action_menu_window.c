@@ -617,7 +617,8 @@ void test_action_menu_window__emoji_picker_selection(void) {
                                                     1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
   for (int count = 0; count <= 21; ++count) {
     action_menu_layer_set_short_items(aml, root_level->items, count, 0);
-    const int expected_rows = PBL_IF_ROUND_ELSE((count + 9) / 10, (count + 2) / 3);
+    const int expected_rows =
+        PBL_IF_ROUND_ELSE(PBL_DIV_ROUND_UP(count, 10), PBL_DIV_ROUND_UP(count, 3));
     cl_assert_equal_i(menu->callbacks.get_num_rows(menu, 0, aml), expected_rows);
 #if PBL_ROUND
     int page_counts[3] = {};

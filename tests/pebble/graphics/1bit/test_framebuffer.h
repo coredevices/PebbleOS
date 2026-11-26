@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/util/math.h>
+
 #include <applib/graphics/framebuffer.h>
 #include <applib/graphics/gtypes.h>
 #include <sys/stat.h>
@@ -86,7 +88,7 @@ static inline void free_pbi(GBitmap *bitmap) {
 }
 
 static inline void fwrite_screenshot_from_framebuffer(FILE *file, const FrameBuffer *framebuffer) {
-  uint16_t row_size_bytes = (FrameBuffer_MaxX + 31) / 32 * 4;
+  uint16_t row_size_bytes = PBL_DIV_ROUND_UP(FrameBuffer_MaxX, 32) * 4;
   uint16_t info_flags = 1 << 1;
   GRect bounds = GRect(0, 0, FrameBuffer_MaxX, FrameBuffer_MaxY);
   fwrite(&row_size_bytes, sizeof(row_size_bytes), 1, file);

@@ -8,6 +8,7 @@
 #include <pbl/kernel/malloc.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/imaging.h>
+#include <pbl/util/math.h>
 
 #include <applib/graphics/gtypes.h>
 #include <clar.h>
@@ -24,15 +25,15 @@
 uint16_t gbitmap_format_get_row_size_bytes(int16_t width, GBitmapFormat format) {
   switch (format) {
     case GBitmapFormat1Bit:
-      return ((width + 31) / 32) * 4;
+      return PBL_DIV_ROUND_UP(width, 32) * 4;
     case GBitmapFormat8Bit:
       return width;
     case GBitmapFormat4BitPalette:
-      return (width * 4 + 7) / 8;
+      return PBL_DIV_ROUND_UP(width * 4, 8);
     case GBitmapFormat2BitPalette:
-      return (width * 2 + 7) / 8;
+      return PBL_DIV_ROUND_UP(width * 2, 8);
     case GBitmapFormat1BitPalette:
-      return (width + 7) / 8;
+      return PBL_DIV_ROUND_UP(width, 8);
     default:
       return 0;
   }

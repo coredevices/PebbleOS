@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/util/math.h>
+
 #include <applib/graphics/gcontext.h>
 #include <applib/graphics/gtypes.h>
 #include <applib/graphics/text_render.h>
@@ -63,7 +65,7 @@ static int32_t prv_get_8bit_x_from_1bit_x(int32_t dest_1bit_x) {
 
 void test_text_render__convert_1bit_to_8bit_144x168(void) {
   GSize size = GSize(144, 168);
-  const int row_1bit_size_words = 1 + (size.w - 1) / 32;
+  const int row_1bit_size_words = PBL_DIV_ROUND_UP(size.w, 32);
 
   GBitmap *bitmap = gbitmap_create_blank(size, GBitmapFormat8Bit);
 
@@ -98,7 +100,7 @@ void test_text_render__convert_1bit_to_8bit_144x168(void) {
 
 void test_text_render__convert_1bit_to_8bit_180x180(void) {
   GSize size = GSize(180, 180);
-  const int row_1bit_size_words = 1 + (size.w - 1) / 32;
+  const int row_1bit_size_words = PBL_DIV_ROUND_UP(size.w, 32);
 
   GBitmap *bitmap = gbitmap_create_blank(size, GBitmapFormat8Bit);
 

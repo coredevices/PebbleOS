@@ -9,6 +9,7 @@
 
 #include <pbl/board/partitions.h>
 #include <pbl/drivers/flash.h>
+#include <pbl/util/math.h>
 
 #include <clar_asserts.h>
 #include <sys/stat.h>
@@ -137,7 +138,7 @@ static void prv_erase_block(uint32_t addr, uint32_t size) {
 
 int pbl_flash_erase(const struct pbl_flash *flash, uint32_t addr, size_t len) {
   cl_assert((addr % SUBSECTOR_SIZE_BYTES) == 0);
-  len = ((len + SUBSECTOR_SIZE_BYTES - 1) / SUBSECTOR_SIZE_BYTES) * SUBSECTOR_SIZE_BYTES;
+  len = PBL_DIV_ROUND_UP(len, SUBSECTOR_SIZE_BYTES) * SUBSECTOR_SIZE_BYTES;
 
   while (len > 0) {
     uint32_t unit = SUBSECTOR_SIZE_BYTES;

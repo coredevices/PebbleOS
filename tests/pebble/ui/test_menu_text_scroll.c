@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/time.h>
+#include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #include <applib/ui/menu_text_scroll.h>
 #include <clar.h>
@@ -29,7 +31,7 @@ static Layer s_row_a;
 static Layer s_row_b;
 
 static void prv_set_ms(uint32_t ms) {
-  fake_rtc_set_ticks(((uint64_t)ms * PBL_TICK_HZ + 999) / 1000);
+  fake_rtc_set_ticks(PBL_DIV_ROUND_UP((uint64_t)ms * PBL_TICK_HZ, PBL_MSEC_PER_SEC));
 }
 
 static AppTimer *prv_timer(void) {

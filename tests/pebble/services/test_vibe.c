@@ -4,7 +4,9 @@
 #include <pbl/drivers/vibe.h>
 #include <pbl/kernel/time.h>
 #include <pbl/services/vibe_pattern.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 #include <applib/ui/vibes.h>
 #include <clar.h>
@@ -95,7 +97,7 @@ static uint64_t prv_get_current_time() {
 //! starts mis-attributing segment boundaries.
 static void prv_snap_ticks_to_wall(void) {
   const uint64_t wall_ms = prv_get_current_time();
-  fake_rtc_set_ticks((wall_ms * PBL_TICK_HZ + 999) / 1000);
+  fake_rtc_set_ticks(PBL_DIV_ROUND_UP(wall_ms * PBL_TICK_HZ, PBL_MSEC_PER_SEC));
 }
 
 static void prv_run_vibes() {

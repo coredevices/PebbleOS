@@ -5,6 +5,7 @@
 #include <fixtures/load_test_resources.h>
 
 // FW headers
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/graphics/text_resources.h>
@@ -41,7 +42,7 @@ extern int s_test_language_font_calls;
 ////////////////////////////////////
 
 static size_t glyph_get_size_bytes(const GlyphData *glyph) {
-  return ((glyph->header.width_px * glyph->header.height_px) + (8 - 1)) / 8;
+  return PBL_DIV_ROUND_UP(glyph->header.width_px * glyph->header.height_px, 8);
 }
 
 void test_text_resources__initialize(void) {

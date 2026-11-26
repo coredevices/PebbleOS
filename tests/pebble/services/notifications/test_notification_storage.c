@@ -4,6 +4,7 @@
 #include <pbl/fs/fs.h>
 #include <pbl/services/notifications/notification_storage.h>
 #include <pbl/services/notifications/notification_storage_private.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <clar.h>
@@ -792,7 +793,7 @@ void test_notification_storage__remove_add_compress(void) {
   free(r.allocated_buffer);
 
   const size_t block_size = file_size / 4;
-  int erase_count = block_size / notif_size + (((block_size % notif_size) > 0) ? 1 : 0);
+  int erase_count = PBL_DIV_ROUND_UP(block_size, notif_size);
   int j;
   for (j = 0; j < erase_count; j++) {
     e.header.id = uuids[j];
