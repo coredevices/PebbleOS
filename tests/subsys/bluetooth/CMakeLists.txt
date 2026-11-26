@@ -40,7 +40,13 @@ pbl_clar_test(test_responsiveness
     third_party/nimble/mynewt-nimble/nimble/host/include
     third_party/nimble/mynewt-nimble/nimble/transport/include
     third_party/nimble/mynewt-nimble/porting/nimble/include
-  DEFINES CONFIG_NIMBLE_LOG_LEVEL=0
+  DEFINES
+    CONFIG_NIMBLE_LOG_LEVEL=0
+    CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MIN_MS=45
+    CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MAX_MS=60
+    CONFIG_BT_RESPONSE_TIME_MAX_LATENCY=4
+    CONFIG_BT_RESPONSE_TIME_MIN_INTERVAL_MS=15
+    CONFIG_BT_RESPONSE_TIME_SUPERVISION_TIMEOUT_MS=6000
 )
 
 pbl_clar_test(test_nimble_port

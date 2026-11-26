@@ -46,16 +46,18 @@ struct params {
 static const struct params s_params[PBL_BT_RESPONSE_TIME_NUM] = {
   [PBL_BT_RESPONSE_TIME_MAX] =
       {
-        .itvl_min = BLE_GAP_CONN_ITVL_MS(45),
-        .itvl_max = BLE_GAP_CONN_ITVL_MS(60),
-        .latency = 4,
-        .supervision_timeout = BLE_GAP_SUPERVISION_TIMEOUT_MS(6000),
+        .itvl_min = BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MIN_MS),
+        .itvl_max = BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MAX_MS),
+        .latency = CONFIG_BT_RESPONSE_TIME_MAX_LATENCY,
+        .supervision_timeout =
+            BLE_GAP_SUPERVISION_TIMEOUT_MS(CONFIG_BT_RESPONSE_TIME_SUPERVISION_TIMEOUT_MS),
       },
   [PBL_BT_RESPONSE_TIME_MIN] = {
-    .itvl_min = BLE_GAP_CONN_ITVL_MS(15),
-    .itvl_max = BLE_GAP_CONN_ITVL_MS(15),
+    .itvl_min = BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MIN_INTERVAL_MS),
+    .itvl_max = BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MIN_INTERVAL_MS),
     .latency = 0,
-    .supervision_timeout = BLE_GAP_SUPERVISION_TIMEOUT_MS(6000),
+    .supervision_timeout =
+        BLE_GAP_SUPERVISION_TIMEOUT_MS(CONFIG_BT_RESPONSE_TIME_SUPERVISION_TIMEOUT_MS),
   },
 };
 

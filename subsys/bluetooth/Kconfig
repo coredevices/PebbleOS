@@ -20,6 +20,40 @@ module = BT
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
 
+config BT_HOST_RESET_PANIC
+    bool "Panic when the host resets"
+    default y if NIMBLE_HCI_SF32LB
+    help
+      Stop the system when the NimBLE host resets, which it does when the
+      controller stops answering. For controllers that only a reboot
+      recovers, and whose state a core dump captures.
+
+menu "Response time"
+
+config BT_RESPONSE_TIME_MAX_INTERVAL_MIN_MS
+    int "Slowest response: minimum connection interval (ms)"
+    default 45
+
+config BT_RESPONSE_TIME_MAX_INTERVAL_MAX_MS
+    int "Slowest response: maximum connection interval (ms)"
+    default 60
+
+config BT_RESPONSE_TIME_MAX_LATENCY
+    int "Slowest response: peripheral latency"
+    default 4
+
+config BT_RESPONSE_TIME_MIN_INTERVAL_MS
+    int "Fastest response: connection interval (ms)"
+    default 15
+
+config BT_RESPONSE_TIME_SUPERVISION_TIMEOUT_MS
+    int "Supervision timeout (ms)"
+    default 6000
+    help
+      Asked for with every response time (pbl/bluetooth/responsiveness.h).
+
+endmenu
+
 endif
 
 rsource "adv/Kconfig"

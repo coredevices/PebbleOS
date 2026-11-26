@@ -69,10 +69,10 @@ static void prv_stop_interval_timers(void) {
 static void prv_start_interval_timers(const struct ble_gap_conn_desc *desc) {
   prv_stop_interval_timers();
 
-  if (desc->conn_itvl == BLE_GAP_CONN_ITVL_MS(15)) {
+  if (desc->conn_itvl == BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MIN_INTERVAL_MS)) {
     PBL_ANALYTICS_TIMER_START(ble_conn_itvl_min_time_ms);
-  } else if (desc->conn_itvl >= BLE_GAP_CONN_ITVL_MS(45) &&
-             desc->conn_itvl <= BLE_GAP_CONN_ITVL_MS(60)) {
+  } else if (desc->conn_itvl >= BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MIN_MS) &&
+             desc->conn_itvl <= BLE_GAP_CONN_ITVL_MS(CONFIG_BT_RESPONSE_TIME_MAX_INTERVAL_MAX_MS)) {
     PBL_ANALYTICS_TIMER_START(ble_conn_itvl_mid_time_ms);
   } else {
     PBL_ANALYTICS_TIMER_START(ble_conn_itvl_other_time_ms);
