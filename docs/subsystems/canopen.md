@@ -11,7 +11,7 @@ with the EDS file the tools on the other end of the bus read.
 | Headers | `pbl/canopen/canopen.h`, `pbl/canopen/cia402.h` |
 | Kconfig | `CONFIG_CANOPEN`, enabled by the application; needs `CONFIG_CAN` |
 | API | {apidoc}`API reference <subsys_canopen>` |
-| Samples | {doc}`Device <../samples/subsys/canopen/device>` |
+| Samples | {doc}`Device <../samples/subsys/canopen/device>`, {doc}`Drive <../samples/subsys/canopen/drive>` |
 
 ## Overview
 
@@ -610,7 +610,8 @@ The generator adds the drive's objects, named for PDO mappings:
 | 0x60c2 | `interpolation_time_period` | csp, csv, cst |
 
 A cyclic synchronous drive maps its controlword and target to synchronous
-RPDOs, and its statusword and actual value to synchronous TPDOs:
+RPDOs, and its statusword and actual value to synchronous TPDOs, as the
+{doc}`Drive sample <../samples/subsys/canopen/drive>` does:
 
 ```yaml
 cia402:
@@ -748,7 +749,8 @@ fault, with its error code in 0x603f and an emergency, until the master resets
 it with the controlword. `pbl_cia402_set_status()` sets the statusword bits
 the application owns, such as target reached. These functions lock the
 node, so they are called from a thread or a callback, never an interrupt. In
-this example, the motor's loop runs in an interrupt:
+this example, the motor's loop runs in an interrupt, as in the
+{doc}`Drive sample <../samples/subsys/canopen/drive>`:
 
 ```c
 #include <pbl/canopen/cia402.h>

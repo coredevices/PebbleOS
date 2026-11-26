@@ -1,0 +1,7 @@
+description: CANopen CiA 402 drive with a simulated motor, in profile and cyclic synchronous velocity modes, driven by a host master script
+expect:
+  - 'drive: node 6 at 500000 bit/s'
+roles: [can_bus]
+integration: [sf32lb57_dpi_hdk]
+# Needs a CANopen master on the bus, master.py on the host
+build_only: true
