@@ -26,8 +26,6 @@ OTHER_PHONE_ADDRESS = "F0:BB:1E:00:00:02"
 OTHER_PHONE_NAME = "pbl-itest-2"
 SESSION_OPENED = r"PPoGATT Session is opened"
 SESSION_CLOSED = r"Session event: is_open=0"
-# Past the 30 s the watch keeps the link fast for service discovery.
-PRF_IDLE_WAIT_S = 45
 
 ATT_INVALID_ATTRIBUTE_LENGTH = 0x0D
 TRIGGER_NO_SECURITY_REQUEST = 0x02
@@ -268,15 +266,10 @@ def _assert_idle(parameters):
 
 
 @BOTH
-def test_asks_for_idle_parameters(build, watch, phones):
-    """Once the phone has settled in, the watch asks for a relaxed link;
-    PRF keeps the fastest one."""
+def test_asks_for_idle_parameters(watch, phones):
+    """Once the phone has settled in, the watch asks for a relaxed link."""
     phone = phones().connect()
-    if build.variant == "prf":
-        with pytest.raises(WatchTimeout):
-            _wait_idle_parameters(phone, timeout=PRF_IDLE_WAIT_S)
-    else:
-        _assert_idle(_wait_idle_parameters(phone))
+    _assert_idle(_wait_idle_parameters(phone))
     assert phone.watch_version() is not None
 
 
@@ -293,6 +286,7 @@ def _on_idle_parameters(phones):
     return phone
 
 
+@BOTH
 def test_session_on_idle_parameters(watch, phones):
     """With the relaxed parameters granted, the session carries on."""
     phone = _on_idle_parameters(phones)
