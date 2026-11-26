@@ -18,6 +18,8 @@
 
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_bt_pairing_listener, bt_pairing);
+
 static char s_peer_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
 static uint16_t s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
 static struct ble_gap_event_listener s_pairing_listener;
@@ -50,7 +52,11 @@ static void prv_end_pairing(uint16_t conn_handle, bool success) {
   }
 
   s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
-  pbl_bt_cb_pairing_confirm_handle_completed(conn_handle, success);
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_pairing_listener, bt_pairing, listener) {
+    if (listener->completed != nullptr) {
+      listener->completed(conn_handle, success);
+    }
+  }
 }
 
 /* A link dropped while pairing raises no pairing complete event. */
@@ -73,8 +79,12 @@ static void prv_handle_passkey(const struct ble_gap_event *event) {
       passkey, sizeof(passkey), "%06" PRIu32,
       (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) ? event->passkey.params.numcmp : 0);
   s_pairing_conn_handle = event->passkey.conn_handle;
-  pbl_bt_cb_pairing_confirm_handle_request(
-      event->passkey.conn_handle, (s_peer_name[0] != '\0') ? s_peer_name : nullptr, passkey);
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_pairing_listener, bt_pairing, listener) {
+    if (listener->request != nullptr) {
+      listener->request(event->passkey.conn_handle,
+                        (s_peer_name[0] != '\0') ? s_peer_name : nullptr, passkey);
+    }
+  }
 }
 
 static int prv_handle_pairing_request(const struct ble_gap_event *event) {
