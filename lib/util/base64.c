@@ -5,12 +5,13 @@
 #include <stdint.h>
 
 #include <pbl/util/base64.h>
+#include <pbl/util/math.h>
 
 static const char s_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 size_t pbl_base64_encode(char *out, size_t out_len, const void *data, size_t data_len) {
   const uint8_t *in = data;
-  const size_t result = (data_len + 2) / 3 * 4;
+  const size_t result = PBL_DIV_ROUND_UP(data_len, 3) * 4;
   if (result > out_len) {
     return result;
   }
