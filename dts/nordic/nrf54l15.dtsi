@@ -73,6 +73,13 @@
 			reg = <0xffd000 0x1000>;
 		};
 
+		cracen: crypto@50048000 {
+			compatible = "nordic,nrf54l15-cracen";
+			reg = <0x50048000 0x1000>, <0x51800000 0x10000>;
+			reg-names = "wrapper", "core";
+			interrupts = <72>;
+		};
+
 		rramc: flash-controller@5004b000 {
 			compatible = "nordic,nrf54l15-rramc";
 			reg = <0x5004b000 0x1000>;
