@@ -4,12 +4,15 @@
 #include <errno.h>
 #include <stdint.h>
 
+#include <pbl/kernel/compiler.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/fatal.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/kernel/mutex.h>
+#include <pbl/kernel/sem.h>
 #include <pbl/kernel/thread.h>
+#include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
 
 #include <devicetree/regs.h>
@@ -20,6 +23,7 @@
 #undef UNUSED
 #include <mpsl.h>
 #include <mpsl_clock.h>
+#include <mpsl_timeslot.h>
 
 #define HFXO_STARTUP_US   1650U
 #define HFXO_TIMEOUT_US   (4U * HFXO_STARTUP_US)
@@ -27,8 +31,25 @@
 
 #define RRAMC_POWER_LOWPOWERCONFIG_STANDBY 1U
 
+// Longest wait for a timeslot, and for each request to be granted
+#define TIMESLOT_TIMEOUT_MS     1000U
+#define TIMESLOT_REQ_TIMEOUT_US 100000U
+#define TIMESLOT_MAX_ATTEMPTS   5U
+
 static PBL_MUTEX_DEFINE(s_lock);
 static uint32_t s_rram_lowpower;
+static bool s_started;
+
+static struct {
+  struct pbl_mutex lock;
+  struct pbl_sem idle;
+  uint8_t mem[MPSL_TIMESLOT_CONTEXT_SIZE] PBL_ALIGNED(4);
+  mpsl_timeslot_request_t req;
+  mpsl_timeslot_signal_return_param_t ret;
+  void (*fn)(void *arg);
+  void *arg;
+  volatile bool ran;
+} s_ts;
 
 static void prv_low_prio_work(struct pbl_work *work) {
   mpsl_pebble_lock();
@@ -80,6 +101,87 @@ void mpsl_low_latency_acquire_callback(void) {
 void mpsl_low_latency_release_callback(void) {
   pbl_writel(1U, PBL_DT_REG_CLOCK + NRF54L_POWER_TASKS_LOWPWR_OFFSET);
   pbl_writel(s_rram_lowpower, PBL_DT_REG_RRAMC + NRF54L_RRAMC_POWER_LOWPOWERCONFIG_OFFSET);
+}
+
+static mpsl_timeslot_signal_return_param_t *prv_timeslot_cb(mpsl_timeslot_session_id_t session,
+                                                            uint32_t signal) {
+  s_ts.ret.callback_action = MPSL_TIMESLOT_SIGNAL_ACTION_NONE;
+
+  switch (signal) {
+    case MPSL_TIMESLOT_SIGNAL_START:
+      s_ts.fn(s_ts.arg);
+      s_ts.ran = true;
+      s_ts.ret.callback_action = MPSL_TIMESLOT_SIGNAL_ACTION_END;
+      break;
+    case MPSL_TIMESLOT_SIGNAL_SESSION_IDLE:
+      pbl_sem_give(&s_ts.idle);
+      break;
+    default:
+      break;
+  }
+
+  return &s_ts.ret;
+}
+
+// One timeslot request, returning once the session is idle again
+static int prv_timeslot_once(uint32_t length_us) {
+  mpsl_timeslot_session_id_t session;
+  int ret = 0;
+
+  s_ts.ran = false;
+  pbl_sem_reset(&s_ts.idle);
+  s_ts.req = (mpsl_timeslot_request_t){
+    .request_type = MPSL_TIMESLOT_REQ_TYPE_EARLIEST,
+    .params.earliest = {
+      .hfclk = MPSL_TIMESLOT_HFCLK_CFG_NO_GUARANTEE,
+      .priority = MPSL_TIMESLOT_PRIORITY_NORMAL,
+      .length_us = length_us,
+      .timeout_us = TIMESLOT_REQ_TIMEOUT_US,
+    },
+  };
+
+  mpsl_pebble_lock();
+  if (mpsl_timeslot_session_open(prv_timeslot_cb, &session) != 0) {
+    mpsl_pebble_unlock();
+    return -EIO;
+  }
+  if (mpsl_timeslot_request(session, &s_ts.req) != 0) {
+    ret = -EIO;
+  }
+  mpsl_pebble_unlock();
+
+  if (ret == 0 && pbl_sem_take(&s_ts.idle, PBL_MSEC(TIMESLOT_TIMEOUT_MS)) != 0) {
+    ret = -ETIMEDOUT;
+  }
+
+  mpsl_pebble_lock();
+  (void)mpsl_timeslot_session_close(session);
+  mpsl_pebble_unlock();
+
+  if (ret == 0 && !s_ts.ran) {
+    ret = -ETIMEDOUT;
+  }
+
+  return ret;
+}
+
+int mpsl_pebble_timeslot_run(void (*fn)(void *arg), void *arg, uint32_t length_us) {
+  int ret = -ETIMEDOUT;
+
+  if (!s_started) {
+    fn(arg);
+    return 0;
+  }
+
+  pbl_mutex_lock(&s_ts.lock, PBL_FOREVER);
+  s_ts.fn = fn;
+  s_ts.arg = arg;
+  for (unsigned int i = 0U; i < TIMESLOT_MAX_ATTEMPTS && ret == -ETIMEDOUT; i++) {
+    ret = prv_timeslot_once(length_us);
+  }
+  pbl_mutex_unlock(&s_ts.lock);
+
+  return ret;
 }
 
 void mpsl_pebble_lock(void) {
@@ -145,6 +247,14 @@ int mpsl_pebble_init(void) {
   if (mpsl_clock_hfclk_latency_set(HFXO_STARTUP_US) != 0) {
     return -EIO;
   }
+
+  pbl_mutex_init(&s_ts.lock);
+  pbl_sem_init(&s_ts.idle, 0U, 1U);
+  if (mpsl_timeslot_session_count_set(s_ts.mem, 1U) != 0) {
+    return -EIO;
+  }
+
+  s_started = true;
 
   return 0;
 }

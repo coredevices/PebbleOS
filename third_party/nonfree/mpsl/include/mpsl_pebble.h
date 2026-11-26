@@ -40,6 +40,20 @@ int mpsl_pebble_init(void);
  */
 int mpsl_pebble_hfxo(bool on);
 
+/**
+ * @brief Run a function in a timeslot, while no radio event runs.
+ *
+ * Waits for a timeslot of @p length_us and runs @p fn in it, from the zero-latency timer
+ * interrupt of the MPSL: @p fn must not use OS services, and must return within the timeslot.
+ * Before the MPSL is started, runs @p fn directly.
+ *
+ * @param fn Function.
+ * @param arg Argument of @p fn.
+ * @param length_us Length of the timeslot, in microseconds.
+ * @return 0, -ETIMEDOUT if no timeslot was granted, or another negative errno.
+ */
+int mpsl_pebble_timeslot_run(void (*fn)(void *arg), void *arg, uint32_t length_us);
+
 /** @brief Take the lock around calls into the MPSL and the stacks on it. */
 void mpsl_pebble_lock(void);
 
