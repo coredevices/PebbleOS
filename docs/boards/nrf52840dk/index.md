@@ -20,8 +20,8 @@ The nRF52840 DK is the Nordic development kit for the nRF52840.
   1 MiB flash and 256 KiB RAM
 - **Flash**: 8 MiB Macronix MX25R6435F quad SPI NOR
 - **Clocks**: 32 MHz and 32.768 kHz crystals
-- **Buttons**: four user buttons, Button 1 to 4 as Back, Up, Select and Down,
-  and a reset button
+- **Buttons**: four user buttons, Button 1 to 4 as keys 1 to 4, Button 1 also
+  waking the board from power-off, and a reset button
 - **LEDs**: four green user LEDs, LED1 the status LED
 - **USB**: full-speed USB device port, nRF USB, on micro-B
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on

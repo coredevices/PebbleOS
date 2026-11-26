@@ -53,32 +53,32 @@
 	buttons: gpio-keys {
 		compatible = "gpio-keys";
 
-		button-back {
+		button-1 {
 			label = "Button1";
 			gpios = <&gpio0 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-			linux,code = <KEY_BACK>;
+			linux,code = <KEY_1>;
 			debounce-interval = <40>;
 			wakeup-source;
 		};
 
-		button-up {
+		button-2 {
 			label = "Button2";
 			gpios = <&gpio0 14 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-			linux,code = <KEY_UP>;
+			linux,code = <KEY_2>;
 			debounce-interval = <40>;
 		};
 
-		button-select {
+		button-3 {
 			label = "Button3";
 			gpios = <&gpio0 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-			linux,code = <KEY_SELECT>;
+			linux,code = <KEY_3>;
 			debounce-interval = <40>;
 		};
 
-		button-down {
+		button-4 {
 			label = "Button4";
 			gpios = <&gpio0 16 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-			linux,code = <KEY_DOWN>;
+			linux,code = <KEY_4>;
 			debounce-interval = <40>;
 		};
 	};

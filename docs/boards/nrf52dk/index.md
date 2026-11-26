@@ -19,8 +19,8 @@ The nRF52 DK is the Nordic development kit for the nRF52832.
   with an Arm Cortex-M4 with FPU, an integrated Bluetooth Low Energy radio,
   512 KiB flash and 64 KiB RAM
 - **Clocks**: 32 MHz and 32.768 kHz crystals
-- **Buttons**: four user buttons, Button 1 to 4 as Back, Up, Select and Down,
-  and a reset button
+- **Buttons**: four user buttons, Button 1 to 4 as keys 1 to 4, Button 1 also
+  waking the board from power-off, and a reset button
 - **LEDs**: four green user LEDs, LED1 the status LED
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE0, P0.06 (TX) and P0.08 (RX), which also powers the kit
