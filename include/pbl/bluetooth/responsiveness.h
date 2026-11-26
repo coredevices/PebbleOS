@@ -12,7 +12,8 @@
  * @brief How fast a connection responds, traded against the power it takes.
  *
  * Whoever needs a connection fast asks for a response time on it, for a limited period. The fastest
- * one asked for is negotiated with the central as connection parameters:
+ * one asked for is negotiated with the central as connection parameters, set with the
+ * @c BT_RESPONSE_TIME_* options. By default:
  *
  * | Response time | Interval | Peripheral latency | Supervision timeout |
  * | --- | --- | --- | --- |
