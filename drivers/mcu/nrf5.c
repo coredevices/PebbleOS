@@ -2,26 +2,34 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
-#include <string.h>
 
 #include <pbl/drivers/mcu.h>
-#include <pbl/kernel/mmio.h>
+#include <pbl/drivers/nvmem/nrf_ficr.h>
 
-#include <devicetree/regs.h>
-#include <hardware/nrf52_ficr.h>
+#define DEVICEID_OFFSET 0x060U
+#define DEVICEID_SIZE   8U
+
+static const struct pbl_nvmem_cell s_deviceid_cell =
+    PBL_NVMEM_CELL(NRF_FICR, DEVICEID_OFFSET, DEVICEID_SIZE);
 
 int mcu_get_serial(void *buf, size_t *buf_sz) {
-  const uint32_t id[2] = {
-    pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_DEVICEID_OFFSET(0)),
-    pbl_readl(PBL_DT_REG_FICR + NRF52_FICR_DEVICEID_OFFSET(1)),
-  };
+  int ret;
 
-  if (*buf_sz < sizeof(id)) {
+  if (*buf_sz < DEVICEID_SIZE) {
     return -ENOSPC;
   }
 
-  memcpy(buf, id, sizeof(id));
-  *buf_sz = sizeof(id);
+  ret = pbl_device_init(&s_deviceid_cell.nvmem->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_nvmem_cell_read(&s_deviceid_cell, buf, DEVICEID_SIZE);
+  if (ret != 0) {
+    return ret;
+  }
+
+  *buf_sz = DEVICEID_SIZE;
 
   return 0;
 }

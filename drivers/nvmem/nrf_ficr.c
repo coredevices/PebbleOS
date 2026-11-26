@@ -30,4 +30,4 @@ const struct pbl_nvmem_ops pbl_nvmem_nrf_ficr_ops = {
   .reg_read = prv_reg_read,
 };
 
-#include PBL_DT_INSTANCES(nordic_nrf54l15_ficr)
+#include PBL_DT_INSTANCES(nrf_ficr)
