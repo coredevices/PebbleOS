@@ -18,6 +18,9 @@ OPENOCD_LOG = ".openocd.log"
 # How long the daemon may take to answer each expectation
 DAEMON_EXPECT_S = 40
 
+# read_memory, which the flash scripts use, came with 0.12.0
+OPENOCD_MIN_VERSION = (0, 12, 0)
+
 
 def _expect(sock, received, regex, timeout):
     """Read from ``sock`` until ``regex`` matches what came; returns what came
@@ -37,6 +40,31 @@ def _expect(sock, received, regex, timeout):
             return received, False
         received += data
     return received[match.end() :], True
+
+
+def _openocd_version():
+    """The version of the openocd in PATH, or None if it does not say."""
+    try:
+        result = subprocess.run(
+            ["openocd", "--version"], capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        raise RunnerError("openocd not found in PATH") from None
+    # It prints its banner to stderr
+    match = re.search(
+        r"Open On-Chip Debugger (\d+)\.(\d+)\.(\d+)", result.stdout + result.stderr
+    )
+    return tuple(int(n) for n in match.groups()) if match else None
+
+
+def _check_openocd_version():
+    version = _openocd_version()
+    if version is not None and version < OPENOCD_MIN_VERSION:
+        found = ".".join(map(str, version))
+        required = ".".join(map(str, OPENOCD_MIN_VERSION))
+        raise RunnerError(
+            f"OpenOCD {found} is too old: {required} or later is required"
+        )
 
 
 def _is_openocd_running():
@@ -114,6 +142,10 @@ class OpenOcdRunner(Runner):
         )
 
     def do_run(self, command):
+        # A running daemon is used as it is; only an openocd started here is checked
+        if not self.cfg.dry_run and not _is_openocd_running():
+            _check_openocd_version()
+
         if command == "flash" and (self.cfg.data_files or self.cfg.erase_code):
             self._flash_data()
         elif command == "flash":
