@@ -31,6 +31,7 @@ LARGE_MTU = 339
 PHONE_WINDOW = 25
 V0_WINDOW = 4
 PINGS = 100
+STRESS_ROUNDS = 10
 SETTLE_S = 5.0
 APP_UUID = uuid.UUID("3b0b7c4f-0e1a-4d3a-9c47-6a0c3d1e2f50")
 # An idle link: 45 ms, peripheral latency 30. With Acks 6 events late,
@@ -125,6 +126,41 @@ def test_large_transfer(dut, watch, phones, mtu):
         if b"".join(bytes(r) for r in rows) == image.tobytes():
             return
     pytest.fail("the screenshot differs from the screen")
+
+
+@pytest.mark.parametrize("accept_parameters", [False, True], ids=["kept", "granted"])
+def test_transfers_among_messages(dut, watch, phones, accept_parameters):
+    """Screenshots sent while a hundred messages are answered, round after
+    round, with the link's parameters changing under them when the phone
+    grants what each transfer asks for: nothing is lost and the session
+    stays up."""
+    from libpebble2.protocol.system import Ping, PingPong, Pong
+
+    phone = _settled(phones(accept_parameters=accept_parameters).connect())
+    since = dut.logs.mark()
+    size = None
+    for _ in range(STRESS_ROUNDS):
+        pongs = phone.pebble.get_endpoint_queue(PingPong)
+        try:
+            for cookie in range(PINGS):
+                phone.pebble.send_packet(
+                    PingPong(cookie=cookie, message=Ping(idle=False))
+                )
+            rows = phone.screenshot()
+            assert len({len(r) for r in rows}) == 1
+            assert size in (None, (len(rows[0]), len(rows)))
+            size = (len(rows[0]), len(rows))
+
+            cookies = set()
+            deadline = time.monotonic() + 60
+            while len(cookies) < PINGS:
+                message = pongs.get(timeout=max(0.0, deadline - time.monotonic()))
+                if isinstance(message.message, Pong):
+                    cookies.add(message.cookie)
+        finally:
+            pongs.close()
+    assert phone.link.is_connected
+    assert dut.logs.find(SESSION_CLOSED, since) is None
 
 
 @pytest.mark.requires_config(
