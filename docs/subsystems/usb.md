@@ -6,7 +6,7 @@ enumerates it. Its public API is `include/pbl/usb/usbd.h`. It is built with
 
 ```{mermaid}
 flowchart TD
-  fn["Functions<br/>CDC ACM, DFU, ..."]
+  fn["Functions<br/>CDC ACM, DFU, mass storage, ..."]
   usbd["Device stack<br/>subsys/usb/usbd.c"]
   udc["USB device controller<br/>pbl/drivers/udc.h"]
   drv["Controller driver<br/>MUSB, ..."]
@@ -319,6 +319,55 @@ cmp image.bin readback.bin
 
 `-Z` stops the upload at the size of the image; without it the whole
 partition is read. On Linux, `stat -c %s` gives the size.
+
+## Mass storage
+
+`CONFIG_USB_MSC` adds a mass storage interface, Bulk-Only Transport with the
+SCSI transparent command set (`include/pbl/usb/msc.h`): the host reads and
+writes disks of the device ({doc}`../drivers/disk`) as its own, removable
+drives it can eject. The function has one interface and a bulk endpoint in
+each direction, numbered among the other functions'. Each disk is a logical
+unit the application defines, up to 16, numbered in the order of their
+names:
+
+```c
+PBL_USB_MSC_LUN_DEFINE(ram, &pbl_disk_ram, false);
+```
+
+The last argument gives the host the disk read-only, as does a disk that
+reports itself read-only: writes then fail with `DATA PROTECT`, and
+`MODE SENSE` sets the write protection bit. The commands are `TEST UNIT
+READY`, `REQUEST SENSE`, `INQUIRY`, `MODE SENSE (6)` and `(10)` (the
+caching page, write cache off), `START STOP UNIT`, `PREVENT ALLOW MEDIUM
+REMOVAL`, `READ FORMAT CAPACITIES`, `READ CAPACITY (10)`, `READ (10)`,
+`WRITE (10)` and `SYNCHRONIZE CACHE (10)`; others fail with `ILLEGAL
+REQUEST`, and every failure leaves its sense data for `REQUEST SENSE`. A
+host that ejects a disk with `START STOP UNIT` sees no medium until it loads
+it again or configures the device again; `PREVENT ALLOW MEDIUM REMOVAL`
+makes the eject fail.
+
+The transport follows the thirteen cases of the specification: when the host
+expects more data than the command has, the device moves what it has, halts
+the endpoint and reports the difference as the residue; when the host
+expects less, none, or the other direction, the command ends with a phase
+error. A CBW that is not valid or not meaningful (its length, signature,
+flags, logical unit or command length) halts both endpoints, which stay
+halted whatever the host clears until a Bulk-Only Mass Storage Reset, which
+also ends the transfers of the command it interrupts. `GET MAX LUN` gives the
+number of logical units, minus 1.
+
+Disks are never accessed from the controller's interrupt: a work item on the
+system work queue runs each command and its disk accesses. The data goes
+through two buffers of `CONFIG_USB_MSC_BUF_SIZE` bytes, 4096 by default: the
+bus sends one while the disk fills the other on reads, and the other way
+around on writes, the interrupt queuing the next transfer as soon as a buffer
+is ready.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `CONFIG_USB_MSC_BUF_SIZE` | `4096` | Bytes of each of the two transfer buffers, a multiple of 512 and of the sector size |
+| `CONFIG_USB_MSC_VENDOR` | `PebbleOS` | Vendor, in the inquiry data, up to 8 characters |
+| `CONFIG_USB_MSC_PRODUCT` | `Disk` | Product, in the inquiry data, up to 16 characters |
 
 ## Test function
 
