@@ -119,7 +119,7 @@ components:
     type: library
     supplier: Nordic Semiconductor ASA
     description: nRF Fuel Gauge library and battery models, from sdk-nrfxlib 8f9ab9b01dd3
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-Nordic-5-Clause
     url: https://github.com/nrfconnect/sdk-nrfxlib
 
@@ -127,8 +127,8 @@ components:
     path: nonfree/pebbleos-nonfree/nordic/mpsl
     type: library
     supplier: Nordic Semiconductor ASA
-    description: Multiprotocol service layer for the nRF54L, from sdk-nrfxlib v3.4.2
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    description: Multiprotocol service layer for the nRF54L15 and nRF54LM20, from sdk-nrfxlib v3.4.2
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-Nordic-5-Clause
     url: https://github.com/nrfconnect/sdk-nrfxlib
 
@@ -136,8 +136,8 @@ components:
     path: nonfree/pebbleos-nonfree/nordic/softdevice_controller
     type: library
     supplier: Nordic Semiconductor ASA
-    description: Bluetooth LE controller for the nRF54L, from sdk-nrfxlib v3.4.2
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    description: Bluetooth LE controller for the nRF54L15 and nRF54LM20, from sdk-nrfxlib v3.4.2
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-Nordic-5-Clause
     url: https://github.com/nrfconnect/sdk-nrfxlib
 
@@ -146,14 +146,14 @@ components:
     type: firmware
     supplier: Shanghai Hynitron Microelectronics Co., Ltd
     description: CST816 touch controller firmware
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-Hynitron-5-Clause
 
   - name: gh3x2x
     path: nonfree/pebbleos-nonfree/gh3x2x
     supplier: Shenzhen Goodix Technology Co., Ltd.
     description: GH3x2x heart rate sensor driver and algorithms
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-Goodix-5-Clause
 
   - name: sf32lb52-lcpu-patch
@@ -161,7 +161,7 @@ components:
     type: firmware
     supplier: SiFli Technology
     description: SF32LB52 LCPU (Bluetooth controller) firmware patches
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-SiFli-5-Clause
 
   - name: sf32lb57-lcpu-patch
@@ -169,7 +169,7 @@ components:
     type: firmware
     supplier: SiFli Technology
     description: SF32LB57 LCPU (Bluetooth controller) firmware patches
-    commit: cdd21da0d2e3dd31939cb53775d58428dec5aad3
+    commit: 21704cdc72770da95886210719c735798fd03bd6
     license: LicenseRef-SiFli-5-Clause
 
   - name: picolibc
