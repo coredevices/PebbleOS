@@ -1,6 +1,8 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "prf_sync.h"
+
 #include <errno.h>
 #include <string.h>
 
@@ -173,4 +175,47 @@ void test_prf_backend__reports_a_store_that_fails(void) {
   s_store_rc = -EIO;
   ble_store_config_peer_secs[ble_store_config_num_peer_secs++] = prv_sec(1, 0x11);
   cl_assert_equal_i(ble_store_config_persist_peer_secs(), BLE_HS_ESTORE_FAIL);
+}
+
+/* A store that had bonds of its own when it took the one of the PRF store. */
+void test_prf_backend__takes_the_stored_bond_next_to_others(void) {
+  prv_bond(1, 0x10);
+  s_peer = prv_sec(7, 0x21);
+  s_our = prv_sec(7, 0x20);
+
+  cl_assert(nimble_store__prf_sync_load());
+
+  cl_assert_equal_i(ble_store_config_num_peer_secs, 2);
+  cl_assert_equal_i(ble_store_config_peer_secs[1].peer_addr.val[0], 7);
+  cl_assert_equal_i(ble_store_config_our_secs[1].ltk[0], 0x20);
+
+  /* Taking it is not writing it: the PRF store is left alone. */
+  s_num_sets = 0;
+  cl_assert_equal_i(nimble_store__prf_sync_save(), 0);
+  cl_assert_equal_i(s_num_sets, 1);
+  prv_assert_stored(7, 0x20);
+}
+
+void test_prf_backend__takes_new_keys_of_a_bond_it_has(void) {
+  prv_bond(1, 0x10);
+  s_peer = prv_sec(1, 0x41);
+  s_our = prv_sec(1, 0x40);
+
+  cl_assert(nimble_store__prf_sync_load());
+
+  cl_assert_equal_i(ble_store_config_num_peer_secs, 1);
+  cl_assert_equal_i(ble_store_config_peer_secs[0].ltk[0], 0x41);
+  cl_assert_equal_i(ble_store_config_our_secs[0].ltk[0], 0x40);
+
+  cl_assert(!nimble_store__prf_sync_load());
+}
+
+void test_prf_backend__gives_its_bond_to_an_empty_store(void) {
+  ble_store_config_our_secs[ble_store_config_num_our_secs++] = prv_sec(1, 0x10);
+  ble_store_config_peer_secs[ble_store_config_num_peer_secs++] = prv_sec(1, 0x11);
+
+  cl_assert(!nimble_store__prf_sync_load());
+  cl_assert_equal_i(nimble_store__prf_sync_save(), 0);
+
+  prv_assert_stored(1, 0x10);
 }

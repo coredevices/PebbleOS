@@ -9,6 +9,7 @@
 
 #include <pbl/bluetooth/sm_types.h>
 #include <pbl/bluetooth/types.h>
+#include <pbl/kernel/section.h>
 
 #include <host/ble_store.h>
 #include <nimble/ble.h>
@@ -21,8 +22,8 @@
  * The stack keeps its bonds, with their keys and Client Characteristic Configuration Descriptor
  * states, in the NimBLE store. They can be read and deleted with the stack stopped as well.
  *
- * Changes are reported on the system work queue through pbl_bt_cb_bond_added(),
- * pbl_bt_cb_bond_changed() and pbl_bt_cb_bond_deleted(), after the store has them.
+ * Changes are reported to the listeners defined with PBL_BT_BOND_LISTENER_DEFINE(), on the system
+ * work queue, after the store has them.
  * @{
  */
 
@@ -111,31 +112,40 @@ int pbl_bt_bond_set_keys(const struct pbl_bt_bond_keys *keys);
  */
 int pbl_bt_unpair(const ble_addr_t *addr);
 
-/**
- * @brief Called after bonding with a new peer.
- *
- * Implemented by the firmware. Runs on the system work queue.
- *
- * @param info The new bond.
- */
-extern void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info);
+/** @brief What a bond listener is told. Each is optional. */
+struct pbl_bt_bond_listener {
+  /**
+   * @brief Bonded with a new peer.
+   *
+   * @param info The new bond.
+   */
+  void (*added)(const struct pbl_bt_bond_info *info);
+  /**
+   * @brief The keys of a bond changed, for example when its peer paired again.
+   *
+   * @param info The bond.
+   */
+  void (*changed)(const struct pbl_bt_bond_info *info);
+  /**
+   * @brief A bond was deleted.
+   *
+   * @param addr Identity address of the peer.
+   */
+  void (*deleted)(const ble_addr_t *addr);
+};
 
 /**
- * @brief Called after the keys of a bond changed, for example when its peer paired again.
+ * @brief Define a listener of the changes to the bonds.
  *
- * Implemented by the firmware. Runs on the system work queue.
+ * @code{.c}
+ * PBL_BT_BOND_LISTENER_DEFINE(my_listener, .added = prv_bond_added);
+ * @endcode
  *
- * @param info The bond.
+ * @param _name Name of the listener.
+ * @param ... Initializers of its struct pbl_bt_bond_listener.
  */
-extern void pbl_bt_cb_bond_changed(const struct pbl_bt_bond_info *info);
-
-/**
- * @brief Called after a bond was deleted.
- *
- * Implemented by the firmware. Runs on the system work queue.
- *
- * @param addr Identity address of the peer.
- */
-extern void pbl_bt_cb_bond_deleted(const ble_addr_t *addr);
+#define PBL_BT_BOND_LISTENER_DEFINE(_name, ...)                                               \
+  static const struct pbl_bt_bond_listener pbl_bt_bond_listener_##_name PBL_ITERABLE_SECTION( \
+      const struct pbl_bt_bond_listener, bt_bond, #_name) = {__VA_ARGS__}
 
 /** @} */

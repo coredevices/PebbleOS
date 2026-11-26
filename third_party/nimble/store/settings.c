@@ -1,11 +1,14 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "prf_sync.h"
+
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/bluetooth/prf_store.h>
 #include <pbl/logging/logging.h>
 #include <pbl/settings/settings.h>
 
@@ -100,14 +103,32 @@ static int prv_load(struct pbl_settings_file *file, const char *key, void *value
   return (int)(len / size);
 }
 
-int ble_store_config_persist_our_secs(void) {
+static int prv_save_our_secs(void) {
   return prv_save(s_key_our_secs, ble_store_config_our_secs,
                   ble_store_config_num_our_secs * sizeof(ble_store_config_our_secs[0]));
 }
 
-int ble_store_config_persist_peer_secs(void) {
+static int prv_save_peer_secs(void) {
   return prv_save(s_key_peer_secs, ble_store_config_peer_secs,
                   ble_store_config_num_peer_secs * sizeof(ble_store_config_peer_secs[0]));
+}
+
+static int prv_mirror(int rc) {
+#ifdef CONFIG_NIMBLE_STORE_SETTINGS_PRF_MIRROR
+  if (rc == 0) {
+    rc = nimble_store__prf_sync_save();
+  }
+#endif
+
+  return rc;
+}
+
+int ble_store_config_persist_our_secs(void) {
+  return prv_mirror(prv_save_our_secs());
+}
+
+int ble_store_config_persist_peer_secs(void) {
+  return prv_mirror(prv_save_peer_secs());
 }
 
 int ble_store_config_persist_cccds(void) {
@@ -149,11 +170,23 @@ static int prv_gen_key(uint8_t key, struct ble_store_gen_key *gen_key, uint16_t 
   return ret;
 }
 
-void ble_store_config_conf_init(void) {
+/* The bonding of the PRF store is the device's: the recovery firmware may have made it. */
+static void prv_mirror_init(void) {
+#ifdef CONFIG_NIMBLE_STORE_SETTINGS_PRF_MIRROR
+  pbl_bt_prf_store_init();
+
+  if (nimble_store__prf_sync_load()) {
+    (void)prv_save_our_secs();
+    (void)prv_save_peer_secs();
+  } else {
+    (void)nimble_store__prf_sync_save();
+  }
+#endif
+}
+
+static void prv_load_all(void) {
   struct pbl_settings_file file;
   struct layout layout;
-
-  ble_hs_cfg.store_gen_key_cb = prv_gen_key;
 
   if (prv_open(&file) != 0) {
     return;
@@ -183,4 +216,11 @@ void ble_store_config_conf_init(void) {
                MYNEWT_VAL(BLE_STORE_MAX_CCCDS));
 
   pbl_settings_close(&file);
+}
+
+void ble_store_config_conf_init(void) {
+  ble_hs_cfg.store_gen_key_cb = prv_gen_key;
+
+  prv_load_all();
+  prv_mirror_init();
 }

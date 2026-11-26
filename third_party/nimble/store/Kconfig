@@ -31,6 +31,15 @@ config NIMBLE_STORE_BACKEND_PRF
 
 endchoice
 
+config NIMBLE_STORE_SETTINGS_PRF_MIRROR
+    bool "Mirror the last bonding to the PRF store"
+    depends on NIMBLE_STORE_BACKEND_SETTINGS
+    select BT_PRF_STORE
+    help
+      Keep the bonding written last in the PRF store too, and take the
+      one found there when the store loads: firmware that uses the PRF
+      store backend then shares the bonding of this one.
+
 config NIMBLE_STORE_SETTINGS_FILE_SIZE
     int "Store file size in bytes"
     depends on NIMBLE_STORE_BACKEND_SETTINGS
