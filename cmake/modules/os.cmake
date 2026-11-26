@@ -98,6 +98,7 @@ include(linker)
 include(firmware)
 include(images)
 include(devicetree)
+include(canopen)
 
 message(STATUS "Board: ${PBL_BOARD}, variant: ${VARIANT}")
 if(ADDONS)
