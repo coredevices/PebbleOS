@@ -43,15 +43,16 @@ config AUDIO_SF32LB_AUDCODEC
       analog microphones through its ADC.
 
 config AUDIO_SF32LB52_PDM
-    bool "SiFli SF32LB52 PDM"
+    bool "SiFli SF32LB52 and SF32LB57 PDM"
     default y
-    depends on DT_HAS_SIFLI_SF32LB52_PDM_ENABLED
+    depends on DT_HAS_SIFLI_SF32LB52_PDM_ENABLED || DT_HAS_SIFLI_SF32LB57_PDM_ENABLED
     select CLK
     select DMA
     select PINCTRL
     select RESET
     help
-      Capture from digital microphones on the SF32LB52 PDM interface.
+      Capture from digital microphones on the SF32LB52 and SF32LB57 PDM
+      interface.
 
 config AUDIO_SF32LB52_PDM_IRQ_PRIO
     int "Interrupt priority"

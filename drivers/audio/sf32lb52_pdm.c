@@ -18,10 +18,28 @@
 
 #include <hardware/sf32lb52_pdm.h>
 
+#ifdef CONFIG_SOC_SF32LB57
+#include <hardware/sf32lb57_pdm.h>
+
+#define REG(name)          (pdm->base + SF32LB57_PDM_##name##_OFFSET)
+#define CFG0_CLK_DIV_MASK  SF32LB57_PDM_CFG0_CLK_DIV_MASK
+#define CFG0_LEFT_EN       SF32LB57_PDM_CFG0_LEFT_EN
+#define CFG0_RIGHT_EN      SF32LB57_PDM_CFG0_RIGHT_EN
+#define CFG0_STEREO_EN     SF32LB57_PDM_CFG0_STEREO_EN
+#define CFG0_SWAP_EN       SF32LB57_PDM_CFG0_SWAP_EN
+#define FIFO_CFG_SHIFT_MSK 0U
+#else
+#define REG(name)          (pdm->base + SF32LB52_PDM_##name##_OFFSET)
+#define CFG0_CLK_DIV_MASK  PDM_CFG0_CLK_DIV_MASK
+#define CFG0_LEFT_EN       PDM_CFG0_LEFT_EN
+#define CFG0_RIGHT_EN      PDM_CFG0_RIGHT_EN
+#define CFG0_STEREO_EN     PDM_CFG0_STEREO_EN
+#define CFG0_SWAP_EN       PDM_CFG0_SWAP_EN
+#define FIFO_CFG_SHIFT_MSK PDM_FIFO_CFG_PDM_SHIFT_MASK
+#endif
+
 static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
               "ring buffers must own their cache lines");
-
-#define REG(name) (pdm->base + SF32LB52_PDM_##name##_OFFSET)
 
 // Gain register: 0.5 dB steps from -15 dB
 #define GAIN_MIN_MDB     (-15000)
@@ -33,6 +51,26 @@ static_assert(PBL_DCACHE_LINE_SIZE <= PBL_AUDIO_BUF_ALIGN,
 #define PGA_GAIN_INIT    0x26U
 #define BYTE_TRUNC_16BIT 1U
 
+#ifdef CONFIG_SOC_SF32LB57
+// Rates from the 9.6 MHz clock: clock / clk_div / sinc_rate / 2 for each half-band filter not
+// bypassed
+struct prv_rate {
+  uint32_t rate;
+  uint8_t clk_div;
+  uint8_t sinc_rate;
+  bool sinc_order4;
+  bool comp_coeff;
+  uint32_t hbf;
+};
+
+static const struct prv_rate s_rates[] = {
+  {8000U, 4U, 75U, false, false, SF32LB57_PDM_HBF_CFG_HBF1_GAIN_EN},
+  {16000U, 4U, 75U, false, false,
+   SF32LB57_PDM_HBF_CFG_HBF1_GAIN_EN | SF32LB57_PDM_HBF_CFG_HBF2_BYPASS},
+  {32000U, 6U, 25U, true, true, SF32LB57_PDM_HBF_CFG_HBF2_BYPASS},
+  {48000U, 4U, 25U, true, true, SF32LB57_PDM_HBF_CFG_HBF2_BYPASS},
+};
+#else
 // Rates from the 9.6 MHz clock: clock / clk_div / sinc_rate / (2 or 4 with lpf_ds)
 struct prv_rate {
   uint32_t rate;
@@ -48,6 +86,7 @@ static const struct prv_rate s_rates[] = {
   {32000U, 6U, 25U, false, false},
   {48000U, 4U, 25U, true, false},
 };
+#endif
 
 static const struct pbl_audio_sf32lb52_pdm *prv_dev(const struct pbl_audio_dai *dai) {
   return PBL_CONTAINER_OF(dai, const struct pbl_audio_sf32lb52_pdm, dai);
@@ -67,36 +106,58 @@ static uint32_t prv_gain_reg(int32_t gain_mdb) {
   return (uint32_t)pbl_audio_gain_to_step(gain_mdb, GAIN_MIN_MDB, GAIN_STEP_MDB);
 }
 
+// Writes the filters of the rate
+static void prv_configure_filters(const struct pbl_audio_sf32lb52_pdm *pdm,
+                                  const struct prv_rate *rate) {
+#ifdef CONFIG_SOC_SF32LB57
+  uint32_t comp = pbl_readl(REG(COMP_FLT_CFG));
+  uint32_t hbf = pbl_readl(REG(HBF_CFG));
+
+  comp &= ~(SF32LB57_PDM_COMP_FLT_CFG_COMP_BYPASS | SF32LB57_PDM_COMP_FLT_CFG_COEFF_SEL);
+  comp |= rate->comp_coeff ? SF32LB57_PDM_COMP_FLT_CFG_COEFF_SEL : 0U;
+  hbf &= ~(SF32LB57_PDM_HBF_CFG_HBF1_GAIN_EN | SF32LB57_PDM_HBF_CFG_HBF1_BYPASS |
+           SF32LB57_PDM_HBF_CFG_HBF2_GAIN_EN | SF32LB57_PDM_HBF_CFG_HBF2_BYPASS);
+  hbf |= rate->hbf;
+
+  pbl_writel(comp, REG(COMP_FLT_CFG));
+  pbl_writel(hbf, REG(HBF_CFG));
+#else
+  uint32_t lpf = pbl_readl(REG(LPF_CFG6));
+
+  lpf &= ~(PDM_LPF_CFG6_LPF_DS | PDM_LPF_CFG6_LPF_BYPASS);
+  lpf |= rate->lpf_ds ? PDM_LPF_CFG6_LPF_DS : 0U;
+
+  pbl_writel(lpf, REG(LPF_CFG6));
+#endif
+}
+
 static void prv_configure(const struct pbl_audio_sf32lb52_pdm *pdm, const struct prv_rate *rate,
                           uint8_t channels) {
   uint32_t cfg0 = pbl_readl(REG(CFG0));
   uint32_t fifo = pbl_readl(REG(FIFO_CFG));
   uint32_t sinc = pbl_readl(REG(SINC_CFG));
-  uint32_t lpf = pbl_readl(REG(LPF_CFG6));
 
-  cfg0 &= ~(PDM_CFG0_LEFT_EN | PDM_CFG0_RIGHT_EN | PDM_CFG0_STEREO_EN | PDM_CFG0_SWAP_EN |
-            PDM_CFG0_CLK_SEL | PDM_CFG0_CLK_DIV_MASK);
+  cfg0 &= ~(CFG0_LEFT_EN | CFG0_RIGHT_EN | CFG0_STEREO_EN | CFG0_SWAP_EN | PDM_CFG0_CLK_SEL |
+            CFG0_CLK_DIV_MASK);
   fifo &= ~(PDM_FIFO_CFG_BYTE_CON | PDM_FIFO_CFG_RX_DMA_MSK_L | PDM_FIFO_CFG_RX_DMA_MSK_R |
-            PDM_FIFO_CFG_PDM_SHIFT_MASK | PDM_FIFO_CFG_BYTE_TRUNC_MASK);
+            FIFO_CFG_SHIFT_MSK | PDM_FIFO_CFG_BYTE_TRUNC_MASK);
   sinc &= ~(PDM_SINC_CFG_SINC_ORDER_SEL | PDM_SINC_CFG_SINC_RATE_MASK);
-  lpf &= ~PDM_LPF_CFG6_LPF_DS;
 
   if (channels == 1U) {
-    cfg0 |= PDM_CFG0_LEFT_EN;
+    cfg0 |= CFG0_LEFT_EN;
     fifo |= PDM_FIFO_CFG_RX_DMA_MSK_R;
   } else {
-    cfg0 |= PDM_CFG0_LEFT_EN | PDM_CFG0_RIGHT_EN | PDM_CFG0_STEREO_EN;
+    cfg0 |= CFG0_LEFT_EN | CFG0_RIGHT_EN | CFG0_STEREO_EN;
     fifo |= PDM_FIFO_CFG_BYTE_CON;
   }
 
-  cfg0 |= PBL_FIELD_PREP(PDM_CFG0_CLK_DIV_MASK, rate->clk_div);
+  cfg0 |= PBL_FIELD_PREP(CFG0_CLK_DIV_MASK, rate->clk_div);
   sinc |= PBL_FIELD_PREP(PDM_SINC_CFG_SINC_RATE_MASK, rate->sinc_rate) |
           (rate->sinc_order4 ? PDM_SINC_CFG_SINC_ORDER_SEL : 0U);
-  lpf |= rate->lpf_ds ? PDM_LPF_CFG6_LPF_DS : 0U;
   fifo |= PBL_FIELD_PREP(PDM_FIFO_CFG_BYTE_TRUNC_MASK, BYTE_TRUNC_16BIT);
 
   pbl_writel(sinc, REG(SINC_CFG));
-  pbl_writel(lpf, REG(LPF_CFG6));
+  prv_configure_filters(pdm, rate);
   pbl_writel(cfg0, REG(CFG0));
   pbl_writel(fifo, REG(FIFO_CFG));
 }
@@ -188,7 +249,6 @@ static int prv_hw_start(const struct pbl_audio_sf32lb52_pdm *pdm,
   pbl_writel(PBL_FIELD_PREP(PDM_PGA_CFG_PGA_GAIN_L_MASK, PGA_GAIN_INIT) |
                  PBL_FIELD_PREP(PDM_PGA_CFG_PGA_GAIN_R_MASK, PGA_GAIN_INIT),
              REG(PGA_CFG));
-  pbl_writel(pbl_readl(REG(LPF_CFG6)) & ~PDM_LPF_CFG6_LPF_BYPASS, REG(LPF_CFG6));
   prv_set_gain_reg(pdm, gain_mdb);
 
   pdm->state->ring_bytes = period_bytes * stream->periods;
@@ -306,3 +366,4 @@ const struct pbl_audio_dai_ops pbl_audio_sf32lb52_pdm_ops = {
 };
 
 #include PBL_DT_INSTANCES(sifli_sf32lb52_pdm)
+#include PBL_DT_INSTANCES(sifli_sf32lb57_pdm)
