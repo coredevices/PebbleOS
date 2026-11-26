@@ -1,0 +1,8 @@
+description: CANopen device with a counter in a TPDO and an output in an RPDO, driven by a host master script
+expect:
+  - 'canopen: NMT pre-operational'
+  - 'canopen: node 5 at 500000 bit/s'
+roles: [can_bus]
+integration: [sf32lb57_dpi_hdk]
+# Needs a CANopen master on the bus, master.py on the host
+build_only: true

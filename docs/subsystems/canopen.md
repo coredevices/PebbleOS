@@ -10,6 +10,7 @@ with the EDS file the tools on the other end of the bus read.
 | Header | `pbl/canopen/canopen.h` |
 | Kconfig | `CONFIG_CANOPEN`, enabled by the application; needs `CONFIG_CAN` |
 | API | {apidoc}`API reference <subsys_canopen>` |
+| Samples | {doc}`Device <../samples/subsys/canopen/device>` |
 
 ## Overview
 
