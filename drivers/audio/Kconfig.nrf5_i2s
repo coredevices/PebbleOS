@@ -15,3 +15,14 @@ config AUDIO_NRF5_I2S_IRQ_PRIO
     depends on AUDIO_NRF5_I2S
     help
       Priority of the I2S interrupt.
+
+config AUDIO_NRF5_I2S_BLOCK_FRAMES
+    int "Most frames in a DMA block"
+    range 16 512
+    default 512
+    depends on AUDIO_NRF5_I2S
+    help
+      The DMA blocks are the first stream's periods, cut down to this. Each
+      direction streaming takes two from the kernel heap while running, of
+      4 bytes a frame: smaller blocks take less of it, at an interrupt per
+      block.

@@ -378,7 +378,8 @@ static int prv_hw_restart(const struct pbl_audio_nrf5_i2s *i2s, uint8_t dirs, ui
   return ret;
 }
 
-// Start for the first stream, whose periods set the block size. A second joins by restarting
+// Start for the first stream, whose period, at most CONFIG_AUDIO_NRF5_I2S_BLOCK_FRAMES, sets the
+// block size. A second joins by restarting
 // the hardware with both, so the capture path, its buffers and its interrupts run only while
 // something records.
 static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
@@ -403,7 +404,9 @@ static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
     return -EINVAL;
   }
 
-  ret = prv_alloc(&state->dirs[dir], stream->period_frames);
+  const size_t block_frames = PBL_MIN(stream->period_frames, CONFIG_AUDIO_NRF5_I2S_BLOCK_FRAMES);
+
+  ret = prv_alloc(&state->dirs[dir], block_frames);
   if (ret != 0) {
     return ret;
   }
@@ -421,7 +424,7 @@ static int prv_start(const struct pbl_audio_dai *dai, enum pbl_audio_dir dir,
     return ret;
   }
 
-  state->block_frames = stream->period_frames;
+  state->block_frames = block_frames;
   prv_hw_run(i2s, PBL_BIT(dir), false);
 
   return 0;
