@@ -1,0 +1,19 @@
+description: Frames with a counter sent on the CAN bus, each echoed back by a host script
+expect:
+  - 'can: 500000 bit/s'
+  - 'can: echo 0 in \d+ ms'
+  - 'can: echo 1 in \d+ ms'
+  - 'can: echo 2 in \d+ ms'
+  - 'can: echo 3 in \d+ ms'
+  - 'can: echo 4 in \d+ ms'
+  - 'can: echo 5 in \d+ ms'
+  - 'can: echo 6 in \d+ ms'
+  - 'can: echo 7 in \d+ ms'
+  - 'can: echo 8 in \d+ ms'
+  - 'can: echo 9 in \d+ ms'
+  - 'can: 10 of 10 echoed, tx errors \d+, rx errors \d+'
+  - 'Sample done'
+roles: [can_bus]
+integration: [sf32lb57_dpi_hdk]
+# Needs another node on the bus, echo.py on the host
+build_only: true
