@@ -16,6 +16,7 @@
 #include <pbl/kernel/time.h>
 #ifdef CONFIG_TOUCH
 #include <pbl/drivers/touch.h>
+#include <pbl/util/math.h>
 #endif
 
 #define FRAME_MS 16U
@@ -145,7 +146,7 @@ static int prv_get_framebuffer(struct demo *d) {
       d->fb.pitch = d->props->width;
       break;
     default:
-      d->fb.pitch = (d->props->width + 7U) / 8U;
+      d->fb.pitch = PBL_DIV_ROUND_UP(d->props->width, 8U);
       break;
   }
 
