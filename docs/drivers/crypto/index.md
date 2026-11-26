@@ -31,6 +31,7 @@ check their own results: the subsystem's
 ```{toctree}
 :maxdepth: 1
 
+nrf_cracen.md
 sf32lb.md
 ```
 

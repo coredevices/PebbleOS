@@ -10,6 +10,18 @@ menuconfig CRYPTO_HW
 
 if CRYPTO_HW
 
+config CRYPTO_NRF_CRACEN
+    bool "Nordic nRF54L CRACEN"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_CRACEN_ENABLED
+    select MFD
+    select MFD_NRF_CRACEN
+    select CRYPTO_SHA256_HW_ACCEL
+    select CRYPTO_AES_HW_ACCEL
+    help
+      Computes SHA-256 and AES in ECB mode on the cipher and hash engine
+      of the Nordic nRF54L CRACEN.
+
 config CRYPTO_SF32LB
     bool "SiFli SF32LB AES and hash accelerator"
     default y

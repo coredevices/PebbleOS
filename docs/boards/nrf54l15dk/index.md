@@ -24,7 +24,7 @@ on its Arm application core, as secure code.
 - **Buttons**: four user buttons, Button 0 to 3 as keys 0 to 3, and a
   reset button
 - **LEDs**: four green user LEDs, LED0 the status LED
-- **Crypto**: the CRACEN of the SoC, for random numbers
+- **Crypto**: the CRACEN of the SoC, for random numbers, SHA-256 and AES
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE20, P1.04 (TX) and P1.05 (RX), which also powers the kit
 
