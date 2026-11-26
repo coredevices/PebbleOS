@@ -22,8 +22,8 @@ on its Arm application core, as secure code.
 - **Clocks**: 32 MHz and 32.768 kHz crystals, on the internal load
   capacitors
 - **Power**: VREGMAIN runs from its DC/DC converter, whose inductor is fitted
-- **Buttons**: four user buttons, Button 0 to 3 as keys 0 to 3, and a
-  reset button
+- **Buttons**: four user buttons, Button 0 to 3 as keys 0 to 3, Button 0 also
+  waking the board from power-off, and a reset button
 - **LEDs**: four green user LEDs, LED0 the status LED
 - **Flash**: 8 MiB Macronix MX25R6435F SPI NOR, on SPIM00 (P2.01 SCK,
   P2.02 MOSI, P2.04 MISO, P2.05 CS) at 8 MHz
