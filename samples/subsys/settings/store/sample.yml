@@ -12,4 +12,4 @@ expect:
   - 'settings: level exists after deleting it: no'
   - 'Sample done'
 roles: [flash]
-integration: [qemu_emery, stm32h747i_disco/m7, nrf52840dk]
+integration: [qemu_emery, stm32h747i_disco/m7, nrf52840dk, nrf54l15dk]
