@@ -36,7 +36,9 @@ void tz_storage_save(const TimezoneInfo *tz_info) {
   };
   memcpy(storage.tm_zone, tz_info->tm_zone, PBL_TZ_LEN - 1);
 
-  pbl_flash_partition_erase(PART_TZINFO, 0U, PART_TZINFO_SIZE);
+  if (pbl_flash_needs_erase(FLASH)) {
+    pbl_flash_partition_erase(PART_TZINFO, 0U, PART_TZINFO_SIZE);
+  }
   pbl_flash_partition_write(PART_TZINFO, 0U, &storage, sizeof(storage));
 }
 
