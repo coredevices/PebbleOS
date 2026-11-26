@@ -192,6 +192,13 @@ static uint32_t prv_check(struct pbl_canopen *co, const struct pbl_canopen_od_en
   uint32_t v = 0U;
 
   if (e->index >= 0x2000U) {
+#ifdef CONFIG_CANOPEN_CIA402
+    uint32_t abort = pbl_canopen__cia402_check(co, e, val);
+
+    if (abort != 0U) {
+      return abort;
+    }
+#endif
     if (cb == nullptr || cb->write == nullptr) {
       return 0U;
     }
@@ -252,6 +259,9 @@ static void prv_apply(struct pbl_canopen *co, const struct pbl_canopen_od_entry 
   if (e->index >= PBL_CANOPEN__IDX_RPDO_COMM && e->index < 0x1c00U) {
     pbl_canopen__pdo_written(co, e);
   }
+#ifdef CONFIG_CANOPEN_CIA402
+  pbl_canopen__cia402_written(co, e);
+#endif
 }
 
 void pbl_canopen__od_store(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e,

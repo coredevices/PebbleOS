@@ -53,6 +53,12 @@ config CANOPEN_EMCY_QUEUE
     default 4
     range 1 255
 
+config CANOPEN_CIA402
+    bool "CiA 402 drive profile"
+    help
+      Drive state machine of CiA 402 on a node whose object dictionary
+      has a cia402 section, for motor control.
+
 module = CANOPEN
 module-str = CANopen
 source "subsys/logging/Kconfig.template.log_level"

@@ -9,3 +9,4 @@ pbl_library_sources(
   pdo.c
   sdo.c
 )
+pbl_library_sources_ifdef(CONFIG_CANOPEN_CIA402 cia402.c)

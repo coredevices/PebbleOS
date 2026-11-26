@@ -1,13 +1,14 @@
 # CANopen
 
 `subsys/canopen/` runs a CANopen device, as CiA 301 specifies it, on a
-{doc}`CAN controller <../drivers/can>`. The object dictionary is generated from a YAML file, along
+{doc}`CAN controller <../drivers/can>`, with the CiA 402 drive profile on top
+for motor control. The object dictionary is generated from a YAML file, along
 with the EDS file the tools on the other end of the bus read.
 
 | | |
 | --- | --- |
 | Directory | `subsys/canopen` |
-| Header | `pbl/canopen/canopen.h` |
+| Headers | `pbl/canopen/canopen.h`, `pbl/canopen/cia402.h` |
 | Kconfig | `CONFIG_CANOPEN`, enabled by the application; needs `CONFIG_CAN` |
 | API | {apidoc}`API reference <subsys_canopen>` |
 | Samples | {doc}`Device <../samples/subsys/canopen/device>` |
@@ -55,6 +56,7 @@ It runs these services:
 | SYNC consumer | 0x1005, 0x1006, 0x1007 | With or without a counter, loss detection, synchronous window |
 | Error behavior | 0x1029 | NMT state on a communication error |
 | EMCY producer | 0x1001, 0x1003, 0x1014, 0x1015 | Error register, error history, inhibit time |
+| CiA 402 drive | 0x6007, 0x603f-0x6502 | With `CONFIG_CANOPEN_CIA402`, see {ref}`canopen-cia402` |
 
 The node does not run SDO block transfers, an SDO client, an NMT master, a
 SYNC producer, LSS, node guarding, RTR-triggered PDOs, multiplexed PDOs or
@@ -326,6 +328,7 @@ Some notes:
   runs, or a double buffer whose index the writer swaps atomically. Masking
   every interrupt, zero-latency ones included, works too, but delays all of
   them.
+- A CiA 402 drive is no different: its callbacks are those of the node.
 
 :::::{tab-set}
 
@@ -532,7 +535,8 @@ errors. Besides its emergency message, each one moves the node to the NMT
 state that sub-index 1 of 0x1029 gives: pre-operational from operational (0,
 the default), no change (1) or stopped (2). The NMT callback reports the
 change; a device that drives something, such as an actuator, brings it to a safe
-state there whenever the node leaves operational, as its PDOs stop.
+state there whenever the node leaves operational, as its PDOs stop. A CiA 402
+drive does it by itself, see {ref}`canopen-cia402`.
 
 With a communication cycle period in 0x1006, in µs, the SYNC is monitored from
 its first reception: once it misses one and a half periods, the node reacts as
@@ -555,6 +559,288 @@ register, and clears each one once its cause is gone:
 | 0x8220 | RPDO longer than its mapping |
 | 0x8250 | RPDO deadline missed |
 
+(canopen-cia402)=
+
+## CiA 402 drive
+
+With `CONFIG_CANOPEN_CIA402`, a node whose dictionary has a `cia402` section
+runs a drive, as CiA 402 specifies it: `include/pbl/canopen/cia402.h`. The
+master writes the controlword (0x6040) to move the drive from state to state,
+selects a mode of operation (0x6060) and sets its targets; the drive reports
+its state in the statusword (0x6041) and the motor's actual values.
+
+### Dictionary
+
+The section lists the modes of operation the drive supports, and optionally
+its option codes:
+
+```yaml
+cia402:
+  modes: [pp, pv, pt, csp, csv, cst]
+  options:
+    abort_connection: 1     # 0x6007
+    quick_stop: 2           # 0x605a
+    shutdown: 0             # 0x605b
+    disable_operation: 1    # 0x605c
+    fault_reaction: 2       # 0x605e
+```
+
+| Mode | Value | The master sets | Typical use |
+| --- | :---: | --- | --- |
+| Profile position, `pp` | 1 | A target position, the drive plans the move | Point-to-point moves |
+| Profile velocity, `pv` | 3 | A target velocity, the drive ramps to it | Spindles, conveyors |
+| Profile torque, `pt` | 4 | A target torque, with a slope | Tensioning |
+| Cyclic synchronous position, `csp` | 8 | A position every SYNC | Multi-axis motion |
+| Cyclic synchronous velocity, `csv` | 9 | A velocity every SYNC | Velocity loops closed by the master |
+| Cyclic synchronous torque, `cst` | 10 | A torque every SYNC | Position and velocity loops in the master |
+
+The generator adds the drive's objects, named for PDO mappings:
+
+| Objects | Names | Modes |
+| --- | --- | --- |
+| 0x603f, 0x6040, 0x6041 | `error_code`, `controlword`, `statusword` | All |
+| 0x6060, 0x6061, 0x6502 | `modes_of_operation`, `modes_of_operation_display`, `supported_drive_modes` | All |
+| 0x6007, 0x605a-0x605e | `*_option_code` | All |
+| 0x607a, 0x6064 | `target_position`, `position_actual_value` | pp, csp |
+| 0x60ff, 0x606c | `target_velocity`, `velocity_actual_value` | pv, csv |
+| 0x6071, 0x6077 | `target_torque`, `torque_actual_value` | pt, cst |
+| 0x6081, 0x6083, 0x6084 | `profile_velocity`, `profile_acceleration`, `profile_deceleration` | pp, pv |
+| 0x6085 | `quick_stop_deceleration` | pp, pv, csp, csv |
+| 0x6087 | `torque_slope` | pt |
+| 0x60c2 | `interpolation_time_period` | csp, csv, cst |
+
+A cyclic synchronous drive maps its controlword and target to synchronous
+RPDOs, and its statusword and actual value to synchronous TPDOs:
+
+```yaml
+cia402:
+  modes: [pv, csv]
+
+rpdos:
+  - mapping: [controlword, modes_of_operation]
+  - transmission: 1         # applied on SYNC
+    mapping: [target_velocity]
+
+tpdos:
+  - transmission: 254       # statusword changes
+    inhibit: 10
+    mapping: [statusword, modes_of_operation_display]
+  - transmission: 1         # sampled on SYNC
+    mapping: [statusword, velocity_actual_value]
+```
+
+### State machine
+
+`pbl_cia402_init()` attaches a drive to an initialized node, in switch on
+disabled. The controlword commands move it from state to state, and each
+change of state calls the application to bring the power stage and the motor
+in line:
+
+```{mermaid}
+flowchart TB
+  start(( )) --> sod
+  sod["Switch on disabled"]
+  ready["Ready to switch on"]
+  son["Switched on"]
+  op["Operation enabled"]
+  qsa["Quick stop active"]
+  anyf(["Any state"])
+  fra["Fault reaction active"]
+  fault["Fault"]
+  sod -->|"Shutdown"| ready
+  ready -->|"Switch on"| son
+  son -->|"Enable operation"| op
+  op -->|"Disable operation"| son
+  son -->|"Shutdown"| ready
+  op -->|"Quick stop"| qsa
+  qsa -->|"quick stop done"| sod
+  anyf -.->|"pbl_cia402_fault()"| fra
+  fra -->|"fault reaction done"| fault
+  fault -->|"Fault reset"| sod
+
+  classDef on fill:#fa4a36,stroke:#fa4a36,color:#ffffff
+  classDef powered fill:#fd8a7c,stroke:#fd8a7c,color:#171717
+  classDef off fill:#525252,stroke:#525252,color:#ffffff
+  class op,qsa,fra on
+  class son powered
+  class sod,ready,fault,anyf,start off
+```
+
+The motor is driven in the red states and the power stage is on in the pink
+one too. The diagram leaves out the shortcuts; every transition, with the
+callbacks it calls:
+
+| From | Command | To | Callbacks |
+| --- | --- | --- | --- |
+| Switch on disabled | Shutdown | Ready to switch on | |
+| Ready to switch on | Switch on | Switched on | `switch_on` |
+| Ready to switch on | Enable operation | Operation enabled | `switch_on`, `enable` |
+| Switched on | Enable operation | Operation enabled | `enable` |
+| Operation enabled | Disable operation | Switched on | `disable` |
+| Switched on | Shutdown | Ready to switch on | `switch_off` |
+| Operation enabled | Shutdown | Ready to switch on | `disable`, `switch_off` |
+| Ready to switch on, switched on | Disable voltage, quick stop | Switch on disabled | `switch_off` |
+| Operation enabled | Disable voltage | Switch on disabled | `disable`, `switch_off` |
+| Operation enabled | Quick stop | Quick stop active | `quick_stop` |
+| Quick stop active | `pbl_cia402_quick_stop_done()` with option codes 0-4, disable voltage | Switch on disabled | `disable`, `switch_off` |
+| Quick stop active | Enable operation, with quick stop option codes 5-8 | Operation enabled | |
+| Any but the fault states | `pbl_cia402_fault()` | Fault reaction active | `fault` |
+| Fault reaction active | `pbl_cia402_fault_reaction_done()` | Fault | `disable`, `switch_off` |
+| Fault | Fault reset | Switch on disabled | |
+
+The commands are these controlword values, the fault reset acting on the
+rising edge of bit 7:
+
+| Command | Controlword | Bits 7, 3-0 |
+| --- | :---: | --- |
+| Shutdown | 0x0006 | `0 x110` |
+| Switch on | 0x0007 | `0 0111` |
+| Enable operation | 0x000f | `0 1111` |
+| Disable operation | 0x0007 | `0 0111` |
+| Disable voltage | 0x0000 | `0 xx0x` |
+| Quick stop | 0x0002 | `0 x01x` |
+| Fault reset | 0x0080 | `↑ xxxx` |
+
+The statusword reports each state, with the remote bit (9) set, the voltage
+enabled bit (4) set where the power stage is on, and the application's bits
+on top:
+
+| State | Statusword |
+| --- | :---: |
+| Switch on disabled | 0x0240 |
+| Ready to switch on | 0x0221 |
+| Switched on | 0x0233 |
+| Operation enabled | 0x0237 |
+| Quick stop active | 0x0217 |
+| Fault reaction active | 0x021f |
+| Fault | 0x0208 |
+
+A master enables a drive with shutdown, then switch on and enable operation,
+waiting for each state in the statusword:
+
+```python
+node.sdo["modes_of_operation"].raw = 9      # csv
+node.sdo["controlword"].raw = 0x06          # ready to switch on
+node.sdo["controlword"].raw = 0x0f          # operation enabled
+assert node.sdo["statusword"].raw & 0x6f == 0x27
+```
+
+### Application
+
+The application drives the motor from the callbacks of
+`struct pbl_cia402_ops`, each optional and called with the node locked, as
+{ref}`canopen-work` describes:
+
+| Callback | Called | The application |
+| --- | --- | --- |
+| `switch_on` | Entering switched on | Turns the power stage on, without driving the motor; may refuse |
+| `enable` | Entering operation enabled | Makes the motor follow its targets; may refuse |
+| `disable` | Leaving operation enabled | Stops the motor as 0x605c says |
+| `switch_off` | Leaving the powered states | Turns the power stage off |
+| `quick_stop` | Entering quick stop active | Starts the quick stop ramp of 0x605a |
+| `fault` | Entering fault reaction active | Starts the reaction of 0x605e |
+| `set_mode` | Writing 0x6060 | Switches the mode of operation; may refuse it |
+
+A quick stop and a fault reaction may take time, e.g. a deceleration ramp:
+the application reports them done once the motor has stopped, with `pbl_cia402_quick_stop_done()` and `pbl_cia402_fault_reaction_done()`; a
+drive without the callback is done at once. `pbl_cia402_fault()` reports a
+fault, with its error code in 0x603f and an emergency, until the master resets
+it with the controlword. `pbl_cia402_set_status()` sets the statusword bits
+the application owns, such as target reached. These functions lock the
+node, so they are called from a thread or a callback, never an interrupt. In
+this example, the motor's loop runs in an interrupt:
+
+```c
+#include <pbl/canopen/cia402.h>
+
+static struct pbl_canopen s_co;
+static struct pbl_cia402 s_drive;
+
+enum command {
+  CMD_COAST,
+  CMD_RUN,
+  CMD_QUICK_STOP,
+};
+
+static atomic_uint_least8_t s_command;
+static atomic_int_least32_t s_velocity;
+
+static int prv_switch_on(struct pbl_cia402 *drive, void *arg) {
+  return power_stage_on();
+}
+
+static void prv_switch_off(struct pbl_cia402 *drive, void *arg) {
+  power_stage_off();
+}
+
+static int prv_enable(struct pbl_cia402 *drive, void *arg) {
+  atomic_store(&s_command, CMD_RUN);
+  return 0;
+}
+
+static void prv_disable(struct pbl_cia402 *drive, void *arg) {
+  atomic_store(&s_command, CMD_COAST);
+}
+
+static void prv_quick_stop(struct pbl_cia402 *drive, void *arg) {
+  atomic_store(&s_command, CMD_QUICK_STOP);
+}
+
+static const struct pbl_cia402_ops s_ops = {
+  .switch_on = prv_switch_on,
+  .switch_off = prv_switch_off,
+  .enable = prv_enable,
+  .disable = prv_disable,
+  .quick_stop = prv_quick_stop,
+};
+
+int main(void) {
+  ...
+  ret = pbl_canopen_init(&s_co, &cfg);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_cia402_init(&s_drive, &s_co, &s_ops, nullptr);
+  if (ret != 0) {
+    return ret;
+  }
+
+  ret = pbl_canopen_start(&s_co);
+  if (ret != 0) {
+    return ret;
+  }
+
+  for (;;) {
+    pbl_thread_sleep(PBL_MSEC(10));
+    /* The loop ramps down; report the quick stop done once it stands still. */
+    uint8_t command = CMD_QUICK_STOP;
+    if (atomic_load(&s_velocity) == 0 &&
+        atomic_compare_exchange_strong(&s_command, &command, CMD_COAST)) {
+      pbl_cia402_quick_stop_done(&s_drive);
+    }
+  }
+}
+```
+
+### Losing the master
+
+When the node leaves operational while the drive is operation enabled, by an
+NMT command or a communication error, its PDOs stop and the abort connection
+option code (0x6007) decides what the drive does:
+
+| 0x6007 | Reaction |
+| :---: | --- |
+| 0 | Nothing |
+| 1 | A fault, with error code 0x8100 (the default) |
+| 2 | Disable voltage: the motor coasts and the power stage goes off |
+| 3 | A quick stop |
+
+With the master's heartbeat consumed, or a SYNC period set, a master that
+stops, or a bus that breaks, stops the motor once the heartbeat consumer time,
+or one and a half SYNC periods, have passed. A reset of the node brings the drive back to switch on
+disabled, unless it is in fault.
+
 ## Configuration
 
 | Option | Default | |
@@ -566,3 +852,4 @@ register, and clears each one once its cause is gone:
 | `CONFIG_CANOPEN_SDO_TIMEOUT_MS` | 1000 | Segmented transfer timeout |
 | `CONFIG_CANOPEN_EMCY_ACTIVE` | 8 | Errors raised at once per node |
 | `CONFIG_CANOPEN_EMCY_QUEUE` | 4 | Emergency messages held back by the inhibit time |
+| `CONFIG_CANOPEN_CIA402` | n | CiA 402 drive profile |

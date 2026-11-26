@@ -259,8 +259,9 @@ void pbl_canopen__comm_error(struct pbl_canopen *co) {
 
 static void prv_set_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state state) {
   const struct pbl_canopen_callbacks *cb = co->cfg.cb;
+  [[maybe_unused]] enum pbl_canopen_nmt_state old = co->nmt;
 
-  if (co->nmt == state) {
+  if (old == state) {
     return;
   }
 
@@ -271,6 +272,9 @@ static void prv_set_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state state
     pbl_canopen__sync_stop(co);
   }
   pbl_canopen__pdo_nmt(co);
+#ifdef CONFIG_CANOPEN_CIA402
+  pbl_canopen__cia402_nmt(co, old);
+#endif
 
   if (cb != nullptr && cb->nmt != nullptr) {
     cb->nmt(co, state, co->cfg.arg);
@@ -295,6 +299,9 @@ static void prv_reset(struct pbl_canopen *co, enum pbl_canopen_reset reset) {
 
   pbl_canopen__od_reset(co, reset == PBL_CANOPEN_RESET_NODE);
   pbl_canopen__emcy_reset(co);
+#ifdef CONFIG_CANOPEN_CIA402
+  pbl_canopen__cia402_reset(co);
+#endif
   if (cb != nullptr && cb->reset != nullptr) {
     cb->reset(co, reset, co->cfg.arg);
   }

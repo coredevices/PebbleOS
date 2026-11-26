@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+device:
+  type: 0x00020192
+  name: test drive
+
+cia402:
+  modes: [pp, pv, csp]
+
+tpdos:
+  - transmission: 254
+    mapping: [statusword, modes_of_operation_display]
+
+rpdos:
+  - mapping: [controlword, modes_of_operation]
+  - transmission: 1
+    mapping: [target_position]

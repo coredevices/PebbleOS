@@ -121,6 +121,7 @@ struct pbl_canopen_od_entry {
 };
 
 struct pbl_canopen;
+struct pbl_cia402;
 
 /** @cond INTERNAL_HIDDEN */
 #define PBL_CANOPEN_PDO_MAX_MAP 8U
@@ -332,6 +333,9 @@ struct pbl_canopen {
   uint64_t sync_ticks;
   uint32_t sync_cycles;
   bool sync_seen;
+#ifdef CONFIG_CANOPEN_CIA402
+  struct pbl_cia402 *drive;
+#endif
   uint32_t rx_overruns;
   uint32_t tx_overruns;
   bool rx_overrun;

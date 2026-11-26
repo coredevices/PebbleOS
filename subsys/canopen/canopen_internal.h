@@ -124,3 +124,13 @@ int pbl_canopen__emcy_raise(struct pbl_canopen *co, uint16_t code, uint8_t reg,
 int pbl_canopen__emcy_clear(struct pbl_canopen *co, uint16_t code);
 uint32_t pbl_canopen__emcy_check(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e,
                                  const void *val);
+
+/* CiA 402 drive */
+
+#ifdef CONFIG_CANOPEN_CIA402
+uint32_t pbl_canopen__cia402_check(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e,
+                                   const void *val);
+void pbl_canopen__cia402_written(struct pbl_canopen *co, const struct pbl_canopen_od_entry *e);
+void pbl_canopen__cia402_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state old);
+void pbl_canopen__cia402_reset(struct pbl_canopen *co);
+#endif

@@ -7,7 +7,9 @@ set(od_dir ${CMAKE_CURRENT_BINARY_DIR}/od)
 file(MAKE_DIRECTORY ${od_dir})
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/od.yaml ${PBL_BASE}/tools/cmake/canopen_od.py)
-foreach(name od)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/cia402.yaml)
+foreach(name od cia402)
   execute_process(
     COMMAND ${PYTHON_EXECUTABLE} ${PBL_BASE}/tools/cmake/canopen_od.py
             ${CMAKE_CURRENT_SOURCE_DIR}/${name}.yaml --name ${name} --source ${name}.yaml
@@ -71,4 +73,10 @@ pbl_clar_test(test_canopen
   SOURCES ${canopen_sources} ${od_dir}/od.c
   INCLUDES ${canopen_includes}
   DEFINES ${canopen_defines}
+)
+
+pbl_clar_test(test_cia402
+  SOURCES ${canopen_sources} subsys/canopen/cia402.c ${od_dir}/cia402.c
+  INCLUDES ${canopen_includes}
+  DEFINES ${canopen_defines} CONFIG_CANOPEN_CIA402=1
 )

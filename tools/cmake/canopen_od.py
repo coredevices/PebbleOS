@@ -181,11 +181,122 @@ def prv_var(index, name, type_, access, default=0, **kw):
     return e
 
 
+# CiA 402 modes of operation: (value, objects)
+CIA402_MODES = {
+    "pp": (1, ("position", "profile", "quick_stop")),
+    "pv": (3, ("velocity", "profile", "quick_stop")),
+    "pt": (4, ("torque", "torque_slope")),
+    "csp": (8, ("position", "quick_stop", "cyclic")),
+    "csv": (9, ("velocity", "quick_stop", "cyclic")),
+    "cst": (10, ("torque", "cyclic")),
+}
+
+CIA402_GROUPS = {
+    "position": [
+        (0x607A, "target_position", "i32", "rw", True, 0),
+        (0x6064, "position_actual_value", "i32", "ro", True, 0),
+    ],
+    "velocity": [
+        (0x60FF, "target_velocity", "i32", "rw", True, 0),
+        (0x606C, "velocity_actual_value", "i32", "ro", True, 0),
+    ],
+    "torque": [
+        (0x6071, "target_torque", "i16", "rw", True, 0),
+        (0x6077, "torque_actual_value", "i16", "ro", True, 0),
+    ],
+    "profile": [
+        (0x6081, "profile_velocity", "u32", "rw", True, 0),
+        (0x6083, "profile_acceleration", "u32", "rw", True, 0),
+        (0x6084, "profile_deceleration", "u32", "rw", True, 0),
+    ],
+    "quick_stop": [(0x6085, "quick_stop_deceleration", "u32", "rw", False, 0)],
+    "torque_slope": [(0x6087, "torque_slope", "u32", "rw", True, 0)],
+}
+
+CIA402_OPTIONS = {
+    "abort_connection": (0x6007, 1),
+    "quick_stop": (0x605A, 2),
+    "shutdown": (0x605B, 0),
+    "disable_operation": (0x605C, 1),
+    "fault_reaction": (0x605E, 2),
+}
+
+
+def prv_cia402(node):
+    """The objects of a CiA 402 drive, as entries of the objects section."""
+    if node is None:
+        return []
+    prv_check_keys(node, ("modes", "options"), "cia402")
+    modes = node.get("modes", [])
+    if not isinstance(modes, list) or not modes:
+        raise Error("cia402: modes must be a list of " + ", ".join(CIA402_MODES))
+    options = node.get("options") or {}
+    prv_check_keys(options, CIA402_OPTIONS, "cia402 options")
+
+    def var(index, name, type_, access, pdo=False, default=0):
+        return {
+            "index": index,
+            "name": name,
+            "type": type_,
+            "access": access,
+            "pdo": pdo,
+            "default": default,
+        }
+
+    supported = 0
+    groups = []
+    for mode in modes:
+        if mode not in CIA402_MODES:
+            raise Error(f"cia402: unknown mode {mode!r}")
+        value, needs = CIA402_MODES[mode]
+        supported |= 1 << (value - 1)
+        groups += [g for g in needs if g not in groups]
+
+    objects = [
+        var(0x603F, "error_code", "u16", "ro", "tx"),
+        var(0x6040, "controlword", "u16", "rw", "rx"),
+        var(0x6041, "statusword", "u16", "ro", "tx"),
+        var(0x6060, "modes_of_operation", "i8", "rw", "rx"),
+        var(0x6061, "modes_of_operation_display", "i8", "ro", "tx"),
+        var(0x6502, "supported_drive_modes", "u32", "ro", False, supported),
+    ]
+    for key, (index, default) in CIA402_OPTIONS.items():
+        objects.append(
+            var(
+                index,
+                f"{key}_option_code",
+                "i16",
+                "rw",
+                False,
+                options.get(key, default),
+            )
+        )
+    for group in groups:
+        if group == "cyclic":
+            objects.append(
+                {
+                    "index": 0x60C2,
+                    "name": "interpolation_time_period",
+                    "type": "record",
+                    "members": [
+                        {"name": "value", "type": "u8", "default": 1},
+                        {"name": "index", "type": "i8", "default": -3},
+                    ],
+                }
+            )
+            continue
+        for index, name, type_, access, pdo, default in CIA402_GROUPS[group]:
+            if all(o["index"] != index for o in objects):
+                objects.append(var(index, name, type_, access, pdo, default))
+    return objects
+
+
 class Dictionary:
     def __init__(self, doc, name):
         prv_check_keys(
             doc,
             (
+                "cia402",
                 "device",
                 "errors",
                 "error_behavior",
@@ -219,6 +330,7 @@ class Dictionary:
             "device",
         )
 
+        self.prv_objects(prv_cia402(doc.get("cia402")))
         self.prv_objects(doc.get("objects") or [])
         self.prv_comm(doc)
 
