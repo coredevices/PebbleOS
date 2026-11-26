@@ -25,7 +25,7 @@
 // Settling time after waking up from deep sleep
 #define DEEPSLEEP_EXIT_NOPS 10
 
-static uint32_t s_enabled[(CONFIG_NUM_IRQS + 31) / 32];
+static uint32_t s_enabled[PBL_DIV_ROUND_UP(CONFIG_NUM_IRQS, 32)];
 
 // Leave AON as the only wakeup source, the other handlers run from flash
 static void prv_irqs_aon_only(void) {
