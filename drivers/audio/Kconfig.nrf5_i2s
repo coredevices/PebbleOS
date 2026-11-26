@@ -7,7 +7,7 @@ config AUDIO_NRF5_I2S
     depends on DT_HAS_NORDIC_NRF52832_I2S_ENABLED
     select CLK
     help
-      Playback through the nRF5 I2S interface.
+      Playback and capture through the nRF5 I2S interface.
 
 config AUDIO_NRF5_I2S_IRQ_PRIO
     int "I2S interrupt priority"

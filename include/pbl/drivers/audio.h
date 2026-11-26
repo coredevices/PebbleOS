@@ -270,7 +270,7 @@ struct pbl_audio_codec_ops {
   int (*unprepare)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir);
   /**
    * Optional, required with @c set_gain. Report the gain range of direction @p dir in the gain
-   * fields of @p caps.
+   * fields of @p caps, and clear its rates if the codec can't run that direction.
    */
   void (*get_caps)(const struct pbl_audio_codec *codec, enum pbl_audio_dir dir,
                    struct pbl_audio_caps *caps);

@@ -9,7 +9,8 @@ chained by the devicetree.
 A device is a card describing one link, which is full duplex: the DAI and the
 codec on it serve both directions, under the lock of the card, and each call
 names the direction it acts on. A board whose speaker and microphone share a
-link has its `speaker` and `mic` roles on the same card.
+link has its `speaker` and `mic` roles on the same card, as the nRF5 I2S
+interface wired to a DA7212 codec, which can record while it plays.
 
 | | |
 | --- | --- |
