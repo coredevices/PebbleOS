@@ -48,41 +48,49 @@ static uint32_t prv_psel(const struct pbl_gpio *gpio) {
   return pbl_gpio_is_connected(gpio) ? pbl_gpio_nrf5_pin(gpio) : SPIM_PSEL_DISCONNECTED;
 }
 
-static int prv_pin_init(const struct pbl_gpio *gpio, uint32_t flags) {
-  if (!pbl_gpio_is_connected(gpio)) {
-    return 0;
-  }
-
-  if (pbl_device_init(&gpio->port->dev) != 0) {
+static int prv_port_init(const struct pbl_gpio *gpio) {
+  if (pbl_gpio_is_connected(gpio) && pbl_device_init(&gpio->port->dev) != 0) {
     return -ENODEV;
   }
 
-  return pbl_gpio_configure(gpio, flags);
+  return 0;
+}
+
+// Drives the lines for a transfer, or releases them to the level the board's pulls give them
+static void prv_pins_set(const struct pbl_spi_bus *bus, bool active) {
+  const struct pbl_spi_nrf5 *spi = prv_spi(bus);
+  const struct pbl_gpio *pins[] = {&spi->sck, &spi->mosi, &spi->miso};
+  uint32_t flags[] = {PBL_GPIO_DISCONNECTED, PBL_GPIO_DISCONNECTED, PBL_GPIO_DISCONNECTED};
+
+  if (active) {
+    // SCK idles at CPOL, and needs its input buffer connected
+    flags[0] =
+        ((bus->state->dev->mode & PBL_SPI_CPOL) != 0U) ? PBL_GPIO_OUTPUT_HIGH : PBL_GPIO_OUTPUT_LOW;
+    flags[0] |= PBL_GPIO_INPUT;
+    flags[1] = PBL_GPIO_OUTPUT_LOW;
+    flags[2] = PBL_GPIO_INPUT;
+  }
+
+  for (size_t i = 0U; i < PBL_ARRAY_SIZE(pins); i++) {
+    if (pbl_gpio_is_connected(pins[i])) {
+      (void)pbl_gpio_configure(pins[i], flags[i]);
+    }
+  }
 }
 
 static int prv_init(const struct pbl_spi_bus *bus) {
   const struct pbl_spi_nrf5 *spi = prv_spi(bus);
-  int ret;
 
   if (!pbl_gpio_is_connected(&spi->sck)) {
     return -EINVAL;
   }
 
-  // SCK needs its input buffer connected
-  ret = prv_pin_init(&spi->sck, PBL_GPIO_OUTPUT_LOW | PBL_GPIO_INPUT);
-  if (ret != 0) {
-    return ret;
+  if (prv_port_init(&spi->sck) != 0 || prv_port_init(&spi->mosi) != 0 ||
+      prv_port_init(&spi->miso) != 0) {
+    return -ENODEV;
   }
 
-  ret = prv_pin_init(&spi->mosi, PBL_GPIO_OUTPUT_LOW);
-  if (ret != 0) {
-    return ret;
-  }
-
-  ret = prv_pin_init(&spi->miso, PBL_GPIO_INPUT);
-  if (ret != 0) {
-    return ret;
-  }
+  prv_pins_set(bus, false);
 
   prv_putreg(spi, NRF52_SPIM_PSEL_SCK_OFFSET, prv_psel(&spi->sck));
   prv_putreg(spi, NRF52_SPIM_PSEL_MOSI_OFFSET, prv_psel(&spi->mosi));
@@ -121,16 +129,15 @@ static int prv_configure(const struct pbl_spi_bus *bus, const struct pbl_spi_dev
     config |= SPIM_CONFIG_CPOL_ACTIVELOW;
   }
 
-  // The SCK idle level is driven by the GPIO while the SPIM is disabled
-  (void)pbl_gpio_set_raw(&spi->sck, (dev->mode & PBL_SPI_CPOL) != 0U);
-
   prv_putreg(spi, NRF52_SPIM_FREQUENCY_OFFSET, s_frequencies[i].frequency);
   prv_putreg(spi, NRF52_SPIM_CONFIG_OFFSET, config);
 
   return 0;
 }
 
+// Called before the chip select is asserted; SCK is driven at CPOL before the SPIM takes it
 static void prv_enable(const struct pbl_spi_bus *bus) {
+  prv_pins_set(bus, true);
   prv_putreg(prv_spi(bus), NRF52_SPIM_ENABLE_OFFSET, SPIM_ENABLE_ENABLED);
 }
 
@@ -144,6 +151,9 @@ static void prv_disable(const struct pbl_spi_bus *bus) {
   }
   prv_event_clear(spi, NRF52_SPIM_EVENTS_END_OFFSET);
   pbl_irq_clear_pending(spi->irq);
+
+  // Called once the chip select is released
+  prv_pins_set(bus, false);
 }
 
 static int prv_start(const struct pbl_spi_bus *bus, const struct pbl_spi_xfer *xfer) {
