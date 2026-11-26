@@ -349,7 +349,7 @@ static void prv_exec_program(const struct pbl_spi_mem *mem, const struct pbl_spi
     memset(s_bounce_buf, 0xFF, sizeof(s_bounce_buf));
     memcpy(s_bounce_buf, src, len);
     src = s_bounce_buf;
-    len = ((len + WORD_SIZE - 1U) / WORD_SIZE) * WORD_SIZE;
+    len = PBL_DIV_ROUND_UP(len, WORD_SIZE) * WORD_SIZE;
   }
 
   prv_putreg(qspi, NRF52_QSPI_WRITE_DST_OFFSET, op->addr.val);

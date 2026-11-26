@@ -75,7 +75,7 @@ static int prv_clock_div(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t 
   }
 
   rate = (uint32_t)(rate_mhz / 1000U);
-  *div = (rate + clock_hz - 1U) / clock_hz;
+  *div = PBL_DIV_ROUND_UP(rate, clock_hz);
   if (*div == 0U || *div > LCDC_INTF_CLK_DIV_MAX * LCDC_SDR_DIV_MAX) {
     return -EINVAL;
   }
@@ -87,10 +87,10 @@ static int prv_clock_div(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t 
 // one as large as it can be
 static void prv_set_div(const struct pbl_display_sf32lb57_lcdc *lcdc, uint32_t div) {
   uint32_t intf = PBL_MIN(div, LCDC_INTF_CLK_DIV_MAX);
-  uint32_t sdr = (div + intf - 1U) / intf;
+  uint32_t sdr = PBL_DIV_ROUND_UP(div, intf);
 
   for (uint32_t i = intf - 1U; i >= 2U && intf * sdr > div; i--) {
-    uint32_t s = (div + i - 1U) / i;
+    uint32_t s = PBL_DIV_ROUND_UP(div, i);
 
     if (s <= LCDC_SDR_DIV_MAX && i * s < intf * sdr) {
       intf = i;

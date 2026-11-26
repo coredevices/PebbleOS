@@ -10,6 +10,7 @@
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/units.h>
 
@@ -179,9 +180,8 @@ static int prv_attach(const struct pbl_mipi_dsi_host *host, const struct pbl_mip
   prv_putreg(dsi, STM32_DSI_PCTLR_OFFSET, DSI_PCTLR_CKE | DSI_PCTLR_DEN);
   prv_putreg(dsi, STM32_DSI_CLCR_OFFSET, DSI_CLCR_DPCC);
   prv_putreg(dsi, STM32_DSI_PCONFR_OFFSET, PBL_FIELD_PREP(DSI_PCONFR_NL_MASK, dev->lanes - 1U));
-  prv_putreg(
-      dsi, STM32_DSI_CCR_OFFSET,
-      PBL_FIELD_PREP(DSI_CCR_TXECKDIV_MASK, (lbc_hz + ESC_CLK_MAX_HZ - 1U) / ESC_CLK_MAX_HZ));
+  prv_putreg(dsi, STM32_DSI_CCR_OFFSET,
+             PBL_FIELD_PREP(DSI_CCR_TXECKDIV_MASK, PBL_DIV_ROUND_UP(lbc_hz, ESC_CLK_MAX_HZ)));
   prv_putreg(dsi, STM32_DSI_CLTCR_OFFSET,
              PBL_FIELD_PREP(DSI_CLTCR_LP2HS_TIME_MASK, CLK_LP2HS_TIME) |
                  PBL_FIELD_PREP(DSI_CLTCR_HS2LP_TIME_MASK, CLK_HS2LP_TIME));

@@ -36,7 +36,7 @@ static const struct pbl_ram_stm32_fmc *prv_fmc(const struct pbl_ram *ram) {
 }
 
 static uint32_t prv_cycles(uint32_t ps, uint32_t hz) {
-  return (uint32_t)(((uint64_t)ps * hz + 999999999999ULL) / 1000000000000ULL);
+  return (uint32_t)PBL_DIV_ROUND_UP((uint64_t)ps * hz, 1000000000000ULL);
 }
 
 // The lowest CAS latency the SDRAM allows at the clock, or a negative errno

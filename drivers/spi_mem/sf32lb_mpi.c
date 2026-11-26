@@ -17,6 +17,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/units.h>
 
 #include <hardware/sf32lb52_mpi.h>
 
@@ -361,7 +362,7 @@ static PBL_SECTION_RAM void prv_power_down(const struct pbl_spi_mem *mem,
                                            const struct pbl_spi_mem_pm *pm, pbl_spi_mem_pm_fn_t fn,
                                            void *arg) {
   const uintptr_t base = prv_base(prv_mpi(mem));
-  const uint32_t cycles_per_us = (pbl_cycles_per_sec() + 999999U) / 1000000U;
+  const uint32_t cycles_per_us = PBL_DIV_ROUND_UP(pbl_cycles_per_sec(), PBL_USEC_PER_SEC);
   struct ccr_op enter = {};
   struct ccr_op exit = {};
   uint32_t enter_cycles = 0U;
@@ -568,7 +569,7 @@ static int prv_poll_status(const struct pbl_spi_mem *mem, const struct pbl_spi_m
 
   if (susp != nullptr && susp->suspend.data.dir == PBL_SPI_MEM_NO_DATA &&
       susp->resume.data.dir == PBL_SPI_MEM_NO_DATA) {
-    const uint32_t cycles_per_us = (pbl_cycles_per_sec() + 999999U) / 1000000U;
+    const uint32_t cycles_per_us = PBL_DIV_ROUND_UP(pbl_cycles_per_sec(), PBL_USEC_PER_SEC);
     const struct ccr_op suspend = prv_encode(&susp->suspend);
     const struct ccr_op resume = prv_encode(&susp->resume);
 

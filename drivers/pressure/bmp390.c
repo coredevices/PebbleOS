@@ -11,7 +11,9 @@
 #include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/units.h>
 
 PBL_LOG_MODULE_DEFINE(driver_pressure_bmp390, CONFIG_DRIVER_PRESSURE_LOG_LEVEL);
 
@@ -164,7 +166,7 @@ static int prv_read(const struct pbl_pressure *pressure, uint32_t *pa) {
     return ret;
   }
 
-  pbl_sleep_ms((CONVERSION_US + 999U) / 1000U);
+  pbl_sleep_ms(PBL_DIV_ROUND_UP(CONVERSION_US, PBL_USEC_PER_MSEC));
 
   // Reading the data registers clears the ready bits
   ret = PBL_POLL_SLEEP_MS(prv_read_status(dev, &status) == 0 && (status & drdy) == drdy, 1,

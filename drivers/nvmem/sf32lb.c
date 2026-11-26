@@ -13,6 +13,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
+#include <pbl/util/units.h>
 
 #include <hardware/sf32lb52_efusec.h>
 #include <hardware/sf32lb52_pmuc.h>
@@ -47,7 +48,7 @@ static int prv_set_timing(const struct pbl_nvmem_sf32lb *efuse) {
     return -ERANGE;
   }
 
-  thrck = (uint32_t)(((uint64_t)RD_STROBE_NS * pclk_hz) / 1000000000U) + 1U;
+  thrck = (uint32_t)(((uint64_t)RD_STROBE_NS * pclk_hz) / PBL_NSEC_PER_SEC) + 1U;
   pbl_modifyl(EFUSEC_TIMR_THRCK_MASK, PBL_FIELD_PREP(EFUSEC_TIMR_THRCK_MASK, thrck),
               efuse->base + SF32LB52_EFUSEC_TIMR_OFFSET);
 

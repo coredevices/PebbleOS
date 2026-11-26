@@ -8,6 +8,7 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/mmio.h>
 #include <pbl/util/bits.h>
+#include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 
 #include <hardware/stm32h7_quadspi.h>
@@ -163,7 +164,7 @@ static int prv_init(const struct pbl_spi_mem *mem) {
   }
 
   clk_hz = (uint32_t)(rate_mhz / 1000U);
-  prescaler = (clk_hz + qspi->max_freq_hz - 1U) / qspi->max_freq_hz;
+  prescaler = PBL_DIV_ROUND_UP(clk_hz, qspi->max_freq_hz);
   if (prescaler == 0U || prescaler > 256U) {
     return -EINVAL;
   }
