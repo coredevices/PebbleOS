@@ -8,6 +8,7 @@ One sample per {doc}`driver class <../../drivers/index>`, in `samples/drivers`.
 accel.md
 als.md
 backlight.md
+can.md
 charger.md
 display.md
 flash.md
