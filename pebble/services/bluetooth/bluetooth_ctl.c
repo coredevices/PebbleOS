@@ -23,101 +23,84 @@
 
 PBL_LOG_MODULE_DEFINE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
-static bool s_comm_initialized = false;
-static bool s_comm_airplane_mode_on = false;
-static bool s_comm_enabled = false;
-static bool s_comm_is_running = false;
-static bool s_comm_state_change_eval_is_scheduled;
-static BtCtlModeOverride s_comm_override = BtCtlModeOverrideNone;
-static PBL_MUTEX_DEFINE(s_comm_state_change_mutex);
+// Guards the starts and stops of the stack, and what decides them.
+static PBL_MUTEX_DEFINE(s_lock);
+static bool s_initialized;
+static bool s_enabled;
+static bool s_airplane_mode;
+// Airplane mode from the shell, which is not persisted.
+static bool s_forced_off;
+static bool s_running;
+static bool s_update_scheduled;
 
 bool bt_ctl_is_airplane_mode_on(void) {
-  return s_comm_airplane_mode_on;
+  return s_airplane_mode;
 }
 
 bool bt_ctl_is_bluetooth_active(void) {
-  if (s_comm_enabled) {
-    if (s_comm_override == BtCtlModeOverrideRun) {
-      return true;
-    } else if (s_comm_override == BtCtlModeOverrideNone && !s_comm_airplane_mode_on) {
-      return true;
-    }
-  }
-  return false;
+  return s_enabled && !s_airplane_mode && !s_forced_off;
 }
 
 bool bt_ctl_is_bluetooth_running(void) {
-  return s_comm_is_running;
+  return s_running;
 }
 
-static void prv_put_disconnection_event(void) {
-  PebbleEvent event = (PebbleEvent){
-    .type = PEBBLE_BT_CONNECTION_EVENT,
-    .bluetooth.connection = {
-      .state = PebbleBluetoothConnectionEventStateDisconnected,
-    }
-  };
-  PBL_LOG_DBG("New BT Conn change event, We are now disconnected");
-  event_put(&event);
-}
+static void prv_start(void) {
+  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 
-static void prv_comm_start(void) {
-  if (s_comm_is_running) {
+  if (s_running) {
     return;
   }
-  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
 
   // Without root keys the stack would run with an identity anyone can resolve.
   if (bt_bonding_get_root_keys(root_keys) == 0) {
-    s_comm_is_running = (pbl_bt_start(&root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]) == 0);
+    s_running = (pbl_bt_start(&root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]) == 0);
   }
 
-  if (s_comm_is_running) {
-    bt_link_init();
-    bt_advertising_init();
-    bt_gateway_init();
-    bt_local_id_handle_start();
-#ifdef CONFIG_BT_SERVICE_BAS
-    bt_battery_level_start();
-#endif
-    bt_pairability_init();
-  } else {
+  if (!s_running) {
     PBL_LOG_ERR("Bluetooth failed to start");
-  }
-}
-
-static void prv_comm_stop(void) {
-  if (!s_comm_is_running) {
     return;
   }
+
+  bt_link_init();
+  bt_advertising_init();
+  bt_gateway_init();
+  bt_local_id_handle_start();
+#ifdef CONFIG_BT_SERVICE_BAS
+  bt_battery_level_start();
+#endif
+  bt_pairability_init();
+}
+
+static void prv_stop(void) {
+  if (!s_running) {
+    return;
+  }
+
 #ifdef CONFIG_BT_SERVICE_BAS
   bt_battery_level_stop();
 #endif
   bt_link_deinit();
   bt_advertising_deinit();
 
-  // Should be the last thing to happen that touches the Bluetooth controller directly
+  // The last thing to happen that touches the controller.
   pbl_bt_stop();
-  s_comm_is_running = false;
-
-  // This is a legacy event used to update the Settings app.
-  prv_put_disconnection_event();
+  s_running = false;
 }
 
-static void prv_send_state_change_event(void) {
-  PBL_LOG_DBG("----> Sending a BT state event");
+static void prv_put_state_event(void) {
   PebbleEvent event = {
     .type = PEBBLE_BT_STATE_EVENT,
     .bluetooth = {
       .state = {
-        .airplane = s_comm_airplane_mode_on,
-        .enabled = s_comm_enabled,
-        .override = s_comm_override,
+        .airplane = s_airplane_mode,
+        .enabled = s_enabled,
       },
     },
   };
+
   event_put(&event);
-  if (s_comm_airplane_mode_on) {
+  if (s_airplane_mode) {
     PBL_ANALYTICS_TIMER_STOP(connectivity_connected_time_ms);
     PBL_ANALYTICS_TIMER_STOP(connectivity_expected_time_ms);
   } else {
@@ -125,98 +108,89 @@ static void prv_send_state_change_event(void) {
   }
 }
 
-static void prv_comm_state_change(void *context) {
-  pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
-  s_comm_state_change_eval_is_scheduled = false;
-  bool is_active_mode = bt_ctl_is_bluetooth_active();
-  if (is_active_mode != s_comm_is_running) {
-    if (is_active_mode) {
-      prv_comm_start();
+// Brings the stack to where it is wanted.
+static void prv_update(void *context) {
+  bool active;
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_update_scheduled = false;
+  active = bt_ctl_is_bluetooth_active();
+  if (active != s_running) {
+    if (active) {
+      prv_start();
     } else {
-      prv_comm_stop();
+      prv_stop();
     }
-    // Only send event if state changed successfully:
-    if (is_active_mode == s_comm_is_running) {
-      prv_send_state_change_event();
+
+    if (active == s_running) {
+      prv_put_state_event();
     }
   }
-
-  pbl_mutex_unlock(&s_comm_state_change_mutex);
+  pbl_mutex_unlock(&s_lock);
 }
 
 void bt_ctl_set_enabled(bool enabled) {
-  if (!s_comm_initialized) {
-    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
+  if (!s_initialized) {
+    PBL_LOG_ERR("Bluetooth is not initialized yet");
     return;
   }
-  pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
-  s_comm_enabled = enabled;
-  pbl_mutex_unlock(&s_comm_state_change_mutex);
-  prv_comm_state_change(nullptr);
-}
 
-void bt_ctl_set_override_mode(BtCtlModeOverride override) {
-  if (!s_comm_initialized) {
-    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
-    return;
-  }
-  pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
-  s_comm_override = override;
-  pbl_mutex_unlock(&s_comm_state_change_mutex);
-  prv_comm_state_change(nullptr);
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_enabled = enabled;
+  pbl_mutex_unlock(&s_lock);
+
+  prv_update(nullptr);
 }
 
 void bt_ctl_set_airplane_mode_async(bool enabled) {
-  if (!s_comm_initialized) {
-    PBL_LOG_ERR("Error: Bluetooth isn't initialized yet");
+  bool schedule;
+
+  if (!s_initialized) {
+    PBL_LOG_ERR("Bluetooth is not initialized yet");
     return;
   }
-  pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
+
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
 #ifdef CONFIG_SETTINGS
   bt_settings_set_airplane_mode(enabled);
 #endif
-  s_comm_airplane_mode_on = enabled;
-  bool should_schedule_eval = false;
-  if (!s_comm_state_change_eval_is_scheduled) {
-    should_schedule_eval = true;
-    s_comm_state_change_eval_is_scheduled = true;
-  }
-  pbl_mutex_unlock(&s_comm_state_change_mutex);
-  if (should_schedule_eval) {
-    pbl_sys_work_call(prv_comm_state_change, nullptr);
+  s_airplane_mode = enabled;
+  schedule = !s_update_scheduled;
+  s_update_scheduled = true;
+  pbl_mutex_unlock(&s_lock);
+
+  if (schedule) {
+    pbl_sys_work_call(prv_update, nullptr);
   }
 }
 
 void bt_ctl_init(void) {
   bt_dis_init();
 #ifdef CONFIG_SETTINGS
-  s_comm_airplane_mode_on = bt_settings_get_airplane_mode();
+  s_airplane_mode = bt_settings_get_airplane_mode();
 #endif
-  s_comm_initialized = true;
+  s_initialized = true;
 }
 
-static void prv_bt_ctl_reset_bluetooth_callback(void *context) {
+static void prv_reset(void *context) {
+  bool was_running;
+
   PBL_LOG_DBG("Resetting Bluetooth");
-  pbl_mutex_lock(&s_comm_state_change_mutex, PBL_FOREVER);
 
-  bool was_already_running = s_comm_is_running;
-
-  prv_comm_stop();
-  prv_comm_start();
-
-  // It's possible a reset was triggered because the stack failed to boot up
-  // correctly in which case we have never generated an event about the stack
-  // booting up. Don't bother sending events if we are just returning the stack
-  // to the state it is already in
-  if (!was_already_running && s_comm_is_running) {
-    prv_send_state_change_event();
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  was_running = s_running;
+  prv_stop();
+  prv_start();
+  // A stack that had failed to start was never reported as running.
+  if (!was_running && s_running) {
+    prv_put_state_event();
   }
-  pbl_mutex_unlock(&s_comm_state_change_mutex);
+  pbl_mutex_unlock(&s_lock);
 }
 
 void bt_ctl_reset_bluetooth(void) {
   if (bt_ctl_is_bluetooth_active()) {
-    pbl_sys_work_call(prv_bt_ctl_reset_bluetooth_callback, nullptr);
+    pbl_sys_work_call(prv_reset, nullptr);
   } else {
     PBL_LOG_DBG("Bluetooth is disabled, reset aborted");
   }
@@ -228,12 +202,12 @@ void bt_ctl_reset_bluetooth(void) {
 #include <pbl/shell/shell.h>
 
 static int prv_cmd_airplane(const struct pbl_shell *sh, size_t argc, char **argv) {
-  BtCtlModeOverride override;
+  bool on;
 
   if (strcmp(argv[1], "on") == 0) {
-    override = BtCtlModeOverrideStop;
+    on = true;
   } else if (strcmp(argv[1], "off") == 0) {
-    override = BtCtlModeOverrideNone;
+    on = false;
     // Also leave the airplane mode set from the UI, which persists across reboots.
     bt_ctl_set_airplane_mode_async(false);
   } else {
@@ -241,7 +215,11 @@ static int prv_cmd_airplane(const struct pbl_shell *sh, size_t argc, char **argv
     return -EINVAL;
   }
 
-  bt_ctl_set_override_mode(override);
+  pbl_mutex_lock(&s_lock, PBL_FOREVER);
+  s_forced_off = on;
+  pbl_mutex_unlock(&s_lock);
+  prv_update(nullptr);
+
   pbl_shell_print(sh, "%s airplane mode", bt_ctl_is_bluetooth_active() ? "Left" : "Entered");
   return 0;
 }
