@@ -157,7 +157,7 @@ static void prv_handle_init(void) {
   // Start with serial number, Bluetooth MAC address, firmware version,
   // and current battery percentage.
   char mac[PBL_BT_ADDR_FMT_BUFFER_SIZE];
-  bt_local_id_copy_address_mac_string(mac);
+  bt_local_id_copy_address_string(mac);
   BatteryChargeState charge = battery_state_service_peek();
   snprintf(data->qr_buffer, sizeof(data->qr_buffer), "%s;%s;%s;%" PRIu8, mfg_get_serial_number(),
            mac, TINTIN_METADATA.version_tag, charge.charge_percent);

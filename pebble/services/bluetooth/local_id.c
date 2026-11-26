@@ -4,63 +4,57 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/bluetooth/id.h>
+#include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/local_id.h>
 
-// Cached: some clients, such as the Settings app, ask often.
-static struct pbl_bt_addr s_local_address;
-static char s_local_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+#include <host/ble_hs.h>
+#include <services/gap/ble_svc_gap.h>
 
-// "Pebble" and the last two bytes of the address.
-static void prv_set_default_device_name(void) {
-  snprintf(s_local_device_name, sizeof(s_local_device_name), "Pebble %02X%02X",
-           s_local_address.octets[1], s_local_address.octets[0]);
+PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
+
+// Kept: the address is asked for while the stack is stopped too.
+static uint8_t s_address[BLE_DEV_ADDR_LEN];
+static char s_device_name[PBL_BT_DEVICE_NAME_BUFFER_SIZE];
+
+static void prv_apply_device_name(void) {
+  int rc = ble_svc_gap_device_name_set(s_device_name);
+
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not set the device name (%d)", rc);
+  }
 }
 
-static bool prv_has_device_name(void) {
-  return (s_local_device_name[0] != '\0');
-}
+void bt_local_id_handle_start(void) {
+  uint8_t own_addr_type;
 
-static void prv_configure_device_name(void) {
-  pbl_bt_id_set_local_device_name(s_local_device_name);
-}
-
-void bt_local_id_configure_driver(void) {
-  // Request the local address from the BT driver and cache it:
-  pbl_bt_id_copy_local_identity_address(&s_local_address);
-
-  if (!prv_has_device_name()) {
-    prv_set_default_device_name();
+  if (ble_hs_id_infer_auto(0, &own_addr_type) != 0 ||
+      ble_hs_id_copy_addr(own_addr_type, s_address, nullptr) != 0) {
+    PBL_LOG_ERR("No identity address");
   }
 
-  prv_configure_device_name();
+  // "Pebble" and the last two bytes of the address.
+  if (s_device_name[0] == '\0') {
+    snprintf(s_device_name, sizeof(s_device_name), "Pebble %02X%02X", s_address[1], s_address[0]);
+  }
+
+  prv_apply_device_name();
 }
 
 void bt_local_id_set_device_name(const char *device_name) {
-  strncpy(s_local_device_name, device_name, sizeof(s_local_device_name));
-  s_local_device_name[sizeof(s_local_device_name) - 1] = '\0';
-  prv_configure_device_name();
+  strncpy(s_device_name, device_name, sizeof(s_device_name));
+  s_device_name[sizeof(s_device_name) - 1] = '\0';
+  prv_apply_device_name();
 }
 
 void bt_local_id_copy_device_name(char name_out[PBL_BT_DEVICE_NAME_BUFFER_SIZE]) {
-  strncpy(name_out, s_local_device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
+  strncpy(name_out, s_device_name, PBL_BT_DEVICE_NAME_BUFFER_SIZE);
 }
 
-void bt_local_id_copy_address(struct pbl_bt_addr *addr_out) {
-  *addr_out = s_local_address;
+void bt_local_id_copy_address(uint8_t addr_out[6]) {
+  memcpy(addr_out, s_address, sizeof(s_address));
 }
 
-void bt_local_id_copy_address_hex_string(char addr_hex_str_out[PBL_BT_BD_ADDR_FMT_BUFFER_SIZE]) {
-  static const struct pbl_bt_addr null_addr = {};
-  if (0 != memcmp(&null_addr, &s_local_address, sizeof(s_local_address))) {
-    snprintf(addr_hex_str_out, PBL_BT_BD_ADDR_FMT_BUFFER_SIZE, PBL_BT_BD_ADDR_FMT,
-             PBL_BT_ADDR_XPLODE(s_local_address));
-  } else {
-    snprintf(addr_hex_str_out, PBL_BT_BD_ADDR_FMT_BUFFER_SIZE, "Unknown");
-  }
-}
-
-void bt_local_id_copy_address_mac_string(char addr_mac_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]) {
-  snprintf(addr_mac_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
-           PBL_BT_ADDR_XPLODE(s_local_address));
+void bt_local_id_copy_address_string(char addr_str_out[PBL_BT_ADDR_FMT_BUFFER_SIZE]) {
+  snprintf(addr_str_out, PBL_BT_ADDR_FMT_BUFFER_SIZE, PBL_BT_ADDR_FMT,
+           PBL_BT_ADDR_XPLODE(s_address));
 }

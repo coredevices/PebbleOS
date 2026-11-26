@@ -24,7 +24,7 @@ static const struct pbl_nvmem_cell s_uid_cell = PBL_NVMEM_CELL(EFUSE, 0U, UID_SI
 
 // The first six bytes of the eFUSE unique ID are the address, followed by
 // their checksum and a magic byte. Parts not programmed at the factory have none.
-int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type) {
+int pbl_bt_id_addr_get(ble_addr_t *addr) {
   uint8_t uid[UID_SIZE];
   uint8_t chksum = 0U;
   int ret;
@@ -38,7 +38,7 @@ int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type)
     return -ENOENT;
   }
 
-  for (size_t i = 0U; i < sizeof(addr->octets); i++) {
+  for (size_t i = 0U; i < sizeof(addr->val); i++) {
     chksum += uid[i];
   }
   // Not worth refusing to boot over: as good as none.
@@ -47,8 +47,8 @@ int pbl_bt_id_addr_get(struct pbl_bt_addr *addr, enum pbl_bt_id_addr_type *type)
     return -ENOENT;
   }
 
-  memcpy(addr->octets, uid, sizeof(addr->octets));
-  *type = PBL_BT_ID_ADDR_PUBLIC;
+  memcpy(addr->val, uid, sizeof(addr->val));
+  addr->type = BLE_ADDR_PUBLIC;
 
   return 0;
 }

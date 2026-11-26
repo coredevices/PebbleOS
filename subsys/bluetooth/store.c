@@ -154,7 +154,7 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
   ctx->is_new = is_new;
   prv_value_to_info(&peer.sec, &ctx->info);
   if (is_new) {
-    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(ctx->info.addr.val));
+    PBL_LOG_INFO("Bonded with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(ctx->info.addr.val));
   }
   (void)pbl_sys_work_call(prv_sec_written_cb, ctx);
 
@@ -189,7 +189,7 @@ static int prv_store_delete(int obj_type, const union ble_store_key *key) {
 
   addr = pbl_malloc_check(sizeof(*addr));
   *addr = value.sec.peer_addr;
-  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE_VAL(addr->val));
+  PBL_LOG_INFO("Deleted bond with " PBL_BT_ADDR_FMT, PBL_BT_ADDR_XPLODE(addr->val));
   (void)pbl_sys_work_call(prv_bond_deleted_cb, addr);
 
   return 0;
