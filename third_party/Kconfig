@@ -6,6 +6,7 @@ menu "Third-party"
 rsource "cmsis_core/Kconfig"
 rsource "hal_nordic/Kconfig"
 rsource "nimble/Kconfig"
+rsource "nonfree/Kconfig"
 
 rsource "lvgl/Kconfig"
 

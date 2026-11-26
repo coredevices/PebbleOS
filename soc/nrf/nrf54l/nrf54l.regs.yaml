@@ -11,3 +11,4 @@ labels:
   - radio
   - icache
   - grtc
+  - clock

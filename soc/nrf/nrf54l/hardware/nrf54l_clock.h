@@ -17,6 +17,11 @@
 #define NRF54L_CLOCK_LFCLK_SRC_OFFSET           0x0440
 #define NRF54L_CLOCK_LFCLK_STAT_OFFSET          0x044c
 
+/* POWER, at the same address */
+
+#define NRF54L_POWER_TASKS_CONSTLAT_OFFSET 0x0030
+#define NRF54L_POWER_TASKS_LOWPWR_OFFSET   0x0034
+
 /* Register bit definitions */
 
 #define CLOCK_XO_STAT_STATE PBL_BIT(16)
