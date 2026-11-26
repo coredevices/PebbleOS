@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import socket
 import subprocess
 import sys
 import unittest
@@ -46,6 +47,25 @@ class TestOpenOcdVersion(unittest.TestCase):
             self.assertRaisesRegex(RunnerError, "not found"),
         ):
             openocd._check_openocd_version()
+
+
+class TestOpenOcdRunning(unittest.TestCase):
+    def port(self, sock):
+        return mock.patch.object(openocd, "OPENOCD_TELNET_PORT", sock.getsockname()[1])
+
+    def test_a_listening_daemon_is_running(self):
+        with socket.socket() as sock:
+            sock.bind(("localhost", 0))
+            sock.listen()
+            with self.port(sock):
+                self.assertTrue(openocd._is_openocd_running())
+
+    def test_a_closed_port_is_not(self):
+        with socket.socket() as sock:
+            sock.bind(("localhost", 0))
+            port = self.port(sock)
+        with port:
+            self.assertFalse(openocd._is_openocd_running())
 
 
 if __name__ == "__main__":
