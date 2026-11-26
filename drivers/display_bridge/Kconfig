@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config DISPLAY_BRIDGE
+    bool
+    help
+      Display bridge class (pbl/drivers/display_bridge.h), selected by
+      the bridges display controllers send their pixels through, and by
+      the controllers using them.
