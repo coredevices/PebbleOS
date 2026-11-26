@@ -12,8 +12,7 @@
  * address, pairability, and the GATT services the firmware implements (battery, device
  * information).
  *
- * The stack runs while it is enabled (by the runlevel system) and either airplane mode is off
- * or the override forces it on:
+ * The stack runs while it is enabled (by the runlevel system) and airplane mode is off:
  *
  * @code{.c}
  * bt_ctl_set_airplane_mode_async(false);
@@ -31,16 +30,6 @@
  * @brief Start, stop and reset the Bluetooth stack.
  * @{
  */
-
-/** @brief Override of the airplane mode setting. */
-typedef enum {
-  /** Follow the airplane mode setting. */
-  BtCtlModeOverrideNone,
-  /** Keep the stack stopped. */
-  BtCtlModeOverrideStop,
-  /** Keep the stack running regardless of airplane mode. */
-  BtCtlModeOverrideRun
-} BtCtlModeOverride;
 
 /**
  * @brief Initialize Bluetooth control, loading the persisted airplane mode setting.
@@ -61,7 +50,7 @@ bool bt_ctl_is_airplane_mode_on(void);
  *
  * It may not actually be running yet, e.g. while starting or resetting.
  *
- * @return True if enabled and not stopped by airplane mode or the override.
+ * @return True if enabled and not stopped by airplane mode.
  */
 bool bt_ctl_is_bluetooth_active(void);
 
@@ -89,15 +78,6 @@ void bt_ctl_set_airplane_mode_async(bool enabled);
  * @param enabled True to enable.
  */
 void bt_ctl_set_enabled(bool enabled);
-
-/**
- * @brief Set the airplane mode override.
- *
- * Starts or stops the stack synchronously as needed.
- *
- * @param override New override mode.
- */
-void bt_ctl_set_override_mode(BtCtlModeOverride override);
 
 /**
  * @brief Restart the stack from SysWorkq.

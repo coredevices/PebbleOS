@@ -246,6 +246,7 @@ void bt_link_deinit(void) {
   pbl_mutex_unlock(&s_lock);
 
   /* The disconnection may not be reported once the stack stops. */
+  prv_put_connection_event(false);
   if (was_gateway) {
     prv_put_gateway_event(conn_handle, BLE_ERR_CONN_TERM_LOCAL, false);
   }

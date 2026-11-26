@@ -256,10 +256,9 @@ typedef struct PBL_PACKED {
   bool connected : 1;
 } PebbleBLEConnectionEvent;
 
-typedef struct PBL_PACKED { // 3 byte?
+typedef struct PBL_PACKED {
   bool airplane;
   bool enabled;
-  BtCtlModeOverride override;
 } PebbleBluetoothStateEvent;
 
 typedef enum {
