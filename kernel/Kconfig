@@ -171,6 +171,15 @@ config KERNEL_MPU_REGIONS
       the rest take the static regions. SoCs whose core implements more set
       it in their Kconfig.defconfig.
 
+config KERNEL_NOCACHE
+    bool
+    depends on CPU_HAS_DCACHE
+    help
+      Section of memory the data cache does not hold, for data other bus
+      masters read and write while the CPU does (PBL_NOCACHE, in
+      pbl/kernel/section.h). It takes one static MPU slot. Selected by
+      what needs it.
+
 config KERNEL_MPU_IN_FAULTS
     bool
     help

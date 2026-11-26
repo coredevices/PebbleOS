@@ -43,6 +43,26 @@
 #endif
 
 /**
+ * @def PBL_NOCACHE
+ * @brief Place the variable where the data cache does not hold it.
+ *
+ * For memory another bus master reads and writes while the CPU does, where cache maintenance
+ * cannot keep both sides coherent, e.g. when both write to the same cache line. With
+ * @c CONFIG_KERNEL_NOCACHE, the variable goes to a section one MPU region marks non-cacheable;
+ * without, it is placed as usual, as it is on cores without a data cache. Variables there are
+ * zeroed at boot and cannot have an initializer.
+ *
+ * @code{.c}
+ * static uint8_t s_ring[256] PBL_NOCACHE;
+ * @endcode
+ */
+#ifdef CONFIG_KERNEL_NOCACHE
+#define PBL_NOCACHE PBL_SECTION(".nocache")
+#else
+#define PBL_NOCACHE
+#endif
+
+/**
  * @def PBL_ITERABLE_SECTION
  * @brief Add the object to an iterable section, a table gathered at link time from any file.
  *

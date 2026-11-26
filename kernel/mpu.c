@@ -7,6 +7,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#include <pbl/kernel/cache.h>
 #include <pbl/kernel/mpu.h>
 #include <pbl/util/size.h>
 
@@ -47,6 +48,10 @@ extern const uint8_t __unpriv_ro_bss_size__[];
 extern const uint8_t __isr_stack_start__[];
 extern const uint8_t __FLASH_start__[];
 extern const uint8_t __FLASH_size__[];
+#ifdef CONFIG_KERNEL_NOCACHE
+extern uint8_t __nocache_start[];
+extern const uint8_t __nocache_size[];
+#endif
 
 static const struct pbl_mpu_region s_kernel_regions[] = {
   {
@@ -78,6 +83,14 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
     .attr = PBL_MPU_NO_ACCESS | PBL_MPU_NORMAL_NC,
   },
 #endif
+#ifdef CONFIG_KERNEL_NOCACHE
+  {
+    .name = "nocache",
+    .base = (uintptr_t)__nocache_start,
+    .size = (size_t)__nocache_size,
+    .attr = PBL_MPU_P_RW | PBL_MPU_NORMAL_NC,
+  },
+#endif
 };
 #endif
 
@@ -89,6 +102,10 @@ static const struct pbl_mpu_region s_kernel_regions[] = {
 
 void mpu_init(void) {
   arch_mpu_init();
+#ifdef CONFIG_KERNEL_NOCACHE
+  // A bootloader may have left the cache on: write back and drop the lines that zeroed it.
+  pbl_dcache_flush_invalidate_range(__nocache_start, (size_t)__nocache_size);
+#endif
 #ifndef CONFIG_ARCH_POSIX
   prv_regions_add(s_kernel_regions, PBL_ARRAY_SIZE(s_kernel_regions));
 #endif
