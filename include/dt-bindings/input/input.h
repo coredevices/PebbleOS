@@ -5,6 +5,11 @@
 #define _DT_BINDINGS_INPUT_INPUT_H
 
 /* Key codes for linux,code, with the values of the Linux input event codes */
+#define KEY_1      2
+#define KEY_2      3
+#define KEY_3      4
+#define KEY_4      5
+#define KEY_0      11
 #define KEY_UP     103
 #define KEY_RIGHT  106
 #define KEY_DOWN   108
