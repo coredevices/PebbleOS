@@ -1371,3 +1371,216 @@ void test_alarm__missed_just_once_alarm_fires_and_is_disabled(void) {
 // TODO:
 // - Test disable while snoozing
 // - Test delete while snoozing
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//! Skipping the next occurrence of an alarm
+
+static bool prv_alarm_skips_next(AlarmId id) {
+  AlarmInfo info;
+  cl_assert(alarm_get_info(id, &info));
+  return info.skip_next;
+}
+
+void test_alarm__skip_next_passes_over_one_occurrence(void) {
+  // It's currently Thursday @ 00:00
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  alarm_set_skip_next(id, true);
+  cl_assert_equal_b(prv_alarm_skips_next(id), true);
+  cl_assert_equal_b(alarm_get_enabled(id), true);
+
+  time_t next_alarm_time;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm_time));
+  cl_assert_equal_i(next_alarm_time, s_friday + prv_hours_and_minutes_to_seconds(10, 30));
+
+  time_t time_until;
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(pbl_realtime() + time_until, next_alarm_time);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  s_current_hour = 24 + 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  // The skip covered one occurrence only
+  s_current_hour = 48 + 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+}
+
+void test_alarm__skip_next_cancel(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+  alarm_set_skip_next(id, false);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_twice_skips_one_occurrence(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+  alarm_set_skip_next(id, true);
+
+  time_t next_alarm_time;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm_time));
+  cl_assert_equal_i(next_alarm_time, s_friday + prv_hours_and_minutes_to_seconds(10, 30));
+}
+
+void test_alarm__skip_next_weekdays_over_weekend(void) {
+  s_current_day = s_friday;
+  s_current_hour = 12;
+  // The next occurrence is Monday, the one after that Tuesday
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 0, .kind = ALARM_KIND_WEEKDAYS});
+  alarm_set_skip_next(id, true);
+
+  time_t next_alarm_time;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm_time));
+  cl_assert_equal_i(next_alarm_time, s_tuesday + prv_hours_and_minutes_to_seconds(7, 0));
+}
+
+void test_alarm__skip_next_other_alarm_still_fires(void) {
+  AlarmId id1 = alarm_create(&(AlarmInfo){.hour = 10, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  alarm_create(&(AlarmInfo){.hour = 11, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id1, true);
+
+  time_t next_alarm_time;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm_time));
+  cl_assert_equal_i(next_alarm_time, s_thursday + prv_hours_and_minutes_to_seconds(11, 0));
+
+  s_current_hour = 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+
+  s_current_hour = 11;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_smart_alarm(void) {
+  AlarmId id = alarm_create(
+      &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true});
+  alarm_set_skip_next(id, true);
+  cl_assert_equal_b(prv_alarm_skips_next(id), true);
+
+  time_t next_alarm_time;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm_time));
+  cl_assert_equal_i(next_alarm_time, s_friday + prv_hours_and_minutes_to_seconds(10, 30));
+
+  // The smart window of the skipped occurrence does not open
+  s_current_hour = 10;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+
+  s_current_hour = 24 + 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_removes_skipped_pin(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  // Thursday, Friday and Saturday
+  cl_assert_equal_i(s_num_timeline_adds, 3);
+
+  alarm_set_skip_next(id, true);
+  // Friday and Saturday
+  cl_assert_equal_i(s_num_timeline_adds, 3 + 2);
+}
+
+void test_alarm__skip_next_ignored_for_just_once_alarm(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_JUST_ONCE});
+  alarm_set_skip_next(id, true);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_ignored_for_disabled_alarm(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_enabled(id, false);
+  alarm_set_skip_next(id, true);
+  cl_assert_equal_b(alarm_get_enabled(id), false);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+}
+
+void test_alarm__skip_next_cleared_by_disable(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+  alarm_set_enabled(id, false);
+  alarm_set_enabled(id, true);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_cleared_by_schedule_change(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+  alarm_set_time(id, 11, 0);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  alarm_set_skip_next(id, true);
+  alarm_set_kind(id, ALARM_KIND_WEEKDAYS);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+
+  alarm_set_skip_next(id, true);
+  alarm_set_smart(id, true);
+  cl_assert_equal_b(prv_alarm_skips_next(id), false);
+}
+
+void test_alarm__skip_next_kept_by_alert_change(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+  alarm_set_vibrate_enabled(id, false);
+  alarm_set_sound_enabled(id, true);
+  alarm_set_tone(id, AlarmTone_Bell);
+  cl_assert_equal_b(prv_alarm_skips_next(id), true);
+}
+
+void test_alarm__skip_next_survives_reboot(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+
+  s_current_hour = 9;
+  prv_simulate_reboot();
+  cl_assert_equal_b(prv_alarm_skips_next(id), true);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+
+  s_current_hour = 24 + 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__skip_next_survives_clock_change(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  alarm_set_skip_next(id, true);
+
+  s_current_hour = 5;
+  alarm_handle_clock_change();
+  cl_assert_equal_b(prv_alarm_skips_next(id), true);
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+}
