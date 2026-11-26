@@ -11,13 +11,14 @@
 #include <pbl/kernel/work.h>
 #include <pbl/pp/transports/console.h>
 #include <pbl/util/base64.h>
+#include <pbl/util/math.h>
 
 #define ESC 0x1b
 
 #define SEQ_LEN     1U
 #define CRC_LEN     sizeof(uint32_t)
 #define RAW_MAX     (SEQ_LEN + PBL_CONSOLE_FRAME_MTU + CRC_LEN)
-#define B64_MAX     ((RAW_MAX + 2U) / 3U * 4U)
+#define B64_MAX     (PBL_DIV_ROUND_UP(RAW_MAX, 3U) * 4U)
 #define ACK_RAW_LEN (SEQ_LEN + 1U + CRC_LEN)
 #define ACK_B64_LEN 8U
 
