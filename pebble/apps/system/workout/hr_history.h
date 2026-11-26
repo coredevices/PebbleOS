@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/util/math.h>
+
 #define WORKOUT_HR_HISTORY_SECONDS 60
 
 typedef struct WorkoutHrSample {
@@ -78,7 +80,7 @@ static inline bool workout_hr_history_range(const WorkoutHrHistory *history, int
   }
   // Round the scale to tens, keeping constant readings away from the axes.
   *minimum = low / 10 * 10;
-  *maximum = (high + 9) / 10 * 10;
+  *maximum = PBL_DIV_ROUND_UP(high, 10) * 10;
   if (*minimum == *maximum) {
     *minimum -= 10;
     *maximum += 10;

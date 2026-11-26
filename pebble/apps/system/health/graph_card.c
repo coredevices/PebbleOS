@@ -102,7 +102,7 @@ static int32_t prv_get_day_point(HealthGraphCard *graph_card, int weekday) {
 
 static int32_t prv_convert_to_graph_height(HealthGraphCard *graph_card, int32_t point) {
   // Round up in order to show the minimum stub bar once progress begins
-  int bar_height = (point * GRAPH_HEIGHT + graph_card->data_max - 1) / graph_card->data_max;
+  int bar_height = PBL_DIV_ROUND_UP(point * GRAPH_HEIGHT, graph_card->data_max);
   const int minimum_stub_height = 5;
   if (bar_height > 0 && bar_height < minimum_stub_height) {
     // Show the minimum stub bar if progress just began

@@ -118,7 +118,7 @@ static bool prv_is_honeycomb(const ActionMenuLayer *aml) {
 
 static int prv_short_row_count(const ActionMenuLayer *aml) {
   const int capacity = prv_is_honeycomb(aml) ? GLYPHS_PER_ROUND_PAGE : SHORT_COL_COUNT;
-  return (aml->num_short_items + capacity - 1) / capacity;
+  return PBL_DIV_ROUND_UP(aml->num_short_items, capacity);
 }
 
 static int prv_short_row_start(const ActionMenuLayer *aml, int row) {

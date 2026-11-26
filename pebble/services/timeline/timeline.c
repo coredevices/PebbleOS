@@ -185,7 +185,7 @@ static void prv_remove_node(TimelineNode **head, TimelineNode *node) {
 static int prv_num_nodes_for_serialized_item(CommonTimelineItemHeader *header) {
   int num_days;
   if (header->all_day) {
-    num_days = header->duration ? (header->duration + PBL_MIN_PER_DAY - 1) / PBL_MIN_PER_DAY : 1;
+    num_days = header->duration ? PBL_DIV_ROUND_UP(header->duration, PBL_MIN_PER_DAY) : 1;
   } else {
     // The span is the time between 0:00 on the first day of the event
     // and 24:00 on the last day of the event

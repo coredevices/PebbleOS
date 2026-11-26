@@ -82,7 +82,7 @@ static Codepoint prv_codepoint_at(unsigned int index) {
 }
 
 static void prv_refresh(AppState *data) {
-  const unsigned int page_count = (data->emoji_count + EMOJIS_PER_PAGE - 1) / EMOJIS_PER_PAGE;
+  const unsigned int page_count = PBL_DIV_ROUND_UP(data->emoji_count, EMOJIS_PER_PAGE);
   snprintf(data->header, sizeof(data->header), "Emoji %u/%u", data->page + 1, page_count);
 
   utf8_t *cursor = (utf8_t *)data->emojis;
@@ -99,7 +99,7 @@ static void prv_refresh(AppState *data) {
 
 static void prv_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppState *data = context;
-  const unsigned int page_count = (data->emoji_count + EMOJIS_PER_PAGE - 1) / EMOJIS_PER_PAGE;
+  const unsigned int page_count = PBL_DIV_ROUND_UP(data->emoji_count, EMOJIS_PER_PAGE);
   if (click_recognizer_get_button_id(recognizer) == BUTTON_ID_UP) {
     data->page = data->page ? data->page - 1 : page_count - 1;
   } else {

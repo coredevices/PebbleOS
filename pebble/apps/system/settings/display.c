@@ -16,6 +16,7 @@
 #include <pbl/kernel/fatal.h>
 #include <pbl/services/language_pack.h>
 #include <pbl/services/light.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/app_malloc.h>
@@ -130,8 +131,7 @@ static const char *s_intensity_labels[] = {
 // will round down/up by a %
 static uint8_t prv_get_scaled_brightness(void) {
   return BACKLIGHT_SCALE_GRANULARITY *
-         ((backlight_get_intensity() + BACKLIGHT_SCALE_GRANULARITY - 1) /
-          BACKLIGHT_SCALE_GRANULARITY);
+         PBL_DIV_ROUND_UP(backlight_get_intensity(), BACKLIGHT_SCALE_GRANULARITY);
 }
 
 static int prv_intensity_get_selection_index() {

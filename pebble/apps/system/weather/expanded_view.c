@@ -966,7 +966,7 @@ static int prv_page_scroll(void) {
 // live.
 #define EV_BODY_Y         PBL_IF_ROUND_ELSE(24, 20) // first row under the status text
 #define EV_BODY_H         (PBL_DISPLAY_HEIGHT - EV_BODY_Y)
-#define EV_BODY_STRIDE(W) (((W) + 3) / 4) // four 2-bit levels per byte
+#define EV_BODY_STRIDE(W) PBL_DIV_ROUND_UP(W, 4) // four 2-bit levels per byte
 
 typedef void (*BodyDrawFn)(GContext *ctx, int W, int tdx, const ExpandedViewGlance *g, GColor fg);
 
