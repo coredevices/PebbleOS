@@ -15,6 +15,7 @@ hyperbus.md
 uart.md
 can.md
 mipi_dbi.md
+mipi_dsi.md
 adc.md
 pwm.md
 dma.md
