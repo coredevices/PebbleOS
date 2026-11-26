@@ -38,7 +38,7 @@ endpoint's own format, most of them little endian.
 | `0x0030` | AppMessage | any | | `pebble/services/app_message/app_message_receiver.c` |
 | `0x0031` | Launcher AppMessage | any | | `pebble/process_management/launcher_app_message.c` |
 | `0x0032` | App customization | any | | `pebble/process_management/app_custom_icon.c` |
-| `0x0033` | BLE control | private | | `pebble/services/bluetooth/pp_ble_control.c` |
+| `0x0033` | BLE control | private | yes | `pebble/services/bluetooth/pp_ble_control.c` |
 | `0x0034` | App run state | any | | `pebble/process_management/app_run_state.c` |
 | `0x0035` | Imaging | private | | `pebble/services/imaging/imaging.c` |
 | `0x038f` | Health sync | private | | `pebble/services/health_sync_endpoint/service.c` |
