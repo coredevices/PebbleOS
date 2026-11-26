@@ -27,6 +27,8 @@
 #define FICR_REVISION_1       0x01U
 // Undocumented register of the radio, for errata 40
 #define RADIO_UNDOC_7AC_OFFSET 0x07ac
+// Undocumented register of the TAD, for errata 37
+#define TAD_UNDOC_40C_OFFSET 0x040c
 
 // Opens a debug signal the TAMPC holds, as when the UICR does not protect the device. A signal
 // locked by the hardware stays as it is.
@@ -40,6 +42,9 @@ static void prv_debug_signal_open(uint32_t offset) {
 }
 
 static void prv_debug_init(void) {
+  // Errata 37, ahead of the debug signals as the MDK does
+  pbl_writel(1U, PBL_DT_REG_TAD + TAD_UNDOC_40C_OFFSET);
+
   prv_debug_signal_open(NRF54L_TAMPC_DOMAIN_DBGEN_CTRL_OFFSET);
   prv_debug_signal_open(NRF54L_TAMPC_DOMAIN_NIDEN_CTRL_OFFSET);
   prv_debug_signal_open(NRF54L_TAMPC_DOMAIN_SPIDEN_CTRL_OFFSET);
