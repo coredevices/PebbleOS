@@ -7,3 +7,25 @@ config MIPI_DSI
       MIPI DSI host class (pbl/drivers/mipi_dsi.h), selected by the
       controllers that drive panels over MIPI DSI and by the panel
       drivers using them.
+
+if MIPI_DSI
+
+config MIPI_DSI_STM32
+    bool "ST STM32 DSI host"
+    default y
+    depends on DT_HAS_ST_STM32_DSI_ENABLED
+    select CLK
+    select DISPLAY_BRIDGE
+    select PINCTRL
+    help
+      Support for the DSI host of the STM32H7 and its D-PHY, in adapted
+      command mode with the tearing effect, as the bridge of the LTDC.
+
+config MIPI_DSI_STM32_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on MIPI_DSI_STM32
+    help
+      Priority of the wrapper interrupt.
+
+endif # MIPI_DSI

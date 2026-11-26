@@ -6,6 +6,7 @@ Displays and the panels behind them, their backlight and 2D acceleration.
 :maxdepth: 1
 
 display.md
+display_bridge.md
 panel.md
 backlight.md
 led.md
