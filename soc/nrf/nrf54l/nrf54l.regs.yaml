@@ -12,3 +12,4 @@ labels:
   - icache
   - grtc
   - clock
+  - memconf

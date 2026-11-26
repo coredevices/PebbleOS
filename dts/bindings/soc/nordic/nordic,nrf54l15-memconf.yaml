@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf54l15-memconf.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L memory configuration
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Powers the RAM blocks, and chooses which of them keep their content in
+  System OFF.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-memconf
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    node@500cf000 {
+        compatible = "nordic,nrf54l15-memconf";
+        reg = <0x500cf000 0x1000>;
+    };
