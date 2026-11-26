@@ -1,15 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-set(sources)
-if(CONFIG_WATCHDOG_QEMU)
-  list(APPEND sources qemu.c)
-elseif(CONFIG_WATCHDOG_NRF5)
-  list(APPEND sources nrf5.c)
-elseif(CONFIG_WATCHDOG_SF32LB)
-  list(APPEND sources sf32lb.c)
-elseif(CONFIG_WATCHDOG_STM32_IWDG)
-  list(APPEND sources stm32_iwdg.c)
-endif()
 pbl_library()
-pbl_library_sources(${sources})
+pbl_library_sources_ifdef(CONFIG_WATCHDOG_QEMU qemu.c)
+pbl_library_sources_ifdef(CONFIG_WATCHDOG_NRF5 nrf5.c)
+pbl_library_sources_ifdef(CONFIG_WATCHDOG_SF32LB sf32lb.c)
+pbl_library_sources_ifdef(CONFIG_WATCHDOG_STM32_IWDG stm32_iwdg.c)

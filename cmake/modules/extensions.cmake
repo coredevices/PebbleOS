@@ -238,6 +238,12 @@ function(pbl_host_sources)
   endforeach()
 endfunction()
 
+function(pbl_host_sources_ifdef feature)
+  if(${feature})
+    pbl_host_sources(${ARGN})
+  endif()
+endfunction()
+
 function(pbl_host_include_directories)
   foreach(dir ${ARGN})
     if(NOT IS_ABSOLUTE ${dir})
