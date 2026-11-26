@@ -485,6 +485,30 @@ finds the device on the bus by the build's vendor and product IDs, and
 `usb_function` gives each test the function configured, its counters
 cleared (`harness.helpers.usb`).
 
+`usb/test_msc.py` checks the mass storage function on a build of the
+`samples/subsys/usb/msc` sample, its RAM disk with a FAT file system:
+
+```shell
+pbl -b build-msc configure --board sf32lb57_dpi_hdk samples/subsys/usb/msc
+pbl -b build-msc build
+pbl -b build-msc itest --flash-before usb/test_msc.py
+```
+
+Through pyusb (`usb_msc`, `harness.helpers.msc.BulkOnly`), it drives the
+transport and the SCSI commands: the inquiry, capacity and mode data, writes
+read back in and across the transfer buffers, sectors out of range, unknown
+commands, the residue when the host expects more, phase errors, invalid CBWs
+that keep both endpoints halted until a reset, a reset in the middle of a
+read, ejecting and loading, and the throughput (`msc_read_kbps`,
+`msc_write_kbps`). These take the interface from the host's own driver,
+which libusb does on Linux but not on macOS, where they are skipped. On
+macOS, `host_disk` (`harness.helpers.msc.HostDisk`) finds the disk the device
+becomes by its USB location from the lab file, and the tests mount it with
+`diskutil`, read `README.TXT`, write a file and read it back after mounting
+it again (`host_write_kbps`, `host_read_kbps`), and eject it. macOS does not
+mount new disks while the screen is locked: those tests are then skipped. A
+build with `-DCONFIG_SAMPLE_READ_ONLY=y` checks the read-only disk instead.
+
 ## Extending the harness
 
 - A new connection backend is a `Connection` subclass in a module of

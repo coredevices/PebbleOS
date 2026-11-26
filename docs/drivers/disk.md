@@ -1,0 +1,28 @@
+# Disk
+
+A disk is block storage read and written by whole sectors of one size,
+numbered from 0: what a file system or the USB mass storage function (see
+{doc}`USB <../subsystems/usb>`) sits on. The class only checks that the
+sectors are on the disk, that it is ready and that it takes writes; how a
+driver stores them, erase blocks and caching included, is its own. A write may
+stay in the driver until `pbl_disk_sync()`. The class does not serialize
+calls: a driver that cannot take them from several threads at once serializes
+them itself.
+
+| | |
+| --- | --- |
+| Directory | `drivers/disk` |
+| Header | `pbl/drivers/disk.h` |
+| Kconfig | `CONFIG_DISK`, enabled by the application |
+| Sample | {doc}`../samples/subsys/usb/msc` |
+| API | {apidoc}`API reference <drivers_disk>` |
+
+## Drivers
+
+| Driver | Device | Kconfig |
+| --- | --- | --- |
+| RAM disk | `pbl_disk_ram` (`pbl/drivers/disk/ram.h`) | `CONFIG_DISK_RAM` |
+
+The RAM disk has no hardware to describe, so it is not a devicetree node: the
+driver defines its one device, `CONFIG_DISK_RAM_SIZE` KiB of the
+application's RAM in 512-byte sectors, zeroed at boot.

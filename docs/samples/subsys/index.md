@@ -23,6 +23,7 @@ usb/cdc_acm.md
 usb/cdc_acm_dual.md
 usb/dfu.md
 usb/loopback.md
+usb/msc.md
 usb/test.md
 usb/webusb.md
 ```

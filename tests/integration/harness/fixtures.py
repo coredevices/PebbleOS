@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import sys
 
 import pytest
 
@@ -313,6 +314,40 @@ def usb_target(request, build, lab_setup, lab_locks, results_dir):
         match,
         lab_setup.usb,
     )
+
+
+@pytest.fixture
+def usb_msc(usb_target):
+    """The mass storage interface (:class:`harness.helpers.msc.BulkOnly`),
+    taken from the host's driver: skipped where libusb cannot."""
+    import usb.core
+
+    from harness.helpers.msc import BulkOnly
+
+    try:
+        msc = BulkOnly(usb_target.find(timeout=15.0))
+    except usb.core.USBError as e:
+        pytest.skip(f"the host keeps the mass storage interface ({e})")
+    try:
+        yield msc
+    finally:
+        msc.release()
+
+
+@pytest.fixture
+def host_disk(usb_target):
+    """The disk the host makes of the device (:class:`harness.helpers.msc.HostDisk`),
+    on macOS."""
+    from harness.helpers.msc import HostDisk, screen_locked
+
+    if sys.platform != "darwin":
+        pytest.skip("host disk tests run on macOS")
+    if screen_locked():
+        pytest.skip("macOS does not mount new disks while the screen is locked")
+    if usb_target.location is None:
+        pytest.skip("the lab file gives no USB location for the device")
+    usb_target.find(timeout=15.0)
+    return HostDisk(usb_target.location)
 
 
 @pytest.fixture

@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig DISK
+    bool "Disks"
+    help
+      Disk class (pbl/drivers/disk.h): block storage read and written by
+      whole sectors, enabled by the application.
+
+if DISK
+
+config DISK_RAM
+    bool "RAM disk"
+    help
+      A disk in RAM, pbl_disk_ram (pbl/drivers/disk/ram.h), in 512-byte
+      sectors, zeroed at boot: its contents are lost at every reset.
+
+config DISK_RAM_SIZE
+    int "RAM disk size in KiB"
+    default 64
+    depends on DISK_RAM
+    help
+      Size of the RAM disk, taken from the RAM of the application.
+
+endif # DISK

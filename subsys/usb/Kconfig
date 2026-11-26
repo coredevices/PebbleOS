@@ -120,9 +120,44 @@ config USB_DFU_TRANSFER_SIZE
       Largest block of a download or an upload, in bytes. The function
       keeps three blocks: the one it writes and two to upload from.
 
+config USB_MSC
+    bool "Mass storage"
+    depends on DISK
+    select KERNEL_SYS_WORKQ
+    help
+      USB mass storage, Bulk-Only Transport with the SCSI transparent
+      command set (pbl/usb/msc.h): the host reads and writes the disks the
+      application gives as logical units. The disks are accessed on the
+      system work queue.
+
+config USB_MSC_BUF_SIZE
+    int "Transfer buffer size"
+    default 4096
+    depends on USB_MSC
+    help
+      Bytes of each of the two buffers the bus and the disks take in turn,
+      a multiple of 512 and of the sector size of the disks. Larger
+      buffers make for fewer disk accesses and longer transfers.
+
+config USB_MSC_VENDOR
+    string "Vendor"
+    default "PebbleOS"
+    depends on USB_MSC
+    help
+      Vendor of the logical units, in their SCSI inquiry data: up to 8
+      characters.
+
+config USB_MSC_PRODUCT
+    string "Product"
+    default "Disk"
+    depends on USB_MSC
+    help
+      Product of the logical units, in their SCSI inquiry data: up to 16
+      characters.
+
 config USB_TEST
     bool "Test function"
-    depends on !USB_CDC_ACM && !USB_DFU
+    depends on !USB_CDC_ACM && !USB_DFU && !USB_MSC
     help
       A vendor-class function, to test the stack and the controller from a
       host: bulk loopback, source and sink, an interrupt endpoint, and
