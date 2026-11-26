@@ -101,8 +101,7 @@ static int prv_handle_pairing_request(const struct ble_gap_event *event) {
 }
 
 static int prv_handle_repeat_pairing(const struct ble_gap_event *event) {
-#if defined(CONFIG_BT_REPEAT_PAIRING_ALWAYS) || \
-    (MYNEWT_VAL(BLE_SM_SC_ONLY) && (MYNEWT_VAL(BLE_SM_IO_CAP) == BLE_HS_IO_DISPLAY_YESNO))
+#if MYNEWT_VAL(BLE_SM_SC_ONLY) && (MYNEWT_VAL(BLE_SM_IO_CAP) == BLE_HS_IO_DISPLAY_YESNO)
   struct ble_gap_conn_desc desc;
   int rc;
 
