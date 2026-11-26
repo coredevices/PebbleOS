@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import errno
 import os
 import re
 import socket
@@ -68,14 +67,12 @@ def _check_openocd_version():
 
 
 def _is_openocd_running():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Binding the port fails too while one that just exited leaves it in TIME_WAIT: connect
     try:
-        s.bind(("", OPENOCD_TELNET_PORT))
-        s.close()
-    except OSError as e:
-        s.close()
-        return e.errno == errno.EADDRINUSE
-    return False
+        with socket.create_connection(("localhost", OPENOCD_TELNET_PORT), timeout=1):
+            return True
+    except OSError:
+        return False
 
 
 class OpenOcdRunner(Runner):
