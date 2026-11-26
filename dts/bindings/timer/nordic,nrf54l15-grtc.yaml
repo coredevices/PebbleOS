@@ -14,7 +14,11 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-grtc
+    oneOf:
+      - const: nordic,nrf54l15-grtc
+      - items:
+          - const: nordic,nrf54lm20a-grtc
+          - const: nordic,nrf54l15-grtc
 
   reg:
     maxItems: 1

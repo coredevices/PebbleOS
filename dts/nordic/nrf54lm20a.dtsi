@@ -1,0 +1,283 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+// The application core, at the secure addresses of the peripherals
+
+#include <dt-bindings/clock/nordic,nrf54l15-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/regulator/nordic,nrf54l15-regulators.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m33";
+			device_type = "cpu";
+			reg = <0>;
+		};
+	};
+
+	sram0: memory@20000000 {
+		device_type = "memory";
+		reg = <0x20000000 0x80000>;
+	};
+
+	hfxo: clock-32000000 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32000000>;
+	};
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v8m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&nvic>;
+		ranges;
+
+		ficr: ficr@ffc000 {
+			compatible = "nordic,nrf54lm20a-ficr", "nordic,nrf54l15-ficr";
+			reg = <0xffc000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			ficr_deviceid: deviceid@304 {
+				reg = <0x304 0x8>;
+			};
+
+			ficr_xosc32mtrim: xosc32mtrim@620 {
+				reg = <0x620 0x4>;
+			};
+
+			ficr_xosc32ktrim: xosc32ktrim@624 {
+				reg = <0x624 0x4>;
+			};
+		};
+
+		uicr: uicr@ffd000 {
+			compatible = "nordic,nrf54lm20a-uicr", "nordic,nrf54l15-uicr";
+			reg = <0xffd000 0x1000>;
+		};
+
+
+		spi00: spi@5004d000 {
+			compatible = "nordic,nrf54lm20a-spim", "nordic,nrf54l15-spim";
+			reg = <0x5004d000 0x1000>;
+			interrupts = <77>;
+			clock-frequency = <128000000>;
+			max-frequency = <32000000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		rramc: flash-controller@5004e000 {
+			compatible = "nordic,nrf54lm20a-rramc", "nordic,nrf54l15-rramc";
+			reg = <0x5004e000 0x1000>;
+			interrupts = <78>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			internal_flash: flash@0 {
+				reg = <0x0 0x1fd000>;
+			};
+		};
+
+		gpio2: gpio@50050400 {
+			compatible = "nordic,nrf54lm20a-gpio", "nordic,nrf54l15-gpio";
+			reg = <0x50050400 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <11>;
+			nordic,port = <2>;
+		};
+
+		tad: debug-controller@50053000 {
+			compatible = "nordic,nrf54lm20a-tad", "nordic,nrf54l15-tad";
+			reg = <0x50053000 0x1000>;
+		};
+
+		cracen: crypto@50059000 {
+			compatible = "nordic,nrf54lm20a-cracen";
+			reg = <0x50059000 0x1000>, <0x50010000 0x10000>;
+			reg-names = "wrapper", "core";
+			interrupts = <89>;
+		};
+
+		radio: radio@5008a000 {
+			compatible = "nordic,nrf54lm20a-radio", "nordic,nrf54l15-radio";
+			reg = <0x5008a000 0x1000>;
+			interrupts = <138>, <139>;
+		};
+
+		uart20: serial@500c6000 {
+			compatible = "nordic,nrf54lm20a-uarte", "nordic,nrf54l15-uarte";
+			reg = <0x500c6000 0x1000>;
+			interrupts = <198>;
+			status = "disabled";
+		};
+
+		uart21: serial@500c7000 {
+			compatible = "nordic,nrf54lm20a-uarte", "nordic,nrf54l15-uarte";
+			reg = <0x500c7000 0x1000>;
+			interrupts = <199>;
+			status = "disabled";
+		};
+
+		uart22: serial@500c8000 {
+			compatible = "nordic,nrf54lm20a-uarte", "nordic,nrf54l15-uarte";
+			reg = <0x500c8000 0x1000>;
+			interrupts = <200>;
+			status = "disabled";
+		};
+
+		timer20: timer@500ca000 {
+			compatible = "nordic,nrf54lm20a-timer", "nordic,nrf54l15-timer";
+			reg = <0x500ca000 0x1000>;
+			interrupts = <202>;
+			status = "disabled";
+		};
+
+		timer21: timer@500cb000 {
+			compatible = "nordic,nrf54lm20a-timer", "nordic,nrf54l15-timer";
+			reg = <0x500cb000 0x1000>;
+			interrupts = <203>;
+			status = "disabled";
+		};
+
+		timer22: timer@500cc000 {
+			compatible = "nordic,nrf54lm20a-timer", "nordic,nrf54l15-timer";
+			reg = <0x500cc000 0x1000>;
+			interrupts = <204>;
+			status = "disabled";
+		};
+
+		timer23: timer@500cd000 {
+			compatible = "nordic,nrf54lm20a-timer", "nordic,nrf54l15-timer";
+			reg = <0x500cd000 0x1000>;
+			interrupts = <205>;
+			status = "disabled";
+		};
+
+		timer24: timer@500ce000 {
+			compatible = "nordic,nrf54lm20a-timer", "nordic,nrf54l15-timer";
+			reg = <0x500ce000 0x1000>;
+			interrupts = <206>;
+			status = "disabled";
+		};
+
+		memconf: memconf@500cf000 {
+			compatible = "nordic,nrf54lm20a-memconf";
+			reg = <0x500cf000 0x1000>;
+		};
+
+		gpio1: gpio@500d8200 {
+			compatible = "nordic,nrf54lm20a-gpio", "nordic,nrf54l15-gpio";
+			reg = <0x500d8200 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <32>;
+			nordic,port = <1>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			nordic,gpiote = <&gpiote20>;
+		};
+
+		gpio3: gpio@500d8600 {
+			compatible = "nordic,nrf54lm20a-gpio", "nordic,nrf54l15-gpio";
+			reg = <0x500d8600 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <13>;
+			nordic,port = <3>;
+		};
+
+		gpiote20: gpiote@500da000 {
+			compatible = "nordic,nrf54lm20a-gpiote", "nordic,nrf54l15-gpiote";
+			reg = <0x500da000 0x1000>;
+			interrupts = <219>;
+			nordic,num-channels = <8>;
+		};
+
+		tampc: tamper-controller@500ef000 {
+			compatible = "nordic,nrf54lm20a-tampc", "nordic,nrf54l15-tampc";
+			reg = <0x500ef000 0x1000>;
+			interrupts = <239>;
+		};
+
+		grtc: timer@500e2000 {
+			compatible = "nordic,nrf54lm20a-grtc", "nordic,nrf54l15-grtc";
+			reg = <0x500e2000 0x1000>;
+			interrupts = <228>;
+		};
+
+		uart30: serial@50104000 {
+			compatible = "nordic,nrf54lm20a-uarte", "nordic,nrf54l15-uarte";
+			reg = <0x50104000 0x1000>;
+			interrupts = <260>;
+			status = "disabled";
+		};
+
+		gpio0: gpio@5010a000 {
+			compatible = "nordic,nrf54lm20a-gpio", "nordic,nrf54l15-gpio";
+			reg = <0x5010a000 0x300>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <10>;
+			nordic,port = <0>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			nordic,gpiote = <&gpiote30>;
+		};
+
+		gpiote30: gpiote@5010c000 {
+			compatible = "nordic,nrf54lm20a-gpiote", "nordic,nrf54l15-gpiote";
+			reg = <0x5010c000 0x1000>;
+			interrupts = <269>;
+			nordic,num-channels = <4>;
+		};
+
+		clock: clock-controller@5010e000 {
+			compatible = "nordic,nrf54lm20a-clock", "nordic,nrf54l15-clock";
+			reg = <0x5010e000 0x1000>;
+			interrupts = <270>;
+			#clock-cells = <1>;
+			clocks = <&hfxo>;
+			clock-names = "hfxo";
+			nordic,oscillators = <&oscillators>;
+			nvmem-cells = <&ficr_xosc32mtrim>, <&ficr_xosc32ktrim>;
+			nvmem-cell-names = "hfxo-trim", "lfxo-trim";
+		};
+
+		oscillators: oscillators@50120000 {
+			compatible = "nordic,nrf54lm20a-oscillators", "nordic,nrf54l15-oscillators";
+			reg = <0x50120000 0x1000>;
+
+			vregmain: vregmain {
+				regulator-name = "VREGMAIN";
+				regulator-always-on;
+				regulator-initial-mode = <NRF54L15_REGULATOR_MODE_LDO>;
+			};
+		};
+
+		icache: cache-controller@e0082000 {
+			compatible = "nordic,nrf54lm20a-cache", "nordic,nrf54l15-cache";
+			reg = <0xe0082000 0x1000>;
+		};
+	};
+};

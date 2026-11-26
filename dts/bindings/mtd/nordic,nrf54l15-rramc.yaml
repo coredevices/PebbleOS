@@ -15,7 +15,11 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-rramc
+    oneOf:
+      - const: nordic,nrf54l15-rramc
+      - items:
+          - const: nordic,nrf54lm20a-rramc
+          - const: nordic,nrf54l15-rramc
 
   reg:
     maxItems: 1

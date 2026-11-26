@@ -17,7 +17,11 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-oscillators
+    oneOf:
+      - const: nordic,nrf54l15-oscillators
+      - items:
+          - const: nordic,nrf54lm20a-oscillators
+          - const: nordic,nrf54l15-oscillators
 
   reg:
     maxItems: 1

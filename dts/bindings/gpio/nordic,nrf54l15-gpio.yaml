@@ -16,7 +16,11 @@ description:
 
 properties:
   compatible:
-    const: nordic,nrf54l15-gpio
+    oneOf:
+      - const: nordic,nrf54l15-gpio
+      - items:
+          - const: nordic,nrf54lm20a-gpio
+          - const: nordic,nrf54l15-gpio
 
   reg:
     maxItems: 1
