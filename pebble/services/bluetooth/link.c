@@ -141,7 +141,6 @@ static void prv_handle_connect(const struct ble_gap_event *event) {
   pbl_mutex_unlock(&s_lock);
 
   prv_start_interval_timers(&desc);
-  bt_advertising_handle_connect();
   prv_put_connection_event(true);
 }
 
@@ -166,7 +165,6 @@ static void prv_handle_disconnect(const struct ble_gap_event *event) {
 
   prv_stop_interval_timers();
   prv_count_disconnect(reason);
-  bt_advertising_handle_disconnect();
   prv_put_connection_event(false);
   if (was_gateway) {
     prv_put_gateway_event(event->disconnect.conn.conn_handle, reason, false);

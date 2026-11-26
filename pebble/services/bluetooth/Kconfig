@@ -3,6 +3,7 @@
 
 config SERVICE_BLUETOOTH
     bool "Bluetooth"
+    select BT_ADV
     help
       Core Bluetooth service (pairing, bonding, local id, ...).
 

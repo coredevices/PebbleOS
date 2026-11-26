@@ -70,12 +70,4 @@ int pbl_bt_start(const struct pbl_bt_sm_key *irk);
  */
 void pbl_bt_stop(void);
 
-/**
- * @brief Called each time the host (re-)synchronizes with the controller.
- *
- * Implemented by the firmware. The controller state is lost on a host reset, so this is where
- * advertising data and parameters must be pushed again. Invoked on the NimBLE host task.
- */
-extern void pbl_bt_cb_host_synced(void);
-
 /** @} */

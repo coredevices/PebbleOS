@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config BT_ADV
+    bool "Advertising"
+    depends on NIMBLE
+    select KERNEL_SYS_WORKQ
+    help
+      Connectable advertising that follows what there is to advertise, at
+      a short interval first and a long one afterwards
+      (pbl/bluetooth/adv.h). It only needs NimBLE.
+
+if BT_ADV
+
+module = BT_ADV
+module-str = Bluetooth advertising
+source "subsys/logging/Kconfig.template.log_level"
+
+endif
