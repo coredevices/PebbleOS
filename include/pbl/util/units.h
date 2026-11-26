@@ -30,6 +30,9 @@
 /** @brief Meters per mile, rounded. */
 #define PBL_M_PER_MILE 1609
 
+/** @brief Millihertz per hertz, clock rates being in millihertz. */
+#define PBL_MILLIHZ_PER_HZ 1000ULL
+
 /** @brief Nanoseconds per microsecond. */
 #define PBL_NSEC_PER_USEC 1000
 /** @brief Nanoseconds per millisecond. */

@@ -10,6 +10,7 @@
 #include <pbl/util/bits.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/time.h>
+#include <pbl/util/units.h>
 
 #include <hardware/stm32_rtc.h>
 #include <hardware/stm32h7_exti.h>
@@ -18,9 +19,6 @@
 #define PREDIV_A 127U
 
 #define INIT_TIMEOUT_US 100000U
-
-// Clock rates are in mHz
-#define MHZ_PER_HZ 1000ULL
 
 // The alarm matches the day of the month, the same in each of the next 28 days at most
 #define ALARM_MAX_S (28 * 24 * 60 * 60)
@@ -260,7 +258,7 @@ int pbl_rtc_stm32_init(const struct pbl_device *dev) {
 
   prer = PBL_FIELD_PREP(RTC_PRER_PREDIV_A_MASK, PREDIV_A) |
          PBL_FIELD_PREP(RTC_PRER_PREDIV_S_MASK,
-                        (uint32_t)(rate_mhz / MHZ_PER_HZ / (PREDIV_A + 1U)) - 1U);
+                        (uint32_t)(rate_mhz / PBL_MILLIHZ_PER_HZ / (PREDIV_A + 1U)) - 1U);
   ret = prv_alarm_irq_init(rtc);
   if (ret != 0) {
     return ret;
