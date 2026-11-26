@@ -1,0 +1,61 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#pragma once
+
+#include <pbl/util/bits.h>
+
+#define STM32_LTDC_SSCR_OFFSET 0x0008
+#define STM32_LTDC_BPCR_OFFSET 0x000c
+#define STM32_LTDC_AWCR_OFFSET 0x0010
+#define STM32_LTDC_TWCR_OFFSET 0x0014
+#define STM32_LTDC_GCR_OFFSET  0x0018
+#define STM32_LTDC_SRCR_OFFSET 0x0024
+#define STM32_LTDC_BCCR_OFFSET 0x002c
+
+// Layer 1
+#define STM32_LTDC_L1CR_OFFSET     0x0084
+#define STM32_LTDC_L1WHPCR_OFFSET  0x0088
+#define STM32_LTDC_L1WVPCR_OFFSET  0x008c
+#define STM32_LTDC_L1PFCR_OFFSET   0x0094
+#define STM32_LTDC_L1CACR_OFFSET   0x0098
+#define STM32_LTDC_L1DCCR_OFFSET   0x009c
+#define STM32_LTDC_L1BFCR_OFFSET   0x00a0
+#define STM32_LTDC_L1CFBAR_OFFSET  0x00ac
+#define STM32_LTDC_L1CFBLR_OFFSET  0x00b0
+#define STM32_LTDC_L1CFBLNR_OFFSET 0x00b4
+
+// Horizontal fields are in the high half, vertical ones in the low half
+#define LTDC_H_MASK PBL_GENMASK(27, 16)
+#define LTDC_V_MASK PBL_GENMASK(10, 0)
+
+#define LTDC_GCR_LTDCEN PBL_BIT(0)
+#define LTDC_GCR_VSPOL  PBL_BIT(30)
+#define LTDC_GCR_HSPOL  PBL_BIT(31)
+
+#define LTDC_SRCR_IMR PBL_BIT(0)
+
+#define LTDC_LCR_LEN PBL_BIT(0)
+
+#define LTDC_LWHPCR_WHSTPOS_MASK PBL_GENMASK(11, 0)
+#define LTDC_LWHPCR_WHSPPOS_MASK PBL_GENMASK(27, 16)
+#define LTDC_LWVPCR_WVSTPOS_MASK PBL_GENMASK(10, 0)
+#define LTDC_LWVPCR_WVSPPOS_MASK PBL_GENMASK(26, 16)
+
+#define LTDC_LPFCR_PF_MASK   PBL_GENMASK(2, 0)
+#define LTDC_LPFCR_PF_RGB565 2U
+
+#define LTDC_LCACR_OPAQUE 0xffU
+
+// Blending: the pixel times the constant alpha, over the rest
+#define LTDC_LBFCR_BF1_MASK PBL_GENMASK(10, 8)
+#define LTDC_LBFCR_BF2_MASK PBL_GENMASK(2, 0)
+#define LTDC_LBFCR_BF1_CA   4U
+#define LTDC_LBFCR_BF2_1_CA 5U
+
+// The line length takes 7 more bytes than the line on the STM32H7
+#define LTDC_LCFBLR_CFBLL_MASK  PBL_GENMASK(12, 0)
+#define LTDC_LCFBLR_CFBP_MASK   PBL_GENMASK(28, 16)
+#define LTDC_LCFBLR_CFBLL_EXTRA 7U
+
+#define LTDC_LCFBLNR_CFBLNBR_MASK PBL_GENMASK(10, 0)
