@@ -44,6 +44,7 @@ static uint8_t s_write_sub;
 static int s_write_ret;
 static int s_syncs;
 static uint8_t s_sync_counter;
+static uint32_t s_sync_spin_us;
 static int s_hb_calls;
 static uint8_t s_hb_node;
 static enum pbl_canopen_hb_event s_hb_event;
@@ -163,6 +164,9 @@ static void prv_sync_cb(struct pbl_canopen *co, uint8_t counter, uint32_t cycles
   cl_assert(pbl_cycle_get_32() - cycles < 0x80000000U);
   s_syncs++;
   s_sync_counter = counter;
+  // A control loop that runs late, in real time
+  while (pbl_cycle_get_32() - cycles < s_sync_spin_us * 1000U) {
+  }
   // Called with the node locked: the API must still work.
   cl_assert_equal_i(pbl_canopen_od_write(co, OD_VALUE, 0U, &value, sizeof(value)), 0);
 }
@@ -326,6 +330,8 @@ static void prv_run(void (*scenario)(void)) {
 void test_canopen__initialize(void) {
   memset(&s_thread, 0, sizeof(s_thread));
   pbl_canopen_reset_for_test();
+  // The cycle counter of the POSIX arch counts nanoseconds.
+  pbl_cycles_per_sec_set(1000000000U);
   s_num_sent = 0;
   s_starts = 0;
   s_stops = 0;
@@ -334,6 +340,7 @@ void test_canopen__initialize(void) {
   s_writes = 0;
   s_write_ret = 0;
   s_syncs = 0;
+  s_sync_spin_us = 0;
   s_hb_calls = 0;
 }
 
@@ -775,6 +782,102 @@ static void prv_hb_consumer(void) {
 
 void test_canopen__heartbeat_consumer(void) {
   prv_run(prv_hb_consumer);
+}
+
+static void prv_sync_monitoring(void) {
+  prv_sdo_write(0x1006, 0, 10000U, 4U);
+  prv_nmt(0x01);
+
+  // Not monitored before the first SYNC
+  prv_sleep(30U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  prv_rx(0x080U, 0U);
+  prv_sleep(10U);
+  prv_rx(0x080U, 0U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  // Lost after 15 ms: emergency 0x8100, then pre-operational
+  prv_clear();
+  prv_sleep(20U);
+  prv_assert_data(prv_last(0x80U + NODE), 8U, 0x00, 0x81, 0x11, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  cl_assert_equal_i(s_nmt_state, PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+
+  prv_clear();
+  prv_rx(0x080U, 0U);
+  prv_assert_data(prv_last(0x80U + NODE), 8U, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0);
+}
+
+void test_canopen__sync_monitoring(void) {
+  prv_run(prv_sync_monitoring);
+}
+
+static void prv_error_behavior(void) {
+  cl_assert_equal_i(prv_sdo_read(0x1029, 0), 1U);
+  cl_assert_equal_i(prv_sdo_read(0x1029, 1), 0U);
+
+  // No state change
+  prv_sdo_write(0x1029, 1, 1U, 1U);
+  prv_nmt(0x01);
+  prv_rx(0x709U, 1U, 0x05);
+  prv_sleep(60U);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_TIMEOUT);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  // Stopped, from operational or pre-operational
+  prv_sdo_write(0x1029, 1, 2U, 1U);
+  prv_nmt(0x80);
+  prv_rx(0x709U, 1U, 0x05);
+  prv_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_STOPPED);
+
+  // Pre-operational only from operational
+  prv_nmt(0x80);
+  prv_sdo_write(0x1029, 1, 0U, 1U);
+  prv_rx(0x709U, 1U, 0x05);
+  prv_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  prv_nmt(0x01);
+  prv_rx(0x709U, 1U, 0x05);
+  prv_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&s_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+}
+
+void test_canopen__error_behavior(void) {
+  prv_run(prv_error_behavior);
+}
+
+static void prv_sync_window(void) {
+  prv_nmt(0x01);
+  prv_sdo_write(0x1007, 0, 1000U, 4U);
+
+  // A late control loop: the synchronous TPDOs due are dropped.
+  s_sync_spin_us = 3000U;
+  prv_clear();
+  prv_rx(0x080U, 0U);
+  prv_rx(0x080U, 0U);
+  cl_assert_equal_i(s_syncs, 2);
+  cl_assert_equal_i(prv_count(0x280U + NODE), 0);
+  s_sync_spin_us = 0U;
+  prv_rx(0x080U, 0U);
+  prv_rx(0x080U, 0U);
+  cl_assert_equal_i(prv_count(0x280U + NODE), 1);
+
+  // A synchronous RPDO past the window is dropped.
+  prv_sdo_write(0x1007, 0, 1U, 4U);
+  prv_rx(0x080U, 0U);
+  prv_rx(0x300U + NODE, 2U, 0x10, 0x00);
+  prv_rx(0x080U, 0U);
+  cl_assert_equal_i(prv_sdo_read(OD_SETPOINT, 0), 0U);
+  prv_sdo_write(0x1007, 0, 0U, 4U);
+  prv_rx(0x300U + NODE, 2U, 0x10, 0x00);
+  prv_rx(0x080U, 0U);
+  cl_assert_equal_i(prv_sdo_read(OD_SETPOINT, 0), 0x10U);
+}
+
+void test_canopen__sync_window(void) {
+  prv_run(prv_sync_window);
 }
 
 static void prv_api(void) {

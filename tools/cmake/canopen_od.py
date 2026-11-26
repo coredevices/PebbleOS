@@ -54,6 +54,8 @@ C_TYPES = {
 
 ACCESS = ("ro", "wo", "rw", "const")
 
+ERROR_BEHAVIOR = {"pre-operational": 0, "none": 1, "stopped": 2}
+
 COB_INVALID = 1 << 31
 COB_NO_RTR = 1 << 30
 
@@ -186,6 +188,7 @@ class Dictionary:
             (
                 "device",
                 "errors",
+                "error_behavior",
                 "emcy",
                 "heartbeat",
                 "sync",
@@ -275,9 +278,15 @@ class Dictionary:
             self.objects[0x1003].entries[0].default = 0
 
         sync = doc.get("sync") or {}
-        prv_check_keys(sync, ("cob_id",), "sync")
+        prv_check_keys(sync, ("cob_id", "period", "window"), "sync")
         self.prv_comm_var(
             0x1005, "COB-ID SYNC message", "u32", "rw", sync.get("cob_id", 0x80)
+        )
+        self.prv_comm_var(
+            0x1006, "Communication cycle period", "u32", "rw", sync.get("period", 0)
+        )
+        self.prv_comm_var(
+            0x1007, "Synchronous window length", "u32", "rw", sync.get("window", 0)
         )
 
         for index, key, param in (
@@ -349,6 +358,14 @@ class Dictionary:
                 ),
             ],
         )
+
+        behavior = doc.get("error_behavior", "pre-operational")
+        if behavior not in ERROR_BEHAVIOR:
+            raise Error(f"error_behavior: one of {', '.join(ERROR_BEHAVIOR)}")
+        entry = self.prv_sub(
+            0, "Communication error", "u8", "rw", ERROR_BEHAVIOR[behavior]
+        )
+        self.prv_comm_array(0x1029, "Error behavior object", "const", [entry])
 
         self.rpdos = self.prv_pdos(doc.get("rpdos") or [], False)
         self.tpdos = self.prv_pdos(doc.get("tpdos") or [], True)

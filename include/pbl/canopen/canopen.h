@@ -328,6 +328,10 @@ struct pbl_canopen {
   struct pbl_work can_work;
   enum pbl_can_bus_state bus_state;
   enum pbl_canopen_nmt_state nmt;
+  struct pbl_delayed_work sync_timeout;
+  uint64_t sync_ticks;
+  uint32_t sync_cycles;
+  bool sync_seen;
   uint32_t rx_overruns;
   uint32_t tx_overruns;
   bool rx_overrun;

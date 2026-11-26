@@ -42,10 +42,13 @@
 #define PBL_CANOPEN__IDX_ERROR_REG   0x1001U
 #define PBL_CANOPEN__IDX_ERRORS      0x1003U
 #define PBL_CANOPEN__IDX_SYNC        0x1005U
+#define PBL_CANOPEN__IDX_SYNC_PERIOD 0x1006U
+#define PBL_CANOPEN__IDX_SYNC_WINDOW 0x1007U
 #define PBL_CANOPEN__IDX_EMCY        0x1014U
 #define PBL_CANOPEN__IDX_EMCY_INH    0x1015U
 #define PBL_CANOPEN__IDX_HB_CONSUMER 0x1016U
 #define PBL_CANOPEN__IDX_HB_PRODUCER 0x1017U
+#define PBL_CANOPEN__IDX_ERR_BEHAV   0x1029U
 #define PBL_CANOPEN__IDX_RPDO_COMM   0x1400U
 #define PBL_CANOPEN__IDX_RPDO_MAP    0x1600U
 #define PBL_CANOPEN__IDX_TPDO_COMM   0x1800U
@@ -55,6 +58,7 @@
 #define PBL_CANOPEN__ERR_REG_COMM    PBL_BIT(4)
 
 #define PBL_CANOPEN__EMCY_RESET          0x0000U
+#define PBL_CANOPEN__EMCY_SYNC_TIMEOUT   0x8100U
 #define PBL_CANOPEN__EMCY_CAN_OVERRUN    0x8110U
 #define PBL_CANOPEN__EMCY_CAN_PASSIVE    0x8120U
 #define PBL_CANOPEN__EMCY_HEARTBEAT      0x8130U
@@ -67,6 +71,7 @@
 
 extern struct pbl_workq pbl_canopen__workq;
 
+void pbl_canopen__comm_error(struct pbl_canopen *co);
 void pbl_canopen__send(struct pbl_canopen *co, uint32_t id, const uint8_t *data, uint8_t len);
 void pbl_canopen__hb_config(struct pbl_canopen *co);
 uint32_t pbl_canopen__hb_consumer_check(struct pbl_canopen *co, uint8_t sub, uint32_t val);
@@ -100,6 +105,7 @@ void pbl_canopen__sdo_receive(struct pbl_canopen *co, const struct pbl_canopen__
 void pbl_canopen__pdo_init(struct pbl_canopen *co);
 void pbl_canopen__pdo_config_all(struct pbl_canopen *co);
 void pbl_canopen__pdo_stop(struct pbl_canopen *co);
+void pbl_canopen__sync_stop(struct pbl_canopen *co);
 void pbl_canopen__pdo_nmt(struct pbl_canopen *co);
 bool pbl_canopen__pdo_receive(struct pbl_canopen *co, const struct pbl_canopen__frame *f);
 void pbl_canopen__sync_receive(struct pbl_canopen *co, const struct pbl_canopen__frame *f);

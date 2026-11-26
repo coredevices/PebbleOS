@@ -21,6 +21,9 @@ PBL_LOG_MODULE_DEFINE(canopen, CONFIG_CANOPEN_LOG_LEVEL);
 #define NMT_CS_RESET_NODE 0x81U
 #define NMT_CS_RESET_COMM 0x82U
 
+#define ERR_BEHAV_PRE_OP  0U
+#define ERR_BEHAV_STOPPED 2U
+
 PBL_WORKQ_DEFINE(pbl_canopen__workq);
 static struct pbl_thread s_thread;
 PBL_THREAD_STACK_DEFINE(s_stack, CONFIG_CANOPEN_THREAD_STACK_SIZE);
@@ -130,6 +133,7 @@ static void prv_hb_timeout(struct pbl_work *work) {
     PBL_LOG_DBG("node %u heartbeat lost", c->node_id);
     (void)pbl_canopen__emcy_raise(co, PBL_CANOPEN__EMCY_HEARTBEAT, PBL_CANOPEN__ERR_REG_COMM, msef);
     prv_hb_notify(co, c, PBL_CANOPEN_HB_TIMEOUT);
+    pbl_canopen__comm_error(co);
   }
   pbl_mutex_unlock(&co->lock);
 }
@@ -238,6 +242,21 @@ void pbl_canopen__hb_config(struct pbl_canopen *co) {
 
 /* NMT */
 
+static void prv_set_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state state);
+
+/* Communication error: bus off, a heartbeat or the SYNC lost. */
+void pbl_canopen__comm_error(struct pbl_canopen *co) {
+  const struct pbl_canopen_od_entry *e =
+      pbl_canopen__od_find(co->cfg.od, PBL_CANOPEN__IDX_ERR_BEHAV, 1U);
+  uint8_t behavior = e != nullptr ? *(const uint8_t *)e->data : ERR_BEHAV_PRE_OP;
+
+  if (behavior == ERR_BEHAV_PRE_OP && co->nmt == PBL_CANOPEN_NMT_OPERATIONAL) {
+    prv_set_nmt(co, PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  } else if (behavior == ERR_BEHAV_STOPPED) {
+    prv_set_nmt(co, PBL_CANOPEN_NMT_STOPPED);
+  }
+}
+
 static void prv_set_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state state) {
   const struct pbl_canopen_callbacks *cb = co->cfg.cb;
 
@@ -249,6 +268,7 @@ static void prv_set_nmt(struct pbl_canopen *co, enum pbl_canopen_nmt_state state
   co->nmt = state;
   if (state != PBL_CANOPEN_NMT_PRE_OPERATIONAL && state != PBL_CANOPEN_NMT_OPERATIONAL) {
     pbl_canopen__sdo_reset(co);
+    pbl_canopen__sync_stop(co);
   }
   pbl_canopen__pdo_nmt(co);
 
@@ -265,6 +285,7 @@ static void prv_reset(struct pbl_canopen *co, enum pbl_canopen_reset reset) {
   co->nmt = PBL_CANOPEN_NMT_INITIALIZING;
   pbl_canopen__sdo_reset(co);
   pbl_canopen__pdo_stop(co);
+  pbl_canopen__sync_stop(co);
   pbl_delayed_work_cancel(&co->heartbeat);
   for (uint8_t i = 0U; i < od->num_hb_consumers; i++) {
     pbl_delayed_work_cancel(&od->hb_consumers[i].timeout);
@@ -410,6 +431,7 @@ static void prv_can_work(struct pbl_work *work) {
     case PBL_CAN_STATE_BUS_OFF:
       (void)pbl_canopen__emcy_raise(co, PBL_CANOPEN__EMCY_BUS_OFF, PBL_CANOPEN__ERR_REG_COMM,
                                     nullptr);
+      pbl_canopen__comm_error(co);
       break;
     case PBL_CAN_STATE_ERROR_ACTIVE:
     case PBL_CAN_STATE_ERROR_WARNING:
@@ -541,6 +563,7 @@ int pbl_canopen_stop(struct pbl_canopen *co) {
   (void)pbl_delayed_work_cancel_sync(&co->heartbeat);
   (void)pbl_delayed_work_cancel_sync(&co->sdo.timeout);
   (void)pbl_delayed_work_cancel_sync(&co->emcy_inhibit);
+  (void)pbl_delayed_work_cancel_sync(&co->sync_timeout);
   for (uint8_t i = 0U; i < od->num_hb_consumers; i++) {
     (void)pbl_delayed_work_cancel_sync(&od->hb_consumers[i].timeout);
   }

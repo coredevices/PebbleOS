@@ -52,7 +52,8 @@ It runs these services:
 | SDO server | 0x1200 | Expedited and segmented transfers |
 | RPDOs | 0x1400, 0x1600 | Event-driven and synchronous, deadline monitoring |
 | TPDOs | 0x1800, 0x1a00 | Event-driven with inhibit time and event timer, synchronous cyclic and acyclic, SYNC start value |
-| SYNC consumer | 0x1005 | With or without a counter |
+| SYNC consumer | 0x1005, 0x1006, 0x1007 | With or without a counter, loss detection, synchronous window |
+| Error behavior | 0x1029 | NMT state on a communication error |
 | EMCY producer | 0x1001, 0x1003, 0x1014, 0x1015 | Error register, error history, inhibit time |
 
 The node does not run SDO block transfers, an SDO client, an NMT master, a
@@ -225,7 +226,7 @@ flowchart TB
   any -.->|"reset node,<br/>reset communication"| init
   init -->|"boot-up message"| preop
   preop -->|"start"| op
-  op -->|"enter pre-operational"| preop
+  op -->|"enter pre-operational,<br/>communication error"| preop
   preop -->|"stop"| stopped
   stopped -->|"enter pre-operational"| preop
   op -->|"stop"| stopped
@@ -247,7 +248,7 @@ any state. In detail:
 | NMT, heartbeat | ✓ | ✓ | ✓ |
 | SDO | ✓ | ✓ | |
 | EMCY | ✓ | ✓ | |
-| SYNC | | ✓ | |
+| SYNC | Monitored | Monitored, callback | |
 | PDOs | | ✓ | |
 
 A reset from the master restores the defaults of the communication objects,
@@ -294,7 +295,8 @@ sequenceDiagram
 ```
 
 The SYNC callback gets the value of `pbl_cycle_get_32()` when the controller
-handed the SYNC over, so it can tell how late it runs.
+handed the SYNC over, so it can tell how late it runs; past the synchronous
+window, the TPDOs due are not sent.
 
 (canopen-work)=
 
@@ -449,6 +451,10 @@ heartbeat:
 
 sync:
   cob_id: 0x80              # 0x1005
+  period: 1000              # 0x1006, in µs, 0 to not monitor the SYNC
+  window: 500               # 0x1007, in µs, 0 for none
+
+error_behavior: pre-operational   # 0x1029: pre-operational, none or stopped
 
 tpdos:
   - transmission: 254       # 0-240 synchronous, 254 or 255 event-driven
@@ -519,13 +525,28 @@ invalidate the PDO, clear sub-index 0 of the mapping, write the entries, set
 sub-index 0, validate the PDO. Mapped entries are whole bytes, up to 8 per PDO
 and 8 bytes in all; RPDOs can also map the dummy entries 0x0001-0x0007.
 
-## Emergencies
+## Communication errors
+
+Bus off, a monitored heartbeat lost and the SYNC lost are communication
+errors. Besides its emergency message, each one moves the node to the NMT
+state that sub-index 1 of 0x1029 gives: pre-operational from operational (0,
+the default), no change (1) or stopped (2). The NMT callback reports the
+change; a device that drives something, such as an actuator, brings it to a safe
+state there whenever the node leaves operational, as its PDOs stop.
+
+With a communication cycle period in 0x1006, in µs, the SYNC is monitored from
+its first reception: once it misses one and a half periods, the node reacts as
+above, and clears the emergency when the SYNC comes back. With a synchronous
+window length in 0x1007, in µs, the synchronous TPDOs due on a SYNC are not
+sent once the window from its reception has passed, e.g. because the SYNC
+callback ran late, and the synchronous RPDOs received past it are dropped.
 
 The node raises emergencies of its own, in the communication bit of the error
 register, and clears each one once its cause is gone:
 
 | Code | Cause |
 | --- | --- |
+| 0x8100 | SYNC lost |
 | 0x8110 | Received frames dropped |
 | 0x8120 | Controller error passive |
 | 0x8130 | Heartbeat lost |

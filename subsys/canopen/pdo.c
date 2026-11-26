@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/kernel/time.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/misc.h>
 
@@ -258,8 +259,46 @@ static void prv_config(struct pbl_canopen *co, struct pbl_canopen__pdo *pdo, boo
   }
 }
 
+static void prv_sync_timeout(struct pbl_work *work) {
+  struct pbl_canopen *co = PBL_CONTAINER_OF(work, struct pbl_canopen, sync_timeout.work);
+
+  (void)pbl_mutex_lock(&co->lock, PBL_FOREVER);
+  if (co->started && co->sync_seen) {
+    co->sync_seen = false;
+    (void)pbl_canopen__emcy_raise(co, PBL_CANOPEN__EMCY_SYNC_TIMEOUT, PBL_CANOPEN__ERR_REG_COMM,
+                                  nullptr);
+    pbl_canopen__comm_error(co);
+  }
+  pbl_mutex_unlock(&co->lock);
+}
+
+void pbl_canopen__sync_stop(struct pbl_canopen *co) {
+  pbl_delayed_work_cancel(&co->sync_timeout);
+  co->sync_seen = false;
+}
+
+/* Whether a SYNC window runs and the time since the last SYNC, at @p cycles, is past it. */
+static bool prv_sync_window_passed(struct pbl_canopen *co, uint32_t cycles) {
+  uint32_t window = pbl_canopen__od_get_u32(co->cfg.od, PBL_CANOPEN__IDX_SYNC_WINDOW, 0U);
+  uint32_t hz = pbl_cycles_per_sec();
+  uint64_t us;
+
+  if (window == 0U || hz == 0U) {
+    return false;
+  }
+  /* The cycle counter wraps within seconds: past a second, go by the uptime. */
+  if (pbl_uptime_ticks() - co->sync_ticks > PBL_TICK_HZ) {
+    return true;
+  }
+
+  us = (uint64_t)(cycles - co->sync_cycles) * 1000000U / hz;
+  return us > window;
+}
+
 void pbl_canopen__pdo_init(struct pbl_canopen *co) {
   const struct pbl_canopen_od *od = co->cfg.od;
+
+  pbl_delayed_work_init(&co->sync_timeout, prv_sync_timeout);
 
   for (uint16_t i = 0U; i < od->num_rpdos; i++) {
     struct pbl_canopen__rpdo *r = &od->rpdos[i];
@@ -480,8 +519,11 @@ bool pbl_canopen__pdo_receive(struct pbl_canopen *co, const struct pbl_canopen__
     }
 
     if (r->pdo.type <= TYPE_SYNC_MAX) {
-      memcpy(r->buf, f->data, r->pdo.len);
-      r->buffered = true;
+      /* Past the SYNC window, a synchronous RPDO is dropped. */
+      if (!prv_sync_window_passed(co, f->cycles)) {
+        memcpy(r->buf, f->data, r->pdo.len);
+        r->buffered = true;
+      }
     } else {
       prv_rpdo_apply(co, r, f->data);
     }
@@ -496,8 +538,26 @@ void pbl_canopen__sync_receive(struct pbl_canopen *co, const struct pbl_canopen_
   const struct pbl_canopen_od *od = co->cfg.od;
   const struct pbl_canopen_callbacks *cb = co->cfg.cb;
   uint8_t counter = f->len == 1U ? f->data[0] : 0U;
+  uint32_t period = pbl_canopen__od_get_u32(od, PBL_CANOPEN__IDX_SYNC_PERIOD, 0U);
+  bool late;
 
-  if (co->nmt != PBL_CANOPEN_NMT_OPERATIONAL || f->len > 1U) {
+  if (f->len > 1U) {
+    return;
+  }
+
+  co->sync_ticks = pbl_uptime_ticks();
+  co->sync_cycles = f->cycles;
+  if (period != 0U) {
+    /* Lost after one and a half periods */
+    pbl_delayed_work_reschedule(&pbl_canopen__workq, &co->sync_timeout,
+                                PBL_TICKS(PBL_US_TO_TICKS_CEIL((uint64_t)period * 3U / 2U)));
+    if (!co->sync_seen) {
+      co->sync_seen = true;
+      (void)pbl_canopen__emcy_clear(co, PBL_CANOPEN__EMCY_SYNC_TIMEOUT);
+    }
+  }
+
+  if (co->nmt != PBL_CANOPEN_NMT_OPERATIONAL) {
     return;
   }
 
@@ -514,6 +574,9 @@ void pbl_canopen__sync_receive(struct pbl_canopen *co, const struct pbl_canopen_
     cb->sync(co, counter, f->cycles, co->cfg.arg);
   }
 
+  /* Past the SYNC window, the synchronous TPDOs due are not sent. */
+  late = prv_sync_window_passed(co, pbl_cycle_get_32());
+
   for (uint16_t i = 0U; i < od->num_tpdos; i++) {
     struct pbl_canopen__tpdo *t = &od->tpdos[i];
     uint8_t type = t->pdo.type;
@@ -523,7 +586,7 @@ void pbl_canopen__sync_receive(struct pbl_canopen *co, const struct pbl_canopen_
     }
 
     if (type == 0U) {
-      if (t->event) {
+      if (t->event && !late) {
         prv_tpdo_send(co, t);
       }
       continue;
@@ -538,14 +601,18 @@ void pbl_canopen__sync_receive(struct pbl_canopen *co, const struct pbl_canopen_
         continue;
       }
       if (start != 0U && f->len == 1U) {
-        prv_tpdo_send(co, t);
+        if (!late) {
+          prv_tpdo_send(co, t);
+        }
         continue;
       }
     }
 
     if (++t->sync_count >= type) {
       t->sync_count = 0U;
-      prv_tpdo_send(co, t);
+      if (!late) {
+        prv_tpdo_send(co, t);
+      }
     }
   }
 }
