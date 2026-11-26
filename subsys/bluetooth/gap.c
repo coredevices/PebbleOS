@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/clients/gap.h>
 #include <pbl/bluetooth/clients/gatt.h>
 #include <pbl/bluetooth/gap.h>
@@ -23,10 +24,7 @@ static uint16_t s_pairing_conn_handle = BLE_HS_CONN_HANDLE_NONE;
 static struct ble_gap_event_listener s_pairing_listener;
 
 static bool prv_is_bonded(const struct ble_gap_conn_desc *desc) {
-  const struct ble_store_key_sec key_sec = {.peer_addr = desc->peer_id_addr};
-  struct ble_store_value_sec value_sec;
-
-  return ble_store_read_peer_sec(&key_sec, &value_sec) == 0;
+  return pbl_bt_bond_get(&desc->peer_id_addr, nullptr) == 0;
 }
 
 static void prv_peer_name_cb(uint16_t conn_handle, const char *name) {
