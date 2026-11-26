@@ -22,6 +22,16 @@ config RNG_NRF5_IRQ_PRIO
     help
       Priority of the RNG interrupt.
 
+config RNG_NRF_CRACEN
+    bool "Nordic nRF54L CRACEN"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_CRACEN_ENABLED
+    select MFD
+    select MFD_NRF_CRACEN
+    help
+      Support for the true random number generator of the Nordic nRF54L
+      CRACEN.
+
 config RNG_SF32LB
     bool "SiFli SF32LB"
     default y
