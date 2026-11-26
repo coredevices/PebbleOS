@@ -10,7 +10,10 @@ maintainers:
   - Gerard Marull-Paretas <gerard@teslabs.com>
 
 description:
-  Configures the crystal oscillators, their load capacitors and the PLL of the CPU clock, and shares its registers with the regulators.
+  Configures the crystal oscillators, their load capacitors and the PLL of
+  the CPU clock, and shares its registers with the regulators. VREGMAIN, the
+  main supply, runs from its LDO or, with an inductor fitted, from its DC/DC
+  converter.
 
 properties:
   compatible:
@@ -18,6 +21,16 @@ properties:
 
   reg:
     maxItems: 1
+
+  vregmain:
+    type: object
+    $ref: /schemas/regulator/regulator.yaml#
+    unevaluatedProperties: false
+    description:
+      VREGMAIN, always on. regulator-initial-mode is
+      NRF54L15_REGULATOR_MODE_LDO or NRF54L15_REGULATOR_MODE_DCDC, from
+      dt-bindings/regulator/nordic,nrf54l15-regulators.h; the DC/DC
+      converter needs the inductor on DCC.
 
 required:
   - compatible
@@ -30,4 +43,10 @@ examples:
     node@50120000 {
         compatible = "nordic,nrf54l15-oscillators";
         reg = <0x50120000 0x1000>;
+
+        vregmain {
+            regulator-name = "VREGMAIN";
+            regulator-always-on;
+            regulator-initial-mode = <1>;
+        };
     };

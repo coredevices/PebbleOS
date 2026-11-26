@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: nordic,nrf54l15-oscillators
+config: REGULATOR_NRF54L
+class: regulator
+define: PBL_REGULATOR_NRF54L_DEFINE
+children:
+  names:
+    vregmain: 0
+args:
+  - string: regulator-name
+  - reg: 0
+    up: true
+  - prop: regulator-initial-mode
+    default: 0
+  - flag: regulator-always-on

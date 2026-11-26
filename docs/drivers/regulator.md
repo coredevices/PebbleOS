@@ -18,4 +18,5 @@ returns.
 | SiFli SF32LB52 PMUC regulators | `sifli,sf32lb52-pmuc` | `CONFIG_REGULATOR_SF32LB52_PMUC` |
 | SiFli SF32LB57 PMUC regulators | `sifli,sf32lb57-pmuc` | `CONFIG_REGULATOR_SF32LB57_PMUC` |
 | Nordic nPM1300 regulators | `nordic,npm1300` | `CONFIG_REGULATOR_NPM1300` |
+| Nordic nRF54L VREGMAIN | `nordic,nrf54l15-oscillators` | `CONFIG_REGULATOR_NRF54L` |
 | Fixed regulators | `regulator-fixed` | `CONFIG_REGULATOR_FIXED` |

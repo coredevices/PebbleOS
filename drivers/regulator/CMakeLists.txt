@@ -3,6 +3,9 @@
 
 pbl_library()
 set(sources regulator.c)
+if(CONFIG_REGULATOR_NRF54L)
+  list(APPEND sources nrf54l.c)
+endif()
 if(CONFIG_REGULATOR_STM32H7_PWR)
   list(APPEND sources stm32h7_pwr.c)
 endif()
