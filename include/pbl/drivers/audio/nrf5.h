@@ -148,7 +148,7 @@ void pbl_audio_nrf5_i2s_irq_handler(const struct pbl_audio_nrf5_i2s *i2s);
  * @brief Define the I2S interface, a DAI playing, recording or both.
  *
  * The first stream sets the size of the DMA blocks both directions move, so its periods must fit
- * @ref PBL_AUDIO_NRF5_I2S_BOUNCE_FRAMES.
+ * @ref PBL_AUDIO_NRF5_I2S_BOUNCE_FRAMES; a block is at most CONFIG_AUDIO_NRF5_I2S_BLOCK_FRAMES.
  *
  * @param sym Symbol of the DAI.
  * @param _name Device name.

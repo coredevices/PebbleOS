@@ -420,3 +420,28 @@ void test_nrf5_i2s__playback_leaves_capture_running(void) {
   cl_assert_equal_i(s_calls[PBL_AUDIO_CAPTURE], 1);
   cl_assert(s_xrun[PBL_AUDIO_CAPTURE]);
 }
+
+void test_nrf5_i2s__blocks_are_capped(void) {
+  struct pbl_audio_stream stream = prv_stream(PBL_AUDIO_PLAYBACK);
+  void *ring;
+
+  // Twice the cap the test sets, so each period takes two blocks
+  stream.period_frames = 2U * CONFIG_AUDIO_NRF5_I2S_BLOCK_FRAMES;
+  ring = pbl_audio_buf_alloc(pbl_audio_ring_bytes(&stream));
+  cl_assert(ring != nullptr);
+  stream.buf = ring;
+
+  cl_assert_equal_i(pbl_audio_start(&s_card, PBL_AUDIO_PLAYBACK, &stream), 0);
+  cl_assert_equal_i(REG(s_regs, NRF52_I2S_RXTXD_MAXCNT_OFFSET), CONFIG_AUDIO_NRF5_I2S_BLOCK_FRAMES);
+  cl_assert_equal_i(s_calls[PBL_AUDIO_PLAYBACK], 0);
+
+  prv_ptr_update(NRF52_I2S_EVENTS_TXPTRUPD_OFFSET);
+  cl_assert_equal_i(s_calls[PBL_AUDIO_PLAYBACK], 1);
+  prv_ptr_update(NRF52_I2S_EVENTS_TXPTRUPD_OFFSET);
+  cl_assert_equal_i(s_calls[PBL_AUDIO_PLAYBACK], 1);
+  prv_ptr_update(NRF52_I2S_EVENTS_TXPTRUPD_OFFSET);
+  cl_assert_equal_i(s_calls[PBL_AUDIO_PLAYBACK], 2);
+
+  cl_assert_equal_i(pbl_audio_stop(&s_card, PBL_AUDIO_PLAYBACK), 0);
+  pbl_audio_buf_free(ring);
+}
