@@ -113,6 +113,11 @@
 			nordic,port = <2>;
 		};
 
+		tad: debug-controller@50053000 {
+			compatible = "nordic,nrf54l15-tad";
+			reg = <0x50053000 0x1000>;
+		};
+
 		radio: radio@5008a000 {
 			compatible = "nordic,nrf54l15-radio";
 			reg = <0x5008a000 0x1000>;

@@ -6,6 +6,7 @@ config: SOC_NRF54L
 labels:
   - ficr
   - tampc
+  - tad
   - rramc
   - oscillators
   - radio
