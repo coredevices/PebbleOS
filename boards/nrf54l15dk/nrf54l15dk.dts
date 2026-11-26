@@ -123,3 +123,8 @@
 		spi-max-frequency = <8000000>;
 	};
 };
+
+// The DC/DC inductor is fitted
+&vregmain {
+	regulator-initial-mode = <NRF54L15_REGULATOR_MODE_DCDC>;
+};

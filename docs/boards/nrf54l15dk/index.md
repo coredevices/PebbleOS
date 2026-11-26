@@ -21,6 +21,7 @@ on its Arm application core, as secure code.
   integrated Bluetooth Low Energy radio, 1524 KiB RRAM and 256 KiB RAM
 - **Clocks**: 32 MHz and 32.768 kHz crystals, on the internal load
   capacitors
+- **Power**: VREGMAIN runs from its DC/DC converter, whose inductor is fitted
 - **Buttons**: four user buttons, Button 0 to 3 as keys 0 to 3, and a
   reset button
 - **LEDs**: four green user LEDs, LED0 the status LED
