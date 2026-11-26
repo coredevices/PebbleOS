@@ -2059,10 +2059,7 @@ int pfs_sector_optimal_size(int min_size, int namelen) {
   min_size += namelen;
 
   int bytes_per_sector = PFS_PAGE_SIZE - sizeof(PageHeader);
-  int num_pages = min_size / bytes_per_sector;
-  if ((min_size % bytes_per_sector) > 0) {
-    num_pages++;
-  }
+  int num_pages = PBL_DIV_ROUND_UP(min_size, bytes_per_sector);
   int optimal_size = num_pages * bytes_per_sector;
 
   optimal_size -= sizeof(FileHeader);
