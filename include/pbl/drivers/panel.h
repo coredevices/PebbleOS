@@ -126,6 +126,12 @@ struct pbl_panel_ops {
    * another negative errno.
    */
   int (*set_rotation)(const struct pbl_panel *panel, uint32_t rotation);
+  /**
+   * Write the next pixels from column @p x0 to @p x1 and row @p y0 to @p y1 of the frame, both
+   * included. Optional. Returns 0 or a negative errno.
+   */
+  int (*set_window)(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                    uint16_t y1);
 };
 
 /** @brief A panel. */
@@ -208,5 +214,18 @@ int pbl_panel_unprepare(const struct pbl_panel *panel);
  * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
  */
 int pbl_panel_set_rotation(const struct pbl_panel *panel, uint32_t rotation);
+
+/**
+ * @brief Write the next pixels of a panel with frame memory to a window of the frame.
+ *
+ * @param panel Panel.
+ * @param x0 First column.
+ * @param y0 First row.
+ * @param x1 Last column.
+ * @param y1 Last row.
+ * @return 0, @c -ENOTSUP if the panel cannot, or another negative errno.
+ */
+int pbl_panel_set_window(const struct pbl_panel *panel, uint16_t x0, uint16_t y0, uint16_t x1,
+                         uint16_t y1);
 
 /** @} */
