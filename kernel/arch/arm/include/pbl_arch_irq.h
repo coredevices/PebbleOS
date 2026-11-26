@@ -8,6 +8,7 @@
 
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/section.h>
+#include <pbl/util/math.h>
 
 #include <devicetree/regs.h>
 #include <pbl_arch_mmio.h>
@@ -73,7 +74,7 @@ struct arch_irq_prio {
 #define ARCH_NVIC_ISER(i) (0xE000E100UL + ((i) * 4U))
 #define ARCH_NVIC_ISPR(i) (0xE000E200UL + ((i) * 4U))
 #define ARCH_NVIC_IPR(n)  (0xE000E400UL + (n))
-#define ARCH_NVIC_WORDS   ((CONFIG_NUM_IRQS + 31U) / 32U)
+#define ARCH_NVIC_WORDS   PBL_DIV_ROUND_UP(CONFIG_NUM_IRQS, 32U)
 
 static PBL_ALWAYS_INLINE unsigned int arch_irq_disable_all(void) {
   unsigned int primask;

@@ -5,6 +5,7 @@
 
 #include <pbl/drivers/timer.h>
 #include <pbl/util/math.h>
+#include <pbl/util/units.h>
 
 #define FRAC_BITS 32U
 
@@ -99,7 +100,7 @@ static void prv_program(uint64_t ticks) {
   }
 
   delta = whole * s_ce_hz + (((uint64_t)frac * s_ce_hz + UINT32_MAX) >> FRAC_BITS);
-  delta = (delta + PBL_TICK_HZ - 1U) / PBL_TICK_HZ;
+  delta = PBL_DIV_ROUND_UP(delta, PBL_TICK_HZ);
   delta = PBL_CLAMP(delta, s_ce->min_delta, s_ce->max_delta);
 
   s_ce->ops->set_next(s_ce, (uint32_t)delta);
@@ -242,5 +243,5 @@ uint64_t timekeeping_realtime_to_ticks(uint64_t realtime_ms) {
     return 0U;
   }
   // Rounded up, so the wall clock has reached it by then.
-  return ((uint64_t)uptime_us * PBL_TICK_HZ + 999999U) / 1000000U;
+  return PBL_DIV_ROUND_UP((uint64_t)uptime_us * PBL_TICK_HZ, PBL_USEC_PER_SEC);
 }
