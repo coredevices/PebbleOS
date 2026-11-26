@@ -143,10 +143,27 @@
 		};
 	};
 
+	i2c4_default: i2c4-0 {
+		pins {
+			pinmux = <STM32_PINMUX('D', 12, AF4)>, /* I2C4_SCL */
+				 <STM32_PINMUX('D', 13, AF4)>; /* I2C4_SDA */
+			bias-disable;
+			drive-open-drain;
+			slew-rate = <0>;
+		};
+	};
+
 	dsi_default: dsi-0 {
 		pins {
 			pinmux = <STM32_PINMUX('J', 2, AF13)>; /* DSI_TE */
 			bias-disable;
+		};
+	};
+
+	touch_default: touch-0 {
+		pins {
+			pinmux = <STM32_PINMUX('K', 7, GPIO)>; /* CTP_INT */
+			bias-pull-up;
 		};
 	};
 };

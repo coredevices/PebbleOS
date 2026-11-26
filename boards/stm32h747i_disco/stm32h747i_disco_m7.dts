@@ -268,6 +268,28 @@
 	};
 };
 
+// The capacitive touch controller of the MB1166 module
+&i2c4 {
+	pinctrl-0 = <&i2c4_default>;
+	pinctrl-names = "default";
+	clock-frequency = <400000>;
+	status = "okay";
+
+	touchscreen: touchscreen@38 {
+		compatible = "focaltech,ft6236";
+		reg = <0x38>;
+		pinctrl-0 = <&touch_default>;
+		pinctrl-names = "default";
+		interrupt-parent = <&gpiok>;
+		interrupts = <7 IRQ_TYPE_EDGE_FALLING>;
+		touchscreen-size-x = <480>;
+		touchscreen-size-y = <800>;
+		// Portrait, its axes turned with the frame
+		touchscreen-inverted-x;
+		touchscreen-swapped-x-y;
+	};
+};
+
 &internal_flash {
 	partitions {
 		compatible = "fixed-partitions";
