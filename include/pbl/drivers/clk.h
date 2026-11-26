@@ -131,6 +131,9 @@ struct pbl_clk {
  */
 #define PBL_CLK(_ctrl, _id) {.ctrl = (_ctrl), .id = (_id)}
 
+/** @brief Initializer for a struct pbl_clk without a clock. */
+#define PBL_CLK_NONE PBL_CLK(nullptr, 0)
+
 /**
  * @brief Check whether two clock references name the same clock.
  *

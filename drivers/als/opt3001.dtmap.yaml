@@ -9,4 +9,4 @@ args:
   - parent: i2c
   - reg: 0
   - supply: vdd
-    default: nullptr
+    optional: true

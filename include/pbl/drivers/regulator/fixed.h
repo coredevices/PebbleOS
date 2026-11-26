@@ -43,7 +43,7 @@ extern const struct pbl_regulator_ops pbl_regulator_fixed_ops;
  *
  * @param sym Symbol of the regulator.
  * @param _name Name.
- * @param _enable Enable GPIO, from PBL_GPIO(), or PBL_GPIO(nullptr, 0, 0) for none.
+ * @param _enable Enable GPIO, from PBL_GPIO(), or PBL_GPIO_NONE for none.
  * @param _active_high Enabled at a high level.
  * @param _startup_delay_us Time from enabling until the rail is up, in microseconds.
  * @param _always_on Switched on at init and never off.

@@ -13,9 +13,9 @@ args:
   - prop: max-frequency
   - gpio: sck
   - gpio: mosi
-    default: PBL_GPIO(nullptr, 0, 0)
+    optional: true
   - gpio: miso
-    default: PBL_GPIO(nullptr, 0, 0)
+    optional: true
   - gpio: cs
     all: true
     optional: true

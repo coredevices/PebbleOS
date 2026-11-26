@@ -6,3 +6,5 @@ type: struct pbl_clk_controller
 include: pbl/drivers/clk.h
 provides:
   clock: "PBL_CLK(&{sym}, {0})"
+absent:
+  clock: PBL_CLK_NONE

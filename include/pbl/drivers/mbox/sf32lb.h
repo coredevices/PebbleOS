@@ -54,7 +54,7 @@ int pbl_mbox_sf32lb_init(const struct pbl_device *dev);
  * @param sym Symbol.
  * @param _name Device name.
  * @param _base Base address.
- * @param _clk Clock, or PBL_CLK(nullptr, 0) if not controlled by this CPU.
+ * @param _clk Clock, or PBL_CLK_NONE if not controlled by this CPU.
  * @param _num_chans Doorbells used, up to PBL_MBOX_SF32LB_NUM_DOORBELLS.
  * @param ... Interrupt, if it reaches this CPU.
  */

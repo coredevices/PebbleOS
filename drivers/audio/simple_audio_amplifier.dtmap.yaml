@@ -9,4 +9,4 @@ args:
   - name: true
   - gpio: enable
   - supply: VCC
-    default: nullptr
+    optional: true

@@ -6,3 +6,5 @@ type: struct pbl_audio_amp
 include: pbl/drivers/audio.h
 provides:
   amp: "&{sym}"
+absent:
+  amp: nullptr

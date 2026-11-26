@@ -10,4 +10,4 @@ args:
   - reg: 0
   - gpio: reset
   - supply: vdd
-    default: nullptr
+    optional: true

@@ -14,10 +14,10 @@ args:
   - clock: 0
   - dma: tx
   - dma: rx1
-    default: nullptr
+    optional: true
   - dma: rx2
-    default: nullptr
+    optional: true
   - pinctrl: default
-    default: nullptr
+    optional: true
   - reg: 0
     of: sifli,pmuc

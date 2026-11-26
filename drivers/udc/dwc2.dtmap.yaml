@@ -15,10 +15,10 @@ args:
   - clock: otg
   - clock: main_clk
     of: phys
-    default: "{}"
+    optional: true
   - flag: phys
   - supply: usb33d
-    default: nullptr
+    optional: true
   - pinctrl: default
   - prop: g-rx-fifo-size
     default: 256

@@ -12,9 +12,9 @@ args:
     up: true
   - clock: sai_ck
   - dma: tx
-    default: nullptr
+    optional: true
   - dma: rx
-    default: nullptr
+    optional: true
   - string: dma-names
     values:
       tx: PBL_AUDIO_PLAYBACK

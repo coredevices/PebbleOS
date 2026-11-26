@@ -35,4 +35,4 @@ args:
     of: memory-region
   - memory: memory-region
     from: display
-    default: nullptr
+    optional: true

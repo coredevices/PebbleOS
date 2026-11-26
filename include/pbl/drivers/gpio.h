@@ -157,6 +157,9 @@ struct pbl_gpio {
  */
 #define PBL_GPIO(_port, _pin, _flags) {.port = (_port), .pin = (_pin), .flags = (_flags)}
 
+/** @brief Initializer for a struct pbl_gpio without a line. */
+#define PBL_GPIO_NONE PBL_GPIO(nullptr, 0, 0)
+
 /**
  * @brief Check whether a pin is connected.
  *

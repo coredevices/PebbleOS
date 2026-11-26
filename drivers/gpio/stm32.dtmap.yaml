@@ -25,8 +25,8 @@ args:
     up: true
   - hwlock: 0
     up: true
-    default: PBL_HWSPINLOCK_NONE
+    optional: true
   - hwlock: 0
     of: interrupt-parent
     up: true
-    default: PBL_HWSPINLOCK_NONE
+    optional: true

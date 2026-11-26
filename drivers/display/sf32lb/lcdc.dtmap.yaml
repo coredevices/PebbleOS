@@ -28,4 +28,4 @@ args:
     remote: 0
   - pinctrl: default
   - pinctrl: sleep
-    default: nullptr
+    optional: true

@@ -13,4 +13,4 @@ args:
   - prop: sensortek,lux-scale
     index: 1
   - supply: vdd
-    default: nullptr
+    optional: true

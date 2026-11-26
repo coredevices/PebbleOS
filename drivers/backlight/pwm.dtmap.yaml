@@ -8,5 +8,5 @@ define: PBL_BACKLIGHT_PWM_DEFINE
 args:
   - name: true
   - gpio: enable
-    default: PBL_GPIO(nullptr, 0, 0)
+    optional: true
   - pwm: 0

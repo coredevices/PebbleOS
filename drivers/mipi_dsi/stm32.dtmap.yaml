@@ -15,4 +15,4 @@ args:
   - clock: pclk
   - clock: ref
   - pinctrl: default
-    default: nullptr
+    optional: true

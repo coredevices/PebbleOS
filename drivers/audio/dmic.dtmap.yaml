@@ -8,6 +8,6 @@ define: PBL_AUDIO_DMIC_DEFINE
 args:
   - name: true
   - supply: vref
-    default: nullptr
+    optional: true
   - prop: wakeup-delay-ms
     default: 0

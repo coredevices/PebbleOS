@@ -13,10 +13,10 @@ args:
   - self: codec
     child: simple-audio-card,codec
     of: sound-dai
-    default: nullptr
+    optional: true
   - self: amp
     of: simple-audio-card,aux-devs
-    default: nullptr
+    optional: true
   - string: simple-audio-card,format
     values:
       i2s: PBL_AUDIO_FMT_I2S

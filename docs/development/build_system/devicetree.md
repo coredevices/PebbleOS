@@ -469,12 +469,17 @@ include: pbl/drivers/gpio.h
 provides:
   # Cells are <pin flags>
   gpio: "PBL_GPIO(&{sym}, {0}, PBL_GPIO_DT_FLAGS({1}))"
+absent:
+  gpio: PBL_GPIO_NONE
 ```
 
 A `provides` template turns a reference from another node into C: `{sym}` is
 the symbol of the referenced device, and `{0}`, `{1}`, ... the cells of the
 specifier. Instance files include only class headers, so drivers do not need
-to know each other.
+to know each other. `absent` gives, for a kind the class provides or for the
+class itself, the C of no reference: what an `optional` argument a node lacks
+stands for, and an entry with a 0 phandle in a list, as a chip select without
+a GPIO. It is `nullptr` for references that are pointers, as a regulator.
 
 The objects of a class hold their `struct pbl_device` as `dev`. A class that
 differs says so with `device`: a template such as `"&{sym}"` for a class whose
@@ -560,7 +565,8 @@ with these options:
 | Option | Meaning |
 | --- | --- |
 | `default` | Value when the node does not have it; without one, the build fails |
-| `optional` | Leave the argument out when absent, for the trailing arguments of a variadic macro. A node that has an argument after an absent one fails the build. `list` arguments and `prop` tables are variadic too, so they come last |
+| `optional` | The `absent` value of the class of what the argument refers to when the node does not have it, so it may come anywhere: the class providing the kind, `regulator` for a `supply`, `ram` for a `memory`, or the `pinctrl` class of pin states. Without one, leave the argument out, for the trailing arguments of a variadic macro: a node that has an argument after an absent one fails the build. `list` arguments and `prop` tables are variadic too, so they come last |
+| `variadic` | With `optional`, leave the argument out even when its class has an `absent` value, for a macro whose variadic tail means something by its presence, as a receive DMA channel that also gets a buffer |
 | `index` | Which cell of a `prop`, or which entry of a `gpio` list |
 | `cells` | The width of the rows of a `prop` table, 1 by default |
 | `all` | Every entry of a `gpio` list |
