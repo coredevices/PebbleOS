@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef CONFIG_CONSOLE
+#include <pbl/console/console.h>
+#endif
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/syscall.h>
 #include <pbl/logging/backend.h>
@@ -275,6 +278,12 @@ void pbl_log_fault(const char *src_filename, int src_line_number, const char *fm
   va_end(ap);
 
   kernel_pbl_log_from_fault_handler(src_filename, (uint16_t)src_line_number, buffer);
+
+#if defined(CONFIG_CONSOLE) && !defined(CONFIG_LOG_BACKEND_UART)
+  // Without the UART backend, nothing else would show a fault on the console
+  pbl_console_write_raw(buffer, strlen(buffer));
+  pbl_console_write_raw("\r\n", 2U);
+#endif
 }
 
 #ifdef CONFIG_SHELL
