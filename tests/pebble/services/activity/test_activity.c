@@ -638,7 +638,7 @@ bool activity_algorithm_get_minute_history(HealthMinuteData *minute_data, uint32
   uint32_t num_records_requested = *num_records;
 
   // Start on next minute boundary
-  *utc_start = ((*utc_start + PBL_SEC_PER_MIN - 1) / PBL_SEC_PER_MIN) * PBL_SEC_PER_MIN;
+  *utc_start = PBL_DIV_ROUND_UP(*utc_start, PBL_SEC_PER_MIN) * PBL_SEC_PER_MIN;
 
   int num_records_returned;
   time_t record_start_time = *utc_start;
@@ -1610,8 +1610,7 @@ void test_activity__raw_sample_collection(void) {
     activity_raw_sample_collection(false, true, &enabled, &session_id, &num_samples, &seconds);
     cl_assert(!enabled);
     cl_assert_equal_i(num_samples, k_raw_samples);
-    cl_assert_equal_i(seconds,
-                      (k_raw_samples + ALGORITHM_SAMPLING_RATE - 1) / ALGORITHM_SAMPLING_RATE);
+    cl_assert_equal_i(seconds, PBL_DIV_ROUND_UP(k_raw_samples, ALGORITHM_SAMPLING_RATE));
 
     // Verify the collected data
     AccelRawData captured_data[k_raw_samples];
@@ -1646,8 +1645,7 @@ void test_activity__raw_sample_collection(void) {
     activity_raw_sample_collection(false, true, &enabled, &session_id, &num_samples, &seconds);
     cl_assert(!enabled);
     cl_assert_equal_i(num_samples, k_raw_samples);
-    cl_assert_equal_i(seconds,
-                      (k_raw_samples + ALGORITHM_SAMPLING_RATE - 1) / ALGORITHM_SAMPLING_RATE);
+    cl_assert_equal_i(seconds, PBL_DIV_ROUND_UP(k_raw_samples, ALGORITHM_SAMPLING_RATE));
 
     // Verify the collected data
     AccelRawData captured_data[k_raw_samples];

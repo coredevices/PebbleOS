@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <pbl/kernel/time.h>
+#include <pbl/util/math.h>
 
 #include <applib/ui/recognizer/recognizer.h>
 #include <applib/ui/recognizer/recognizer_impl.h>
@@ -60,7 +61,7 @@ static void prv_advance_ms(uint32_t ms) {
 #define SWIPE_CAP_MS (300)
 #define SWIPE_MIN_PX (30)
 static uint64_t prv_ticks_for_floored_ms(uint32_t ms) {
-  return ((uint64_t)ms * PBL_TICK_HZ + (PBL_MSEC_PER_SEC - 1)) / PBL_MSEC_PER_SEC;
+  return PBL_DIV_ROUND_UP((uint64_t)ms * PBL_TICK_HZ, PBL_MSEC_PER_SEC);
 }
 
 // Drive a single straight swipe from (sx, sy) to (ex, ey) over a fast duration, with the liftoff

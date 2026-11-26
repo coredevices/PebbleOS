@@ -9,6 +9,7 @@
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/time.h>
 #include <pbl/kernel/work.h>
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 // Delayed work that only runs when a test says so. A pending item's delay is kept in its timer.
@@ -107,7 +108,7 @@ static inline bool fake_work_is_scheduled(const struct pbl_delayed_work *dwork) 
 //! The delay the item was last scheduled with.
 static inline uint32_t fake_work_timeout_ms(const struct pbl_delayed_work *dwork) {
   // Rounded up, which gets back the exact value pbl_ms_to_ticks() rounded down.
-  return (uint32_t)((dwork->timer.timeout.expires * 1000U + PBL_TICK_HZ - 1U) / PBL_TICK_HZ);
+  return (uint32_t)PBL_DIV_ROUND_UP(dwork->timer.timeout.expires * 1000U, PBL_TICK_HZ);
 }
 
 //! The pending item with the shortest delay, NULL if none is pending.

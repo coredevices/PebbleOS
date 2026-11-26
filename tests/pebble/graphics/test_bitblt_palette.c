@@ -15,6 +15,8 @@
 #include "graphics_common_stubs.h"
 #include "test_graphics.h"
 
+#include <pbl/util/math.h>
+
 // Setup
 ////////////////////////////////////
 static GContext ctx;
@@ -87,7 +89,7 @@ void test_bitblt_palette__1Bit_color(void) {
   const int PIXELS_PER_BYTE = (8 / BITS_PER_PIXEL);
   const int WIDTH = 2;
   const int HEIGHT = 2;
-  const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
+  const int ROW_STRIDE = PBL_DIV_ROUND_UP(WIDTH, PIXELS_PER_BYTE);
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
   GColor s_palette[1 << 1] = {GColorMelon, GColorIcterine};
@@ -126,7 +128,7 @@ void test_bitblt_palette__4Bit_assign(void) {
   const int PIXELS_PER_BYTE = (8 / BITS_PER_PIXEL);
   const int WIDTH = 16;
   const int HEIGHT = 16;
-  const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
+  const int ROW_STRIDE = PBL_DIV_ROUND_UP(WIDTH, PIXELS_PER_BYTE);
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
   GColor s_palette[1 << 4] = {GColorMelon,        GColorIcterine,      GColorYellow,
@@ -174,7 +176,7 @@ static void prv_opaque_2bit_simple(GCompOp compositing_mode) {
   const int PIXELS_PER_BYTE = (8 / BITS_PER_PIXEL);
   const int WIDTH = 4;
   const int HEIGHT = 4;
-  const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
+  const int ROW_STRIDE = PBL_DIV_ROUND_UP(WIDTH, PIXELS_PER_BYTE);
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
   GColor s_palette[] = {GColorRed, GColorWhite, GColorBlack, GColorBlue};
@@ -236,7 +238,7 @@ static void prv_4bit_simple(GCompOp compositing_mode, GColor color, bool transpa
   const int PIXELS_PER_BYTE = (8 / BITS_PER_PIXEL);
   const int WIDTH = 16;
   const int HEIGHT = 16;
-  const int ROW_STRIDE = (WIDTH + (PIXELS_PER_BYTE - 1)) / PIXELS_PER_BYTE;
+  const int ROW_STRIDE = PBL_DIV_ROUND_UP(WIDTH, PIXELS_PER_BYTE);
 
   uint8_t s_data[ROW_STRIDE * HEIGHT];
   GColor s_palette[] = {GColorMelon,         GColorIcterine,   GColorYellow, GColorSunsetOrange,

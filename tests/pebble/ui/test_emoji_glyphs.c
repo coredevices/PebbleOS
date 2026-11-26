@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
 #include <applib/fonts/fonts_private.h>
@@ -177,7 +178,7 @@ static bool prv_check_atlas(FontInfo *font, const Codepoint *codepoints, size_t 
   while (columns * columns < (int)count) {
     columns++;
   }
-  const int rows = (count + columns - 1) / columns;
+  const int rows = PBL_DIV_ROUND_UP(count, columns);
   const GSize cell = {bounds.size.w + 2 * CELL_PADDING, bounds.size.h + 2 * CELL_PADDING};
   prv_prepare_canvas(GSize(columns * cell.w, rows * cell.h));
   graphics_context_set_text_color(&s_ctx, GColorBlack);
