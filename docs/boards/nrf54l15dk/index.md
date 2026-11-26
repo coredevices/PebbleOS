@@ -28,7 +28,9 @@ on its Arm application core, as secure code.
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE20, P1.04 (TX) and P1.05 (RX), which also powers the kit
 
-The radio, the coprocessor and the external flash are not supported yet.
+The radio runs the Nordic SoftDevice Controller from the nonfree libraries,
+under the NimBLE host. The coprocessor and the external flash are not
+supported yet.
 
 ## Flashing
 

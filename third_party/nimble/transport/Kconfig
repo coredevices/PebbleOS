@@ -21,6 +21,16 @@ config NIMBLE_HCI_NRF52
       as that driver owns the peripheral, and drives the peripheral
       itself otherwise.
 
+config NIMBLE_HCI_NRF_SDC
+    bool "Nordic SoftDevice Controller"
+    depends on SOC_NRF54L
+    select MPSL
+    select RNG
+    help
+      Run the Nordic SoftDevice Controller, from the nonfree libraries,
+      in the same image, on the multiprotocol service layer. The host
+      reaches it through its C API, with no HCI framing.
+
 config NIMBLE_HCI_SF32LB
     bool "SiFli LCPU over IPC"
     depends on DT_HAS_SIFLI_SF32LB52_LCPU_ENABLED || DT_HAS_SIFLI_SF32LB57_LCPU_ENABLED
@@ -47,14 +57,40 @@ config NIMBLE_HCI_FAKE
 
 endchoice
 
+if NIMBLE_HCI_NRF_SDC
+
+config NIMBLE_HCI_NRF_SDC_MULTIROLE
+    bool "Central and observer roles"
+    help
+      Link the multirole controller, which can also scan and initiate
+      connections, instead of the peripheral-only one.
+
+config NIMBLE_HCI_NRF_SDC_TX_PACKETS
+    int "Link layer TX packets per link"
+    default 3
+
+config NIMBLE_HCI_NRF_SDC_RX_PACKETS
+    int "Link layer RX packets per link"
+    default 2
+
+config NIMBLE_HCI_NRF_SDC_MEM_SIZE
+    int "Controller memory in bytes"
+    default 8192
+    help
+      Memory handed to the controller for its links and buffers. Boot
+      fails if the configuration needs more; the debug log shows how
+      much it takes.
+
+endif # NIMBLE_HCI_NRF_SDC
+
 config NIMBLE_HCI_THREAD_STACK_SIZE
     int "HCI transport thread stack size in bytes"
-    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART
+    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART || NIMBLE_HCI_NRF_SDC
     default 1024
 
 config NIMBLE_HCI_THREAD_PRIO
     int "HCI transport thread priority"
-    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART
+    depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART || NIMBLE_HCI_NRF_SDC
     default 3
 
 config NIMBLE_DRIVER_NRF5X

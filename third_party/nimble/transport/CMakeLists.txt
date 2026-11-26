@@ -3,6 +3,7 @@
 
 pbl_library()
 pbl_library_sources_ifdef(CONFIG_NIMBLE_HCI_FAKE hci_fake.c)
+pbl_library_sources_ifdef(CONFIG_NIMBLE_HCI_NRF_SDC hci_alloc.c hci_nrf_sdc.c)
 pbl_library_sources_ifdef(CONFIG_NIMBLE_HCI_SF32LB hci_alloc.c hci_sf32lb.c)
 pbl_library_sources_ifdef(CONFIG_NIMBLE_HCI_UART hci_alloc.c hci_uart.c)
 pbl_library_sources_ifdef(CONFIG_NIMBLE_ID_ADDR_POSIX id_addr_posix.c)
