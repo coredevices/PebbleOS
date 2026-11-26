@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -25,12 +26,17 @@
 /**
  * @defgroup drivers_flash Flash
  * @ingroup drivers
- * @brief NOR flash class.
+ * @brief Flash class, for NOR flash and for memories that need no erase, as RRAM.
  *
  * A flash is a struct pbl_flash device. Addresses are offsets from its first byte, wherever the
- * SoC maps it. Writes only clear bits, so the target range must be erased first. Erases work on
- * whole subsectors: the class erases a range with as few sector and subsector erases as it can,
- * skipping the blank ones.
+ * SoC maps it. On NOR flash, writes only clear bits, so the target range must be erased first.
+ * Erases work on whole subsectors: the class erases a range with as few sector and subsector
+ * erases as it can, skipping the blank ones.
+ *
+ * A flash with @ref PBL_FLASH_NO_ERASE, as RRAM, writes any data over any data. Erasing it only
+ * fills the range with the erased value, at the cost of a write, for code that needs to find it
+ * blank: code that erases only to write again checks pbl_flash_needs_erase() and skips the erase.
+ * Its writes program whole units of @c write_size bytes, so writing a part of one wears all of it.
  *
  * @code{.c}
  * static void prv_erased(int status, void *arg) {
@@ -77,12 +83,19 @@ struct pbl_flash;
  */
 typedef void (*pbl_flash_erase_cb_t)(int status, void *arg);
 
+/** @brief The flash writes any data over any data, and needs no erase. */
+#define PBL_FLASH_NO_ERASE (1U << 0)
+
 /** @brief Flash geometry. */
 struct pbl_flash_geometry {
   /** Size, in bytes. */
   uint32_t size;
   /** Program page size, in bytes. */
   uint32_t page_size;
+  /** Unit the flash programs at once, in bytes, or 0 for single bytes. */
+  uint32_t write_size;
+  /** Flags, @c PBL_FLASH_*. */
+  uint32_t flags;
   /** Large erase unit, in bytes. */
   uint32_t sector_size;
   /** Small erase unit, in bytes. */
@@ -256,6 +269,15 @@ static inline const struct pbl_flash_geometry *pbl_flash_get_geometry(
 }
 
 /**
+ * @brief Check whether a flash must be erased before data is written over data.
+ * @param flash Flash.
+ * @return False with @ref PBL_FLASH_NO_ERASE.
+ */
+static inline bool pbl_flash_needs_erase(const struct pbl_flash *flash) {
+  return (flash->geometry->flags & PBL_FLASH_NO_ERASE) == 0U;
+}
+
+/**
  * @brief Define the class state of flash @p sym, for the @c PBL_FLASH_*_DEFINE() macro of a
  * driver.
  *
@@ -320,7 +342,7 @@ void pbl_flash_set_map(const struct pbl_flash *flash, const void *ptr, uint32_t 
 int pbl_flash_read(const struct pbl_flash *flash, uint32_t addr, void *buf, size_t len);
 
 /**
- * @brief Program data into an erased range.
+ * @brief Program data into an erased range, or over any data without pbl_flash_needs_erase().
  *
  * @param flash Flash.
  * @param addr Address.
