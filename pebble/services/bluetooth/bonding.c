@@ -26,50 +26,6 @@ static bool prv_get_prf_pairing(struct pbl_bt_bond_keys *keys, char *name) {
   return pbl_bt_prf_store_get_pairing(&keys->peer, &keys->our, name);
 }
 
-static bool prv_ltk_equal(const struct ble_store_value_sec *a,
-                          const struct ble_store_value_sec *b) {
-  if (a->ltk_present != b->ltk_present) {
-    return false;
-  }
-
-  return !a->ltk_present || (a->ediv == b->ediv && a->rand_num == b->rand_num &&
-                             memcmp(a->ltk, b->ltk, sizeof(a->ltk)) == 0);
-}
-
-// Of what the PRF store keeps.
-static bool prv_keys_equal(const struct pbl_bt_bond_keys *a, const struct pbl_bt_bond_keys *b) {
-  const struct ble_store_value_sec *pa = &a->peer;
-  const struct ble_store_value_sec *pb = &b->peer;
-
-  if (ble_addr_cmp(&pa->peer_addr, &pb->peer_addr) != 0 || pa->sc != pb->sc ||
-      pa->authenticated != pb->authenticated || pa->irk_present != pb->irk_present) {
-    return false;
-  }
-
-  if (pa->irk_present && memcmp(pa->irk, pb->irk, sizeof(pa->irk)) != 0) {
-    return false;
-  }
-
-  return prv_ltk_equal(pa, pb) && prv_ltk_equal(&a->our, &b->our);
-}
-
-static void prv_copy_to_prf_store(const ble_addr_t *addr) {
-  struct pbl_bt_bond_keys keys;
-  struct pbl_bt_bond_keys stored;
-
-  if (pbl_bt_bond_get_keys(addr, &keys) != 0) {
-    return;
-  }
-
-  if (prv_get_prf_pairing(&stored, nullptr) && prv_keys_equal(&keys, &stored)) {
-    return;
-  }
-
-  if (pbl_bt_prf_store_set_pairing(&keys.peer, &keys.our, nullptr) != 0) {
-    PBL_LOG_ERR("Could not copy the bond to the PRF store");
-  }
-}
-
 struct others {
   const ble_addr_t *keep;
   ble_addr_t addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
@@ -111,25 +67,20 @@ static void prv_first_bond_cb(const struct pbl_bt_bond_info *info, void *user_da
   }
 }
 
+// The stack's store shares its bond with the PRF store: that is the one kept.
 void bt_bonding_init(void) {
   struct first_bond first = {};
   struct pbl_bt_bond_keys keys;
 
-  if (prv_get_prf_pairing(&keys, nullptr)) {
+  if (prv_get_prf_pairing(&keys, nullptr) && pbl_bt_bond_get(&keys.peer.peer_addr, nullptr) == 0) {
     prv_delete_others(&keys.peer.peer_addr);
-    if (pbl_bt_bond_set_keys(&keys) != 0) {
-      PBL_LOG_ERR("Could not take the bond of the PRF store");
-    }
     return;
   }
 
   pbl_bt_foreach_bond(prv_first_bond_cb, &first);
-  if (!first.found) {
-    return;
+  if (first.found) {
+    prv_delete_others(&first.addr);
   }
-
-  prv_delete_others(&first.addr);
-  prv_copy_to_prf_store(&first.addr);
 }
 
 int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
@@ -180,9 +131,8 @@ void bt_bonding_set_peer_name(const ble_addr_t *addr, const char *name) {
   (void)pbl_bt_prf_store_set_pairing_name(name);
 }
 
-void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
+static void prv_bond_added(const struct pbl_bt_bond_info *info) {
   prv_delete_others(&info->addr);
-  prv_copy_to_prf_store(&info->addr);
 
   // Only one bond is kept, so a new one means a new phone.
   bt_settings_set_unfaithful(true);
@@ -196,20 +146,10 @@ void pbl_bt_cb_bond_added(const struct pbl_bt_bond_info *info) {
   bt_pairability_update_due_to_bonding_change();
 }
 
-void pbl_bt_cb_bond_changed(const struct pbl_bt_bond_info *info) {
-  prv_copy_to_prf_store(&info->addr);
-}
-
-void pbl_bt_cb_bond_deleted(const ble_addr_t *addr) {
-  struct pbl_bt_bond_keys stored;
-
+static void prv_bond_deleted(const ble_addr_t *addr) {
   // The peer paired again since.
   if (pbl_bt_bond_get(addr, nullptr) == 0) {
     return;
-  }
-
-  if (prv_get_prf_pairing(&stored, nullptr) && ble_addr_cmp(&stored.peer.peer_addr, addr) == 0) {
-    (void)pbl_bt_prf_store_erase_pairing();
   }
 
   if (!bt_ctl_is_bluetooth_running()) {
@@ -220,3 +160,5 @@ void pbl_bt_cb_bond_deleted(const ble_addr_t *addr) {
   bt_advertising_set_reconnectable(pbl_bt_bond_count() > 0);
   bt_pairability_update_due_to_bonding_change();
 }
+
+PBL_BT_BOND_LISTENER_DEFINE(bonding, .added = prv_bond_added, .deleted = prv_bond_deleted);

@@ -15,17 +15,14 @@
  * @ingroup services_bluetooth
  * @brief What the firmware does with the bonds the Bluetooth stack keeps.
  *
- * Only one bond is kept, the phone's: bonding with a new peer deletes the others. It is copied
- * to the PRF store, which the recovery firmware uses, and taken from there when the recovery
- * firmware made it. The PRF store also has the phone's name and the root keys.
+ * Only one bond is kept, the phone's: bonding with a new peer deletes the others. The stack's
+ * store shares it with the PRF store, which the recovery firmware uses. The PRF store also has
+ * the phone's name and the root keys.
  * @{
  */
 
 /**
- * @brief Bring the stack's bonds and the PRF store in line, before the stack starts.
- *
- * The pairing in the PRF store replaces the stack's bonds. Without one, the stack's bond is
- * copied there.
+ * @brief Leave the stack one bond, before it starts: the one the PRF store has, if any.
  */
 void bt_bonding_init(void);
 

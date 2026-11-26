@@ -24,6 +24,8 @@ PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 #define MAX_BONDS MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 
+PBL_ITERABLE_SECTION_DECLARE(const struct pbl_bt_bond_listener, bt_bond);
+
 static struct pbl_bt_sm_key s_local_irk;
 
 // NimBLE's store is not thread-safe, and the firmware reads and deletes bonds from its own
@@ -106,10 +108,12 @@ struct sec_written {
 static void prv_sec_written_cb(void *data) {
   struct sec_written *ctx = data;
 
-  if (ctx->is_new) {
-    pbl_bt_cb_bond_added(&ctx->info);
-  } else {
-    pbl_bt_cb_bond_changed(&ctx->info);
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_bond_listener, bt_bond, listener) {
+    if (ctx->is_new && listener->added != nullptr) {
+      listener->added(&ctx->info);
+    } else if (!ctx->is_new && listener->changed != nullptr) {
+      listener->changed(&ctx->info);
+    }
   }
 
   pbl_free(ctx);
@@ -164,7 +168,11 @@ static int prv_store_write(int obj_type, const union ble_store_value *value) {
 static void prv_bond_deleted_cb(void *data) {
   ble_addr_t *addr = data;
 
-  pbl_bt_cb_bond_deleted(addr);
+  PBL_ITERABLE_SECTION_FOREACH(const struct pbl_bt_bond_listener, bt_bond, listener) {
+    if (listener->deleted != nullptr) {
+      listener->deleted(addr);
+    }
+  }
 
   pbl_free(addr);
 }
