@@ -4,5 +4,6 @@
 pbl_library()
 pbl_library_sources(nvmem.c)
 pbl_library_sources_ifdef(CONFIG_NVMEM_SF32LB sf32lb.c)
+pbl_library_sources_ifdef(CONFIG_NVMEM_NRF_FICR nrf_ficr.c)
 pbl_library_sources_ifdef(CONFIG_NVMEM_STM32_ROMEM stm32_romem.c)
 pbl_library_sources_ifdef(CONFIG_NVMEM_SHELL shell.c)
