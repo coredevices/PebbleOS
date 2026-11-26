@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config UART_RTT
+    bool "SEGGER RTT serial port"
+    select RTT
+    help
+      Serial port over a channel of the SEGGER RTT control block, which a
+      debug probe reads and writes over SWD (pbl/drivers/uart/rtt.h).
+
+if UART_RTT
+
+config UART_RTT_CHANNEL
+    int "RTT channel"
+    default 0
+    help
+      Up and down channel of the port; 0 is the terminal.
+
+config UART_RTT_POLL_MS
+    int "Receive poll period, in milliseconds"
+    default 20
+    help
+      Received bytes are polled this often while reception is enabled,
+      which keeps the system out of its deepest idle states meanwhile.
+
+config UART_RTT_FLUSH_TIMEOUT_MS
+    int "Longest flush from an interrupt, in milliseconds"
+    default 1000
+    help
+      How long a flush from an interrupt, as the fault handler's before a
+      reboot, waits for a probe seen reading to empty the channel.
+
+endif # UART_RTT
