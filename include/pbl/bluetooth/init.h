@@ -3,9 +3,7 @@
 
 #pragma once
 
-#include <pbl/bluetooth/dis.h>
 #include <pbl/bluetooth/sm_types.h>
-#include <pbl/kernel/malloc.h>
 
 /**
  * @defgroup bluetooth Bluetooth
@@ -31,10 +29,7 @@
  * @code{.c}
  * pbl_bt_init(); // once, at boot
  *
- * struct pbl_bt_config *config = pbl_zalloc_check(sizeof(*config));
- * bt_dis_get_info(&config->dis_info);
- * int rc = pbl_bt_start(config);
- * pbl_free(config);
+ * int rc = pbl_bt_start(&irk);
  *
  * // ...
  *
@@ -42,14 +37,6 @@
  * @endcode
  * @{
  */
-
-/** @brief Stack configuration passed to pbl_bt_start(). */
-struct pbl_bt_config {
-  /** The local Identity Resolving Key. */
-  struct pbl_bt_sm_key irk;
-  /** Values served by the Device Information Service. */
-  struct pbl_bt_dis_info dis_info;
-};
 
 /**
  * @brief One-time initialization of the Bluetooth stack.
@@ -63,16 +50,17 @@ void pbl_bt_init(void);
 /**
  * @brief Start the Bluetooth stack.
  *
- * Registers the GATT services, starts the host and waits for it to synchronize with the
- * controller and set the identity address up. Does nothing if the stack is already running.
+ * Adds the GATT services (see PBL_BT_GATTS_SERVICE_DEFINE()), starts the host and waits for it to
+ * synchronize with the controller and set the identity address up. Does nothing if the stack is
+ * already running.
  *
- * @param config Stack configuration. Only read during the call.
+ * @param irk The local Identity Resolving Key. Only read during the call.
  * @retval 0 The stack is running.
  * @retval -EBUSY It is starting or stopping.
  * @retval -EIO The GATT services could not be registered.
  * @retval -EADDRNOTAVAIL There is no identity address.
  */
-int pbl_bt_start(const struct pbl_bt_config *config);
+int pbl_bt_start(const struct pbl_bt_sm_key *irk);
 
 /**
  * @brief Stop the Bluetooth stack.

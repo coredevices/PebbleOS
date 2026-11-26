@@ -97,7 +97,7 @@ It has two roles:
 
 In the forward role the watch is a client of the phone's service, found
 during service discovery. In the reversed role the watch hosts the service
-(`subsys/bluetooth`) and the phone is its client. Once the phone starts a
+(`PP_TRANSPORT_GATT_REVERSED`) and the phone is its client. Once the phone starts a
 reversed handshake on a connection, it takes over from forward PPoGATT on that
 connection.
 

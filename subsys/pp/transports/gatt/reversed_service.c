@@ -1,22 +1,22 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include "ppogatt_internal.h"
+
 #include <errno.h>
 
 #include <pbl/bluetooth/gatts.h>
 #include <pbl/bluetooth/pebble_bt.h>
-#include <pbl/bluetooth/ppog_reversed.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
 #include <host/ble_uuid.h>
 #include <os/os_mbuf.h>
 
-PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
+PBL_LOG_MODULE_DECLARE(pp, CONFIG_PP_LOG_LEVEL);
 
 static uint16_t s_data_notify_handle;
 static uint16_t s_data_write_handle;
@@ -48,7 +48,7 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
     pbl_free(buf);
     return BLE_ATT_ERR_UNLIKELY;
   }
-  pbl_bt_cb_ppog_reversed_data_written(conn_handle, buf, out_len);
+  ppogatt_reversed_service_data_written(conn_handle, buf, out_len);
   return 0;
 }
 
@@ -97,9 +97,9 @@ static void prv_handle_subscribe_event(struct ble_gap_event *event) {
     return;
   }
   if (event->subscribe.cur_notify) {
-    pbl_bt_cb_ppog_reversed_subscribed(event->subscribe.conn_handle);
+    ppogatt_reversed_service_subscribed(event->subscribe.conn_handle);
   } else {
-    pbl_bt_cb_ppog_reversed_unsubscribed(event->subscribe.conn_handle);
+    ppogatt_reversed_service_unsubscribed(event->subscribe.conn_handle);
   }
 }
 
@@ -116,7 +116,7 @@ static int prv_handle_gap_event(struct ble_gap_event *event, void *arg) {
 
 static struct ble_gap_event_listener s_gap_event_listener;
 
-int pbl_bt__ppog_reversed_init(void) {
+static int prv_add(void) {
   int rc;
 
   rc = pbl_bt_gatts_add(s_ppog_reversed_svc);
@@ -136,6 +136,8 @@ int pbl_bt__ppog_reversed_init(void) {
   return 0;
 }
 
-int pbl_bt_ppog_reversed_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
+PBL_BT_GATTS_SERVICE_DEFINE(ppog_reversed, 40, prv_add);
+
+int ppogatt_reversed_service_notify(uint16_t conn_handle, const uint8_t *buf, uint16_t len) {
   return pbl_bt_gatts_notify(conn_handle, s_data_notify_handle, buf, len);
 }

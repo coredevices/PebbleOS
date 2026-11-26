@@ -9,7 +9,6 @@
 #include <pbl/bluetooth/pebble_pairing_service.h>
 #include <pbl/logging/logging.h>
 
-#include <bluetooth/services/services.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
 #include <host/ble_hs.h>
@@ -169,7 +168,7 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
 
 static struct ble_gap_event_listener s_listener;
 
-int pbl_bt__pps_init(void) {
+static int prv_add(void) {
   int rc;
 
   rc = pbl_bt_gatts_add(pebble_pairing_svc);
@@ -186,3 +185,5 @@ int pbl_bt__pps_init(void) {
 
   return 0;
 }
+
+PBL_BT_GATTS_SERVICE_DEFINE(pps, 20, prv_add);

@@ -13,6 +13,7 @@ pbl_library_sources(
   version.c
 )
 pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_GATT transports/gatt/ppogatt.c)
+pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_GATT_REVERSED transports/gatt/reversed_service.c)
 pbl_library_sources_ifdef(CONFIG_PP_TRANSPORT_CONSOLE transports/console.c)
 pbl_iterable_section(pp_endpoints)
 pbl_iterable_section(pp_listeners)

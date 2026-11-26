@@ -10,18 +10,12 @@
  * @{
  */
 
-/** @cond INTERNAL_HIDDEN */
-struct pbl_bt_dis_info;
-/** @endcond */
-
 /**
- * @brief Fill in the device information.
+ * @brief Give the service the device information.
  *
  * Model number (hardware version), manufacturer, serial number, firmware version and SDK
  * version.
- *
- * @param[out] info Device information.
  */
-void bt_dis_get_info(struct pbl_bt_dis_info *info);
+void bt_dis_init(void);
 
 /** @} */

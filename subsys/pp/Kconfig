@@ -23,6 +23,15 @@ config PP_TRANSPORT_GATT
     help
       Pebble protocol over GATT (PPoGATT), the transport phones use.
 
+config PP_TRANSPORT_GATT_REVERSED
+    bool "Reversed PPoGATT service"
+    depends on PP_TRANSPORT_GATT
+    select BT_GATT_SERVER
+    help
+      PPoGATT service hosted by the device, for phones whose GATT server
+      API is broken: the phone is the client. It is added with the other
+      GATT services of the device (pbl/bluetooth/gatts.h).
+
 config PP_TRANSPORT_CONSOLE
     bool "Console frames"
     depends on CONSOLE
