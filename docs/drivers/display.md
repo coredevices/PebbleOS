@@ -20,6 +20,7 @@ display.
 | --- | --- | --- |
 | SiFli SF32LB LCD controller | `sifli,sf32lb52-lcdc` | `CONFIG_DISPLAY_SF32LB_LCDC` |
 | SiFli SF32LB57 LCD controller | `sifli,sf32lb57-lcdc` | `CONFIG_DISPLAY_SF32LB57_LCDC` |
+| ST STM32 LTDC | `st,stm32-ltdc` | `CONFIG_DISPLAY_STM32_LTDC` |
 | Sharp memory LCDs | `sharp,ls010b7dh04`, `sharp,ls011b7dh03`, `sharp,ls012b7dd01`, `sharp,ls013b7dh01`, `sharp,ls013b7dh03`, `sharp,ls013b7dh05`, `sharp,ls027b7dh01`, `sharp,ls027b7dh01a`, `sharp,ls044q7dh01` | `CONFIG_DISPLAY_SHARP_MEMORY` |
 | QEMU Framebuffer Display | `qemu,pebble-display` | `CONFIG_DISPLAY_QEMU` |
 | SDL window | — | `CONFIG_DISPLAY_SDL` |
