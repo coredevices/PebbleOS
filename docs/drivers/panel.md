@@ -17,3 +17,4 @@ generate. The controller brings it up and down in steps around its own.
 | --- | --- | --- |
 | Memory-in-pixel panels | `sharp,ls013b7dd02`, `jdi,lpm015m135a` | `CONFIG_PANEL_JDI_MIP` |
 | ChipOne CO5300 AMOLED panels | `chipone,co5300` | `CONFIG_PANEL_CO5300` |
+| Orise Tech OTM8009A | `orisetech,otm8009a` | `CONFIG_PANEL_OTM8009A` |
