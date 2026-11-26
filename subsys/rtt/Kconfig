@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig RTT
+    bool "SEGGER RTT"
+    select KERNEL_NOCACHE if CPU_HAS_DCACHE
+    help
+      Channels in RAM that a debug probe reads and writes over SWD while
+      the target runs (pbl/rtt). Its buffers take RAM, so it is only built
+      when selected. With a data cache they go in the kernel's
+      non-cacheable section: the probe reads RAM behind the cache.
+
+if RTT
+
+config RTT_NUM_UP
+    int "Up channels"
+    range 1 16
+    default 1
+    help
+      Channels from the target to the probe. Channel 0 is the terminal.
+
+config RTT_NUM_DOWN
+    int "Down channels"
+    range 1 16
+    default 1
+    help
+      Channels from the probe to the target. Channel 0 is the terminal.
+
+config RTT_UP_SIZE
+    int "Up channel buffer size"
+    range 16 65536
+    default 2048
+    help
+      Bytes the target can write to a channel before the probe reads
+      them; writes that do not fit are dropped.
+
+config RTT_DOWN_SIZE
+    int "Down channel buffer size"
+    range 16 65536
+    default 64
+
+endif # RTT
