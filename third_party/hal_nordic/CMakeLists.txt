@@ -7,6 +7,9 @@ endif()
 if(CONFIG_HAL_NORDIC_NRF52840)
   pbl_compile_definitions(NRF52840_XXAA)
 endif()
+if(CONFIG_HAL_NORDIC_NRF54L15)
+  pbl_compile_definitions(NRF54L15_XXAA NRF_APPLICATION)
+endif()
 pbl_include_directories(
   .
   nrfx

@@ -21,4 +21,11 @@ config HAL_NORDIC_NRF52840
     help
       Configure the nrfx HAL headers for the Nordic nRF52840 SoC.
 
+config HAL_NORDIC_NRF54L15
+    bool
+    default y if SOC_NRF54L15
+    help
+      Configure the nrfx HAL headers for the application core of the
+      Nordic nRF54L15 SoC.
+
 endif # HAL_NORDIC
