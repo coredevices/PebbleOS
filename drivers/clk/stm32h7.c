@@ -12,6 +12,7 @@
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
+#include <pbl/util/units.h>
 
 #include <dt-bindings/clock/stm32h7-clks.h>
 #include <hardware/stm32h7_pwr.h>
@@ -44,8 +45,7 @@ static_assert(PBL_CLK_STM32H7_NUM_CLKS == LPUART1_CK + 1);
 // The system clock goes to PLL1 P once PLL1 starts
 static bool s_sys_on_pll1;
 
-#define MHZ_PER_HZ 1000ULL
-#define MHZ(n)     ((uint64_t)(n) * 1000000ULL * MHZ_PER_HZ)
+#define MHZ(n) ((uint64_t)(n) * 1000000ULL * PBL_MILLIHZ_PER_HZ)
 
 // The core supply settles within a few hundred microseconds
 #define ACTVOSRDY_TIMEOUT_US 10000U
@@ -253,7 +253,7 @@ static void prv_update_core_clock(const struct pbl_clk_controller *ctrl) {
   uint64_t rate_mhz;
 
   if (pbl_clk_get_rate(&(struct pbl_clk)PBL_CLK(ctrl, CORE_CLK), &rate_mhz) == 0) {
-    pbl_cycles_per_sec_set((uint32_t)(rate_mhz / MHZ_PER_HZ));
+    pbl_cycles_per_sec_set((uint32_t)(rate_mhz / PBL_MILLIHZ_PER_HZ));
   }
 }
 
@@ -494,17 +494,17 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
 
   switch (id) {
     case STM32H7_CLK_HSI_CK:
-      *rate_mhz = (STM32H7_HSI_HZ * MHZ_PER_HZ) >>
+      *rate_mhz = (STM32H7_HSI_HZ * PBL_MILLIHZ_PER_HZ) >>
                   PBL_FIELD_GET(RCC_CR_HSIDIV_MASK, prv_getreg(rcc, STM32H7_RCC_CR_OFFSET));
       return 0;
     case STM32H7_CLK_CSI_CK:
-      *rate_mhz = STM32H7_CSI_HZ * MHZ_PER_HZ;
+      *rate_mhz = STM32H7_CSI_HZ * PBL_MILLIHZ_PER_HZ;
       return 0;
     case STM32H7_CLK_RC48_CK:
-      *rate_mhz = STM32H7_HSI48_HZ * MHZ_PER_HZ;
+      *rate_mhz = STM32H7_HSI48_HZ * PBL_MILLIHZ_PER_HZ;
       return 0;
     case STM32H7_CLK_LSI_CK:
-      *rate_mhz = STM32H7_LSI_HZ * MHZ_PER_HZ;
+      *rate_mhz = STM32H7_LSI_HZ * PBL_MILLIHZ_PER_HZ;
       return 0;
     case STM32H7_CLK_PLL1_P ... STM32H7_CLK_PLL3_R: {
       uint32_t pll = prv_pll(id);
