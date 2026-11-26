@@ -4,6 +4,7 @@
 #include "clients/op_queue.h"
 #include "responsiveness.h"
 #include "services/services.h"
+#include "shell.h"
 #include "store.h"
 
 #include <errno.h>
@@ -115,6 +116,9 @@ void pbl_bt_init(void) {
   nimble_port_init();
   pbl_bt__store_init();
   pbl_bt__responsiveness_init();
+#ifdef CONFIG_SHELL
+  pbl_bt__shell_init();
+#endif
 
   ble_hs_cfg.sync_cb = prv_sync_cb;
   ble_hs_cfg.reset_cb = prv_reset_cb;
