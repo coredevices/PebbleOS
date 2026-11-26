@@ -15,8 +15,8 @@
  * response times. Everything else is done with NimBLE directly: connections are named by their
  * handles, and their events are followed with ble_gap_event_listener_register().
  *
- * A few events are reported through callbacks the application implements, declared @c extern
- * and named @c pbl_bt_cb_*. Unless stated otherwise they run on the NimBLE host task.
+ * A few events are reported to listeners the application defines, e.g. with
+ * PBL_BT_BOND_LISTENER_DEFINE().
  *
  * The NimBLE host reaches its controller through the HCI transport selected with the
  * @c NIMBLE_HCI_* Kconfig choice: the in-image NimBLE link layer (@c NIMBLE_HCI_NRF52), the SiFli

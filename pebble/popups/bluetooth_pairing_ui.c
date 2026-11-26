@@ -644,8 +644,8 @@ static void prv_copy_string_and_move_cursor(const char *in_str, char **out_str, 
   *cursor += str_size_bytes;
 }
 
-void pbl_bt_cb_pairing_confirm_handle_request(uint16_t conn_handle, const char *device_name,
-                                              const char *confirmation_token) {
+static void prv_handle_request(uint16_t conn_handle, const char *device_name,
+                               const char *confirmation_token) {
   // events.c clean-up (see event_deinit) can only clean up one associated heap allocation,
   // so put everything in a single buffer:
   size_t device_name_len = device_name ? (strlen(device_name) + 1) : 0;
@@ -675,7 +675,7 @@ void pbl_bt_cb_pairing_confirm_handle_request(uint16_t conn_handle, const char *
   prv_put_pairing_event(&pair_event);
 }
 
-void pbl_bt_cb_pairing_confirm_handle_completed(uint16_t conn_handle, bool success) {
+static void prv_handle_completed(uint16_t conn_handle, bool success) {
   PebbleBluetoothPairEvent pair_event = {
     .type = PebbleBluetoothPairEventTypePairingComplete,
     .conn_handle = conn_handle,
@@ -683,6 +683,9 @@ void pbl_bt_cb_pairing_confirm_handle_completed(uint16_t conn_handle, bool succe
   };
   prv_put_pairing_event(&pair_event);
 }
+
+PBL_BT_PAIRING_LISTENER_DEFINE(pairing_ui, .request = prv_handle_request,
+                               .completed = prv_handle_completed);
 
 #ifdef CONFIG_SHELL
 typedef struct {
