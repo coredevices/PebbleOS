@@ -11,3 +11,9 @@ it coming and going, which a USB device controller follows.
 | Header | `pbl/drivers/phy.h` |
 | Kconfig | `CONFIG_PHY`, selected by the controllers that take a PHY |
 | API | {apidoc}`API reference <drivers_phy>` |
+
+## Drivers
+
+| Driver | Compatible | Kconfig |
+| --- | --- | --- |
+| USB transceiver with nothing to set up | `usb-nop-xceiv` | `CONFIG_PHY_USB_NOP` |
