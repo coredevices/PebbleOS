@@ -3,7 +3,7 @@
 
 config TIMER_NRF_GRTC
     bool
-    select CLK
+    select CLK if SOC_NRF54L_CPUAPP
     help
       Clock source and clock event device on the GRTC, counting
       microseconds. It keeps the time from the 32.768 kHz low-frequency
