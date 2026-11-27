@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Wed, 25 Nov 2026 14:44:54 +0100
+Subject: [PATCH] dt-bindings: hwlock: st,stm32-hwspinlock: add mailbox cells
+ and interrupt
+
+Besides locking, releasing a hardware semaphore raises the interrupt of
+each core that enabled it for that semaphore. On multi-core parts
+without an IPCC, such as the STM32H745/H747/H755/H757 (Cortex-M7 and
+Cortex-M4), this is how the cores signal each other, each semaphore
+serving as a doorbell.
+
+Allow '#mbox-cells', its cell being the semaphore, and the interrupt of
+the semaphores. Each core has an interrupt of its own (HSEM1 for the
+Cortex-M7, HSEM2 for the Cortex-M4 on STM32H747), so a description
+gives the one of the CPU it is for.
+
+PebbleOS, whose STM32H747 port uses the semaphores as doorbells between
+its two cores, describes and uses these.
+
+Signed-off-by: Gerard Marull-Paretas <gerard@teslabs.com>
+---
+ hwlock/st,stm32-hwspinlock.yaml | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/hwlock/st,stm32-hwspinlock.yaml b/hwlock/st,stm32-hwspinlock.yaml
+index 829d1fdf4c67..3b8d872b7c21 100644
+--- a/hwlock/st,stm32-hwspinlock.yaml
++++ b/hwlock/st,stm32-hwspinlock.yaml
+@@ -9,16 +9,30 @@ title: STMicroelectronics STM32 Hardware Spinlock
+ maintainers:
+   - Fabien Dessenne <fabien.dessenne@foss.st.com>
+ 
++description: |
++  Hardware semaphores, which also ring doorbells between the cores of a
++  multi-core part: releasing a semaphore raises the interrupt of each core
++  that enabled it, and the core taking the doorbell clears it in its
++  interrupt status.
++
+ properties:
+   "#hwlock-cells":
+     const: 1
+ 
++  "#mbox-cells":
++    const: 1
++    description: The semaphore ringing the doorbell.
++
+   compatible:
+     const: st,stm32-hwspinlock
+ 
+   reg:
+     maxItems: 1
+ 
++  interrupts:
++    maxItems: 1
++    description: The interrupt of the semaphores for the CPU the description is for.
++
+   clocks:
+     maxItems: 1
+ 

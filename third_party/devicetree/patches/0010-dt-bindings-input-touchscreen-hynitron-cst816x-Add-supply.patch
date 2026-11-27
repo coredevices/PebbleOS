@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Sat, 21 Nov 2026 20:52:28 +0100
+Subject: [PATCH] dt-bindings: input: touchscreen: hynitron,cst816x: Add supply
+
+The controllers run from a single 2.8 V to 3.6 V supply. Boards may
+switch it, for example along with the display panel the touchscreen
+is laminated to, so document it.
+
+This patch was prepared with the help of an AI coding assistant (Claude
+Code, using Claude Opus 5.5), which wrote the change and this commit
+message under the submitter's direction. It was reviewed by the
+submitter, who takes responsibility for it.
+---
+ input/touchscreen/hynitron,cst816x.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/input/touchscreen/hynitron,cst816x.yaml b/input/touchscreen/hynitron,cst816x.yaml
+index df52431b1d49..ae8424693534 100644
+--- a/input/touchscreen/hynitron,cst816x.yaml
++++ b/input/touchscreen/hynitron,cst816x.yaml
+@@ -30,6 +30,9 @@ properties:
+   reset-gpios:
+     maxItems: 1
+ 
++  vdd-supply:
++    description: Power supply of the controller.
++
+   linux,keycodes:
+     minItems: 1
+     items:
+@@ -60,6 +63,7 @@ examples:
+             interrupt-parent = <&gpio0>;
+             interrupts = <4 IRQ_TYPE_EDGE_RISING>;
+             reset-gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
++            vdd-supply = <&vdd_ts>;
+             touchscreen-size-x = <240>;
+             touchscreen-size-y = <240>;
+             linux,keycodes = <KEY_UP>, <KEY_DOWN>, <KEY_LEFT>, <KEY_RIGHT>,

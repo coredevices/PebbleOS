@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# Every patch of this directory, by its name:
+#   type: temporary, to go upstream and be dropped once there, or permanent
+#   status: for a temporary one, not-submitted, submitted, applied (to a
+#     maintainer tree) or merged (in a release the submodule is not on yet)
+#   link: once submitted, the link to the latest submission
+#   reason: for a permanent one, why upstream will never take it
+#   note: optional, the review state
+
+0001-dt-bindings-arm-cpus-Add-Cortex-M33.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/?q=s:%22dt-bindings:+arm:+cpus:+Add+Cortex-M33%22
+0002-dt-bindings-arm-cpus-Add-Arm-China-STAR-MC1.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/?q=s:%22dt-bindings:+arm:+cpus:+Add+Arm+China+STAR-MC1%22
+0003-dt-bindings-arm-cpus-Add-Cortex-M7.patch:
+  type: temporary
+  status: not-submitted
+0004-dt-bindings-display-panel-orisetech-otm8009a-Allow.patch:
+  type: temporary
+  status: not-submitted
+0005-dt-bindings-display-sharp-ls010b7dh04-Add-LS013B7DH01.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/?q=s:%22dt-bindings:+display:+sharp,ls010b7dh04:+Add+LS013B7DH01%22
+  note: Rob Herring applied it, then dropped it, as it needs an ack from a DRM maintainer.
+0006-dt-bindings-display-st-stm32-dsi-Add-the-wrapper-interrupt.patch:
+  type: temporary
+  status: not-submitted
+0007-dt-bindings-hwlock-st-stm32-hwspinlock-add-mailbox-cells.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/20261125135231.98914-1-gerard@teslabs.com/
+0008-dt-bindings-iio-adc-st-stm32-adc-add-temperature-sensor.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/?q=s:%22st,stm32-adc:+add+temperature+sensor+calibration+cells%22
+  note: ST questions it, as the STM32H7 device trees are to be removed from Linux.
+0009-dt-bindings-input-touchscreen-hynitron-cst816x-Reference.patch:
+  type: temporary
+  status: applied
+  link: https://lore.kernel.org/all/?q=s:%22hynitron,cst816x:+Reference+touchscreen.yaml%22
+  note: Applied by Dmitry Torokhov to the input tree.
+0010-dt-bindings-input-touchscreen-hynitron-cst816x-Add-supply.patch:
+  type: temporary
+  status: applied
+  link: https://lore.kernel.org/all/?q=s:%22hynitron,cst816x:+Add+supply%22
+  note: Applied by Dmitry Torokhov to the input tree.
+0011-dt-bindings-mfd-st-stm32-lptimer-add-resets.patch:
+  type: temporary
+  status: submitted
+  link: https://lore.kernel.org/all/20261125132225.90891-1-gerard@teslabs.com/
+0012-ASoC-dt-bindings-stm32-sai-Allow-a-memory-region-for.patch:
+  type: temporary
+  status: not-submitted

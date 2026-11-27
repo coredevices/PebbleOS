@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Sun, 22 Nov 2026 10:26:11 +0100
+Subject: [PATCH] dt-bindings: arm: cpus: Add Arm China STAR-MC1
+
+Document the compatible of the Arm China STAR-MC1 core, an Armv8-M
+Mainline core compatible with the Cortex-M33.
+
+These schemas are now used by PebbleOS, which runs on the SiFli SF32LB52
+and SF32LB57 SoCs, built around STAR-MC1 cores.
+---
+ arm/cpus.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arm/cpus.yaml b/arm/cpus.yaml
+index da12be7f5119..75e79aa49ab7 100644
+--- a/arm/cpus.yaml
++++ b/arm/cpus.yaml
+@@ -190,6 +190,7 @@ properties:
+           - arm,neoverse-v3
+           - arm,neoverse-v3ae
+           - arm,rainier
++          - armchina,star-mc1
+           - brcm,brahma-b15
+           - brcm,brahma-b53
+           - brcm,vulcan
