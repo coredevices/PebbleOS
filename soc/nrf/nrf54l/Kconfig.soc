@@ -7,7 +7,7 @@ config SOC_NRF54L15_CPUAPP
     select SOC_NRF54L_CPUAPP
     help
       The secure Cortex-M33 of the nRF54L15, which sets up the supply and
-      the clocks.
+      the clocks and starts the FLPR.
 
 config SOC_NRF54L15_CPUFLPR
     bool "Nordic nRF54L15, FLPR"

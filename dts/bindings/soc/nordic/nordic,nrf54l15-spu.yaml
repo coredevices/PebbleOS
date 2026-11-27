@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/nordic/nordic,nrf54l15-spu.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L system protection unit
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  Security attributes of the peripherals on a bus, and of the bus masters
+  among them, by their slave index.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-spu
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+additionalProperties: false
+
+examples:
+  - |
+    spu@50040000 {
+        compatible = "nordic,nrf54l15-spu";
+        reg = <0x50040000 0x1000>;
+        interrupts = <64>;
+    };

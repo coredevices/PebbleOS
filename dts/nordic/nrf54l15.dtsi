@@ -54,6 +54,12 @@
 			reg = <0xffd000 0x1000>;
 		};
 
+		spu00: spu@50040000 {
+			compatible = "nordic,nrf54l15-spu";
+			reg = <0x50040000 0x1000>;
+			interrupts = <64>;
+		};
+
 		cracen: crypto@50048000 {
 			compatible = "nordic,nrf54l15-cracen";
 			reg = <0x50048000 0x1000>, <0x51800000 0x10000>;
@@ -82,6 +88,15 @@
 			internal_flash: flash@0 {
 				reg = <0x0 0x17d000>;
 			};
+		};
+
+		// The FLPR as the application core starts it
+		cpuflpr_vpr: vpr@5004c000 {
+			compatible = "nordic,nrf54l15-vpr";
+			reg = <0x5004c000 0x1000>;
+			interrupts = <76>;
+			nordic,spu = <&spu00>;
+			status = "disabled";
 		};
 
 		gpio2: gpio@50050400 {

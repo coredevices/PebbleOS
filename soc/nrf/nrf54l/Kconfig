@@ -27,8 +27,10 @@ config SOC_NRF54L_CPUAPP
     select CPU_HAS_FPU
     select SOC_HAS_POWER_OFF
     select SOC_HAS_UNIQUE_ID
+    select REMOTEPROC if DT_HAS_NORDIC_NRF54L15_VPR_ENABLED
     help
-      The secure application core of an nRF54L.
+      The secure application core of an nRF54L, which starts the FLPR
+      when its tree enables it.
 
 config SOC_NRF54L_CPUFLPR
     bool

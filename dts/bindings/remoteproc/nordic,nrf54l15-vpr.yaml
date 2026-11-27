@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/remoteproc/nordic,nrf54l15-vpr.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Nordic nRF54L VPR
+
+maintainers:
+  - Gerard Marull-Paretas <gerard@teslabs.com>
+
+description:
+  A VPR RISC-V core of an nRF54L, such as the FLPR, as the application core
+  sees it. It runs its firmware from its first instruction, in place in a
+  partition or copied to RAM, once the application core starts it. The SPU
+  makes it a secure bus master, which reaches the peripherals at their
+  secure addresses.
+
+properties:
+  compatible:
+    const: nordic,nrf54l15-vpr
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  nordic,spu:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: SPU of the bus of the VPR.
+
+  nordic,firmware:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: Partition of the internal flash holding the firmware.
+
+  memory-region:
+    maxItems: 1
+    description:
+      RAM the firmware, linked to run from it, is copied to before the VPR
+      starts. Without it, the VPR runs the firmware in place.
+
+  nordic,auto-boot:
+    $ref: /schemas/types.yaml#/definitions/flag
+    description: Start the VPR at boot, when its partition holds an image.
+
+required:
+  - compatible
+  - reg
+  - nordic,spu
+
+additionalProperties: false
+
+examples:
+  - |
+    vpr@5004c000 {
+        compatible = "nordic,nrf54l15-vpr";
+        reg = <0x5004c000 0x1000>;
+        interrupts = <76>;
+        nordic,spu = <&spu00>;
+        nordic,firmware = <&cpuflpr_code>;
+        memory-region = <&cpuflpr_sram>;
+        nordic,auto-boot;
+    };

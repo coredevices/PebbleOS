@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config REMOTEPROC_NRF_VPR
+    bool "Nordic VPR"
+    default y
+    depends on DT_HAS_NORDIC_NRF54L15_VPR_ENABLED && SOC_NRF54L_CPUAPP
+    help
+      A VPR RISC-V core of an nRF54L, as the application core sees it:
+      started from its firmware in the RRAM, with access to the secure
+      peripherals.

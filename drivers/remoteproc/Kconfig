@@ -9,6 +9,7 @@ menuconfig REMOTEPROC
 
 if REMOTEPROC
 
+rsource "Kconfig.nrf_vpr"
 rsource "Kconfig.sf32lb"
 rsource "Kconfig.stm32h7_cm4"
 
