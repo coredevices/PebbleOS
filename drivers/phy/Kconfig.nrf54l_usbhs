@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PHY_NRF54L_USBHS
+    bool "Nordic nRF54LM20A USBHS PHY"
+    default y
+    depends on DT_HAS_NORDIC_NRF54LM20A_USBHS_PHY_ENABLED
+    select CLK
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      The wrapper of the nRF54LM20A USBHS controller and its UTMI+ PHY,
+      which powers and resets them, and VREGUSB, which senses VBUS.
+
+config PHY_NRF54L_USBHS_IRQ_PRIO
+    int "Interrupt priority"
+    default 0
+    depends on PHY_NRF54L_USBHS
+    help
+      Priority of the VREGUSB interrupt.
