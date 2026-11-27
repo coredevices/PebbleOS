@@ -6,6 +6,7 @@ config UDC_DWC2
     default y
     depends on DT_HAS_ST_STM32F7_HSOTG_ENABLED
     select CLK
+    select PHY
     select PINCTRL
     select REGULATOR
     help
