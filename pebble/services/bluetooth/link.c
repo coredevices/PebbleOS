@@ -12,6 +12,7 @@
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/advertising.h>
 #include <pbl/services/bluetooth/bonding.h>
+#include <pbl/services/bluetooth/gateway.h>
 #include <pbl/services/bluetooth/link.h>
 
 #include <host/ble_gap.h>
@@ -34,24 +35,6 @@ static void prv_put_connection_event(bool connected) {
       .connection = {
         .state = connected ? PebbleBluetoothConnectionEventStateConnected
                            : PebbleBluetoothConnectionEventStateDisconnected,
-      },
-    },
-  };
-
-  event_put(&event);
-}
-
-static void prv_put_gateway_event(uint16_t conn_handle, uint8_t hci_reason, bool connected) {
-  PebbleEvent event = {
-    .type = PEBBLE_BLE_CONNECTION_EVENT,
-    .task_mask = (PebbleTaskBitset) ~(1u << PebbleTask_KernelMain),
-    .bluetooth = {
-      .le = {
-        .connection = {
-          .conn_handle = conn_handle,
-          .hci_reason = hci_reason,
-          .connected = connected,
-        },
       },
     },
   };
@@ -122,7 +105,7 @@ static void prv_update_gateway(void) {
   }
 
   s_is_gateway = true;
-  prv_put_gateway_event(s_conn_handle, 0, true);
+  bt_gateway_connected(s_conn_handle);
 }
 
 static void prv_handle_connect(const struct ble_gap_event *event) {
@@ -168,7 +151,7 @@ static void prv_handle_disconnect(const struct ble_gap_event *event) {
   prv_count_disconnect(reason);
   prv_put_connection_event(false);
   if (was_gateway) {
-    prv_put_gateway_event(event->disconnect.conn.conn_handle, reason, false);
+    bt_gateway_disconnected();
   }
 }
 
@@ -249,7 +232,7 @@ void bt_link_deinit(void) {
   /* The disconnection may not be reported once the stack stops. */
   prv_put_connection_event(false);
   if (was_gateway) {
-    prv_put_gateway_event(conn_handle, BLE_ERR_CONN_TERM_LOCAL, false);
+    bt_gateway_disconnected();
   }
 
   if (conn_handle != BLE_HS_CONN_HANDLE_NONE) {
@@ -343,7 +326,7 @@ void bt_link_handle_bond_deleted(void) {
     /* The disconnection that follows is no longer the gateway's. */
     conn_handle = s_conn_handle;
     s_is_gateway = false;
-    prv_put_gateway_event(conn_handle, BT_LINK_REASON_BOND_REMOVED, false);
+    bt_gateway_disconnected();
   }
   pbl_mutex_unlock(&s_lock);
 

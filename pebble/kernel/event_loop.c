@@ -20,7 +20,6 @@
 #include <pbl/services/battery/battery_charger.h>
 #include <pbl/services/battery/battery_monitor.h>
 #include <pbl/services/battery/battery_state.h>
-#include <pbl/services/bluetooth/gateway.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/compositor/compositor.h>
 #include <pbl/services/debounced_connection_service.h>
@@ -531,10 +530,6 @@ static PBL_NOINLINE void prv_extended_event_handler(PebbleEvent *e) {
 #endif
       return;
     }
-    case PEBBLE_BLE_CONNECTION_EVENT:
-      bt_gateway_handle_event(e);
-      return;
-
     case PEBBLE_COMM_SESSION_EVENT: {
       PebbleCommSessionEvent *comm_session_event = &e->bluetooth.comm_session_event;
       debounced_connection_service_handle_event(comm_session_event);

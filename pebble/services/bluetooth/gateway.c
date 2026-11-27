@@ -16,7 +16,6 @@
 #endif
 
 #include <kernel/event_loop.h>
-#include <kernel/events.h>
 #include <mfg/mfg_serials.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
@@ -65,59 +64,57 @@ static void prv_services_changed(struct pbl_bt_service_changed_client *client,
 
 // -------------------------------------------------------------------------------------------------
 
-static void prv_handle_connection_event(const PebbleBLEConnectionEvent *event) {
-  PBL_LOG_DBG("PEBBLE_BLE_CONNECTION_EVENT: reason=0x%x, conn=%u", event->hci_reason,
-              event->connected);
+static void prv_connected_kernel_main_cb(void *data) {
+  const uint16_t conn_handle = (uint16_t)(uintptr_t)data;
 
-  if (event->connected) {
-    const uint16_t conn_handle = event->conn_handle;
+  PBL_LOG_DBG("Connected to Gateway!");
 
-    PBL_LOG_DBG("Connected to Gateway!");
+  pbl_bt_responsiveness_request(conn_handle, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
+                                DISCOVERY_RESPONSE_TIME_SECS);
 
-    pbl_bt_responsiveness_request(conn_handle, &s_response_time_req, PBL_BT_RESPONSE_TIME_MIN,
-                                  DISCOVERY_RESPONSE_TIME_SECS);
+  ++s_generation;
+  s_is_connected = true;
 
-    ++s_generation;
-    s_is_connected = true;
-
-    // Each looks for its service, in this order: the session with the phone app comes first.
+  // Each looks for its service, in this order: the session with the phone app comes first.
 #if defined(CONFIG_PP_TRANSPORT_GATT)
-    pbl_pp_gatt_create();
-    pbl_pp_gatt_discover(conn_handle);
+  pbl_pp_gatt_create();
+  pbl_pp_gatt_discover(conn_handle);
 #endif
-    const int rc =
-        pbl_bt_service_changed_client_start(&s_service_changed, conn_handle, prv_services_changed);
-    if (rc != 0) {
-      PBL_LOG_ERR("Could not look for Service Changed (%d)", rc);
-    }
-#if defined(CONFIG_BT_ANCS_CLIENT)
-    ancs_create(conn_handle);
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-    ams_create(conn_handle);
-#endif
-  } else {
-    PBL_LOG_DBG("Disconnected from Gateway!");
-
-    s_is_connected = false;
-    pbl_bt_service_changed_client_stop(&s_service_changed);
-#if defined(CONFIG_PP_TRANSPORT_GATT)
-    pbl_pp_gatt_destroy();
-#endif
-#if defined(CONFIG_BT_AMS_CLIENT)
-    ams_destroy();
-#endif
-#if defined(CONFIG_BT_ANCS_CLIENT)
-    ancs_destroy();
-#endif
+  const int rc =
+      pbl_bt_service_changed_client_start(&s_service_changed, conn_handle, prv_services_changed);
+  if (rc != 0) {
+    PBL_LOG_ERR("Could not look for Service Changed (%d)", rc);
   }
+#if defined(CONFIG_BT_ANCS_CLIENT)
+  ancs_create(conn_handle);
+#endif
+#if defined(CONFIG_BT_AMS_CLIENT)
+  ams_create(conn_handle);
+#endif
 }
 
-// -------------------------------------------------------------------------------------------------
-void bt_gateway_handle_event(const PebbleEvent *e) {
-  if (e->type == PEBBLE_BLE_CONNECTION_EVENT) {
-    prv_handle_connection_event(&e->bluetooth.le.connection);
-  }
+static void prv_disconnected_kernel_main_cb(void *data) {
+  PBL_LOG_DBG("Disconnected from Gateway!");
+
+  s_is_connected = false;
+  pbl_bt_service_changed_client_stop(&s_service_changed);
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+  pbl_pp_gatt_destroy();
+#endif
+#if defined(CONFIG_BT_AMS_CLIENT)
+  ams_destroy();
+#endif
+#if defined(CONFIG_BT_ANCS_CLIENT)
+  ancs_destroy();
+#endif
+}
+
+void bt_gateway_connected(uint16_t conn_handle) {
+  launcher_task_add_callback(prv_connected_kernel_main_cb, (void *)(uintptr_t)conn_handle);
+}
+
+void bt_gateway_disconnected(void) {
+  launcher_task_add_callback(prv_disconnected_kernel_main_cb, nullptr);
 }
 
 // -------------------------------------------------------------------------------------------------

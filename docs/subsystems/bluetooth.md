@@ -161,7 +161,8 @@ tells the rest of the firmware about it:
 - Any connection and disconnection, with `PEBBLE_BT_CONNECTION_EVENT`.
 - The gateway: the link becomes the gateway's once it is encrypted and its
   peer is bonded, and only then are the services of the phone used. That, and
-  the loss of it, is `PEBBLE_BLE_CONNECTION_EVENT`, with the connection handle.
+  the loss of it, is told to the gateway service
+  (`pebble/services/bluetooth/gateway.c`), which runs the clients on the main thread.
 - The device name of the peer, read with the GAP client and kept with its bond.
 
 ## GATT clients
