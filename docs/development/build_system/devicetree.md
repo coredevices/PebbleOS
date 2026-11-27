@@ -31,7 +31,8 @@ for the machine, a board tree for each.
 | `boards/<board>/<board>_<revision>.dts` | A revision, e.g. `obelix_pvt.dts`, or `<board>.dts` for boards with one |
 | `boards/<board>/<board>_<core>.dts` | A core of a board with several, e.g. `stm32h747i_disco_m4.dts`, or `<board>_<revision>_<core>.dts` for one of a revision; a board variant of a core may have `<board>_<core>_<variant>.dts`, and one of a board without cores `<board>_<variant>.dts` |
 | `include/dt-bindings/` | Constants the trees use, such as clock IDs and GPIO flags |
-| `dts/bindings/` | Bindings that upstream does not have, or extends |
+| `dts/bindings/` | Bindings that upstream does not have |
+| `third_party/devicetree/patches/` | Patches to the upstream bindings, for what they lack |
 
 A board tree includes its SoC tree, enables the peripherals it uses, and adds
 what is on the board: sensors on a bus, the flash on its controller, the panel,
@@ -129,9 +130,15 @@ other way around:
 
 - **Bindings.** A node follows the upstream binding of its compatible when
   there is one, property for property. A binding of our own goes in
-  `dts/bindings/`, written the way upstream would accept it. Where upstream
-  lacks what the hardware has, a copy of its binding at the same path in
-  `dts/bindings/`, with the additions, replaces it.
+  `dts/bindings/`, written the way upstream would accept it. Where an upstream
+  binding lacks what the hardware has, a compatible or a property, patches to
+  it in `third_party/devicetree/patches/` add it, one per change, as mails
+  `git format-patch` writes, numbered and applied in the order of their names,
+  e.g. `0001-dt-bindings-arm-cpus-Add-Cortex-M33.patch`. Each carries the
+  message it was, or is to be, submitted with, and `patches.yaml` there
+  classifies it: `temporary`, with its upstream status (`not-submitted`,
+  `submitted`, `applied` or `merged`) and the link to its submission, or
+  `permanent`, with the reason upstream will never take it.
 - **Compatibles.** A compatible names the part, e.g. `jdi,lpm015m135a`, never a
   family or a board. A peripheral that a whole SoC series shares lists the part
   it is on first and the first part that had it last, as
@@ -432,7 +439,10 @@ without a tree has nothing to overlay, which fails the build.
 `tools/devicetree/validate.py` checks our bindings and the board trees with
 dtschema, against the upstream bindings and ours. The upstream bindings and
 their headers come from the `third_party/devicetree/devicetree-rebasing`
-submodule, pinned to a release, and dtschema is in `requirements.txt`:
+submodule, pinned to a release, with the patches of
+`third_party/devicetree/patches/` applied: a patch that no longer applies
+fails, to rebase, and so does one upstream took, to drop. dtschema is in
+`requirements.txt`:
 
 ```shell
 python3 tools/devicetree/validate.py \
