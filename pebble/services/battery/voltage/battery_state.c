@@ -346,6 +346,10 @@ int32_t battery_state_get_temp(void) {
   return 0;
 }
 
+uint32_t battery_state_get_soc_cpct(void) {
+  return (uint32_t)(((uint64_t)s_last_battery_state.percent * 10000U) / PBL_RATIO32_MAX);
+}
+
 /////////////////
 // Analytics
 

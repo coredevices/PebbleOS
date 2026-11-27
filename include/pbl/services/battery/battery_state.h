@@ -117,6 +117,13 @@ uint16_t battery_state_get_voltage(void);
 int32_t battery_state_get_temperature(void);
 
 /**
+ * @brief Get the last state of charge, unrounded.
+ *
+ * @return State of charge in hundredths of a percent.
+ */
+uint32_t battery_state_get_soc_cpct(void);
+
+/**
  * @brief Get the periodic sampling timer, for unit tests.
  *
  * @return Delayed work item.

@@ -460,6 +460,10 @@ int32_t battery_state_get_temperature(void) {
   return s_last_temp_mc;
 }
 
+uint32_t battery_state_get_soc_cpct(void) {
+  return s_last_soc_cpct;
+}
+
 /////////////////
 // Analytics
 
