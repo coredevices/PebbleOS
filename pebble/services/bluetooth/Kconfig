@@ -35,6 +35,13 @@ config SERVICE_BLUETOOTH_VENDOR_NAME
     help
       Manufacturer name in the Device Information Service.
 
+config SERVICE_BLUETOOTH_ADV_RECONNECT
+    bool "Advertise for the bonded phone to reconnect"
+    help
+      Advertise an empty payload while there is a bond and nothing asks for
+      discovery. Without it, only discovery is advertised, so that a phone
+      can always find and pair the device, bonded or not.
+
 module = SERVICE_BLUETOOTH
 module-str = Bluetooth
 source "subsys/logging/Kconfig.template.log_level"
