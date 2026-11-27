@@ -17,12 +17,16 @@
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/kernel/time.h>
+#include <pbl/logging/logging.h>
 #include <pbl/util/bits.h>
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 #include <pbl/util/misc.h>
 #include <pbl/util/size.h>
+
+PBL_LOG_MODULE_DEFINE(driver_udc_dwc2, CONFIG_DRIVER_UDC_LOG_LEVEL);
 
 // Endpoints in each direction the driver keeps state for, endpoint 0 included
 #define MAX_EPS 9U
@@ -42,12 +46,23 @@
 #define WAKEUP_IDLE_MS   5U
 #define WAKEUP_RESUME_MS 10U
 
-// Turnaround time, in PHY clocks: for the 60 MHz of a ULPI PHY, and for full speed on a fast AHB
-#define TRDT_HS 9U
-#define TRDT_FS 6U
+// Turnaround time, in PHY clocks: for the 60 MHz of a ULPI or 8-bit UTMI+ PHY, for the 30 MHz of
+// a 16-bit UTMI+ PHY, and for full speed on a fast AHB
+#define TRDT_HS     9U
+#define TRDT_UTMI16 5U
+#define TRDT_FS     6U
 
 // Variants
 #define DWC2_STM32 PBL_BIT(0)
+// The PHY the controller takes is UTMI+, else ULPI
+#define DWC2_UTMI PBL_BIT(1)
+
+// PHYs: the internal full-speed one, or the external one the controller takes
+enum prv_phy_type {
+  PHY_FS,
+  PHY_ULPI,
+  PHY_UTMI,
+};
 
 struct prv_ep {
   uint8_t *buf;
@@ -72,6 +87,12 @@ struct pbl_udc_dwc2_state {
   bool dma;
   bool suspended;
   uint64_t suspend_ms;
+  // The core is up: with a PHY that senses VBUS, only while VBUS is present
+  bool powered;
+  bool utmi16;
+  struct pbl_mutex vbus_lock;
+  struct pbl_phy_listener phy_listener;
+  const struct pbl_udc_dwc2 *dwc2;
 };
 
 struct pbl_udc_dwc2 {
@@ -80,8 +101,8 @@ struct pbl_udc_dwc2 {
   pbl_irq_t irq;
   uint32_t quirks;
   struct pbl_clk clk;
-  // An external ULPI PHY, which the controller then drives at high speed, or NULL for the
-  // internal full-speed one
+  // An external PHY, which the controller then drives at high speed, or NULL for the internal
+  // full-speed one
   const struct pbl_phy *phy;
   const struct pbl_regulator *supply;
   const struct pbl_pinctrl *pinctrl;
@@ -134,6 +155,14 @@ static int prv_core_reset(const struct pbl_udc_dwc2 *d) {
   prv_modify(d, DWC2_GRSTCTL, GRSTCTL_CSRST, 0U);
 
   return 0;
+}
+
+static enum prv_phy_type prv_phy_type(const struct pbl_udc_dwc2 *d) {
+  if (d->phy == nullptr) {
+    return PHY_FS;
+  }
+
+  return (d->quirks & DWC2_UTMI) != 0U ? PHY_UTMI : PHY_ULPI;
 }
 
 static void prv_flush_tx(const struct pbl_udc_dwc2 *d, uint32_t fifo) {
@@ -439,10 +468,10 @@ static enum pbl_udc_speed prv_speed(const struct pbl_udc *udc) {
 
 static void prv_enum_done(const struct pbl_udc_dwc2 *d) {
   bool high = prv_speed(&d->udc) == PBL_UDC_SPEED_HIGH;
+  uint32_t trdt = d->state->utmi16 ? TRDT_UTMI16 : (high ? TRDT_HS : TRDT_FS);
 
   prv_modify(d, DWC2_DIEPCTL(0U), DEPCTL_MPSIZ_MASK, DEPCTL_EP0_MPS_64);
-  prv_modify(d, DWC2_GUSBCFG, GUSBCFG_TRDT_MASK,
-             PBL_FIELD_PREP(GUSBCFG_TRDT_MASK, high ? TRDT_HS : TRDT_FS));
+  prv_modify(d, DWC2_GUSBCFG, GUSBCFG_TRDT_MASK, PBL_FIELD_PREP(GUSBCFG_TRDT_MASK, trdt));
   prv_modify(d, DWC2_DCTL, 0U, DCTL_CGINAK);
 
   pbl_udc_event(&d->udc, PBL_UDC_EVENT_ENUMERATED, nullptr);
@@ -488,7 +517,13 @@ static void prv_isr(const struct pbl_udc_dwc2 *d) {
 }
 
 static int prv_set_address(const struct pbl_udc *udc, uint8_t addr) {
-  prv_modify(prv_dwc2(udc), DWC2_DCFG, DCFG_DAD_MASK, PBL_FIELD_PREP(DCFG_DAD_MASK, addr));
+  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+
+  if (!d->state->powered) {
+    return -ENOTCONN;
+  }
+
+  prv_modify(d, DWC2_DCFG, DCFG_DAD_MASK, PBL_FIELD_PREP(DCFG_DAD_MASK, addr));
 
   return 0;
 }
@@ -524,6 +559,10 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
         DEPCTL_SD0PID | DEPCTL_USBAEP | DEPCTL_SNAK;
 
   pbl_irq_lock();
+  if (!d->state->powered) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
   if (in) {
     prv_putreg(d, DWC2_DIEPCTL(n), ctl | PBL_FIELD_PREP(DEPCTL_TXFNUM_MASK, n));
     prv_modify(d, DWC2_DAINTMSK, 0U, DAINT_IN(n));
@@ -572,20 +611,22 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
   struct prv_ep *ep = in ? &d->state->in[n] : &d->state->out[n];
 
   pbl_irq_lock();
-  if ((prv_getreg(d, ctl) & DEPCTL_EPENA) != 0U) {
-    if (in) {
-      prv_stop_in(d, n);
-    } else {
-      prv_stop_out(d, n);
+  if (d->state->powered) {
+    if ((prv_getreg(d, ctl) & DEPCTL_EPENA) != 0U) {
+      if (in) {
+        prv_stop_in(d, n);
+      } else {
+        prv_stop_out(d, n);
+      }
     }
-  }
-  if (in) {
-    prv_flush_tx(d, n);
-    prv_modify(d, DWC2_DIEPEMPMSK, PBL_BIT(n), 0U);
-  }
-  if (n != 0U) {
-    prv_modify(d, ctl, DEPCTL_USBAEP, 0U);
-    prv_modify(d, DWC2_DAINTMSK, in ? DAINT_IN(n) : DAINT_OUT(n), 0U);
+    if (in) {
+      prv_flush_tx(d, n);
+      prv_modify(d, DWC2_DIEPEMPMSK, PBL_BIT(n), 0U);
+    }
+    if (n != 0U) {
+      prv_modify(d, ctl, DEPCTL_USBAEP, 0U);
+      prv_modify(d, DWC2_DAINTMSK, in ? DAINT_IN(n) : DAINT_OUT(n), 0U);
+    }
   }
   if (ep->busy) {
     prv_done(d, addr, ep, -ECONNABORTED);
@@ -601,6 +642,10 @@ static int prv_ep_set_halt(const struct pbl_udc *udc, uint8_t addr, bool halt) {
   uint32_t ctl = (addr & PBL_UDC_EP_IN) != 0U ? DWC2_DIEPCTL(n) : DWC2_DOEPCTL(n);
 
   pbl_irq_lock();
+  if (!d->state->powered) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
   if (halt) {
     prv_modify(d, ctl, 0U, DEPCTL_STALL);
   } else {
@@ -648,7 +693,9 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
   }
 
   pbl_irq_lock();
-  if (ep->busy) {
+  if (!d->state->powered) {
+    ret = -ENOTCONN;
+  } else if (ep->busy) {
     ret = -EBUSY;
   } else {
     ep->buf = buf;
@@ -687,32 +734,54 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
 }
 
 static int prv_enable(const struct pbl_udc *udc) {
-  prv_modify(prv_dwc2(udc), DWC2_DCTL, DCTL_SDIS, 0U);
+  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+
+  if (!d->state->powered) {
+    return -ENOTCONN;
+  }
+
+  prv_modify(d, DWC2_DCTL, DCTL_SDIS, 0U);
 
   return 0;
 }
 
 static int prv_disable(const struct pbl_udc *udc) {
-  prv_modify(prv_dwc2(udc), DWC2_DCTL, 0U, DCTL_SDIS);
+  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+
+  if (d->state->powered) {
+    prv_modify(d, DWC2_DCTL, 0U, DCTL_SDIS);
+  }
 
   return 0;
 }
 
 // The PHY, then a core reset, then device mode, forced, with the session taken as valid: the
-// cores of the STM32 sense no VBUS here
+// cores of the STM32 sense no VBUS here, and a PHY that senses VBUS powers the core only while
+// it is present
 static int prv_core_init(const struct pbl_udc_dwc2 *d) {
+  struct pbl_udc_dwc2_state *st = d->state;
   int ret;
 
-  if (d->phy != nullptr) {
-    if ((d->quirks & DWC2_STM32) != 0U) {
-      prv_modify(d, DWC2_GGPIO, STM32_GCCFG_PWRDWN, 0U);
-    }
-    prv_modify(
-        d, DWC2_GUSBCFG,
-        GUSBCFG_TSDPS | GUSBCFG_ULPIFSLS | GUSBCFG_PHYSEL | GUSBCFG_ULPIEVBUSD | GUSBCFG_ULPIEVBUSI,
-        0U);
-  } else {
-    prv_modify(d, DWC2_GUSBCFG, 0U, GUSBCFG_PHYSEL);
+  switch (prv_phy_type(d)) {
+    case PHY_ULPI:
+      if ((d->quirks & DWC2_STM32) != 0U) {
+        prv_modify(d, DWC2_GGPIO, STM32_GCCFG_PWRDWN, 0U);
+      }
+      prv_modify(d, DWC2_GUSBCFG,
+                 GUSBCFG_TSDPS | GUSBCFG_ULPIFSLS | GUSBCFG_PHYSEL | GUSBCFG_ULPIEVBUSD |
+                     GUSBCFG_ULPIEVBUSI,
+                 0U);
+      break;
+    case PHY_UTMI:
+      st->utmi16 =
+          PBL_FIELD_GET(GHWCFG4_UTMIWIDTH_MASK, prv_getreg(d, DWC2_GHWCFG4)) != GHWCFG4_UTMIWIDTH_8;
+      prv_modify(d, DWC2_GUSBCFG, GUSBCFG_PHYSEL | GUSBCFG_ULPISEL | GUSBCFG_PHYIF16,
+                 st->utmi16 ? GUSBCFG_PHYIF16 : 0U);
+      break;
+    case PHY_FS:
+    default:
+      prv_modify(d, DWC2_GUSBCFG, 0U, GUSBCFG_PHYSEL);
+      break;
   }
 
   ret = prv_core_reset(d);
@@ -765,45 +834,9 @@ static int prv_fifo_init(const struct pbl_udc_dwc2 *d) {
   return 0;
 }
 
-static int prv_init(const struct pbl_udc *udc) {
-  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+// The core set up from its reset, disconnected
+static int prv_start(const struct pbl_udc_dwc2 *d) {
   int ret;
-
-  if (udc->num_eps > MAX_EPS) {
-    return -EINVAL;
-  }
-
-  ret = pbl_device_init(&d->clk.ctrl->dev);
-  if (ret != 0) {
-    return ret;
-  }
-
-  if (d->supply != nullptr) {
-    ret = pbl_regulator_enable(d->supply);
-    if (ret != 0) {
-      return ret;
-    }
-  }
-
-  ret = pbl_pinctrl_select_state(d->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
-  if (ret != 0) {
-    return ret;
-  }
-
-  if (d->phy != nullptr) {
-    ret = pbl_device_init(&d->phy->dev);
-    if (ret != 0) {
-      return ret;
-    }
-  }
-
-  ret = pbl_clk_enable(&d->clk);
-  if (ret == 0 && d->phy != nullptr) {
-    ret = pbl_phy_power_on(d->phy);
-  }
-  if (ret != 0) {
-    return ret;
-  }
 
   ret = prv_core_init(d);
   if (ret != 0) {
@@ -831,7 +864,7 @@ static int prv_init(const struct pbl_udc *udc) {
   prv_putreg(d, DWC2_DIEPMSK, 0U);
   prv_putreg(d, DWC2_DOEPMSK, 0U);
   prv_putreg(d, DWC2_DAINTMSK, 0U);
-  for (uint8_t n = 0U; n < udc->num_eps; n++) {
+  for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
     prv_putreg(d, DWC2_DIEPCTL(n), (n == 0U) ? 0U : DEPCTL_SNAK);
     prv_putreg(d, DWC2_DOEPCTL(n), (n == 0U) ? 0U : DEPCTL_SNAK);
     prv_putreg(d, DWC2_DIEPINT(n), UINT32_MAX);
@@ -844,7 +877,144 @@ static int prv_init(const struct pbl_udc *udc) {
                  (d->state->dma ? 0U : GINT_RXFLVL));
   prv_modify(d, DWC2_GAHBCFG, 0U, GAHBCFG_GINTMSK);
 
+  d->state->powered = true;
   pbl_irq_enable(d->irq);
+
+  return 0;
+}
+
+static void prv_clocks_off(const struct pbl_udc_dwc2 *d) {
+  if (d->phy != nullptr) {
+    (void)pbl_phy_power_off(d->phy);
+  }
+  if (d->clk.ctrl != nullptr) {
+    (void)pbl_clk_disable(&d->clk);
+  }
+}
+
+// The clock and the PHY on, then the core set up
+static int prv_power_up(const struct pbl_udc_dwc2 *d) {
+  int ret;
+
+  if (d->clk.ctrl != nullptr) {
+    ret = pbl_clk_enable(&d->clk);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  if (d->phy != nullptr) {
+    ret = pbl_phy_power_on(d->phy);
+    if (ret != 0) {
+      if (d->clk.ctrl != nullptr) {
+        (void)pbl_clk_disable(&d->clk);
+      }
+      return ret;
+    }
+  }
+
+  ret = prv_start(d);
+  if (ret != 0) {
+    prv_clocks_off(d);
+  }
+
+  return ret;
+}
+
+// The transfers ended, then the PHY and the clocks off, the core with them
+static void prv_power_down(const struct pbl_udc_dwc2 *d) {
+  struct pbl_udc_dwc2_state *st = d->state;
+
+  pbl_irq_lock();
+  pbl_irq_disable(d->irq);
+  st->powered = false;
+  st->suspended = false;
+  for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
+    if (st->in[n].busy) {
+      prv_done(d, n | PBL_UDC_EP_IN, &st->in[n], -ECONNRESET);
+    }
+    if (st->out[n].busy) {
+      prv_done(d, n, &st->out[n], -ECONNRESET);
+    }
+  }
+  pbl_irq_unlock();
+
+  prv_clocks_off(d);
+}
+
+// From thread context: the core follows VBUS, up before the stack hears VBUS came, down after it
+// heard VBUS went and disconnected
+static void prv_vbus_changed(const struct pbl_phy *phy, struct pbl_phy_listener *listener) {
+  struct pbl_udc_dwc2_state *st =
+      PBL_CONTAINER_OF(listener, struct pbl_udc_dwc2_state, phy_listener);
+  const struct pbl_udc_dwc2 *d = st->dwc2;
+  bool vbus = false;
+  int ret;
+
+  pbl_mutex_lock(&st->vbus_lock, PBL_FOREVER);
+  (void)pbl_phy_vbus_present(phy, &vbus);
+  if (vbus && !st->powered) {
+    ret = prv_power_up(d);
+    if (ret == 0) {
+      pbl_udc_vbus_changed(&d->udc, true);
+    } else {
+      PBL_LOG_ERR("power-up failed: %d", ret);
+    }
+  } else if (!vbus && st->powered) {
+    pbl_udc_vbus_changed(&d->udc, false);
+    prv_power_down(d);
+  }
+  pbl_mutex_unlock(&st->vbus_lock);
+}
+
+static int prv_init(const struct pbl_udc *udc) {
+  const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
+  bool vbus;
+  int ret;
+
+  if (udc->num_eps > MAX_EPS) {
+    return -EINVAL;
+  }
+
+  if (d->clk.ctrl != nullptr) {
+    ret = pbl_device_init(&d->clk.ctrl->dev);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  if (d->supply != nullptr) {
+    ret = pbl_regulator_enable(d->supply);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+  ret = pbl_pinctrl_select_state(d->pinctrl, PBL_PINCTRL_STATE_DEFAULT);
+  if (ret != 0 && ret != -ENOENT) {
+    return ret;
+  }
+
+  if (d->phy == nullptr) {
+    return prv_power_up(d);
+  }
+
+  ret = pbl_device_init(&d->phy->dev);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (pbl_phy_vbus_present(d->phy, &vbus) != 0) {
+    return prv_power_up(d);
+  }
+
+  // A PHY that senses VBUS: the core is up while VBUS is present. Power counts as absent before
+  // the listener may run, so that what it reports is the last word
+  pbl_udc_vbus_changed(udc, false);
+  d->state->dwc2 = d;
+  d->state->phy_listener.vbus_changed = prv_vbus_changed;
+  pbl_phy_add_listener(d->phy, &d->state->phy_listener);
+  prv_vbus_changed(d->phy, &d->state->phy_listener);
 
   return 0;
 }
@@ -856,6 +1026,10 @@ static int prv_wakeup(const struct pbl_udc *udc) {
   uint64_t since;
 
   pbl_irq_lock();
+  if (!st->powered) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
   if (!st->suspended) {
     pbl_irq_unlock();
     return -EALREADY;
@@ -867,11 +1041,20 @@ static int prv_wakeup(const struct pbl_udc *udc) {
     pbl_sleep_ms((uint32_t)(WAKEUP_IDLE_MS - since));
   }
 
-  prv_modify(d, DWC2_DCTL, 0U, DCTL_RWUSIG);
+  // The core may lose power meanwhile
+  pbl_irq_lock();
+  if (st->powered) {
+    prv_modify(d, DWC2_DCTL, 0U, DCTL_RWUSIG);
+  }
+  pbl_irq_unlock();
   pbl_sleep_ms(WAKEUP_RESUME_MS);
-  prv_modify(d, DWC2_DCTL, DCTL_RWUSIG, 0U);
 
   pbl_irq_lock();
+  if (!st->powered) {
+    pbl_irq_unlock();
+    return -ENOTCONN;
+  }
+  prv_modify(d, DWC2_DCTL, DCTL_RWUSIG, 0U);
   if (st->suspended) {
     st->suspended = false;
     pbl_udc_event(&d->udc, PBL_UDC_EVENT_RESUME, nullptr);
@@ -897,7 +1080,7 @@ static const struct pbl_udc_ops s_ops = {
 #define PBL_UDC_DWC2_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _phy, _supply, _pinctrl,       \
                             _rx_fifo, _tx0_fifo, ...)                                              \
   PBL_UDC_STATE_DEFINE(sym);                                                                       \
-  static struct pbl_udc_dwc2_state sym##_dwc2_state;                                               \
+  static struct pbl_udc_dwc2_state sym##_dwc2_state = {.vbus_lock = PBL_MUTEX_INITIALIZER};        \
   static const struct pbl_pinctrl sym##_dwc2_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);             \
   PBL_DEVICE_INSTANCE(sym, struct pbl_udc_dwc2, struct pbl_udc, udc){                              \
     .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops,                                               \
@@ -916,4 +1099,4 @@ static const struct pbl_udc_ops s_ops = {
   };                                                                                               \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_DWC2_IRQ_PRIO, prv_isr, &sym##_inst, 0)
 
-#include PBL_DT_INSTANCES(st_stm32f7_hsotg)
+#include PBL_DT_INSTANCES(dwc2)
