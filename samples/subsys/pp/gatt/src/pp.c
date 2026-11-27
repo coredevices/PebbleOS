@@ -47,15 +47,10 @@ bool pbl_pp_main_is_current(void) {
   return pbl_workq_is_current(&s_main_q);
 }
 
-const char *pbl_pp_gatt_cb_get_serial_number(void) {
-  return "SAMPLE000001";
-}
-
-/* The sample leaves the connection as the phone set it. */
-void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
-                                       enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs) {
-}
+/* No response times: the sample leaves the connection as the phone set it. */
+static const struct pbl_pp_gatt_config s_gatt_config = {
+  .serial_number = "SAMPLE000001",
+};
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
@@ -121,6 +116,7 @@ void sample_pp_init(void) {
     .stack_size = sizeof(s_main_stack),
   };
 
+  pbl_pp_gatt_configure(&s_gatt_config);
   pbl_thread_create(&s_main_thread, &attr);
 }
 

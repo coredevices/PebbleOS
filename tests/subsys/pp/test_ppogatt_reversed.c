@@ -44,15 +44,6 @@ int ble_gap_conn_find(uint16_t handle, struct ble_gap_conn_desc *out_desc) {
   return 0;
 }
 
-const char *pbl_pp_gatt_cb_get_serial_number(void) {
-  return SERIAL_NUMBER;
-}
-
-void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
-                                       enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs) {
-}
-
 bool pbl_pp_main_is_current(void) {
   return true;
 }
@@ -131,6 +122,7 @@ void test_ppogatt_reversed__initialize(void) {
   fake_gatt_client_op_init();
   fake_gatt_client_subscriptions_init();
   fake_comm_session_init();
+  pbl_pp_gatt_configure(&(const struct pbl_pp_gatt_config){.serial_number = SERIAL_NUMBER});
   pbl_pp_gatt_create();
   pbl_pp_gatt_discover(CONN_HANDLE);
 }

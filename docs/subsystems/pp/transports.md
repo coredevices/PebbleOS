@@ -14,9 +14,10 @@ link it uses. The code that drives the link calls the transport through its
 header in `include/pbl/pp/transports/`.
 
 PPoGATT builds on the Bluetooth stack and the GATT service clients alone. The
-application tells it when the phone connects and goes, and implements two
-callbacks: the serial number sent to the phone, and the connection response
-time a session asks for. In the firmware, `pebble/services/bluetooth/pp_gatt.c` does.
+application tells it when the phone connects and goes, and configures it
+once with `pbl_pp_gatt_configure()`: the serial number sent to the phone, and
+the function that applies the connection response time a session asks for.
+In the firmware, `pebble/services/bluetooth/gateway.c` does.
 
 ## Contract
 
