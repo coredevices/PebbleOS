@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+device:
+  name: PebbleOS CANopen sample
+  product_code: 1
+  revision: 1
+
+heartbeat:
+  producer: 1000
+
+tpdos:
+  # The counter, on every change, at most every 10 ms and at least every second
+  - transmission: 254
+    inhibit: 100
+    event_timer: 1000
+    mapping: [counter]
+
+rpdos:
+  - mapping: [output]
+
+objects:
+  - index: 0x2000
+    name: counter
+    type: u32
+    access: ro
+    pdo: true
+  - index: 0x2001
+    name: output
+    type: u8
+    access: rw
+    pdo: true
+  - index: 0x2002
+    name: label
+    type: string
+    size: 32
+    access: rw
+    default: PebbleOS

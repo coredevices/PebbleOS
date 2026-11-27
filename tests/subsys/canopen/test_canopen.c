@@ -1,0 +1,670 @@
+/* SPDX-FileCopyrightText: 2026 Core Devices LLC */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+#include "canopen_test.h"
+#include "od.h"
+
+#include <errno.h>
+#include <string.h>
+
+#include <pbl/canopen/canopen.h>
+#include <pbl/drivers/can.h>
+#include <pbl/kernel/kernel.h>
+#include <pbl/kernel/thread.h>
+#include <pbl/kernel/time.h>
+
+#include <clar.h>
+
+static int s_nmt_calls;
+static enum pbl_canopen_nmt_state s_nmt_state;
+static int s_reset_calls;
+static enum pbl_canopen_reset s_reset;
+static int s_writes;
+static uint16_t s_write_index;
+static uint8_t s_write_sub;
+static int s_write_ret;
+static int s_syncs;
+static uint8_t s_sync_counter;
+static uint32_t s_sync_spin_us;
+static int s_hb_calls;
+static uint8_t s_hb_node;
+static enum pbl_canopen_hb_event s_hb_event;
+static enum pbl_canopen_nmt_state s_hb_state;
+
+// ---- callbacks --------------------------------------------------------------
+
+static void prv_nmt_cb(struct pbl_canopen *co, enum pbl_canopen_nmt_state state, void *arg) {
+  s_nmt_calls++;
+  s_nmt_state = state;
+}
+
+static void prv_reset_cb(struct pbl_canopen *co, enum pbl_canopen_reset reset, void *arg) {
+  s_reset_calls++;
+  s_reset = reset;
+}
+
+static int prv_write_cb(struct pbl_canopen *co, uint16_t index, uint8_t subindex, const void *data,
+                        size_t len, void *arg) {
+  s_writes++;
+  s_write_index = index;
+  s_write_sub = subindex;
+  return s_write_ret;
+}
+
+static void prv_sync_cb(struct pbl_canopen *co, uint8_t counter, uint32_t cycles, void *arg) {
+  uint32_t value = 0x01020304U + (uint32_t)s_syncs;
+
+  // Stamped in the interrupt, before the callback
+  cl_assert(pbl_cycle_get_32() - cycles < 0x80000000U);
+  s_syncs++;
+  s_sync_counter = counter;
+  // A control loop that runs late, in real time
+  while (pbl_cycle_get_32() - cycles < s_sync_spin_us * 1000U) {
+  }
+  // Called with the node locked: the API must still work.
+  cl_assert_equal_i(pbl_canopen_od_write(co, OD_VALUE, 0U, &value, sizeof(value)), 0);
+}
+
+static void prv_hb_cb(struct pbl_canopen *co, uint8_t node_id, enum pbl_canopen_hb_event event,
+                      enum pbl_canopen_nmt_state state, void *arg) {
+  s_hb_calls++;
+  s_hb_node = node_id;
+  s_hb_event = event;
+  s_hb_state = state;
+}
+
+static const struct pbl_canopen_callbacks s_cb = {
+  .nmt = prv_nmt_cb,
+  .reset = prv_reset_cb,
+  .write = prv_write_cb,
+  .sync = prv_sync_cb,
+  .heartbeat = prv_hb_cb,
+};
+
+static void prv_run(void (*scenario)(void)) {
+  ct_run(&od, &s_cb, nullptr, scenario);
+}
+
+void test_canopen__initialize(void) {
+  ct_init();
+  s_nmt_calls = 0;
+  s_reset_calls = 0;
+  s_writes = 0;
+  s_write_ret = 0;
+  s_syncs = 0;
+  s_sync_spin_us = 0;
+  s_hb_calls = 0;
+}
+
+void test_canopen__cleanup(void) {
+}
+
+// ---- tests ------------------------------------------------------------------
+
+static void prv_boot(void) {
+  cl_assert_equal_i(ct_starts, 1);
+  cl_assert_equal_i(ct_count(0x700U + CT_NODE), 1);
+  ct_assert_data(ct_last(0x700U + CT_NODE), 1U, 0x00);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  cl_assert_equal_i(s_nmt_state, PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  cl_assert_equal_i(s_reset_calls, 1);
+  cl_assert_equal_i(s_reset, PBL_CANOPEN_RESET_NODE);
+
+  // Heartbeat every 100 ms
+  ct_clear();
+  ct_sleep(350U);
+  cl_assert_equal_i(ct_count(0x700U + CT_NODE), 3);
+  ct_assert_data(ct_last(0x700U + CT_NODE), 1U, 0x7f);
+  // No PDOs while pre-operational
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 0);
+}
+
+void test_canopen__boot_and_heartbeat(void) {
+  prv_run(prv_boot);
+  cl_assert_equal_i(ct_stops, 1);
+}
+
+static void prv_nmt_states(void) {
+  ct_clear();
+  ct_nmt(0x01);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_OPERATIONAL);
+  // The event-driven TPDO goes once on entering operational.
+  ct_assert_data(ct_last(0x180U + CT_NODE), 5U, 0x11, 0xdd, 0xcc, 0xbb, 0xaa);
+
+  // Commands for other nodes are ignored, broadcast ones are not.
+  ct_rx(0x000U, 2U, 0x02, CT_NODE + 1U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_OPERATIONAL);
+  ct_rx(0x000U, 2U, 0x02, 0);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_STOPPED);
+
+  // No SDO while stopped
+  ct_clear();
+  ct_rx(0x600U + CT_NODE, 8U, 0x40, 0x00, 0x10, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(ct_count(0x580U + CT_NODE), 0);
+  ct_sleep(100U);
+  ct_assert_data(ct_last(0x700U + CT_NODE), 1U, 0x04);
+
+  ct_nmt(0x80);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+
+  // Reset communication restores the communication defaults only.
+  ct_sdo_write(0x1017, 0, 500U, 2U);
+  ct_sdo_write(OD_OUTPUT, 0, 0x55U, 1U);
+  ct_clear();
+  ct_nmt(0x82);
+  cl_assert_equal_i(s_reset, PBL_CANOPEN_RESET_COMM);
+  ct_assert_data(ct_last(0x700U + CT_NODE), 1U, 0x00);
+  cl_assert_equal_i(ct_sdo_read(0x1017, 0), 100U);
+  cl_assert_equal_i(ct_sdo_read(OD_OUTPUT, 0), 0x55U);
+
+  // Reset node restores the application ones too.
+  ct_nmt(0x81);
+  cl_assert_equal_i(s_reset, PBL_CANOPEN_RESET_NODE);
+  cl_assert_equal_i(ct_sdo_read(OD_OUTPUT, 0), 0U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+}
+
+void test_canopen__nmt(void) {
+  prv_run(prv_nmt_states);
+}
+
+static void prv_sdo_expedited(void) {
+  uint8_t output;
+
+  cl_assert_equal_i(ct_sdo_read(0x1000, 0), 0x00020192U);
+  cl_assert_equal_i(ct_sdo_read(0x1018, 0), 4U);
+  cl_assert_equal_i(ct_sdo_read(0x1018, 1), 0x12345678U);
+  cl_assert_equal_i(ct_sdo_read(0x1018, 2), 0x42U);
+  cl_assert_equal_i(ct_sdo_read(0x1200, 1), 0x600U + CT_NODE);
+  cl_assert_equal_i(ct_sdo_read(0x1200, 2), 0x580U + CT_NODE);
+  cl_assert_equal_i(ct_sdo_read(0x1014, 0), 0x80U + CT_NODE);
+  cl_assert_equal_i(ct_sdo_read(0x1800, 1), 0x40000180U + CT_NODE);
+  cl_assert_equal_i(ct_sdo_read(0x1a00, 0), 2U);
+  cl_assert_equal_i(ct_sdo_read(0x1a00, 1), 0x20000008U);
+  cl_assert_equal_i(ct_sdo_read(0x1a00, 2), 0x20010020U);
+  cl_assert_equal_i(ct_sdo_read(OD_CONFIG, OD_CONFIG_OFFSET), (uint32_t)-5);
+
+  // Upload of a byte says its size.
+  cl_assert_equal_i(ct_sdo(0x40U, OD_STATUS, 0, 0U)->data[0], 0x4fU);
+
+  s_writes = 0;
+  ct_sdo_write(OD_OUTPUT, 0, 0x7aU, 1U);
+  cl_assert_equal_i(s_writes, 1);
+  cl_assert_equal_i(s_write_index, OD_OUTPUT);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_OUTPUT, 0, &output, sizeof(output)), 1);
+  cl_assert_equal_i(output, 0x7aU);
+
+  // Expedited without a size takes the entry's.
+  cl_assert_equal_i(ct_sdo(0x22U, OD_CONFIG, OD_CONFIG_GAIN, 0x1234U)->data[0], 0x60U);
+  cl_assert_equal_i(ct_sdo_read(OD_CONFIG, OD_CONFIG_GAIN), 0x1234U);
+
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, OD_STATUS, 0, 1U), 0x06010002U);
+  cl_assert_equal_i(ct_sdo_abort(0x40U, OD_SECRET, 0, 0U), 0x06010001U);
+  cl_assert_equal_i(ct_sdo_abort(0x40U, 0x3000, 0, 0U), 0x06020000U);
+  cl_assert_equal_i(ct_sdo_abort(0x40U, OD_CONFIG, 9, 0U), 0x06090011U);
+  cl_assert_equal_i(ct_sdo_abort(0x2bU, OD_OUTPUT, 0, 1U), 0x06070012U);
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, OD_VALUE, 0, 1U), 0x06070013U);
+  cl_assert_equal_i(ct_sdo_abort(0xc0U, OD_VALUE, 0, 0U), 0x05040001U);
+
+  // The application refuses a value.
+  s_write_ret = -ERANGE;
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, OD_OUTPUT, 0, 1U), 0x06090030U);
+  cl_assert_equal_i(ct_sdo_read(OD_OUTPUT, 0), 0x7aU);
+}
+
+void test_canopen__sdo_expedited(void) {
+  prv_run(prv_sdo_expedited);
+}
+
+static void prv_sdo_segmented(void) {
+  static const uint8_t seg1[7] = {'P', 'e', 'b', 'b', 'l', 'e', 'O'};
+  static const uint8_t seg2[7] = {'S', '!', 0, 0, 0, 0, 0};
+  const struct pbl_can_frame *f;
+  char label[21] = {0};
+
+  // Upload of a string longer than 4 bytes
+  f = ct_sdo(0x40U, OD_LABEL, 0, 0U);
+  cl_assert_equal_i(f->data[0], 0x41U);
+  cl_assert_equal_i(ct_get_le32(&f->data[4]), 13U);
+  ct_sdo_segment(0x60U, seg1);
+  f = ct_last(0x580U + CT_NODE);
+  ct_assert_data(f, 8U, 0x00, 'h', 'e', 'l', 'l', 'o', ' ', 'c');
+  ct_sdo_segment(0x70U, seg1);
+  f = ct_last(0x580U + CT_NODE);
+  // 6 bytes left, 1 unused, last
+  ct_assert_data(f, 8U, 0x13, 'a', 'n', 'o', 'p', 'e', 'n', 0);
+
+  // Download of a shorter one, size given
+  f = ct_sdo(0x21U, OD_LABEL, 0, 9U);
+  cl_assert_equal_i(f->data[0], 0x60U);
+  ct_sdo_segment(0x00U, seg1);
+  ct_assert_data(ct_last(0x580U + CT_NODE), 8U, 0x20, 0, 0, 0, 0, 0, 0, 0);
+  // Toggle set, 2 bytes, 5 unused, last
+  ct_sdo_segment(0x1bU, seg2);
+  ct_assert_data(ct_last(0x580U + CT_NODE), 8U, 0x30, 0, 0, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_LABEL, 0, label, sizeof(label)), 9);
+  cl_assert_equal_s(label, "PebbleOS!");
+
+  // A repeated toggle aborts.
+  ct_sdo(0x21U, OD_LABEL, 0, 14U);
+  ct_sdo_segment(0x00U, seg1);
+  ct_sdo_segment(0x00U, seg1);
+  f = ct_last(0x580U + CT_NODE);
+  cl_assert_equal_i(f->data[0], 0x80U);
+  cl_assert_equal_i(ct_get_le32(&f->data[4]), 0x05030000U);
+
+  // A size that does not match what came aborts, without a write.
+  ct_sdo(0x21U, OD_LABEL, 0, 10U);
+  ct_sdo_segment(0x0bU, seg2);
+  f = ct_last(0x580U + CT_NODE);
+  cl_assert_equal_i(ct_get_le32(&f->data[4]), 0x06070010U);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_LABEL, 0, label, sizeof(label)), 9);
+
+  // Too long for the entry
+  cl_assert_equal_i(ct_sdo_abort(0x21U, OD_LABEL, 0, 21U), 0x06070012U);
+
+  // A transfer left hanging times out.
+  ct_sdo(0x21U, OD_LABEL, 0, 9U);
+  ct_clear();
+  ct_sleep(1100U);
+  f = ct_last(0x580U + CT_NODE);
+  cl_assert_equal_i(f->data[0], 0x80U);
+  cl_assert_equal_i(ct_get_le32(&f->data[4]), 0x05040000U);
+}
+
+void test_canopen__sdo_segmented(void) {
+  prv_run(prv_sdo_segmented);
+}
+
+static void prv_tpdo(void) {
+  uint8_t status = 0x22U;
+  uint32_t value = 0x12345678U;
+
+  // Past the inhibit time of the TPDO sent on entering operational
+  ct_nmt(0x01);
+  ct_sleep(15U);
+  ct_clear();
+
+  // A change goes at once, then waits for the 10 ms inhibit time.
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_STATUS, 0, &status, 1U), 0);
+  ct_sleep(1U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 1);
+  ct_assert_data(ct_last(0x180U + CT_NODE), 5U, 0x22, 0xdd, 0xcc, 0xbb, 0xaa);
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_VALUE, 0, &value, 4U), 0);
+  status = 0x33U;
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_STATUS, 0, &status, 1U), 0);
+  ct_sleep(1U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 1);
+  ct_sleep(10U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 2);
+  ct_assert_data(ct_last(0x180U + CT_NODE), 5U, 0x33, 0x78, 0x56, 0x34, 0x12);
+
+  // An unchanged value is no event.
+  ct_sleep(20U);
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_STATUS, 0, &status, 1U), 0);
+  ct_sleep(1U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 2);
+
+  cl_assert_equal_i(pbl_canopen_tpdo_request(&ct_co, 1U), 0);
+  ct_sleep(1U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 3);
+  cl_assert_equal_i(pbl_canopen_tpdo_request(&ct_co, 2U), -ENOTSUP);
+  cl_assert_equal_i(pbl_canopen_tpdo_request(&ct_co, 9U), -ENOENT);
+
+  // TPDO 2 goes every second SYNC, sampled after the SYNC callback; TPDO 3
+  // on the first SYNC after a change.
+  ct_clear();
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(s_syncs, 1);
+  cl_assert_equal_i(ct_count(0x280U + CT_NODE), 0);
+  cl_assert_equal_i(ct_count(0x380U + CT_NODE), 1);
+  ct_assert_data(ct_last(0x380U + CT_NODE), 1U, 0x33);
+  status = 0x44U;
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_STATUS, 0, &status, 1U), 0);
+  ct_sleep(20U);
+  cl_assert_equal_i(ct_count(0x380U + CT_NODE), 1);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(s_syncs, 2);
+  ct_assert_data(ct_last(0x280U + CT_NODE), 4U, 0x05, 0x03, 0x02, 0x01);
+  ct_assert_data(ct_last(0x380U + CT_NODE), 1U, 0x44);
+  ct_rx(0x080U, 1U, 7);
+  cl_assert_equal_i(s_sync_counter, 7);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(s_sync_counter, 0);
+  cl_assert_equal_i(ct_count(0x280U + CT_NODE), 2);
+  cl_assert_equal_i(ct_count(0x380U + CT_NODE), 2);
+
+  // Nothing once stopped
+  ct_nmt(0x02);
+  ct_clear();
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(pbl_canopen_tpdo_request(&ct_co, 1U), 0);
+  ct_sleep(5U);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE) + ct_count(0x280U + CT_NODE), 0);
+}
+
+void test_canopen__tpdo(void) {
+  prv_run(prv_tpdo);
+}
+
+static void prv_rpdo(void) {
+  const struct pbl_can_frame *f;
+  int16_t setpoint;
+  uint8_t output;
+
+  // Ignored while pre-operational
+  ct_rx(0x200U + CT_NODE, 3U, 0x01, 0x02, 0x03);
+  cl_assert_equal_i(ct_sdo_read(OD_OUTPUT, 0), 0U);
+
+  ct_nmt(0x01);
+  s_writes = 0;
+  ct_rx(0x200U + CT_NODE, 3U, 0x42, 0xfe, 0xff);
+  cl_assert_equal_i(s_writes, 2);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_OUTPUT, 0, &output, 1U), 1);
+  cl_assert_equal_i(output, 0x42U);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_SETPOINT, 0, &setpoint, 2U), 2);
+  cl_assert_equal_i(setpoint, -2);
+
+  // Too short: not processed, emergency 0x8210
+  ct_clear();
+  ct_rx(0x200U + CT_NODE, 2U, 0x43, 0x00);
+  f = ct_last(0x80U + CT_NODE);
+  ct_assert_data(f, 8U, 0x10, 0x82, 0x11, 0x01, 0x00, 0, 0, 0);
+  cl_assert_equal_i(ct_sdo_read(OD_OUTPUT, 0), 0x42U);
+  cl_assert_equal_i(ct_sdo_read(0x1001, 0), 0x11U);
+
+  // The next good one clears it.
+  ct_clear();
+  ct_rx(0x200U + CT_NODE, 3U, 0x44, 0x00, 0x00);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(ct_sdo_read(0x1001, 0), 0U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 0), 1U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 1), 0x8210U);
+
+  // RPDO 2 is synchronous: applied on the next SYNC.
+  ct_rx(0x300U + CT_NODE, 2U, 0x10, 0x00);
+  cl_assert_equal_i(ct_sdo_read(OD_SETPOINT, 0), 0U);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(ct_sdo_read(OD_SETPOINT, 0), 0x10U);
+
+  // Its 30 ms deadline is missed: emergency 0x8250, cleared by the next one.
+  ct_clear();
+  ct_sleep(40U);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x50, 0x82, 0x11, 0x02, 0x00, 0, 0, 0);
+  ct_clear();
+  ct_rx(0x300U + CT_NODE, 2U, 0x20, 0x00);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 0), 2U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 1), 0x8250U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 2), 0x8210U);
+
+  // Clearing the history
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1003, 0, 1U), 0x06090030U);
+  ct_sdo_write(0x1003, 0, 0U, 1U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 0), 0U);
+}
+
+void test_canopen__rpdo(void) {
+  prv_run(prv_rpdo);
+}
+
+static void prv_remap(void) {
+  // The mapping cannot change while the TPDO is valid.
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1a00, 0, 0U), 0x08000022U);
+  // Nor can the COB-ID of a valid PDO.
+  cl_assert_equal_i(ct_sdo_abort(0x23U, 0x1800, 1, 0x190U), 0x06090030U);
+
+  ct_sdo_write(0x1800, 1, 0xc0000180U + CT_NODE, 4U);
+  // Entries need sub-index 0 cleared first.
+  cl_assert_equal_i(ct_sdo_abort(0x23U, 0x1a00, 1, 0x20020008U), 0x08000022U);
+  ct_sdo_write(0x1a00, 0, 0U, 1U);
+  ct_sdo_write(0x1a00, 1, 0x20020008U, 4U);
+  ct_sdo_write(0x1a00, 2, 0x20030010U, 4U);
+  ct_sdo_write(0x1a00, 3, 0x20050020U, 4U);
+  // Not mappable, missing, too long
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1a00, 0, 3U), 0x06040041U);
+  ct_sdo_write(0x1a00, 3, 0x30000008U, 4U);
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1a00, 0, 3U), 0x06020000U);
+  ct_sdo_write(0x1a00, 3, 0x20010020U, 4U);
+  ct_sdo_write(0x1a00, 4, 0x20010020U, 4U);
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1a00, 0, 4U), 0x06040042U);
+  ct_sdo_write(0x1a00, 0, 2U, 1U);
+  // A restricted COB-ID is refused.
+  cl_assert_equal_i(ct_sdo_abort(0x23U, 0x1800, 1, 0x705U), 0x06090030U);
+  ct_sdo_write(0x1800, 1, 0x40000190U, 4U);
+  cl_assert_equal_i(ct_sdo_abort(0x2fU, 0x1800, 2, 250U), 0x06090030U);
+
+  ct_nmt(0x01);
+  ct_clear();
+  // Sent on entering operational, then again past the inhibit time.
+  ct_rx(0x200U + CT_NODE, 3U, 0x99, 0x34, 0x12);
+  cl_assert_equal_i(ct_count(0x190U), 0);
+  ct_sleep(15U);
+  cl_assert_equal_i(ct_count(0x190U), 1);
+  ct_assert_data(ct_last(0x190U), 3U, 0x99, 0x34, 0x12);
+  cl_assert_equal_i(ct_count(0x180U + CT_NODE), 0);
+
+  // Back to the defaults
+  ct_nmt(0x82);
+  cl_assert_equal_i(ct_sdo_read(0x1800, 1), 0x40000180U + CT_NODE);
+  cl_assert_equal_i(ct_sdo_read(0x1a00, 1), 0x20000008U);
+}
+
+void test_canopen__remap(void) {
+  prv_run(prv_remap);
+}
+
+static void prv_emcy(void) {
+  static const uint8_t msef[5] = {1, 2, 3, 4, 5};
+
+  ct_clear();
+  cl_assert_equal_i(pbl_canopen_emcy_raise(&ct_co, 0x5000U, 0x80U, msef), 0);
+  cl_assert_equal_i(pbl_canopen_emcy_raise(&ct_co, 0x5000U, 0x80U, msef), -EALREADY);
+  ct_sleep(1U);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x50, 0x81, 1, 2, 3, 4, 5);
+
+  // Held back by the inhibit time
+  ct_sdo_write(0x1015, 0, 1000U, 2U);
+  ct_clear();
+  cl_assert_equal_i(pbl_canopen_emcy_raise(&ct_co, 0x4200U, 0x08U, nullptr), 0);
+  cl_assert_equal_i(pbl_canopen_emcy_clear(&ct_co, 0x5000U), 0);
+  ct_sleep(1U);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x42, 0x89, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(ct_count(0x80U + CT_NODE), 1);
+  ct_sleep(100U);
+  cl_assert_equal_i(ct_count(0x80U + CT_NODE), 2);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x00, 0x09, 0, 0, 0, 0, 0);
+
+  cl_assert_equal_i(pbl_canopen_emcy_clear(&ct_co, 0x5000U), -ENOENT);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 0), 2U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 1), 0x4200U);
+  cl_assert_equal_i(ct_sdo_read(0x1003, 2), 0x5000U);
+
+  // Disabled by its COB-ID
+  ct_sdo_write(0x1014, 0, 0x80000085U, 4U);
+  ct_clear();
+  cl_assert_equal_i(pbl_canopen_emcy_clear(&ct_co, 0x4200U), 0);
+  ct_sleep(200U);
+  cl_assert_equal_i(ct_count(0x80U + CT_NODE), 0);
+  cl_assert_equal_i(ct_sdo_read(0x1001, 0), 0U);
+}
+
+void test_canopen__emcy(void) {
+  prv_run(prv_emcy);
+}
+
+static void prv_hb_consumer(void) {
+  // Not monitored until the first heartbeat
+  ct_sleep(100U);
+  cl_assert_equal_i(s_hb_calls, 0);
+
+  ct_rx(0x709U, 1U, 0x00);
+  cl_assert_equal_i(s_hb_calls, 1);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_BOOT);
+  cl_assert_equal_i(s_hb_node, 9U);
+  ct_rx(0x709U, 1U, 0x7f);
+  cl_assert_equal_i(s_hb_calls, 2);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_STATE);
+  cl_assert_equal_i(s_hb_state, PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  ct_sleep(30U);
+  ct_rx(0x709U, 1U, 0x7f);
+  cl_assert_equal_i(s_hb_calls, 2);
+
+  ct_clear();
+  ct_sleep(60U);
+  cl_assert_equal_i(s_hb_calls, 3);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_TIMEOUT);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x30, 0x81, 0x11, 0x09, 0, 0, 0, 0);
+
+  ct_clear();
+  ct_rx(0x709U, 1U, 0x05);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_STATE);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0);
+
+  // The same node twice is refused; another one takes over the second entry.
+  cl_assert_equal_i(ct_sdo_abort(0x23U, 0x1016, 2, 0x00090064U), 0x06040043U);
+  ct_sdo_write(0x1016, 2, 0x000a0064U, 4U);
+  ct_sdo_write(0x1016, 1, 0U, 4U);
+  ct_rx(0x70aU, 1U, 0x05);
+  cl_assert_equal_i(s_hb_node, 10U);
+  s_hb_calls = 0;
+  ct_rx(0x709U, 1U, 0x7f);
+  cl_assert_equal_i(s_hb_calls, 0);
+}
+
+void test_canopen__heartbeat_consumer(void) {
+  prv_run(prv_hb_consumer);
+}
+
+static void prv_sync_monitoring(void) {
+  ct_sdo_write(0x1006, 0, 10000U, 4U);
+  ct_nmt(0x01);
+
+  // Not monitored before the first SYNC
+  ct_sleep(30U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  ct_rx(0x080U, 0U);
+  ct_sleep(10U);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  // Lost after 15 ms: emergency 0x8100, then pre-operational
+  ct_clear();
+  ct_sleep(20U);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x81, 0x11, 0, 0, 0, 0, 0);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  cl_assert_equal_i(s_nmt_state, PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+
+  ct_clear();
+  ct_rx(0x080U, 0U);
+  ct_assert_data(ct_last(0x80U + CT_NODE), 8U, 0x00, 0x00, 0x00, 0, 0, 0, 0, 0);
+}
+
+void test_canopen__sync_monitoring(void) {
+  prv_run(prv_sync_monitoring);
+}
+
+static void prv_error_behavior(void) {
+  cl_assert_equal_i(ct_sdo_read(0x1029, 0), 1U);
+  cl_assert_equal_i(ct_sdo_read(0x1029, 1), 0U);
+
+  // No state change
+  ct_sdo_write(0x1029, 1, 1U, 1U);
+  ct_nmt(0x01);
+  ct_rx(0x709U, 1U, 0x05);
+  ct_sleep(60U);
+  cl_assert_equal_i(s_hb_event, PBL_CANOPEN_HB_TIMEOUT);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_OPERATIONAL);
+
+  // Stopped, from operational or pre-operational
+  ct_sdo_write(0x1029, 1, 2U, 1U);
+  ct_nmt(0x80);
+  ct_rx(0x709U, 1U, 0x05);
+  ct_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_STOPPED);
+
+  // Pre-operational only from operational
+  ct_nmt(0x80);
+  ct_sdo_write(0x1029, 1, 0U, 1U);
+  ct_rx(0x709U, 1U, 0x05);
+  ct_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+  ct_nmt(0x01);
+  ct_rx(0x709U, 1U, 0x05);
+  ct_sleep(60U);
+  cl_assert_equal_i(pbl_canopen_nmt_state(&ct_co), PBL_CANOPEN_NMT_PRE_OPERATIONAL);
+}
+
+void test_canopen__error_behavior(void) {
+  prv_run(prv_error_behavior);
+}
+
+static void prv_sync_window(void) {
+  ct_nmt(0x01);
+  ct_sdo_write(0x1007, 0, 1000U, 4U);
+
+  // A late control loop: the synchronous TPDOs due are dropped.
+  s_sync_spin_us = 3000U;
+  ct_clear();
+  ct_rx(0x080U, 0U);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(s_syncs, 2);
+  cl_assert_equal_i(ct_count(0x280U + CT_NODE), 0);
+  s_sync_spin_us = 0U;
+  ct_rx(0x080U, 0U);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(ct_count(0x280U + CT_NODE), 1);
+
+  // A synchronous RPDO past the window is dropped.
+  ct_sdo_write(0x1007, 0, 1U, 4U);
+  ct_rx(0x080U, 0U);
+  ct_rx(0x300U + CT_NODE, 2U, 0x10, 0x00);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(ct_sdo_read(OD_SETPOINT, 0), 0U);
+  ct_sdo_write(0x1007, 0, 0U, 4U);
+  ct_rx(0x300U + CT_NODE, 2U, 0x10, 0x00);
+  ct_rx(0x080U, 0U);
+  cl_assert_equal_i(ct_sdo_read(OD_SETPOINT, 0), 0x10U);
+}
+
+void test_canopen__sync_window(void) {
+  prv_run(prv_sync_window);
+}
+
+static void prv_api(void) {
+  uint8_t small[2];
+  char label[4] = "abc";
+  uint32_t value;
+
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, 0x3000, 0, &value, 4U), -ENOENT);
+  cl_assert_equal_i(pbl_canopen_od_read(&ct_co, OD_VALUE, 0, small, sizeof(small)), -ENOSPC);
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_VALUE, 0, small, sizeof(small)), -EINVAL);
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, OD_LABEL, 0, label, 3U), 0);
+  cl_assert_equal_i(ct_sdo(0x40U, OD_LABEL, 0, 0U)->data[0], 0x47U);
+  // Read-only over the bus, writable by the application
+  value = 7U;
+  cl_assert_equal_i(pbl_canopen_od_write(&ct_co, 0x1018, 4, &value, 4U), 0);
+  cl_assert_equal_i(ct_sdo_read(0x1018, 4), 7U);
+  cl_assert_equal_i(pbl_canopen_start(&ct_co), -EALREADY);
+}
+
+void test_canopen__api(void) {
+  prv_run(prv_api);
+}
+
+void test_canopen__init_errors(void) {
+  struct pbl_canopen_config cfg = {
+    .can = &ct_can,
+    .od = &od,
+    .node_id = 0U,
+    .bitrate = 500000U,
+  };
+
+  cl_assert_equal_i(pbl_canopen_init(&ct_co, &cfg), -EINVAL);
+  cfg.node_id = 128U;
+  cl_assert_equal_i(pbl_canopen_init(&ct_co, &cfg), -EINVAL);
+  cfg.node_id = 1U;
+  cfg.od = nullptr;
+  cl_assert_equal_i(pbl_canopen_init(&ct_co, &cfg), -EINVAL);
+}

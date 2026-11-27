@@ -6,6 +6,8 @@ Samples of the {doc}`subsystems <../../subsystems/index>`, in `samples/subsys`.
 :maxdepth: 1
 
 bluetooth/ios_clients.md
+canopen/device.md
+canopen/drive.md
 crc/checksums.md
 crypto/sha256.md
 crypto/aes.md

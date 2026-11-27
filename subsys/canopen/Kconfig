@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CANOPEN
+    bool "CANopen"
+    depends on CAN
+    help
+      CANopen device (CiA 301): NMT slave, heartbeat, SDO server, PDOs,
+      SYNC consumer and emergency producer, with an object dictionary
+      generated from YAML.
+
+if CANOPEN
+
+config CANOPEN_THREAD_PRIO
+    int "Thread priority"
+    default 4
+    help
+      Priority of the thread every node runs on, the highest by default:
+      SYNC, PDOs and the SYNC callback run on it.
+
+config CANOPEN_THREAD_STACK_SIZE
+    int "Thread stack size in bytes"
+    default 1536
+
+config CANOPEN_RX_QUEUE_SIZE
+    int "Received frames queued per node"
+    default 16
+    help
+      Frames received from the controller interrupt and not yet
+      processed by the node's thread. Frames past this are dropped and
+      raise a CAN overrun emergency.
+
+config CANOPEN_TX_QUEUE_SIZE
+    int "Frames queued for transmission per node"
+    default 16
+    range 1 255
+    help
+      Frames waiting for room in the controller. A SYNC sends every
+      synchronous TPDO due at once, so this needs room for all of them,
+      a heartbeat and an emergency message.
+
+config CANOPEN_SDO_TIMEOUT_MS
+    int "SDO segmented transfer timeout in milliseconds"
+    default 1000
+
+config CANOPEN_EMCY_ACTIVE
+    int "Errors raised at once per node"
+    default 8
+    range 1 255
+
+config CANOPEN_EMCY_QUEUE
+    int "Emergency messages held back by the inhibit time"
+    default 4
+    range 1 255
+
+config CANOPEN_STORAGE
+    bool "Parameter storage"
+    depends on SETTINGS
+    help
+      Save the parameters, the entries the bus can write, to a settings
+      file on command (0x1010), load them on reset, and restore their
+      defaults (0x1011), for dictionaries with storage enabled.
+
+config CANOPEN_STORAGE_SIZE
+    int "Space for the stored parameters of a node, in bytes"
+    default 4096
+    depends on CANOPEN_STORAGE
+
+config CANOPEN_CIA402
+    bool "CiA 402 drive profile"
+    help
+      Drive state machine of CiA 402 on a node whose object dictionary
+      has a cia402 section, for motor control.
+
+module = CANOPEN
+module-str = CANopen
+source "subsys/logging/Kconfig.template.log_level"
+
+endif

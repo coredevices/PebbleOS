@@ -3,6 +3,7 @@
 
 rsource "analytics/Kconfig"
 rsource "bluetooth/Kconfig"
+rsource "canopen/Kconfig"
 rsource "console/Kconfig"
 rsource "coredump/Kconfig"
 rsource "crc/Kconfig"

@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+device:
+  type: 0x00020192
+  name: test device
+  vendor_id: 0x12345678
+  product_code: 0x42
+  revision: 3
+
+errors: 4
+
+heartbeat:
+  producer: 100
+  consumers:
+    - {node: 9, time: 50}
+    - {}
+
+tpdos:
+  - transmission: 254
+    inhibit: 100
+    mapping: [status, value]
+  - transmission: 2
+    mapping: [value]
+  - transmission: 0
+    mapping: [status]
+
+rpdos:
+  - mapping: [output, setpoint]
+  - transmission: 1
+    event_timer: 30
+    mapping: [setpoint]
+
+objects:
+  - {index: 0x2000, name: status, type: u8, access: ro, pdo: true, default: 0x11}
+  - {index: 0x2001, name: value, type: u32, access: rw, pdo: true, default: 0xaabbccdd}
+  - {index: 0x2002, name: output, type: u8, access: rw, pdo: true}
+  - {index: 0x2003, name: setpoint, type: i16, access: rw, pdo: true}
+  - {index: 0x2004, name: label, type: string, size: 20, access: rw, default: "hello canopen"}
+  - {index: 0x2005, name: secret, type: u32, access: wo}
+  - index: 0x2006
+    name: config
+    type: record
+    members:
+      - {name: gain, type: u16, default: 7}
+      - {name: offset, type: i32, default: -5}

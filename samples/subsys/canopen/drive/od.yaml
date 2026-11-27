@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+device:
+  type: 0x00020192
+  name: PebbleOS CANopen drive sample
+  product_code: 2
+  revision: 1
+
+heartbeat:
+  producer: 100
+
+cia402:
+  modes: [pv, csv]
+
+rpdos:
+  - mapping: [controlword, modes_of_operation]
+  # Applied on SYNC
+  - transmission: 1
+    mapping: [target_velocity]
+
+tpdos:
+  - transmission: 254
+    inhibit: 10
+    mapping: [statusword, modes_of_operation_display]
+  # Sampled on SYNC
+  - transmission: 1
+    mapping: [statusword, velocity_actual_value]
