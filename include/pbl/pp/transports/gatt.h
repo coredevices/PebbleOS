@@ -37,9 +37,10 @@ void pbl_pp_gatt_create(void);
 void pbl_pp_gatt_destroy(void);
 
 /**
- * @brief Look for the PPoGATT services of the phone, and open a session with each.
+ * @brief Look for the PPoGATT service of the phone, and open a session with it.
  *
- * The Pebble app hosts one, and so may other apps.
+ * Only the service of the Pebble app is accepted. If the phone shows several, e.g. a stale one
+ * of an earlier run of the app, the last one found is kept.
  *
  * @param conn_handle The connection of the phone.
  */

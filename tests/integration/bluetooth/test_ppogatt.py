@@ -277,10 +277,11 @@ def test_forward_version_unsupported(dut, watch, phones):
 
 
 @BOTH
-def test_forward_app_session(dut, watch, phones):
-    """A third-party app's service opens an app session."""
+def test_forward_app_service_refused(dut, watch, phones):
+    """A third-party app's service gets no session."""
     since = dut.logs.mark()
     phone = phones(ppogatt=FORWARD, forward_meta=_meta(0, 1, APP_UUID))
-    phone.connect()
-    prefix = str(APP_UUID)[:8]
-    dut.wait_for_log(rf"is_open=1, destination=A, app_uuid=\{{{prefix}", 10, since)
+    with pytest.raises(WatchTimeout):
+        phone.connect()
+    dut.wait_for_log(r"Not the service of the Pebble app", 10, since)
+    assert not dut.logs.find(SESSION_OPENED, since)

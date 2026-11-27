@@ -85,8 +85,8 @@ mobile app before it opens a system session.
 
 PPoGATT carries the Pebble protocol over BLE GATT, with ordering,
 acknowledgments and retransmission on top of unacknowledged GATT writes and
-notifications. Each PPoGATT service is one session: the Pebble mobile app
-hosts one, and third party apps may host their own.
+notifications. A PPoGATT service is one session, and only the Pebble mobile
+app may host one: services of other apps are refused.
 
 It has two roles:
 
