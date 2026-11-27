@@ -18,7 +18,7 @@
  * Each edge of a key restarts its debounce timer; when the timer expires the key is read and, if
  * it changed, reported. A key must therefore be stable for its debounce interval to be reported.
  * Keys held at initialization are reported once their debounce interval has elapsed. Keys marked
- * as wake sources wake the system from power-off.
+ * as wake sources wake the system from power-off when pressed, at once if held at power-off.
  *
  * The configuration follows the devicetree gpio-keys binding, one key per child node:
  *
