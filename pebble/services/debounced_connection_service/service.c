@@ -27,7 +27,7 @@
 //!
 //! At the moment, the connections this module tracks are:
 //!   + Watch <-> Mobile App / PebbleKit JS
-//!   + Watch <-> third-party App using PebbleKit
+//!   + Watch <-> third-party App using PebbleKit, through the Mobile App
 
 typedef enum {
   MobileAppDebounce = 0,

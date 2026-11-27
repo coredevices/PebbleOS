@@ -24,13 +24,9 @@
 //! The service also allows you to determine if the Pebble watch can establish
 //! a connection to a PebbleKit companion app by subscribing to the
 //! pebblekit_connection_handler or by calling the
-//! connection_service_peek_pebblekit_connection function.  Today, due to
-//! architectural differences between iOS and Android, this will return true
-//! for Android anytime a connection with the Pebble mobile app is established
-//! (since PebbleKit messages are routed through the Android app). For iOS,
-//! this will return true when any PebbleKit companion app has established a
-//! connection with the Pebble watch (since companion app messages are routed
-//! directly to the watch)
+//! connection_service_peek_pebblekit_connection function. PebbleKit messages
+//! are routed through the Pebble mobile app, so this will return true anytime
+//! a connection with a Pebble mobile app that relays them is established.
 //!
 //!   @{
 //! Callback type for connection events
