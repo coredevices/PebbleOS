@@ -1476,7 +1476,12 @@ class Generator:
             target, cells = entries[index]
             return self._provided(src, target, "gpio", cells)
         if kind == "pinctrl":
-            return self._pinctrl(src, key) if node.has("pinctrl-names") else None
+            if not node.has("pinctrl-names"):
+                return None
+            # A state a node lacks, as a sleep state, takes the default
+            if key not in node.strings("pinctrl-names") and self._may_lack(arg):
+                return None
+            return self._pinctrl(src, key)
         raise AssertionError(kind)
 
     def _unconnected(self, src, prop):
