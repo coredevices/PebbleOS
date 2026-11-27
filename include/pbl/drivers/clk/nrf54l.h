@@ -30,6 +30,8 @@ extern const struct pbl_clk_controller pbl_clk_nrf54l;
 #define NRF54L_CLK_HFCLK 0
 /** LFCLK, from the LFXO crystal oscillator while enabled. */
 #define NRF54L_CLK_LFCLK 1
+/** XO24M, 24 MHz from the HFXO, on the nRF54LM20A. */
+#define NRF54L_CLK_XO24M 2
 /** @} */
 
 /** @brief Clock control block. */
@@ -75,7 +77,7 @@ int pbl_clk_nrf54l_init(const struct pbl_device *dev);
  */
 #define PBL_CLK_NRF54L_DEFINE(sym, _name, _base, _oscillators, _hfxo_trim, _lfxo_trim, _hfxo,   \
                               _lfxo, _hfxo_cap_ff, _lfxo_cap_ff)                                \
-  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, 2);                                                      \
+  PBL_CLK_CONTROLLER_STATE_DEFINE(sym, 3);                                                      \
   PBL_DEVICE_INSTANCE(sym, struct pbl_clk_nrf54l, struct pbl_clk_controller, ctrl) {            \
     .ctrl =                                                                                     \
         PBL_CLK_CONTROLLER_INIT(sym, _name, pbl_clk_nrf54l_init, nullptr, &pbl_clk_nrf54l_ops), \

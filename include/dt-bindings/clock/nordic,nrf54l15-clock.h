@@ -7,5 +7,6 @@
 /* Abstract IDs: new clocks go at the end. */
 #define NRF54L_CLOCK_HFCLK 0
 #define NRF54L_CLOCK_LFCLK 1
+#define NRF54L_CLOCK_XO24M 2
 
 #endif /* _DT_BINDINGS_CLOCK_NORDIC_NRF54L15_CLOCK_H */

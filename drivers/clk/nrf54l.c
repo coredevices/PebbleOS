@@ -23,6 +23,8 @@
 // The LFXO takes about 250 ms to start, worst case 600 ms
 #define LFXO_TIMEOUT_US 1000000U
 
+#define XO24M_RATE_MHZ 24000000000ULL
+
 static const struct pbl_clk_nrf54l *prv_clock(const struct pbl_clk_controller *ctrl) {
   return PBL_CONTAINER_OF(ctrl, const struct pbl_clk_nrf54l, ctrl);
 }
@@ -35,15 +37,14 @@ static inline void prv_putreg(const struct pbl_clk_nrf54l *clock, uint32_t offse
   pbl_writel(value, clock->base + offset);
 }
 
-#ifndef CONFIG_MPSL
-static void prv_start(const struct pbl_clk_nrf54l *clock, uint32_t task, uint32_t event) {
+[[maybe_unused]] static void prv_start(const struct pbl_clk_nrf54l *clock, uint32_t task,
+                                       uint32_t event) {
   prv_putreg(clock, event, 0U);
   prv_putreg(clock, task, 1U);
   while (prv_getreg(clock, event) == 0U) {
   }
   prv_putreg(clock, event, 0U);
 }
-#endif
 
 // Slope and offset of the capacitor trim of a crystal, the slope in two's complement
 static int prv_trim(const struct pbl_nvmem_cell *cell, int32_t *slope, int32_t *trim_offset) {
@@ -169,6 +170,14 @@ static int prv_enable(const struct pbl_clk_controller *ctrl, uint32_t id) {
       }
       return 0;
 #endif
+#ifdef CONFIG_SOC_NRF54LM20A
+    case NRF54L_CLK_XO24M:
+      if ((prv_getreg(clock, NRF54L_CLOCK_PLL24M_STAT_OFFSET) & CLOCK_PLL24M_STAT_STATE) == 0U) {
+        prv_start(clock, NRF54L_CLOCK_TASKS_XO24MSTART_OFFSET,
+                  NRF54L_CLOCK_EVENTS_XO24MSTARTED_OFFSET);
+      }
+      return 0;
+#endif
     default:
       return -EINVAL;
   }
@@ -190,6 +199,11 @@ static int prv_disable(const struct pbl_clk_controller *ctrl, uint32_t id) {
       prv_putreg(clock, NRF54L_CLOCK_TASKS_LFCLKSTOP_OFFSET, 1U);
 #endif
       return 0;
+#ifdef CONFIG_SOC_NRF54LM20A
+    case NRF54L_CLK_XO24M:
+      prv_putreg(clock, NRF54L_CLOCK_TASKS_XO24MSTOP_OFFSET, 1U);
+      return 0;
+#endif
     default:
       return -EINVAL;
   }
@@ -202,6 +216,11 @@ static int prv_get_rate(const struct pbl_clk_controller *ctrl, uint32_t id, uint
     case NRF54L_CLK_LFCLK:
       *rate_mhz = parent_mhz;
       return 0;
+#ifdef CONFIG_SOC_NRF54LM20A
+    case NRF54L_CLK_XO24M:
+      *rate_mhz = XO24M_RATE_MHZ;
+      return 0;
+#endif
     default:
       return -EINVAL;
   }
@@ -218,6 +237,11 @@ static int prv_get_parent(const struct pbl_clk_controller *ctrl, uint32_t id,
     case NRF54L_CLK_LFCLK:
       *parent = clock->lfxo;
       return 0;
+#ifdef CONFIG_SOC_NRF54LM20A
+    case NRF54L_CLK_XO24M:
+      *parent = (struct pbl_clk)PBL_CLK(&clock->ctrl, NRF54L_CLK_HFCLK);
+      return 0;
+#endif
     default:
       return -EINVAL;
   }
