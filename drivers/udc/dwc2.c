@@ -446,6 +446,8 @@ static void prv_bus_reset(const struct pbl_udc_dwc2 *d) {
     if (n != 0U) {
       prv_modify(d, DWC2_DIEPCTL(n), DEPCTL_USBAEP, 0U);
       prv_modify(d, DWC2_DOEPCTL(n), DEPCTL_USBAEP, 0U);
+      d->state->in[n].mps = 0U;
+      d->state->out[n].mps = 0U;
     }
     if (d->state->in[n].busy) {
       prv_done(d, n | PBL_UDC_EP_IN, &d->state->in[n], -ECONNRESET);
@@ -694,6 +696,9 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
       prv_modify(d, ctl, DEPCTL_USBAEP, 0U);
       prv_modify(d, DWC2_DAINTMSK, in ? DAINT_IN(n) : DAINT_OUT(n), 0U);
     }
+  }
+  if (n != 0U) {
+    ep->mps = 0U;
   }
   if (ep->busy) {
     prv_done(d, addr, ep, -ECONNABORTED);

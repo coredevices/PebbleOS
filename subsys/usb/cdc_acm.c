@@ -252,7 +252,9 @@ static void prv_rx_start(uint8_t n) {
   (void)pbl_udc_ep_queue(UDC, prv_ep(EP_DATA_OUT(n)), s_ports[n].rx_buf, pbl_usbd_bulk_mps());
 }
 
+// On the stack's thread, while the transfers end in the interrupt
 static void prv_configured(bool on) {
+  pbl_irq_lock();
   for (uint8_t n = 0U; n < NUM_PORTS; n++) {
     struct prv_port *p = &s_ports[n];
 
@@ -263,6 +265,7 @@ static void prv_configured(bool on) {
       prv_rx_start(n);
     }
   }
+  pbl_irq_unlock();
 }
 
 static int prv_class_request(const struct pbl_usb_setup *setup, uint8_t **data, uint16_t *len) {
@@ -280,10 +283,12 @@ static int prv_class_request(const struct pbl_usb_setup *setup, uint8_t **data, 
       *len = sizeof(p->line_coding);
       return 0;
     case CDC_SET_CONTROL_LINE:
+      pbl_irq_lock();
       p->dtr = (setup->wValue & CDC_LINE_DTR) != 0U;
       if (prv_open(p) && !p->tx_busy && prv_ring_used(p) != 0U) {
         prv_tx_start(n);
       }
+      pbl_irq_unlock();
       return 0;
     case CDC_SEND_BREAK:
       return 0;

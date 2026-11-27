@@ -26,9 +26,31 @@ functions, setting the maximum packet size of bulk endpoints and the interval
 of interrupt ones for the bus speed, and enables the endpoints when the host
 configures the device. On a high-speed controller it also gives the device
 qualifier and the other-speed configuration, the device and its
-configuration as they would be at the other speed. Class and vendor requests to an interface go to its
-function, and so do the ends of the transfers on its endpoints. All of it runs
-from the controller's interrupt.
+configuration as they would be at the other speed. Class and vendor requests
+to an interface go to its function, and so do the ends of the transfers on its
+endpoints.
+
+The control path runs on a thread of the stack's own, a work queue: the
+controller's interrupt queues bus events, USB power coming and going, setup
+packets and the ends of the transfers on endpoint 0 in a small ring, and the
+thread takes them in order. Connecting to the bus and leaving it, configuring
+the device, switching an alternate setting and the class requests run there,
+with the calls they make into functions: `configured()`, `set_alt()`,
+`class_request()`, `control_out()` and `event()` may block, take a mutex or
+write to flash, but meanwhile the device answers no other request, and the
+host gives up on one left unanswered for long, 50 ms for some. The thread is
+its own rather than the system's queues so that no other work stands in the
+way of a setup packet. Should the ring overflow, the device leaves the bus and
+comes back, for the host to enumerate it again.
+
+The data path stays in the interrupt: the end of a transfer on any other
+endpoint goes to its function's `xfer_done()` from the controller's interrupt.
+A function locks out the interrupt where its control and data callbacks share
+state. Once the thread starts tearing down a configuration or an alternate
+setting, or the bus resets, or USB power goes, the ends of the transfers on
+its endpoints no longer reach the function, so none of them queues a transfer
+on an endpoint already disabled. Only then is the function told, with
+`configured()` or `set_alt()`.
 
 | Option | Default | Purpose |
 | --- | --- | --- |
@@ -38,6 +60,8 @@ from the controller's interrupt.
 | `CONFIG_USB_DEVICE_PRODUCT` | `PebbleOS device` | Product string |
 | `CONFIG_USB_DEVICE_SERIAL_NUMBER` | `y` | Serial number string, from the SoC's unique ID |
 | `CONFIG_USB_DEVICE_REMOTE_WAKEUP` | `n` | Advertise remote wakeup |
+| `CONFIG_USB_DEVICE_THREAD_PRIO` | `4` | Priority of the stack's thread |
+| `CONFIG_USB_DEVICE_THREAD_STACK_SIZE` | `2048` | Stack size of the stack's thread |
 
 The serial number is the unique ID of the SoC, from `mcu_get_serial()`
 ({doc}`../drivers/mcu`), folded to 48 bits by XOR and written as 12 uppercase
@@ -227,8 +251,8 @@ PBL_USBD_LISTENER_DEFINE(app) = {.event = prv_usb_event};
 | `PBL_USBD_EVENT_SUSPENDED` | The host suspended the bus |
 | `PBL_USBD_EVENT_RESUMED` | The bus is active again, resumed by the host or the device |
 
-Like the rest of the stack, they run from the controller's interrupt, or from
-the charger's work queue with interrupts locked for USB power.
+They run on the stack's thread, like the rest of the control path, in the
+order the events came.
 
 ## Suspend and remote wakeup
 
@@ -344,13 +368,13 @@ would go past the end of the partition fails with `errADDRESS`, before
 anything is written. An upload reads the partition from its beginning and
 ends with a short block at its end.
 
-The flash is not accessed from the controller's interrupt. A downloaded block
-is erased and written by a work item on the system work queue, and the
-device answers `DFU_GETSTATUS` with `dfuDNBUSY` and a poll timeout from the
-flash's subsector erase time until it is done. Upload blocks are read ahead
-by the same work item, into one of two buffers while the host reads the
-other. The device is manifestation tolerant: once a download ends it goes
-back to `dfuIDLE`, ready for another one.
+The flash is not accessed from the stack's thread, which keeps answering the
+host meanwhile. A downloaded block is erased and written by a work item on the
+system work queue, and the device answers `DFU_GETSTATUS` with `dfuDNBUSY` and
+a poll timeout from the flash's subsector erase time until it is done. Upload
+blocks are read ahead by the same work item, into one of two buffers while the
+host reads the other. The device is manifestation tolerant: once a download
+ends it goes back to `dfuIDLE`, ready for another one.
 
 | Option | Default | Purpose |
 | --- | --- | --- |
@@ -403,7 +427,9 @@ Its vendor requests, to its interface:
 A controller driver implements `struct pbl_udc_ops` and reports bus events,
 setup packets, suspend and resume among them, and the end of transfers from its
 interrupt. Its optional `wakeup` op signals resume to the host, which the MUSB
-and DWC2 drivers implement.
+and DWC2 drivers implement. Its operations are called from the stack's thread,
+its interrupt and any context a function sends from, so they lock out its
+interrupt where they share state with it.
 
 Drivers may move transfers by DMA, so the buffers given to
 `pbl_udc_ep_queue()` are aligned to `PBL_UDC_BUF_ALIGN`, a data cache line,

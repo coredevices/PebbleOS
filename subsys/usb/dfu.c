@@ -93,9 +93,9 @@ PBL_ITERABLE_SECTION_DECLARE(const struct pbl_usb_dfu_region, usb_dfu_regions);
 
 static void prv_work(struct pbl_work *work);
 
-// The work item runs the flash accesses the interrupt asks for: a block to write, written first,
-// then the block to read for the next upload. Upload blocks are read ahead into the buffer the
-// host is not reading from.
+// The work item runs the flash accesses the stack's thread asks for: a block to write, written
+// first, then the block to read for the next upload. Upload blocks are read ahead into the buffer
+// the host is not reading from.
 static struct {
   struct pbl_work work;
   const struct pbl_usb_dfu_region *region;

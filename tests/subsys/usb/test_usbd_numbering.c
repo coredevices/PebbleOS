@@ -113,3 +113,22 @@ void test_usbd_numbering__xfer_done(void) {
   s_cb->xfer_done(UDC, 0x04, 10, nullptr);
   cl_assert_equal_i(s_xfer_ep, 0x01);
 }
+
+// No transfer end reaches a function once its configuration is being torn down
+void test_usbd_numbering__teardown(void) {
+  s_xfer_ep = -1;
+  s_xfer_on_disable = 0x85;
+  cl_assert_equal_i(prv_request(PBL_USB_TYPE_STANDARD, PBL_USB_REQ_SET_CONFIGURATION, 0U, 0U, 0U),
+                    0);
+  s_xfer_on_disable = 0U;
+  cl_assert_equal_i(s_xfer_ep, -1);
+  cl_assert(!s_enabled_eps[1][5]);
+
+  s_cb->xfer_done(UDC, 0x85, 10, nullptr);
+  cl_assert_equal_i(s_xfer_ep, -1);
+
+  cl_assert_equal_i(prv_request(PBL_USB_TYPE_STANDARD, PBL_USB_REQ_SET_CONFIGURATION, 1U, 0U, 0U),
+                    0);
+  s_cb->xfer_done(UDC, 0x85, 10, nullptr);
+  cl_assert_equal_i(s_xfer_ep, 0x82);
+}

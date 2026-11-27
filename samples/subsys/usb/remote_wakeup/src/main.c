@@ -18,7 +18,7 @@ static const char *const s_names[] = {
   [PBL_USBD_EVENT_RESUMED] = "resumed",
 };
 
-/* The listener runs in the controller's interrupt: it queues, the main thread reports. */
+/* The listener runs on the USB stack's thread: it queues, the main thread reports. */
 static PBL_MSGQ_DEFINE(s_events, sizeof(uint8_t), 16);
 
 static void prv_event(enum pbl_usbd_event evt) {

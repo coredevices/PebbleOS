@@ -24,8 +24,18 @@
  * their bulk endpoints for the bus speed, enables their endpoints when the host configures the
  * device, and hands them the class and vendor requests to their interfaces and the end of the
  * transfers on their endpoints, with their own numbers. A function queues transfers on the
- * endpoint pbl_usbd_ep() gives. Everything the stack calls runs from the controller's interrupt, or
- * with interrupts locked.
+ * endpoint pbl_usbd_ep() gives.
+ *
+ * The control path runs on a thread of the stack's own, which takes bus events and endpoint 0 from
+ * the controller's interrupt in order: @ref pbl_usbd_function.configured,
+ * @ref pbl_usbd_function.set_alt, @ref pbl_usbd_function.class_request,
+ * @ref pbl_usbd_function.control_out, @ref pbl_usbd_function.event and the listeners run there, one
+ * at a time, and may block, take a mutex or write to flash, though the device answers no other
+ * request meanwhile and the host gives up on one left unanswered for long, 50 ms for some.
+ * @ref pbl_usbd_function.xfer_done runs from the controller's interrupt: a function locks out the
+ * interrupt where the two share state. Once the stack starts tearing down a configuration or an
+ * alternate setting, or the bus resets, or USB power goes, the ends of the transfers on its
+ * endpoints no longer reach the function.
  *
  * An interface can have alternate settings: its interface descriptor is followed by others with the
  * same interface number and a higher bAlternateSetting, each with its own endpoints. Two settings
@@ -83,12 +93,13 @@ struct pbl_usbd_function {
   void (*desc_fixup)(struct pbl_usb_desc_header *desc, uint8_t first_iface);
   /**
    * Optional. The host configured the device, its endpoints now enabled, or left that
-   * configuration, at a reset or a disconnection.
+   * configuration, at a reset or a disconnection, its endpoints now disabled and their transfers
+   * ended unreported.
    */
   void (*configured)(bool on);
   /**
    * Optional. The host selected alternate setting @p alt of interface @p iface, the endpoints of
-   * the previous setting now disabled, their transfers ended with @c -ECONNABORTED, and those of
+   * the previous setting now disabled, their transfers ended unreported, and those of
    * @p alt enabled. Not called when the host configures the device.
    */
   void (*set_alt)(uint8_t iface, uint8_t alt);

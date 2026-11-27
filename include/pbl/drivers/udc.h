@@ -24,8 +24,10 @@
  * Transfers are queued one at a time per endpoint with pbl_udc_ep_queue(). An IN transfer sends
  * its bytes, a zero-length packet when it has none; an OUT transfer ends with a short packet or
  * once its buffer is full. The driver reports the end of each with pbl_udc_xfer_done(), and bus
- * events, setup packets among them, with pbl_udc_event(), both from its interrupt: the stack's
- * callbacks run there.
+ * events, setup packets among them, with pbl_udc_event(), both from its interrupt, or from the
+ * caller's context when an endpoint call ends a transfer itself. The stack's callbacks run there:
+ * they hand the end of a data transfer to its function at once, and pass bus events and endpoint 0
+ * on to the stack's thread.
  *
  * Controllers may move transfers by DMA. Buffers are then in memory the controller reaches and
  * aligned to @ref PBL_UDC_BUF_ALIGN; OUT ones, but for endpoint 0, take whole packets and share no
