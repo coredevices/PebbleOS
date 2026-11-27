@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <kernel/events.h>
+#include <stdint.h>
 
 /**
  * @defgroup services_bluetooth_gateway Gateway
@@ -17,11 +17,15 @@
 void bt_gateway_init(void);
 
 /**
- * @brief Handle the gateway being connected or lost, on KernelMain.
+ * @brief The link became the gateway's: start the clients. Callable from any thread, they start
+ * on KernelMain.
  *
- * @param event A @c PEBBLE_BLE_CONNECTION_EVENT.
+ * @param conn_handle The connection.
  */
-void bt_gateway_handle_event(const PebbleEvent *event);
+void bt_gateway_connected(uint16_t conn_handle);
+
+/** @brief The gateway is lost: stop the clients. Callable from any thread. */
+void bt_gateway_disconnected(void);
 
 /**
  * @brief Make the clients look for the services of the gateway again, as when it indicates that

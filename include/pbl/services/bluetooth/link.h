@@ -16,14 +16,10 @@
  * @brief The connection of the watch: there is one at most, to a central.
  *
  * The link becomes the gateway's once it is encrypted and its peer is bonded: only then are the
- * services of the phone used. That, and the loss of it, is reported with
- * @c PEBBLE_BLE_CONNECTION_EVENT; any connection and disconnection with
- * @c PEBBLE_BT_CONNECTION_EVENT.
+ * services of the phone used. That, and the loss of it, is told to the gateway service; any
+ * connection and disconnection is reported with @c PEBBLE_BT_CONNECTION_EVENT.
  * @{
  */
-
-/** @brief Reason of a gateway disconnection that is not HCI's: its bond was removed. */
-#define BT_LINK_REASON_BOND_REMOVED 0xFB
 
 /** @brief Start following the link. Call once the stack runs. */
 void bt_link_init(void);

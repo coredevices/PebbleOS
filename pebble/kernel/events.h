@@ -84,7 +84,6 @@ typedef enum {
   PEBBLE_COMPASS_DATA_EVENT,
   PEBBLE_PLUGIN_SERVICE_EVENT,
   PEBBLE_WORKER_LAUNCH_EVENT,
-  PEBBLE_BLE_CONNECTION_EVENT,
   PEBBLE_BLE_DEVICE_NAME_UPDATED_EVENT,
   PEBBLE_WAKEUP_EVENT,
   PEBBLE_BLOBDB_EVENT,
@@ -248,12 +247,6 @@ typedef enum {
 typedef struct PBL_PACKED {
   PebbleBluetoothConnectionEventState state : 1;
 } PebbleBluetoothConnectionEvent;
-
-typedef struct PBL_PACKED {
-  uint16_t conn_handle;
-  uint8_t hci_reason;
-  bool connected : 1;
-} PebbleBLEConnectionEvent;
 
 typedef struct PBL_PACKED {
   bool airplane;
@@ -701,9 +694,6 @@ typedef struct PBL_PACKED PBL_ALIGNED(sizeof(void *)) {
       PebbleCommSessionEvent comm_session_event;
       PebbleBluetoothStateEvent state;
       PebbleRemoteAppInfoEvent app_info_event;
-      union {
-        PebbleBLEConnectionEvent connection;
-      } le;
     } bluetooth;
     PebbleAncsChangedEvent ancs_changed;
     PebbleDoNotDisturbEvent do_not_disturb;
