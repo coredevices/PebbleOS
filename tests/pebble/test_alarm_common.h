@@ -68,6 +68,11 @@ typedef struct PBL_PACKED AlarmStorageKey {
   AlarmDataType type : 8;
 } AlarmStorageKey;
 
+typedef struct PBL_PACKED AlarmArmedRecord {
+  int32_t time;
+  AlarmId id;
+} AlarmArmedRecord;
+
 typedef struct PBL_PACKED {
   AlarmKind kind : 8;
   bool is_disabled;
@@ -146,6 +151,7 @@ static int s_num_alarms_fired = 0;
 #include <pbl/logging/logging.h>
 
 void prv_timer_kernel_bg_callback(void *data);
+void prv_missed_alarm_catchup_callback(void *data);
 
 static bool s_defer_sys_work_callbacks;
 static pbl_work_call_fn_t s_pending_sys_work_callback;
@@ -158,7 +164,7 @@ bool pbl_sys_work_call(pbl_work_call_fn_t cb, void *data) {
     return true;
   }
   cb(data);
-  if (cb == prv_timer_kernel_bg_callback) {
+  if (cb == prv_timer_kernel_bg_callback || cb == prv_missed_alarm_catchup_callback) {
     s_num_alarms_fired++;
   }
   return true;
@@ -211,10 +217,13 @@ void event_put(PebbleEvent *event) {
 }
 
 static EventServiceInfo *s_language_change_event_info;
+static EventServiceInfo *s_activity_event_info;
 
 void event_service_client_subscribe(EventServiceInfo *service_info) {
   if (service_info->type == PEBBLE_LANGUAGE_CHANGE_EVENT) {
     s_language_change_event_info = service_info;
+  } else if (service_info->type == PEBBLE_ACTIVITY_EVENT) {
+    s_activity_event_info = service_info;
   }
 }
 

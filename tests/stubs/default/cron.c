@@ -17,6 +17,9 @@ PBL_WEAK time_t pbl_cron_job_schedule(struct pbl_cron_job *job) {
   return 0;
 }
 
+PBL_WEAK void pbl_cron_job_schedule_at(struct pbl_cron_job *job, time_t utc_time) {
+}
+
 PBL_WEAK bool pbl_cron_job_unschedule(struct pbl_cron_job *job) {
   return true;
 }
