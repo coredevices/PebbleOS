@@ -16,4 +16,5 @@ it coming and going, which a USB device controller follows.
 
 | Driver | Compatible | Kconfig |
 | --- | --- | --- |
+| Nordic nRF54LM20A USBHS PHY | `nordic,nrf54lm20a-usbhs-phy` | `CONFIG_PHY_NRF54L_USBHS` |
 | USB transceiver with nothing to set up | `usb-nop-xceiv` | `CONFIG_PHY_USB_NOP` |
