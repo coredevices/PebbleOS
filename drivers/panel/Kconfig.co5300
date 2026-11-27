@@ -9,6 +9,7 @@ config PANEL_CO5300
     select BACKLIGHT
     select GPIO
     select MIPI_DBI
+    select PANEL_QSPI
     help
       Support for AMOLED panels on the ChipOne CO5300 driver IC, over quad
       SPI, with their brightness as a backlight.

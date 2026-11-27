@@ -14,15 +14,37 @@ args:
   - irq: 0
   - clock: 0
   - reset: 0
+  # A panel child, on quad SPI
   - self: panel
     child: panel@0
+    default: nullptr
   - prop: hactive
     child: panel@0/panel-timing
+    default: 0
   - prop: vactive
     child: panel@0/panel-timing
+    default: 0
   - prop: rotation
     child: panel@0
     default: 0
+  # A panel at the other end of the port, on the JDI parallel interface
+  - self: panel
+    remote: 0
+    default: nullptr
+  - prop: hactive
+    remote: 0
+    child: panel-timing
+    default: 0
+  - prop: vactive
+    remote: 0
+    child: panel-timing
+    default: 0
+  - prop: rotation
+    remote: 0
+    default: 0
+  - self: round-mask
+    remote: 0
+    default: nullptr
   - reg: 0
     of: memory-region
     default: 0
@@ -32,3 +54,5 @@ args:
   - memory: memory-region
     optional: true
   - pinctrl: default
+  - pinctrl: sleep
+    default: nullptr

@@ -6,6 +6,18 @@ config PANEL
     help
       Panel class, selected by the display controllers driving a panel.
 
+config PANEL_QSPI
+    bool
+    help
+      Panels on quad SPI, selected by their drivers, for the display
+      controllers to build that interface.
+
+config PANEL_JDI_PARALLEL
+    bool
+    help
+      Panels on the JDI parallel interface, selected by their drivers, for
+      the display controllers to build that interface.
+
 rsource "Kconfig.jdi_mip"
 rsource "Kconfig.co5300"
 rsource "Kconfig.otm8009a"
