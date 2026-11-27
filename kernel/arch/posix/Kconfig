@@ -3,6 +3,7 @@
 
 config ARCH_POSIX
     bool
+    select ARCH_HAS_MPU
     help
       Kernel threads run as POSIX threads of a host process, one at a
       time. Selected by the SoC.
