@@ -122,7 +122,17 @@ static int prv_core_reset(const struct pbl_udc_dwc2 *d) {
 
   prv_modify(d, DWC2_GRSTCTL, 0U, GRSTCTL_CSRST);
 
-  return prv_wait(d, DWC2_GRSTCTL, GRSTCTL_CSRST, false, RESET_TIMEOUT_US);
+  // From release 4.20a, the reset bit stays set, and the done bit, which writing 1 clears, tells
+  // the end: wait for either, as the release in GSNPSID may read 0
+  ret = PBL_POLL_BUSY_US(
+      (prv_getreg(d, DWC2_GRSTCTL) & (GRSTCTL_CSRST | GRSTCTL_CSRSTDONE)) != GRSTCTL_CSRST, 1U,
+      RESET_TIMEOUT_US);
+  if (ret != 0) {
+    return ret;
+  }
+  prv_modify(d, DWC2_GRSTCTL, GRSTCTL_CSRST, 0U);
+
+  return 0;
 }
 
 static void prv_flush_tx(const struct pbl_udc_dwc2 *d, uint32_t fifo) {
