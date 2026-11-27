@@ -25,8 +25,9 @@ static uint8_t s_channels[NRF52_GPIOTE_NUM_CHANNELS] = {
 // Interrupt controller of each port, for the shared GPIOTE interrupt
 static const struct pbl_intc *s_intcs[MAX_PORTS];
 static const struct pbl_gpio_nrf5 *s_ports[MAX_PORTS];
-// Pins of each port that wake the system from System OFF
-static uint32_t s_wake[MAX_PORTS];
+// Pins of each port that wake the system from System OFF when high, when low, or both for a change
+static uint32_t s_wake_high[MAX_PORTS];
+static uint32_t s_wake_low[MAX_PORTS];
 static uintptr_t s_gpiote;
 
 static const struct pbl_gpio_nrf5 *prv_port(const struct pbl_gpio_port *port) {
@@ -217,13 +218,16 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
-static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   const struct pbl_gpio_nrf5 *gpio = prv_intc_port(intc);
 
-  if (on) {
-    s_wake[gpio->index] |= PBL_BIT(hwirq);
-  } else {
-    s_wake[gpio->index] &= ~PBL_BIT(hwirq);
+  s_wake_high[gpio->index] &= ~PBL_BIT(hwirq);
+  s_wake_low[gpio->index] &= ~PBL_BIT(hwirq);
+  if ((type & (PBL_IRQ_TYPE_LEVEL_HIGH | PBL_IRQ_TYPE_EDGE_RISING)) != 0U) {
+    s_wake_high[gpio->index] |= PBL_BIT(hwirq);
+  }
+  if ((type & (PBL_IRQ_TYPE_LEVEL_LOW | PBL_IRQ_TYPE_EDGE_FALLING)) != 0U) {
+    s_wake_low[gpio->index] |= PBL_BIT(hwirq);
   }
 
   return 0;
@@ -234,7 +238,8 @@ static void prv_intc_free(const struct pbl_intc *intc, uint32_t hwirq) {
   const struct pbl_gpio_nrf5 *gpio = prv_intc_port(intc);
   int ch = prv_channel_find((uint8_t)(gpio->index * 32U + hwirq));
 
-  s_wake[gpio->index] &= ~PBL_BIT(hwirq);
+  s_wake_high[gpio->index] &= ~PBL_BIT(hwirq);
+  s_wake_low[gpio->index] &= ~PBL_BIT(hwirq);
   if (ch < 0) {
     return;
   }
@@ -251,12 +256,12 @@ const struct pbl_intc_ops pbl_gpio_nrf5_intc_ops = {
   .free = prv_intc_free,
 };
 
-// Only SENSE wakes from System OFF; sensing the level opposite to the current
-// one keeps a pin held at power-off from waking at once
+// Only SENSE wakes from System OFF. A pin waking on a change senses the level opposite to the
+// current one.
 static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
   for (uint32_t index = 0U; index < MAX_PORTS; index++) {
     const struct pbl_gpio_nrf5 *gpio = s_ports[index];
-    uint32_t pins = s_wake[index];
+    uint32_t pins = s_wake_high[index] | s_wake_low[index];
 
     if (gpio == nullptr) {
       continue;
@@ -271,14 +276,21 @@ static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
       }
 
       ch = prv_channel_find((uint8_t)(index * 32U + pin));
-      high = (prv_getreg(gpio, NRF52_GPIO_IN_OFFSET) & PBL_BIT(pin)) != 0U;
       if (ch >= 0) {
         prv_gpiote_putreg(NRF52_GPIOTE_CONFIG_OFFSET(ch), 0U);
       }
 
+      if ((s_wake_low[index] & PBL_BIT(pin)) == 0U) {
+        high = true;
+      } else if ((s_wake_high[index] & PBL_BIT(pin)) == 0U) {
+        high = false;
+      } else {
+        high = (prv_getreg(gpio, NRF52_GPIO_IN_OFFSET) & PBL_BIT(pin)) == 0U;
+      }
+
       pbl_modifyl(GPIO_PIN_CNF_SENSE_MASK,
                   PBL_FIELD_PREP(GPIO_PIN_CNF_SENSE_MASK,
-                                 high ? GPIO_PIN_CNF_SENSE_LOW : GPIO_PIN_CNF_SENSE_HIGH),
+                                 high ? GPIO_PIN_CNF_SENSE_HIGH : GPIO_PIN_CNF_SENSE_LOW),
                   gpio->base + NRF52_GPIO_PIN_CNF_OFFSET(pin));
     }
   }

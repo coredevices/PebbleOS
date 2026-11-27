@@ -3,6 +3,7 @@
 
 #include <errno.h>
 
+#include <pbl/drivers/intc.h>
 #include <pbl/kernel/idle.h>
 #include <pbl/kernel/irq.h>
 #include <pbl/kernel/mmio.h>
@@ -45,7 +46,7 @@ static void prv_irqs_off(void) {
 #ifdef CONFIG_CPU_CORTEX_M4
 
 // Only the Cortex-M7 powers the system off, and wakes
-int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
+int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, uint32_t type) {
   return -ENOTSUP;
 }
 
@@ -79,13 +80,15 @@ static const struct {
   uint8_t pin;
 } s_wkup_pins[PWR_WKUP_PINS] = {{0U, 0U}, {0U, 2U}, {8U, 8U}, {2U, 13U}, {8U, 11U}, {2U, 1U}};
 
-// GPIO port of each wakeup pin armed, 0 when not
+// GPIO port of each wakeup pin armed, 0 when not, and its wake type
 static uintptr_t s_wake[PWR_WKUP_PINS];
+static uint8_t s_wake_type[PWR_WKUP_PINS];
 
-int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
+int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, uint32_t type) {
   for (uint32_t n = 0U; n < PWR_WKUP_PINS; n++) {
     if (s_wkup_pins[n].port == (port / STM32_GPIO_PORT_SIZE) % 16U && s_wkup_pins[n].pin == pin) {
-      s_wake[n] = on ? port : 0U;
+      s_wake[n] = type != 0U ? port : 0U;
+      s_wake_type[n] = (uint8_t)type;
       return 0;
     }
   }
@@ -93,7 +96,8 @@ int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on) {
   return -ENOTSUP;
 }
 
-// Each wakeup pin armed wakes on the edge away from the level it is at, with the pull of its line
+// Each wakeup pin armed wakes, with the pull of its line, on the edge to its wake level, or, on a
+// change, away from the level it is at
 static void prv_arm_wakeup_pins(void) {
   uint32_t epr = 0U;
 
@@ -109,7 +113,9 @@ static void prv_arm_wakeup_pins(void) {
            PBL_FIELD_PREP(
                PWR_WKUPEPR_PUPD_MASK(n),
                PBL_FIELD_GET(GPIO_PUPDR_MASK(pin), pbl_readl(port + STM32_GPIO_PUPDR_OFFSET)));
-    if ((pbl_readl(port + STM32_GPIO_IDR_OFFSET) & PBL_BIT(pin)) != 0U) {
+    if (s_wake_type[n] == PBL_IRQ_TYPE_LEVEL_LOW ||
+        (s_wake_type[n] == PBL_IRQ_TYPE_EDGE_BOTH &&
+         (pbl_readl(port + STM32_GPIO_IDR_OFFSET) & PBL_BIT(pin)) != 0U)) {
       epr |= PWR_WKUPEPR_FALLING(n);
     }
   }

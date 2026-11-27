@@ -97,7 +97,7 @@ static void prv_pmu_arm(uintptr_t pmuc, uint32_t lines, uint32_t high) {
     set |=
         PBL_FIELD_PREP(PMUC_CR_PIN_SEL_MASK(n), line) |
         PBL_FIELD_PREP(PMUC_CR_PIN_MODE_MASK(n),
-                       (high & PBL_BIT(line)) != 0U ? PMUC_CR_PIN_MODE_LOW : PMUC_CR_PIN_MODE_HIGH);
+                       (high & PBL_BIT(line)) != 0U ? PMUC_CR_PIN_MODE_HIGH : PMUC_CR_PIN_MODE_LOW);
     wer |= PMUC_WER_PIN0 << n;
     n++;
   }
@@ -167,7 +167,7 @@ static void prv_pmu_arm(uintptr_t pmuc, uint32_t lines, uint32_t high) {
 
     clear |= PMUC_WKUP_MODE_MASK(line);
     set |= PBL_FIELD_PREP(PMUC_WKUP_MODE_MASK(line),
-                          (high & PBL_BIT(line)) != 0U ? PMUC_WKUP_MODE_LOW : PMUC_WKUP_MODE_HIGH);
+                          (high & PBL_BIT(line)) != 0U ? PMUC_WKUP_MODE_HIGH : PMUC_WKUP_MODE_LOW);
   }
 
   pbl_modifyl(clear, set, pmuc + SF32LB57_PMUC_WKUP_MODE_OFFSET);
@@ -177,9 +177,12 @@ static void prv_pmu_arm(uintptr_t pmuc, uint32_t lines, uint32_t high) {
 }
 #endif
 
-// Wake lines, one bit per PMU wake line, and their port
+// Wake lines, one bit per PMU wake line, and their port; lines wake when high, when low, or both
+// for a change
 static const struct pbl_gpio_sf32lb *s_wake_port;
 static uint32_t s_wake;
+static uint32_t s_wake_high;
+static uint32_t s_wake_low;
 
 static const struct pbl_gpio_sf32lb *prv_port(const struct pbl_gpio_port *port) {
   return PBL_CONTAINER_OF(port, const struct pbl_gpio_sf32lb, port);
@@ -301,17 +304,17 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
-static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   const struct pbl_gpio_sf32lb *gpio = prv_intc_port(intc);
   int line = prv_pmu_line(hwirq);
   uint32_t bit;
 
   if (gpio->pmuc == 0U || line < 0) {
-    return on ? -ENOTSUP : 0;
+    return type != 0U ? -ENOTSUP : 0;
   }
 
   bit = PBL_BIT((uint32_t)line);
-  if (!on) {
+  if (type == 0U) {
     s_wake &= ~bit;
     return 0;
   }
@@ -322,6 +325,14 @@ static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool o
 
   s_wake |= bit;
   s_wake_port = gpio;
+  s_wake_high &= ~bit;
+  s_wake_low &= ~bit;
+  if ((type & (PBL_IRQ_TYPE_LEVEL_HIGH | PBL_IRQ_TYPE_EDGE_RISING)) != 0U) {
+    s_wake_high |= bit;
+  }
+  if ((type & (PBL_IRQ_TYPE_LEVEL_LOW | PBL_IRQ_TYPE_EDGE_FALLING)) != 0U) {
+    s_wake_low |= bit;
+  }
 
   return 0;
 }
@@ -333,18 +344,17 @@ const struct pbl_intc_ops pbl_gpio_sf32lb_intc_ops = {
   .set_wake = prv_intc_set_wake,
 };
 
-// Waking on the level opposite to the current one keeps a pin held at
-// power-off from waking at once
+// A line waking on a change wakes on the level opposite to the current one
 static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
-  uint32_t high = 0U;
+  uint32_t high = s_wake_high & ~s_wake_low;
 
   if (s_wake == 0U) {
     return;
   }
 
   for (uint32_t line = 0U; line < PMU_NUM_WAKE_LINES; line++) {
-    if ((s_wake & PBL_BIT(line)) != 0U &&
-        prv_get(&s_wake_port->port, (uint8_t)prv_pmu_line_pin(line)) != 0) {
+    if ((s_wake & s_wake_high & s_wake_low & PBL_BIT(line)) != 0U &&
+        prv_get(&s_wake_port->port, (uint8_t)prv_pmu_line_pin(line)) == 0) {
       high |= PBL_BIT(line);
     }
   }

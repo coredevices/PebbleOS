@@ -166,8 +166,8 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
 }
 
 // Only the lines on a wakeup pin wake the SoC from Standby
-static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
-  return pbl_soc_stm32h7_wakeup_pin_set(prv_intc_port(intc)->base, hwirq, on);
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
+  return pbl_soc_stm32h7_wakeup_pin_set(prv_intc_port(intc)->base, hwirq, type);
 }
 
 const struct pbl_intc_ops pbl_gpio_stm32_intc_ops = {
