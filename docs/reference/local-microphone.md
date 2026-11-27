@@ -73,8 +73,8 @@ projection, updated transactionally with the app's sync hash.
 The AppDB permissions field is the only consent point for local capture: any
 extended insert with bit 0 set grants capture to that UUID, with no prompt on
 the watch beyond the Listening banner while the microphone runs. The watch
-keeps it out of apps' reach (BlobDB is private to the system session,
-PebbleKit sessions cannot reach it, and no app syscall writes the AppDB), but it
+keeps it out of apps' reach (only the mobile app talks to BlobDB, and no app
+syscall writes the AppDB), but it
 cannot check what the companion does. A companion must only ever set the field
 from its own consent UI, never from an API an app can reach, including the
 app's own PebbleKit JS.
