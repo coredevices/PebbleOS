@@ -24,6 +24,7 @@
 #include <pbl/util/testing.h>
 #include <pbl/util/units.h>
 
+#include <applib/alarm_service.h>
 #include <applib/event_service_client.h>
 #include <apps/system_app_ids.h>
 #include <kernel/events.h>
@@ -33,6 +34,8 @@ PBL_LOG_MODULE_DEFINE(service_alarms, CONFIG_SERVICE_ALARMS_LOG_LEVEL);
 
 #define DEFAULT_SNOOZE_DELAY_M (10)
 #define MAX_CONFIGURED_ALARMS  (10)
+
+static_assert(MAX_CONFIGURED_ALARMS == ALARM_SERVICE_MAX_ALARMS, "alarm slot count mismatch");
 
 #define ALARM_FILE_NAME          "/alarms"
 #define ALARM_MAX_FILE_SIZE      PBL_KIB(1) // ~50 alarms or so

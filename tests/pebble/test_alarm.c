@@ -11,10 +11,8 @@
 #include <pbl/kernel/time.h>
 #include <pbl/util/units.h>
 
+#include <applib/alarm_service.h>
 #include <fake_work.h>
-
-// The production alarm slot count; the test build uses a smaller fake pin array.
-#define TEST_MAX_ALARMS 10
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
@@ -132,14 +130,14 @@ void test_alarm__can_schedule(void) {
 }
 
 typedef struct {
-  AlarmId ids[TEST_MAX_ALARMS];
+  AlarmId ids[ALARM_SERVICE_MAX_ALARMS];
   size_t count;
 } CollectedAlarmIds;
 
 static void prv_collect_alarm_id(AlarmId id, const AlarmInfo *info, void *context) {
   (void)info;
   CollectedAlarmIds *collected = context;
-  if (collected->count < TEST_MAX_ALARMS) {
+  if (collected->count < ALARM_SERVICE_MAX_ALARMS) {
     collected->ids[collected->count] = id;
   }
   collected->count++;
@@ -195,7 +193,7 @@ void test_alarm__set_enabled_checked(void) {
 }
 
 void test_alarm__out_of_range_id_is_rejected(void) {
-  const AlarmId id = TEST_MAX_ALARMS;
+  const AlarmId id = ALARM_SERVICE_MAX_ALARMS;
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   uint8_t config[64] = {0};
   config[2] = 7;  // hour
@@ -506,7 +504,8 @@ void test_alarm__update_checked_errors(void) {
   cl_assert_equal_i(alarm_update_checked(id, &bad), AlarmUpdateResultInvalidArgument);
 
   cl_assert_equal_i(alarm_update_checked(id, NULL), AlarmUpdateResultInvalidArgument);
-  cl_assert_equal_i(alarm_update_checked(TEST_MAX_ALARMS, &valid), AlarmUpdateResultDoesNotExist);
+  cl_assert_equal_i(alarm_update_checked(ALARM_SERVICE_MAX_ALARMS, &valid),
+                    AlarmUpdateResultDoesNotExist);
   const AlarmId unused = (id == 0) ? 9 : 0;
   cl_assert_equal_i(alarm_update_checked(unused, &valid), AlarmUpdateResultDoesNotExist);
 
@@ -601,7 +600,7 @@ void test_alarm__delete_checked(void) {
   assert_alarm_pins_absent(id);
 
   cl_assert_equal_i(alarm_delete_checked(id), AlarmDeleteResultDoesNotExist);
-  cl_assert_equal_i(alarm_delete_checked(TEST_MAX_ALARMS), AlarmDeleteResultDoesNotExist);
+  cl_assert_equal_i(alarm_delete_checked(ALARM_SERVICE_MAX_ALARMS), AlarmDeleteResultDoesNotExist);
 }
 
 void test_alarm__delete_checked_storage_failure(void) {

@@ -2,7 +2,7 @@
   "_notes": [ "You need to increase the revision for each change of this file AND",
               "increase PROCESS_INFO_CURRENT_SDK_VERSION_MINOR in pebble_process_info.h"
             ],
-  "revision" : "117",
+  "revision" : "118",
   "version" : "2.0",
   "files": [
     "pebble/applib/status.h",
@@ -351,6 +351,80 @@
                 { "type": "function",
                   "name": "alarm_service_peek_next",
                   "addedRevision": "105"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceKind",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceTone",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceInfo",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceId",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceAlarm",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceResult",
+                  "addedRevision": "118"
+                }, {
+                  "type": "type",
+                  "name": "AlarmServiceCreateResult",
+                  "addedRevision": "118"
+                }, {
+                  "type": "define",
+                  "name": "ALARM_SERVICE_MAX_ALARMS",
+                  "addedRevision": "118"
+                }, {
+                  "type": "define",
+                  "name": "ALARM_SERVICE_INVALID_ID",
+                  "addedRevision": "118"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_can_create",
+                  "addedRevision": "118",
+                  "stubReturn": "false"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_create",
+                  "addedRevision": "118",
+                  "stubReturn": "AlarmServiceCreateErrUnavailable",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceCreateResult alarm_service_create(const AlarmServiceInfo *info, AlarmServiceId *id_out) { __asm__ volatile(\"\" ::: \"memory\"); (void)info; if (id_out) { *id_out = ALARM_SERVICE_INVALID_ID; } return AlarmServiceCreateErrUnavailable; }"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_get",
+                  "addedRevision": "118",
+                  "stubReturn": "AlarmServiceResultErrUnavailable",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_get(AlarmServiceId id, AlarmServiceAlarm *alarm_out) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; (void)alarm_out; return AlarmServiceResultErrUnavailable; }"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_get_ids",
+                  "addedRevision": "118",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) size_t alarm_service_get_ids(AlarmServiceId *ids, size_t max) { __asm__ volatile(\"\" ::: \"memory\"); (void)ids; (void)max; return 0; }"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_set_enabled",
+                  "addedRevision": "118",
+                  "stubReturn": "AlarmServiceResultErrUnavailable",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_set_enabled(AlarmServiceId id, bool enable) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; (void)enable; return AlarmServiceResultErrUnavailable; }"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_update",
+                  "addedRevision": "118",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_update(AlarmServiceId id, const AlarmServiceInfo *info) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; (void)info; return AlarmServiceResultErrUnavailable; }"
+                }, {
+                  "type": "function",
+                  "name": "alarm_service_delete",
+                  "addedRevision": "118",
+                  "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_delete(AlarmServiceId id) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; return AlarmServiceResultErrUnavailable; }"
                 }
               ]
             }, {

@@ -40,6 +40,20 @@ static struct {
   struct pbl_mutex mutex;
 } s_app_db;
 
+//! An app can check the alarm permissions once per alarm while enumerating, so cache the bits.
+static PBL_MUTEX_DEFINE(s_alarm_permission_mutex);
+static Uuid s_alarm_permission_uuid;
+static bool s_alarm_permission_valid;
+static uint32_t s_alarm_permission_bits;
+
+static void prv_alarm_permission_invalidate(const Uuid *uuid) {
+  pbl_mutex_lock(&s_alarm_permission_mutex, PBL_FOREVER);
+  if (!uuid || (s_alarm_permission_valid && uuid_equal(uuid, &s_alarm_permission_uuid))) {
+    s_alarm_permission_valid = false;
+  }
+  pbl_mutex_unlock(&s_alarm_permission_mutex);
+}
+
 //////////////////////
 // Settings helpers
 //////////////////////
@@ -104,6 +118,7 @@ static int prv_read_entry(struct pbl_settings_file *file, AppInstallId id, AppDB
 
 //! A null uuid means every app's permissions changed.
 static void prv_permissions_changed(const Uuid *uuid, uint32_t permissions) {
+  prv_alarm_permission_invalidate(uuid);
 #ifdef CONFIG_SERVICE_MIC_CAPTURE
   mic_capture_service_handle_permission_changed(uuid,
                                                 (permissions & APP_DB_PERMISSION_MICROPHONE) != 0);
@@ -309,6 +324,7 @@ void app_db_enumerate_entries(AppDBEnumerateCb cb, void *data) {
 void app_db_init(void) {
   memset(&s_app_db, 0, sizeof(s_app_db));
   pbl_mutex_init(&s_app_db.mutex);
+  prv_alarm_permission_invalidate(nullptr);
 
   // set to zero to reset unit test static variable.
   s_next_unique_flash_app_id = INSTALL_ID_INVALID;
@@ -512,6 +528,38 @@ bool app_db_health_allowed(const Uuid *uuid) {
   prv_close_file_and_unlock_mutex();
   return !(permissions & APP_DB_PERMISSION_HEALTH_ENFORCED) ||
          (permissions & APP_DB_PERMISSION_HEALTH_GRANTED);
+}
+
+static bool prv_alarm_permission_granted(const Uuid *uuid, uint32_t permission) {
+  if (!uuid) {
+    return false;
+  }
+
+  pbl_mutex_lock(&s_alarm_permission_mutex, PBL_FOREVER);
+  if (s_alarm_permission_valid && uuid_equal(uuid, &s_alarm_permission_uuid)) {
+    const uint32_t permissions = s_alarm_permission_bits;
+    pbl_mutex_unlock(&s_alarm_permission_mutex);
+    return (permissions & permission) != 0;
+  }
+
+  uint32_t permissions = 0;
+  if (prv_lock_mutex_and_open_file() == 0) {
+    permissions = prv_read_permissions(&s_app_db.settings_file, uuid);
+    prv_close_file_and_unlock_mutex();
+    s_alarm_permission_uuid = *uuid;
+    s_alarm_permission_bits = permissions;
+    s_alarm_permission_valid = true;
+  }
+  pbl_mutex_unlock(&s_alarm_permission_mutex);
+  return (permissions & permission) != 0;
+}
+
+bool app_db_alarm_read_granted(const Uuid *uuid) {
+  return prv_alarm_permission_granted(uuid, APP_DB_PERMISSION_ALARM_READ);
+}
+
+bool app_db_alarm_write_granted(const Uuid *uuid) {
+  return prv_alarm_permission_granted(uuid, APP_DB_PERMISSION_ALARM_WRITE);
 }
 
 int app_db_compact(void) {

@@ -277,3 +277,57 @@ void test_app_db__reads_legacy_stored_records_without_grant(void) {
   cl_assert_equal_i(0, entry.permissions);
   app_db_enumerate_entries(prv_assert_legacy_grant_denied, NULL);
 }
+
+void test_app_db__alarm_permissions(void) {
+  AppDBEntry entry = app1;
+
+  entry.permissions = APP_DB_PERMISSION_ALARM_READ;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(app_db_alarm_read_granted(&app1.uuid));
+  cl_assert(!app_db_alarm_write_granted(&app1.uuid));
+
+  entry.permissions = APP_DB_PERMISSION_ALARM_WRITE;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(!app_db_alarm_read_granted(&app1.uuid));
+  cl_assert(app_db_alarm_write_granted(&app1.uuid));
+
+  entry.permissions = APP_DB_PERMISSION_ALARM_READ | APP_DB_PERMISSION_ALARM_WRITE;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(app_db_alarm_read_granted(&app1.uuid));
+  cl_assert(app_db_alarm_write_granted(&app1.uuid));
+
+  entry.permissions = 0;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(!app_db_alarm_read_granted(&app1.uuid));
+  cl_assert(!app_db_alarm_write_granted(&app1.uuid));
+}
+
+void test_app_db__alarm_permissions_cleared_on_delete(void) {
+  AppDBEntry entry = app1;
+  entry.permissions = APP_DB_PERMISSION_ALARM_READ | APP_DB_PERMISSION_ALARM_WRITE;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(app_db_alarm_read_granted(&entry.uuid));
+  cl_assert(app_db_alarm_write_granted(&entry.uuid));
+
+  cl_assert_equal_i(0, app_db_delete((uint8_t *)&entry.uuid, sizeof(Uuid)));
+  cl_assert(!app_db_alarm_read_granted(&entry.uuid));
+  cl_assert(!app_db_alarm_write_granted(&entry.uuid));
+}
+
+void test_app_db__alarm_permissions_cleared_on_flush(void) {
+  AppDBEntry entry = app1;
+  entry.permissions = APP_DB_PERMISSION_ALARM_READ | APP_DB_PERMISSION_ALARM_WRITE;
+  cl_assert_equal_i(
+      0, app_db_insert((uint8_t *)&entry.uuid, sizeof(Uuid), (uint8_t *)&entry, sizeof(entry)));
+  cl_assert(app_db_alarm_read_granted(&entry.uuid));
+  cl_assert(app_db_alarm_write_granted(&entry.uuid));
+
+  cl_assert_equal_i(0, app_db_flush());
+  cl_assert(!app_db_alarm_read_granted(&entry.uuid));
+  cl_assert(!app_db_alarm_write_granted(&entry.uuid));
+}

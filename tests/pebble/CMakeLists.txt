@@ -80,6 +80,12 @@ pbl_clar_test(test_alarm
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_alarm_syscall
+  SOURCES
+    pebble/syscall/services_syscalls.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_alarm_smart
   MODULES settings timeline_item time
   SOURCES
