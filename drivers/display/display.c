@@ -216,7 +216,7 @@ int pbl_display_update(const struct pbl_display *disp, const struct pbl_display_
     return -ENODEV;
   }
 
-  if (y0 > y1 || y1 >= disp->props.height) {
+  if (y0 > y1 || y1 >= disp->props.height || y1 - y0 >= pbl_display_max_update_rows(disp)) {
     return -EINVAL;
   }
 
@@ -258,14 +258,33 @@ static void prv_sync_complete(int status, void *arg) {
 int pbl_display_update_sync(const struct pbl_display *disp, const struct pbl_display_buffer *buf,
                             uint16_t y0, uint16_t y1) {
   struct prv_sync sync;
-  int ret;
+  uint16_t rows;
+  int ret = 0;
+
+  if (!pbl_device_is_ready(&disp->dev)) {
+    return -ENODEV;
+  }
+
+  if (y0 > y1 || y1 >= disp->props.height) {
+    return -EINVAL;
+  }
+
+  rows = pbl_display_max_update_rows(disp);
 
   pbl_sem_init(&sync.done, 0, 1);
 
-  ret = pbl_display_update(disp, buf, y0, y1, prv_sync_complete, &sync);
-  if (ret == 0) {
-    (void)pbl_sem_take(&sync.done, PBL_FOREVER);
-    ret = sync.status;
+  // One band after the other, each up to the rows the display takes
+  for (uint32_t y = y0; y <= y1; y += rows) {
+    uint16_t band_y1 = (uint16_t)PBL_MIN(y + rows - 1U, (uint32_t)y1);
+
+    ret = pbl_display_update(disp, buf, (uint16_t)y, band_y1, prv_sync_complete, &sync);
+    if (ret == 0) {
+      (void)pbl_sem_take(&sync.done, PBL_FOREVER);
+      ret = sync.status;
+    }
+    if (ret != 0) {
+      break;
+    }
   }
 
   pbl_sem_deinit(&sync.done);

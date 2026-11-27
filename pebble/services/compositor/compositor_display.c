@@ -27,6 +27,9 @@ static uint64_t s_flush_ticks;
 
 static uint16_t s_flush_y0;
 static uint16_t s_flush_y1;
+// Next row of the flush to send, past s_flush_y1 once every band has started
+static uint16_t s_flush_next_y = 1U;
+static struct pbl_display_buffer s_flush_buf;
 
 // Corner pixels hidden by the display mounting, drawn into the framebuffer for the flush and
 // undone after it. Holds the bytes of each masked row: [row][left, right][byte]
@@ -100,6 +103,8 @@ static void prv_corners_apply(FrameBuffer *fb, bool mask) {
 static void prv_flush_finish(void *data) {
   bool success = (data == nullptr);
 
+  s_flush_next_y = s_flush_y1 + 1U;
+
 #ifdef CONFIG_BOARD_DISPLAY_CORNERS
   prv_corners_apply(compositor_get_framebuffer(), false);
 #endif
@@ -117,19 +122,43 @@ static void prv_flush_finish(void *data) {
   }
 }
 
-// The display reports from its interrupt, or synchronously from compositor_display_update()
+static void prv_flush_done(int status, void *arg);
+
+// Sends the next band of the flush, as many rows as the display takes per update
+static void prv_flush_send(void) {
+  uint16_t y0 = s_flush_next_y;
+  uint16_t y1 = PBL_MIN(s_flush_y1, y0 + pbl_display_max_update_rows(DISPLAY) - 1U);
+
+  s_flush_next_y = y1 + 1U;
+
+  if (pbl_display_update(DISPLAY, &s_flush_buf, y0, y1, prv_flush_done, nullptr) != 0) {
+    prv_flush_finish((void *)1);
+  }
+}
+
+// Runs on KernelMain once a band is out: sends the next one, or ends the flush
+static void prv_band_done(void *data) {
+  if (data == nullptr && s_flush_next_y <= s_flush_y1) {
+    prv_flush_send();
+    return;
+  }
+
+  prv_flush_finish(data);
+}
+
+// The display reports from its interrupt, or synchronously from pbl_display_update()
 static void prv_flush_done(int status, void *arg) {
   void *data = (status == 0) ? nullptr : (void *)1;
 
   if (!pbl_in_isr()) {
-    prv_flush_finish(data);
+    prv_band_done(data);
     return;
   }
 
   PebbleEvent e = {
     .type = PEBBLE_CALLBACK_EVENT,
     .callback = {
-      .callback = prv_flush_finish,
+      .callback = prv_band_done,
       .data = data,
     },
   };
@@ -169,6 +198,13 @@ void compositor_display_update(void (*handle_update_complete_cb)(bool success)) 
   if (!framebuffer_is_dirty(fb)) {
     return;
   }
+  // Between bands the display is idle, but the flush is not over: refuse as the display would
+  if (s_flush_next_y <= s_flush_y1) {
+    if (handle_update_complete_cb) {
+      handle_update_complete_cb(false);
+    }
+    return;
+  }
   // Every flush drops the mirror; the compositor restores it after an app frame's flush
   compositor_app_framebuffer_mirror_invalidate();
 
@@ -181,18 +217,18 @@ void compositor_display_update(void (*handle_update_complete_cb)(bool success)) 
   prv_corners_apply(fb, true);
 #endif
 
-  struct pbl_display_buffer buf = {
+  // The display takes the buffer until the update ends, and bands follow on from KernelMain
+  s_flush_buf = (struct pbl_display_buffer){
     .data = (uint8_t *)framebuffer_get_line(fb, 0),
     .pitch = FRAMEBUFFER_BYTES_PER_ROW,
   };
+  s_flush_next_y = s_flush_y0;
 
-  if (pbl_display_update(DISPLAY, &buf, s_flush_y0, s_flush_y1, prv_flush_done, nullptr) != 0) {
-    prv_flush_finish((void *)1);
-  }
+  prv_flush_send();
 }
 
 bool compositor_display_update_in_progress(void) {
-  return pbl_display_update_in_progress(DISPLAY);
+  return pbl_display_update_in_progress(DISPLAY) || (s_flush_next_y <= s_flush_y1);
 }
 
 static void prv_collect_display_stats(void) {

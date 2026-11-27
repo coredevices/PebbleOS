@@ -16,6 +16,16 @@ config DISPLAY_UPDATE_TIMEOUT_MS
       Time an update has to complete, for the displays whose driver can
       abort one: past it, the update is stopped and ends with -ETIMEDOUT.
 
+config DISPLAY_MAX_UPDATE_ROWS
+    int "Most rows per update of a staging display"
+    range 0 65535
+    default 0
+    help
+      Most rows taken per update by the displays that stage updates in a
+      transfer buffer, such as the Sharp memory LCDs, which sizes that
+      buffer. Callers send more rows in bands of this many. 0 takes the
+      whole panel at once.
+
 rsource "Kconfig.sf32lb_lcdc"
 rsource "Kconfig.sf32lb57_lcdc"
 rsource "Kconfig.stm32_ltdc"

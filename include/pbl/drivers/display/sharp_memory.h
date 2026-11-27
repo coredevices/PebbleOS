@@ -23,6 +23,10 @@
  * EXTCOMIN, driven by a PWM output while the panel is on. Updates complete from the SPI
  * controller.
  *
+ * An update is staged in a transfer buffer of @c CONFIG_DISPLAY_MAX_UPDATE_ROWS rows, or of the
+ * whole panel if that is 0, and takes at most as many: a smaller buffer for a large panel, sent
+ * in more updates.
+ *
  * @code{.c}
  * PBL_DISPLAY_SHARP_MEMORY_DEFINE(s_display, "display", 144, 168, &s_spi3, 0, 1000000,
  *                                 PBL_SPI_MODE_0 | PBL_SPI_CS_HIGH | PBL_SPI_LSB_FIRST,
@@ -33,8 +37,10 @@
  */
 
 /** @cond INTERNAL_HIDDEN */
-// Mode byte, then per line its address, its data and a dummy byte, then a last dummy byte
-#define SHARP_MEMORY_BUF_SIZE(_width, _height) (2U + (((_width) / 8U) + 2U) * (_height))
+// Mode byte, then per line its address, its data and a dummy byte, then a last dummy byte, for
+// the most rows an update takes
+#define SHARP_MEMORY_BUF_SIZE(_width, _height) \
+  (2U + (((_width) / 8U) + 2U) * PBL_DISPLAY_MAX_UPDATE_ROWS(_height))
 
 struct pbl_display_sharp_memory_state {
   struct pbl_spi_xfer xfer;
@@ -86,7 +92,8 @@ extern const struct pbl_display_ops pbl_display_sharp_memory_ops;
   static uint8_t sym##_sharp_buf[SHARP_MEMORY_BUF_SIZE(_width, _height)];                       \
   PBL_DEVICE_INSTANCE(sym, struct pbl_display_sharp_memory, struct pbl_display, disp) {         \
     .disp = PBL_DISPLAY_INIT(sym, _name, nullptr, &pbl_display_sharp_memory_ops, (_width),      \
-                             (_height), PBL_DISPLAY_FORMAT_MONO, (_rotation) == 180),           \
+                             (_height), PBL_DISPLAY_FORMAT_MONO, (_rotation) == 180,            \
+                             .max_update_rows = PBL_DISPLAY_MAX_UPDATE_ROWS(_height)),          \
     .state = &sym##_sharp_state, .buf = sym##_sharp_buf,                                        \
     .spi = PBL_SPI_DEV(_bus, _cs, _max_hz, _mode), .enable = _enable, .extcomin = __VA_ARGS__,  \
   }

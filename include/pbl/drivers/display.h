@@ -45,6 +45,10 @@
  * complete within CONFIG_DISPLAY_UPDATE_TIMEOUT_MS, as when the panel stops answering. Calls are
  * made from task context and return 0 or a negative errno: @c -EBUSY while an update is in
  * progress, @c -EINVAL for an invalid row range and @c -ENODEV if the display is not ready.
+ *
+ * A display that stages its updates in a transfer buffer may take fewer rows per update than it
+ * has, pbl_display_max_update_rows(), to keep that buffer small: callers send a larger range in
+ * bands of that many rows, one update after the other. pbl_display_update_sync() does so itself.
  * @{
  */
 
@@ -74,6 +78,8 @@ struct pbl_display_props {
    * half, or NULL.
    */
   const uint8_t *round_mask;
+  /** Most rows an update takes, or 0 for the whole panel. */
+  uint16_t max_update_rows;
 };
 
 /** @brief Framebuffer handed to an update. */
@@ -128,8 +134,8 @@ struct pbl_display_ops {
    */
   int (*set_rotated)(const struct pbl_display *disp, bool rotated);
   /**
-   * Start sending rows @p y0 to @p y1 of @p buf. Returns 0 if pbl_display_complete() will be
-   * called, or a negative errno.
+   * Start sending rows @p y0 to @p y1 of @p buf, at most @ref pbl_display_props.max_update_rows
+   * of them. Returns 0 if pbl_display_complete() will be called, or a negative errno.
    */
   int (*update)(const struct pbl_display *disp, const struct pbl_display_buffer *buf, uint16_t y0,
                 uint16_t y1);
@@ -175,6 +181,18 @@ static inline const struct pbl_display_props *pbl_display_get_props(
 }
 
 /**
+ * @brief Get the most rows an update of a display takes.
+ *
+ * @param disp Display.
+ * @return Most rows from @p y0 to @p y1 that pbl_display_update() takes, at most the height.
+ */
+static inline uint16_t pbl_display_max_update_rows(const struct pbl_display *disp) {
+  const struct pbl_display_props *props = &disp->props;
+
+  return (props->max_update_rows != 0U) ? props->max_update_rows : props->height;
+}
+
+/**
  * @brief Get the pixels hidden at each end of a row of a round panel.
  *
  * @param disp Display, with a @ref pbl_display_props.round_mask.
@@ -186,6 +204,21 @@ static inline uint16_t pbl_display_round_inset(const struct pbl_display *disp, u
 
   return props->round_mask[(y < props->height / 2) ? y : (props->height - 1 - y)];
 }
+
+/**
+ * @brief Most rows per update of a display @p _height rows high that stages its updates, for its
+ * @ref pbl_display_props.max_update_rows and the size of its transfer buffer.
+ *
+ * @c CONFIG_DISPLAY_MAX_UPDATE_ROWS, or the whole panel if it is 0 or larger.
+ *
+ * @param _height Height, in pixels.
+ */
+#if defined(CONFIG_DISPLAY_MAX_UPDATE_ROWS) && (CONFIG_DISPLAY_MAX_UPDATE_ROWS > 0)
+#define PBL_DISPLAY_MAX_UPDATE_ROWS(_height) \
+  (((_height) < CONFIG_DISPLAY_MAX_UPDATE_ROWS) ? (_height) : CONFIG_DISPLAY_MAX_UPDATE_ROWS)
+#else
+#define PBL_DISPLAY_MAX_UPDATE_ROWS(_height) (_height)
+#endif
 
 /**
  * @brief Define the class state of display @p sym, for the @c PBL_*_DEFINE() macro of a driver.
@@ -306,7 +339,7 @@ int pbl_display_clear(const struct pbl_display *disp);
  * @param disp Display.
  * @param buf Framebuffer, valid until @p cb is called.
  * @param y0 First row.
- * @param y1 Last row.
+ * @param y1 Last row, at most pbl_display_max_update_rows() rows from @p y0.
  * @param cb Completion callback.
  * @param arg Callback argument.
  * @return 0 if @p cb will be called, or a negative errno.
@@ -327,6 +360,8 @@ int pbl_display_get_framebuffer(const struct pbl_display *disp, struct pbl_displ
 
 /**
  * @brief Send rows of a framebuffer to the panel and wait for the update to end.
+ *
+ * Any number of rows, sent in bands of pbl_display_max_update_rows().
  *
  * @param disp Display.
  * @param buf Framebuffer.
