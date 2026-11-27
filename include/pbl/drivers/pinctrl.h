@@ -32,11 +32,14 @@
  * @endcode
  *
  * Controllers need no initialization, so states can be selected before the devices are
- * initialized, e.g. for the debug console.
+ * initialized, e.g. for the debug console. A controller may have a state of its own, a hog, for
+ * pins no device configures, e.g. to remove a pull that would fight what drives them: it is
+ * selected when the controller is initialized.
  * @{
  */
 
 struct pbl_pinctrl_controller;
+struct pbl_pinctrl_state;
 
 /** @brief Class of the pin controllers. */
 extern const struct pbl_device_class pbl_pinctrl_class;
@@ -59,7 +62,13 @@ struct pbl_pinctrl_controller {
   const struct pbl_pinctrl_controller_ops *ops;
   /** Number of pads. */
   uint16_t num_pads;
+  /** State of the controller's own, selected at init, or NULL. */
+  const struct pbl_pinctrl_state *hog;
 };
+
+/** @cond INTERNAL_HIDDEN */
+int pbl_pinctrl_controller_dev_init(const struct pbl_device *dev);
+/** @endcond */
 
 /**
  * @brief Initializer for the struct pbl_pinctrl_controller of controller @p sym.
@@ -70,12 +79,15 @@ struct pbl_pinctrl_controller {
  * @param _parent Parent device, or NULL.
  * @param _ops Driver operations.
  * @param _num_pads Number of pads.
+ * @param _hog State of the controller's own, selected at init, or NULL.
  */
-#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _parent, _ops, _num_pads)           \
-  {                                                                                 \
-    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, nullptr, _parent, &pbl_pinctrl_class), \
-    .ops = (_ops),                                                                  \
-    .num_pads = (_num_pads),                                                        \
+#define PBL_PINCTRL_CONTROLLER_INIT(sym, _name, _parent, _ops, _num_pads, _hog)        \
+  {                                                                                    \
+    .dev = PBL_DEVICE_INIT_CLASS(sym, _name, pbl_pinctrl_controller_dev_init, _parent, \
+                                 &pbl_pinctrl_class),                                  \
+    .ops = (_ops),                                                                     \
+    .num_pads = (_num_pads),                                                           \
+    .hog = (_hog),                                                                     \
   }
 
 /** @brief A pin state. */

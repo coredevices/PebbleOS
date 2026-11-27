@@ -119,12 +119,13 @@ extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb57_ops;
  * @param sym Symbol of the controller.
  * @param _name Name.
  * @param _base Pinmux registers.
+ * @param _hog State of the controller's own, selected at init, or NULL.
  */
-#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base)                                         \
+#define PBL_PINCTRL_SF32LB57_DEFINE(sym, _name, _base, _hog)                                   \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                \
   PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb57, struct pbl_pinctrl_controller, ctrl) { \
     .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_sf32lb57_ops,        \
-                                        PBL_PINCTRL_SF32LB57__NUM_PADS),                       \
+                                        PBL_PINCTRL_SF32LB57__NUM_PADS, _hog),                 \
     .base = (_base),                                                                           \
   }
 
