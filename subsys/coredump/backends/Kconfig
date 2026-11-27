@@ -19,3 +19,10 @@ config COREDUMP_BACKEND_FLASH_IMAGES
     help
       The storage is divided evenly between this many dumps, the oldest
       being replaced.
+
+config COREDUMP_BACKEND_FLASH_OVERWRITE_UNREAD
+    bool "Overwrite unread dumps"
+    depends on COREDUMP_BACKEND_FLASH
+    help
+      Save every dump. Otherwise a dump less than a day old that has not
+      been read is kept, and a crash in that time resets without a dump.

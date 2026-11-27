@@ -41,7 +41,8 @@ services while a dump is being written.
 `CONFIG_COREDUMP_BACKEND_FLASH` keeps dumps in flash, in the `cd` partition or,
 without one, in the `scratch` partition. A dump replaces an older
 one, but not one less than a day old that has not been read, unless it is
-forced. `CONFIG_COREDUMP_BACKEND_FLASH_IMAGES` sets how many dumps fit.
+forced or `CONFIG_COREDUMP_BACKEND_FLASH_OVERWRITE_UNREAD` is set.
+`CONFIG_COREDUMP_BACKEND_FLASH_IMAGES` sets how many dumps fit.
 
 A backend that keeps dumps implements the `stored_*` operations, and
 `pbl_coredump_stored_find()` and friends read them back. That is how the

@@ -170,6 +170,7 @@ config RECOVERY_FW
 config MFG
     bool "Manufacturing firmware"
     depends on RECOVERY_FW
+    imply COREDUMP_BACKEND_FLASH_OVERWRITE_UNREAD
     help
       Enable manufacturing-only functionality in the PRF build, which
       MFG firmwares are built on.
