@@ -13,7 +13,20 @@ config DISPLAY_SF32LB57_LCDC
     select RESET
     help
       Support for the SiFli SF32LB57 LCD controller, driving a panel with
-      frame memory over quad SPI.
+      frame memory over quad SPI, or a JDI memory-in-pixel panel on the JDI
+      parallel interface.
+
+config DISPLAY_SF32LB57_LCDC_QSPI
+    def_bool y
+    depends on DISPLAY_SF32LB57_LCDC && PANEL_QSPI
+    help
+      Quad SPI, built with a driver of a panel on it.
+
+config DISPLAY_SF32LB57_LCDC_JDI
+    def_bool y
+    depends on DISPLAY_SF32LB57_LCDC && PANEL_JDI_PARALLEL
+    help
+      The JDI parallel interface, built with a driver of a panel on it.
 
 config DISPLAY_SF32LB57_LCDC_IRQ_PRIO
     int "Interrupt priority"
