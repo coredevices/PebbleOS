@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config PHY_USB_NOP
+    bool "USB transceiver with nothing to set up"
+    default y
+    depends on DT_HAS_USB_NOP_XCEIV_ENABLED
+    select CLK
+    help
+      A USB PHY software does not set up, as a ULPI PHY, of which the
+      driver only runs the clock.

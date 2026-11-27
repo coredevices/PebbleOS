@@ -9,4 +9,6 @@ menuconfig PHY
 
 if PHY
 
+rsource "Kconfig.usb_nop"
+
 endif # PHY

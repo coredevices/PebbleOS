@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: usb-nop-xceiv
+config: PHY_USB_NOP
+class: phy
+define: PBL_PHY_USB_NOP_DEFINE
+args:
+  - name: true
+  - clock: main_clk
+    optional: true

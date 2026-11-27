@@ -3,3 +3,4 @@
 
 pbl_library()
 pbl_library_sources(phy.c)
+pbl_library_sources_ifdef(CONFIG_PHY_USB_NOP usb_nop.c)
