@@ -43,7 +43,7 @@
 /** @brief Highlight color of the alarms app. */
 #define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
 
-/** @brief Unique ID of a configured alarm. */
+/** @brief Slot ID of a configured alarm. IDs may be reused after an alarm is deleted. */
 typedef int AlarmId;
 
 /** @brief Invalid alarm ID, returned on failure. */
@@ -271,14 +271,20 @@ bool alarm_get_kind(AlarmId id, AlarmKind *kind_out);
 bool alarm_get_next_enabled_alarm(time_t *next_alarm_time_out);
 
 /**
- * @brief Check whether the next enabled alarm is a smart alarm.
+ * @brief Check whether the next enabled alarm will use the smart alarm window.
  *
- * @return true if an alarm is scheduled and the next one is smart.
+ * A smart alarm with activity tracking off is scheduled at its configured
+ * time and reports false.
+ *
+ * @return true if an alarm is scheduled and its next occurrence uses the
+ *         smart early window.
  */
 bool alarm_is_next_enabled_alarm_smart(void);
 
 /**
  * @brief Get the time until an alarm next goes off.
+ *
+ * The alarm may be disabled; the result is its next configured occurrence.
  *
  * @param id Alarm to query.
  * @param[out] time_out Seconds until the next occurrence of the alarm, may be NULL.

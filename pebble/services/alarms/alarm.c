@@ -128,12 +128,21 @@ static bool prv_set_alarm_custom_op(AlarmId id, AlarmConfig *config, void *conte
 // Private globals
 static bool s_alarms_enabled = false;
 static time_t s_next_alarm_time;
+//! Whether the next alarm uses the smart-alarm early window.
+static bool s_next_alarm_smart_window;
 
 //! This is only valid when s_next_alarm_time is not 0.
 static Alarm s_next_alarm;
 static struct pbl_cron_job s_next_alarm_cron;
 static AlarmId s_most_recent_alarm_id = ALARM_INVALID_ID;
 static AlarmConfig s_most_recent_alarm_config;
+//! Configured occurrence that last fired for each alarm ID. A reload must not re-arm it.
+//! RAM-only: a boot reconstructs the next occurrence from the armed record.
+static time_t s_fired_occurrences[MAX_CONFIGURED_ALARMS];
+//! Generation of the cron callback for each slot. Bumped when the slot is created, deleted,
+//! disabled, or rescheduled so a callback queued for an old alarm cannot fire a new one.
+static uintptr_t s_alarm_fire_generations[MAX_CONFIGURED_ALARMS];
+static bool s_most_recent_alarm_smart_window;
 static bool s_most_recent_alarm_recorded;
 
 PBL_T_STATIC PBL_DELAYED_WORK_DEFINE(s_snooze_timer, prv_snooze_timer_callback);
@@ -154,6 +163,12 @@ static AlarmArmedRecord s_armed_record = {.id = ALARM_INVALID_ID};
 //! Alarm which should have fired while the watch was down. Fired once alarms are enabled.
 static AlarmId s_missed_alarm_id = ALARM_INVALID_ID;
 static time_t s_missed_alarm_time;
+
+//! The missed alarm handed to the queued catch-up callback.
+static AlarmId s_missed_alarm_catchup_id = ALARM_INVALID_ID;
+static time_t s_missed_alarm_catchup_time;
+//! Invalidates a queued catch-up when its slot is updated, disabled, deleted, or reused.
+static uintptr_t s_missed_alarm_generation;
 
 //! Mutex used to guard our list of alarms
 static PBL_MUTEX_DEFINE(s_mutex);
@@ -242,11 +257,8 @@ static bool prv_timeline_remove_alarm(struct pbl_settings_file *fd, AlarmId id) 
 // ----------------------------------------------------------------------------------------------
 //! Converts an alarm's cron time to its actual alarm time.
 //! Smart alarms execute earlier than their actual alarm time in order to opportunistically alarm.
-static time_t prv_get_alarm_time(const Alarm *alarm, time_t cron_time) {
-  if (alarm->config.is_smart) {
-    cron_time += SMART_ALARM_RANGE_S;
-  }
-  return cron_time;
+static time_t prv_get_alarm_time(time_t cron_time, bool smart_window) {
+  return smart_window ? cron_time + SMART_ALARM_RANGE_S : cron_time;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -259,7 +271,8 @@ static int prv_add_pin(AlarmId id, const AlarmConfig *config, time_t alarm_time,
 // ----------------------------------------------------------------------------------------------
 //! Pins alarm in the timeline for the next three days
 static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *alarm,
-                                   const struct pbl_cron_job *cron, const time_t current_time) {
+                                   const struct pbl_cron_job *cron, const time_t current_time,
+                                   bool smart_window) {
   // If an alarm was updated then remove all the pins with stale information
   // If an alarm was added then this has no effect
   prv_timeline_remove_alarm(file, alarm->id);
@@ -273,14 +286,15 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
   }
 
   int num_pin_adds = 0;
-  time_t alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time(cron));
+  time_t alarm_time = prv_get_alarm_time(pbl_cron_job_get_execute_time(cron), smart_window);
 
   time_t last_alarm = 0;
   for (int i = 0; alarm_time <= current_time + PBL_SEC_PER_DAY * 3; i++) {
     if (last_alarm != alarm_time) {
       last_alarm = alarm_time;
       pbl_localtime_r(&alarm_time, local_alarm_time);
-      if (alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
+      if (num_pin_adds < NUM_ALARM_PINS_PER_ALARM &&
+          alarm->config.scheduled_days[local_alarm_time->tm_wday]) {
         Uuid *pinid = (Uuid *)&settings_file_buffer[num_pin_adds * UUID_SIZE];
         int rv = prv_add_pin(alarm->id, &alarm->config, alarm_time, pinid);
         if (rv == 0) {
@@ -290,8 +304,9 @@ static void prv_timeline_add_alarm(struct pbl_settings_file *file, const Alarm *
         }
       }
     }
-    alarm_time = prv_get_alarm_time(alarm, pbl_cron_job_get_execute_time_from_epoch(
-                                               cron, current_time + (i * PBL_SEC_PER_DAY)));
+    alarm_time = prv_get_alarm_time(
+        pbl_cron_job_get_execute_time_from_epoch(cron, current_time + (i * PBL_SEC_PER_DAY)),
+        smart_window);
   }
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_PINS};
@@ -311,7 +326,12 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
-static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
+static void prv_build_cron(const AlarmConfig *config, struct pbl_cron_job *cron,
+                           bool *smart_window_out) {
+  const bool smart_window = config->is_smart && activity_tracking_on();
+  if (smart_window_out) {
+    *smart_window_out = smart_window;
+  }
   *cron = (struct pbl_cron_job){
     .cb = prv_cron_callback,
     .cb_data = (void *)0,
@@ -321,7 +341,7 @@ static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
     .mday = PBL_CRON_MDAY_ANY,
     .month = PBL_CRON_MONTH_ANY,
 
-    .offset_seconds = config->is_smart ? -SMART_ALARM_RANGE_S : 0,
+    .offset_seconds = smart_window ? -SMART_ALARM_RANGE_S : 0,
 
     // Tolerate up to a 15 minute clock change before recalculating.
     .clock_change_tolerance = 15 * PBL_SEC_PER_MIN,
@@ -329,16 +349,143 @@ static time_t prv_build_cron(AlarmConfig *config, struct pbl_cron_job *cron) {
   for (int i = 0; i < PBL_DAY_PER_WEEK; i++) {
     cron->wday |= config->scheduled_days[i] ? (1 << i) : 0;
   }
-  return pbl_cron_job_get_execute_time(cron);
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron) {
+typedef struct AlarmOccurrence {
+  struct pbl_cron_job cron;
+  time_t execute_time;
+  bool smart_window;
+} AlarmOccurrence;
+
+//! Whether this alarm's configured occurrence is exactly now.
+static bool prv_alarm_is_due_now(const AlarmConfig *config, time_t now) {
+  struct pbl_tm tm;
+  pbl_localtime_r(&now, &tm);
+  return tm.tm_sec == 0 && tm.tm_hour == config->hour && tm.tm_min == config->minute &&
+         config->scheduled_days[tm.tm_wday];
+}
+
+//! Whether this exact occurrence has already fired.
+static bool prv_occurrence_already_fired(AlarmId id, time_t occurrence_time) {
+  return id >= 0 && id < MAX_CONFIGURED_ALARMS && occurrence_time != 0 &&
+         s_fired_occurrences[id] == occurrence_time;
+}
+
+//! Forget the occurrence fired by @p id, e.g. when its slot is deleted or reused.
+static void prv_clear_fired_occurrence(AlarmId id) {
+  if (id >= 0 && id < MAX_CONFIGURED_ALARMS) {
+    s_fired_occurrences[id] = 0;
+  }
+}
+
+//! Pack an alarm ID and fire generation into the cron callback's single data pointer.
+#define ALARM_FIRE_ID_BITS (8)
+#define ALARM_FIRE_ID_MASK ((uintptr_t)0xff)
+
+static void *prv_alarm_fire_token(AlarmId id, uintptr_t generation) {
+  return (void *)((generation << ALARM_FIRE_ID_BITS) | ((uintptr_t)id & ALARM_FIRE_ID_MASK));
+}
+
+static AlarmId prv_alarm_fire_id(const void *token) {
+  return (AlarmId)((uintptr_t)token & ALARM_FIRE_ID_MASK);
+}
+
+static uintptr_t prv_alarm_fire_generation(const void *token) {
+  return (uintptr_t)token >> ALARM_FIRE_ID_BITS;
+}
+
+//! Invalidate a cron callback already queued for @p id.
+static void prv_invalidate_alarm_fire(AlarmId id) {
+  if (id >= 0 && id < MAX_CONFIGURED_ALARMS) {
+    s_alarm_fire_generations[id]++;
+  }
+}
+
+//! Forget any missed-alarm state for @p id, e.g. when its slot is deleted or reused.
+//!
+//! Must be called with s_mutex held.
+static void prv_clear_missed_alarm(AlarmId id) {
+  pbl_mutex_assert_held(&s_mutex, true);
+  if (s_missed_alarm_id == id) {
+    s_missed_alarm_id = ALARM_INVALID_ID;
+    s_missed_alarm_time = 0;
+  }
+  if (s_missed_alarm_catchup_id == id) {
+    s_missed_alarm_catchup_id = ALARM_INVALID_ID;
+    s_missed_alarm_catchup_time = 0;
+    s_missed_alarm_generation++;
+  }
+}
+
+//! Build the cron job for the alarm's configured time, ignoring the smart window.
+static void prv_build_base_cron(const AlarmConfig *config, struct pbl_cron_job *cron) {
+  AlarmConfig base_config = *config;
+  base_config.is_smart = false;
+  prv_build_cron(&base_config, cron, NULL);
+}
+
+//! The configured occurrence that was scheduled to fire at @p execute_time.
+//!
+//! A smart alarm can fire at its early window, while a basic or tracking-off alarm fires at its
+//! configured time. Search just before the execute time so both map to the same occurrence.
+static time_t prv_configured_occurrence(const AlarmConfig *config, time_t execute_time) {
+  struct pbl_cron_job base_cron;
+  prv_build_base_cron(config, &base_cron);
+  return pbl_cron_job_get_execute_time_from_epoch(&base_cron, execute_time - 1);
+}
+
+//! Select the next occurrence and whether it uses the smart-alarm window.
+//!
+//! If tracking starts after the window has begun, keep the configured occurrence instead of
+//! letting cron's negative offset push it to the next day.
+static void prv_select_alarm_occurrence(AlarmId id, const AlarmConfig *config, time_t now,
+                                        AlarmOccurrence *occurrence) {
+  struct pbl_cron_job base_cron;
+  prv_build_base_cron(config, &base_cron);
+  const time_t configured_time = pbl_cron_job_get_execute_time_from_epoch(&base_cron, now);
+
+  // A non-instant cron job advances past an occurrence at exactly its time. If this occurrence
+  // has not already fired, keep it so a reload (e.g. tracking starting) cannot skip it.
+  // A reload between the cron fire and the callback recording the occurrence can still re-arm
+  // it here; that window is sub-second and the callback records it shortly after.
+  if (prv_alarm_is_due_now(config, now) && !prv_occurrence_already_fired(id, now)) {
+    occurrence->cron = base_cron;
+    occurrence->cron.may_be_instant = true;
+    occurrence->execute_time = now;
+    occurrence->smart_window = false;
+    return;
+  }
+
+  const bool smart_window = config->is_smart && activity_tracking_on();
+  const bool already_fired = prv_occurrence_already_fired(id, configured_time);
+  if (smart_window && !already_fired && configured_time >= now &&
+      configured_time - SMART_ALARM_RANGE_S <= now) {
+    occurrence->cron = base_cron;
+    occurrence->execute_time = configured_time;
+    occurrence->smart_window = false;
+    return;
+  }
+
+  prv_build_cron(config, &occurrence->cron, &occurrence->smart_window);
+  // When this occurrence already fired, advance past its configured time. Using now + 1 is not
+  // enough if tracking turned off: cron then has no offset and would select the fired time again.
+  occurrence->execute_time = pbl_cron_job_get_execute_time_from_epoch(
+      &occurrence->cron, already_fired ? configured_time + 1 : now);
+}
+
+// ----------------------------------------------------------------------------------------------
+static void prv_assign_alarm(Alarm *alarm, struct pbl_cron_job *cron, time_t execute_time,
+                             bool smart_window) {
   pbl_cron_job_unschedule(&s_next_alarm_cron);
   s_next_alarm_cron = *cron;
-  s_next_alarm_cron.cb_data = (void *)(intptr_t)alarm->id;
+  s_next_alarm_cron.cb_data = prv_alarm_fire_token(alarm->id, s_alarm_fire_generations[alarm->id]);
   s_next_alarm = *alarm;
-  s_next_alarm_time = pbl_cron_job_schedule(&s_next_alarm_cron);
+  s_next_alarm_smart_window = smart_window;
+  // This marks the job absolute, opting out of cron's clock-change recalculation.
+  // alarm_handle_clock_change() reloads and re-arms on the same significant changes.
+  pbl_cron_job_schedule_at(&s_next_alarm_cron, execute_time);
+  s_next_alarm_time = execute_time;
   PBL_LOG_INFO("Scheduling alarm %u to go off at %d:%d (%ld) (smart:%d)", alarm->id,
                alarm->config.hour, alarm->config.minute, (long)s_next_alarm_time,
                alarm->config.is_smart);
@@ -356,13 +503,15 @@ static void prv_check_and_schedule_alarm(struct pbl_settings_file *fd, Alarm *al
     return;
   }
 
-  struct pbl_cron_job cron;
-  time_t execute_time = prv_build_cron(&alarm->config, &cron);
-  prv_timeline_add_alarm(fd, alarm, &cron, pbl_realtime());
+  const time_t now = pbl_realtime();
+  AlarmOccurrence occurrence;
+  prv_select_alarm_occurrence(alarm->id, &alarm->config, now, &occurrence);
 
-  if (s_next_alarm_time == 0 || execute_time < s_next_alarm_time) {
+  prv_timeline_add_alarm(fd, alarm, &occurrence.cron, now, occurrence.smart_window);
+
+  if (s_next_alarm_time == 0 || occurrence.execute_time < s_next_alarm_time) {
     // This alarm is sooner than the previous one!
-    prv_assign_alarm(alarm, &cron);
+    prv_assign_alarm(alarm, &occurrence.cron, occurrence.execute_time, occurrence.smart_window);
   }
   if (refresh) {
     timeline_event_refresh();
@@ -394,11 +543,7 @@ static int prv_remove_untracked_alarm_pins(struct pbl_settings_file *file) {
 
   for (AlarmId id = 0; id < MAX_CONFIGURED_ALARMS; ++id) {
     AlarmStorageKey key = {.id = id, .type = ALARM_DATA_PINS};
-    int size = pbl_settings_get_len(file, &key, sizeof(key));
-    if (size < 0) {
-      rv = size;
-      break;
-    }
+    const size_t size = pbl_settings_get_len(file, &key, sizeof(key));
     if (size == 0 || size > ALARM_ENTRY_SIZE || size % UUID_SIZE != 0) {
       continue;
     }
@@ -428,6 +573,7 @@ static bool prv_reload_alarms(struct pbl_settings_file *file) {
   }
 
   s_next_alarm_time = 0;
+  s_next_alarm_smart_window = false;
   pbl_cron_job_unschedule(&s_next_alarm_cron);
 
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
@@ -453,7 +599,7 @@ static void prv_put_alarm_event(void) {
 
   AlarmConfig *config =
       s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : nullptr;
-  const bool is_smart = (config && config->is_smart && activity_tracking_on());
+  const bool is_smart = config && s_most_recent_alarm_smart_window;
   PebbleEvent e = (PebbleEvent){
     .type = PEBBLE_ALARM_CLOCK_EVENT,
     .alarm_clock = {
@@ -483,14 +629,22 @@ static void prv_clear_snooze_timer(void) {
 
 // ----------------------------------------------------------------------------------------------
 // Put a trigger event if applicable based on the type of alarm.
-static void prv_process_most_recent_alarm(void) {
+//!
+//! @param require_alarm Whether a valid most-recent alarm is required. Alarm-fire timer callbacks
+//!        pass true so a slot deleted after the callback was queued cannot produce an anonymous
+//!        popup. The snooze callback passes false so an anonymous user snooze still fires.
+static void prv_process_most_recent_alarm(bool require_alarm) {
+  if (require_alarm && s_most_recent_alarm_id == ALARM_INVALID_ID) {
+    return;
+  }
+
   // Only processes the most recent alarm since it modifies the alarm config
   AlarmConfig *config =
       s_most_recent_alarm_id != ALARM_INVALID_ID ? &s_most_recent_alarm_config : nullptr;
   const bool user_snoozed = s_user_snoozed;
   s_user_snoozed = false;
   bool trigger = true;
-  const bool is_smart = (config && config->is_smart);
+  const bool is_smart = config && s_most_recent_alarm_smart_window;
   // A user snooze must fire after exactly the configured delay; only the smart
   // alarm's internal sleep poll may re-evaluate the sleep state and re-snooze.
   if (is_smart && !user_snoozed) {
@@ -519,7 +673,7 @@ static void prv_process_most_recent_alarm(void) {
 // ----------------------------------------------------------------------------------------------
 static void prv_snooze_kernel_bg_callback(void *generation) {
   if ((uintptr_t)generation == s_snooze_generation) {
-    prv_process_most_recent_alarm();
+    prv_process_most_recent_alarm(false /* require_alarm */);
   }
 }
 
@@ -533,26 +687,72 @@ static void prv_snooze_timer_callback(struct pbl_work *work) {
 }
 
 // ----------------------------------------------------------------------------------------------
-PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
-  AlarmId id = (intptr_t)data;
-  if (id == ALARM_INVALID_ID) {
+//! Fire the alarm at @p id unless its queued callback is stale or it was deleted or disabled.
+//!
+//! Scheduled callbacks pass the generation captured when they were queued. A missed-alarm
+//! catch-up passes its own generation and @ref ALARM_INVALID_ID.
+static void prv_fire_alarm(AlarmId id, uintptr_t generation, bool catching_up) {
+  if (!catching_up && (id < 0 || id >= MAX_CONFIGURED_ALARMS)) {
     return;
   }
 
   // We allocate some larger variables on the heap to reduce stack usage
   AlarmConfig *config = &s_most_recent_alarm_config;
   struct pbl_settings_file *file = pbl_malloc_check(sizeof(struct pbl_settings_file));
-  bool rv = prv_file_open_and_lock(file);
-  if (!rv) {
+  if (!prv_file_open_and_lock(file)) {
+    pbl_free(file);
+    return;
+  }
+
+  bool rv = false;
+  time_t catchup_time = 0;
+  if (catching_up) {
+    if (generation != s_missed_alarm_generation || s_missed_alarm_catchup_id < 0 ||
+        s_missed_alarm_catchup_id >= MAX_CONFIGURED_ALARMS) {
+      goto cleanup;
+    }
+    id = s_missed_alarm_catchup_id;
+    catchup_time = s_missed_alarm_catchup_time;
+    // Consume the catch-up even if the alarm vanished or is disabled; do not leave it queued.
+    s_missed_alarm_catchup_id = ALARM_INVALID_ID;
+    s_missed_alarm_catchup_time = 0;
+    s_missed_alarm_generation++;
+  } else if (generation != s_alarm_fire_generations[id]) {
     goto cleanup;
   }
 
   rv = prv_alarm_get_config(file, id, config);
+  if (rv && config->is_disabled) {
+    rv = false;
+  }
+  if (!rv) {
+    goto cleanup;
+  }
+
+  const bool smart_window = (s_next_alarm.id == id) ? s_next_alarm_smart_window
+                                                    : (config->is_smart && activity_tracking_on());
+  const time_t now = pbl_realtime();
+  time_t occurrence_time = 0;
+  if (catching_up) {
+    // The missed alarm was armed for this occurrence; suppress its configured time even though
+    // the reload below schedules the next one. A "just once" alarm may already have been moved to
+    // its next day, and it is disabled below, so its original execute time is enough.
+    occurrence_time = config->kind == ALARM_KIND_JUST_ONCE
+                          ? catchup_time
+                          : prv_configured_occurrence(config, catchup_time);
+  } else if (s_next_alarm.id == id && s_next_alarm_time != 0 && s_next_alarm_time <= now) {
+    occurrence_time = s_next_alarm_time + (s_next_alarm_smart_window ? SMART_ALARM_RANGE_S : 0);
+  }
+  s_most_recent_alarm_id = id;
+  s_most_recent_alarm_smart_window = smart_window;
+  if (occurrence_time != 0) {
+    s_fired_occurrences[id] = occurrence_time;
+  }
 
   s_smart_snooze_counter = 0;
 
   // If this is a just once alarm, then disable it.
-  if (rv && config->kind == ALARM_KIND_JUST_ONCE) {
+  if (config->kind == ALARM_KIND_JUST_ONCE) {
     config->is_disabled = true;
     prv_alarm_set_config(file, id, config); // This will reload the alarms
   } else {
@@ -563,11 +763,24 @@ cleanup:
   prv_file_close_and_unlock(file);
   pbl_free(file);
 
+  if (!rv) {
+    return;
+  }
+
   PBL_LOG_INFO("Alarm %u timeout", id);
   s_most_recent_alarm_recorded = false;
-  s_most_recent_alarm_id = rv ? id : ALARM_INVALID_ID;
   prv_clear_snooze_timer();
-  prv_process_most_recent_alarm();
+  prv_process_most_recent_alarm(true /* require_alarm */);
+}
+
+// ----------------------------------------------------------------------------------------------
+PBL_T_STATIC void prv_timer_kernel_bg_callback(void *data) {
+  prv_fire_alarm(prv_alarm_fire_id(data), prv_alarm_fire_generation(data), false);
+}
+
+// ----------------------------------------------------------------------------------------------
+PBL_T_STATIC void prv_missed_alarm_catchup_callback(void *data) {
+  prv_fire_alarm(ALARM_INVALID_ID, (uintptr_t)data, true);
 }
 
 static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
@@ -738,6 +951,9 @@ AlarmId alarm_create(const AlarmInfo *info) {
   }
 
   AlarmId id = prv_get_next_free_alarm_id(&file);
+  prv_invalidate_alarm_fire(id);
+  prv_clear_fired_occurrence(id);
+
   AlarmConfig config = {
     .hour = info->hour,
     .minute = info->minute,
@@ -756,9 +972,30 @@ AlarmId alarm_create(const AlarmInfo *info) {
 
   Alarm alarm = {.id = id, .config = config};
   prv_add_and_schedule_alarm(&file, &alarm);
+  prv_clear_missed_alarm(id);
   prv_file_close_and_unlock(&file);
 
   return id;
+}
+
+// ----------------------------------------------------------------------------------------------
+static void prv_handle_alarm_edit(AlarmId id, bool schedule_changed) {
+  if (!schedule_changed) {
+    return;
+  }
+
+  prv_clear_missed_alarm(id);
+  prv_invalidate_alarm_fire(id);
+
+  if (id == s_most_recent_alarm_id) {
+    PBL_LOG_DBG("Canceling snooze timer because alarm was edited");
+    prv_clear_snooze_timer();
+    s_most_recent_alarm_id = ALARM_INVALID_ID;
+    s_smart_snooze_counter = 0;
+  }
+
+  // The edit re-arms the alarm: allow its configured occurrence to fire again.
+  prv_clear_fired_occurrence(id);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -781,13 +1018,7 @@ static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, voi
     goto cleanup;
   }
 
-  if (schedule_changed && id == s_most_recent_alarm_id) {
-    PBL_LOG_DBG("Canceling snooze timer because alarm was edited");
-    prv_clear_snooze_timer();
-    s_most_recent_alarm_id = ALARM_INVALID_ID;
-    s_smart_snooze_counter = 0;
-  }
-
+  prv_handle_alarm_edit(id, schedule_changed);
   prv_enable_alarm_config(&config, true /* enabled */);
   prv_alarm_set_config(&file, id, &config);
 
@@ -924,6 +1155,19 @@ cleanup:
 }
 
 // ----------------------------------------------------------------------------------------------
+static void prv_cancel_snooze_for_disable(AlarmId id) {
+  if (id != s_most_recent_alarm_id) {
+    return;
+  }
+
+  PBL_LOG_DBG("Canceling snooze timer because alarm was disabled");
+  // Harmless if the alarm is not currently snoozing - the snooze timer still exists to be stopped
+  prv_clear_snooze_timer();
+  s_most_recent_alarm_id = ALARM_INVALID_ID;
+  s_smart_snooze_counter = 0;
+}
+
+// ----------------------------------------------------------------------------------------------
 void alarm_set_enabled(AlarmId id, bool enable) {
   struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
@@ -936,12 +1180,12 @@ void alarm_set_enabled(AlarmId id, bool enable) {
     goto cleanup;
   }
 
-  if (id == s_most_recent_alarm_id && !enable) {
-    PBL_LOG_DBG("Canceling snooze timer because alarm was disabled");
-    // Harmless if the alarm is not currently snoozing - the snooze timer still exists to be stopped
-    prv_clear_snooze_timer();
-    s_most_recent_alarm_id = ALARM_INVALID_ID;
-    s_smart_snooze_counter = 0;
+  if (!enable) {
+    prv_cancel_snooze_for_disable(id);
+    // Keep the fired-occurrence guard: toggling an alarm off and on must not re-fire an
+    // occurrence that already fired.
+    prv_invalidate_alarm_fire(id);
+    prv_clear_missed_alarm(id);
   }
 
   prv_enable_alarm_config(&config, enable);
@@ -958,6 +1202,7 @@ void alarm_delete(AlarmId id) {
     return;
   }
 
+  prv_clear_missed_alarm(id);
   if (id == s_most_recent_alarm_id) {
     PBL_LOG_DBG("Canceling snooze timer on delete");
     prv_clear_snooze_timer();
@@ -965,6 +1210,8 @@ void alarm_delete(AlarmId id) {
     s_smart_snooze_counter = 0;
   }
 
+  prv_invalidate_alarm_fire(id);
+  prv_clear_fired_occurrence(id);
   AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
   pbl_settings_delete(&file, &key, sizeof(key));
   prv_timeline_remove_alarm(&file, id);
@@ -1026,7 +1273,8 @@ bool alarm_get_next_enabled_alarm(time_t *next_alarm_time_out) {
   const bool alarm_is_scheduled = s_next_alarm_time != 0;
 
   if (alarm_is_scheduled && next_alarm_time_out) {
-    *next_alarm_time_out = prv_get_alarm_time(&s_next_alarm, s_next_alarm_time);
+    *next_alarm_time_out =
+        s_next_alarm_time + (s_next_alarm_smart_window ? SMART_ALARM_RANGE_S : 0);
   }
 
   pbl_mutex_unlock(&s_mutex);
@@ -1042,7 +1290,7 @@ bool alarm_is_next_enabled_alarm_smart(void) {
 
   bool is_next_alarm_smart = false;
   if (alarm_is_scheduled) {
-    is_next_alarm_smart = s_next_alarm.config.is_smart;
+    is_next_alarm_smart = s_next_alarm_smart_window;
   }
 
   pbl_mutex_unlock(&s_mutex);
@@ -1065,8 +1313,10 @@ bool alarm_get_time_until(AlarmId id, time_t *time_out) {
   }
 
   if (time_out) {
-    struct pbl_cron_job cron;
-    *time_out = prv_build_cron(&config, &cron) - pbl_realtime();
+    const time_t now = pbl_realtime();
+    AlarmOccurrence occurrence;
+    prv_select_alarm_occurrence(id, &config, now, &occurrence);
+    *time_out = occurrence.execute_time - now;
   }
   alarm_is_scheduled = true;
 
@@ -1333,7 +1583,7 @@ void alarm_handle_clock_change(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_language_change_kernel_bg_callback(void *unused) {
+static void prv_reload_alarms_kernel_bg_callback(void *unused) {
   struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
     return;
@@ -1343,20 +1593,47 @@ static void prv_language_change_kernel_bg_callback(void *unused) {
 }
 
 static EventServiceInfo s_language_change_event_info;
+static EventServiceInfo s_activity_event_info;
 
 static void prv_language_change_event_handler(PebbleEvent *event, void *context) {
-  pbl_sys_work_call(prv_language_change_kernel_bg_callback, nullptr);
+  pbl_sys_work_call(prv_reload_alarms_kernel_bg_callback, nullptr);
+}
+
+static void prv_activity_event_handler(PebbleEvent *event, void *context) {
+  if (event->activity_event.type == PebbleActivityEvent_TrackingStarted ||
+      event->activity_event.type == PebbleActivityEvent_TrackingStopped) {
+    pbl_sys_work_call(prv_reload_alarms_kernel_bg_callback, nullptr);
+  }
 }
 
 // ----------------------------------------------------------------------------------------------
 void alarm_init(void) {
   s_next_alarm_time = 0;
+  s_next_alarm_smart_window = false;
+  s_most_recent_alarm_id = ALARM_INVALID_ID;
+  memset(s_fired_occurrences, 0, sizeof(s_fired_occurrences));
+  s_most_recent_alarm_smart_window = false;
+  s_missed_alarm_catchup_id = ALARM_INVALID_ID;
+  s_missed_alarm_catchup_time = 0;
+  s_missed_alarm_generation++;
+  s_missed_alarm_id = ALARM_INVALID_ID;
+  s_missed_alarm_time = 0;
+  for (int i = 0; i < MAX_CONFIGURED_ALARMS; i++) {
+    prv_invalidate_alarm_fire(i);
+  }
+  s_smart_snooze_counter = 0;
 
   s_language_change_event_info = (EventServiceInfo){
     .type = PEBBLE_LANGUAGE_CHANGE_EVENT,
     .handler = prv_language_change_event_handler,
   };
   event_service_client_subscribe(&s_language_change_event_info);
+
+  s_activity_event_info = (EventServiceInfo){
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .handler = prv_activity_event_handler,
+  };
+  event_service_client_subscribe(&s_activity_event_info);
 
   struct pbl_settings_file file;
   if (!prv_file_open_and_lock(&file)) {
@@ -1397,18 +1674,32 @@ void alarm_init(void) {
 void alarm_service_enable_alarms(bool enable) {
   s_alarms_enabled = enable;
 
-  if (!enable || s_missed_alarm_id == ALARM_INVALID_ID) {
+  if (!enable) {
     return;
   }
 
+  pbl_mutex_lock(&s_mutex, PBL_FOREVER);
   const AlarmId id = s_missed_alarm_id;
+  const time_t missed_time = s_missed_alarm_time;
+  if (id == ALARM_INVALID_ID) {
+    pbl_mutex_unlock(&s_mutex);
+    return;
+  }
   s_missed_alarm_id = ALARM_INVALID_ID;
+  s_missed_alarm_time = 0;
 
-  if ((pbl_realtime() - s_missed_alarm_time) > ALARM_MISSED_MAX_DELAY_S) {
+  if ((pbl_realtime() - missed_time) > ALARM_MISSED_MAX_DELAY_S) {
+    pbl_mutex_unlock(&s_mutex);
     PBL_LOG_DBG("Missed alarm %d is too late to fire", id);
     return;
   }
-  pbl_sys_work_call(prv_timer_kernel_bg_callback, (void *)(intptr_t)id);
+  s_missed_alarm_catchup_id = id;
+  s_missed_alarm_catchup_time = missed_time;
+  s_missed_alarm_generation++;
+  const uintptr_t generation = s_missed_alarm_generation;
+  pbl_mutex_unlock(&s_mutex);
+
+  pbl_sys_work_call(prv_missed_alarm_catchup_callback, (void *)generation);
 }
 
 // ----------------------------------------------------------------------------------------------
