@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/services/bluetooth/bonding.h>
@@ -211,12 +212,12 @@ void test_bonding__new_bond_replaces_the_others(void) {
 }
 
 void test_bonding__root_keys_are_generated_once(void) {
-  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
-  struct pbl_bt_sm_key again[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
-  const struct pbl_bt_sm_key none = {};
+  uint8_t keys[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE];
+  uint8_t again[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE];
+  const uint8_t none[PBL_BT_PRF_STORE_KEY_SIZE] = {};
 
   bt_bonding_get_root_keys(keys);
-  cl_assert(memcmp(&keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY], &none, sizeof(none)) != 0);
+  cl_assert(memcmp(&keys[PBL_BT_PRF_STORE_ROOT_KEY_IR], &none, sizeof(none)) != 0);
 
   bt_bonding_get_root_keys(again);
   cl_assert_equal_m(keys, again, sizeof(keys));

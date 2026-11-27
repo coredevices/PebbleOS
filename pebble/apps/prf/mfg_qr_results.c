@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/addr.h>
 
 #include <applib/app.h>
 #include <applib/app_malloc.h>

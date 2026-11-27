@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/addr.h>
+#include <pbl/bluetooth/gap.h>
 
 /**
  * @defgroup services_bluetooth_local_id Local identity

@@ -46,7 +46,7 @@ bool bt_ctl_is_bluetooth_running(void) {
 }
 
 static void prv_start(void) {
-  struct pbl_bt_sm_key root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+  uint8_t root_keys[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE];
 
   if (s_running) {
     return;
@@ -54,7 +54,7 @@ static void prv_start(void) {
 
   // Without root keys the stack would run with an identity anyone can resolve.
   if (bt_bonding_get_root_keys(root_keys) == 0) {
-    s_running = (pbl_bt_start(&root_keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY]) == 0);
+    s_running = (pbl_bt_start(root_keys[PBL_BT_PRF_STORE_ROOT_KEY_IR]) == 0);
   }
 
   if (!s_running) {

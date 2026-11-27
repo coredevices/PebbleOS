@@ -5,9 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <pbl/bluetooth/addr.h>
 #include <pbl/bluetooth/bond.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/bluetooth/types.h>
 #include <pbl/services/bluetooth/bluetooth_ctl.h>
 #include <pbl/services/bluetooth/bonding.h>
 #include <pbl/services/bluetooth/link.h>

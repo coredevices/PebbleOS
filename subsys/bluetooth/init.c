@@ -149,7 +149,7 @@ static void prv_stop_host(void) {
   (void)ble_gatts_reset();
 }
 
-int pbl_bt_start(const struct pbl_bt_sm_key *irk) {
+int pbl_bt_start(const uint8_t irk[16]) {
   int rc;
 
   if (s_state == STATE_STARTED) {

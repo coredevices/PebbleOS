@@ -5,8 +5,8 @@
 
 #include <stdbool.h>
 
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap.h>
+#include <pbl/bluetooth/prf_store.h>
 
 #include <nimble/ble.h>
 
@@ -29,11 +29,11 @@ void bt_bonding_init(void);
 /**
  * @brief Get the root keys, generating them the first time.
  *
- * @param[out] keys Array of @c PBL_BT_SM_ROOT_KEY_TYPE_NUM keys, indexed by key type.
+ * @param[out] keys Array of @c PBL_BT_PRF_STORE_ROOT_KEY_NUM keys, indexed by key type.
  * @retval 0 on success.
  * @retval -EIO if they could not be generated.
  */
-int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys);
+int bt_bonding_get_root_keys(uint8_t keys[][PBL_BT_PRF_STORE_KEY_SIZE]);
 
 /**
  * @brief Get the name of a bonded peer.

@@ -9,6 +9,24 @@
 #include <pbl/pp/transports/gatt.h>
 #include <pbl/util/uuid.h>
 
+//! Service of the forward role, hosted by the phone, and its characteristics. They are 32-bit
+//! values expanded with PPOGATT_UUID128_INIT().
+#define PPOGATT_SERVICE_UUID             (0x10000000)
+#define PPOGATT_DATA_CHARACTERISTIC_UUID (0x10000001)
+#define PPOGATT_META_CHARACTERISTIC_UUID (0x10000002)
+// 0x30000003 to 0x30000006 are taken: an earlier service hosted by the device used them.
+//! Service of the reversed role, hosted by the device: the phone writes one characteristic and
+//! is notified of the other. There is no meta characteristic, 0x40000002 is reserved for one.
+#define PPOGATT_REVERSED_SERVICE_UUID                (0x40000000)
+#define PPOGATT_REVERSED_DATA_CHARACTERISTIC_UUID    (0x40000001)
+#define PPOGATT_REVERSED_DATA_WR_CHARACTERISTIC_UUID (0x40000003)
+
+//! Initializer of a ble_uuid128_t: a 32-bit UUID expanded with the base UUID,
+//! XXXXXXXX-328E-0FBB-C642-1AA6699BDADA.
+#define PPOGATT_UUID128_INIT(u)                                                            \
+  BLE_UUID128_INIT(0xDA, 0xDA, 0x9B, 0x69, 0xA6, 0x1A, 0x42, 0xC6, 0xBB, 0x0F, 0x8E, 0x32, \
+                   (u) & 0xff, ((u) >> 8) & 0xff, ((u) >> 16) & 0xff, ((u) >> 24) & 0xff)
+
 //! The largest ATT MTU: what the host stack is configured to prefer.
 #define PPOGATT_MTU_MAX                   (247)
 #define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / (PPOGATT_MTU_MAX - 3))

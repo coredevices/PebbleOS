@@ -10,7 +10,6 @@
 #include <pbl/bluetooth/clients/gap.h>
 #include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/pairing_confirm.h>
-#include <pbl/bluetooth/types.h>
 #include <pbl/logging/logging.h>
 
 #include <host/ble_gap.h>

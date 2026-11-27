@@ -5,7 +5,7 @@
 
 #include "menu.h"
 
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/util/list.h>
 
 #include <kernel/events.h>

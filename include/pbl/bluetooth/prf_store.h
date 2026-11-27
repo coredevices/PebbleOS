@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/bluetooth/types.h>
+#include <stdint.h>
+
+#include <pbl/bluetooth/gap.h>
 
 struct ble_store_value_sec;
 
@@ -24,24 +25,37 @@ struct ble_store_value_sec;
  * @{
  */
 
+/** @brief Size of a root key, in bytes. */
+#define PBL_BT_PRF_STORE_KEY_SIZE 16
+
+/** @brief Root keys of the local device, from which the local keys are derived. */
+enum pbl_bt_prf_store_root_key {
+  /** Encryption Root key (ER). */
+  PBL_BT_PRF_STORE_ROOT_KEY_ER,
+  /** Identity Root key (IR), from which the local IRK is derived. */
+  PBL_BT_PRF_STORE_ROOT_KEY_IR,
+  /** Number of root keys. */
+  PBL_BT_PRF_STORE_ROOT_KEY_NUM,
+};
+
 /**
  * @brief Get a BLE root key.
  *
- * @param key_type Encryption Root (ER) or Identity Root (IR) key.
+ * @param key_type Which root key.
  * @param[out] key_out Key, may be NULL.
  * @return true if a non-zero key is stored.
  */
-bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
-                                   struct pbl_bt_sm_key *key_out);
+bool pbl_bt_prf_store_get_root_key(enum pbl_bt_prf_store_root_key key_type,
+                                   uint8_t key_out[PBL_BT_PRF_STORE_KEY_SIZE]);
 
 /**
  * @brief Store the BLE root keys.
  *
- * @param keys_in Array of @c PBL_BT_SM_ROOT_KEY_TYPE_NUM keys indexed by
- *                @ref pbl_bt_sm_root_key_type, or NULL to store zeroed keys.
+ * @param keys_in Array of @c PBL_BT_PRF_STORE_ROOT_KEY_NUM keys indexed by
+ *                @ref pbl_bt_prf_store_root_key, or NULL to store zeroed keys.
  * @return 0 on success, negative errno otherwise.
  */
-int pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in);
+int pbl_bt_prf_store_set_root_keys(uint8_t keys_in[][PBL_BT_PRF_STORE_KEY_SIZE]);
 
 /**
  * @brief Get the BLE pairing, as the keys NimBLE stores for a peer.

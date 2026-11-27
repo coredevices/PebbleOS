@@ -6,6 +6,7 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/clients/gap.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/work.h>
 #include <pbl/logging/logging.h>

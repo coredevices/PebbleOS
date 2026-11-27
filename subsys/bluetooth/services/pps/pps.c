@@ -18,9 +18,9 @@
 PBL_LOG_MODULE_DECLARE(bt, CONFIG_BT_LOG_LEVEL);
 
 static const ble_uuid128_t s_status_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PPS_CONNECTION_STATUS_UUID_32BIT);
+    PBL_BT_PPS_UUID128_INIT(PBL_BT_PPS_CONNECTION_STATUS_UUID_32BIT);
 static const ble_uuid128_t s_trigger_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PPS_TRIGGER_PAIRING_UUID_32BIT);
+    PBL_BT_PPS_UUID128_INIT(PBL_BT_PPS_TRIGGER_PAIRING_UUID_32BIT);
 
 static int prv_get_status(uint16_t conn_handle, uint8_t *status) {
   struct ble_gap_conn_desc desc;

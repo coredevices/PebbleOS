@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/drivers/battery.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/msgq.h>

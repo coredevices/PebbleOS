@@ -6,11 +6,14 @@
 struct ble_gap_event;
 
 /**
- * @defgroup bluetooth_gap GAP events
+ * @defgroup bluetooth_gap GAP
  * @ingroup bluetooth
- * @brief The handler of a connection's GAP events.
+ * @brief The handler of a connection's GAP events, and the size of device names.
  * @{
  */
+
+/** @brief Buffer size of a device name, including the terminator. */
+#define PBL_BT_DEVICE_NAME_BUFFER_SIZE (20)
 
 /**
  * @brief Handle a GAP event of a connection.

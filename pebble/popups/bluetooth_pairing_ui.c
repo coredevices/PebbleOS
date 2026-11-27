@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/pairing_confirm.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>

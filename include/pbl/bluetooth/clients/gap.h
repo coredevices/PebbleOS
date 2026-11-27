@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <pbl/bluetooth/gap.h>
+
 /**
  * @defgroup bluetooth_gap_client GAP client
  * @ingroup bluetooth

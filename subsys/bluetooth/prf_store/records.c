@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
@@ -31,8 +32,8 @@ PBL_LOG_MODULE_DEFINE(bt_prf_store, CONFIG_BT_PRF_STORE_LOG_LEVEL);
    PRF_RECORD_FLAG_OUR_LTK | PRF_RECORD_FLAG_SECURE_CONNECTIONS | PRF_RECORD_FLAG_AUTHENTICATED)
 
 static_assert(PRF_RECORD_NAME_SIZE == PBL_BT_DEVICE_NAME_BUFFER_SIZE);
-static_assert(PRF_RECORD_NUM_ROOT_KEYS == PBL_BT_SM_ROOT_KEY_TYPE_NUM);
-static_assert(PRF_RECORD_KEY_SIZE == sizeof(struct pbl_bt_sm_key));
+static_assert(PRF_RECORD_NUM_ROOT_KEYS == PBL_BT_PRF_STORE_ROOT_KEY_NUM);
+static_assert(PRF_RECORD_KEY_SIZE == PBL_BT_PRF_STORE_KEY_SIZE);
 
 static PBL_MUTEX_DEFINE(s_lock);
 
@@ -205,8 +206,8 @@ int pbl_bt_prf_store_wipe(void) {
   return ret;
 }
 
-bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
-                                   struct pbl_bt_sm_key *key_out) {
+bool pbl_bt_prf_store_get_root_key(enum pbl_bt_prf_store_root_key key_type,
+                                   uint8_t key_out[PBL_BT_PRF_STORE_KEY_SIZE]) {
   static const uint8_t s_no_key[PRF_RECORD_KEY_SIZE];
   struct prf_record record;
 
@@ -220,13 +221,13 @@ bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
   }
 
   if (key_out != nullptr) {
-    memcpy(key_out->data, record.root_keys[key_type], sizeof(key_out->data));
+    memcpy(key_out, record.root_keys[key_type], PBL_BT_PRF_STORE_KEY_SIZE);
   }
 
   return true;
 }
 
-int pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
+int pbl_bt_prf_store_set_root_keys(uint8_t keys_in[][PBL_BT_PRF_STORE_KEY_SIZE]) {
   struct prf_record record;
   int ret;
 

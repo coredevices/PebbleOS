@@ -3,8 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/bluetooth/sm_types.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
@@ -89,13 +89,13 @@ static const struct ble_store_value_sec OUR = {
 // Helpers
 ///////////////////////////////////////////////////////////
 // A field to set and read back as a flag: the root keys, as one of two values.
-static const struct pbl_bt_sm_key ROOT_KEYS_SET[PBL_BT_SM_ROOT_KEY_TYPE_NUM] = {
-  {.data = {0x11}},
-  {.data = {0x22}},
+static const uint8_t ROOT_KEYS_SET[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE] = {
+  {0x11},
+  {0x22},
 };
-static const struct pbl_bt_sm_key ROOT_KEYS_CLEAR[PBL_BT_SM_ROOT_KEY_TYPE_NUM] = {
-  {.data = {0x33}},
-  {.data = {0x44}},
+static const uint8_t ROOT_KEYS_CLEAR[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE] = {
+  {0x33},
+  {0x44},
 };
 
 static void prv_assert_pairing(void) {
@@ -136,20 +136,20 @@ static void prv_read_pairing_field(SprfBlePairingData *data) {
 }
 
 static void prv_set_field(bool set) {
-  struct pbl_bt_sm_key keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM];
+  uint8_t keys[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE];
 
   memcpy(keys, set ? ROOT_KEYS_SET : ROOT_KEYS_CLEAR, sizeof(keys));
   pbl_bt_prf_store_set_root_keys(keys);
 }
 
 static bool prv_get_field(void) {
-  struct pbl_bt_sm_key key;
+  uint8_t key[PBL_BT_PRF_STORE_KEY_SIZE];
 
-  if (!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, &key)) {
+  if (!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR, key)) {
     return false;
   }
 
-  return memcmp(&key, &ROOT_KEYS_SET[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY], sizeof(key)) == 0;
+  return memcmp(&key, &ROOT_KEYS_SET[PBL_BT_PRF_STORE_ROOT_KEY_IR], sizeof(key)) == 0;
 }
 
 static void prv_fill_flash_random_data(void) {
@@ -333,22 +333,20 @@ void test_prf_store__ble_pairing_without_keys_is_ignored(void) {
 void test_prf_store__root_keys(void) {
   pbl_bt_prf_store_wipe();
 
-  cl_assert_equal_b(pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, nullptr),
-                    false);
-  cl_assert_equal_b(pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION, nullptr),
-                    false);
+  cl_assert_equal_b(pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR, nullptr), false);
+  cl_assert_equal_b(pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_ER, nullptr), false);
 
-  struct pbl_bt_sm_key keys[2];
+  uint8_t keys[2][PBL_BT_PRF_STORE_KEY_SIZE];
   for (int i = 0; i < sizeof(keys); ++i) {
     ((uint8_t *)keys)[i] = i;
   }
 
   pbl_bt_prf_store_set_root_keys(keys);
 
-  struct pbl_bt_sm_key keys_out[2];
-  for (enum pbl_bt_sm_root_key_type key_type = 0; key_type < PBL_BT_SM_ROOT_KEY_TYPE_NUM;
+  uint8_t keys_out[2][PBL_BT_PRF_STORE_KEY_SIZE];
+  for (enum pbl_bt_prf_store_root_key key_type = 0; key_type < PBL_BT_PRF_STORE_ROOT_KEY_NUM;
        ++key_type) {
-    cl_assert_equal_b(pbl_bt_prf_store_get_root_key(key_type, &keys_out[key_type]), true);
+    cl_assert_equal_b(pbl_bt_prf_store_get_root_key(key_type, keys_out[key_type]), true);
     // It's a byte array inside, so memcmp should be OK to use:
     cl_assert_equal_i(memcmp(&keys[key_type], &keys_out[key_type], sizeof(keys[0])), 0);
   }
