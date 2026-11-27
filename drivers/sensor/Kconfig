@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menu "Sensors"
+
+config SENSOR
+    bool "Sensor class"
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Sensor class (pbl/drivers/sensor.h): accelerometers, gyroscopes,
+      magnetometers, temperature and pressure sensors. Selected by the
+      sensor type menus below.
+
+if SENSOR
+
+config SENSOR_SHELL
+    bool "Shell commands"
+    default DRIVER_SHELL
+    depends on SHELL
+    help
+      The sensor shell command, to list the sensors, read them and set
+      their attributes.
+
+module = DRIVER_SENSOR
+module-str = Sensor
+source "subsys/logging/Kconfig.template.log_level"
+
+endif # SENSOR
+
+menuconfig ACCEL
+    bool "Accelerometers"
+    select SENSOR
+    help
+      Accelerometer drivers. The board's accelerometer is the accel role,
+      ACCEL.
+
+if ACCEL
+
+rsource "Kconfig.lis2dw12"
+rsource "Kconfig.lsm6dso"
+rsource "Kconfig.accel_sim"
+
+endif # ACCEL
+
+menuconfig TEMP
+    bool "Temperature sensors"
+    select SENSOR
+    help
+      Temperature sensor drivers. The board's die temperature sensor is
+      the die_temp role, TEMP.
+
+if TEMP
+
+rsource "Kconfig.temp_nrf5"
+rsource "Kconfig.temp_sf32lb"
+rsource "Kconfig.temp_stm32h7_adc"
+rsource "Kconfig.temp_sim"
+
+endif # TEMP
+
+menuconfig MAG
+    bool "Magnetometers"
+    select SENSOR
+    help
+      Magnetometer drivers. The board's magnetometer is the mag role,
+      MAG.
+
+if MAG
+
+rsource "Kconfig.mmc5603nj"
+rsource "Kconfig.mag_sim"
+
+endif # MAG
+
+menuconfig PRESSURE
+    bool "Pressure sensors"
+    select SENSOR
+    help
+      Barometric pressure sensor drivers. The board's pressure sensor is
+      the pressure role, PRESSURE.
+
+if PRESSURE
+
+rsource "Kconfig.bmp390"
+
+endif # PRESSURE
+
+endmenu

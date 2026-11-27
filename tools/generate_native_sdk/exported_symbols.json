@@ -54,7 +54,6 @@
     "include/pbl/util/uuid.h",
     "pebble/process_management/app_manager.h",
     "pebble/process_management/sdk_shims.h",
-    "include/pbl/drivers/mag.h",
     "pebble/applib/fonts/fonts.h",
     "pebble/applib/graphics/gcontext.h",
     "pebble/applib/graphics/gtypes.h",

@@ -544,7 +544,7 @@ are their own layer, independent of how devices are defined:
   die_temp: temp0          # a devicetree node
   accel:                   # a device defined in C
     symbol: SIM_ACCEL
-    include: pbl/drivers/imu/sim.h
+    include: pbl/drivers/sensor/sim.h
   ```
 
 - revisions, add-ons and applications change them in roles files of their
@@ -555,8 +555,8 @@ are their own layer, independent of how devices are defined:
 each role whose symbol is enabled:
 
 ```c
-const struct pbl_temp *const DIE_TEMP = &dt_temp0;
-const struct pbl_accel *const ACCEL = SIM_ACCEL;
+const struct pbl_sensor *const TEMP = &dt_temp0;
+const struct pbl_sensor *const ACCEL = SIM_ACCEL;
 ```
 
 An enabled symbol whose role has no device fails the build. The override

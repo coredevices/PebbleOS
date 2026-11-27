@@ -9,6 +9,7 @@
 #include <pbl/device.h>
 #include <pbl/kernel/mutex.h>
 #include <pbl/kernel/sem.h>
+#include <pbl/kernel/timer.h>
 #include <pbl/util/bits.h>
 
 /**
@@ -20,8 +21,10 @@
  * bus plus 7-bit address. A transfer is a list of messages, each a read or a write, sent as one
  * bus transaction: a START, a repeated START between messages and a STOP after the last one. A
  * write flagged @ref PBL_I2C_MSG_NOSTART continues the previous write instead, e.g. data after a
- * register address. Transfers block the calling task, are serialized per bus and must not be
- * issued from ISRs. The controller is powered for the duration of each transfer.
+ * register address. pbl_i2c_transfer() and the helpers built on it block the calling task and must
+ * not be issued from ISRs. pbl_i2c_transfer_async() queues a transfer from any context, ISRs
+ * included, and reports its outcome to a callback. Transfers are serialized per bus, in the order
+ * they are issued, and the controller is powered while it has transfers queued.
  *
  * @code{.c}
  * static const struct pbl_i2c_dev s_accel = PBL_I2C_DEV(&s_i2c2.bus, 0x6a);
@@ -36,6 +39,29 @@
  * }
  *
  * return pbl_i2c_burst_read(&s_accel, REG_OUT_X_L, xyz, sizeof(xyz));
+ * @endcode
+ *
+ * An asynchronous transfer, e.g. reading a FIFO from its watermark interrupt:
+ *
+ * @code{.c}
+ * struct fifo {
+ *   struct pbl_i2c_async xfer;
+ *   struct pbl_i2c_msg msgs[2];
+ *   uint8_t reg;
+ *   uint8_t data[96];
+ * };
+ *
+ * static void prv_fifo_done(struct pbl_i2c_async *xfer, int status) {
+ *   struct fifo *fifo = PBL_CONTAINER_OF(xfer, struct fifo, xfer);
+ *   ...
+ * }
+ *
+ * fifo->msgs[0] = (struct pbl_i2c_msg){.buf = &fifo->reg, .len = 1, .flags = PBL_I2C_MSG_WRITE};
+ * fifo->msgs[1] = (struct pbl_i2c_msg){.buf = fifo->data, .len = 96, .flags = PBL_I2C_MSG_READ};
+ * fifo->xfer = (struct pbl_i2c_async){
+ *   .dev = &s_accel, .msgs = fifo->msgs, .num_msgs = 2, .done = prv_fifo_done,
+ * };
+ * ret = pbl_i2c_transfer_async(&fifo->xfer);
  * @endcode
  *
  * Calls return 0 or a negative errno: @c -ENXIO when the address is not acknowledged, @c -EIO on a
@@ -75,21 +101,63 @@ struct pbl_i2c_msg {
 /** @brief Class of the I2C buses. */
 extern const struct pbl_device_class pbl_i2c_bus_class;
 
+struct pbl_i2c_bus;
+struct pbl_i2c_dev;
+struct pbl_i2c_async;
+
+/**
+ * @brief Outcome of an asynchronous transfer.
+ *
+ * Called from an ISR, or from any context queueing a transfer when the controller rejects this one,
+ * so it must not block. It may queue further transfers, behind those already pending.
+ *
+ * @param xfer Transfer, which the caller may reuse from now on.
+ * @param status 0 or a negative errno, see @ref drivers_i2c.
+ */
+typedef void (*pbl_i2c_async_cb_t)(struct pbl_i2c_async *xfer, int status);
+
+/**
+ * @brief An asynchronous transfer.
+ *
+ * Owned by the bus from pbl_i2c_transfer_async() until its callback runs: it and its messages
+ * and buffers must stay valid and untouched until then. Embed it in a larger structure to reach
+ * the caller's data from the callback.
+ */
+struct pbl_i2c_async {
+  /** Device. */
+  const struct pbl_i2c_dev *dev;
+  /** Messages. */
+  struct pbl_i2c_msg *msgs;
+  /** Number of messages. */
+  uint8_t num_msgs;
+  /** Outcome callback. */
+  pbl_i2c_async_cb_t done;
+  /** @cond INTERNAL_HIDDEN */
+  struct pbl_i2c_async *next;
+  /** @endcond */
+};
+
 /** @cond INTERNAL_HIDDEN */
 struct pbl_i2c_bus_state {
-  int status;
-  struct pbl_sem done;
+  const struct pbl_i2c_bus *bus;
   struct pbl_mutex mutex;
+  struct pbl_sem done;
+  int status;
+  struct pbl_i2c_async sync;
+  struct pbl_timer timer;
+  struct pbl_i2c_async *head;
+  struct pbl_i2c_async *tail;
+  bool busy;
+  bool powered;
 };
 /** @endcond */
-
-struct pbl_i2c_bus;
 
 /**
  * @brief Bus driver operations.
  *
- * Called with the bus lock held. The class layer owns locking, power and timeouts; the driver
- * moves a transfer over the wire and reports its outcome with pbl_i2c_bus_complete().
+ * Called with interrupts locked, possibly from an ISR, so they must not block. The class layer
+ * owns queueing, power and timeouts; the driver moves a transfer over the wire and reports its
+ * outcome with pbl_i2c_bus_complete().
  */
 struct pbl_i2c_bus_ops {
   /** Configure the controller, leaving it disabled. Returns 0 or a negative errno. */
@@ -170,7 +238,8 @@ int pbl_i2c_bus_dev_init(const struct pbl_device *dev);
 /**
  * @brief Report the outcome of the transfer in flight.
  *
- * Called by the bus driver, typically from its interrupt handler.
+ * Called by the bus driver from its interrupt handler, which may then start the next queued
+ * transfer.
  *
  * @param bus Bus.
  * @param status 0 or a negative errno, see @ref drivers_i2c.
@@ -186,6 +255,18 @@ void pbl_i2c_bus_complete(const struct pbl_i2c_bus *bus, int status);
  * @return 0 or a negative errno.
  */
 int pbl_i2c_transfer(const struct pbl_i2c_dev *dev, struct pbl_i2c_msg *msgs, uint8_t num_msgs);
+
+/**
+ * @brief Queue an asynchronous transfer.
+ *
+ * Callable from any context, ISRs included. The callback reports the outcome, unless this call
+ * fails.
+ *
+ * @param xfer Transfer, with its device, messages and callback set.
+ * @return 0 if queued, @c -ENODEV if the bus is not ready or @c -EINVAL for an invalid message
+ *         sequence.
+ */
+int pbl_i2c_transfer_async(struct pbl_i2c_async *xfer);
 
 /**
  * @brief Write data.

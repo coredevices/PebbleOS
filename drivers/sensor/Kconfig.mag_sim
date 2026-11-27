@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config MAG_SIM
+    bool "Simulator"
+    depends on SOC_QEMU_PEBBLE || SOC_POSIX
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Simulated magnetometer, measuring a field set through its
+      simulator API (pbl/drivers/sensor/sim.h).
