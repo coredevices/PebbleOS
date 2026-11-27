@@ -3,7 +3,7 @@
 
 pbl_clar_test(test_session
   SOURCES
-    pebble/comm/pp.c
+    pebble/kernel/pp.c
     subsys/pp/session.c
     subsys/pp/send_queue.c
   INCLUDES subsys/pp

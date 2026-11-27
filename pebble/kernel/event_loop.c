@@ -37,7 +37,7 @@
 #include <applib/app_launch_reason.h>
 #include <applib/graphics/graphics.h>
 #include <applib/ui/ui.h>
-#include <comm/qemu/serial.h>
+#include <debug/qemu/serial.h>
 #include <kernel/input_buttons.h>
 #include <kernel/kernel_applib_state.h>
 #include <kernel/low_power.h>

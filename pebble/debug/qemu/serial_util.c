@@ -8,8 +8,8 @@
 #include <pbl/util/byteorder.h>
 #include <pbl/util/math.h>
 
-#include <comm/qemu/serial.h>
-#include <comm/qemu/serial_private.h>
+#include <debug/qemu/serial.h>
+#include <debug/qemu/serial_private.h>
 
 PBL_LOG_MODULE_DECLARE(qemu_serial, CONFIG_QEMU_SERIAL_LOG_LEVEL);
 

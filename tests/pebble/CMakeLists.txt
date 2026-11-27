@@ -233,3 +233,10 @@ pbl_clar_test(test_event_syscalls
     pebble/syscall/event_syscalls.c
   DEFINES UNITTEST_WITH_SYSCALL_PRIVILEGES=1
 )
+
+pbl_clar_test(test_qemu_serial
+  SOURCES
+    pebble/debug/qemu/serial_util.c
+    tests/fakes/fake_rtc.c
+  OVERRIDES dummy_board
+)

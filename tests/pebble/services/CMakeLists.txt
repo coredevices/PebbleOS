@@ -497,3 +497,21 @@ pbl_clar_test(test_prf_update
   DEFINES CONFIG_SERVICE_PRF_UPDATE_LOG_LEVEL=4
   OVERRIDES dummy_board
 )
+
+pbl_clar_test(test_ams
+  SOURCES
+    pebble/services/music/ams_util.c
+    pebble/services/music/ams.c
+    subsys/bluetooth/clients/ams/ams.c
+    pebble/services/music/service.c
+    tests/fakes/fake_events.c
+    tests/fakes/fake_gattc_service.c
+    tests/fakes/fake_rtc.c
+  INCLUDES third_party/nimble/mynewt-nimble/nimble/host/include
+  DEFINES CONFIG_MUSIC_ALBUM_ART_RECENTS=0
+)
+
+pbl_clar_test(test_ams_util
+  SOURCES
+    pebble/services/music/ams_util.c
+)

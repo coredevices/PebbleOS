@@ -9,7 +9,7 @@
 #include <pbl/services/battery/battery_curve.h>
 #include <pbl/services/battery/battery_state.h>
 #ifdef CONFIG_QEMU
-#include <comm/qemu/settings.h>
+#include <debug/qemu/settings.h>
 #endif
 #endif
 #ifdef CONFIG_AUDIO_SIM_MIC
@@ -32,8 +32,8 @@
 #include <pbl/util/math.h>
 #include <pbl/util/size.h>
 
-#include <comm/qemu/serial.h>
-#include <comm/qemu/serial_private.h>
+#include <debug/qemu/serial.h>
+#include <debug/qemu/serial_private.h>
 #include <kernel/events.h>
 #include <kernel/pebble_tasks.h>
 #include <popups/timeline/peek.h>

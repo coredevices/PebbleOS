@@ -27,6 +27,6 @@ accel:
 ```
 
 Simulators know nothing of where their data comes from. On the emulator and
-native boards, the QEMU host channel (`pebble/comm/qemu/serial.c`) decodes
+native boards, the QEMU host channel (`pebble/debug/qemu/serial.c`) decodes
 the host's messages and calls the simulator APIs, so the host tools drive
 them unchanged. Unit tests call the same APIs directly.

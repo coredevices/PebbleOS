@@ -66,7 +66,7 @@ NimBLE controller on the nRF52 radio, the Nordic SoftDevice Controller on
 the nRF54L, from the nonfree libraries and called directly with no HCI
 framing, the SiFli LCPU over IPC on SF32LB52, and a fake controller on QEMU that acknowledges every command so the host
 runs without a radio. On QEMU the phone link is the emulator's serial
-channel, `pebble/comm/qemu/`.
+channel, `pebble/debug/qemu/`.
 
 ## NimBLE port
 
