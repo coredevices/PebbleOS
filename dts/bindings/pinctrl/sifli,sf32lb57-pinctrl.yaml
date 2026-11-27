@@ -23,6 +23,14 @@ properties:
   reg:
     maxItems: 1
 
+  pinctrl-0:
+    description:
+      Hog, the controller's own state, selected when the controller is
+      initialized, for pins no device configures.
+
+  pinctrl-names:
+    const: default
+
 patternProperties:
   '-state$':
     type: object

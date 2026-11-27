@@ -9,3 +9,5 @@ symbol: pbl_pinctrl_sf32lb57_hpsys
 args:
   - name: true
   - reg: 0
+  - pinctrl: default
+    default: nullptr

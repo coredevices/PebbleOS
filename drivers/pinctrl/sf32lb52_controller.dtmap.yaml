@@ -15,3 +15,5 @@ args:
     of: sifli,rtc
   - reg: 0
     of: sifli,hpsys-aon
+  - pinctrl: default
+    default: nullptr

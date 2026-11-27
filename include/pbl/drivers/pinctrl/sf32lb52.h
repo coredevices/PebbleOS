@@ -139,12 +139,13 @@ extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_sf32lb52_ops;
  * @param _cfg HPSYS_CFG registers.
  * @param _rtc RTC registers.
  * @param _aon HPSYS always-on registers.
+ * @param _hog State of the controller's own, selected at init, or NULL.
  */
-#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon)                       \
+#define PBL_PINCTRL_SF32LB52_DEFINE(sym, _name, _base, _cfg, _rtc, _aon, _hog)                 \
   PBL_DEVICE_STATE_DEFINE(sym);                                                                \
   PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_sf32lb52, struct pbl_pinctrl_controller, ctrl) { \
     .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_sf32lb52_ops,        \
-                                        PBL_PINCTRL_SF32LB52__NUM_PADS),                       \
+                                        PBL_PINCTRL_SF32LB52__NUM_PADS, _hog),                 \
     .base = (_base), .cfg = (_cfg), .rtc = (_rtc), .aon = (_aon),                              \
   }
 

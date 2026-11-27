@@ -94,7 +94,7 @@ extern const struct pbl_pinctrl_controller_ops pbl_pinctrl_stm32_ops;
   PBL_DEVICE_STATE_DEFINE(sym);                                                             \
   PBL_DEVICE_INSTANCE(sym, struct pbl_pinctrl_stm32, struct pbl_pinctrl_controller, ctrl) { \
     .ctrl = PBL_PINCTRL_CONTROLLER_INIT(sym, _name, nullptr, &pbl_pinctrl_stm32_ops,        \
-                                        PBL_PINCTRL_STM32_NUM_PORTS * 16U),                 \
+                                        PBL_PINCTRL_STM32_NUM_PORTS * 16U, nullptr),        \
     .base = (_base), .hwlock = _hwlock, .clks = {__VA_ARGS__},                              \
   }
 
