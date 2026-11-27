@@ -17,6 +17,9 @@
  *
  * It advertises every 20 ms at first and every 1022.5 ms after that, and not at all while
  * connected. A phone that keeps reconnecting and dropping gets the long interval right away.
+ *
+ * Reconnection is only advertised with `SERVICE_BLUETOOTH_ADV_RECONNECT`, which the recovery
+ * firmware leaves off: it advertises for discovery alone.
  * @{
  */
 
@@ -35,6 +38,8 @@ void bt_advertising_set_discoverable(bool discoverable);
 
 /**
  * @brief Advertise for the bonded phone to reconnect, or stop.
+ *
+ * Does nothing without `SERVICE_BLUETOOTH_ADV_RECONNECT`.
  *
  * The recovery firmware never does, it stays discoverable instead.
  *

@@ -300,8 +300,7 @@ void bt_advertising_set_discoverable(bool discoverable) {
 }
 
 void bt_advertising_set_reconnectable(bool reconnectable) {
-  /* The recovery firmware only advertises to be discovered. */
-#ifndef CONFIG_RECOVERY_FW
+#ifdef CONFIG_SERVICE_BLUETOOTH_ADV_RECONNECT
   pbl_mutex_lock(&s_lock, PBL_FOREVER);
   if (s_modes[MODE_RECONNECT].enabled != reconnectable) {
     s_modes[MODE_RECONNECT].enabled = reconnectable;
