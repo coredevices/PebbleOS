@@ -28,13 +28,14 @@ runs on its Arm application core, as secure code.
 - **LEDs**: four green user LEDs, LED0 the status LED
 - **Flash**: 8 MiB Macronix MX25R6435F SPI NOR, on SPIM00 (P2.01 SCK,
   P2.02 MOSI, P2.04 MISO, P2.05 CS) at 8 MHz
+- **USB**: the high-speed USB controller on the nRF USB connector, as a
+  device, connected while the connector's VBUS is present
 - **Crypto**: the CRACEN of the SoC, for random numbers, SHA-256 and AES
 - **Debug**: SEGGER J-Link OB interface MCU, with a virtual COM port on
   UARTE20, P1.16 (TX) and P1.17 (RX), which also powers the kit
 
 The radio runs the Nordic SoftDevice Controller from the nonfree libraries,
-under the NimBLE host. The USB controller and the coprocessor are not
-supported yet.
+under the NimBLE host. The coprocessor is not supported yet.
 
 ## Flashing
 

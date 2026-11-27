@@ -129,3 +129,12 @@
 		spi-max-frequency = <8000000>;
 	};
 };
+
+// The nRF USB connector
+&usbhs {
+	status = "okay";
+};
+
+&usbhs_phy {
+	status = "okay";
+};
