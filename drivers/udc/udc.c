@@ -19,13 +19,7 @@ static void prv_vbus_changed(const struct pbl_charger *charger,
   bool online = false;
 
   (void)pbl_charger_is_online(charger, &online);
-  if (online == state->vbus) {
-    return;
-  }
-
-  state->vbus = online;
-  pbl_udc_event(state->udc, online ? PBL_UDC_EVENT_VBUS_READY : PBL_UDC_EVENT_VBUS_REMOVED,
-                nullptr);
+  pbl_udc_vbus_changed(state->udc, online);
 }
 
 static int prv_vbus_init(const struct pbl_udc *udc) {
@@ -49,12 +43,12 @@ int pbl_udc_dev_init(const struct pbl_device *dev) {
   const struct pbl_udc *udc = prv_udc(dev);
   int ret;
 
+  udc->state->vbus = true;
   ret = udc->ops->init(udc);
   if (ret != 0) {
     return ret;
   }
 
-  udc->state->vbus = true;
 #ifdef CONFIG_UDC_VBUS_CHARGER
   if (udc->vbus_charger != nullptr) {
     return prv_vbus_init(udc);
@@ -83,6 +77,15 @@ int pbl_udc_enable(const struct pbl_udc *udc) {
 
 int pbl_udc_disable(const struct pbl_udc *udc) {
   return udc->ops->disable(udc);
+}
+
+void pbl_udc_vbus_changed(const struct pbl_udc *udc, bool present) {
+  if (present == udc->state->vbus) {
+    return;
+  }
+
+  udc->state->vbus = present;
+  pbl_udc_event(udc, present ? PBL_UDC_EVENT_VBUS_READY : PBL_UDC_EVENT_VBUS_REMOVED, nullptr);
 }
 
 bool pbl_udc_vbus_present(const struct pbl_udc *udc) {

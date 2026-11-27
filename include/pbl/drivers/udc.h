@@ -34,10 +34,10 @@
  * The driver takes the address as soon as the stack sets it, before the status stage of the
  * SET_ADDRESS request, as controllers that apply it in hardware need.
  *
- * A board that senses USB power gives the controller the charger on the connector's VBUS. The
- * class then reports power coming and going as @ref PBL_UDC_EVENT_VBUS_READY and
- * @ref PBL_UDC_EVENT_VBUS_REMOVED, from thread context, for the stack to connect only while it
- * is there.
+ * A board that senses USB power gives the controller the charger on the connector's VBUS, and a
+ * controller that senses it itself reports it with pbl_udc_vbus_changed(). The class then reports
+ * power coming and going as @ref PBL_UDC_EVENT_VBUS_READY and @ref PBL_UDC_EVENT_VBUS_REMOVED,
+ * from thread context, for the stack to connect only while it is there.
  * @{
  */
 
@@ -311,6 +311,16 @@ int pbl_udc_ep_queue(const struct pbl_udc *udc, uint8_t ep, void *buf, size_t le
  * @param setup For @ref PBL_UDC_EVENT_SETUP, the 8 bytes of the setup packet.
  */
 void pbl_udc_event(const struct pbl_udc *udc, enum pbl_udc_event evt, const uint8_t *setup);
+
+/**
+ * @brief Report USB power coming or going, from thread context, for a controller that senses it.
+ *
+ * The controller reports power absent from its init when it is.
+ *
+ * @param udc Controller.
+ * @param present Whether USB power is present.
+ */
+void pbl_udc_vbus_changed(const struct pbl_udc *udc, bool present);
 
 /**
  * @brief Report the end of a transfer, from the controller's interrupt.
