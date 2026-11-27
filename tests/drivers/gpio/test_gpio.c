@@ -64,6 +64,14 @@ void test_gpio__configure_logical_init(void) {
   cl_assert_equal_i(s_flags, PBL_GPIO_ACTIVE_LOW | PBL_GPIO_OUTPUT | PBL_GPIO_OUTPUT_INIT_LOW);
 }
 
+void test_gpio__configure_disconnected(void) {
+  const struct pbl_gpio gpio = PBL_GPIO(&s_port, 3, PBL_GPIO_PULL_DOWN);
+
+  s_flags = PBL_GPIO_INPUT;
+  cl_assert_equal_i(pbl_gpio_configure(&gpio, PBL_GPIO_DISCONNECTED), 0);
+  cl_assert_equal_i(s_flags, PBL_GPIO_PULL_DOWN);
+}
+
 void test_gpio__logical_levels(void) {
   const struct pbl_gpio gpio = PBL_GPIO(&s_port, 2, PBL_GPIO_ACTIVE_LOW);
 

@@ -17,9 +17,12 @@
  * Transfers run through EasyDMA, so their buffers must be in data RAM, and are at most 65535
  * bytes. The clock runs at 125 kHz to 8 MHz, or up to 32 MHz on SPIM3.
  *
- * SCK and MOSI are outputs and MISO an input with its wiring flags, e.g. a pull, and keep that
- * configuration while the bus is disabled; MOSI and MISO may be left unconnected. An instance
- * connects its interrupt itself, with priority @c CONFIG_SPI_NRF5_IRQ_PRIO:
+ * During a transfer SCK and MOSI are outputs and MISO an input. Between transfers, once the
+ * chip select is released, all three are disconnected, so they rest at the level their wiring
+ * flags or the board give them, e.g. @c GPIO_PULL_DOWN or an external pull-up; SCK is driven
+ * at the device's clock polarity again before the SPIM is enabled. MOSI and MISO may be left
+ * unconnected. An instance connects its interrupt itself, with priority
+ * @c CONFIG_SPI_NRF5_IRQ_PRIO:
  *
  * @code{.c}
  * PBL_SPI_NRF5_DEFINE(s_spi3, "spi3", 0x4002f000, PBL_SOC_IRQN_SPIM3,

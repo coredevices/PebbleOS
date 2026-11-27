@@ -296,8 +296,8 @@
 };
 
 &spi3 {
-	sck-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
-	mosi-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+	sck-gpios = <&gpio0 6 GPIO_PULL_DOWN>;
+	mosi-gpios = <&gpio0 8 GPIO_PULL_DOWN>;
 	cs-gpios = <&gpio1 3 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 

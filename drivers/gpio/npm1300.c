@@ -66,7 +66,7 @@ static int prv_mode(const struct pbl_npm1300 *pmic, uint8_t pin, uint32_t flags,
     return 0;
   }
 
-  return -EINVAL;
+  return -ENOTSUP;
 }
 
 static int prv_configure_locked(const struct pbl_gpio_port *port, uint8_t pin, uint32_t flags) {
