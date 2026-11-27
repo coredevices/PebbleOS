@@ -4,3 +4,7 @@
 runners:
   - nrfutil
   - probe-rs
+
+cores:
+  - cpuapp
+  - cpuflpr

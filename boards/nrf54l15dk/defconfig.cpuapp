@@ -1,0 +1,3 @@
+# The application core, which sets up the clocks and starts the FLPR
+
+CONFIG_SOC_NRF54L15_CPUAPP=y
