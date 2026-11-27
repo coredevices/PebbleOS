@@ -427,5 +427,4 @@ void app_fetch_protocol_msg_callback(struct pbl_pp_session *session, const uint8
   prv_app_fetch_protocol_handle_msg((AppFetchResponseData *)data);
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_FETCH, PBL_PP_ACCESS_PRIVATE,
-                       app_fetch_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_FETCH, app_fetch_protocol_msg_callback);

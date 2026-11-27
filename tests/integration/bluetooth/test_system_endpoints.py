@@ -164,7 +164,7 @@ def test_phone_app_version(dut, phone):
         + struct.pack("<Q", capabilities),
     )
     dut.wait_for_log(
-        rf"Phone app: is_system=1, plf=0x{PLATFORM_IOS:x}, "
+        rf"Phone app: plf=0x{PLATFORM_IOS:x}, "
         rf"capabilities=0x{capabilities:x}",
         timeout=10,
         since=since,

@@ -171,7 +171,6 @@ static const struct pbl_pp_endpoint s_app_message_endpoint = (const struct pbl_p
   .handler = prv_protocol_msg_callback,
   .receiver = &g_app_message_receiver_implementation,
   .id = APP_MESSAGE_ENDPOINT_ID,
-  .access = PBL_PP_ACCESS_ANY,
 };
 
 void test_app_message_receiver__receive_push_but_inbox_not_opened(void) {

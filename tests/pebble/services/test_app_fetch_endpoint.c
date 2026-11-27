@@ -71,7 +71,7 @@ struct fake_transport *s_transport;
 
 void test_app_fetch_endpoint__initialize(void) {
   fake_comm_session_init();
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
 }
 

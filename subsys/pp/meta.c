@@ -49,4 +49,4 @@ static void prv_meta_handler(struct pbl_pp_session *session, const uint8_t *data
   PBL_LOG_DBG("Meta message received");
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_META, PBL_PP_ACCESS_ANY, prv_meta_handler);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_META, prv_meta_handler);

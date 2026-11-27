@@ -429,7 +429,7 @@ void clock_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_CLOCK, PBL_PP_ACCESS_PRIVATE, clock_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_CLOCK, clock_protocol_msg_callback);
 #endif
 
 //! Runs once a minute. DST transitions and the top of the hour both land on minute boundaries.

@@ -103,7 +103,7 @@ void test_launcher_app_message__initialize(void) {
   launcher_app_message_reset();
   s_last_cmd = APP_RUN_STATE_INVALID_COMMAND;
   fake_comm_session_init();
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
 }
 

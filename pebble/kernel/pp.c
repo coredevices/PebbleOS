@@ -33,7 +33,7 @@ static void prv_put_session_events(struct pbl_pp_session *session, bool is_open)
     return;
   }
 
-  prv_put_session_event(is_open, destination != PBL_PP_DESTINATION_APP);
+  prv_put_session_event(is_open, true);
   if (destination == PBL_PP_DESTINATION_HYBRID) {
     prv_put_session_event(is_open, false);
   }
@@ -60,9 +60,7 @@ static void prv_put_remote_info_event(struct pbl_pp_session *session) {
     .bluetooth.app_info_event.os = pbl_pp_session_get_remote_os(session),
   };
 
-  if (pbl_pp_session_is_system(session)) {
-    event_put(&event);
-  }
+  event_put(&event);
 }
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,

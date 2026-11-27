@@ -1,8 +1,9 @@
 # Pebble protocol
 
-The Pebble protocol carries messages between the watch and phone apps: the
-Pebble mobile app (notifications, firmware updates, app installs, settings
-sync, ...) and third party phone apps talking to their watch apps. Every
+The Pebble protocol carries messages between the watch and the Pebble mobile
+app (notifications, firmware updates, app installs, settings sync, ...),
+which also relays what third party phone apps exchange with their watch
+apps. Every
 message is addressed to an *endpoint*, a 16-bit ID naming the service that
 handles it, such as Put Bytes or BlobDB.
 
@@ -75,25 +76,23 @@ flowchart TB
 
 ## Sessions
 
-A session is a Pebble protocol connection with one peer over one transport.
-It has a destination:
+A session is a Pebble protocol connection with the Pebble mobile app over one
+transport. It has a destination:
 
-| Destination | Peer | Session type |
-|---|---|---|
-| System | The Pebble mobile app | `PBL_PP_SESSION_SYSTEM` |
-| App | A third party phone app, bound to the UUID of its watch app | `PBL_PP_SESSION_APP` |
-| Hybrid | Both, as the Pebble Android app relays PebbleKit traffic | `PBL_PP_SESSION_SYSTEM` |
+| Destination | Traffic |
+|---|---|
+| System | The system's only |
+| Hybrid | The system's and that of PebbleKit apps, which the mobile app relays |
 
-`pbl_pp_session_get_system()` returns the system session. When more than one
+`pbl_pp_session_get_system()` returns the session. When more than one
 is open, for example the console next to PPoGATT during development, the one
 on the transport with the highest priority wins. `pbl_pp_session_get_app()`
-returns the session serving a watch app: an app session bound to its UUID,
-or else a hybrid session or an app session whose app is unknown. The
+returns the session that carries PebbleKit traffic, a hybrid one. The
 `app_session` service applies this to the running app, and gives PebbleKit
 JS apps the system session.
 
-Opening a system or hybrid session closes the existing system session through
-its transport, unless either is on a *shared* transport like the console.
+Opening a session closes the existing one through its transport, unless
+either is on a *shared* transport like the console.
 This keeps one Pebble mobile app connection at a time: when the app comes
 back over another link, or relaunches after a crash, the last session to open
 wins.
@@ -131,7 +130,7 @@ subsystem collects listeners at link time and calls each for every event:
 ```c
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
-  if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
+  if (event == PBL_PP_SESSION_CLOSED) {
     pbl_sys_work_call(prv_handle_disconnect, NULL);
   }
 }
@@ -139,7 +138,7 @@ static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_e
 PBL_PP_SESSION_LISTENER_DEFINE(my_service, prv_session_cb, NULL);
 ```
 
-Data logging, analytics and the cache of the system session's capabilities
+Data logging, analytics and the cache of the session's capabilities
 are listeners. Listeners run in the context of the transport,
 which may hold its own lock, so they must not block. Apps learn about
 sessions through `PEBBLE_COMM_SESSION_EVENT`, which a listener of the firmware
@@ -164,7 +163,7 @@ static void prv_ping_handler(struct pbl_pp_session *session, const uint8_t *data
   ...
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, prv_ping_handler);
 ```
 
 | Macro | Handling |
@@ -173,10 +172,8 @@ PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler
 | `PBL_PP_ENDPOINT_DEFINE_MAIN()` | The same, on the main thread, for handlers whose events must stay ordered with `PEBBLE_COMM_SESSION_EVENT` |
 | `PBL_PP_ENDPOINT_DEFINE_RECEIVER()` | A receiver of the endpoint's own buffers the message, such as Put Bytes into its download buffer or AppMessage into the app's inbox |
 
-The access level decides who may use the endpoint: `PBL_PP_ACCESS_PRIVATE`
-endpoints only accept messages on system sessions, `PBL_PP_ACCESS_ANY` ones
-on app sessions too. Messages for unknown or disallowed endpoints are
-answered on the meta endpoint (see {ref}`pp-meta`).
+Messages for unknown endpoints are answered on the meta endpoint (see
+{ref}`pp-meta`).
 
 An endpoint exists if the code defining it is built. Endpoints left out of
 recovery firmware are guarded with `CONFIG_RECOVERY_FW`, which keeps PRF to
@@ -195,8 +192,8 @@ sequenceDiagram
   participant H as Handler (SysWorkq or main thread)
   L->>T: bytes
   T->>S: pbl_pp_session_receive()
-  Note over S: collect the 4-byte header,<br/>look the endpoint up,<br/>check its access
-  alt unknown or disallowed
+  Note over S: collect the 4-byte header,<br/>look the endpoint up
+  alt unknown
     S-->>S: meta error, skip the payload
   else accepted
     S->>R: prepare(length)

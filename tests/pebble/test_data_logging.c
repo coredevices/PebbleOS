@@ -192,7 +192,7 @@ void test_data_logging__initialize(void) {
   //                                         PBL_PP_DESTINATION_SYSTEM);
   fake_comm_session_init();
   struct fake_transport *transport =
-      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_transport_sent_data_cb);
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, prv_transport_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
 }
 

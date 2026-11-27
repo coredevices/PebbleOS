@@ -30,7 +30,6 @@ struct pbl_pp_session {
   const struct pbl_pp_transport *transport;
   struct pbl_pp_send_job *send_queue;
   struct pbl_pp__receive_state rx;
-  Uuid app_uuid;
   uint32_t capabilities;
   enum pbl_pp_destination destination;
   enum pbl_pp_remote_os remote_os;
@@ -40,7 +39,6 @@ struct pbl_pp_session {
 enum pbl_pp__meta_error : uint8_t {
   PBL_PP__META_CORRUPTED = 0xd0,
   PBL_PP__META_UNHANDLED = 0xdc,
-  PBL_PP__META_DISALLOWED = 0xdd,
 };
 
 // Protects the session list and each session's send queue, flags and capabilities.

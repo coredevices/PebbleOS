@@ -25,7 +25,7 @@ struct PBL_PACKED pbl_pp_header {
 
 /** @brief Largest inbound payload accepted from the Pebble mobile app. */
 #define PBL_PP_MAX_INBOUND_PAYLOAD_PRIVATE 2044
-/** @brief Largest inbound payload accepted from third party phone apps. */
+/** @brief Largest inbound payload apps without PebbleKit JS are told to expect. */
 #define PBL_PP_MAX_INBOUND_PAYLOAD_PUBLIC 144
 /** @brief Largest outbound payload the phone accepts. */
 #define PBL_PP_MAX_OUTBOUND_PAYLOAD 656

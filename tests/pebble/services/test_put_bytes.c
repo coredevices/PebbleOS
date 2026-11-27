@@ -35,7 +35,6 @@ extern const struct pbl_pp_receiver_api g_put_bytes_receiver_impl;
 static const struct pbl_pp_endpoint s_put_bytes_endpoint = (const struct pbl_pp_endpoint){
   .receiver = &g_put_bytes_receiver_impl,
   .id = 0xBEEF,
-  .access = PBL_PP_ACCESS_PRIVATE,
 };
 
 // Fakes
@@ -311,7 +310,7 @@ void test_put_bytes__initialize(void) {
   fake_event_reset_count();
 
   struct fake_transport *transport =
-      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_system_msg_sent_callback);
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, prv_system_msg_sent_callback);
   s_session = fake_transport_set_connected(transport, true /* connected */);
   cl_assert_equal_p(pbl_pp_session_get_system(), s_session);
 

@@ -83,18 +83,14 @@ struct pbl_pp_transport {
 /**
  * @brief Open a session.
  *
- * A system or hybrid session closes the existing system session, see
- * @ref pbl_pp_transport::shared.
+ * It closes the existing session, see @ref pbl_pp_transport::shared.
  *
  * @param transport Transport carrying the session.
  * @param destination Whose traffic the session carries.
- * @param app_uuid UUID of the phone app's watch app counterpart for app sessions, or NULL if
- *                 unknown.
- * @return The session, or NULL if out of memory or the existing system session cannot be closed.
+ * @return The session, or NULL if out of memory or the existing session cannot be closed.
  */
 struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transport,
-                                           enum pbl_pp_destination destination,
-                                           const Uuid *app_uuid);
+                                           enum pbl_pp_destination destination);
 
 /**
  * @brief Close a session and release its resources, dropping any queued data.

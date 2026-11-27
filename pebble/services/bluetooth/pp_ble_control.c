@@ -39,4 +39,4 @@ static void prv_msg_cb(struct pbl_pp_session *session, const uint8_t *data, size
   bt_pairability_use_for_period(cmd->discoverable_pairable != 0U ? duration : 0U);
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLE_CONTROL, PBL_PP_ACCESS_PRIVATE, prv_msg_cb);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_BLE_CONTROL, prv_msg_cb);

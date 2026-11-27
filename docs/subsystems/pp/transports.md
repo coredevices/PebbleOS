@@ -26,7 +26,7 @@ sequenceDiagram
   participant T as Transport
   participant S as Session
   D->>T: link up
-  T->>S: pbl_pp_session_open(transport, destination, app UUID)
+  T->>S: pbl_pp_session_open(transport, destination)
   opt peer known up front
     T->>S: pbl_pp_session_set_capabilities()
   end
@@ -45,9 +45,9 @@ sequenceDiagram
 
 A transport:
 
-- Opens a session once its link can carry messages, with the destination
-  and, for app sessions, the UUID of the watch app. Opening a system session
-  may close another transport's system session through its `close` callback.
+- Opens a session once its link can carry messages, with its destination.
+  Opening a session may close another transport's session through its
+  `close` callback.
 - Feeds every received byte to `pbl_pp_session_receive()`, from one context
   at a time.
 - Drains the send queue when `send_next` runs. It may leave data queued, for
@@ -76,10 +76,10 @@ See the locking rules in {doc}`index`.
 
 A new transport, for instance over TCP/IP, implements the callbacks above
 and calls the session API; nothing else changes. Who may open a session is
-the only access control: a system session reaches every private endpoint,
-including firmware updates and the factory registry. A transport whose link
+the only access control: a session reaches every endpoint, including
+firmware updates and the factory registry. A transport whose link
 anyone can reach, such as a network socket, must authenticate the Pebble
-mobile app before it opens a system session.
+mobile app before it opens a session.
 
 ## GATT (PPoGATT)
 
@@ -114,13 +114,13 @@ The meta characteristic holds:
 |---|---|---|---|
 | 0 | 1 | Minimum PPoGATT version | v0 |
 | 1 | 1 | Maximum PPoGATT version | v0 |
-| 2 | 16 | App UUID: the system UUID for the Pebble mobile app | v0 |
-| 18 | 1 | Session type: 0 from the UUID, 1 hybrid | v1 |
+| 2 | 16 | App UUID: the system UUID, that of the Pebble mobile app | v0 |
+| 18 | 1 | Session type: 0 system, 1 hybrid | v1 |
 
 The watch uses the highest version both support (0 or 1), and ignores
-servers whose minimum version is above 1 or whose UUID is invalid. The session is hybrid if the session
-type says so, a system session for the system UUID, and an app session
-otherwise. Recovery firmware only connects to the Pebble mobile app.
+servers whose minimum version is above 1 or whose UUID is not the system
+UUID. The session is hybrid if the session type says so, and a system
+session otherwise.
 
 ### Packets
 

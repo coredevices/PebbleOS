@@ -42,23 +42,13 @@ static bool prv_is_open(const struct pbl_pp_session *session) {
   return (session != nullptr) && list_contains((ListNode *)s_session_head, &session->node);
 }
 
-static bool prv_find_session_filter(ListNode *found_node, void *data) {
-  const enum pbl_pp_session_type requested_type = (enum pbl_pp_session_type)(uintptr_t)data;
-  const enum pbl_pp_destination destination =
-      ((const struct pbl_pp_session *)found_node)->destination;
-  switch (requested_type) {
-    case PBL_PP_SESSION_APP:
-      return destination == PBL_PP_DESTINATION_APP || destination == PBL_PP_DESTINATION_HYBRID;
-    case PBL_PP_SESSION_SYSTEM:
-      return destination == PBL_PP_DESTINATION_SYSTEM || destination == PBL_PP_DESTINATION_HYBRID;
-    default:
-      return false;
-  }
+static bool prv_find_hybrid_filter(ListNode *found_node, void *data) {
+  return ((const struct pbl_pp_session *)found_node)->destination == PBL_PP_DESTINATION_HYBRID;
 }
 
-static struct pbl_pp_session *prv_get_by_type(enum pbl_pp_session_type type) {
-  return (struct pbl_pp_session *)list_find((ListNode *)s_session_head, prv_find_session_filter,
-                                            (void *)(uintptr_t)type);
+static struct pbl_pp_session *prv_get_hybrid(void) {
+  return (struct pbl_pp_session *)list_find((ListNode *)s_session_head, prv_find_hybrid_filter,
+                                            nullptr);
 }
 
 bool pbl_pp_session_has_capability(const struct pbl_pp_session *session,
@@ -77,23 +67,11 @@ void pbl_pp_session_set_capabilities(struct pbl_pp_session *session, uint32_t ca
 }
 
 struct pbl_pp_session *pbl_pp_session_get_system(void) {
-  return prv_get_by_type(PBL_PP_SESSION_SYSTEM);
+  return s_session_head;
 }
 
-struct pbl_pp_session *pbl_pp_session_get_app(const Uuid *app_uuid) {
-  return prv_get_by_type(PBL_PP_SESSION_APP);
-}
-
-enum pbl_pp_session_type pbl_pp_session_get_type(const struct pbl_pp_session *session) {
-  if (!prv_is_open(session)) {
-    return PBL_PP_SESSION_INVALID;
-  }
-  return (session->destination == PBL_PP_DESTINATION_APP) ? PBL_PP_SESSION_APP
-                                                          : PBL_PP_SESSION_SYSTEM;
-}
-
-bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
-  return pbl_pp_session_get_type(session) == PBL_PP_SESSION_SYSTEM;
+struct pbl_pp_session *pbl_pp_session_get_app(void) {
+  return prv_get_hybrid();
 }
 
 void pbl_pp_session_reset(struct pbl_pp_session *session) {
@@ -101,7 +79,7 @@ void pbl_pp_session_reset(struct pbl_pp_session *session) {
 }
 
 struct pbl_pp_session *app_session_get_current(void) {
-  return prv_get_by_type(PBL_PP_SESSION_APP);
+  return prv_get_hybrid();
 }
 
 void pbl_pp_session_close(struct pbl_pp_session *session) {
@@ -132,8 +110,7 @@ int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint
 }
 
 struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transport,
-                                           enum pbl_pp_destination destination,
-                                           const Uuid *app_uuid) {
+                                           enum pbl_pp_destination destination) {
   ++s_session_open_call_count;
 
   struct pbl_pp_session *session = pbl_malloc(sizeof(struct pbl_pp_session));
@@ -307,7 +284,6 @@ struct fake_transport {
   ListNode node;
   enum pbl_pp_destination destination;
   FakeTransportSentCallback sent_cb;
-  Uuid app_uuid;
   struct pbl_pp_session *session;
 
   //! When no sent_cb is used, data is appended to this list
@@ -355,16 +331,12 @@ static const struct pbl_pp_transport s_fake_transport = {
 };
 
 struct fake_transport *fake_transport_create(enum pbl_pp_destination destination,
-                                             const Uuid *app_uuid,
                                              FakeTransportSentCallback sent_cb) {
   struct fake_transport *transport = pbl_malloc(sizeof(*transport));
   *transport = (const struct fake_transport){
     .destination = destination,
     .sent_cb = sent_cb,
   };
-  if (app_uuid) {
-    transport->app_uuid = *app_uuid;
-  }
   s_fake_transport_head =
       (struct fake_transport *)list_prepend((ListNode *)s_fake_transport_head, &transport->node);
   return transport;
@@ -374,8 +346,7 @@ struct pbl_pp_session *fake_transport_set_connected(struct fake_transport *trans
                                                     bool connected) {
   if (connected) {
     cl_assert_equal_p(transport->session, nullptr);
-    transport->session =
-        pbl_pp_session_open(&s_fake_transport, transport->destination, &transport->app_uuid);
+    transport->session = pbl_pp_session_open(&s_fake_transport, transport->destination);
     return transport->session;
   }
 

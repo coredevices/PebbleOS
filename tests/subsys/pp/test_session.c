@@ -62,7 +62,7 @@ static bool s_listener_saw_open_session;
 static void prv_listener(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                          void *user_data) {
   ++s_listener_events[event];
-  s_listener_saw_open_session = (pbl_pp_session_get_type(session) != PBL_PP_SESSION_INVALID);
+  s_listener_saw_open_session = (pbl_pp_session_get_transport(session) != nullptr);
 }
 
 PBL_PP_SESSION_LISTENER_DEFINE(test, prv_listener, nullptr);
@@ -149,18 +149,15 @@ void test_session__cleanup(void) {
 }
 
 void test_session__disconnected_lookups_return_null(void) {
-  const Uuid uuid = {0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-                     0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
-
   cl_assert_equal_p(pbl_pp_session_get_system(), nullptr);
-  cl_assert_equal_p(pbl_pp_session_get_app(&uuid), nullptr);
-  cl_assert_equal_i(pbl_pp_session_get_type(nullptr), PBL_PP_SESSION_INVALID);
+  cl_assert_equal_p(pbl_pp_session_get_app(), nullptr);
+  cl_assert_equal_p(pbl_pp_session_get_transport(nullptr), nullptr);
 }
 
 void test_session__basic_open_close(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   cl_assert(session);
-  cl_assert_equal_i(pbl_pp_session_get_type(session), PBL_PP_SESSION_SYSTEM);
+  cl_assert_equal_p(pbl_pp_session_get_transport(session), &s_gatt);
   cl_assert_equal_i(s_version_request_count, 1);
   cl_assert_equal_i(s_listener_events[PBL_PP_SESSION_OPENED], 1);
 
@@ -171,8 +168,7 @@ void test_session__basic_open_close(void) {
 }
 
 void test_session__system_events(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  cl_assert_equal_b(pbl_pp_session_is_system(session), true);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   cl_assert_equal_p(pbl_pp_session_get_system(), session);
   pbl_pp_session_close(session);
 
@@ -182,21 +178,9 @@ void test_session__system_events(void) {
   cl_assert_equal_i(s_app_events_closed, 0);
 }
 
-void test_session__app_events(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
-  cl_assert_equal_i(pbl_pp_session_get_type(session), PBL_PP_SESSION_APP);
-  cl_assert_equal_b(pbl_pp_session_is_system(session), false);
-  cl_assert_equal_p(pbl_pp_session_get_system(), nullptr);
-  pbl_pp_session_close(session);
-
-  cl_assert_equal_i(s_system_events_open, 0);
-  cl_assert_equal_i(s_app_events_open, 1);
-  cl_assert_equal_i(s_app_events_closed, 1);
-}
-
 void test_session__hybrid_events(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_HYBRID, nullptr);
-  cl_assert_equal_b(pbl_pp_session_is_system(session), true);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_HYBRID);
+  cl_assert_equal_p(pbl_pp_session_get_system(), session);
   pbl_pp_session_close(session);
 
   cl_assert_equal_i(s_system_events_open, 1);
@@ -206,10 +190,10 @@ void test_session__hybrid_events(void) {
 }
 
 void test_session__last_system_session_wins(void) {
-  struct pbl_pp_session *first = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *first = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   cl_assert_equal_i(s_close_count, 0);
 
-  struct pbl_pp_session *second = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *second = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   cl_assert(second);
   cl_assert_equal_i(s_close_count, 1);
   cl_assert_equal_p(s_last_closed, first);
@@ -219,15 +203,14 @@ void test_session__last_system_session_wins(void) {
 }
 
 void test_session__shared_transport_does_not_close(void) {
-  struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  struct pbl_pp_session *console =
-      pbl_pp_session_open(&s_console, PBL_PP_DESTINATION_HYBRID, nullptr);
+  struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
+  struct pbl_pp_session *console = pbl_pp_session_open(&s_console, PBL_PP_DESTINATION_HYBRID);
   cl_assert(console);
   cl_assert_equal_i(s_close_count, 0);
 
   // A non-shared session opened after a shared one leaves it alone too.
   pbl_pp_session_close(gatt);
-  gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   cl_assert(gatt);
   cl_assert_equal_i(s_close_count, 0);
 
@@ -236,24 +219,18 @@ void test_session__shared_transport_does_not_close(void) {
 }
 
 void test_session__open_fails_if_system_session_cannot_be_closed(void) {
-  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_HYBRID, nullptr);
+  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_HYBRID);
   cl_assert(qemu);
 
-  cl_assert_equal_p(pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr), nullptr);
+  cl_assert_equal_p(pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM), nullptr);
   cl_assert_equal_p(pbl_pp_session_get_system(), qemu);
 
-  // App sessions do not compete for the system role.
-  struct pbl_pp_session *app = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
-  cl_assert(app);
-
-  pbl_pp_session_close(app);
   pbl_pp_session_close(qemu);
 }
 
 void test_session__system_session_follows_priority(void) {
-  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_HYBRID, nullptr);
-  struct pbl_pp_session *console =
-      pbl_pp_session_open(&s_console, PBL_PP_DESTINATION_HYBRID, nullptr);
+  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_HYBRID);
+  struct pbl_pp_session *console = pbl_pp_session_open(&s_console, PBL_PP_DESTINATION_HYBRID);
   cl_assert_equal_p(pbl_pp_session_get_system(), console);
 
   pbl_pp_session_close(console);
@@ -262,42 +239,36 @@ void test_session__system_session_follows_priority(void) {
   pbl_pp_session_close(qemu);
 }
 
-void test_session__get_app_session(void) {
-  const Uuid invalid_uuid = UUID_INVALID;
-  const Uuid system_uuid = UUID_SYSTEM;
-  const Uuid legacy_uuid = {0xff, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-                            0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
-  const Uuid modern_uuid = {0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-                            0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
+void test_session__system_session_does_not_serve_apps(void) {
+  struct pbl_pp_session *system = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
 
-  struct pbl_pp_session *system = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
-  // A transport that does not know the app UUID.
-  struct pbl_pp_session *legacy = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
-  struct pbl_pp_session *modern =
-      pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, &modern_uuid);
-
-  cl_assert_equal_p(pbl_pp_session_get_app(&legacy_uuid), legacy);
-  cl_assert_equal_p(pbl_pp_session_get_app(&modern_uuid), modern);
-  cl_assert_equal_p(pbl_pp_session_get_app(&invalid_uuid), nullptr);
-  cl_assert_equal_p(pbl_pp_session_get_app(&system_uuid), nullptr);
-  cl_assert_equal_p(pbl_pp_session_get_app(nullptr), nullptr);
+  cl_assert_equal_p(pbl_pp_session_get_app(), nullptr);
 
   pbl_pp_session_close(system);
-  pbl_pp_session_close(legacy);
-  pbl_pp_session_close(modern);
 }
 
-void test_session__get_app_session_falls_back_to_hybrid(void) {
-  const Uuid uuid = {0x04, 0xc5, 0x24, 0x01, 0x4d, 0xbe, 0x40, 0x8b,
-                     0xb7, 0x3a, 0x0e, 0x80, 0xef, 0x09, 0xaf, 0x74};
+void test_session__hybrid_session_serves_apps(void) {
+  struct pbl_pp_session *hybrid = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_HYBRID);
 
-  struct pbl_pp_session *hybrid = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_HYBRID, nullptr);
-  cl_assert_equal_p(pbl_pp_session_get_app(&uuid), hybrid);
+  cl_assert_equal_p(pbl_pp_session_get_app(), hybrid);
+
   pbl_pp_session_close(hybrid);
 }
 
+void test_session__app_session_follows_priority(void) {
+  struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_HYBRID);
+  struct pbl_pp_session *console = pbl_pp_session_open(&s_console, PBL_PP_DESTINATION_HYBRID);
+  cl_assert_equal_p(pbl_pp_session_get_app(), gatt);
+  cl_assert_equal_p(pbl_pp_session_get_system(), gatt);
+
+  pbl_pp_session_close(gatt);
+  cl_assert_equal_p(pbl_pp_session_get_app(), console);
+
+  pbl_pp_session_close(console);
+}
+
 void test_session__send_next_deduping(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   fake_sys_work_callbacks_cleanup();
 
   for (int i = 0; i < 5; ++i) {
@@ -321,7 +292,7 @@ void test_session__send_next_deduping(void) {
 }
 
 void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   fake_sys_work_callbacks_cleanup();
 
   pbl_pp_session_send_next(session);
@@ -331,7 +302,7 @@ void test_session__send_next_not_called_when_session_closed_in_mean_time(void) {
 }
 
 void test_session__send_next_now_keeps_pending_flag(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   fake_sys_work_callbacks_cleanup();
 
   pbl_pp_session_send_next(session);
@@ -356,7 +327,7 @@ void test_session__in_send_task(void) {
 }
 
 void test_session__reset(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   pbl_pp_session_reset(session);
   cl_assert_equal_i(s_reset_count, 1);
   pbl_pp_session_close(session);
@@ -365,23 +336,22 @@ void test_session__reset(void) {
   pbl_pp_session_reset(session);
   cl_assert_equal_i(s_reset_count, 1);
 
-  session = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  session = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM);
   pbl_pp_session_reset(session);
   cl_assert_equal_i(s_reset_count, 1);
   pbl_pp_session_close(session);
 }
 
 void test_session__responsiveness(void) {
-  struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_APP, nullptr);
+  struct pbl_pp_session *gatt = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   pbl_pp_session_set_responsiveness(gatt, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
+  pbl_pp_session_close(gatt);
 
   // Transports without the notion ignore it.
-  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *qemu = pbl_pp_session_open(&s_qemu, PBL_PP_DESTINATION_SYSTEM);
   pbl_pp_session_set_responsiveness(qemu, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
   cl_assert_equal_i(s_responsiveness_count, 1);
-
-  pbl_pp_session_close(gatt);
   pbl_pp_session_close(qemu);
 
   pbl_pp_session_set_responsiveness(gatt, &s_req, PBL_BT_RESPONSE_TIME_MIN, 10);
@@ -389,7 +359,7 @@ void test_session__responsiveness(void) {
 }
 
 void test_session__capabilities(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
 
   for (int i = 0; i < 32; ++i) {
     cl_assert_equal_b(pbl_pp_session_has_capability(session, 1U << i), false);
@@ -427,7 +397,7 @@ static const struct pbl_pp_send_job_api s_job_api = {
 };
 
 void test_session__close_drops_send_queue(void) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_gatt, PBL_PP_DESTINATION_SYSTEM);
   s_job_free_count = 0;
 
   for (int i = 0; i < 2; ++i) {

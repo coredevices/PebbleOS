@@ -540,8 +540,7 @@ void data_logging_protocol_msg_callback(struct pbl_pp_session *session, const ui
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_DATA_LOGGING, PBL_PP_ACCESS_PRIVATE,
-                       data_logging_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_DATA_LOGGING, data_logging_protocol_msg_callback);
 
 void dls_endpoint_init(void) {
   pbl_mutex_init(&s_endpoint_data.mutex);
@@ -561,7 +560,7 @@ void dls_private_handle_disconnect(void *data) {
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
-  if (event == PBL_PP_SESSION_CLOSED && pbl_pp_session_is_system(session)) {
+  if (event == PBL_PP_SESSION_CLOSED) {
     pbl_sys_work_call(dls_private_handle_disconnect, nullptr);
   }
 }

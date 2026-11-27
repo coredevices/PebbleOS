@@ -22,11 +22,10 @@
  * dispatched to @ref pp_endpoint "endpoints"; outbound ones are queued per session with the
  * @ref pp_send "send API" and drained by the transport.
  *
- * There are two kinds of sessions:
- * - The system session talks to the Pebble mobile app. Opening one on a transport closes the
- *   previous one, unless one of them is on a transport that shares the role, like the console.
- *   A hybrid session also carries PebbleKit app traffic.
- * - An app session connects directly to a third party phone app.
+ * A session talks to the Pebble mobile app: it is the system session. Opening one on a transport
+ * closes the previous one, unless one of them is on a transport that shares the role, like the
+ * console. A hybrid session also carries the traffic of PebbleKit apps, which the mobile app
+ * relays.
  *
  * Sessions may close at any time: a session pointer is only a handle, validated by every call.
  * @{
@@ -34,16 +33,6 @@
 
 /** @brief Opaque Pebble protocol session. */
 struct pbl_pp_session;
-
-/** @brief Kind of session. */
-enum pbl_pp_session_type : int8_t {
-  /** Not a valid, or no longer open, session. */
-  PBL_PP_SESSION_INVALID = -1,
-  /** Session with the Pebble mobile app. */
-  PBL_PP_SESSION_SYSTEM = 0,
-  /** Session with a third party phone app. */
-  PBL_PP_SESSION_APP = 1,
-};
 
 /** @brief Session life cycle events, see PBL_PP_SESSION_LISTENER_DEFINE(). */
 enum pbl_pp_session_event : uint8_t {
@@ -61,8 +50,6 @@ enum pbl_pp_session_event : uint8_t {
 enum pbl_pp_destination : uint8_t {
   /** Only the system, i.e. the Pebble mobile app. */
   PBL_PP_DESTINATION_SYSTEM,
-  /** Only one phone app, e.g. a third party app using PebbleKit iOS. */
-  PBL_PP_DESTINATION_APP,
   /** Both the system and PebbleKit apps, e.g. the Pebble Android app. */
   PBL_PP_DESTINATION_HYBRID,
 };
@@ -103,31 +90,11 @@ struct pbl_pp_session_listener {
 struct pbl_pp_session *pbl_pp_session_get_system(void);
 
 /**
- * @brief Get the session serving a watch app.
+ * @brief Get the session that carries the traffic of PebbleKit apps.
  *
- * Prefers an app session bound to @p app_uuid, then a hybrid session or an app session whose app
- * is unknown.
- *
- * @param app_uuid UUID of the watch app.
- * @return The session, or NULL if none can serve the app or @p app_uuid is a system UUID.
+ * @return The hybrid session of the transport with the highest priority, or NULL if none is open.
  */
-struct pbl_pp_session *pbl_pp_session_get_app(const Uuid *app_uuid);
-
-/**
- * @brief Get the kind of a session.
- *
- * @param session Session.
- * @return Session type, or @ref PBL_PP_SESSION_INVALID if @p session is not open.
- */
-enum pbl_pp_session_type pbl_pp_session_get_type(const struct pbl_pp_session *session);
-
-/**
- * @brief Check whether a session is a system session.
- *
- * @param session Session.
- * @return true if @p session is an open system session.
- */
-bool pbl_pp_session_is_system(const struct pbl_pp_session *session);
+struct pbl_pp_session *pbl_pp_session_get_app(void);
 
 struct pbl_pp_transport;
 

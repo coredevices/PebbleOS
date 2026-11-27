@@ -146,7 +146,7 @@ void ping_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *d
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, ping_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, ping_protocol_msg_callback);
 #endif
 
 #ifdef CONFIG_SHELL

@@ -614,7 +614,7 @@ static void prv_handle_reset_request(PPoGATTClient *client) {
 
 static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket *packet,
                                       uint16_t payload_length) {
-  struct pbl_pp_session *session = pbl_pp_session_open(&s_transport, client->destination, nullptr);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_transport, client->destination);
   if (!session) {
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_CouldntOpenSession);
     return;

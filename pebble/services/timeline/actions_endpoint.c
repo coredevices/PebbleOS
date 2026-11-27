@@ -236,5 +236,5 @@ void timeline_action_endpoint_protocol_msg_callback(struct pbl_pp_session *sessi
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_TIMELINE_ACTION, PBL_PP_ACCESS_PRIVATE,
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_TIMELINE_ACTION,
                        timeline_action_endpoint_protocol_msg_callback);

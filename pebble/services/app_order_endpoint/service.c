@@ -86,5 +86,4 @@ void app_order_protocol_msg_callback(struct pbl_pp_session *session, const uint8
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_ORDER, PBL_PP_ACCESS_PRIVATE,
-                       app_order_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_ORDER, app_order_protocol_msg_callback);

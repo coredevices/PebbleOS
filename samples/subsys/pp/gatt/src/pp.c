@@ -59,14 +59,12 @@ void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_respo
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
-  const char *kind = pbl_pp_session_is_system(session) ? "system" : "app";
-
   switch (event) {
     case PBL_PP_SESSION_OPENED:
-      printf("pp_gatt: %s session opened\n", kind);
+      printf("pp_gatt: session opened\n");
       break;
     case PBL_PP_SESSION_CLOSED:
-      printf("pp_gatt: %s session closed\n", kind);
+      printf("pp_gatt: session closed\n");
       break;
     case PBL_PP_SESSION_CAPABILITIES:
       printf("pp_gatt: capabilities 0x%08x\n",
@@ -100,7 +98,7 @@ static void prv_ping_handler(struct pbl_pp_session *session, const uint8_t *data
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, prv_ping_handler);
 
 static void prv_start_cb(void *data) {
   pbl_pp_gatt_destroy();

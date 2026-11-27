@@ -186,8 +186,7 @@ void sys_msg_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_MESSAGE, PBL_PP_ACCESS_PRIVATE,
-                            sys_msg_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_MESSAGE, sys_msg_protocol_msg_callback);
 
 void system_message_send_firmware_start_response(FirmwareUpdateStatus status) {
   struct PBL_PACKED {

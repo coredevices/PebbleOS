@@ -211,7 +211,7 @@ void test_music_endpoint__initialize(void) {
   music_init();
   music_album_art_retain();
 
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   fake_transport_set_connected(s_transport, true /* connected */);
 
   // Simulate connecting Pebble mobile app:
