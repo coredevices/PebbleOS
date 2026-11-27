@@ -111,6 +111,23 @@ const struct pbl_mem_region *pbl_rproc_sf32lb_get_ipc_mem(const struct pbl_rproc
 const struct pbl_mem_region *pbl_rproc_sf32lb_get_sram(const struct pbl_rproc *rproc);
 
 /**
+ * @brief Make the LPSYS SRAM reachable while the LCPU is not running.
+ *
+ * LPSYS sleeps while its CPU runs nothing, and its SRAM does not answer then. Balance each call
+ * with pbl_rproc_sf32lb_sram_put().
+ *
+ * @param rproc LCPU.
+ */
+void pbl_rproc_sf32lb_sram_get(const struct pbl_rproc *rproc);
+
+/**
+ * @brief Let LPSYS sleep again after pbl_rproc_sf32lb_sram_get().
+ *
+ * @param rproc LCPU.
+ */
+void pbl_rproc_sf32lb_sram_put(const struct pbl_rproc *rproc);
+
+/**
  * @brief Get the doorbell to the LCPU.
  *
  * @param rproc LCPU.
