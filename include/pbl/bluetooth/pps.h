@@ -6,7 +6,7 @@
 #include <pbl/util/bits.h>
 
 /**
- * @defgroup bluetooth_pebble_pairing_service Pebble Pairing Service
+ * @defgroup bluetooth_pps Pebble Pairing Service (PPS)
  * @ingroup bluetooth
  * @brief GATT service through which the phone app checks the connection and triggers pairing.
  *
