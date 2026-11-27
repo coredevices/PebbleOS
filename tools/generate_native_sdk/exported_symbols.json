@@ -396,13 +396,11 @@
                   "type": "function",
                   "name": "alarm_service_create",
                   "addedRevision": "118",
-                  "stubReturn": "AlarmServiceCreateErrUnavailable",
                   "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceCreateResult alarm_service_create(const AlarmServiceInfo *info, AlarmServiceId *id_out) { __asm__ volatile(\"\" ::: \"memory\"); (void)info; if (id_out) { *id_out = ALARM_SERVICE_INVALID_ID; } return AlarmServiceCreateErrUnavailable; }"
                 }, {
                   "type": "function",
                   "name": "alarm_service_get",
                   "addedRevision": "118",
-                  "stubReturn": "AlarmServiceResultErrUnavailable",
                   "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_get(AlarmServiceId id, AlarmServiceAlarm *alarm_out) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; (void)alarm_out; return AlarmServiceResultErrUnavailable; }"
                 }, {
                   "type": "function",
@@ -413,7 +411,6 @@
                   "type": "function",
                   "name": "alarm_service_set_enabled",
                   "addedRevision": "118",
-                  "stubReturn": "AlarmServiceResultErrUnavailable",
                   "stubDefinition": "static __attribute__((noinline, noclone, unused)) AlarmServiceResult alarm_service_set_enabled(AlarmServiceId id, bool enable) { __asm__ volatile(\"\" ::: \"memory\"); (void)id; (void)enable; return AlarmServiceResultErrUnavailable; }"
                 }, {
                   "type": "function",
