@@ -28,7 +28,8 @@
 #include <host/ble_gap.h>
 #include <host/ble_hs.h>
 
-//! How many PPoGATT services of the phone are looked for: the Pebble app's, and those of apps.
+//! How many PPoGATT services of the phone are looked for. Only the Pebble app hosts one, but
+//! iOS keeps the service of an app that crashed for a while next to the one of its new run.
 #define FORWARD_SERVICES_MAX 4
 
 static const ble_uuid128_t s_forward_svc_uuid = PPOGATT_UUID128_INIT(PPOGATT_SERVICE_UUID);
@@ -84,9 +85,6 @@ typedef struct PPoGATTClient {
   State state;
   uint8_t version;
   PPoGATTRole role;
-
-  // TODO: Save some memory and point to app metadata instead?
-  Uuid app_uuid;
 
   //! State for the forward role (phone hosts the GATT service).
   struct {
@@ -413,7 +411,6 @@ static PPoGATTClient *prv_create_client(void) {
     return nullptr;
   }
   *client = (PPoGATTClient){};
-  client->app_uuid = UUID_INVALID;
   pbl_delayed_work_init(&client->rx_ack_work, prv_rx_ack_fn);
   pbl_delayed_work_init(&client->meta_read_retry_work, prv_meta_read_retry_fn);
   pbl_delayed_work_init(&client->send_retry_work, prv_send_retry_fn);
@@ -473,15 +470,16 @@ static PPoGATTClient *prv_find_forward_client_with_instance(uint8_t instance) {
 
 // -------------------------------------------------------------------------------------------------
 
-static bool prv_uuid_filter_callback(ListNode *found_node, void *data) {
+//! A forward client whose service proved to be the Pebble app's.
+static bool prv_forward_accepted_filter_callback(ListNode *found_node, void *data) {
   const PPoGATTClient *client = (const PPoGATTClient *)found_node;
-  const Uuid *uuid = (const Uuid *)data;
-  return uuid_equal(&client->app_uuid, uuid);
+  return (client->role == PPoGATTRoleForward && client != data &&
+          client->state >= StateDisconnectedSubscribingData);
 }
 
-static PPoGATTClient *prv_find_client_with_uuid(const Uuid *uuid) {
-  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head, prv_uuid_filter_callback,
-                                    (void *)uuid);
+static PPoGATTClient *prv_find_accepted_forward_client(const PPoGATTClient *other_than) {
+  return (PPoGATTClient *)list_find((ListNode *)s_ppogatt_head,
+                                    prv_forward_accepted_filter_callback, (void *)other_than);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -616,8 +614,7 @@ static void prv_handle_reset_request(PPoGATTClient *client) {
 
 static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket *packet,
                                       uint16_t payload_length) {
-  struct pbl_pp_session *session =
-      pbl_pp_session_open(&s_transport, client->destination, &client->app_uuid);
+  struct pbl_pp_session *session = pbl_pp_session_open(&s_transport, client->destination, nullptr);
   if (!session) {
     prv_delete_client(client, false /* is_disconnected */, DeleteReason_CouldntOpenSession);
     return;
@@ -880,8 +877,8 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
       /* || meta->ppogatt_max_version < PPOGATT_MIN_VERSION  // always true at the moment */) {
     goto handle_error;
   }
-  if (uuid_is_invalid(&meta->app_uuid)) {
-    PBL_LOG_ERR("Invalid UUID");
+  if (!uuid_is_system(&meta->app_uuid)) {
+    PBL_LOG_ERR("Not the service of the Pebble app");
     goto handle_error;
   }
 
@@ -901,7 +898,6 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
 
   // Save data needed across the the lock release
   const uint8_t instance = client->fwd.instance;
-  Uuid app_uuid = meta->app_uuid;
 
   // Release the lock before subscribing, which calls into NimBLE.
   prv_unlock();
@@ -919,27 +915,21 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
   }
 
   if (e == 0) {
-    // Delete any existing client with this UUID, last one wins.
+    // Delete any existing client, last one wins.
     // iOS behavior is a bit strange when it comes to service persistence. When an app crashes or
     // gets killed through Xcode, the service records persist. When the app is relaunched again,
     // a new service will get added again. The old one remains when it was killed through Xcode
     // before. The old one seems to go away *after* the new one gets added in the crash scenario.
-    PPoGATTClient *existing_client = prv_find_client_with_uuid(&app_uuid);
+    PPoGATTClient *existing_client = prv_find_accepted_forward_client(client);
     if (existing_client) {
-      PBL_LOG_ERR("Found PPoGATT server with same UUID. Keeping only the last one.");
+      PBL_LOG_ERR("Found another PPoGATT server. Keeping only the last one.");
       prv_delete_client(existing_client, true /* is_disconnected */, DeleteReason_DuplicateServer);
     }
     client->state = StateDisconnectedSubscribingData;
-    client->app_uuid = app_uuid;
     // Reset retry counter on success
     client->meta_read_retries = 0;
-
-    if (session_type == PPoGATTSessionType_Hybrid) {
-      client->destination = PBL_PP_DESTINATION_HYBRID;
-    } else { // (session_type == PPoGATTSessionType_InferredFromUuid)
-      const bool is_system = uuid_is_system(&client->app_uuid);
-      client->destination = is_system ? PBL_PP_DESTINATION_SYSTEM : PBL_PP_DESTINATION_APP;
-    }
+    client->destination = (session_type == PPoGATTSessionType_Hybrid) ? PBL_PP_DESTINATION_HYBRID
+                                                                      : PBL_PP_DESTINATION_SYSTEM;
     return;
   }
 
@@ -1026,7 +1016,6 @@ static void prv_reversed_start(uint16_t conn_handle) {
   }
   client->role = PPoGATTRoleReversed;
   client->rev.conn_handle = conn_handle;
-  client->app_uuid = UUID_INVALID;
   client->version = PPOGATT_MAX_VERSION;
   client->destination = PBL_PP_DESTINATION_HYBRID;
 
@@ -1819,21 +1808,21 @@ void pbl_pp_gatt_destroy(void) {
 // -------------------------------------------------------------------------------------------------
 // For Unit Testing
 
-struct pbl_pp_session *ppogatt_session_for_uuid(const Uuid *uuid) {
-  PPoGATTClient *client = prv_find_client_with_uuid(uuid);
+struct pbl_pp_session *ppogatt_get_session(void) {
+  PPoGATTClient *client = prv_find_accepted_forward_client(nullptr);
   return (client != nullptr) ? client->session : nullptr;
 }
 
-enum pbl_pp_destination ppogatt_get_destination_for_uuid(const Uuid *uuid) {
-  return prv_find_client_with_uuid(uuid)->destination;
+enum pbl_pp_destination ppogatt_get_destination(void) {
+  return prv_find_accepted_forward_client(nullptr)->destination;
 }
 
 const struct pbl_pp_transport *ppogatt_get_transport(void) {
   return &s_transport;
 }
 
-bool ppogatt_has_client_for_uuid(const Uuid *uuid) {
-  return (prv_find_client_with_uuid(uuid) != nullptr);
+bool ppogatt_has_client(void) {
+  return (prv_find_accepted_forward_client(nullptr) != nullptr);
 }
 
 uint32_t ppogatt_client_count(void) {

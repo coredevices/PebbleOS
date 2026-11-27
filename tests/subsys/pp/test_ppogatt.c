@@ -76,11 +76,11 @@ void pbl_pp_main_call(void (*callback)(void *data), void *data) {
 // Helpers
 ///////////////////////////////////////////////////////////
 
-extern struct pbl_pp_session *ppogatt_session_for_uuid(const Uuid *uuid);
-extern bool ppogatt_has_client_for_uuid(const Uuid *uuid);
+extern struct pbl_pp_session *ppogatt_get_session(void);
+extern bool ppogatt_has_client(void);
 extern uint32_t ppogatt_client_count(void);
 extern void ppogatt_trigger_rx_ack_send_timeout(void);
-extern enum pbl_pp_destination ppogatt_get_destination_for_uuid(const Uuid *uuid);
+extern enum pbl_pp_destination ppogatt_get_destination(void);
 extern const struct pbl_pp_transport *ppogatt_get_transport(void);
 
 static void prv_send_next(struct pbl_pp_session *session) {
@@ -418,7 +418,7 @@ void prv_notify_services_discovered(int num_services_to_register) {
   }
 }
 
-void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
+void test_ppogatt__finds_pebble_app_and_refuses_3rd_party_app(void) {
   prv_notify_services_discovered(NUM_SERVICE_INSTANCES);
 
   // Assert GATT reads requests to Meta characteristics happened:
@@ -428,11 +428,12 @@ void test_ppogatt__find_pebble_app_and_3rd_party_app(void) {
   // Simulate read responses:
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
                                   (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
 
   prv_handle_read_or_notification(s_characteristics[1][PBL_PP_GATT_CHARACTERISTIC_META],
                                   (const uint8_t *)&s_meta_v0_app, sizeof(s_meta_v0_app), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_app.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
+  cl_assert_equal_i(ppogatt_client_count(), 1);
 }
 
 void test_ppogatt__handles_unknown_read_response(void) {
@@ -449,7 +450,7 @@ void test_ppogatt__handles_too_short_meta_length(void) {
                                   sizeof(s_meta_v0_system) - 1 /* missing last byte */, 0);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 void test_ppogatt__handles_meta_v1(void) {
@@ -465,10 +466,6 @@ void test_ppogatt__handles_meta_v1(void) {
       .meta = &s_meta_v1_system_inferred,
       .expected_destination = PBL_PP_DESTINATION_SYSTEM,
     },
-    {
-      .meta = &s_meta_v1_app_inferred,
-      .expected_destination = PBL_PP_DESTINATION_APP,
-    },
   };
 
   for (int i = 0; i < PBL_ARRAY_SIZE(metas); ++i) {
@@ -478,10 +475,17 @@ void test_ppogatt__handles_meta_v1(void) {
     // Client created:
     cl_assert_equal_i(ppogatt_client_count(), 1);
 
-    cl_assert_equal_i(ppogatt_get_destination_for_uuid(&metas[i].meta->app_uuid),
-                      metas[i].expected_destination);
+    cl_assert_equal_i(ppogatt_get_destination(), metas[i].expected_destination);
     pbl_pp_gatt_invalidate_all_references();
   }
+}
+
+void test_ppogatt__refuses_meta_v1_of_3rd_party_app(void) {
+  prv_notify_services_discovered(1);
+  prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
+                                  (const uint8_t *)&s_meta_v1_app_inferred, sizeof(PPoGATTMetaV1),
+                                  0);
+  cl_assert_equal_i(ppogatt_client_count(), 0);
 }
 
 void test_ppogatt__handles_unsupported_meta_ppogatt_version(void) {
@@ -496,7 +500,7 @@ void test_ppogatt__handles_unsupported_meta_ppogatt_version(void) {
                                   sizeof(future_meta_non_compatible), 0);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&future_meta_non_compatible.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 void test_ppogatt__handles_invalid_uuid_meta(void) {
@@ -510,7 +514,7 @@ void test_ppogatt__handles_invalid_uuid_meta(void) {
                                   0);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&meta_invalid_uuid.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
@@ -520,7 +524,7 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
                                   (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
   // Client created:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
 
   // Rediscovery:
   pbl_pp_gatt_invalidate_all_references();
@@ -533,7 +537,7 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
                                   (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
   // Still one client:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
 }
 
 static void prv_discover_system_service(void) {
@@ -542,7 +546,7 @@ static void prv_discover_system_service(void) {
   prv_service_discovered(1, -ENOENT);
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
                                   (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert(s_started[0] != nullptr);
   cl_assert(s_started[1] == nullptr);
 }
@@ -554,7 +558,7 @@ void test_ppogatt__services_changed_keeps_the_client_of_a_service_that_did_not_m
 
   cl_assert_equal_i(s_num_rediscoveries, 1);
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
 }
 
 void test_ppogatt__services_changed_looks_for_the_first_service_that_was_not_there(void) {
@@ -565,7 +569,7 @@ void test_ppogatt__services_changed_looks_for_the_first_service_that_was_not_the
 
   prv_service_discovered(1, 0);
   cl_assert_equal_i(ppogatt_client_count(), 2);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
 }
 
 void test_ppogatt__services_changed_starts_over_with_a_service_that_moved(void) {
@@ -576,7 +580,7 @@ void test_ppogatt__services_changed_starts_over_with_a_service_that_moved(void) 
 
   // A new client, yet to read what the service is for:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 void test_ppogatt__services_changed_deletes_the_client_of_a_service_that_is_gone(void) {
@@ -650,7 +654,7 @@ void test_ppogatt__cleanup_client_when_data_subscription_cccd_write_failed(void)
     prv_fail_meta_read_retry(meta, (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
   }
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
@@ -665,7 +669,7 @@ void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
   prv_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
                        BLESubscriptionNotifications, BLE_ATT_ERR_READ_NOT_PERMITTED);
   cl_assert_equal_i(ppogatt_client_count(), 0);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
 static void prv_discover_and_read_meta_and_reset(void) {
@@ -711,7 +715,7 @@ void test_ppogatt__start_reset_upon_out_of_range_ack(void) {
 void test_ppogatt__ignore_retransmitted_ack(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   for (uint8_t sn = 0; sn < 3; ++sn) {
     const bool success = fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
                                                                  sizeof(s_short_data_fragment));
@@ -823,7 +827,7 @@ void test_ppogatt__ignore_invalid_packet_type(void) {
                                   (const uint8_t *)&packet, sizeof(packet), 0);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }
 
@@ -833,7 +837,7 @@ void test_ppogatt__ignore_reset_complete_while_open(void) {
   prv_receive_reset_complete(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA]);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }
 
@@ -868,7 +872,7 @@ void test_ppogatt__ignore_zero_length_notification(void) {
                                   0);
   // No crash etc, client still alive:
   cl_assert_equal_i(ppogatt_client_count(), 1);
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), true);
+  cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 0);
 }
 
@@ -886,7 +890,7 @@ void test_ppogatt__ack_received_data(void) {
 
 void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   const pbl_bt_characteristic_t data = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA];
 
   // V0 Acks every packet, V1 every half window:
@@ -906,12 +910,12 @@ void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
 void test_ppogatt__close(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   cl_assert(session);
 
   ppogatt_get_transport()->close(session);
 
-  cl_assert_equal_b(ppogatt_has_client_for_uuid(&s_meta_v0_system.app_uuid), false);
+  cl_assert_equal_b(ppogatt_has_client(), false);
   cl_assert_equal_i(fake_comm_session_close_call_count(), 1);
 }
 
@@ -932,7 +936,7 @@ void test_ppogatt__send_data_max_payload_size(void) {
 
   // The fake send buffer holds a V0 window of these:
   const uint8_t num_packets = PBL_MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   for (uint8_t sn = 0; sn < num_packets; ++sn) {
     cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, data, MAX_PAYLOAD_SIZE),
                       true);
@@ -948,7 +952,7 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
   test_ppogatt__open_session_when_found_pebble_app();
 
   uint8_t sn = 0;
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   // V1 takes the phone's window whatever the MTU:
   cl_assert_equal_i(s_tx_window_size,
                     (s_ppogatt_version > 0) ? PHONE_WINDOW_SIZE : PPOGATT_V0_WINDOW_SIZE);
@@ -984,7 +988,7 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
 void test_ppogatt__receive_ack_for_all_packets_in_flight(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get s_tx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
@@ -1023,7 +1027,7 @@ void test_ppogatt__handle_client_disappearing_for_send_callback(void) {
 
 void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
   const pbl_bt_characteristic_t data = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA];
 
   for (uint8_t sn = 0; sn < 2; ++sn) {
@@ -1053,7 +1057,7 @@ void test_ppogatt__retry_send_with_backoff_when_bluetooth_stack_out_of_buffers(v
 void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get s_tx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
@@ -1087,7 +1091,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_all_at_once(void) {
 void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(void) {
   test_ppogatt__open_session_when_found_pebble_app();
   uint8_t sn = 0;
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get s_tx_window_size packets in flight:
   uint8_t secs_passed = 0;
@@ -1123,7 +1127,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_first_but_not_later_ones(vo
 
 void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_once(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get s_tx_window_size packets in flight:
   uint8_t sn = 0;
@@ -1161,7 +1165,7 @@ void test_ppogatt__retransmit_timed_out_data_packets_race_everything_acked_at_on
 
 void test_ppogatt__retransmit_max_number_of_times(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get a packet in flight:
   uint8_t sn = 0;
@@ -1191,7 +1195,7 @@ void test_ppogatt__retransmit_max_number_of_times(void) {
 
 void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   uint8_t num_packets = s_tx_window_size;
 
@@ -1225,7 +1229,7 @@ void test_ppogatt__make_sure_timeout_reset_after_data_ack(void) {
 
 void test_ppogatt__send_retried_when_out_of_heap(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, s_short_data_fragment,
                                                             sizeof(s_short_data_fragment)),
@@ -1243,7 +1247,7 @@ void test_ppogatt__send_retried_when_out_of_heap(void) {
 
 void test_ppogatt__mtu_zero_due_to_disconnection(void) {
   test_ppogatt__open_session_when_found_pebble_app();
-  struct pbl_pp_session *session = ppogatt_session_for_uuid(&s_meta_v0_system.app_uuid);
+  struct pbl_pp_session *session = ppogatt_get_session();
 
   // Get a packet in flight:
   uint8_t sn = 0;
