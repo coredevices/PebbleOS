@@ -2666,6 +2666,21 @@
       "type": "pdc",
       "name": "WEATHER_REPORT_PAPER",
       "file": "normal/base/images/Pebble_80x80_Weather_report.svg"
+    },
+    {
+      "type": "pdc",
+      "name": "APP_FETCH_GIFT",
+      "file": "normal/base/images/app_fetch_gift",
+      "config": "CONFIG_PLATFORM_COLOR",
+      "_comment": ["The app install gift box, a frame per file: 00-31 a half turn, 32-63 the",
+                   "same turn while it is hit from inside, then its lid and its open body."]
+    },
+    {
+      "type": "pdc",
+      "name": "APP_FETCH_GIFT_ROCKET",
+      "file": "../third_party/resources/iconography/icons/80px_Rocket.svg",
+      "config": "CONFIG_PLATFORM_COLOR",
+      "_comment": "What the gift reveals for an app that has no icon of its own."
     }
   ],
   "timeline": [
