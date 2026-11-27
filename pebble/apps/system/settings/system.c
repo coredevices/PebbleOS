@@ -1287,7 +1287,20 @@ static void prv_push_kcc_window(SystemCertificationData *data) {
 // Callbacks for the main settings filter list menu.
 ////////////////////////////////////////////////////
 
+// Select pressed in the shutdown dialog, so its release confirms.
+static bool s_shutdown_pressed;
+
+static void prv_shutdown_press_cb(ClickRecognizerRef recognizer, void *context) {
+  s_shutdown_pressed = true;
+}
+
+// On release, as a key that wakes the system would wake it again if still held at power-off.
+// A release whose press came before the dialog is not a confirmation.
 static void prv_shutdown_confirm_cb(ClickRecognizerRef recognizer, void *context) {
+  if (!s_shutdown_pressed) {
+    return;
+  }
+
   actionable_dialog_pop((ActionableDialog *)context);
   pbl_power_off();
 }
@@ -1297,11 +1310,14 @@ static void prv_shutdown_back_cb(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void prv_shutdown_click_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_SELECT, prv_shutdown_confirm_cb);
+  window_raw_click_subscribe(BUTTON_ID_SELECT, prv_shutdown_press_cb, prv_shutdown_confirm_cb,
+                             nullptr);
   window_single_click_subscribe(BUTTON_ID_BACK, prv_shutdown_back_cb);
 }
 
 static void prv_shutdown_cb(void *data) {
+  s_shutdown_pressed = false;
+
   ActionableDialog *a_dialog = actionable_dialog_create("Shutdown");
   Dialog *dialog = actionable_dialog_get_dialog(a_dialog);
 
