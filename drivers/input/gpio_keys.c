@@ -60,7 +60,7 @@ static int prv_key_init(const struct pbl_gpio_keys_key *key,
   }
 
   if (key->wakeup_source) {
-    ret = pbl_intc_set_wake(&irq, true);
+    ret = pbl_intc_set_wake(&irq, PBL_IRQ_TYPE_EDGE_BOTH);
     if (ret != 0) {
       return ret;
     }

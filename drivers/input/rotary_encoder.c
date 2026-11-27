@@ -91,7 +91,7 @@ static int prv_line_irq(const struct pbl_rotary_encoder *enc, const struct pbl_g
   }
 
   if (enc->wakeup_source) {
-    ret = pbl_intc_set_wake(&irq, true);
+    ret = pbl_intc_set_wake(&irq, PBL_IRQ_TYPE_EDGE_BOTH);
     if (ret != 0) {
       return ret;
     }

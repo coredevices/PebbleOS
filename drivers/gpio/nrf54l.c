@@ -187,14 +187,17 @@ static int prv_intc_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
-static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+static int prv_intc_set_wake(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   const struct pbl_gpio_nrf54l *gpio = prv_intc_port(intc);
 
   pbl_irq_lock();
-  if (on) {
-    gpio->state->wake |= PBL_BIT(hwirq);
-  } else {
-    gpio->state->wake &= ~PBL_BIT(hwirq);
+  gpio->state->wake_high &= ~PBL_BIT(hwirq);
+  gpio->state->wake_low &= ~PBL_BIT(hwirq);
+  if ((type & (PBL_IRQ_TYPE_LEVEL_HIGH | PBL_IRQ_TYPE_EDGE_RISING)) != 0U) {
+    gpio->state->wake_high |= PBL_BIT(hwirq);
+  }
+  if ((type & (PBL_IRQ_TYPE_LEVEL_LOW | PBL_IRQ_TYPE_EDGE_FALLING)) != 0U) {
+    gpio->state->wake_low |= PBL_BIT(hwirq);
   }
   pbl_irq_unlock();
 
@@ -208,8 +211,8 @@ const struct pbl_intc_ops pbl_gpio_nrf54l_intc_ops = {
   .set_wake = prv_intc_set_wake,
 };
 
-// Only SENSE wakes from System OFF; sensing the level opposite to the current one keeps a pin
-// held at power-off from waking at once
+// Only SENSE wakes from System OFF. A pin waking on a change senses the level opposite to the
+// current one.
 static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
   for (uint32_t index = 0U; index < MAX_PORTS; index++) {
     const struct pbl_gpio_nrf54l *gpio = s_ports[index];
@@ -222,7 +225,7 @@ static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
       int ch;
       bool high;
 
-      if ((gpio->state->wake & PBL_BIT(pin)) == 0U) {
+      if (((gpio->state->wake_high | gpio->state->wake_low) & PBL_BIT(pin)) == 0U) {
         continue;
       }
 
@@ -231,10 +234,17 @@ static void prv_arm_wake(enum pbl_sys_off_mode mode, void *user_data) {
         prv_gpiote_putreg(gpio, NRF54L_GPIOTE_CONFIG_OFFSET(ch), 0U);
       }
 
-      high = (prv_getreg(gpio, NRF54L_GPIO_IN_OFFSET) & PBL_BIT(pin)) != 0U;
+      if ((gpio->state->wake_low & PBL_BIT(pin)) == 0U) {
+        high = true;
+      } else if ((gpio->state->wake_high & PBL_BIT(pin)) == 0U) {
+        high = false;
+      } else {
+        high = (prv_getreg(gpio, NRF54L_GPIO_IN_OFFSET) & PBL_BIT(pin)) == 0U;
+      }
+
       pbl_modifyl(GPIO_PIN_CNF_SENSE_MASK,
                   PBL_FIELD_PREP(GPIO_PIN_CNF_SENSE_MASK,
-                                 high ? GPIO_PIN_CNF_SENSE_LOW : GPIO_PIN_CNF_SENSE_HIGH),
+                                 high ? GPIO_PIN_CNF_SENSE_HIGH : GPIO_PIN_CNF_SENSE_LOW),
                   gpio->base + NRF54L_GPIO_PIN_CNF_OFFSET(pin));
     }
   }

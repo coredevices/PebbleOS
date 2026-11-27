@@ -71,8 +71,11 @@ struct pbl_intc_ops {
   int (*enable)(const struct pbl_intc *intc, uint32_t hwirq);
   /** Mask a line. Returns 0 or a negative errno. */
   int (*disable)(const struct pbl_intc *intc, uint32_t hwirq);
-  /** Make a line a wake source from power-off, or not. Optional. Returns 0 or a negative errno. */
-  int (*set_wake)(const struct pbl_intc *intc, uint32_t hwirq, bool on);
+  /**
+   * Make a line a wake source from power-off with a wake type (see pbl_intc_set_wake()), or not
+   * with 0. Optional. Returns 0, @c -ENOTSUP or a negative errno.
+   */
+  int (*set_wake)(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type);
   /** Release what configure() took for a disabled line, and its wake setting. Optional. */
   void (*free)(const struct pbl_intc *intc, uint32_t hwirq);
 };
@@ -198,15 +201,17 @@ int pbl_intc_disable(const struct pbl_irq_spec *spec);
 /**
  * @brief Let a requested line wake the system from power-off, or stop it.
  *
- * The controller arms the line when the SoC powers off; it then wakes the system on a change of
- * the line, whatever its trigger type.
+ * The controller arms the line when the SoC powers off, whatever its trigger type. With
+ * @ref PBL_IRQ_TYPE_LEVEL_HIGH or @ref PBL_IRQ_TYPE_LEVEL_LOW it wakes the system on that level,
+ * at once if the line is already at it. With @ref PBL_IRQ_TYPE_EDGE_BOTH it wakes the system on a
+ * change from the level at power-off.
  *
  * @param spec Requested line.
- * @param on Whether the line wakes the system.
- * @return 0, @c -EINVAL if the line is not requested, @c -ENOTSUP if the controller cannot wake
- * the system on it, or another negative errno.
+ * @param type Wake type, or 0 for the line not to wake the system.
+ * @return 0, @c -EINVAL if the line is not requested or for an invalid type, @c -ENOTSUP if the
+ * controller cannot wake the system on it, or another negative errno.
  */
-int pbl_intc_set_wake(const struct pbl_irq_spec *spec, bool on);
+int pbl_intc_set_wake(const struct pbl_irq_spec *spec, uint32_t type);
 
 /**
  * @brief Run the handler of a pending line, for the controller driver.

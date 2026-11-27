@@ -15,6 +15,7 @@ static int s_configure_ret;
 static int s_enable_calls;
 static int s_disable_calls;
 static uint32_t s_wake;
+static uint32_t s_wake_type;
 static uint32_t s_freed;
 static int s_handler_calls;
 static void *s_handler_arg;
@@ -50,9 +51,10 @@ static int prv_disable(const struct pbl_intc *intc, uint32_t hwirq) {
   return 0;
 }
 
-static int prv_set_wake(const struct pbl_intc *intc, uint32_t hwirq, bool on) {
+static int prv_set_wake(const struct pbl_intc *intc, uint32_t hwirq, uint32_t type) {
   cl_assert(s_lock_depth > 0);
-  if (on) {
+  s_wake_type = type;
+  if (type != 0U) {
     s_wake |= 1U << hwirq;
   } else {
     s_wake &= ~(1U << hwirq);
@@ -107,6 +109,7 @@ void test_intc__initialize(void) {
   s_enable_calls = 0;
   s_disable_calls = 0;
   s_wake = 0U;
+  s_wake_type = 0U;
   s_freed = 0U;
   s_handler_calls = 0;
   s_handler_arg = nullptr;
@@ -224,15 +227,31 @@ void test_intc__spec_connected(void) {
 void test_intc__set_wake(void) {
   cl_assert_equal_i(pbl_intc_request(&s_line1, prv_handler, nullptr), 0);
 
-  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, true), 0);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_LEVEL_LOW), 0);
   cl_assert_equal_i(s_wake, 1U << 1);
-  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, false), 0);
+  cl_assert_equal_i(s_wake_type, PBL_IRQ_TYPE_LEVEL_LOW);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_LEVEL_HIGH), 0);
+  cl_assert_equal_i(s_wake_type, PBL_IRQ_TYPE_LEVEL_HIGH);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_EDGE_BOTH), 0);
+  cl_assert_equal_i(s_wake_type, PBL_IRQ_TYPE_EDGE_BOTH);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, 0U), 0);
+  cl_assert_equal_i(s_wake, 0U);
+  cl_assert_equal_i(s_lock_depth, 0);
+}
+
+void test_intc__set_wake_invalid_type(void) {
+  cl_assert_equal_i(pbl_intc_request(&s_line1, prv_handler, nullptr), 0);
+
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_EDGE_RISING), -EINVAL);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_EDGE_FALLING), -EINVAL);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line1, PBL_IRQ_TYPE_LEVEL_HIGH | PBL_IRQ_TYPE_LEVEL_LOW),
+                    -EINVAL);
   cl_assert_equal_i(s_wake, 0U);
   cl_assert_equal_i(s_lock_depth, 0);
 }
 
 void test_intc__set_wake_not_requested(void) {
-  cl_assert_equal_i(pbl_intc_set_wake(&s_line3, true), -EINVAL);
+  cl_assert_equal_i(pbl_intc_set_wake(&s_line3, PBL_IRQ_TYPE_LEVEL_LOW), -EINVAL);
   cl_assert_equal_i(s_wake, 0U);
   cl_assert_equal_i(s_lock_depth, 0);
 }
@@ -242,7 +261,7 @@ void test_intc__set_wake_unsupported(void) {
 
   cl_assert_equal_i(pbl_device_init(&s_intc_no_wake.dev), 0);
   cl_assert_equal_i(pbl_intc_request(&line, prv_handler, nullptr), 0);
-  cl_assert_equal_i(pbl_intc_set_wake(&line, true), -ENOTSUP);
+  cl_assert_equal_i(pbl_intc_set_wake(&line, PBL_IRQ_TYPE_EDGE_BOTH), -ENOTSUP);
 }
 
 void test_intc__free_without_driver_release(void) {

@@ -137,9 +137,14 @@ int pbl_intc_disable(const struct pbl_irq_spec *spec) {
   return prv_set_enabled(spec, false);
 }
 
-int pbl_intc_set_wake(const struct pbl_irq_spec *spec, bool on) {
+int pbl_intc_set_wake(const struct pbl_irq_spec *spec, uint32_t type) {
   const struct pbl_intc *intc = spec->intc;
   int ret;
+
+  if (type != 0U && type != PBL_IRQ_TYPE_LEVEL_HIGH && type != PBL_IRQ_TYPE_LEVEL_LOW &&
+      type != PBL_IRQ_TYPE_EDGE_BOTH) {
+    return -EINVAL;
+  }
 
   if (intc->ops->set_wake == nullptr) {
     return -ENOTSUP;
@@ -152,7 +157,7 @@ int pbl_intc_set_wake(const struct pbl_irq_spec *spec, bool on) {
     return -EINVAL;
   }
 
-  ret = intc->ops->set_wake(intc, spec->hwirq, on);
+  ret = intc->ops->set_wake(intc, spec->hwirq, type);
 
   pbl_irq_unlock();
 

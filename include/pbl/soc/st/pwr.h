@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stdint.h>
 
 /**
@@ -16,15 +15,17 @@
 /**
  * @brief Let a GPIO line on a wakeup pin wake the SoC from power-off.
  *
- * At power-off, the pin wakes on the edge away from the level it is at, with the pull of its line.
+ * At power-off, the pin wakes, with the pull of its line, on the edge to the level of
+ * @ref PBL_IRQ_TYPE_LEVEL_HIGH or @ref PBL_IRQ_TYPE_LEVEL_LOW, or with
+ * @ref PBL_IRQ_TYPE_EDGE_BOTH on the edge away from the level it is at.
  *
  * @param port Registers of the GPIO port.
  * @param pin Pin of the port.
- * @param on Whether the line wakes the SoC.
+ * @param type Wake type, or 0 for the line not to wake the SoC.
  *
  * @retval 0 On success.
  * @retval -ENOTSUP The line is not on a wakeup pin.
  */
-int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, bool on);
+int pbl_soc_stm32h7_wakeup_pin_set(uintptr_t port, uint32_t pin, uint32_t type);
 
 /** @} */
