@@ -185,39 +185,26 @@ static void prv_handle_subscribe(pbl_bt_characteristic_t characteristic,
   pbl_pp_gatt_handle_subscribe(instance, subscription_type != BLESubscriptionNone, status);
 }
 
-static const PPoGATTMetaV0 s_meta_v0_app = {
-  .ppogatt_min_version = PPOGATT_MIN_VERSION,
-  .ppogatt_max_version = USE_PPOGATT_VERSION,
-  .app_uuid = UuidMake(0xA4, 0x83, 0x2A, 0x0E, 0x74, 0x54, 0x45, 0x32, 0xB2, 0xA2, 0x4E, 0x6F, 0x8F,
-                       0x7B, 0x68, 0x6F)
-};
-
-static const PPoGATTMetaV0 s_meta_v0_system = {
-  .ppogatt_min_version = PPOGATT_MIN_VERSION,
-  .ppogatt_max_version = USE_PPOGATT_VERSION,
-  .app_uuid = (const Uuid)UUID_SYSTEM,
-};
-
-static const PPoGATTMetaV1 s_meta_v1_hybrid = {
+static const PPoGATTMeta s_meta_app = {
   .ppogatt_min_version = 0,
-  .ppogatt_max_version = 0,
-  .app_uuid = (const Uuid)UUID_SYSTEM,
-  .pp_session_type = PPoGATTSessionType_Hybrid,
-};
-
-static const PPoGATTMetaV1 s_meta_v1_system_inferred = {
-  .ppogatt_min_version = 0,
-  .ppogatt_max_version = 0,
-  .app_uuid = (const Uuid)UUID_SYSTEM,
-  .pp_session_type = PPoGATTSessionType_InferredFromUuid,
-};
-
-static const PPoGATTMetaV1 s_meta_v1_app_inferred = {
-  .ppogatt_min_version = 0,
-  .ppogatt_max_version = 0,
+  .ppogatt_max_version = PPOGATT_VERSION,
   .app_uuid = UuidMake(0xA4, 0x83, 0x2A, 0x0E, 0x74, 0x54, 0x45, 0x32, 0xB2, 0xA2, 0x4E, 0x6F, 0x8F,
                        0x7B, 0x68, 0x6F),
-  .pp_session_type = PPoGATTSessionType_InferredFromUuid,
+  .pp_session_type = PPoGATTSessionType_System,
+};
+
+static const PPoGATTMeta s_meta_system = {
+  .ppogatt_min_version = 0,
+  .ppogatt_max_version = PPOGATT_VERSION,
+  .app_uuid = (const Uuid)UUID_SYSTEM,
+  .pp_session_type = PPoGATTSessionType_System,
+};
+
+static const PPoGATTMeta s_meta_hybrid = {
+  .ppogatt_min_version = 0,
+  .ppogatt_max_version = PPOGATT_VERSION,
+  .app_uuid = (const Uuid)UUID_SYSTEM,
+  .pp_session_type = PPoGATTSessionType_Hybrid,
 };
 
 static PPoGATTPacket s_server_reset_request = (const PPoGATTPacket){
@@ -231,7 +218,6 @@ static uint16_t s_client_reset_request_size;
 static PPoGATTPacket *s_client_reset_complete;
 static uint16_t s_client_reset_complete_size;
 
-static int s_ppogatt_version;
 static int s_tx_window_size;
 static int s_rx_window_size;
 
@@ -245,16 +231,14 @@ static void prv_create_expected_reset_request(void) {
   PPoGATTResetRequestClientIDPayload *client_id_payload =
       (PPoGATTResetRequestClientIDPayload *)s_client_reset_request->payload;
   *client_id_payload = (const PPoGATTResetRequestClientIDPayload){
-    .ppogatt_version = s_ppogatt_version,
+    .ppogatt_version = PPOGATT_VERSION,
   };
   memcpy(client_id_payload->serial_number, SERIAL_NUMBER, PBL_PP_GATT_SERIAL_NUMBER_SIZE);
 }
 
 static void prv_create_expected_reset_complete(void) {
-  s_client_reset_complete_size = sizeof(PPoGATTPacket);
-  if (s_ppogatt_version > 0) {
-    s_client_reset_complete_size += sizeof(PPoGATTResetCompleteClientIDPayloadV1);
-  }
+  s_client_reset_complete_size =
+      sizeof(PPoGATTPacket) + sizeof(PPoGATTResetCompleteClientIDPayload);
 
   s_client_reset_complete = (PPoGATTPacket *)malloc(s_client_reset_complete_size);
   *s_client_reset_complete = (const PPoGATTPacket){
@@ -262,13 +246,11 @@ static void prv_create_expected_reset_complete(void) {
     .type = PPoGATTPacketTypeResetComplete,
   };
 
-  if (s_ppogatt_version > 0) {
-    *((PPoGATTResetCompleteClientIDPayloadV1 *)s_client_reset_complete->payload) =
-        (const PPoGATTResetCompleteClientIDPayloadV1){
-          .ppogatt_max_rx_window = s_rx_window_size,
-          .ppogatt_max_tx_window = s_tx_window_size,
-    };
-  }
+  *((PPoGATTResetCompleteClientIDPayload *)s_client_reset_complete->payload) =
+      (const PPoGATTResetCompleteClientIDPayload){
+        .ppogatt_max_rx_window = s_rx_window_size,
+        .ppogatt_max_tx_window = s_tx_window_size,
+  };
 }
 
 static void prv_receive_reset_request(pbl_bt_characteristic_t characteristic) {
@@ -313,25 +295,21 @@ static void prv_assert_sent_reset_complete(pbl_bt_characteristic_t characteristi
   struct PBL_PACKED {
     PPoGATTPacketType type : 3;
     uint8_t sn : PPOGATT_SN_BITS;
-    PPoGATTResetCompleteClientIDPayloadV1 payload;
-  } expected_response = {.sn = 0, .type = PPoGATTPacketTypeResetComplete};
-
-  if (s_ppogatt_version > 0) {
-    expected_response.payload = (const PPoGATTResetCompleteClientIDPayloadV1){
-      .ppogatt_max_rx_window = PPOGATT_V1_DESIRED_RX_WINDOW_SIZE,
+    PPoGATTResetCompleteClientIDPayload payload;
+  } expected_response = {
+    .sn = 0,
+    .type = PPoGATTPacketTypeResetComplete,
+    .payload = {
+      .ppogatt_max_rx_window = PPOGATT_DESIRED_RX_WINDOW_SIZE,
       .ppogatt_max_tx_window = PPOGATT_SN_MOD_DIV - 1,
-    };
-  }
+    },
+  };
 
   fake_gatt_client_op_assert_write(characteristic, (const uint8_t *)&expected_response,
                                    s_client_reset_complete_size, false /* is_response_required */);
 
-  if (s_ppogatt_version > 0) {
-    s_tx_window_size = PBL_MIN(s_tx_window_size, expected_response.payload.ppogatt_max_tx_window);
-    s_rx_window_size = PBL_MIN(s_rx_window_size, expected_response.payload.ppogatt_max_rx_window);
-  } else {
-    s_tx_window_size = s_rx_window_size = PPOGATT_V0_WINDOW_SIZE;
-  }
+  s_tx_window_size = PBL_MIN(s_tx_window_size, expected_response.payload.ppogatt_max_tx_window);
+  s_rx_window_size = PBL_MIN(s_rx_window_size, expected_response.payload.ppogatt_max_rx_window);
 }
 
 static void prv_assert_sent_ack(pbl_bt_characteristic_t characteristic, uint8_t sn) {
@@ -360,7 +338,6 @@ static void prv_assert_sent_data(pbl_bt_characteristic_t characteristic, uint8_t
 ///////////////////////////////////////////////////////////
 
 void test_ppogatt__initialize(void) {
-  s_ppogatt_version = USE_PPOGATT_VERSION;
   s_tx_window_size = PHONE_WINDOW_SIZE;
   s_rx_window_size = PHONE_WINDOW_SIZE;
   prv_create_expected_reset_request();
@@ -419,11 +396,11 @@ void test_ppogatt__finds_pebble_app_and_refuses_3rd_party_app(void) {
 
   // Simulate read responses:
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   cl_assert_equal_b(ppogatt_has_client(), true);
 
   prv_handle_read_or_notification(s_characteristics[1][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_app, sizeof(s_meta_v0_app), 0);
+                                  (const uint8_t *)&s_meta_app, sizeof(s_meta_app), 0);
   cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 }
@@ -438,24 +415,24 @@ void test_ppogatt__handles_too_short_meta_length(void) {
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system,
-                                  sizeof(s_meta_v0_system) - 1 /* missing last byte */, 0);
+                                  (const uint8_t *)&s_meta_system,
+                                  sizeof(s_meta_system) - 1 /* missing last byte */, 0);
   // No client created:
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client(), false);
 }
 
-void test_ppogatt__handles_meta_v1(void) {
+void test_ppogatt__handles_session_types(void) {
   struct {
-    const PPoGATTMetaV1 *meta;
+    const PPoGATTMeta *meta;
     enum pbl_pp_destination expected_destination;
   } metas[] = {
     {
-      .meta = &s_meta_v1_hybrid,
+      .meta = &s_meta_hybrid,
       .expected_destination = PBL_PP_DESTINATION_HYBRID,
     },
     {
-      .meta = &s_meta_v1_system_inferred,
+      .meta = &s_meta_system,
       .expected_destination = PBL_PP_DESTINATION_SYSTEM,
     },
   };
@@ -463,7 +440,7 @@ void test_ppogatt__handles_meta_v1(void) {
   for (int i = 0; i < PBL_ARRAY_SIZE(metas); ++i) {
     prv_notify_services_discovered(1);
     prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                    (const uint8_t *)metas[i].meta, sizeof(PPoGATTMetaV1), 0);
+                                    (const uint8_t *)metas[i].meta, sizeof(PPoGATTMeta), 0);
     // Client created:
     cl_assert_equal_i(ppogatt_client_count(), 1);
 
@@ -472,16 +449,18 @@ void test_ppogatt__handles_meta_v1(void) {
   }
 }
 
-void test_ppogatt__refuses_meta_v1_of_3rd_party_app(void) {
+void test_ppogatt__refuses_version_0_only(void) {
+  PPoGATTMeta meta = s_meta_system;
+  meta.ppogatt_max_version = 0;
+
   prv_notify_services_discovered(1);
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v1_app_inferred, sizeof(PPoGATTMetaV1),
-                                  0);
+                                  (const uint8_t *)&meta, sizeof(meta), 0);
   cl_assert_equal_i(ppogatt_client_count(), 0);
 }
 
 void test_ppogatt__handles_unsupported_meta_ppogatt_version(void) {
-  PPoGATTMetaV0 future_meta_non_compatible = s_meta_v0_system;
+  PPoGATTMeta future_meta_non_compatible = s_meta_system;
   future_meta_non_compatible.ppogatt_min_version = 0xaa;
   future_meta_non_compatible.ppogatt_max_version = 0xff;
 
@@ -496,7 +475,7 @@ void test_ppogatt__handles_unsupported_meta_ppogatt_version(void) {
 }
 
 void test_ppogatt__handles_invalid_uuid_meta(void) {
-  PPoGATTMetaV0 meta_invalid_uuid = s_meta_v0_system;
+  PPoGATTMeta meta_invalid_uuid = s_meta_system;
   meta_invalid_uuid.app_uuid = UUID_INVALID;
 
   prv_notify_services_discovered(1);
@@ -513,7 +492,7 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   // Client created:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client(), true);
@@ -526,7 +505,7 @@ void test_ppogatt__deletes_existing_client_after_rediscovery(void) {
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   // Still one client:
   cl_assert_equal_i(ppogatt_client_count(), 1);
   cl_assert_equal_b(ppogatt_has_client(), true);
@@ -537,7 +516,7 @@ static void prv_discover_system_service(void) {
   prv_service_discovered(0, 0);
   prv_service_discovered(1, -ENOENT);
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   cl_assert_equal_b(ppogatt_has_client(), true);
   cl_assert(s_started[0] != nullptr);
   cl_assert(s_started[1] == nullptr);
@@ -636,14 +615,13 @@ void test_ppogatt__cleanup_client_when_data_subscription_cccd_write_failed(void)
   // The meta read succeeds, but the data subscription cccd write fails. That is
   // now treated as a retriable failure (commit 8651be8fb), so the first attempt
   // schedules a retry instead of deleting the client.
-  prv_handle_read_or_notification(meta, (const uint8_t *)&s_meta_v0_system,
-                                  sizeof(s_meta_v0_system), 0);
+  prv_handle_read_or_notification(meta, (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   cl_assert_equal_i(ppogatt_client_count(), 1);
 
   // Each retry re-reads the meta (success) and re-attempts the failing
   // subscription; the client is deleted only after the retry budget is spent.
   for (int i = 1; i < PPOGATT_META_READ_RETRY_COUNT_MAX; i++) {
-    prv_fail_meta_read_retry(meta, (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+    prv_fail_meta_read_retry(meta, (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   }
   cl_assert_equal_i(ppogatt_client_count(), 0);
   cl_assert_equal_b(ppogatt_has_client(), false);
@@ -653,7 +631,7 @@ void test_ppogatt__cleanup_client_when_data_subscription_error_response(void) {
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(
       s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
@@ -668,7 +646,7 @@ static void prv_discover_and_read_meta_and_reset(void) {
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(
       s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);
@@ -746,7 +724,7 @@ void test_ppogatt__ignore_server_reset_request_while_resetting_due_to_own_reset_
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   prv_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
                        BLESubscriptionNotifications, 0);
 
@@ -837,7 +815,7 @@ void test_ppogatt__ignore_data_during_reset(void) {
   prv_notify_services_discovered(1);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   prv_handle_subscribe(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA],
                        BLESubscriptionNotifications, 0);
 
@@ -885,8 +863,8 @@ void test_ppogatt__defer_ack_until_half_rx_window_received(void) {
   struct pbl_pp_session *session = ppogatt_get_session();
   const pbl_bt_characteristic_t data = s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA];
 
-  // V0 Acks every packet, V1 every half window:
-  const uint8_t num_packets = (s_ppogatt_version > 0) ? (s_rx_window_size / 2) : 1;
+  // An Ack every half window:
+  const uint8_t num_packets = s_rx_window_size / 2;
   for (uint8_t sn = 0; sn < num_packets - 1; ++sn) {
     prv_receive_short_data_fragment(data, sn);
     // Send attempts don't count as received packets:
@@ -926,8 +904,8 @@ void test_ppogatt__send_data_max_payload_size(void) {
   uint8_t *data = malloc(MAX_PAYLOAD_SIZE);
   memset(data, 0x55, MAX_PAYLOAD_SIZE);
 
-  // The fake send buffer holds a V0 window of these:
-  const uint8_t num_packets = PBL_MIN(s_tx_window_size, PPOGATT_V0_WINDOW_SIZE);
+  // The fake send buffer holds this many:
+  const uint8_t num_packets = PBL_MIN(s_tx_window_size, 4);
   struct pbl_pp_session *session = ppogatt_get_session();
   for (uint8_t sn = 0; sn < num_packets; ++sn) {
     cl_assert_equal_b(fake_comm_session_send_buffer_write_raw(session, data, MAX_PAYLOAD_SIZE),
@@ -945,9 +923,8 @@ void test_ppogatt__cap_number_of_data_packets_in_flight(void) {
 
   uint8_t sn = 0;
   struct pbl_pp_session *session = ppogatt_get_session();
-  // V1 takes the phone's window whatever the MTU:
-  cl_assert_equal_i(s_tx_window_size,
-                    (s_ppogatt_version > 0) ? PHONE_WINDOW_SIZE : PPOGATT_V0_WINDOW_SIZE);
+  // The phone's window is taken whatever the MTU:
+  cl_assert_equal_i(s_tx_window_size, PHONE_WINDOW_SIZE);
 
   // Get s_rx_window_size packets in flight:
   for (sn = 0; sn < s_tx_window_size; ++sn) {
@@ -1262,7 +1239,7 @@ void test_ppogatt__mtu_zero_due_to_service_rediscovery_while_resetting(void) {
   pbl_pp_gatt_handle_service_discovered(0);
 
   prv_handle_read_or_notification(s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_META],
-                                  (const uint8_t *)&s_meta_v0_system, sizeof(s_meta_v0_system), 0);
+                                  (const uint8_t *)&s_meta_system, sizeof(s_meta_system), 0);
   // Expect subscribe request was made:
   fake_gatt_client_subscriptions_assert_subscribe(
       s_characteristics[0][PBL_PP_GATT_CHARACTERISTIC_DATA], BLESubscriptionNotifications);

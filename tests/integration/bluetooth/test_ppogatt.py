@@ -29,7 +29,6 @@ MIN_MTU = 23
 LARGE_MTU = 339
 # The windows the harness offers.
 PHONE_WINDOW = 25
-V0_WINDOW = 4
 PINGS = 100
 STRESS_ROUNDS = 10
 SETTLE_S = 5.0
@@ -43,10 +42,13 @@ FRAME_S = 0.02
 DROPPED_FRAMES = r"Dropped \d+ frames during audio transfer"
 
 
-def _meta(min_version, max_version, app=None, session_type=True):
+def _meta(min_version, max_version, app=None):
     """A forward PPoGATT meta characteristic value."""
-    value = bytes([min_version, max_version]) + (app.bytes if app else bytes(16))
-    return value + bytes([0]) if session_type else value
+    return (
+        bytes([min_version, max_version])
+        + (app.bytes if app else bytes(16))
+        + bytes([0])
+    )
 
 
 def _opened(dut, since, timeout=15):
@@ -244,32 +246,27 @@ def test_watch_resends_lost_data(dut, watch, phones):
 
 @BOTH
 @pytest.mark.parametrize(
-    "meta,version,tx_window",
-    [
-        (_meta(0, 0, session_type=False), 0, V0_WINDOW),
-        (PPOG_FORWARD_META, 1, PHONE_WINDOW),
-        (_meta(0, 5), 1, PHONE_WINDOW),
-    ],
-    ids=["v0", "v1", "newer"],
+    "meta",
+    [PPOG_FORWARD_META, _meta(0, 5)],
+    ids=["v1", "newer"],
 )
-def test_forward_version(dut, watch, phones, meta, version, tx_window):
-    """A phone hosting the service gets the highest version both support,
-    and from version 1 on the watch takes the phone's TX window."""
+def test_forward_version(dut, watch, phones, meta):
+    """A phone hosting the service gets version 1, the only one, and the
+    watch takes the phone's TX window."""
     since = dut.logs.mark()
     phone = phones(ppogatt=FORWARD, forward_meta=meta).connect()
-    role, agreed, tx, rx = _opened(dut, since)
-    assert (role, agreed) == ("forward", version)
-    assert tx == tx_window
-    if version == 0:
-        assert rx == V0_WINDOW
+    role, agreed, tx, _rx = _opened(dut, since)
+    assert (role, agreed) == ("forward", 1)
+    assert tx == PHONE_WINDOW
     assert phone.watch_version() is not None
 
 
 @BOTH
-def test_forward_version_unsupported(dut, watch, phones):
-    """A phone that needs a newer version than the watch's gets no session."""
+@pytest.mark.parametrize("meta", [_meta(0, 0), _meta(2, 2)], ids=["older", "newer"])
+def test_forward_version_unsupported(dut, watch, phones, meta):
+    """A phone that does not speak the watch's version gets no session."""
     since = dut.logs.mark()
-    phone = phones(ppogatt=FORWARD, forward_meta=_meta(2, 2))
+    phone = phones(ppogatt=FORWARD, forward_meta=meta)
     with pytest.raises(WatchTimeout):
         phone.connect()
     dut.wait_for_log(r"Failed handling PPoGATT meta", 10, since)

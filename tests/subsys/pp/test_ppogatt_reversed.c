@@ -102,14 +102,12 @@ static void prv_phone_sends_reversed_reset_request(void) {
 }
 
 static void prv_phone_sends_reversed_reset_complete(void) {
-  uint8_t reset_complete[sizeof(PPoGATTPacket) + sizeof(PPoGATTResetCompleteClientIDPayloadV1)] =
-      {};
+  uint8_t reset_complete[sizeof(PPoGATTPacket) + sizeof(PPoGATTResetCompleteClientIDPayload)] = {};
   PPoGATTPacket *packet = (PPoGATTPacket *)reset_complete;
   packet->type = PPoGATTPacketTypeResetComplete;
-  *(PPoGATTResetCompleteClientIDPayloadV1 *)packet->payload =
-      (PPoGATTResetCompleteClientIDPayloadV1){
-        .ppogatt_max_rx_window = 25,
-        .ppogatt_max_tx_window = 25
+  *(PPoGATTResetCompleteClientIDPayload *)packet->payload = (PPoGATTResetCompleteClientIDPayload){
+    .ppogatt_max_rx_window = 25,
+    .ppogatt_max_tx_window = 25
   };
   ppogatt_reversed_handle_data(CONN_HANDLE, reset_complete, sizeof(reset_complete));
 }

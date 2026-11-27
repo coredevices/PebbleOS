@@ -83,7 +83,6 @@ typedef enum {
 typedef struct PPoGATTClient {
   ListNode node;
   State state;
-  uint8_t version;
   PPoGATTRole role;
 
   //! State for the forward role (phone hosts the GATT service).
@@ -219,19 +218,6 @@ void pbl_pp_gatt_configure(const struct pbl_pp_gatt_config *config) {
 
 void pbl_pp_gatt_reset_disconnect_counter(void) {
   s_disconnect_counter = 0;
-}
-
-static bool prv_client_supports_enhanced_throughput_features(const PPoGATTClient *client) {
-  // In PPoGATT V1, two features were added to allow for enhanced throughput:
-  // 1) Negotiable RX/TX in-flight windows - This let's the phone put more data out over the
-  //                                         air and not block waiting for an Ack
-  // 2) Coalesced ACKing - Since 1) makes the window size larger, it's beneficial to flush Acks less
-  //                       frequently. This reduces the strain on the BT controller scheduler and
-  //                       frees up more slots for outbound data packets. As long as we send an Ack
-  //                       before the in-flight window fills, the phone can keep pushing data.
-  //                       If very little data is in flight, flushing Acks periodically will have no
-  //                       impact on throughput
-  return (client->version >= 1);
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -552,16 +538,9 @@ static void prv_enter_awaiting_reset_complete(PPoGATTClient *client, bool self_i
   // TODO: use the SN for Reset Request / Reset Complete
   client->out = (typeof(client->out)){};
 
-  if (prv_client_supports_enhanced_throughput_features(client)) {
-    // Set our desired window sizes: the largest TX window, the phone caps it
-    client->out.tx_window_size = (PPOGATT_SN_MOD_DIV - 1);
-
-    const uint8_t desired_rx_window =
-        PBL_MIN(PPOGATT_V1_DESIRED_RX_WINDOW_SIZE, PPOGATT_SN_MOD_DIV - 1);
-    client->out.rx_window_size = desired_rx_window;
-  } else {
-    client->out.tx_window_size = client->out.rx_window_size = PPOGATT_V0_WINDOW_SIZE;
-  }
+  // Set our desired window sizes: the largest TX window, the phone caps it
+  client->out.tx_window_size = (PPOGATT_SN_MOD_DIV - 1);
+  client->out.rx_window_size = PBL_MIN(PPOGATT_DESIRED_RX_WINDOW_SIZE, PPOGATT_SN_MOD_DIV - 1);
 
   if (self_initiated) {
     client->out.reset_packet_to_send.type = PPoGATTPacketTypeResetRequest;
@@ -648,28 +627,25 @@ static void prv_handle_reset_complete(PPoGATTClient *client, const PPoGATTPacket
 
   PBL_ANALYTICS_SET_UNSIGNED(ppog_reversed, (client->role == PPoGATTRoleReversed) ? 1 : 0);
 
-  if (prv_client_supports_enhanced_throughput_features(client)) {
-    if (payload_length < sizeof(PPoGATTResetCompleteClientIDPayloadV1)) {
-      PBL_LOG_WRN("Unexpected PPoGatt Reset Complete Payload Size: %" PRIu16, payload_length);
-      // Be defensive, and use the original window size
-      client->out.tx_window_size = client->out.rx_window_size = PPOGATT_V0_WINDOW_SIZE;
-    } else {
-      PPoGATTResetCompleteClientIDPayloadV1 *payload =
-          (PPoGATTResetCompleteClientIDPayloadV1 *)&packet->payload[0];
-      PBL_LOG_DBG("PPoGATT Remote RxWindow: %d TxWindow %d", payload->ppogatt_max_rx_window,
-                  payload->ppogatt_max_tx_window);
+  if (payload_length < sizeof(PPoGATTResetCompleteClientIDPayload)) {
+    PBL_LOG_WRN("Unexpected PPoGatt Reset Complete Payload Size: %" PRIu16, payload_length);
+    client->out.tx_window_size = client->out.rx_window_size = PPOGATT_FALLBACK_WINDOW_SIZE;
+  } else {
+    PPoGATTResetCompleteClientIDPayload *payload =
+        (PPoGATTResetCompleteClientIDPayload *)&packet->payload[0];
+    PBL_LOG_DBG("PPoGATT Remote RxWindow: %d TxWindow %d", payload->ppogatt_max_rx_window,
+                payload->ppogatt_max_tx_window);
 
-      client->out.tx_window_size =
-          PBL_MIN(client->out.tx_window_size, payload->ppogatt_max_rx_window);
-      client->out.rx_window_size =
-          PBL_MIN(client->out.rx_window_size, payload->ppogatt_max_tx_window);
-    }
+    client->out.tx_window_size =
+        PBL_MIN(client->out.tx_window_size, payload->ppogatt_max_rx_window);
+    client->out.rx_window_size =
+        PBL_MIN(client->out.rx_window_size, payload->ppogatt_max_tx_window);
   }
 
   {
     const uint32_t elapsed_ms = (pbl_uptime_ticks() - client->created_ticks) * 1000 / PBL_TICK_HZ;
     PBL_LOG_INFO("PPoGATT Session is opened (%s, Vers: %d TXW: %d RXW: %d) after %" PRIu32 "ms!",
-                 (client->role == PPoGATTRoleReversed) ? "reversed" : "forward", client->version,
+                 (client->role == PPoGATTRoleReversed) ? "reversed" : "forward", PPOGATT_VERSION,
                  client->out.tx_window_size, client->out.rx_window_size, elapsed_ms);
   }
 }
@@ -727,14 +703,11 @@ static void prv_handle_data(PPoGATTClient *client, const PPoGATTPacket *packet,
       .sn = client->in.next_expected_data_sn,
       .type = PPoGATTPacketTypeAck,
     };
-    if (!prv_client_supports_enhanced_throughput_features(client)) {
+    // Acks are coalesced: one before the phone's window fills is enough to keep it sending, and
+    // fewer of them leave the controller more slots for data.
+    client->out.outstanding_rx_ack_count++;
+    if (client->out.outstanding_rx_ack_count >= (client->out.rx_window_size / 2)) {
       client->out.send_rx_ack_now = true;
-    } else {
-      client->out.outstanding_rx_ack_count++;
-      if (client->out.outstanding_rx_ack_count >= (client->out.rx_window_size / 2)) {
-        // we want to ACK data before the other side is blocking waiting for an ACK
-        client->out.send_rx_ack_now = true;
-      }
     }
     prv_send_next_packets(client);
 
@@ -879,12 +852,11 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
   }
   PBL_LOG_INFO("PPoGATT meta read success after %" PRIu32 "ms, len=%u", elapsed_ms,
                (unsigned int)value_length);
-  if (value_length < sizeof(PPoGATTMetaV0)) {
+  if (value_length < sizeof(PPoGATTMeta)) {
     goto handle_error;
   }
-  const PPoGATTMetaV0 *meta = (const PPoGATTMetaV0 *)value;
-  if (meta->ppogatt_min_version > PPOGATT_MAX_VERSION
-      /* || meta->ppogatt_max_version < PPOGATT_MIN_VERSION  // always true at the moment */) {
+  const PPoGATTMeta *meta = (const PPoGATTMeta *)value;
+  if (meta->ppogatt_min_version > PPOGATT_VERSION || meta->ppogatt_max_version < PPOGATT_VERSION) {
     goto handle_error;
   }
   if (!uuid_is_system(&meta->app_uuid)) {
@@ -892,19 +864,11 @@ static void prv_handle_meta_read(PPoGATTClient *client, const uint8_t *value, si
     goto handle_error;
   }
 
-  // Use the highest version that both ends support:
-  client->version = PBL_MIN(meta->ppogatt_max_version, PPOGATT_MAX_VERSION);
-
-  // Parse additional v1 metadata fields:
-  PPoGATTSessionType session_type = PPoGATTSessionType_InferredFromUuid;
-  if (/*meta->ppogatt_max_version >= 0x01 &&*/ value_length >= sizeof(PPoGATTMetaV1)) {
-    const PPoGATTMetaV1 *meta_v1 = (const PPoGATTMetaV1 *)value;
-    if (meta_v1->pp_session_type >= PPoGATTSessionTypeCount) {
-      PBL_LOG_ERR("Invalid session type %u", meta_v1->pp_session_type);
-      goto handle_error;
-    }
-    session_type = meta_v1->pp_session_type;
+  if (meta->pp_session_type >= PPoGATTSessionTypeCount) {
+    PBL_LOG_ERR("Invalid session type %u", meta->pp_session_type);
+    goto handle_error;
   }
+  const PPoGATTSessionType session_type = meta->pp_session_type;
 
   // Save data needed across the the lock release
   const uint8_t instance = client->fwd.instance;
@@ -1026,7 +990,6 @@ static void prv_reversed_start(uint16_t conn_handle) {
   }
   client->role = PPoGATTRoleReversed;
   client->rev.conn_handle = conn_handle;
-  client->version = PPOGATT_MAX_VERSION;
   client->destination = PBL_PP_DESTINATION_HYBRID;
 
   // The handshake is phone-initiated: wait for the phone's ResetRequest.
@@ -1472,31 +1435,25 @@ static const PPoGATTPacket *prv_prepare_next_reset_packet(PPoGATTClient *client,
     PPoGATTResetRequestClientIDPayload *client_id_payload =
         (PPoGATTResetRequestClientIDPayload *)packet->payload;
     *client_id_payload = (const PPoGATTResetRequestClientIDPayload){
-      .ppogatt_version = client->version,
+      .ppogatt_version = PPOGATT_VERSION,
     };
     memcpy(client_id_payload->serial_number, s_serial_number,
            sizeof(client_id_payload->serial_number));
     *payload_size_out = sizeof(*client_id_payload);
     return packet;
   } else { // PPoGATTPacketTypeResetComplete
-    if (prv_client_supports_enhanced_throughput_features(client)) {
-      *packet = (const PPoGATTPacket){
-        .sn = 0,
-        .type = PPoGATTPacketTypeResetComplete,
-      };
-      PPoGATTResetCompleteClientIDPayloadV1 *client_id_payload =
-          (PPoGATTResetCompleteClientIDPayloadV1 *)packet->payload;
-      *client_id_payload = (const PPoGATTResetCompleteClientIDPayloadV1){
-        .ppogatt_max_rx_window = client->out.rx_window_size,
-        .ppogatt_max_tx_window = client->out.tx_window_size,
-      };
-      *payload_size_out = sizeof(*client_id_payload);
-      return packet;
-    } else {
-      // Reset Complete packet (zero payload size):
-      *payload_size_out = 0;
-      return (const PPoGATTPacket *)&client->out.reset_packet_to_send;
-    }
+    *packet = (const PPoGATTPacket){
+      .sn = 0,
+      .type = PPoGATTPacketTypeResetComplete,
+    };
+    PPoGATTResetCompleteClientIDPayload *client_id_payload =
+        (PPoGATTResetCompleteClientIDPayload *)packet->payload;
+    *client_id_payload = (const PPoGATTResetCompleteClientIDPayload){
+      .ppogatt_max_rx_window = client->out.rx_window_size,
+      .ppogatt_max_tx_window = client->out.tx_window_size,
+    };
+    *payload_size_out = sizeof(*client_id_payload);
+    return packet;
   }
 }
 

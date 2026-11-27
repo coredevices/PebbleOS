@@ -111,16 +111,15 @@ connection.
 
 The meta characteristic holds:
 
-| Offset | Size | Field | Since |
-|---|---|---|---|
-| 0 | 1 | Minimum PPoGATT version | v0 |
-| 1 | 1 | Maximum PPoGATT version | v0 |
-| 2 | 16 | App UUID: the system UUID, that of the Pebble mobile app | v0 |
-| 18 | 1 | Session type: 0 system, 1 hybrid | v1 |
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 1 | Minimum PPoGATT version |
+| 1 | 1 | Maximum PPoGATT version |
+| 2 | 16 | App UUID: the system UUID, that of the Pebble mobile app |
+| 18 | 1 | Session type: 0 system, 1 hybrid |
 
-The watch uses the highest version both support (0 or 1), and ignores
-servers whose minimum version is above 1 or whose UUID is not the system
-UUID. The session is hybrid if the session type says so, and a system
+The watch speaks version 1 only, and ignores servers whose versions do not
+include it, whose meta is shorter or whose UUID is not the system UUID. The session is hybrid if the session type says so, and a system
 session otherwise.
 
 ### Packets
@@ -138,7 +137,7 @@ the payload:
 | Data | 0 | Pebble protocol bytes, up to the ATT MTU minus 4 |
 | Ack | 1 | None; acknowledges data up to and including the sequence number |
 | Reset request | 2 | From the watch: its PPoGATT version and serial number |
-| Reset complete | 3 | Version 1: the sender's receive and transmit windows |
+| Reset complete | 3 | The sender's receive and transmit windows |
 
 The Pebble protocol stream is cut into data packets regardless of message
 boundaries.
@@ -154,9 +153,9 @@ sequenceDiagram
   P-->>W: versions, app UUID, session type
   W->>P: subscribe to Data
   W->>P: Reset request (version, serial)
-  P->>W: Reset complete (windows, v1)
+  P->>W: Reset complete (windows)
   Note over W: open the session
-  W->>P: Reset complete (windows, v1)
+  W->>P: Reset complete (windows)
   Note over W,P: data flows both ways
 ```
 
@@ -170,9 +169,8 @@ numbers.
 
 ### Data and acknowledgments
 
-Each side sends up to a window of unacknowledged data packets. Version 0 has
-a window of 4. In version 1 each side announces the windows it wants in its
-reset complete, and each side uses the smaller of the two: the watch asks to
+Each side sends up to a window of unacknowledged data packets. Each side
+announces the windows it wants in its reset complete, and each side uses the smaller of the two: the watch asks to
 send up to 31 packets, and to receive about 4500 bytes' worth.
 
 ```{mermaid}
@@ -186,7 +184,7 @@ sequenceDiagram
   Note over W: consume sn 0-2 from the send queue
   P->>W: Data sn=0
   P->>W: Data sn=1
-  Note over W: v1: coalesce acks, up to 200 ms or half the window
+  Note over W: coalesce acks, up to 200 ms or half the window
   W->>P: Ack sn=1
 ```
 
@@ -194,9 +192,8 @@ Receiving:
 
 - A data packet with the expected sequence number goes to the session and is
   acknowledged; any other is dropped, and the phone sends it again.
-- Version 0 acknowledges each packet right away. Version 1 coalesces
-  acknowledgments, sending one when half the receive window is pending or
-  after 200 ms.
+- Acknowledgments are coalesced: one is sent when half the receive window is
+  pending or after 200 ms.
 
 Sending:
 
