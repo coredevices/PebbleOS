@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-compatible: st,stm32f7-hsotg
+compatible:
+  - st,stm32f7-hsotg
+  - nordic,nrf54lm20a-usbhs
 config: UDC_DWC2
 class: udc
 define: PBL_UDC_DWC2_DEFINE
@@ -12,13 +14,16 @@ args:
   - compatible: true
     values:
       st,stm32f7-hsotg: DWC2_STM32
+      nordic,nrf54lm20a-usbhs: DWC2_UTMI
   - clock: otg
+    optional: true
   - phandle: phys
     as: phy
     optional: true
   - supply: usb33d
     optional: true
   - pinctrl: default
+    optional: true
   - prop: g-rx-fifo-size
     default: 256
   - prop: g-np-tx-fifo-size
