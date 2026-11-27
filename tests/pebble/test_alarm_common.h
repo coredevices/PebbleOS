@@ -27,6 +27,11 @@
 
 extern struct pbl_delayed_work s_snooze_timer;
 
+#if defined(UNITTEST)
+void alarm_test_set_persist_failure(bool fail);
+void alarm_test_set_delete_failure(bool fail);
+#endif
+
 // Stubs
 
 // Fakes

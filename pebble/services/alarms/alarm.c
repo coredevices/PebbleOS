@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <errno.h>
 #include <string.h>
 
 #include <pbl/cron/cron.h>
@@ -117,8 +118,8 @@ static void prv_alarm_operation(AlarmId id, AlarmOperationCallback callback, voi
 static bool prv_reload_alarms(struct pbl_settings_file *file);
 static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
                                  AlarmConfig *config_out);
-static void prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
-                                 const AlarmConfig *config);
+static int prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
+                                const AlarmConfig *config);
 static void prv_cron_callback(struct pbl_cron_job *job, void *data);
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated);
 static void prv_snooze_timer_callback(struct pbl_work *work);
@@ -149,6 +150,19 @@ PBL_T_STATIC PBL_DELAYED_WORK_DEFINE(s_snooze_timer, prv_snooze_timer_callback);
 static uintptr_t s_snooze_generation;
 static uint16_t s_snooze_delay_m = DEFAULT_SNOOZE_DELAY_M;
 
+#if defined(UNITTEST)
+static bool s_fail_next_persist;
+static bool s_fail_next_delete;
+
+void alarm_test_set_persist_failure(bool fail) {
+  s_fail_next_persist = fail;
+}
+
+void alarm_test_set_delete_failure(bool fail) {
+  s_fail_next_delete = fail;
+}
+#endif
+
 //! Whether the pending snooze timer was armed by an explicit user snooze rather
 //! than the smart alarm's internal sleep poll.
 static bool s_user_snoozed;
@@ -174,15 +188,20 @@ static uintptr_t s_missed_alarm_generation;
 static PBL_MUTEX_DEFINE(s_mutex);
 
 // ----------------------------------------------------------------------------------------------
-static bool prv_file_open_and_lock(struct pbl_settings_file *file) {
+static int prv_file_open_and_lock_errno(struct pbl_settings_file *file) {
   pbl_mutex_lock(&s_mutex, PBL_FOREVER);
 
-  bool success = pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE) == 0;
-  if (!success) {
+  int rv = pbl_settings_open(file, ALARM_FILE_NAME, ALARM_MAX_FILE_SIZE);
+  if (rv < 0) {
     pbl_mutex_unlock(&s_mutex);
   }
 
-  return success;
+  return rv;
+}
+
+// ----------------------------------------------------------------------------------------------
+static bool prv_file_open_and_lock(struct pbl_settings_file *file) {
+  return prv_file_open_and_lock_errno(file) == 0;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -788,8 +807,15 @@ static void prv_cron_callback(struct pbl_cron_job *job, void *data) {
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_persist_alarm(struct pbl_settings_file *fd, Alarm *alarm) {
+static int prv_persist_alarm(struct pbl_settings_file *fd, Alarm *alarm) {
   PBL_ASSERT(alarm->id >= 0 && alarm->id < MAX_CONFIGURED_ALARMS, "Invalid id %d", alarm->id);
+
+#if defined(UNITTEST)
+  if (s_fail_next_persist) {
+    s_fail_next_persist = false;
+    return -EIO;
+  }
+#endif
 
   AlarmStorageKey key = {.id = alarm->id, .type = ALARM_DATA_CONFIG};
   AlarmConfig config = {
@@ -803,78 +829,99 @@ static void prv_persist_alarm(struct pbl_settings_file *fd, Alarm *alarm) {
     .tone = alarm->config.tone,
   };
   memcpy(&config.scheduled_days, alarm->config.scheduled_days, sizeof(config.scheduled_days));
-  pbl_settings_set(fd, &key, sizeof(key), &config, sizeof(config));
+  return pbl_settings_set(fd, &key, sizeof(key), &config, sizeof(config));
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_add_and_schedule_alarm(struct pbl_settings_file *file, Alarm *alarm) {
+static int prv_add_and_schedule_alarm(struct pbl_settings_file *file, Alarm *alarm) {
+  int rv = prv_persist_alarm(file, alarm);
+  if (rv < 0) {
+    return rv;
+  }
+
   prv_check_and_schedule_alarm(file, alarm, true /* refresh */);
-  prv_persist_alarm(file, alarm);
   prv_persist_armed_alarm(file);
+  return 0;
+}
+
+// ----------------------------------------------------------------------------------------------
+typedef enum AlarmConfigReadResult {
+  AlarmConfigReadOk,
+  AlarmConfigReadDoesNotExist,
+  AlarmConfigReadError,
+} AlarmConfigReadResult;
+
+// ----------------------------------------------------------------------------------------------
+static AlarmConfigReadResult prv_alarm_get_config_status(struct pbl_settings_file *file, AlarmId id,
+                                                         AlarmConfig *config_out) {
+  if (id < 0 || id >= MAX_CONFIGURED_ALARMS) {
+    return AlarmConfigReadDoesNotExist;
+  }
+
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
+  const size_t size = pbl_settings_get_len(file, &key, sizeof(key));
+  if (size == 0) {
+    return AlarmConfigReadDoesNotExist;
+  }
+
+  AlarmConfig config = {};
+  const size_t load_size = PBL_MIN(size, sizeof(config));
+  if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) != 0) {
+    return AlarmConfigReadError;
+  }
+
+  if (config.hour > 23 || config.minute > 59) {
+    PBL_LOG_DBG(
+        "Invalid config for id %u! Blowing it out! "
+        "Hours %u Minutes %u Kind %u",
+        id, config.hour, config.minute, config.kind);
+    pbl_settings_delete(file, &key, sizeof(key));
+    return AlarmConfigReadDoesNotExist;
+  }
+
+  *config_out = (AlarmConfig){
+    .hour = config.hour,
+    .minute = config.minute,
+    .is_disabled = config.is_disabled,
+    .kind = config.kind,
+    .is_smart = config.is_smart,
+    .sound_enabled = config.sound_enabled,
+    .vibrate_disabled = config.vibrate_disabled,
+    .tone = config.tone,
+  };
+  memcpy(&config_out->scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
+  return AlarmConfigReadOk;
 }
 
 // ----------------------------------------------------------------------------------------------
 static bool prv_alarm_get_config(struct pbl_settings_file *file, AlarmId id,
                                  AlarmConfig *config_out) {
-  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
-  const int size = pbl_settings_get_len(file, &key, sizeof(key));
-  if (size <= 0) {
-    return false;
-  }
-
-  AlarmConfig config = {};
-  const int load_size = PBL_MIN(size, (int)sizeof(config));
-  if (pbl_settings_get(file, &key, sizeof(key), &config, load_size) == 0) {
-    if (config.hour > 23 || config.minute > 59) {
-      PBL_LOG_DBG(
-          "Invalid config for id %u! Blowing it out! "
-          "Hours %u Minutes %u Kind %u",
-          id, config.hour, config.minute, config.kind);
-      pbl_settings_delete(file, &key, sizeof(key));
-      return false;
-    }
-
-    *config_out = (AlarmConfig){
-      .hour = config.hour,
-      .minute = config.minute,
-      .is_disabled = config.is_disabled,
-      .kind = config.kind,
-      .is_smart = config.is_smart,
-      .sound_enabled = config.sound_enabled,
-      .vibrate_disabled = config.vibrate_disabled,
-      .tone = config.tone,
-    };
-    memcpy(&config_out->scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
-    return true;
-  }
-
-  return false;
+  return prv_alarm_get_config_status(file, id, config_out) == AlarmConfigReadOk;
 }
 
 // ----------------------------------------------------------------------------------------------
-static void prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
-                                 const AlarmConfig *config) {
+static int prv_alarm_set_config(struct pbl_settings_file *file, AlarmId id,
+                                const AlarmConfig *config) {
   PBL_ASSERTN(id >= 0 && id < MAX_CONFIGURED_ALARMS);
 
   Alarm alarm = {.id = id, .config = *config};
-  prv_persist_alarm(file, &alarm);
-
+  int rv = prv_persist_alarm(file, &alarm);
   prv_reload_alarms(file);
+  return rv;
 }
 
 // ----------------------------------------------------------------------------------------------
-static AlarmId prv_get_next_free_alarm_id(struct pbl_settings_file *file) {
-  AlarmId id_out = ALARM_INVALID_ID;
-
+static int prv_alloc_alarm_id(struct pbl_settings_file *file, AlarmId *id_out) {
   for (int i = 0; i < MAX_CONFIGURED_ALARMS; ++i) {
     AlarmStorageKey key = {.id = i, .type = ALARM_DATA_CONFIG};
-    if (pbl_settings_get_len(file, &key, sizeof(key)) == 0) {
-      id_out = i;
-      break;
+    const size_t size = pbl_settings_get_len(file, &key, sizeof(key));
+    if (size == 0) {
+      *id_out = i;
+      return 0;
     }
   }
 
-  return id_out;
+  return -ENOSPC;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -943,14 +990,41 @@ static void prv_enable_alarm_config(AlarmConfig *config, bool enable) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Public Functions
 
-AlarmId alarm_create(const AlarmInfo *info) {
-  prv_assert_alarm_params(info->hour, info->minute);
-  struct pbl_settings_file file;
-  if (!prv_file_open_and_lock(&file)) {
-    return ALARM_INVALID_ID;
+static bool prv_alarm_info_valid(const AlarmInfo *info) {
+  const int kind = info->kind;
+  const int tone = info->tone;
+  return info->hour >= 0 && info->hour <= 23 && info->minute >= 0 && info->minute <= 59 &&
+         kind >= ALARM_KIND_EVERYDAY && kind <= ALARM_KIND_CUSTOM && tone >= AlarmTone_Reveille &&
+         tone <= AlarmTone_Chime && (kind != ALARM_KIND_CUSTOM || info->scheduled_days);
+}
+
+AlarmCreateResult alarm_create_checked(const AlarmInfo *info, AlarmId *id_out) {
+  if (!id_out) {
+    return AlarmCreateResultInvalidArgument;
+  }
+  *id_out = ALARM_INVALID_ID;
+
+  if (!info || !prv_alarm_info_valid(info)) {
+    return AlarmCreateResultInvalidArgument;
   }
 
-  AlarmId id = prv_get_next_free_alarm_id(&file);
+  struct pbl_settings_file file;
+  int rv = prv_file_open_and_lock_errno(&file);
+  if (rv < 0) {
+    return AlarmCreateResultStorageError;
+  }
+
+  AlarmId id = ALARM_INVALID_ID;
+  AlarmCreateResult result = AlarmCreateResultStorageError;
+  rv = prv_alloc_alarm_id(&file, &id);
+  if (rv == -ENOSPC) {
+    result = AlarmCreateResultNoSpace;
+    goto cleanup;
+  }
+  if (rv < 0) {
+    goto cleanup;
+  }
+
   prv_invalidate_alarm_fire(id);
   prv_clear_fired_occurrence(id);
 
@@ -964,21 +1038,42 @@ AlarmId alarm_create(const AlarmInfo *info) {
     .vibrate_disabled = !info->vibrate_enabled,
     .tone = info->tone,
   };
-  if (info->kind == ALARM_KIND_CUSTOM && info->scheduled_days) {
+  if (info->kind == ALARM_KIND_CUSTOM) {
     prv_set_alarm_custom_op(id, &config, (void *)info->scheduled_days);
   } else {
     prv_set_alarm_kind_op(id, &config, (void *)(uintptr_t)info->kind);
   }
 
   Alarm alarm = {.id = id, .config = config};
-  prv_add_and_schedule_alarm(&file, &alarm);
-  prv_clear_missed_alarm(id);
-  prv_file_close_and_unlock(&file);
+  rv = prv_add_and_schedule_alarm(&file, &alarm);
+  if (rv < 0) {
+    goto cleanup;
+  }
 
-  return id;
+  prv_clear_missed_alarm(id);
+  *id_out = id;
+  result = AlarmCreateResultOk;
+
+cleanup:
+  prv_file_close_and_unlock(&file);
+  return result;
 }
 
 // ----------------------------------------------------------------------------------------------
+AlarmId alarm_create(const AlarmInfo *info) {
+  prv_assert_alarm_params(info->hour, info->minute);
+
+  AlarmId id = ALARM_INVALID_ID;
+  return alarm_create_checked(info, &id) == AlarmCreateResultOk ? id : ALARM_INVALID_ID;
+}
+
+// ----------------------------------------------------------------------------------------------
+static bool prv_alarm_schedule_changed(const AlarmConfig *before, const AlarmConfig *after) {
+  return before->hour != after->hour || before->minute != after->minute ||
+         before->kind != after->kind || before->is_smart != after->is_smart ||
+         memcmp(before->scheduled_days, after->scheduled_days, sizeof(before->scheduled_days)) != 0;
+}
+
 static void prv_handle_alarm_edit(AlarmId id, bool schedule_changed) {
   if (!schedule_changed) {
     return;
@@ -996,6 +1091,60 @@ static void prv_handle_alarm_edit(AlarmId id, bool schedule_changed) {
 
   // The edit re-arms the alarm: allow its configured occurrence to fire again.
   prv_clear_fired_occurrence(id);
+}
+
+// ----------------------------------------------------------------------------------------------
+AlarmUpdateResult alarm_update_checked(AlarmId id, const AlarmInfo *info) {
+  if (!info || !prv_alarm_info_valid(info)) {
+    return AlarmUpdateResultInvalidArgument;
+  }
+  if (id < 0 || id >= MAX_CONFIGURED_ALARMS) {
+    return AlarmUpdateResultDoesNotExist;
+  }
+
+  struct pbl_settings_file file;
+  if (prv_file_open_and_lock_errno(&file) < 0) {
+    return AlarmUpdateResultStorageError;
+  }
+
+  AlarmUpdateResult result = AlarmUpdateResultStorageError;
+  AlarmConfig config;
+  switch (prv_alarm_get_config_status(&file, id, &config)) {
+    case AlarmConfigReadOk:
+      break;
+    case AlarmConfigReadDoesNotExist:
+      result = AlarmUpdateResultDoesNotExist;
+      goto cleanup;
+    case AlarmConfigReadError:
+      goto cleanup;
+  }
+
+  const AlarmConfig before = config;
+  config.hour = info->hour;
+  config.minute = info->minute;
+  config.is_smart = info->is_smart;
+  config.sound_enabled = info->sound_enabled;
+  config.vibrate_disabled = !info->vibrate_enabled;
+  config.tone = info->tone;
+  if (info->kind == ALARM_KIND_CUSTOM) {
+    prv_set_alarm_custom_op(id, &config, (void *)info->scheduled_days);
+  } else if (!prv_set_alarm_kind_op(id, &config, (void *)(uintptr_t)info->kind)) {
+    result = AlarmUpdateResultInvalidArgument;
+    goto cleanup;
+  }
+
+  Alarm alarm = {.id = id, .config = config};
+  if (prv_persist_alarm(&file, &alarm) < 0) {
+    goto cleanup;
+  }
+
+  prv_handle_alarm_edit(id, prv_alarm_schedule_changed(&before, &config));
+  prv_reload_alarms(&file);
+  result = AlarmUpdateResultOk;
+
+cleanup:
+  prv_file_close_and_unlock(&file);
+  return result;
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1168,15 +1317,39 @@ static void prv_cancel_snooze_for_disable(AlarmId id) {
 }
 
 // ----------------------------------------------------------------------------------------------
-void alarm_set_enabled(AlarmId id, bool enable) {
+AlarmSetEnabledResult alarm_set_enabled_checked(AlarmId id, bool enable) {
   struct pbl_settings_file file;
-  if (!prv_file_open_and_lock(&file)) {
-    return;
+  if (prv_file_open_and_lock_errno(&file) < 0) {
+    return AlarmSetEnabledResultStorageError;
   }
 
+  AlarmSetEnabledResult result = AlarmSetEnabledResultStorageError;
   AlarmConfig config;
-  bool rv = prv_alarm_get_config(&file, id, &config);
-  if (!rv) {
+  switch (prv_alarm_get_config_status(&file, id, &config)) {
+    case AlarmConfigReadOk:
+      break;
+    case AlarmConfigReadDoesNotExist:
+      result = AlarmSetEnabledResultDoesNotExist;
+      goto cleanup;
+    case AlarmConfigReadError:
+      goto cleanup;
+  }
+
+  AlarmConfig updated = config;
+  prv_enable_alarm_config(&updated, enable);
+  if (memcmp(&updated, &config, sizeof(config)) == 0) {
+    if (!enable) {
+      prv_cancel_snooze_for_disable(id);
+      // Keep the fired-occurrence guard: toggling an alarm off and on must not re-fire an
+      // occurrence that already fired.
+      prv_invalidate_alarm_fire(id);
+      prv_clear_missed_alarm(id);
+    }
+    result = AlarmSetEnabledResultOk;
+    goto cleanup;
+  }
+
+  if (prv_alarm_set_config(&file, id, &updated) < 0) {
     goto cleanup;
   }
 
@@ -1188,18 +1361,53 @@ void alarm_set_enabled(AlarmId id, bool enable) {
     prv_clear_missed_alarm(id);
   }
 
-  prv_enable_alarm_config(&config, enable);
-  prv_alarm_set_config(&file, id, &config);
+  result = AlarmSetEnabledResultOk;
 
 cleanup:
   prv_file_close_and_unlock(&file);
+  return result;
 }
 
 // ----------------------------------------------------------------------------------------------
-void alarm_delete(AlarmId id) {
+void alarm_set_enabled(AlarmId id, bool enable) {
+  (void)alarm_set_enabled_checked(id, enable);
+}
+
+// ----------------------------------------------------------------------------------------------
+AlarmDeleteResult alarm_delete_checked(AlarmId id) {
+  if (id < 0 || id >= MAX_CONFIGURED_ALARMS) {
+    return AlarmDeleteResultDoesNotExist;
+  }
+
   struct pbl_settings_file file;
-  if (!prv_file_open_and_lock(&file)) {
-    return;
+  if (prv_file_open_and_lock_errno(&file) < 0) {
+    return AlarmDeleteResultStorageError;
+  }
+
+  AlarmDeleteResult result = AlarmDeleteResultStorageError;
+  AlarmConfig config;
+  bool exists = false;
+  switch (prv_alarm_get_config_status(&file, id, &config)) {
+    case AlarmConfigReadOk:
+      exists = true;
+      break;
+    case AlarmConfigReadDoesNotExist:
+      break;
+    case AlarmConfigReadError:
+      goto cleanup;
+  }
+
+  if (exists) {
+    AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
+#if defined(UNITTEST)
+    if (s_fail_next_delete) {
+      s_fail_next_delete = false;
+      goto cleanup;
+    }
+#endif
+    if (pbl_settings_delete(&file, &key, sizeof(key)) < 0) {
+      goto cleanup;
+    }
   }
 
   prv_clear_missed_alarm(id);
@@ -1212,12 +1420,17 @@ void alarm_delete(AlarmId id) {
 
   prv_invalidate_alarm_fire(id);
   prv_clear_fired_occurrence(id);
-  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
-  pbl_settings_delete(&file, &key, sizeof(key));
   prv_timeline_remove_alarm(&file, id);
   prv_reload_alarms(&file);
+  result = exists ? AlarmDeleteResultOk : AlarmDeleteResultDoesNotExist;
 
+cleanup:
   prv_file_close_and_unlock(&file);
+  return result;
+}
+
+void alarm_delete(AlarmId id) {
+  (void)alarm_delete_checked(id);
 }
 
 // ----------------------------------------------------------------------------------------------
@@ -1353,20 +1566,27 @@ AlarmId alarm_get_most_recent_id(void) {
 }
 
 // ----------------------------------------------------------------------------------------------
-bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
+AlarmGetResult alarm_get_info_checked(AlarmId id, AlarmInfo *info_out,
+                                      bool scheduled_days[PBL_DAY_PER_WEEK]) {
   if (!info_out) {
-    return false;
+    return AlarmGetResultInvalidArgument;
   }
 
   struct pbl_settings_file file;
-  if (!prv_file_open_and_lock(&file)) {
-    return false;
+  if (prv_file_open_and_lock_errno(&file) < 0) {
+    return AlarmGetResultStorageError;
   }
 
+  AlarmGetResult result = AlarmGetResultStorageError;
   AlarmConfig config;
-  bool rv = prv_alarm_get_config(&file, id, &config);
-  if (!rv) {
-    goto cleanup;
+  switch (prv_alarm_get_config_status(&file, id, &config)) {
+    case AlarmConfigReadOk:
+      break;
+    case AlarmConfigReadDoesNotExist:
+      result = AlarmGetResultDoesNotExist;
+      goto cleanup;
+    case AlarmConfigReadError:
+      goto cleanup;
   }
 
   *info_out = (AlarmInfo){
@@ -1380,10 +1600,19 @@ bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
     .tone = config.tone,
     .scheduled_days = nullptr,
   };
+  if (scheduled_days) {
+    memcpy(scheduled_days, config.scheduled_days, sizeof(config.scheduled_days));
+  }
+  result = AlarmGetResultOk;
 
 cleanup:
   prv_file_close_and_unlock(&file);
-  return rv;
+  return result;
+}
+
+// ----------------------------------------------------------------------------------------------
+bool alarm_get_info(AlarmId id, AlarmInfo *info_out) {
+  return alarm_get_info_checked(id, info_out, nullptr) == AlarmGetResultOk;
 }
 
 static void prv_snooze_alarm(int snooze_delay_s, bool user_initiated) {
