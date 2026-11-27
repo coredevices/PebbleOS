@@ -17,11 +17,16 @@
 
 #include <kernel/event_loop.h>
 #include <kernel/events.h>
+#include <mfg/mfg_serials.h>
 
 PBL_LOG_MODULE_DECLARE(service_bluetooth, CONFIG_SERVICE_BLUETOOTH_LOG_LEVEL);
 
 //! How long the connection is kept fast for the clients to find their services.
 #define DISCOVERY_RESPONSE_TIME_SECS 30
+
+#if defined(CONFIG_PP_TRANSPORT_GATT)
+_Static_assert(PBL_PP_GATT_SERIAL_NUMBER_SIZE == MFG_SERIAL_NUMBER_SIZE);
+#endif
 
 PBL_BT_SERVICE_CHANGED_CLIENT_DEFINE(s_service_changed);
 
@@ -118,6 +123,12 @@ void bt_gateway_handle_event(const PebbleEvent *e) {
 // -------------------------------------------------------------------------------------------------
 void bt_gateway_init(void) {
 #if defined(CONFIG_PP_TRANSPORT_GATT)
+  const struct pbl_pp_gatt_config config = {
+    .serial_number = mfg_get_serial_number(),
+    .set_responsiveness = pbl_bt_responsiveness_request,
+  };
+
+  pbl_pp_gatt_configure(&config);
   pbl_pp_gatt_reset_disconnect_counter();
 #endif
 

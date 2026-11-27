@@ -170,6 +170,11 @@ typedef struct PPoGATTClient {
 //! Protects the clients. Not held while calling into NimBLE.
 static PBL_MUTEX_DEFINE(s_lock);
 
+static char s_serial_number[PBL_PP_GATT_SERIAL_NUMBER_SIZE];
+static void (*s_set_responsiveness)(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
+                                    enum pbl_bt_response_time_state state,
+                                    uint16_t max_period_secs);
+
 static PPoGATTClient *s_ppogatt_head;
 
 static struct pbl_wallclock_work s_ack_work;
@@ -207,6 +212,11 @@ static void prv_forward_restart(void);
 static void prv_forward_stop(void);
 
 // -------------------------------------------------------------------------------------------------
+void pbl_pp_gatt_configure(const struct pbl_pp_gatt_config *config) {
+  memcpy(s_serial_number, config->serial_number, sizeof(s_serial_number));
+  s_set_responsiveness = config->set_responsiveness;
+}
+
 void pbl_pp_gatt_reset_disconnect_counter(void) {
   s_disconnect_counter = 0;
 }
@@ -1464,7 +1474,7 @@ static const PPoGATTPacket *prv_prepare_next_reset_packet(PPoGATTClient *client,
     *client_id_payload = (const PPoGATTResetRequestClientIDPayload){
       .ppogatt_version = client->version,
     };
-    memcpy(client_id_payload->serial_number, pbl_pp_gatt_cb_get_serial_number(),
+    memcpy(client_id_payload->serial_number, s_serial_number,
            sizeof(client_id_payload->serial_number));
     *payload_size_out = sizeof(*client_id_payload);
     return packet;
@@ -1765,8 +1775,8 @@ static void prv_transport_set_responsiveness(struct pbl_pp_session *session,
   }
   prv_unlock();
 
-  if (conn_handle != BLE_HS_CONN_HANDLE_NONE) {
-    pbl_pp_gatt_cb_set_responsiveness(conn_handle, req, state, max_period_secs);
+  if (conn_handle != BLE_HS_CONN_HANDLE_NONE && s_set_responsiveness != nullptr) {
+    s_set_responsiveness(conn_handle, req, state, max_period_secs);
   }
 }
 

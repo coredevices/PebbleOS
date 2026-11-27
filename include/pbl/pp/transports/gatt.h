@@ -30,6 +30,29 @@ enum pbl_pp_gatt_characteristic {
   PBL_PP_GATT_CHARACTERISTIC_NUM
 };
 
+/** @brief What the application provides to the transport, see pbl_pp_gatt_configure(). */
+struct pbl_pp_gatt_config {
+  /**
+   * Serial number of the device, sent to the phone when a session starts:
+   * @ref PBL_PP_GATT_SERIAL_NUMBER_SIZE characters, a terminator is not needed.
+   */
+  const char *serial_number;
+  /**
+   * Applies a connection response time, see pbl_pp_session_set_responsiveness(): typically
+   * pbl_bt_responsiveness_request(). Called from any thread. NULL leaves connections as they
+   * are.
+   */
+  void (*set_responsiveness)(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
+                             enum pbl_bt_response_time_state state, uint16_t max_period_secs);
+};
+
+/**
+ * @brief Configure the transport, once, before pbl_pp_gatt_create().
+ *
+ * @param config Configuration, copied.
+ */
+void pbl_pp_gatt_configure(const struct pbl_pp_gatt_config *config);
+
 /** @brief Start, once the Bluetooth stack is up. */
 void pbl_pp_gatt_create(void);
 
@@ -88,26 +111,5 @@ void pbl_pp_gatt_handle_read_or_notification(uint8_t instance,
 
 /** @brief Clear the count of disconnections caused by repeated resets. */
 void pbl_pp_gatt_reset_disconnect_counter(void);
-
-/**
- * @brief Get the serial number of the device, sent to the phone when a session starts.
- * Implemented by the application.
- *
- * @return @ref PBL_PP_GATT_SERIAL_NUMBER_SIZE characters; a terminator is not needed.
- */
-const char *pbl_pp_gatt_cb_get_serial_number(void);
-
-/**
- * @brief Apply a connection response time, see pbl_pp_session_set_responsiveness(). Implemented
- * by the application, and called from any thread.
- *
- * @param conn_handle The connection of the phone.
- * @param req Request of who asks, see struct pbl_bt_responsiveness_req.
- * @param state Requested response time state.
- * @param max_period_secs Maximum time to stay in @p state.
- */
-void pbl_pp_gatt_cb_set_responsiveness(uint16_t conn_handle, struct pbl_bt_responsiveness_req *req,
-                                       enum pbl_bt_response_time_state state,
-                                       uint16_t max_period_secs);
 
 /** @} */
