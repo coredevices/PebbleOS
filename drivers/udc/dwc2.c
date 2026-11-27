@@ -9,6 +9,7 @@
 
 #include <pbl/devicetree.h>
 #include <pbl/drivers/clk.h>
+#include <pbl/drivers/phy.h>
 #include <pbl/drivers/pinctrl.h>
 #include <pbl/drivers/regulator.h>
 #include <pbl/drivers/udc.h>
@@ -79,9 +80,9 @@ struct pbl_udc_dwc2 {
   pbl_irq_t irq;
   uint32_t quirks;
   struct pbl_clk clk;
-  // The clock of an external ULPI PHY, which the controller then drives at high speed
-  struct pbl_clk phy_clk;
-  bool ulpi;
+  // An external ULPI PHY, which the controller then drives at high speed, or NULL for the
+  // internal full-speed one
+  const struct pbl_phy *phy;
   const struct pbl_regulator *supply;
   const struct pbl_pinctrl *pinctrl;
   // FIFO sizes, in 32-bit words: the shared receive FIFO, then each IN endpoint's
@@ -702,7 +703,7 @@ static int prv_disable(const struct pbl_udc *udc) {
 static int prv_core_init(const struct pbl_udc_dwc2 *d) {
   int ret;
 
-  if (d->ulpi) {
+  if (d->phy != nullptr) {
     if ((d->quirks & DWC2_STM32) != 0U) {
       prv_modify(d, DWC2_GGPIO, STM32_GCCFG_PWRDWN, 0U);
     }
@@ -719,7 +720,7 @@ static int prv_core_init(const struct pbl_udc_dwc2 *d) {
     return ret;
   }
 
-  if (!d->ulpi && (d->quirks & DWC2_STM32) != 0U) {
+  if (d->phy == nullptr && (d->quirks & DWC2_STM32) != 0U) {
     prv_modify(d, DWC2_GGPIO, 0U, STM32_GCCFG_PWRDWN);
   }
 
@@ -789,9 +790,16 @@ static int prv_init(const struct pbl_udc *udc) {
     return ret;
   }
 
+  if (d->phy != nullptr) {
+    ret = pbl_device_init(&d->phy->dev);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
   ret = pbl_clk_enable(&d->clk);
-  if (ret == 0 && d->ulpi) {
-    ret = pbl_clk_enable(&d->phy_clk);
+  if (ret == 0 && d->phy != nullptr) {
+    ret = pbl_phy_power_on(d->phy);
   }
   if (ret != 0) {
     return ret;
@@ -813,7 +821,7 @@ static int prv_init(const struct pbl_udc *udc) {
   prv_putreg(d, DWC2_PCGCCTL, 0U);
   prv_modify(d, DWC2_DCTL, 0U, DCTL_SDIS);
   prv_modify(d, DWC2_DCFG, DCFG_DSPD_MASK,
-             PBL_FIELD_PREP(DCFG_DSPD_MASK, d->ulpi ? DCFG_DSPD_HS : DCFG_DSPD_FS));
+             PBL_FIELD_PREP(DCFG_DSPD_MASK, d->phy != nullptr ? DCFG_DSPD_HS : DCFG_DSPD_FS));
 
   ret = prv_fifo_init(d);
   if (ret != 0) {
@@ -886,27 +894,26 @@ static const struct pbl_udc_ops s_ops = {
   .wakeup = prv_wakeup,
 };
 
-#define PBL_UDC_DWC2_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _phy_clk, _ulpi, _supply, \
-                            _pinctrl, _rx_fifo, _tx0_fifo, ...)                               \
-  PBL_UDC_STATE_DEFINE(sym);                                                                  \
-  static struct pbl_udc_dwc2_state sym##_dwc2_state;                                          \
-  static const struct pbl_pinctrl sym##_dwc2_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);        \
-  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_dwc2, struct pbl_udc, udc){                         \
-    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops,                                          \
-                        1U + PBL_ARRAY_SIZE(((const uint16_t[]){__VA_ARGS__})),               \
-                        (_ulpi) ? PBL_UDC_SPEED_HIGH : PBL_UDC_SPEED_FULL, 0U, nullptr),      \
-    .base = (_base),                                                                          \
-    .irq = (_irq),                                                                            \
-    .quirks = (_quirks),                                                                      \
-    .clk = _clk,                                                                              \
-    .phy_clk = _phy_clk,                                                                      \
-    .ulpi = (_ulpi),                                                                          \
-    .supply = (_supply),                                                                      \
-    .pinctrl = &sym##_dwc2_pins,                                                              \
-    .rx_fifo = (_rx_fifo),                                                                    \
-    .tx_fifo = {_tx0_fifo, __VA_ARGS__},                                                      \
-    .state = &sym##_dwc2_state,                                                               \
-  };                                                                                          \
+#define PBL_UDC_DWC2_DEFINE(sym, _name, _base, _irq, _quirks, _clk, _phy, _supply, _pinctrl,       \
+                            _rx_fifo, _tx0_fifo, ...)                                              \
+  PBL_UDC_STATE_DEFINE(sym);                                                                       \
+  static struct pbl_udc_dwc2_state sym##_dwc2_state;                                               \
+  static const struct pbl_pinctrl sym##_dwc2_pins = PBL_PINCTRL(_pinctrl, nullptr, 0);             \
+  PBL_DEVICE_INSTANCE(sym, struct pbl_udc_dwc2, struct pbl_udc, udc){                              \
+    .udc = PBL_UDC_INIT(sym, _name, nullptr, &s_ops,                                               \
+                        1U + PBL_ARRAY_SIZE(((const uint16_t[]){__VA_ARGS__})),                    \
+                        (_phy) != nullptr ? PBL_UDC_SPEED_HIGH : PBL_UDC_SPEED_FULL, 0U, nullptr), \
+    .base = (_base),                                                                               \
+    .irq = (_irq),                                                                                 \
+    .quirks = (_quirks),                                                                           \
+    .clk = _clk,                                                                                   \
+    .phy = (_phy),                                                                                 \
+    .supply = (_supply),                                                                           \
+    .pinctrl = &sym##_dwc2_pins,                                                                   \
+    .rx_fifo = (_rx_fifo),                                                                         \
+    .tx_fifo = {_tx0_fifo, __VA_ARGS__},                                                           \
+    .state = &sym##_dwc2_state,                                                                    \
+  };                                                                                               \
   PBL_IRQ_CONNECT_NUM(_irq, CONFIG_UDC_DWC2_IRQ_PRIO, prv_isr, &sym##_inst, 0)
 
 #include PBL_DT_INSTANCES(st_stm32f7_hsotg)

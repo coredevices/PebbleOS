@@ -13,10 +13,9 @@ args:
     values:
       st,stm32f7-hsotg: DWC2_STM32
   - clock: otg
-  - clock: main_clk
-    of: phys
+  - phandle: phys
+    as: phy
     optional: true
-  - flag: phys
   - supply: usb33d
     optional: true
   - pinctrl: default
