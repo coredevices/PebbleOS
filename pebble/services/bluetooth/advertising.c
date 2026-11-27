@@ -6,7 +6,7 @@
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/adv.h>
 #include <pbl/bluetooth/gap.h>
-#include <pbl/bluetooth/pebble_pairing_service.h>
+#include <pbl/bluetooth/pps.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/advertising.h>

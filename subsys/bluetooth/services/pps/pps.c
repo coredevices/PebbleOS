@@ -6,7 +6,7 @@
 
 #include <pbl/bluetooth/bond.h>
 #include <pbl/bluetooth/gatts.h>
-#include <pbl/bluetooth/pebble_pairing_service.h>
+#include <pbl/bluetooth/pps.h>
 #include <pbl/logging/logging.h>
 
 #include <host/ble_gap.h>
@@ -124,7 +124,7 @@ static int prv_access_trigger(uint16_t conn_handle, uint16_t attr_handle,
   return 0;
 }
 
-static const struct ble_gatt_svc_def pebble_pairing_svc[] = {
+static const struct ble_gatt_svc_def s_pps_svc[] = {
   {
     .type = BLE_GATT_SVC_TYPE_PRIMARY,
     .uuid = BLE_UUID16_DECLARE(PBL_BT_PPS_UUID_16BIT),
@@ -158,8 +158,7 @@ static int prv_gap_event(struct ble_gap_event *event, void *arg) {
     return 0;
   }
 
-  if (ble_gatts_find_chr(pebble_pairing_svc[0].uuid, &s_status_uuid.u, nullptr, &attr_handle) ==
-      0) {
+  if (ble_gatts_find_chr(s_pps_svc[0].uuid, &s_status_uuid.u, nullptr, &attr_handle) == 0) {
     prv_notify_status(event->enc_change.conn_handle, attr_handle);
   }
 
@@ -171,9 +170,9 @@ static struct ble_gap_event_listener s_listener;
 static int prv_add(void) {
   int rc;
 
-  rc = pbl_bt_gatts_add(pebble_pairing_svc);
+  rc = pbl_bt_gatts_add(s_pps_svc);
   if (rc != 0) {
-    PBL_LOG_ERR("Failed to add Pebble Pairing Service: %d", rc);
+    PBL_LOG_ERR("Failed to add PPS: %d", rc);
     return rc;
   }
 
