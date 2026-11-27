@@ -162,8 +162,10 @@ void pbl_workq_thread(void *arg) {
 
     // The function may have freed the item: only compare its address from here on.
     fn(work);
+#ifdef CONFIG_CPU_HAS_FPU
     // Or the next items pay for stacking the FPU registers on every context switch.
     mcu_fpu_cleanup();
+#endif
 
     key = arch_irq_lock();
     q->current = nullptr;
