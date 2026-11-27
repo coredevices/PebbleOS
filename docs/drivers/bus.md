@@ -16,6 +16,7 @@ uart.md
 can.md
 mipi_dbi.md
 mipi_dsi.md
+phy.md
 adc.md
 pwm.md
 dma.md
