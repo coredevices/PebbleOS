@@ -103,10 +103,8 @@ static const struct {
   uint8_t height;
 } s_emoji_fonts[] = {
   // Keep this sorted in descending order: lookup returns the first entry that fits
-  {FONT_KEY_GOTHIC_28_EMOJI, 28},
-  {FONT_KEY_GOTHIC_24_EMOJI, 24},
-  {FONT_KEY_GOTHIC_18_EMOJI, 18},
-  {FONT_KEY_GOTHIC_14_EMOJI, 14},
+  {FONT_KEY_GOTHIC_36_EMOJI, 36}, {FONT_KEY_GOTHIC_28_EMOJI, 28}, {FONT_KEY_GOTHIC_24_EMOJI, 24},
+  {FONT_KEY_GOTHIC_18_EMOJI, 18}, {FONT_KEY_GOTHIC_14_EMOJI, 14},
 };
 
 FontInfo *fonts_get_system_emoji_font_for_size(unsigned int font_height) {
