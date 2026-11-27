@@ -1,7 +1,6 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-#include <pbl/drivers/clk/nrf54l.h>
 #include <pbl/drivers/timer.h>
 #include <pbl/kernel/delay.h>
 #include <pbl/kernel/irq.h>
@@ -11,10 +10,17 @@
 #include <devicetree/regs.h>
 #include <hardware/nrf54l_grtc.h>
 
-// SYSCOUNTER and interrupt group of the secure application core
-#define DOMAIN 2U
+#ifdef PBL_DT_CLK_NORDIC_NRF54L15_GRTC
+#include <pbl/drivers/clk/nrf54l.h>
+#endif
 
-#define CC_EVENT 0U
+#define GRTC PBL_DT_REG_NORDIC_NRF54L15_GRTC
+#define IRQ  PBL_DT_IRQ_NORDIC_NRF54L15_GRTC
+
+// SYSCOUNTER and interrupt group of the core, one per interrupt line
+#define DOMAIN (IRQ - PBL_SOC_IRQN_GRTC_0)
+
+#define CC_EVENT PBL_DT_PROP_GRTC_NORDIC_COMPARE_CHANNEL
 
 #define RATE_HZ 1000000U
 
@@ -27,14 +33,16 @@
 
 #define MIN_DELTA 2U
 
-static const struct pbl_clk s_lfclk = PBL_CLK(NRF54L_CLOCK, NRF54L_CLK_LFCLK);
+#ifdef PBL_DT_CLK_NORDIC_NRF54L15_GRTC
+static const struct pbl_clk s_lfclk = PBL_CLK(NRF54L_CLOCK, PBL_DT_CLK_NORDIC_NRF54L15_GRTC);
+#endif
 
 static inline uint32_t prv_getreg(uint32_t offset) {
-  return pbl_readl(PBL_DT_REG_GRTC + offset);
+  return pbl_readl(GRTC + offset);
 }
 
 static inline void prv_putreg(uint32_t offset, uint32_t value) {
-  pbl_writel(value, PBL_DT_REG_GRTC + offset);
+  pbl_writel(value, GRTC + offset);
 }
 
 // Reading the low word latches the high one, with whether SYSCOUNTER was ready, e.g. after a
@@ -105,9 +113,11 @@ static void prv_isr(void) {
   pbl_clockevent_handler(&s_grtc_ce);
 }
 
-PBL_IRQ_CONNECT(GRTC_2, CONFIG_TIMER_NRF_GRTC_IRQ_PRIO, prv_isr, , 0);
+PBL_IRQ_CONNECT_NUM(IRQ, CONFIG_TIMER_NRF_GRTC_IRQ_PRIO, prv_isr, , 0);
 
+// A core whose tree gives the GRTC no clock leaves the low-frequency clock to another
 static int prv_start(void) {
+#ifdef PBL_DT_CLK_NORDIC_NRF54L15_GRTC
   int ret;
 
   ret = pbl_device_init(&NRF54L_CLOCK->dev);
@@ -118,6 +128,7 @@ static int prv_start(void) {
   if (ret != 0) {
     return ret;
   }
+#endif
 
   prv_putreg(NRF54L_GRTC_INTENCLR_OFFSET(DOMAIN), UINT32_MAX);
   prv_putreg(NRF54L_GRTC_CC_CCEN_OFFSET(CC_EVENT), 0U);
@@ -127,7 +138,7 @@ static int prv_start(void) {
   if ((prv_getreg(NRF54L_GRTC_MODE_OFFSET) & GRTC_MODE_SYSCOUNTEREN) == 0U) {
     pbl_modifyl(GRTC_CLKCFG_CLKSEL_MASK,
                 PBL_FIELD_PREP(GRTC_CLKCFG_CLKSEL_MASK, GRTC_CLKCFG_CLKSEL_LFCLK),
-                PBL_DT_REG_GRTC + NRF54L_GRTC_CLKCFG_OFFSET);
+                GRTC + NRF54L_GRTC_CLKCFG_OFFSET);
     prv_putreg(NRF54L_GRTC_TIMEOUT_OFFSET, SLEEP_TIMEOUT);
     prv_putreg(NRF54L_GRTC_WAKETIME_OFFSET, WAKETIME);
     prv_putreg(NRF54L_GRTC_MODE_OFFSET, GRTC_MODE_AUTOEN);
@@ -142,7 +153,7 @@ static int prv_start(void) {
   (void)prv_counter();
   prv_putreg(NRF54L_GRTC_SYSCOUNTER_ACTIVE_OFFSET(DOMAIN), 0U);
 
-  pbl_irq_enable(PBL_IRQN(GRTC_2));
+  pbl_irq_enable(IRQ);
 
   return 0;
 }
