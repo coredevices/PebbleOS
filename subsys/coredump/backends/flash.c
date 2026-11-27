@@ -82,6 +82,7 @@ static int prv_latest_slot(const struct pbl_coredump__flash_hdr *flash_hdr, bool
   return (*last_used > 0) ? 0 : -ENOENT;
 }
 
+#ifndef CONFIG_COREDUMP_BACKEND_FLASH_OVERWRITE_UNREAD
 // Not inlined: the image header would stay on the stack while the slot is erased and written.
 static PBL_NOINLINE int prv_keep_stored_image(uint32_t slot, uint32_t timestamp) {
   struct pbl_coredump__slot_hdr slot_hdr;
@@ -104,6 +105,7 @@ static PBL_NOINLINE int prv_keep_stored_image(uint32_t slot, uint32_t timestamp)
 
   return 0;
 }
+#endif
 
 static int prv_init(const struct pbl_coredump_backend *backend) {
   int ret = pbl_flash_coredump_init(FLASH);
@@ -142,12 +144,14 @@ static int prv_start(const struct pbl_coredump_backend *backend, bool forced, ui
 
   ret = prv_latest_slot(&flash_hdr, false, &slot, &last_used);
   if (ret == 0) {
+#ifndef CONFIG_COREDUMP_BACKEND_FLASH_OVERWRITE_UNREAD
     if (!forced) {
       ret = prv_keep_stored_image(slot, timestamp);
       if (ret < 0) {
         return ret;
       }
     }
+#endif
     slot = (slot + 1) % IMAGES;
   } else if (ret == -ENOENT) {
     // Nothing to rotate from: spread wear by starting anywhere.
