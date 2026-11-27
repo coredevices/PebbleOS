@@ -1,0 +1,59 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Sat, 21 Nov 2026 21:28:02 +0100
+Subject: [PATCH] dt-bindings: display: sharp,ls010b7dh04: Add LS013B7DH01
+
+The LS013B7DH01 is the 144x168 Sharp Memory LCD the LS013B7DH05 is a
+thinner revision of. It is obsolete, but still found in products, such
+as Pebble watches.
+
+The two are electrically the same, taking the same SPI commands and
+VCOM signal at the same resolution, so the LS013B7DH05 compatible can
+serve as a fallback and the sharp-memory driver drives the LS013B7DH01
+unchanged.
+
+This patch was prepared with the help of an AI coding assistant (Claude
+Code, using Claude Opus 5.5), which wrote the change and this commit
+message under the submitter's direction. It was reviewed by the
+submitter, who takes responsibility for it.
+---
+ display/sharp,ls010b7dh04.yaml | 26 +++++++++++++++-----------
+ 1 file changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/display/sharp,ls010b7dh04.yaml b/display/sharp,ls010b7dh04.yaml
+index 8097f091c2a5..e6ebfea50ad1 100644
+--- a/display/sharp,ls010b7dh04.yaml
++++ b/display/sharp,ls010b7dh04.yaml
+@@ -17,17 +17,21 @@ description:
+ 
+ properties:
+   compatible:
+-    enum:
+-      - sharp,ls010b7dh04
+-      - sharp,ls011b7dh03
+-      - sharp,ls012b7dd01
+-      - sharp,ls013b7dh03
+-      - sharp,ls013b7dh05
+-      - sharp,ls018b7dh02
+-      - sharp,ls027b7dh01
+-      - sharp,ls027b7dh01a
+-      - sharp,ls032b7dd02
+-      - sharp,ls044q7dh01
++    oneOf:
++      - enum:
++          - sharp,ls010b7dh04
++          - sharp,ls011b7dh03
++          - sharp,ls012b7dd01
++          - sharp,ls013b7dh03
++          - sharp,ls013b7dh05
++          - sharp,ls018b7dh02
++          - sharp,ls027b7dh01
++          - sharp,ls027b7dh01a
++          - sharp,ls032b7dd02
++          - sharp,ls044q7dh01
++      - items:
++          - const: sharp,ls013b7dh01
++          - const: sharp,ls013b7dh05
+ 
+   reg:
+     maxItems: 1

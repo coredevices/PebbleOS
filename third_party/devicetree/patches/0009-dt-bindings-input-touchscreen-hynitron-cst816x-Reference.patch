@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Sat, 21 Nov 2026 20:52:28 +0100
+Subject: [PATCH] dt-bindings: input: touchscreen: hynitron,cst816x: Reference
+ touchscreen.yaml
+
+The controller reports positions in the coordinate range of the panel
+it is fitted to, and how the panel is mounted varies from one board to
+another. Reference the common touchscreen schema, so that boards can
+describe them with the common properties (touchscreen-size-x/y,
+touchscreen-inverted-x/y, touchscreen-swapped-x-y, ...), as other
+touchscreen controller bindings do.
+
+This patch was prepared with the help of an AI coding assistant (Claude
+Code, using Claude Opus 5.5), which wrote the change and this commit
+message under the submitter's direction. It was reviewed by the
+submitter, who takes responsibility for it.
+---
+ input/touchscreen/hynitron,cst816x.yaml | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/input/touchscreen/hynitron,cst816x.yaml b/input/touchscreen/hynitron,cst816x.yaml
+index 72d4da636881..df52431b1d49 100644
+--- a/input/touchscreen/hynitron,cst816x.yaml
++++ b/input/touchscreen/hynitron,cst816x.yaml
+@@ -13,6 +13,9 @@ description: |
+   Bindings for CST816x high performance self-capacitance touch chip series
+   with single point gesture and real two-point operation.
+ 
++allOf:
++  - $ref: touchscreen.yaml#
++
+ properties:
+   compatible:
+     enum:
+@@ -41,7 +44,7 @@ required:
+   - reg
+   - interrupts
+ 
+-additionalProperties: false
++unevaluatedProperties: false
+ 
+ examples:
+   - |
+@@ -57,6 +60,8 @@ examples:
+             interrupt-parent = <&gpio0>;
+             interrupts = <4 IRQ_TYPE_EDGE_RISING>;
+             reset-gpios = <&gpio 17 GPIO_ACTIVE_LOW>;
++            touchscreen-size-x = <240>;
++            touchscreen-size-y = <240>;
+             linux,keycodes = <KEY_UP>, <KEY_DOWN>, <KEY_LEFT>, <KEY_RIGHT>,
+                              <BTN_TOOL_TRIPLETAP>;
+         };

@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 15:42:46 +0100
+Subject: [PATCH] dt-bindings: display: panel: orisetech,otm8009a: Allow
+ rotation
+
+Boards may mount the panel rotated. Allow the common rotation property
+of panels.
+
+PebbleOS describes the panel of the STM32H747I-DISCO with it.
+---
+ display/panel/orisetech,otm8009a.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/display/panel/orisetech,otm8009a.yaml b/display/panel/orisetech,otm8009a.yaml
+index 1f697da..1ec63b2 100644
+--- a/display/panel/orisetech,otm8009a.yaml
++++ b/display/panel/orisetech,otm8009a.yaml
+@@ -31,6 +31,8 @@ properties:
+   reset-gpios:
+     maxItems: 1
+ 
++  rotation: true
++
+ required:
+   - compatible
+   - reg

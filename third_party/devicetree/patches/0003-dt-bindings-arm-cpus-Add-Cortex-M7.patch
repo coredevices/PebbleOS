@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 15:42:38 +0100
+Subject: [PATCH] dt-bindings: arm: cpus: Add Cortex-M7
+
+The Cortex-M7 is an Armv7E-M core, as the Cortex-M4, which the binding
+lists. Add it with the other Cortex-M cores.
+
+PebbleOS describes the Cortex-M7 of the STM32H747 with it.
+---
+ arm/cpus.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arm/cpus.yaml b/arm/cpus.yaml
+index 8b5ab0d..22a1229 100644
+--- a/arm/cpus.yaml
++++ b/arm/cpus.yaml
+@@ -166,6 +166,7 @@ properties:
+           - arm,cortex-m1
+           - arm,cortex-m3
+           - arm,cortex-m4
++          - arm,cortex-m7
+           - arm,cortex-m33
+           - arm,cortex-r4
+           - arm,cortex-r5

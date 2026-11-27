@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 15:42:42 +0100
+Subject: [PATCH] dt-bindings: display: st,stm32-dsi: Add the wrapper interrupt
+ and TE pin
+
+The DSI host wrapper has an interrupt, which reports the tearing effect
+and the end of a refresh in adapted command mode. A panel may also
+report its tearing effect on a pin rather than over the link.
+
+Allow the interrupt, and a default pin control state for the TE pin.
+
+PebbleOS describes the DSI host of the STM32H747 with them.
+---
+ display/st,stm32-dsi.yaml | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/display/st,stm32-dsi.yaml b/display/st,stm32-dsi.yaml
+index 5356005..8b1c216 100644
+--- a/display/st,stm32-dsi.yaml
++++ b/display/st,stm32-dsi.yaml
+@@ -23,6 +23,12 @@ properties:
+   reg:
+     maxItems: 1
+ 
++  interrupts:
++    maxItems: 1
++    description:
++      The wrapper interrupt, which reports the tearing effect and the end of a
++      refresh in adapted command mode.
++
+   clocks:
+     items:
+       - description: Module Clock
+@@ -44,6 +50,14 @@ properties:
+     items:
+       - const: apb
+ 
++  pinctrl-0:
++    description:
++      The TE pin, when the panel reports its tearing effect on it rather than
++      over the link.
++
++  pinctrl-names:
++    const: default
++
+   phy-dsi-supply:
+     description:
+       Phandle of the regulator that provides the supply voltage.

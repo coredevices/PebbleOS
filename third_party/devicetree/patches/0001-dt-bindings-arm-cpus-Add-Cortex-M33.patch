@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Sat, 21 Nov 2026 20:52:08 +0100
+Subject: [PATCH] dt-bindings: arm: cpus: Add Cortex-M33
+
+Document the compatible of the Arm Cortex-M33 core, next to the other
+Cortex-M cores already listed.
+
+These schemas are now used by PebbleOS, whose QEMU machines are built
+around a Cortex-M33.
+---
+ arm/cpus.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arm/cpus.yaml b/arm/cpus.yaml
+index 96136b70dacd..da12be7f5119 100644
+--- a/arm/cpus.yaml
++++ b/arm/cpus.yaml
+@@ -170,6 +170,7 @@ properties:
+           - arm,cortex-m1
+           - arm,cortex-m3
+           - arm,cortex-m4
++          - arm,cortex-m33
+           - arm,cortex-r4
+           - arm,cortex-r5
+           - arm,cortex-r7

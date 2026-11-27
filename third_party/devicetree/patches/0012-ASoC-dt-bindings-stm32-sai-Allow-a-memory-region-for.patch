@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 15:42:48 +0100
+Subject: [PATCH] ASoC: dt-bindings: stm32: sai: Allow a memory region for
+ sub-blocks
+
+The DMA controller serving a sub-block may only reach part of the
+memory, as the BDMA serving the SAI4 of the STM32H7, which only reaches
+the SRAM4. Allow a sub-block a memory region, for the memory its samples
+are to be in.
+
+PebbleOS describes the SAI4 of the STM32H747 with it.
+---
+ sound/st,stm32-sai.yaml | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/sound/st,stm32-sai.yaml b/sound/st,stm32-sai.yaml
+index 551edf3..af799c7 100644
+--- a/sound/st,stm32-sai.yaml
++++ b/sound/st,stm32-sai.yaml
+@@ -104,6 +104,13 @@ patternProperties:
+           tx: SAI sub-block is configured as a playback DAI.
+         enum: [ rx, tx ]
+ 
++      memory-region:
++        maxItems: 1
++        description:
++          Memory for the samples, for a sub-block whose DMA controller only
++          reaches part of the memory, as the BDMA of the STM32H7 SAI4, which
++          only reaches the SRAM4.
++
+       st,sync:
+         description:
+           Configure the SAI sub-block as slave of another SAI sub-block.

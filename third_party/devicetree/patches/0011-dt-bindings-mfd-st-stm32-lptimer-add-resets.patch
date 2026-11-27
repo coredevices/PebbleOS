@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Wed, 25 Nov 2026 14:21:13 +0100
+Subject: [PATCH] dt-bindings: mfd: st,stm32-lptimer: add resets
+
+The RCC has a reset line per LPTIM. The STM32H7 errata (ES0445, 2.17.1)
+advise resetting an LPTIM through the RCC rather than clearing its
+ENABLE bit, which may leave its interrupt stuck and keep the device out
+of Stop. Allow a reset.
+
+PebbleOS, whose STM32H747 port uses an LPTIM of each core as its system
+timer, describes and uses these resets.
+
+Signed-off-by: Gerard Marull-Paretas <gerard@teslabs.com>
+---
+ mfd/st,stm32-lptimer.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mfd/st,stm32-lptimer.yaml b/mfd/st,stm32-lptimer.yaml
+index 4eabafb8079d..412060d3f167 100644
+--- a/mfd/st,stm32-lptimer.yaml
++++ b/mfd/st,stm32-lptimer.yaml
+@@ -41,6 +41,9 @@ properties:
+   interrupts:
+     maxItems: 1
+ 
++  resets:
++    maxItems: 1
++
+   "#address-cells":
+     const: 1
+ 

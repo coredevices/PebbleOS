@@ -302,7 +302,7 @@
 	status = "okay";
 
 	display: display@0 {
-		compatible = "sharp,ls013b7dh01";
+		compatible = "sharp,ls013b7dh01", "sharp,ls013b7dh05";
 		reg = <0>;
 		spi-max-frequency = <1000000>;
 		spi-cs-high;
