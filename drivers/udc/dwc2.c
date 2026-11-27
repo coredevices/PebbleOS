@@ -42,6 +42,9 @@ PBL_LOG_MODULE_DEFINE(driver_udc_dwc2, CONFIG_DRIVER_UDC_LOG_LEVEL);
 // An endpoint stops within a few packets, and is stopped with interrupts locked
 #define EP_STOP_TIMEOUT_US 1000U
 
+// The PHY clock stops, then the AHB clock, each taking effect within that long
+#define CLOCK_GATE_US 5U
+
 // Remote wakeup: the bus idle that long before, then resume signalled that long, within 1-15 ms
 #define WAKEUP_IDLE_MS   5U
 #define WAKEUP_RESUME_MS 10U
@@ -75,6 +78,8 @@ struct prv_ep {
   size_t xfer;
   uint16_t mps;
   bool busy;
+  // Queued while the clocks were gated, to start once they run
+  bool deferred;
 };
 
 // With DMA, endpoint 0 moves its packets through buffers of the driver: three back-to-back setup
@@ -86,6 +91,9 @@ struct pbl_udc_dwc2_state {
   struct prv_ep out[MAX_EPS];
   bool dma;
   bool suspended;
+  // Enumerated since the last reset; suspended, the PHY clock stopped and the AHB clock gated
+  bool enumerated;
+  bool gated;
   uint64_t suspend_ms;
   // The core is up: with a PHY that senses VBUS, only while VBUS is present
   bool powered;
@@ -313,6 +321,7 @@ static void prv_rx(const struct pbl_udc_dwc2 *d) {
 
 static void prv_done(const struct pbl_udc_dwc2 *d, uint8_t addr, struct prv_ep *ep, int ret) {
   ep->busy = false;
+  ep->deferred = false;
   pbl_udc_xfer_done(&d->udc, addr, ret);
 }
 
@@ -427,6 +436,7 @@ static void prv_iep(const struct pbl_udc_dwc2 *d) {
 // The host reset the bus: every endpoint but endpoint 0 is gone, and endpoint 0 waits for setup
 static void prv_bus_reset(const struct pbl_udc_dwc2 *d) {
   d->state->suspended = false;
+  d->state->enumerated = false;
   prv_flush_tx(d, GRSTCTL_TXFNUM_ALL);
 
   for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
@@ -474,11 +484,59 @@ static void prv_enum_done(const struct pbl_udc_dwc2 *d) {
   prv_modify(d, DWC2_GUSBCFG, GUSBCFG_TRDT_MASK, PBL_FIELD_PREP(GUSBCFG_TRDT_MASK, trdt));
   prv_modify(d, DWC2_DCTL, 0U, DCTL_CGINAK);
 
+  d->state->enumerated = true;
   pbl_udc_event(&d->udc, PBL_UDC_EVENT_ENUMERATED, nullptr);
+}
+
+// The bus suspended: the PHY clock stopped, which suspends the PHY, then the AHB clock gated, as
+// the wakeup logic runs on
+static void prv_gate(const struct pbl_udc_dwc2 *d) {
+  prv_modify(d, DWC2_PCGCCTL, 0U, PCGCCTL_STOPPCLK);
+  pbl_busy_wait_us(CLOCK_GATE_US);
+  prv_modify(d, DWC2_PCGCCTL, 0U, PCGCCTL_GATEHCLK);
+  pbl_busy_wait_us(CLOCK_GATE_US);
+  d->state->gated = true;
+}
+
+static void prv_ep_start(const struct pbl_udc_dwc2 *d, uint8_t n, bool in);
+
+// The clocks back, in the reverse order, as the bus resumes or resets, for a remote wakeup, or
+// for the core to be used; the transfers queued meanwhile start, but at a reset, which ends them
+static void prv_ungate(const struct pbl_udc_dwc2 *d, bool start) {
+  struct pbl_udc_dwc2_state *st = d->state;
+
+  if (!st->gated) {
+    return;
+  }
+
+  prv_modify(d, DWC2_PCGCCTL, PCGCCTL_GATEHCLK, 0U);
+  pbl_busy_wait_us(CLOCK_GATE_US);
+  prv_modify(d, DWC2_PCGCCTL, PCGCCTL_STOPPCLK, 0U);
+  pbl_busy_wait_us(CLOCK_GATE_US);
+  st->gated = false;
+
+  for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
+    for (int dir = 0; dir < 2; dir++) {
+      struct prv_ep *ep = dir != 0 ? &st->in[n] : &st->out[n];
+
+      if (ep->deferred) {
+        ep->deferred = false;
+        if (start) {
+          prv_ep_start(d, n, dir != 0);
+        }
+      }
+    }
+  }
 }
 
 static void prv_isr(const struct pbl_udc_dwc2 *d) {
   uint32_t sts = prv_getreg(d, DWC2_GINTSTS) & prv_getreg(d, DWC2_GINTMSK);
+
+  // A reset detected while gated comes as RESETDET, then as USBRST once the clocks run
+  if ((sts & (GINT_WKUINT | GINT_USBRST | GINT_RESETDET)) != 0U) {
+    prv_putreg(d, DWC2_GINTSTS, GINT_RESETDET);
+    prv_ungate(d, (sts & (GINT_USBRST | GINT_RESETDET)) == 0U);
+  }
 
   if ((sts & GINT_USBRST) != 0U) {
     prv_putreg(d, DWC2_GINTSTS, GINT_USBRST);
@@ -495,6 +553,10 @@ static void prv_isr(const struct pbl_udc_dwc2 *d) {
     d->state->suspended = true;
     d->state->suspend_ms = pbl_uptime_ms();
     pbl_udc_event(&d->udc, PBL_UDC_EVENT_SUSPEND, nullptr);
+    // Not before enumeration, as the bus idles before the first reset
+    if (d->state->enumerated && (prv_getreg(d, DWC2_DSTS) & DSTS_SUSPSTS) != 0U) {
+      prv_gate(d);
+    }
   }
 
   if ((sts & GINT_WKUINT) != 0U) {
@@ -519,11 +581,14 @@ static void prv_isr(const struct pbl_udc_dwc2 *d) {
 static int prv_set_address(const struct pbl_udc *udc, uint8_t addr) {
   const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
 
+  pbl_irq_lock();
   if (!d->state->powered) {
+    pbl_irq_unlock();
     return -ENOTCONN;
   }
-
+  prv_ungate(d, true);
   prv_modify(d, DWC2_DCFG, DCFG_DAD_MASK, PBL_FIELD_PREP(DCFG_DAD_MASK, addr));
+  pbl_irq_unlock();
 
   return 0;
 }
@@ -563,6 +628,7 @@ static int prv_ep_enable(const struct pbl_udc *udc, uint8_t addr, enum pbl_udc_e
     pbl_irq_unlock();
     return -ENOTCONN;
   }
+  prv_ungate(d, true);
   if (in) {
     prv_putreg(d, DWC2_DIEPCTL(n), ctl | PBL_FIELD_PREP(DEPCTL_TXFNUM_MASK, n));
     prv_modify(d, DWC2_DAINTMSK, 0U, DAINT_IN(n));
@@ -612,6 +678,7 @@ static int prv_ep_disable(const struct pbl_udc *udc, uint8_t addr) {
 
   pbl_irq_lock();
   if (d->state->powered) {
+    prv_ungate(d, true);
     if ((prv_getreg(d, ctl) & DEPCTL_EPENA) != 0U) {
       if (in) {
         prv_stop_in(d, n);
@@ -646,6 +713,7 @@ static int prv_ep_set_halt(const struct pbl_udc *udc, uint8_t addr, bool halt) {
     pbl_irq_unlock();
     return -ENOTCONN;
   }
+  prv_ungate(d, true);
   if (halt) {
     prv_modify(d, ctl, 0U, DEPCTL_STALL);
   } else {
@@ -667,6 +735,36 @@ static void prv_dma_start(const struct pbl_udc_dwc2 *d, uint8_t n, bool in) {
   } else {
     pbl_dcache_invalidate_range(buf, ep->len);
     prv_putreg(d, DWC2_DOEPDMA(n), (uint32_t)(uintptr_t)buf);
+  }
+}
+
+// The transfer queued on an endpoint handed to the controller
+static void prv_ep_start(const struct pbl_udc_dwc2 *d, uint8_t n, bool in) {
+  struct prv_ep *ep = in ? &d->state->in[n] : &d->state->out[n];
+  uint32_t pkts = (uint32_t)(ep->xfer / ep->mps);
+
+  if (d->state->dma && n != 0U) {
+    prv_dma_start(d, n, in);
+  }
+
+  if (in && n == 0U) {
+    prv_ep0_arm_in(d);
+  } else if (in) {
+    prv_putreg(
+        d, DWC2_DIEPTSIZ(n),
+        PBL_FIELD_PREP(DEPTSIZ_PKTCNT_MASK, pkts) | PBL_FIELD_PREP(DEPTSIZ_XFRSIZ_MASK, ep->len));
+    // A halt the host set stays until it clears it
+    prv_modify(d, DWC2_DIEPCTL(n), 0U, DEPCTL_CNAK | DEPCTL_EPENA);
+    if (ep->len != 0U && !d->state->dma) {
+      prv_modify(d, DWC2_DIEPEMPMSK, 0U, PBL_BIT(n));
+    }
+  } else if (n == 0U) {
+    prv_ep0_arm_out(d);
+  } else {
+    prv_putreg(
+        d, DWC2_DOEPTSIZ(n),
+        PBL_FIELD_PREP(DEPTSIZ_PKTCNT_MASK, pkts) | PBL_FIELD_PREP(DEPTSIZ_XFRSIZ_MASK, ep->xfer));
+    prv_modify(d, DWC2_DOEPCTL(n), 0U, DEPCTL_CNAK | DEPCTL_EPENA);
   }
 }
 
@@ -704,28 +802,10 @@ static int prv_ep_queue(const struct pbl_udc *udc, uint8_t addr, void *buf, size
     ep->xfer = pkts * ep->mps;
     ep->busy = true;
 
-    if (d->state->dma && n != 0U) {
-      prv_dma_start(d, n, in);
-    }
-
-    if (in && n == 0U) {
-      prv_ep0_arm_in(d);
-    } else if (in) {
-      prv_putreg(
-          d, DWC2_DIEPTSIZ(n),
-          PBL_FIELD_PREP(DEPTSIZ_PKTCNT_MASK, pkts) | PBL_FIELD_PREP(DEPTSIZ_XFRSIZ_MASK, len));
-      // A halt the host set stays until it clears it
-      prv_modify(d, DWC2_DIEPCTL(n), 0U, DEPCTL_CNAK | DEPCTL_EPENA);
-      if (len != 0U && !d->state->dma) {
-        prv_modify(d, DWC2_DIEPEMPMSK, 0U, PBL_BIT(n));
-      }
-    } else if (n == 0U) {
-      prv_ep0_arm_out(d);
+    if (d->state->gated) {
+      ep->deferred = true;
     } else {
-      prv_putreg(d, DWC2_DOEPTSIZ(n),
-                 PBL_FIELD_PREP(DEPTSIZ_PKTCNT_MASK, pkts) |
-                     PBL_FIELD_PREP(DEPTSIZ_XFRSIZ_MASK, ep->xfer));
-      prv_modify(d, DWC2_DOEPCTL(n), 0U, DEPCTL_CNAK | DEPCTL_EPENA);
+      prv_ep_start(d, n, in);
     }
   }
   pbl_irq_unlock();
@@ -748,9 +828,12 @@ static int prv_enable(const struct pbl_udc *udc) {
 static int prv_disable(const struct pbl_udc *udc) {
   const struct pbl_udc_dwc2 *d = prv_dwc2(udc);
 
+  pbl_irq_lock();
   if (d->state->powered) {
+    prv_ungate(d, true);
     prv_modify(d, DWC2_DCTL, 0U, DCTL_SDIS);
   }
+  pbl_irq_unlock();
 
   return 0;
 }
@@ -873,8 +956,8 @@ static int prv_start(const struct pbl_udc_dwc2 *d) {
 
   prv_putreg(d, DWC2_GINTSTS, UINT32_MAX);
   prv_putreg(d, DWC2_GINTMSK,
-             GINT_USBRST | GINT_ENUMDNE | GINT_USBSUSP | GINT_WKUINT | GINT_IEPINT | GINT_OEPINT |
-                 (d->state->dma ? 0U : GINT_RXFLVL));
+             GINT_USBRST | GINT_RESETDET | GINT_ENUMDNE | GINT_USBSUSP | GINT_WKUINT | GINT_IEPINT |
+                 GINT_OEPINT | (d->state->dma ? 0U : GINT_RXFLVL));
   prv_modify(d, DWC2_GAHBCFG, 0U, GAHBCFG_GINTMSK);
 
   d->state->powered = true;
@@ -929,6 +1012,8 @@ static void prv_power_down(const struct pbl_udc_dwc2 *d) {
   pbl_irq_disable(d->irq);
   st->powered = false;
   st->suspended = false;
+  st->enumerated = false;
+  st->gated = false;
   for (uint8_t n = 0U; n < d->udc.num_eps; n++) {
     if (st->in[n].busy) {
       prv_done(d, n | PBL_UDC_EP_IN, &st->in[n], -ECONNRESET);
@@ -961,6 +1046,10 @@ static void prv_vbus_changed(const struct pbl_phy *phy, struct pbl_phy_listener 
       PBL_LOG_ERR("power-up failed: %d", ret);
     }
   } else if (!vbus && st->powered) {
+    // The stack disconnects through the core, which a suspended bus left gated
+    pbl_irq_lock();
+    prv_ungate(d, false);
+    pbl_irq_unlock();
     pbl_udc_vbus_changed(&d->udc, false);
     prv_power_down(d);
   }
@@ -1044,6 +1133,7 @@ static int prv_wakeup(const struct pbl_udc *udc) {
   // The core may lose power meanwhile
   pbl_irq_lock();
   if (st->powered) {
+    prv_ungate(d, true);
     prv_modify(d, DWC2_DCTL, 0U, DCTL_RWUSIG);
   }
   pbl_irq_unlock();
