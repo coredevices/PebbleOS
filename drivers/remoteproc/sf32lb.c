@@ -312,7 +312,7 @@ static int prv_start(const struct pbl_rproc *rproc) {
 static void prv_stop(const struct pbl_rproc *rproc) {
   // LPSYS_AON is only reachable while the wake request is held
   soc_sf32lb_lpsys_wake();
-  soc_sf32lb_lpsys_halt(false);
+  soc_sf32lb_lpsys_sleep();
   soc_sf32lb_lpsys_release();
 }
 

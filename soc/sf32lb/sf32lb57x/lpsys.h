@@ -18,5 +18,9 @@ void soc_sf32lb_lpsys_halt(bool all);
 // Set the stack pointer and entry point the LCPU boots with. LPSYS must be awake.
 void soc_sf32lb_lpsys_set_entry(uint32_t sp, uint32_t pc);
 
-// Let a halted LCPU run. LPSYS must be awake.
+// Halt the LCPU and let LPSYS sleep whenever HPSYS holds no wake request. LPSYS must be awake.
+// Without it, LPSYS stays active with no program on its CPU.
+void soc_sf32lb_lpsys_sleep(void);
+
+// Let a halted LCPU run, and LPSYS sleep when its program says. LPSYS must be awake.
 void soc_sf32lb_lpsys_run(void);

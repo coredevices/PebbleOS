@@ -131,6 +131,8 @@ void pbl_soc_early_init(void) {
   prv_wdt_takeover();
 #endif
 
+  // Until a program runs on the LCPU, if any
+  soc_sf32lb_lpsys_sleep();
   soc_sf32lb_lpsys_release();
 
   soc_sf32lb52_pmu_init();

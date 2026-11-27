@@ -40,7 +40,3 @@ void soc_sf32lb_lpsys_set_entry(uint32_t sp, uint32_t pc) {
   pbl_writel(sp, LPSYS_AON(SPR));
   pbl_writel(pc, LPSYS_AON(PCR));
 }
-
-void soc_sf32lb_lpsys_run(void) {
-  pbl_modifyl(LPSYS_AON_PMR_CPUWAIT, 0U, LPSYS_AON(PMR));
-}
