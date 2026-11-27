@@ -4,6 +4,7 @@
 #include "hci_alloc.h"
 
 #include <errno.h>
+#include <stdatomic.h>
 #include <string.h>
 
 #include <pbl/bluetooth/id_addr.h>
@@ -89,6 +90,9 @@ static_assert(sizeof(struct ring) == 20U);
 static struct pbl_thread s_hci_thread;
 PBL_THREAD_STACK_DEFINE(s_hci_task_stack, CONFIG_NIMBLE_HCI_THREAD_STACK_SIZE);
 static PBL_SEM_DEFINE(s_hci_data_ready, 0, 1);
+// Given once the LCPU runs, and given back by each waiter
+static PBL_SEM_DEFINE(s_lcpu_ready, 0, 1);
+static atomic_bool s_lcpu_up;
 // Held while a packet is written, so that packets of two threads do not mix.
 static PBL_MUTEX_DEFINE(s_tx_lock);
 static struct hci_h4_sm s_hci_h4sm;
@@ -258,6 +262,11 @@ static int prv_tx_begin(size_t len) {
     return -EMSGSIZE;
   }
 
+  if (!atomic_load_explicit(&s_lcpu_up, memory_order_acquire)) {
+    pbl_sem_take(&s_lcpu_ready, PBL_FOREVER);
+    pbl_sem_give(&s_lcpu_ready);
+  }
+
   pbl_mutex_lock(&s_tx_lock, PBL_FOREVER);
 
   while (size - prv_ring_used(tx->rd_idx, tx->wr_idx, size) < len) {
@@ -316,28 +325,6 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
   return -1;
 }
 
-static void prv_hci_task_main(void *unused) {
-  while (true) {
-    const uint8_t *data;
-    size_t len;
-
-    pbl_sem_take(&s_hci_data_ready, PBL_FOREVER);
-
-    while ((len = prv_ring_peek(&data)) > 0U) {
-      int consumed;
-
-      // The allocators wait for a buffer, so this is not expected to fail.
-      consumed = hci_h4_sm_rx(&s_hci_h4sm, data, len);
-      if (consumed <= 0) {
-        PBL_LOG_ERR("hci_h4_sm_rx returned %d", consumed);
-        consumed = (int)len;
-      }
-
-      prv_ring_consume((size_t)consumed);
-    }
-  }
-}
-
 static void prv_nvds_config(const uint8_t *bd_addr) {
   uint8_t *nvds = (uint8_t *)(pbl_rproc_sf32lb_get_sram(BT_CONTROLLER)->base + NVDS_OFFSET);
   uint8_t *p = nvds + NVDS_HDR_LEN;
@@ -382,6 +369,45 @@ static void prv_controller_config(void) {
 #endif
 }
 
+// Booting the LCPU calibrates the radio for about a second, so it is not done by the caller
+static void prv_lcpu_boot(void) {
+  int ret;
+
+  pbl_rproc_sf32lb_sram_get(BT_CONTROLLER);
+  prv_controller_config();
+  pbl_rproc_sf32lb_sram_put(BT_CONTROLLER);
+
+  ret = pbl_rproc_boot(BT_CONTROLLER);
+  PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
+
+  atomic_store_explicit(&s_lcpu_up, true, memory_order_release);
+  pbl_sem_give(&s_lcpu_ready);
+}
+
+static void prv_hci_task_main(void *unused) {
+  prv_lcpu_boot();
+
+  while (true) {
+    const uint8_t *data;
+    size_t len;
+
+    pbl_sem_take(&s_hci_data_ready, PBL_FOREVER);
+
+    while ((len = prv_ring_peek(&data)) > 0U) {
+      int consumed;
+
+      // The allocators wait for a buffer, so this is not expected to fail.
+      consumed = hci_h4_sm_rx(&s_hci_h4sm, data, len);
+      if (consumed <= 0) {
+        PBL_LOG_ERR("hci_h4_sm_rx returned %d", consumed);
+        consumed = (int)len;
+      }
+
+      prv_ring_consume((size_t)consumed);
+    }
+  }
+}
+
 void ble_transport_ll_init(void) {
   int ret;
 
@@ -398,13 +424,6 @@ void ble_transport_ll_init(void) {
 
   ret = pbl_mbox_request(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), &s_mbox_cl);
   PBL_ASSERT(ret == 0, "LCPU TX doorbell request failed (%d)", ret);
-
-  pbl_rproc_sf32lb_sram_get(BT_CONTROLLER);
-  prv_controller_config();
-  pbl_rproc_sf32lb_sram_put(BT_CONTROLLER);
-
-  ret = pbl_rproc_boot(BT_CONTROLLER);
-  PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);
 
   struct pbl_thread_attr attr = {
     .name = "NimbleHCI",
