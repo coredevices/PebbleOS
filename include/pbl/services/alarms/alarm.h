@@ -43,7 +43,7 @@
 /** @brief Highlight color of the alarms app. */
 #define ALARMS_APP_HIGHLIGHT_COLOR PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack)
 
-/** @brief Unique ID of a configured alarm. */
+/** @brief Slot ID of a configured alarm. IDs may be reused after an alarm is deleted. */
 typedef int AlarmId;
 
 /** @brief Invalid alarm ID, returned on failure. */
@@ -129,6 +129,54 @@ typedef void (*AlarmForEach)(AlarmId id, const AlarmInfo *info, void *context);
  */
 AlarmId alarm_create(const AlarmInfo *info);
 
+/** @brief Result of alarm_create_checked(). */
+typedef enum AlarmCreateResult {
+  /** The alarm was created and enabled. */
+  AlarmCreateResultOk = 0,
+  /** All alarm slots are in use. */
+  AlarmCreateResultNoSpace,
+  /** The configuration is invalid. */
+  AlarmCreateResultInvalidArgument,
+  /** The alarm could not be stored. */
+  AlarmCreateResultStorageError,
+} AlarmCreateResult;
+
+/**
+ * @brief Create and schedule an alarm, reporting why it failed.
+ *
+ * The slot is allocated and the configuration persisted under the alarm service lock, so
+ * concurrent callers cannot both take the last free slot.
+ *
+ * @param info Alarm configuration. @c scheduled_days is used for @ref ALARM_KIND_CUSTOM.
+ * @param[out] id_out Set to the new alarm ID on success, or @ref ALARM_INVALID_ID on failure.
+ * @return The result of the operation.
+ */
+AlarmCreateResult alarm_create_checked(const AlarmInfo *info, AlarmId *id_out);
+
+/** @brief Result of alarm_update_checked(). */
+typedef enum AlarmUpdateResult {
+  /** The alarm was updated. */
+  AlarmUpdateResultOk = 0,
+  /** No alarm with that ID is configured. */
+  AlarmUpdateResultDoesNotExist,
+  /** The configuration is invalid. */
+  AlarmUpdateResultInvalidArgument,
+  /** The alarm could not be stored. */
+  AlarmUpdateResultStorageError,
+} AlarmUpdateResult;
+
+/**
+ * @brief Replace an alarm's configuration, preserving its enabled state.
+ *
+ * The time, recurrence, smart, sound, vibration, and tone settings are
+ * replaced. Use alarm_set_enabled() to change whether the alarm is enabled.
+ *
+ * @param id Alarm to update.
+ * @param info New configuration. @c scheduled_days is used for @ref ALARM_KIND_CUSTOM.
+ * @return The result of the operation.
+ */
+AlarmUpdateResult alarm_update_checked(AlarmId id, const AlarmInfo *info);
+
 /**
  * @brief Set the time of an alarm.
  *
@@ -188,6 +236,29 @@ void alarm_set_vibrate_enabled(AlarmId id, bool enabled);
  */
 void alarm_set_tone(AlarmId id, AlarmTone tone);
 
+/** @brief Result of alarm_get_info_checked(). */
+typedef enum AlarmGetResult {
+  /** The alarm was read. */
+  AlarmGetResultOk = 0,
+  /** No alarm with that ID is configured. */
+  AlarmGetResultDoesNotExist,
+  /** The output argument is invalid. */
+  AlarmGetResultInvalidArgument,
+  /** The alarm could not be read. */
+  AlarmGetResultStorageError,
+} AlarmGetResult;
+
+/**
+ * @brief Read an alarm and its custom days under one lock.
+ *
+ * @param id Alarm to look up.
+ * @param[out] info_out Configuration. Its @c scheduled_days is set to NULL.
+ * @param[out] scheduled_days One flag per weekday (Sunday = index 0). May be NULL.
+ * @return The result of the operation.
+ */
+AlarmGetResult alarm_get_info_checked(AlarmId id, AlarmInfo *info_out,
+                                      bool scheduled_days[PBL_DAY_PER_WEEK]);
+
 /**
  * @brief Get the configuration of an alarm.
  *
@@ -218,6 +289,27 @@ AlarmId alarm_get_most_recent_id(void);
  */
 bool alarm_get_custom_days(AlarmId id, bool scheduled_days[PBL_DAY_PER_WEEK]);
 
+/** @brief Result of alarm_set_enabled_checked(). */
+typedef enum AlarmSetEnabledResult {
+  /** The alarm was updated. */
+  AlarmSetEnabledResultOk = 0,
+  /** No alarm with that ID is configured. */
+  AlarmSetEnabledResultDoesNotExist,
+  /** The alarm could not be stored. */
+  AlarmSetEnabledResultStorageError,
+} AlarmSetEnabledResult;
+
+/**
+ * @brief Enable or disable an alarm, reporting why it failed.
+ *
+ * Disabling the most recently fired alarm cancels its snooze.
+ *
+ * @param id Alarm to update.
+ * @param enable Whether to enable the alarm.
+ * @return The result of the operation.
+ */
+AlarmSetEnabledResult alarm_set_enabled_checked(AlarmId id, bool enable);
+
 /**
  * @brief Enable or disable an alarm.
  *
@@ -234,6 +326,24 @@ void alarm_set_enabled(AlarmId id, bool enable);
  * @param id Alarm to delete.
  */
 void alarm_delete(AlarmId id);
+
+/** @brief Result of alarm_delete_checked(). */
+typedef enum AlarmDeleteResult {
+  /** The alarm was deleted. */
+  AlarmDeleteResultOk = 0,
+  /** No alarm with that ID is configured. */
+  AlarmDeleteResultDoesNotExist,
+  /** The alarm could not be deleted. */
+  AlarmDeleteResultStorageError,
+} AlarmDeleteResult;
+
+/**
+ * @brief Delete an alarm and its timeline pins, reporting why it failed.
+ *
+ * @param id Alarm to delete.
+ * @return The result of the operation.
+ */
+AlarmDeleteResult alarm_delete_checked(AlarmId id);
 
 /**
  * @brief Check whether an alarm is enabled.
@@ -271,14 +381,20 @@ bool alarm_get_kind(AlarmId id, AlarmKind *kind_out);
 bool alarm_get_next_enabled_alarm(time_t *next_alarm_time_out);
 
 /**
- * @brief Check whether the next enabled alarm is a smart alarm.
+ * @brief Check whether the next enabled alarm will use the smart alarm window.
  *
- * @return true if an alarm is scheduled and the next one is smart.
+ * A smart alarm with activity tracking off is scheduled at its configured
+ * time and reports false.
+ *
+ * @return true if an alarm is scheduled and its next occurrence uses the
+ *         smart early window.
  */
 bool alarm_is_next_enabled_alarm_smart(void);
 
 /**
  * @brief Get the time until an alarm next goes off.
+ *
+ * The alarm may be disabled; the result is its next configured occurrence.
  *
  * @param id Alarm to query.
  * @param[out] time_out Seconds until the next occurrence of the alarm, may be NULL.

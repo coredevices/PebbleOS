@@ -14,6 +14,7 @@
 #include <pbl/services/wakeup.h>
 #include <pbl/util/time.h>
 
+#include <applib/alarm_service.h>
 #include <applib/app_comm.h>
 #include <applib/app_exit_reason.h>
 #include <applib/app_inbox.h>
@@ -313,3 +314,27 @@ bool sys_dark_mode_is_active(void);
 //! @param timestamp_out Set to the UTC time of the next enabled alarm.
 //! @return True if at least one enabled alarm is scheduled.
 bool sys_alarm_get_next_enabled(time_t *timestamp_out);
+
+//! Check whether an alarm slot is free.
+bool sys_alarm_can_create(void);
+
+//! Create and enable an alarm.
+AlarmServiceCreateResult sys_alarm_create(const AlarmServiceInfo *info, AlarmServiceId *id_out);
+
+//! Read a configured alarm.
+AlarmServiceResult sys_alarm_get(AlarmServiceId id, AlarmServiceAlarm *alarm_out);
+
+//! Get the IDs of all configured alarms.
+//! @param ids Buffer of at least max IDs, or NULL to only count them.
+//! @param max Number of IDs that fit in ids.
+//! @return Total number of configured alarms.
+size_t sys_alarm_get_ids(AlarmServiceId *ids, size_t max);
+
+//! Enable or disable a configured alarm.
+AlarmServiceResult sys_alarm_set_enabled(AlarmServiceId id, bool enabled);
+
+//! Update a configured alarm.
+AlarmServiceResult sys_alarm_update(AlarmServiceId id, const AlarmServiceInfo *info);
+
+//! Delete a configured alarm.
+AlarmServiceResult sys_alarm_delete(AlarmServiceId id);

@@ -80,3 +80,10 @@ Trust section of [Local microphone capture](local-microphone.md).
 | Bit | Permission |
 |---|---|
 | 0 | Microphone, see [Local microphone capture](local-microphone.md) |
+| 1 | Health data requires a grant (`HEALTH_ENFORCED`) |
+| 2 | Health data granted (`HEALTH_GRANTED`) |
+| 3 | Read alarms, see [Alarm service](alarm-service.md) |
+| 4 | Create, update, enable, disable, or delete alarms, see [Alarm service](alarm-service.md) |
+
+Without bit 1 the watch allows health data, as it does for a phone that never
+sends permissions; with bit 1 set, bit 2 must also be set.

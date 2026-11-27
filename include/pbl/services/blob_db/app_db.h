@@ -40,7 +40,7 @@ typedef struct PBL_PACKED {
   /** App name. */
   char name[APP_NAME_SIZE_BYTES];
   /** Optional phone-authorized permissions; absent on legacy records. Only app_db_read() fills
-   *  it; use app_db_microphone_granted() or app_db_health_allowed() to check a grant. */
+   *  it; use the app_db_*_granted() or app_db_health_allowed() helpers to check a grant. */
   uint32_t permissions;
 } AppDBEntry;
 
@@ -49,10 +49,19 @@ typedef struct PBL_PACKED {
 //! Without it health is allowed, as it is for a phone that never sends permissions.
 #define APP_DB_PERMISSION_HEALTH_ENFORCED (1u << 1)
 #define APP_DB_PERMISSION_HEALTH_GRANTED  (1u << 2)
+//! Allows reading alarms through the AlarmService applib API.
+#define APP_DB_PERMISSION_ALARM_READ (1u << 3)
+//! Allows creating, updating, enabling, disabling, or deleting alarms through the AlarmService
+//! applib API.
+#define APP_DB_PERMISSION_ALARM_WRITE (1u << 4)
 
 bool app_db_microphone_granted(const Uuid *uuid);
 
 bool app_db_health_allowed(const Uuid *uuid);
+
+bool app_db_alarm_read_granted(const Uuid *uuid);
+
+bool app_db_alarm_write_granted(const Uuid *uuid);
 
 /**
  * @brief Callback of app_db_enumerate_entries().

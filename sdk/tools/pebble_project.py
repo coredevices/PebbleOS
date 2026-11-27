@@ -27,6 +27,19 @@ MANIFEST_V2_KEYS = ("plugin", "usesPermissions", "configPage")
 WATCH_MICROPHONE = "WatchMicrophone"
 # And health data. The phone app only enforces it for apps built with an SDK that has this check.
 HEALTH = "Health"
+# And reading alarms. Must match the phone app's PermissionKind.
+ALARMS_READ = "AlarmsRead"
+# And managing alarms. Must match the phone app's PermissionKind.
+ALARMS_WRITE = "AlarmsWrite"
+_ALARM_CALLS = (
+    ("alarm_service_get", ALARMS_READ),
+    ("alarm_service_get_ids", ALARMS_READ),
+    ("alarm_service_peek_next", ALARMS_READ),
+    ("alarm_service_create", ALARMS_WRITE),
+    ("alarm_service_set_enabled", ALARMS_WRITE),
+    ("alarm_service_update", ALARMS_WRITE),
+    ("alarm_service_delete", ALARMS_WRITE),
+)
 _MICROPHONE_CALL = re.compile(r"\b(mic_capture_start|mic_stream_to_phone_start)\s*\(")
 
 # Message keys are numbered from here, in the order they are declared.
@@ -230,6 +243,38 @@ def _health_error(project_info, used):
     return (
         f"The app uses {used}, but package.json doesn't declare '{HEALTH}' in usesPermissions"
     )
+
+
+def _alarm_error(project_info, used, permission):
+    if project_info.get("manifestVersion", 2) < 2:
+        return (
+            f"The app uses {used}, but manifestVersion 1 apps can't use the alarm "
+            f"service: remove '\"manifestVersion\": 1' and declare '{permission}' in "
+            f"usesPermissions"
+        )
+    if permission in _declared_permissions(project_info):
+        return None
+    return (
+        f"The app uses {used}, but package.json doesn't declare "
+        f"'{permission}' in usesPermissions"
+    )
+
+
+def undeclared_alarm_error(project_info, symbols):
+    """An error when a linked app reads or manages alarms without declaring
+    the required permission, or None.
+
+    symbols: the names of the symbols in the linked binary."""
+    for symbol in symbols:
+        for name, permission in _ALARM_CALLS:
+            # Compiler-generated variants keep the function name and add a dotted suffix,
+            # e.g. .lto_priv.0, .constprop.0 or .cold.
+            if symbol == name or symbol.startswith(f"{name}."):
+                error = _alarm_error(project_info, f"{name}()", permission)
+                # A declared permission returns None; keep looking for an undeclared one.
+                if error:
+                    return error
+    return None
 
 
 def _declared_permissions(project_info):

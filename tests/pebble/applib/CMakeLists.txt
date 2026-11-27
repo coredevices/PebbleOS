@@ -32,6 +32,12 @@ pbl_clar_test(test_cpu_cache
   OVERRIDES dummy_board
 )
 
+pbl_clar_test(test_alarm_service
+  SOURCES
+    pebble/applib/alarm_service.c
+  OVERRIDES dummy_board
+)
+
 pbl_clar_test(test_persist
   MODULES settings rand
   SOURCES

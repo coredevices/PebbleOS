@@ -1,7 +1,17 @@
 # Reference
 
-Specifications of the protocols and file formats used by the firmware and
-its tooling.
+Specifications of the protocols, file formats, and app-facing APIs used by
+the firmware and its tooling.
+
+## App SDK guides
+
+Guides to the app-facing APIs built on the firmware services.
+
+```{toctree}
+:maxdepth: 1
+
+alarm-service.md
+```
 
 ## Pebble Protocol endpoints
 

@@ -1027,9 +1027,11 @@ def binary(args):
     os.environ["PATH"] = args.toolchain_bin + os.pathsep + os.environ["PATH"]
     project = _load_project(args.project)
     platform = project["platforms"][args.platform]
-    error = pebble_project.undeclared_health_error(
-        project["info"], inject_metadata.elf_symbol_names(args.elf)
-    )
+    symbols = inject_metadata.elf_symbol_names(args.elf)
+    error = pebble_project.undeclared_health_error(project["info"], symbols)
+    if error:
+        raise ProjectError(error)
+    error = pebble_project.undeclared_alarm_error(project["info"], symbols)
     if error:
         raise ProjectError(error)
     if args.sources_list:

@@ -3,17 +3,40 @@
 
 #include "test_alarm_common.h"
 
+#include <errno.h>
+
 // Stubs
 #include "fake_pfs.h"
 
 #include <pbl/kernel/time.h>
 #include <pbl/util/units.h>
 
+#include <applib/alarm_service.h>
 #include <fake_work.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Counter variables
 static int s_alarm_timer_timeout_ms = 0;
+static bool s_activity_tracking_on = true;
+static ActivitySleepState s_sleep_state = ActivitySleepStateUnknown;
+static int32_t s_vmc;
+
+bool activity_tracking_on(void) {
+  return s_activity_tracking_on;
+}
+
+bool activity_get_metric(ActivityMetric metric, uint32_t history_len, int32_t *history) {
+  cl_assert_equal_i(history_len, 1);
+  if (metric == ActivityMetricSleepState) {
+    *history = s_sleep_state;
+    return true;
+  }
+  if (metric == ActivityMetricLastVMC) {
+    *history = s_vmc;
+    return true;
+  }
+  return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //! Fakes
@@ -40,6 +63,14 @@ void test_alarm__initialize(void) {
   s_num_alarm_events_put = 0;
   s_alarm_timer_timeout_ms = 0;
   s_num_alarms_fired = 0;
+  s_activity_tracking_on = true;
+  s_sleep_state = ActivitySleepStateUnknown;
+  s_vmc = 0;
+  alarm_test_set_persist_failure(false);
+  alarm_test_set_delete_failure(false);
+  s_defer_sys_work_callbacks = false;
+  s_pending_sys_work_callback = nullptr;
+  s_pending_sys_work_data = nullptr;
 
   s_current_hour = 0;
   s_current_minute = 0;
@@ -78,6 +109,510 @@ void test_alarm__alarm_create_recurring_daily(void) {
   prv_assert_alarm_config(id, 5, 14, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
   id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
   prv_assert_alarm_config(id, 6, 14, false, ALARM_KIND_EVERYDAY, s_every_day_schedule);
+}
+
+void test_alarm__can_schedule(void) {
+  cl_assert(alarm_can_schedule());
+
+  int count = 0;
+  while (alarm_can_schedule() && count < 20) {
+    AlarmId id =
+        alarm_create(&(AlarmInfo){.hour = 3 + count, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
+    cl_assert(id != ALARM_INVALID_ID);
+    count++;
+  }
+
+  cl_assert_equal_i(count, 10);
+  cl_assert(!alarm_can_schedule());
+
+  alarm_delete(0);
+  cl_assert(alarm_can_schedule());
+}
+
+typedef struct {
+  AlarmId ids[ALARM_SERVICE_MAX_ALARMS];
+  size_t count;
+} CollectedAlarmIds;
+
+static void prv_collect_alarm_id(AlarmId id, const AlarmInfo *info, void *context) {
+  (void)info;
+  CollectedAlarmIds *collected = context;
+  if (collected->count < ALARM_SERVICE_MAX_ALARMS) {
+    collected->ids[collected->count] = id;
+  }
+  collected->count++;
+}
+
+void test_alarm__for_each(void) {
+  CollectedAlarmIds collected = {};
+  alarm_for_each(prv_collect_alarm_id, &collected);
+  cl_assert_equal_i(collected.count, 0);
+
+  const AlarmId id0 =
+      alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
+  const AlarmId id1 =
+      alarm_create(&(AlarmInfo){.hour = 4, .minute = 14, .kind = ALARM_KIND_WEEKDAYS});
+  const AlarmId id2 =
+      alarm_create(&(AlarmInfo){.hour = 5, .minute = 14, .kind = ALARM_KIND_JUST_ONCE});
+  cl_assert(id0 != ALARM_INVALID_ID);
+  cl_assert(id1 != ALARM_INVALID_ID);
+  cl_assert(id2 != ALARM_INVALID_ID);
+
+  // Disabled alarms are still configured and listed.
+  alarm_set_enabled(id1, false);
+
+  collected = (CollectedAlarmIds){};
+  alarm_for_each(prv_collect_alarm_id, &collected);
+  cl_assert_equal_i(collected.count, 3);
+  cl_assert(collected.ids[0] == id0 || collected.ids[0] == id1 || collected.ids[0] == id2);
+  cl_assert(collected.ids[1] == id0 || collected.ids[1] == id1 || collected.ids[1] == id2);
+  cl_assert(collected.ids[2] == id0 || collected.ids[2] == id1 || collected.ids[2] == id2);
+  cl_assert(collected.ids[0] != collected.ids[1] && collected.ids[0] != collected.ids[2] &&
+            collected.ids[1] != collected.ids[2]);
+
+  alarm_delete(id1);
+  collected = (CollectedAlarmIds){};
+  alarm_for_each(prv_collect_alarm_id, &collected);
+  cl_assert_equal_i(collected.count, 2);
+  cl_assert(collected.ids[0] == id0 || collected.ids[0] == id2);
+  cl_assert(collected.ids[1] == id0 || collected.ids[1] == id2);
+  cl_assert(collected.ids[0] != collected.ids[1]);
+}
+
+void test_alarm__set_enabled_checked(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert(alarm_get_enabled(id));
+
+  cl_assert_equal_i(alarm_set_enabled_checked(id, false), AlarmSetEnabledResultOk);
+  cl_assert(!alarm_get_enabled(id));
+
+  cl_assert_equal_i(alarm_set_enabled_checked(id, true), AlarmSetEnabledResultOk);
+  cl_assert(alarm_get_enabled(id));
+
+  cl_assert_equal_i(alarm_set_enabled_checked(9, true), AlarmSetEnabledResultDoesNotExist);
+}
+
+void test_alarm__out_of_range_id_is_rejected(void) {
+  const AlarmId id = ALARM_SERVICE_MAX_ALARMS;
+  AlarmStorageKey key = {.id = id, .type = ALARM_DATA_CONFIG};
+  uint8_t config[64] = {0};
+  config[2] = 7;  // hour
+  config[3] = 30; // minute
+
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  cl_must_pass(pbl_settings_set(&file, &key, sizeof(key), config, sizeof(config)));
+  pbl_settings_close(&file);
+
+  cl_assert_equal_i(alarm_set_enabled_checked(id, false), AlarmSetEnabledResultDoesNotExist);
+
+  AlarmInfo info;
+  bool scheduled_days[PBL_DAY_PER_WEEK];
+  cl_assert_equal_i(alarm_get_info_checked(id, &info, scheduled_days), AlarmGetResultDoesNotExist);
+}
+
+void test_alarm__smart_alarm_created_without_tracking(void) {
+  s_activity_tracking_on = false;
+
+  AlarmId id = ALARM_INVALID_ID;
+  cl_assert_equal_i(
+      alarm_create_checked(
+          &(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY, .is_smart = true},
+          &id),
+      AlarmCreateResultOk);
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // Without tracking, the smart alarm fires at its configured time.
+  time_t time_until;
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(time_until, 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+
+  // Starting tracking adds the early window.
+  s_activity_tracking_on = true;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(time_until, 10 * PBL_SEC_PER_HOUR);
+
+  // Losing tracking after creation removes the early window when alarms are reloaded.
+  s_activity_tracking_on = false;
+  alarm_handle_clock_change();
+
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(time_until, 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+}
+
+void test_alarm__get_info_checked_includes_custom_days(void) {
+  bool scheduled_days[PBL_DAY_PER_WEEK] = {true, true, false, false, false, false, false};
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 10,
+    .minute = 30,
+    .kind = ALARM_KIND_CUSTOM,
+    .scheduled_days = &scheduled_days,
+    .is_smart = false,
+    .sound_enabled = true,
+    .vibrate_enabled = false,
+    .tone = AlarmTone_Bell,
+  });
+
+  AlarmInfo info;
+  bool days[PBL_DAY_PER_WEEK];
+  cl_assert_equal_i(alarm_get_info_checked(id, &info, days), AlarmGetResultOk);
+  cl_assert_equal_i(info.hour, 10);
+  cl_assert_equal_i(info.minute, 30);
+  cl_assert_equal_i(info.kind, ALARM_KIND_CUSTOM);
+  cl_assert(info.sound_enabled);
+  cl_assert(!info.vibrate_enabled);
+  cl_assert_equal_i(info.tone, AlarmTone_Bell);
+  cl_assert(days[0]);
+  cl_assert(days[1]);
+  cl_assert(!days[2]);
+
+  cl_assert_equal_i(alarm_get_info_checked(9, &info, days), AlarmGetResultDoesNotExist);
+}
+
+void test_alarm__smart_alarm_fires_at_time_without_tracking(void) {
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 10,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  s_activity_tracking_on = false;
+  alarm_handle_clock_change();
+  s_sleep_state = ActivitySleepStateLightSleep;
+
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__enable_enabled_alarm_is_noop(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  const int timeline_adds = s_num_timeline_adds;
+
+  cl_assert_equal_i(alarm_set_enabled_checked(id, true), AlarmSetEnabledResultOk);
+  cl_assert_equal_i(s_num_timeline_adds, timeline_adds);
+}
+
+void test_alarm__failed_disable_keeps_snooze(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  alarm_set_snooze_alarm();
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+
+  alarm_test_set_persist_failure(true);
+  cl_assert_equal_i(alarm_set_enabled_checked(id, false), AlarmSetEnabledResultStorageError);
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__noop_disable_cancels_snooze(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_JUST_ONCE});
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  alarm_set_snooze_alarm();
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+
+  // The one-shot alarm was auto-disabled when it fired, so this is a no-op
+  // configuration change that must still cancel the snooze.
+  cl_assert_equal_i(alarm_set_enabled_checked(id, false), AlarmSetEnabledResultOk);
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__failed_just_once_disable_keeps_later_alarm(void) {
+  AlarmId id1 = alarm_create(&(AlarmInfo){.hour = 10, .minute = 10, .kind = ALARM_KIND_JUST_ONCE});
+  AlarmId id2 = alarm_create(&(AlarmInfo){.hour = 10, .minute = 20, .kind = ALARM_KIND_JUST_ONCE});
+
+  s_current_hour = 10;
+  s_current_minute = 10;
+  alarm_test_set_persist_failure(true);
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  AlarmInfo info;
+  cl_assert(alarm_get_info(id1, &info));
+  cl_assert(info.enabled);
+
+  s_current_minute = 20;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+  cl_assert(alarm_get_info(id2, &info));
+}
+
+void test_alarm__create_checked_no_space(void) {
+  int count = 0;
+  while (alarm_can_schedule() && count < 20) {
+    AlarmId id = ALARM_INVALID_ID;
+    cl_assert_equal_i(
+        alarm_create_checked(
+            &(AlarmInfo){.hour = 3 + count, .minute = 14, .kind = ALARM_KIND_EVERYDAY}, &id),
+        AlarmCreateResultOk);
+    cl_assert(id != ALARM_INVALID_ID);
+    count++;
+  }
+
+  cl_assert_equal_i(count, 10);
+
+  AlarmId id = 42;
+  cl_assert_equal_i(alarm_create_checked(
+                        &(AlarmInfo){.hour = 13, .minute = 14, .kind = ALARM_KIND_EVERYDAY}, &id),
+                    AlarmCreateResultNoSpace);
+  cl_assert_equal_i(id, ALARM_INVALID_ID);
+
+  // The legacy creator must fail cleanly on the same full store.
+  cl_assert_equal_i(
+      alarm_create(&(AlarmInfo){.hour = 13, .minute = 14, .kind = ALARM_KIND_EVERYDAY}),
+      ALARM_INVALID_ID);
+}
+
+void test_alarm__create_checked_invalid(void) {
+  AlarmId id = 42;
+  cl_assert_equal_i(alarm_create_checked(NULL, &id), AlarmCreateResultInvalidArgument);
+  cl_assert_equal_i(id, ALARM_INVALID_ID);
+
+  id = 42;
+  cl_assert_equal_i(alarm_create_checked(
+                        &(AlarmInfo){.hour = 24, .minute = 14, .kind = ALARM_KIND_EVERYDAY}, &id),
+                    AlarmCreateResultInvalidArgument);
+  cl_assert_equal_i(id, ALARM_INVALID_ID);
+
+  id = 42;
+  cl_assert_equal_i(
+      alarm_create_checked(&(AlarmInfo){.hour = 3, .minute = 60, .kind = ALARM_KIND_EVERYDAY}, &id),
+      AlarmCreateResultInvalidArgument);
+  cl_assert_equal_i(id, ALARM_INVALID_ID);
+
+  cl_assert_equal_i(alarm_create_checked(
+                        &(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY}, NULL),
+                    AlarmCreateResultInvalidArgument);
+}
+
+void test_alarm__create_checked_storage_failure(void) {
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+
+  uint8_t filler[100] = {};
+  int rv = 0;
+  for (int i = 0; i < 32; ++i) {
+    rv = pbl_settings_set(&file, &i, sizeof(i), filler, sizeof(filler));
+    if (rv < 0) {
+      break;
+    }
+  }
+  // Fill the remaining tail with small records so the alarm configuration cannot fit.
+  for (int i = 0; i < UINT8_MAX; ++i) {
+    const uint8_t key[2] = {0xff, i};
+    const uint8_t value = 0;
+    rv = pbl_settings_set(&file, key, sizeof(key), &value, sizeof(value));
+    if (rv < 0) {
+      break;
+    }
+  }
+  pbl_settings_close(&file);
+  cl_assert(rv < 0);
+
+  AlarmId id = 42;
+  cl_assert_equal_i(
+      alarm_create_checked(&(AlarmInfo){.hour = 3, .minute = 14, .kind = ALARM_KIND_EVERYDAY}, &id),
+      AlarmCreateResultStorageError);
+  cl_assert_equal_i(id, ALARM_INVALID_ID);
+
+  AlarmInfo info;
+  cl_assert(!alarm_get_info(0, &info));
+}
+
+void test_alarm__update_checked(void) {
+  bool days[PBL_DAY_PER_WEEK] = {false, true, true, false, true, false, false};
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert(id != ALARM_INVALID_ID);
+  alarm_set_enabled(id, false);
+
+  const AlarmInfo update = {
+    .hour = 7,
+    .minute = 15,
+    .kind = ALARM_KIND_CUSTOM,
+    .scheduled_days = &days,
+    .enabled = true,
+    .is_smart = true,
+    .sound_enabled = true,
+    .vibrate_enabled = true,
+    .tone = AlarmTone_Chime,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+
+  AlarmInfo info;
+  bool stored_days[PBL_DAY_PER_WEEK];
+  cl_assert_equal_i(alarm_get_info_checked(id, &info, stored_days), AlarmGetResultOk);
+  cl_assert_equal_i(info.hour, 7);
+  cl_assert_equal_i(info.minute, 15);
+  cl_assert_equal_i(info.kind, ALARM_KIND_CUSTOM);
+  cl_assert_equal_i(memcmp(stored_days, days, sizeof(days)), 0);
+  cl_assert(info.is_smart);
+  cl_assert(info.sound_enabled);
+  cl_assert(info.vibrate_enabled);
+  cl_assert_equal_i(info.tone, AlarmTone_Chime);
+  cl_assert(!info.enabled);
+
+  // A built-in recurrence replaces the custom days and the other settings.
+  const AlarmInfo weekdays = {
+    .hour = 6,
+    .minute = 45,
+    .kind = ALARM_KIND_WEEKDAYS,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &weekdays), AlarmUpdateResultOk);
+  cl_assert_equal_i(alarm_get_info_checked(id, &info, stored_days), AlarmGetResultOk);
+  cl_assert_equal_i(info.kind, ALARM_KIND_WEEKDAYS);
+  const bool expected_days[PBL_DAY_PER_WEEK] = {false, true, true, true, true, true, false};
+  cl_assert_equal_i(memcmp(stored_days, expected_days, sizeof(expected_days)), 0);
+  cl_assert(!info.is_smart);
+  cl_assert(!info.sound_enabled);
+  cl_assert(!info.vibrate_enabled);
+  cl_assert_equal_i(info.tone, AlarmTone_Reveille);
+  cl_assert(!info.enabled);
+}
+
+void test_alarm__update_checked_errors(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  const AlarmInfo valid = {
+    .hour = 7,
+    .minute = 15,
+    .kind = ALARM_KIND_EVERYDAY,
+  };
+
+  AlarmInfo bad = valid;
+  bad.hour = 24;
+  cl_assert_equal_i(alarm_update_checked(id, &bad), AlarmUpdateResultInvalidArgument);
+
+  bad = valid;
+  bad.kind = ALARM_KIND_CUSTOM;
+  bad.scheduled_days = NULL;
+  cl_assert_equal_i(alarm_update_checked(id, &bad), AlarmUpdateResultInvalidArgument);
+
+  bad = valid;
+  bad.tone = (AlarmTone)99;
+  cl_assert_equal_i(alarm_update_checked(id, &bad), AlarmUpdateResultInvalidArgument);
+
+  cl_assert_equal_i(alarm_update_checked(id, NULL), AlarmUpdateResultInvalidArgument);
+  cl_assert_equal_i(alarm_update_checked(ALARM_SERVICE_MAX_ALARMS, &valid),
+                    AlarmUpdateResultDoesNotExist);
+  const AlarmId unused = (id == 0) ? 9 : 0;
+  cl_assert_equal_i(alarm_update_checked(unused, &valid), AlarmUpdateResultDoesNotExist);
+
+  alarm_test_set_persist_failure(true);
+  cl_assert_equal_i(alarm_update_checked(id, &valid), AlarmUpdateResultStorageError);
+  alarm_test_set_persist_failure(false);
+
+  AlarmInfo info;
+  cl_assert(alarm_get_info(id, &info));
+  cl_assert_equal_i(info.hour, 10);
+  cl_assert_equal_i(info.minute, 30);
+}
+
+void test_alarm__update_tone_after_smart_fire_does_not_refire(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  s_sleep_state = ActivitySleepStateUnknown;
+
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // The smart alarm fires at 06:30 for the 07:00 occurrence.
+  s_current_hour = 6;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  // A tone-only update must not disarm the fired-occurrence guard.
+  s_current_minute = 35;
+  const AlarmInfo update = {
+    .hour = 7,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+    .tone = AlarmTone_Bell,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__update_tone_keeps_snooze(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  alarm_set_snooze_alarm();
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+
+  const AlarmInfo update = {
+    .hour = 10,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .tone = AlarmTone_Bell,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__update_schedule_change_cancels_snooze(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  s_current_hour = 10;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  alarm_set_snooze_alarm();
+  cl_assert(fake_work_is_scheduled(&s_snooze_timer));
+
+  const AlarmInfo update = {
+    .hour = 11,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__delete_checked(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert(id != ALARM_INVALID_ID);
+
+  cl_assert_equal_i(alarm_delete_checked(id), AlarmDeleteResultOk);
+  prv_assert_alarm_config_absent(id);
+  assert_alarm_pins_absent(id);
+
+  cl_assert_equal_i(alarm_delete_checked(id), AlarmDeleteResultDoesNotExist);
+  cl_assert_equal_i(alarm_delete_checked(ALARM_SERVICE_MAX_ALARMS), AlarmDeleteResultDoesNotExist);
+}
+
+void test_alarm__delete_checked_storage_failure(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 10, .minute = 30, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert(id != ALARM_INVALID_ID);
+
+  alarm_test_set_delete_failure(true);
+  cl_assert_equal_i(alarm_delete_checked(id), AlarmDeleteResultStorageError);
+  cl_assert(alarm_get_enabled(id));
+
+  alarm_delete(id);
+  prv_assert_alarm_config_absent(id);
 }
 
 void test_alarm__alarm_create_recurring_weekends(void) {
@@ -1270,6 +1805,457 @@ static void prv_simulate_reboot(void) {
   alarm_service_enable_alarms(true);
 }
 
+//! Restarts the alarm service but leaves alarms disabled so a pending catch-up can be inspected.
+static void prv_simulate_reboot_without_enabling(void) {
+  pbl_cron_deinit();
+  pbl_cron_init();
+  alarm_init();
+}
+
+void test_alarm__missed_alarm_cleared_when_slot_deleted(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+
+  s_current_hour = 6;
+  s_current_minute = 2;
+  prv_simulate_reboot_without_enabling();
+
+  alarm_delete(id);
+  alarm_service_enable_alarms(true);
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+}
+
+void test_alarm__missed_alarm_cleared_when_updated(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+
+  s_current_hour = 6;
+  s_current_minute = 2;
+  prv_simulate_reboot_without_enabling();
+
+  const AlarmInfo update = {
+    .hour = 7,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+
+  alarm_service_enable_alarms(true);
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+}
+
+void test_alarm__missed_alarm_cleared_when_slot_reused(void) {
+  struct pbl_settings_file file;
+  cl_must_pass(pbl_settings_open(&file, "/alarms", 1024));
+  const AlarmArmedRecord armed = {
+    .time = s_current_day + 6 * PBL_SEC_PER_HOUR,
+    .id = 0,
+  };
+  cl_must_pass(pbl_settings_set(&file, "ArmedAlarm", strlen("ArmedAlarm"), &armed, sizeof(armed)));
+  pbl_settings_close(&file);
+
+  s_current_hour = 6;
+  s_current_minute = 2;
+  prv_simulate_reboot_without_enabling();
+
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert_equal_i(id, 0);
+
+  alarm_service_enable_alarms(true);
+  cl_assert_equal_i(s_num_alarms_fired, 0);
+}
+
+//! Queue a missed-alarm catch-up and leave its work callback pending.
+static void prv_queue_missed_alarm_catchup(void) {
+  s_current_hour = 6;
+  s_current_minute = 2;
+  prv_simulate_reboot_without_enabling();
+
+  s_defer_sys_work_callbacks = true;
+  alarm_service_enable_alarms(true);
+  s_defer_sys_work_callbacks = false;
+  cl_assert(s_pending_sys_work_callback);
+}
+
+void test_alarm__queued_missed_alarm_rejected_after_update(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  prv_queue_missed_alarm_catchup();
+
+  const AlarmInfo update = {
+    .hour = 7,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+  cl_assert_equal_i(alarm_get_most_recent_id(), ALARM_INVALID_ID);
+}
+
+void test_alarm__queued_missed_alarm_rejected_after_delete_and_recreate(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  prv_queue_missed_alarm_catchup();
+
+  alarm_delete(id);
+  AlarmId new_id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert_equal_i(new_id, id);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+}
+
+void test_alarm__queued_missed_alarm_rejected_after_disable(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  prv_queue_missed_alarm_catchup();
+
+  alarm_set_enabled(id, false);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+}
+
+void test_alarm__queued_missed_alarm_survives_tone_update(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  prv_queue_missed_alarm_catchup();
+
+  const AlarmInfo update = {
+    .hour = 6,
+    .minute = 0,
+    .kind = ALARM_KIND_EVERYDAY,
+    .tone = AlarmTone_Bell,
+  };
+  cl_assert_equal_i(alarm_update_checked(id, &update), AlarmUpdateResultOk);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+  cl_assert_equal_i(alarm_get_most_recent_id(), id);
+}
+
+void test_alarm__queued_timer_callback_rejected_after_delete(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_defer_sys_work_callbacks = true;
+  pbl_cron_wakeup();
+  s_defer_sys_work_callbacks = false;
+  cl_assert(s_pending_sys_work_callback);
+
+  alarm_delete(id);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
+}
+
+void test_alarm__smart_alarm_tracking_across_boot(void) {
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 10,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // At boot, activity has not started yet, so the alarm is scheduled for 10:30
+  // without the early window.
+  s_activity_tracking_on = false;
+  prv_simulate_reboot();
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+
+  // Tracking starting must reconcile the schedule to the 10:00 early window.
+  cl_assert(s_activity_event_info);
+  s_activity_tracking_on = true;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+
+  // Tracking stopping must remove the early window again.
+  s_activity_tracking_on = false;
+  PebbleEvent stopped = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStopped},
+  };
+  s_activity_event_info->handler(&stopped, s_activity_event_info->context);
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 10 * PBL_SEC_PER_HOUR + 30 * PBL_SEC_PER_MIN);
+}
+
+void test_alarm__tracking_start_inside_smart_window_keeps_alarm(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // Boot at 07:10 with tracking off: the alarm is pending for 07:30.
+  s_current_hour = 7;
+  s_current_minute = 10;
+  s_activity_tracking_on = false;
+  prv_simulate_reboot();
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 20 * PBL_SEC_PER_MIN);
+
+  // Tracking starts inside the window. The 07:00 early time is already past, so
+  // keep the pending 07:30 occurrence instead of advancing to tomorrow.
+  s_activity_tracking_on = true;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 20 * PBL_SEC_PER_MIN);
+  cl_assert(!alarm_is_next_enabled_alarm_smart());
+
+  time_t time_until = 0;
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(time_until, 20 * PBL_SEC_PER_MIN);
+
+  // A retained sleep reading must not start a smart snooze after the fallback.
+  s_sleep_state = ActivitySleepStateLightSleep;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert(!fake_work_is_scheduled(&s_snooze_timer));
+}
+
+void test_alarm__tracking_start_at_smart_window_start_keeps_alarm(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // Boot just before the window opens, with tracking off.
+  s_current_hour = 6;
+  s_current_minute = 59;
+  s_activity_tracking_on = false;
+  prv_simulate_reboot();
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm - pbl_realtime(), 30 * PBL_SEC_PER_MIN);
+
+  time_t time_until = 0;
+  cl_assert(alarm_get_time_until(id, &time_until));
+  cl_assert_equal_i(time_until, 30 * PBL_SEC_PER_MIN);
+  cl_assert(!alarm_is_next_enabled_alarm_smart());
+}
+
+void test_alarm__tracking_start_at_alarm_time_fires_once(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // Boot exactly at the configured time, before the due cron callback runs.
+  s_current_hour = 7;
+  s_current_minute = 30;
+  s_activity_tracking_on = false;
+  prv_simulate_reboot();
+
+  s_activity_tracking_on = true;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm, pbl_realtime());
+
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  // A second tracking event after the callback must not schedule or fire it again.
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert(next_alarm > pbl_realtime());
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__early_smart_alarm_does_not_fire_again_at_time(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+}
+
+void test_alarm__early_smart_alarm_tracking_off_reload_does_not_refire(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // Tracking turns off before the early callback runs. The reload must not
+  // schedule the already-fired 07:30 occurrence with an offset-0 cron.
+  s_current_hour = 7;
+  s_current_minute = 0;
+  s_activity_tracking_on = false;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert(next_alarm > pbl_realtime());
+
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
+void test_alarm__next_days_occurrence_can_fire_at_exact_time(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  // The same alarm ID is still most recent from Thursday. Friday's occurrence
+  // must not be mistaken for Thursday's already-fired one.
+  s_current_day = s_friday;
+  s_current_hour = 7;
+  s_current_minute = 30;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm, pbl_realtime());
+
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+}
+
+void test_alarm__reused_just_once_occurrence_can_fire_at_exact_time(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 7, .minute = 30, .kind = ALARM_KIND_JUST_ONCE});
+  cl_assert(id != ALARM_INVALID_ID);
+
+  s_current_hour = 7;
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  // Re-enable the same just-once ID for the next day.
+  alarm_set_enabled(id, true);
+  s_current_day = s_friday;
+  s_current_hour = 7;
+  s_current_minute = 30;
+  PebbleEvent started = {
+    .type = PEBBLE_ACTIVITY_EVENT,
+    .activity_event = {.type = PebbleActivityEvent_TrackingStarted},
+  };
+  s_activity_event_info->handler(&started, s_activity_event_info->context);
+
+  time_t next_alarm = 0;
+  cl_assert(alarm_get_next_enabled_alarm(&next_alarm));
+  cl_assert_equal_i(next_alarm, pbl_realtime());
+
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+}
+
+void test_alarm__missed_smart_alarm_does_not_fire_again_at_time(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  // The watch was down when the 07:00 early window fired and boots at 07:02.
+  // The catch-up fires once; the configured 07:30 occurrence must not fire again.
+  s_current_hour = 7;
+  s_current_minute = 2;
+  prv_simulate_reboot();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
 void test_alarm__missed_alarm_fires_after_reboot(void) {
   // It's currently Thursday @ 00:00, so the alarm is armed for Thursday @ 06:00
   alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
@@ -1366,6 +2352,81 @@ void test_alarm__missed_just_once_alarm_fires_and_is_disabled(void) {
 
   cl_assert_equal_i(s_num_alarms_fired, 1);
   cl_assert_equal_b(alarm_get_enabled(id), false);
+}
+
+void test_alarm__smart_alarm_does_not_refire_after_another_alarm(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId smart = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  AlarmId basic = alarm_create(&(AlarmInfo){.hour = 7, .minute = 10, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert(smart != ALARM_INVALID_ID && basic != ALARM_INVALID_ID);
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+
+  s_current_minute = 10;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 2);
+}
+
+void test_alarm__reenable_after_smart_fire_does_not_refire(void) {
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_activity_tracking_on = true;
+  AlarmId id = alarm_create(&(AlarmInfo){
+    .hour = 7,
+    .minute = 30,
+    .kind = ALARM_KIND_EVERYDAY,
+    .is_smart = true,
+  });
+  cl_assert(id != ALARM_INVALID_ID);
+
+  s_current_hour = 7;
+  s_current_minute = 0;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+
+  // Toggling the alarm off and on must not re-arm the occurrence that already fired.
+  s_current_minute = 5;
+  alarm_set_enabled(id, false);
+  s_current_minute = 6;
+  alarm_set_enabled(id, true);
+
+  s_current_minute = 30;
+  pbl_cron_wakeup();
+  cl_assert_equal_i(s_num_alarms_fired, 1);
+  cl_assert_equal_i(s_num_alarm_events_put, 1);
+}
+
+void test_alarm__queued_timer_callback_rejected_after_delete_and_recreate(void) {
+  AlarmId id = alarm_create(&(AlarmInfo){.hour = 6, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+
+  s_current_hour = 6;
+  s_current_minute = 0;
+  s_defer_sys_work_callbacks = true;
+  pbl_cron_wakeup();
+  s_defer_sys_work_callbacks = false;
+  cl_assert(s_pending_sys_work_callback);
+
+  alarm_delete(id);
+  AlarmId new_id = alarm_create(&(AlarmInfo){.hour = 21, .minute = 0, .kind = ALARM_KIND_EVERYDAY});
+  cl_assert_equal_i(new_id, id);
+
+  s_pending_sys_work_callback(s_pending_sys_work_data);
+  cl_assert_equal_i(s_num_alarm_events_put, 0);
 }
 
 // TODO:
