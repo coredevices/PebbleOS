@@ -59,8 +59,11 @@ static int prv_key_init(const struct pbl_gpio_keys_key *key,
     return ret;
   }
 
+  // A key wakes the system when pressed, not on its release
   if (key->wakeup_source) {
-    ret = pbl_intc_set_wake(&irq, PBL_IRQ_TYPE_EDGE_BOTH);
+    ret = pbl_intc_set_wake(&irq, (key->gpio.flags & PBL_GPIO_ACTIVE_LOW) != 0U
+                                      ? PBL_IRQ_TYPE_LEVEL_LOW
+                                      : PBL_IRQ_TYPE_LEVEL_HIGH);
     if (ret != 0) {
       return ret;
     }
