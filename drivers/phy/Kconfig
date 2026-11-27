@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig PHY
+    bool "PHYs"
+    help
+      PHY class (pbl/drivers/phy.h), selected by the controllers that take
+      a PHY.
+
+if PHY
+
+endif # PHY
