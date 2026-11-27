@@ -83,6 +83,8 @@ void pbl_soc_early_init(void) {
 
   soc_sf32lb_lpsys_wake();
   prv_gtimer_start();
+  // Until a program runs on the LCPU, if any
+  soc_sf32lb_lpsys_sleep();
   soc_sf32lb_lpsys_release();
 
 #ifndef CONFIG_WATCHDOG
