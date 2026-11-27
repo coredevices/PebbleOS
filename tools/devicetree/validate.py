@@ -8,7 +8,9 @@ Bindings are checked as upstream checks its own: against the meta-schema, and th
 against the processed schema. Trees are checked from compiled blobs, or compiled from every board
 tree. Needs dtschema, dtc and a C preprocessor. The tools
 report problems of the upstream bindings too and exit 0 on findings, so only lines about our
-files count. The upstream bindings and headers come from the devicetree-rebasing submodule.
+files count. The upstream bindings and headers come from the devicetree-rebasing submodule,
+with the patches in third_party/devicetree/patches applied, which extend upstream bindings in
+place.
 """
 
 import argparse
@@ -22,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import dtmap
 import fdt
+import yaml
 
 # Those upstream gives dtc for binding examples
 EXAMPLE_DTC_FLAGS = (
@@ -52,19 +55,109 @@ def merged_vendor_prefixes(upstream, extra, outdir):
     return out
 
 
+def our_bindings(ours):
+    return [p for p in ours.rglob("*.yaml") if p.is_file()]
+
+
 def our_compatibles(ours):
     found = set()
-    for path in ours.rglob("*.yaml"):
-        found |= set(re.findall(r"(?:const:|-)\s+([a-z0-9-]+,[a-z0-9.,+-]+)\s*$", path.read_text(), re.MULTILINE))
+    for path in our_bindings(ours):
+        found |= set(
+            re.findall(
+                r"(?:const:|-)\s+([a-z0-9-]+,[a-z0-9.,+-]+)\s*$",
+                path.read_text(),
+                re.MULTILINE,
+            )
+        )
     return found
 
 
-def upstream_copy(upstream, ours, tmp):
-    """Upstream, without the trivial devices we have a binding for, as upstream does when one
-    gains properties, and without the bindings ours replace, at the same path."""
+PATCH_TYPES = ("temporary", "permanent")
+PATCH_STATUSES = ("not-submitted", "submitted", "applied", "merged")
+PATCH_KEYS = {
+    "temporary": {"type", "status", "link", "note"},
+    "permanent": {"type", "reason", "note"},
+}
+
+
+def check_patch_index(patches_dir):
+    """Every patch classified in patches.yaml, and nothing else: a temporary one by how far it got
+    upstream, with the link to its submission once submitted, a permanent one with why upstream
+    will never take it."""
+    index = patches_dir / "patches.yaml"
+    entries = (yaml.safe_load(index.read_text()) if index.exists() else None) or {}
+    patches = {p.name for p in patches_dir.glob("*.patch")}
+    errors = [f"{p}: not in {index.name}" for p in sorted(patches - set(entries))]
+    errors += [f"{p}: no such patch" for p in sorted(set(entries) - patches)]
+    for name, entry in sorted(entries.items()):
+        entry = entry or {}
+        kind = entry.get("type")
+        if kind not in PATCH_TYPES:
+            errors.append(f"{name}: type is one of {', '.join(PATCH_TYPES)}")
+            continue
+        unknown = set(entry) - PATCH_KEYS[kind]
+        if unknown:
+            errors.append(f"{name}: no {', '.join(sorted(unknown))} for a {kind} patch")
+        if kind == "permanent":
+            if not entry.get("reason"):
+                errors.append(f"{name}: a permanent patch gives its reason")
+            continue
+        status = entry.get("status")
+        if status not in PATCH_STATUSES:
+            errors.append(f"{name}: status is one of {', '.join(PATCH_STATUSES)}")
+        elif status == "not-submitted" and "link" in entry:
+            errors.append(f"{name}: a patch not submitted has no link")
+        elif status != "not-submitted" and not str(entry.get("link", "")).startswith(
+            "https://"
+        ):
+            errors.append(f"{name}: a {status} patch links to its submission")
+    if errors:
+        sys.exit(f"validate: {index}:\n  " + "\n  ".join(errors))
+
+
+def patch_targets(patch):
+    """The upstream bindings a patch is for, as its diff names them. A patch is a mail as git
+    format-patch writes it, with the message it was or is to be submitted with."""
+    text = patch.read_text()
+    if not re.search(r"^Subject: ", text, re.MULTILINE):
+        sys.exit(f"validate: {patch} has no message: write it as git format-patch does")
+    names = sorted(set(re.findall(r"^\+\+\+ b/(\S+)", text, re.MULTILINE)))
+    if not names:
+        sys.exit(f"validate: {patch} patches nothing")
+    return [Path(n) for n in names]
+
+
+def apply_patches(tree, patches_dir):
+    """Our patches to upstream bindings, applied to the copy in the order of their names: one that
+    no longer applies needs a rebase, one upstream took needs dropping."""
+    check_patch_index(patches_dir)
+    patched = []
+    for patch in sorted(patches_dir.glob("*.patch")):
+        targets = patch_targets(patch)
+        name = patch.name
+        check = run(["git", "apply", "--check", "-p1", str(patch)], cwd=tree)
+        if check.returncode != 0:
+            taken = run(
+                ["git", "apply", "--check", "--reverse", "-p1", str(patch)], cwd=tree
+            )
+            if taken.returncode == 0:
+                sys.exit(f"validate: upstream has {name} now: drop it")
+            sys.exit(f"validate: {name} no longer applies:\n{check.stderr.strip()}")
+        run(["git", "apply", "-p1", str(patch)], cwd=tree)
+        patched += [t for t in targets if t not in patched]
+    return patched
+
+
+def upstream_copy(upstream, patches_dir, ours, tmp):
+    """Upstream, with our patches applied, without the trivial devices we have a binding for, as
+    upstream does when one gains properties, and without the bindings ours replace, at the same
+    path."""
     tree = tmp / "upstream"
     shutil.copytree(upstream, tree, symlinks=True)
-    for path in ours.rglob("*.yaml"):
+    for rel in apply_patches(tree, patches_dir):
+        if (ours / rel).exists():
+            sys.exit(f"validate: {rel} is both patched and a binding of ours")
+    for path in our_bindings(ours):
         (tree / path.relative_to(ours)).unlink(missing_ok=True)
     trivial = tree / "trivial-devices.yaml"
     compatibles = our_compatibles(ours)
@@ -72,7 +165,9 @@ def upstream_copy(upstream, ours, tmp):
     kept = [
         line
         for line in lines
-        if not (line.strip().startswith("- ") and line.strip()[2:].strip() in compatibles)
+        if not (
+            line.strip().startswith("- ") and line.strip()[2:].strip() in compatibles
+        )
     ]
     trivial.write_text("".join(kept))
     return tree
@@ -164,6 +259,25 @@ def check_bindings(args, ours, files, schema, tmp):
     return failed
 
 
+def check_patched(args):
+    """The upstream bindings our patches patch, against the meta-schema."""
+    files = sorted(
+        {
+            str(args.upstream / t)
+            for p in args.patches.glob("*.patch")
+            for t in patch_targets(p)
+        }
+    )
+    if not files:
+        return False
+    findings = ours_only(
+        run([args.dt_doc_validate, "-u", str(args.upstream), *files]).stderr, files
+    )
+    for line in findings:
+        print(line.replace(str(args.upstream) + "/", "patched: "))
+    return bool(findings)
+
+
 def check_dtbs(args, dtbs, schema):
     if not dtbs:
         return False
@@ -199,7 +313,11 @@ def compile_trees(args, tmp):
                 overlays = dtmap.addon_overlays(root, board, [addon])
                 outdir = tmp / "trees" / f"{dts.stem}+{addon}"
                 dtb, _ = dtmap.compile_dts(
-                    dts, args.cc, include_dirs, outdir, [p for p in overlays if p.exists()]
+                    dts,
+                    args.cc,
+                    include_dirs,
+                    outdir,
+                    [p for p in overlays if p.exists()],
                 )
                 named = outdir / f"{dts.stem}+{addon}.dtb"
                 Path(dtb).rename(named)
@@ -215,6 +333,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--upstream-bindings", type=Path, default=upstream / "Bindings")
     parser.add_argument(
+        "--patches",
+        type=Path,
+        default=root / "third_party" / "devicetree" / "patches",
+        help="our patches to the upstream bindings",
+    )
+    parser.add_argument(
         "--include",
         type=Path,
         action="append",
@@ -227,7 +351,11 @@ def main():
     parser.add_argument("--dt-doc-validate", default="dt-doc-validate")
     parser.add_argument("--dt-extract-example", default="dt-extract-example")
     parser.add_argument(
-        "--bindings", nargs="+", default=[], metavar="YAML", help="our bindings to check"
+        "--bindings",
+        nargs="+",
+        default=[],
+        metavar="YAML",
+        help="our bindings to check",
     )
     parser.add_argument(
         "--all-trees", action="store_true", help="compile and check every board tree"
@@ -250,9 +378,13 @@ def main():
         prefixes = merged_vendor_prefixes(
             args.upstream_bindings, ours / "vendor-prefixes.txt", tmp
         )
-        args.upstream = upstream_copy(args.upstream_bindings, ours, tmp)
+        args.upstream = upstream_copy(
+            args.upstream_bindings, args.patches.resolve(), ours, tmp
+        )
         schema = make_schema(args, ours, prefixes, tmp)
-        failed = check_bindings(args, ours, args.bindings, schema, tmp) if args.bindings else False
+        failed = check_patched(args)
+        if args.bindings:
+            failed |= check_bindings(args, ours, args.bindings, schema, tmp)
         dtbs = [*args.dtb, *(compile_trees(args, tmp) if args.all_trees else [])]
         failed |= check_dtbs(args, dtbs, schema)
     sys.exit(1 if failed else 0)
