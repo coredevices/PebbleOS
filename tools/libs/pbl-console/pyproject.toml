@@ -8,6 +8,7 @@ dependencies = ["pyserial"]
 
 [project.optional-dependencies]
 protocol = ["libpebble2"]
+usb = ["libpebble2", "pyusb", "libusb-package"]
 
 [tool.setuptools]
 packages = ["pblconsole"]

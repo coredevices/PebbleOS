@@ -52,18 +52,20 @@ flowchart TB
     direction LR
     gatt["GATT<br/>(PPoGATT)"]
     console["Console"]
+    usb["USB"]
   end
   users --> core
   core --> transports
   gatt --- ble["Kernel LE client"]
   console --- cons["Console frames"]
+  usb --- usbd["USB device"]
 
   classDef app fill:#fa4a36,stroke:#fa4a36,color:#ffffff
   classDef system fill:#fd8a7c,stroke:#fd8a7c,color:#171717
   classDef base fill:#525252,stroke:#525252,color:#ffffff
   class pb,blob,music,more app
   class rx,tx,sess system
-  class gatt,console,ble,cons base
+  class gatt,console,usb,ble,cons,usbd base
 ```
 
 - Endpoints and senders use sessions and know nothing about transports.
@@ -71,8 +73,9 @@ flowchart TB
   links.
 - Transports move bytes over a link and open and close sessions. The code
   that drives each link (the kernel LE client, the console) calls its
-  transport through the transport's header. The firmware adds a transport of
-  its own for the emulator's serial link.
+  transport through the transport's header; the USB device stack calls the
+  USB transport as one of its functions. The firmware adds a transport of its
+  own for the emulator's serial link.
 
 ## Sessions
 

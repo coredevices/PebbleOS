@@ -40,4 +40,14 @@ config PP_TRANSPORT_CONSOLE
     help
       Pebble protocol over serial console frames, for development tools.
 
+config PP_TRANSPORT_USB
+    bool "USB"
+    depends on USB_DEVICE
+    select KERNEL_SYS_WORKQ
+    select KERNEL_SYS_WORKQ_HIGH
+    help
+      Pebble protocol over USB, for development tools: a function of the
+      USB device, with a vendor-specific interface and two bulk endpoints
+      (pbl/pp/transports/usb.h).
+
 endif

@@ -398,6 +398,11 @@ Its vendor requests, to its interface:
 | `0x04` | OUT | Clears the counters and the sink's sequence number |
 | `0x05` | IN | Returns the counters, five 32-bit little-endian words: loopback, source and sink bytes, sink errors, interrupt packets |
 
+## Pebble protocol
+
+`CONFIG_PP_TRANSPORT_USB` adds a function that carries the Pebble protocol,
+for host tools: see {doc}`pp/transports`.
+
 ## Controllers
 
 A controller driver implements `struct pbl_udc_ops` and reports bus events,
