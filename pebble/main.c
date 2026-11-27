@@ -43,7 +43,7 @@
 #include <system/task_wdt.h>
 #include <system/version.h>
 #ifdef CONFIG_QEMU_SERIAL
-#include <comm/qemu/serial.h>
+#include <debug/qemu/serial.h>
 #endif
 
 #if defined(CONFIG_MFG)

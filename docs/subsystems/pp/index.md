@@ -143,7 +143,7 @@ Data logging, analytics and the cache of the system session's capabilities
 are listeners. Listeners run in the context of the transport,
 which may hold its own lock, so they must not block. Apps learn about
 sessions through `PEBBLE_COMM_SESSION_EVENT`, which a listener of the firmware
-(`pebble/comm/pp.c`) puts for every session that opens or closes.
+(`pebble/kernel/pp.c`) puts for every session that opens or closes.
 
 ## Main thread
 

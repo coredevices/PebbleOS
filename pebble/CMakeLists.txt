@@ -67,7 +67,6 @@ set(dirs
   services
   applib
   mfg
-  comm
   debug
   kernel
   popups

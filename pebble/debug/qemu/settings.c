@@ -5,7 +5,7 @@
 
 #include <pbl/kernel/fatal.h>
 
-#include <comm/qemu/settings.h>
+#include <debug/qemu/settings.h>
 #include <devicetree/regs.h>
 
 // QEMU RTC backup registers at the RTC base + 0x40
