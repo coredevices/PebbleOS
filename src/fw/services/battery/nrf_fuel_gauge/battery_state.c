@@ -555,6 +555,8 @@ TimerID battery_state_get_periodic_timer_id(void) { return s_periodic_timer_id; 
 
 uint16_t battery_state_get_voltage(void) { return (uint16_t)s_last_voltage_mv; }
 
+uint32_t battery_state_get_soc_cpct(void) { return s_last_soc_cpct; }
+
 int32_t battery_state_get_temperature(void) { return s_last_temp_mc; }
 
 #include "console/prompt.h"
