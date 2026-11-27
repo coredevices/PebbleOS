@@ -399,7 +399,9 @@ void ble_transport_ll_init(void) {
   ret = pbl_mbox_request(pbl_rproc_sf32lb_get_tx_chan(BT_CONTROLLER), &s_mbox_cl);
   PBL_ASSERT(ret == 0, "LCPU TX doorbell request failed (%d)", ret);
 
+  pbl_rproc_sf32lb_sram_get(BT_CONTROLLER);
   prv_controller_config();
+  pbl_rproc_sf32lb_sram_put(BT_CONTROLLER);
 
   ret = pbl_rproc_boot(BT_CONTROLLER);
   PBL_ASSERT(ret == 0, "LCPU boot failed (%d)", ret);

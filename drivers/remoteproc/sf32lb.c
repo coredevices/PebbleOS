@@ -347,6 +347,16 @@ const struct pbl_mem_region *pbl_rproc_sf32lb_get_sram(const struct pbl_rproc *r
   return &prv_lcpu(rproc)->sram;
 }
 
+void pbl_rproc_sf32lb_sram_get(const struct pbl_rproc *rproc) {
+  (void)rproc;
+  soc_sf32lb_lpsys_wake();
+}
+
+void pbl_rproc_sf32lb_sram_put(const struct pbl_rproc *rproc) {
+  (void)rproc;
+  soc_sf32lb_lpsys_release();
+}
+
 const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_tx_chan(const struct pbl_rproc *rproc) {
   return &prv_lcpu(rproc)->tx_chan;
 }
