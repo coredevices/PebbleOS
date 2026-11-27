@@ -24,6 +24,7 @@
 #include "kernel/util/sleep.h"
 #include "process_management/pebble_process_md.h"
 #include "process_state/app_state/app_state.h"
+#include "pbl/services/battery/battery_state.h"
 #include "pbl/services/bluetooth/bluetooth_ctl.h"
 #include "pbl/services/light.h"
 #include "pbl/services/idle_watchdog.h"
@@ -32,7 +33,8 @@
 
 #include <stdio.h>
 
-#define STATUS_STRING_LEN 200
+#define STATUS_STRING_LEN 240
+#define RECORD_INTERVAL_SEC 60
 #define COMPONENT_TEST_DURATION_SEC 10
 #define COMPONENT_BACKLIGHT_DURATION_SEC 2
 #define COMPONENT_VIBE_DURATION_SEC 1
@@ -108,6 +110,16 @@ typedef struct {
   // Battery state at start of idle phase, used for the drop check
   uint8_t initial_percent;
   int32_t initial_voltage_mv;
+  uint32_t initial_soc_cpct;
+
+  // Battery charge drawn in the current phase, from the PMIC current
+  int64_t phase_uas;
+  uint32_t record_elapsed_sec;
+
+  uint32_t drain_sec;
+  int32_t drain_uah;
+  int32_t idle_uah;
+  int32_t idle_mean_ua;
 
   char fail_reason[64];
 
@@ -217,6 +229,71 @@ static void prv_advance_component(AppData *data) {
   prv_start_component(data);
 }
 
+static const char *const s_phase_names[] = {
+  [AgingStateWaitPlug] = "waitplug", [AgingStateCycling] = "cycle",
+  [AgingStateCharging] = "charge",   [AgingStateWaitUnplug] = "waitunplug",
+  [AgingStateDraining] = "drain",    [AgingStateSettling] = "settle",
+  [AgingStateIdle] = "idle",         [AgingStatePass] = "pass",
+  [AgingStateFail] = "fail",
+};
+
+static void prv_log_battery(const AppData *data, const char *what, const BatteryConstants *bc,
+                            const BatteryChargeState *cs) {
+  uint32_t soc = battery_state_get_soc_cpct();
+  PBL_LOG_INFO("Aging %s %s t=%" PRIu32 " V=%" PRId32 " I=%" PRId32 " T=%" PRId32,
+               s_phase_names[data->state], what, data->phase_elapsed_sec, bc->v_mv, bc->i_ua,
+               bc->t_mc);
+  PBL_LOG_INFO("Aging %s %s soc=%" PRIu32 ".%02" PRIu32 " plg=%d chg=%d q=%" PRId32 "uAh",
+               s_phase_names[data->state], what, soc / 100, soc % 100, cs->is_plugged,
+               cs->is_charging, (int32_t)(data->phase_uas / 3600));
+}
+
+// Account the battery current over the last dt seconds, and log a record
+// once a minute.
+static void prv_account(AppData *data, const BatteryConstants *bc, const BatteryChargeState *cs,
+                        uint32_t dt) {
+  data->phase_uas += (int64_t)bc->i_ua * dt;
+  data->record_elapsed_sec += dt;
+  if (data->record_elapsed_sec >= RECORD_INTERVAL_SEC) {
+    data->record_elapsed_sec = 0;
+    prv_log_battery(data, "rec", bc, cs);
+  }
+}
+
+static void prv_set_phase(AppData *data, AgingState state) {
+  BatteryConstants bc = {0};
+  battery_get_constants(&bc);
+  BatteryChargeState cs = battery_get_charge_state();
+  int32_t uah = (int32_t)(data->phase_uas / 3600);
+
+  prv_log_battery(data, "end", &bc, &cs);
+  if (data->state == AgingStateDraining) {
+    data->drain_sec = data->phase_elapsed_sec;
+    data->drain_uah = uah;
+  } else if (data->state == AgingStateIdle) {
+    data->idle_uah = uah;
+    data->idle_mean_ua =
+        data->phase_elapsed_sec ? (int32_t)(data->phase_uas / data->phase_elapsed_sec) : 0;
+  }
+
+  data->state = state;
+  data->phase_elapsed_sec = 0;
+  data->phase_uas = 0;
+  data->record_elapsed_sec = 0;
+  prv_log_battery(data, "start", &bc, &cs);
+}
+
+static void prv_format_summary(const AppData *data, char *buf, size_t size) {
+  uint32_t soc = battery_state_get_soc_cpct();
+  sniprintf(buf, size,
+            "Drain %" PRIu32 "min %" PRId32 ".%02" PRId32 "mAh\n"
+            "Idle %" PRId32 "uA %" PRId32 ".%02" PRId32 "mAh\n"
+            "SoC %" PRIu32 ".%02" PRIu32 "->%" PRIu32 ".%02" PRIu32,
+            data->drain_sec / 60, data->drain_uah / 1000, (data->drain_uah % 1000) / 10,
+            data->idle_mean_ua, data->idle_uah / 1000, (data->idle_uah % 1000) / 10,
+            data->initial_soc_cpct / 100, data->initial_soc_cpct % 100, soc / 100, soc % 100);
+}
+
 static void prv_report_result(bool passed) {
   // Always report into the FINISHED bucket: aging is launched outside the
   // per-mode test menu, so we can't rely on whatever mode happened to be
@@ -232,7 +309,7 @@ static void prv_enter_fail(AppData *data, const char *reason) {
     prv_cleanup_component(data);
   }
   battery_set_charge_enable(true);
-  data->state = AgingStateFail;
+  prv_set_phase(data, AgingStateFail);
   sniprintf(data->fail_reason, sizeof(data->fail_reason), "%s", reason);
   PBL_LOG_ERR("Aging test FAIL: %s", reason);
   prv_report_result(false);
@@ -372,8 +449,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
     case AgingStateWaitPlug: {
       BatteryChargeState cs = battery_get_charge_state();
       if (cs.is_plugged) {
-        data->state = AgingStateCycling;
-        data->phase_elapsed_sec = 0;
+        prv_set_phase(data, AgingStateCycling);
         // Cycle on external power only; the battery is charged afterwards.
         battery_set_charge_enable(false);
         data->component = ComponentAccel;
@@ -396,6 +472,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
+      prv_account(data, &bc, &cs, 1);
 
       if (!cs.is_plugged) {
         prv_enter_fail(data, "Unplugged during\ncycling");
@@ -410,8 +487,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       if (data->phase_elapsed_sec >= CYCLE_DURATION_SEC) {
         prv_cleanup_component(data);
         battery_set_charge_enable(true);
-        data->state = AgingStateCharging;
-        data->phase_elapsed_sec = 0;
+        prv_set_phase(data, AgingStateCharging);
         sniprintf(data->status_string, sizeof(data->status_string), "CHARGING\nStarting...");
         break;
       }
@@ -430,6 +506,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
+      prv_account(data, &bc, &cs, 1);
 
       if (!cs.is_plugged) {
         prv_enter_fail(data, "Unplugged during\ncharge");
@@ -443,7 +520,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
       // Full once the PMIC stops charging on its own at a near-full SoC.
       if (!cs.is_charging && cs.charge_percent >= CHARGE_COMPLETE_MIN_PERCENT) {
-        data->state = AgingStateWaitUnplug;
+        prv_set_phase(data, AgingStateWaitUnplug);
         break;
       }
 
@@ -475,8 +552,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       if (!cs.is_plugged) {
         // Near full the fuel gauge can sit at 99-100% for hours regardless of
         // consumption, so the idle drop is measured from a settled lower SoC.
-        data->state = AgingStateDraining;
-        data->phase_elapsed_sec = 0;
+        prv_set_phase(data, AgingStateDraining);
         prv_drain_light_enable(data, true);
         // The remaining phases only need occasional screen refreshes, so tick
         // once a minute to cut wake-ups and the test's own power draw.
@@ -497,6 +573,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
+      prv_account(data, &bc, &cs, SECONDS_PER_MINUTE);
 
       if (cs.is_plugged) {
         prv_enter_fail(data, "Plugged while\ndraining");
@@ -505,8 +582,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 
       if (cs.charge_percent <= DRAIN_TARGET_PERCENT) {
         prv_drain_light_enable(data, false);
-        data->state = AgingStateSettling;
-        data->phase_elapsed_sec = 0;
+        prv_set_phase(data, AgingStateSettling);
         sniprintf(data->status_string, sizeof(data->status_string), "SETTLING\nStarting...");
         break;
       }
@@ -534,6 +610,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
+      prv_account(data, &bc, &cs, SECONDS_PER_MINUTE);
 
       if (cs.is_plugged) {
         prv_enter_fail(data, "Plugged while\nsettling");
@@ -543,10 +620,10 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       // The fuel gauge keeps converging for a while after the drain, so the
       // idle baseline is only taken once it has settled.
       if (data->phase_elapsed_sec >= SETTLE_DURATION_SEC) {
-        data->state = AgingStateIdle;
-        data->phase_elapsed_sec = 0;
+        prv_set_phase(data, AgingStateIdle);
         data->initial_percent = cs.charge_percent;
         data->initial_voltage_mv = bc.v_mv;
+        data->initial_soc_cpct = battery_state_get_soc_cpct();
         sniprintf(data->status_string, sizeof(data->status_string), "IDLE\nStarting...");
         break;
       }
@@ -575,6 +652,7 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
       BatteryConstants bc;
       battery_get_constants(&bc);
       BatteryChargeState cs = battery_get_charge_state();
+      prv_account(data, &bc, &cs, SECONDS_PER_MINUTE);
 
       if (cs.is_plugged) {
         prv_enter_fail(data, "Plugged during\nidle test");
@@ -602,10 +680,11 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
           break;
         }
 
-        data->state = AgingStatePass;
+        prv_set_phase(data, AgingStatePass);
+        char summary[128];
+        prv_format_summary(data, summary, sizeof(summary));
         sniprintf(data->status_string, sizeof(data->status_string),
-                  "PASS\n\nIdle drop %" PRId8 "%%\n%" PRId32 "mV\nNow %" PRIu8 "%%", drop, drop_mv,
-                  cs.charge_percent);
+                  "PASS\nDrop %" PRId8 "%% %" PRId32 "mV\n%s", drop, drop_mv, summary);
         prv_report_result(true);
         tick_timer_service_unsubscribe();
         break;
@@ -639,8 +718,10 @@ static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   if (data->state == AgingStateFail) {
-    sniprintf(data->status_string, sizeof(data->status_string),
-              "FAIL\n\n%s", data->fail_reason);
+    char summary[128];
+    prv_format_summary(data, summary, sizeof(summary));
+    sniprintf(data->status_string, sizeof(data->status_string), "FAIL\n%s\n%s",
+              data->fail_reason, summary);
   }
 
   text_layer_set_text(&data->status, data->status_string);
