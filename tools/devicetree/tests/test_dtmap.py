@@ -346,6 +346,12 @@ def test_default_used_when_absent(tmp_path):
     assert "BUS_DT_DEFINE(dt_bus, 100);" in body(gen)
 
 
+def test_missing_pin_state_takes_the_default(tmp_path):
+    data = {**SPECS["acme,bus"], "args": [{"pinctrl": "sleep", "default": "nullptr"}]}
+    gen = generate(tmp_path, specs={"acme,bus": spec("acme,bus", data)})
+    assert "BUS_DT_DEFINE(dt_bus, nullptr);" in body(gen)
+
+
 def test_required_arg_missing_fails(tmp_path):
     data = {**SPECS["acme,bus"], "args": [{"prop": "absent"}]}
     with pytest.raises(DtError, match="missing"):
