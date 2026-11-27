@@ -72,6 +72,7 @@ if(PEBBLEOS_SDK_ROOT)
   message(STATUS "PebbleOS SDK: ${PEBBLEOS_SDK_ROOT} (${label})")
   set(PEBBLEOS_SDK_HINTS
     ${PEBBLEOS_SDK_ROOT}/arm-none-eabi/bin
+    ${PEBBLEOS_SDK_ROOT}/riscv-none-elf/bin
     ${PEBBLEOS_SDK_ROOT}/qemu/bin
     ${PEBBLEOS_SDK_ROOT}/sftool
   )

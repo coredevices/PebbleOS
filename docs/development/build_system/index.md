@@ -58,7 +58,11 @@ flowchart TD
    symbol becomes a CMake variable.
 2. **Toolchain.** The bare-metal ARM toolchain comes from the installed
    PebbleOS SDK; boards that do not run on ARM, such as `native_emery`,
-   bring their own `toolchain.cmake`.
+   bring their own `toolchain.cmake`, and so do cores of a board, such as
+   the RISC-V `nrf54l15dk/cpuflpr`, with `toolchain.<core>.cmake`. The
+   RISC-V toolchain, `cmake/toolchain/riscv-none-elf.cmake`, is not in the
+   SDK yet: it takes `riscv-none-elf-gcc` from `PATH`, or another prefix
+   from `-DCROSS_COMPILE=`, and builds picolibc from source.
 3. **Libraries.** PebbleOS's directories, then the firmware's, are added
    in turn. Each one
    contributes libraries, global include directories, linker script
@@ -117,7 +121,7 @@ cmake/PebbleOSConfig.cmake
                       find_package(PebbleOS), for applications
 samples/              applications other than the firmware, each showing
                       one part of PebbleOS
-cmake/toolchain/      the bare-metal ARM and host toolchains
+cmake/toolchain/      the bare-metal ARM and RISC-V, and host toolchains
 tools/cmake/          the generators the build shells out to
 ```
 

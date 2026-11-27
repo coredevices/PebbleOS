@@ -40,7 +40,7 @@ function(pbl_arch_flags out)
   get_directory_property(flags COMPILE_OPTIONS)
   set(arch "")
   foreach(flag ${flags})
-    if(flag MATCHES "^(-mthumb|-mcpu=|-mfloat-abi=|-mfpu=|-march=)")
+    if(flag MATCHES "^(-mthumb|-mcpu=|-mfloat-abi=|-mfpu=|-march=|-mabi=|-mcmodel=|-msmall-data-limit=)")
       list(APPEND arch ${flag})
     endif()
   endforeach()
@@ -80,8 +80,8 @@ nm = '${CROSS_COMPILE}nm'
 strip = '${CROSS_COMPILE}strip'
 [host_machine]
 system = 'none'
-cpu_family = 'arm'
-cpu = 'arm'
+cpu_family = '${CMAKE_SYSTEM_PROCESSOR}'
+cpu = '${CMAKE_SYSTEM_PROCESSOR}'
 endian = 'little'
 [properties]
 skip_sanity_check = true
