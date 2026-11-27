@@ -4,6 +4,7 @@
 /dts-v1/;
 
 #include "nordic/nrf54l15-qfaa.dtsi"
+#include "nordic/nrf54l15_cpuapp.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>

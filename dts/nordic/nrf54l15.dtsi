@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Core Devices LLC
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
-// The application core, at the secure addresses of the peripherals
+// The blocks the cores share, at the secure addresses of the peripherals. What a core has of its
+// own, and the interrupts as it sees them, come from the tree of the core, such as
+// nrf54l15_cpuapp.dtsi.
 
 #include <dt-bindings/clock/nordic,nrf54l15-clock.h>
 #include <dt-bindings/gpio/gpio.h>
@@ -11,17 +13,6 @@
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
-
-	cpus {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		cpu0: cpu@0 {
-			compatible = "arm,cortex-m33";
-			device_type = "cpu";
-			reg = <0>;
-		};
-	};
 
 	sram0: memory@20000000 {
 		device_type = "memory";
@@ -34,20 +25,10 @@
 		clock-frequency = <32000000>;
 	};
 
-	nvic: interrupt-controller@e000e100 {
-		compatible = "arm,v8m-nvic";
-		reg = <0xe000e100 0xc00>;
-		interrupt-controller;
-		#interrupt-cells = <1>;
-		#address-cells = <0>;
-		arm,num-irq-priority-bits = <3>;
-	};
-
-	soc {
+	soc: soc {
 		compatible = "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
-		interrupt-parent = <&nvic>;
 		ranges;
 
 		ficr: ficr@ffc000 {
@@ -200,7 +181,6 @@
 		gpiote20: gpiote@500da000 {
 			compatible = "nordic,nrf54l15-gpiote";
 			reg = <0x500da000 0x1000>;
-			interrupts = <219>;
 			nordic,num-channels = <8>;
 		};
 
@@ -213,9 +193,6 @@
 		grtc: timer@500e2000 {
 			compatible = "nordic,nrf54l15-grtc";
 			reg = <0x500e2000 0x1000>;
-			interrupts = <228>;
-			clocks = <&clock NRF54L_CLOCK_LFCLK>;
-			nordic,compare-channel = <0>;
 		};
 
 		uart30: serial@50104000 {
@@ -240,7 +217,6 @@
 		gpiote30: gpiote@5010c000 {
 			compatible = "nordic,nrf54l15-gpiote";
 			reg = <0x5010c000 0x1000>;
-			interrupts = <269>;
 			nordic,num-channels = <4>;
 		};
 
@@ -265,11 +241,6 @@
 				regulator-always-on;
 				regulator-initial-mode = <NRF54L15_REGULATOR_MODE_LDO>;
 			};
-		};
-
-		icache: cache-controller@e0082000 {
-			compatible = "nordic,nrf54l15-cache";
-			reg = <0xe0082000 0x1000>;
 		};
 	};
 };

@@ -1,0 +1,49 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+// The nRF54L15 as its application core, the secure Cortex-M33, sees it
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-m33";
+			device_type = "cpu";
+			reg = <0>;
+		};
+	};
+
+	nvic: interrupt-controller@e000e100 {
+		compatible = "arm,v8m-nvic";
+		reg = <0xe000e100 0xc00>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+		arm,num-irq-priority-bits = <3>;
+	};
+};
+
+&soc {
+	interrupt-parent = <&nvic>;
+
+	icache: cache-controller@e0082000 {
+		compatible = "nordic,nrf54l15-cache";
+		reg = <0xe0082000 0x1000>;
+	};
+};
+
+&gpiote20 {
+	interrupts = <219>;
+};
+
+&gpiote30 {
+	interrupts = <269>;
+};
+
+&grtc {
+	interrupts = <228>;
+	clocks = <&clock NRF54L_CLOCK_LFCLK>;
+	nordic,compare-channel = <0>;
+};
