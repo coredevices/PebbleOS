@@ -112,3 +112,40 @@ void test_alerts_preferences__window_timeout_keeps_valid_values(void) {
   cl_assert(alerts_preferences_get_notification_window_timeout_ms() ==
             NOTIF_WINDOW_TIMEOUT_INFINITE);
 }
+
+#define PREF_KEY_DND_AUTO_DISMISS "dndAutoDismiss"
+
+static bool prv_dnd_auto_dismiss_stored(bool *value) {
+  struct pbl_settings_file file = {};
+  cl_assert_equal_i(pbl_settings_open(&file, NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN), 0);
+  const bool found = pbl_settings_get(&file, PREF_KEY_DND_AUTO_DISMISS,
+                                      strlen(PREF_KEY_DND_AUTO_DISMISS), value, sizeof(*value)) == 0;
+  pbl_settings_close(&file);
+  return found;
+}
+
+void test_alerts_preferences__dnd_auto_dismiss_defaults_on(void) {
+  alerts_preferences_init();
+  cl_assert(alerts_preferences_dnd_get_auto_dismiss());
+  bool stored = false;
+  cl_assert(prv_dnd_auto_dismiss_stored(&stored));
+  cl_assert(stored);
+}
+
+void test_alerts_preferences__dnd_auto_dismiss_keeps_explicit_off(void) {
+  const bool off = false;
+  prv_set(NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN, PREF_KEY_DND_AUTO_DISMISS,
+          strlen(PREF_KEY_DND_AUTO_DISMISS), &off, sizeof(off));
+  alerts_preferences_init();
+  cl_assert(!alerts_preferences_dnd_get_auto_dismiss());
+
+  // Legacy phone-pushed records carry the NUL terminator in the key.
+  alerts_preferences_dnd_set_auto_dismiss(true);
+  pbl_fs_format("/");
+  prv_set(NOTIF_PREFS_FILE_NAME, NOTIF_PREFS_FILE_LEN, PREF_KEY_DND_AUTO_DISMISS,
+          sizeof(PREF_KEY_DND_AUTO_DISMISS), &off, sizeof(off));
+  alerts_preferences_init();
+  cl_assert(!alerts_preferences_dnd_get_auto_dismiss());
+  bool stored = true;
+  cl_assert(!prv_dnd_auto_dismiss_stored(&stored));
+}

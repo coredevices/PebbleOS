@@ -52,7 +52,7 @@ static bool s_dnd_notification_backlight = true;
 static bool s_dnd_mute_speaker = false;
 
 #define PREF_KEY_DND_AUTO_DISMISS "dndAutoDismiss"
-static bool s_dnd_auto_dismiss = false;
+static bool s_dnd_auto_dismiss = true;
 
 #define PREF_KEY_SPEAKER_MUTED "speakerMuted"
 static bool s_speaker_muted = false;
@@ -202,6 +202,18 @@ static void prv_migrate_notification_content_size(struct pbl_settings_file *file
 
   pbl_settings_set(file, PREF_KEY_NOTIF_TEXT_SIZE, strlen(PREF_KEY_NOTIF_TEXT_SIZE),
                    &s_notification_content_size, sizeof(s_notification_content_size));
+}
+
+// Phones treat an unset pref as off, so store the default for them to sync.
+static void prv_migrate_dnd_auto_dismiss(struct pbl_settings_file *file) {
+  const char *key = PREF_KEY_DND_AUTO_DISMISS;
+  if (pbl_settings_exists(file, key, strlen(key)) ||
+      pbl_settings_exists(file, key, strlen(key) + 1)) {
+    return;
+  }
+
+  s_dnd_auto_dismiss = true;
+  pbl_settings_set(file, key, strlen(key), &s_dnd_auto_dismiss, sizeof(s_dnd_auto_dismiss));
 }
 
 static void prv_migrate_legacy_dnd_schedule(struct pbl_settings_file *file) {
@@ -491,6 +503,7 @@ void alerts_preferences_init(void) {
 
   prv_migrate_legacy_dnd_schedule(&file);
   prv_migrate_notification_content_size(&file);
+  prv_migrate_dnd_auto_dismiss(&file);
   prv_migrate_dnd_schedule_slots(&file);
   for (int type = 0; type < NumDNDSchedules; type++) {
     prv_sync_legacy_schedule(&file, type);
