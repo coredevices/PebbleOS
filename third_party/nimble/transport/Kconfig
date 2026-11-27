@@ -86,6 +86,7 @@ endif # NIMBLE_HCI_NRF_SDC
 config NIMBLE_HCI_THREAD_STACK_SIZE
     int "HCI transport thread stack size in bytes"
     depends on NIMBLE_HCI_SF32LB || NIMBLE_HCI_UART || NIMBLE_HCI_NRF_SDC
+    default 2560 if NIMBLE_HCI_SF32LB
     default 1024
 
 config NIMBLE_HCI_THREAD_PRIO
