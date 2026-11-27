@@ -57,3 +57,6 @@
 0012-ASoC-dt-bindings-stm32-sai-Allow-a-memory-region-for.patch:
   type: temporary
   status: not-submitted
+0013-dt-bindings-usb-dwc2-Add-Nordic-nRF54LM20A-USBHS.patch:
+  type: permanent
+  reason: Upstream describes no nRF54L part.

@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 15:51:55 +0100
+Subject: [PATCH] dt-bindings: usb: dwc2: Add Nordic nRF54LM20A USBHS
+
+The USBHS of the nRF54LM20A is a DWC2 controller whose UTMI+ PHY sits
+behind a wrapper that powers and resets the controller, taken as its
+PHY. It runs from the CPU clock, which software does not switch, so it
+takes no clock of its own: require its PHY instead.
+
+Upstream describes no nRF54L part, so this stays a fixup.
+---
+ usb/dwc2.yaml | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/usb/dwc2.yaml b/usb/dwc2.yaml
+index 6c3a109..5d45537 100644
+--- a/usb/dwc2.yaml
++++ b/usb/dwc2.yaml
+@@ -67,6 +67,9 @@ properties:
+       - items:
+           - const: st,stm32mp15-hsotg
+           - const: snps,dwc2
++      - items:
++          - const: nordic,nrf54lm20a-usbhs
++          - const: snps,dwc2
+       - const: samsung,s3c6400-hsotg
+       - const: intel,socfpga-agilex-hsotg
+ 
+@@ -185,8 +188,21 @@ required:
+   - compatible
+   - reg
+   - interrupts
+-  - clocks
+-  - clock-names
++
++# The nRF54LM20A USBHS runs from the CPU clock, which software does not
++# switch, and takes its own clock through its PHY
++if:
++  properties:
++    compatible:
++      contains:
++        const: nordic,nrf54lm20a-usbhs
++then:
++  required:
++    - phys
++else:
++  required:
++    - clocks
++    - clock-names
+ 
+ unevaluatedProperties: false
+ 
