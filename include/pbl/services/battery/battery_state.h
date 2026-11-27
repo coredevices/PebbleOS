@@ -65,5 +65,8 @@ uint16_t battery_state_get_voltage(void);
 // Get the last recorded temperature (mC)
 int32_t battery_state_get_temperature(void);
 
+// Get the unrounded fuel gauge state of charge, in hundredths of a percent
+uint32_t battery_state_get_soc_cpct(void);
+
 // For unit tests
 TimerID battery_state_get_periodic_timer_id(void);
