@@ -473,5 +473,4 @@ void remote_input_protocol_msg_callback(struct pbl_pp_session *session, const ui
               PBL_PP_DEFAULT_TIMEOUT_MS);
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_REMOTE_INPUT, PBL_PP_ACCESS_PRIVATE,
-                       remote_input_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_REMOTE_INPUT, remote_input_protocol_msg_callback);

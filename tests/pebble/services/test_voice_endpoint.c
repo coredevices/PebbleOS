@@ -103,7 +103,7 @@ void test_voice_endpoint__initialize(void) {
   s_retry_count = 0;
 
   fake_comm_session_init();
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   fake_transport_set_connected(s_transport, true);
 }
 

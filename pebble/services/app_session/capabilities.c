@@ -126,7 +126,7 @@ static void prv_set_system_capabilities(const struct pbl_pp_capabilities *capabi
 
 static void prv_session_cb(struct pbl_pp_session *session, enum pbl_pp_session_event event,
                            void *user_data) {
-  if (event == PBL_PP_SESSION_CAPABILITIES && pbl_pp_session_is_system(session)) {
+  if (event == PBL_PP_SESSION_CAPABILITIES) {
     const struct pbl_pp_capabilities capabilities = {
       .flags = pbl_pp_session_get_capabilities(session),
     };

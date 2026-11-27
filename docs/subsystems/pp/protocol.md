@@ -17,7 +17,7 @@ endian:
 | Limit | Value | |
 |---|---|---|
 | `PBL_PP_MAX_INBOUND_PAYLOAD_PRIVATE` | 2044 bytes | From the Pebble mobile app |
-| `PBL_PP_MAX_INBOUND_PAYLOAD_PUBLIC` | 144 bytes | From third party phone apps |
+| `PBL_PP_MAX_INBOUND_PAYLOAD_PUBLIC` | 144 bytes | What apps without PebbleKit JS are told to expect |
 | `PBL_PP_MAX_OUTBOUND_PAYLOAD` | 656 bytes | To the phone |
 
 Messages follow each other with nothing in between: the stream carries no
@@ -26,46 +26,43 @@ endpoint's own format, most of them little endian.
 
 ## Endpoints
 
-| ID | Name | Access | In PRF | Defined in |
-|---|---|---|---|---|
-| `0x0000` | Meta | any | yes | `subsys/pp/meta.c` |
-| `0x000b` | Clock (time) | private | | `pebble/services/clock/service.c` |
-| `0x0010` | System version | any | yes | `pebble/kernel/system_versions.c` |
-| `0x0011` | Remote version | any | yes | `subsys/pp/version.c` |
-| `0x0012` | System message | private | yes | `pebble/kernel/system_message.c` |
-| `0x0020` | Music | private | | `pebble/services/music/endpoint.c` |
-| `0x0021` | Phone | private | | `pebble/services/phone_pp/service.c` |
-| `0x0030` | AppMessage | any | | `pebble/services/app_message/app_message_receiver.c` |
-| `0x0031` | Launcher AppMessage | any | | `pebble/process_management/launcher_app_message.c` |
-| `0x0032` | App customization | any | | `pebble/process_management/app_custom_icon.c` |
-| `0x0033` | BLE control | private | yes | `pebble/services/bluetooth/pp_ble_control.c` |
-| `0x0034` | App run state | any | | `pebble/process_management/app_run_state.c` |
-| `0x0035` | Imaging | private | | `pebble/services/imaging/imaging.c` |
-| `0x038f` | Health sync | private | | `pebble/services/health_sync_endpoint/service.c` |
-| `0x07d1` | Ping | any | | `pebble/services/ping/service.c` |
-| `0x07d2` | Log dump | private | yes | `pebble/services/log_dump_endpoint/service.c` |
-| `0x07d3` | Reset | private | yes | `pebble/kernel/util/fw_reset.c` |
-| `0x07d6` | App log | private | | `pebble/services/app_log_endpoint/service.c` |
-| `0x1389` | Factory registry | private | yes | `pebble/services/registry_endpoint/service.c` |
-| `0x1771` | App fetch | private | | `pebble/services/app_fetch_endpoint/service.c` |
-| `0x1a7a` | Data logging | private | | `pebble/services/data_logging/dls_endpoint.c` |
-| `0x1f40` | Screenshot | private | | `pebble/services/compositor/screenshot_pp.c` |
-| `0x2328` | Get Bytes | private | yes | `pebble/services/get_bytes/get_bytes.c` |
-| `0x2710` | Audio | private | | `pebble/services/audio_endpoint/service.c` |
-| `0x2af8` | Voice | private | | `pebble/services/voice_endpoint/service.c` |
-| `0x2cb0` | Timeline action | private | | `pebble/services/timeline/actions_endpoint.c` |
-| `0xabcd` | App order | private | | `pebble/services/app_order_endpoint/service.c` |
-| `0xb1db` | BlobDB | private | | `pebble/services/blob_db/endpoint.c` |
-| `0xb2db` | BlobDB v2 | private | | `pebble/services/blob_db/endpoint2.c` |
-| `0xbeef` | Put Bytes | private | yes | `pebble/services/put_bytes/put_bytes.c` |
-| `0xcafe` | Poll remote | any | | `pebble/services/poll_remote/service.c` |
-| `0xcaff` | xsbug | any | | `pebble/applib/moddable/moddable.c`, with moddable |
-| `0xf00d` | Remote input | private | yes | `pebble/kernel/remote_input.c` |
+| ID | Name | In PRF | Defined in |
+|---|---|---|---|
+| `0x0000` | Meta | yes | `subsys/pp/meta.c` |
+| `0x000b` | Clock (time) | | `pebble/services/clock/service.c` |
+| `0x0010` | System version | yes | `pebble/kernel/system_versions.c` |
+| `0x0011` | Remote version | yes | `subsys/pp/version.c` |
+| `0x0012` | System message | yes | `pebble/kernel/system_message.c` |
+| `0x0020` | Music | | `pebble/services/music/endpoint.c` |
+| `0x0021` | Phone | | `pebble/services/phone_pp/service.c` |
+| `0x0030` | AppMessage | | `pebble/services/app_message/app_message_receiver.c` |
+| `0x0031` | Launcher AppMessage | | `pebble/process_management/launcher_app_message.c` |
+| `0x0032` | App customization | | `pebble/process_management/app_custom_icon.c` |
+| `0x0033` | BLE control | yes | `pebble/services/bluetooth/pp_ble_control.c` |
+| `0x0034` | App run state | | `pebble/process_management/app_run_state.c` |
+| `0x0035` | Imaging | | `pebble/services/imaging/imaging.c` |
+| `0x038f` | Health sync | | `pebble/services/health_sync_endpoint/service.c` |
+| `0x07d1` | Ping | | `pebble/services/ping/service.c` |
+| `0x07d2` | Log dump | yes | `pebble/services/log_dump_endpoint/service.c` |
+| `0x07d3` | Reset | yes | `pebble/kernel/util/fw_reset.c` |
+| `0x07d6` | App log | | `pebble/services/app_log_endpoint/service.c` |
+| `0x1389` | Factory registry | yes | `pebble/services/registry_endpoint/service.c` |
+| `0x1771` | App fetch | | `pebble/services/app_fetch_endpoint/service.c` |
+| `0x1a7a` | Data logging | | `pebble/services/data_logging/dls_endpoint.c` |
+| `0x1f40` | Screenshot | | `pebble/services/compositor/screenshot_pp.c` |
+| `0x2328` | Get Bytes | yes | `pebble/services/get_bytes/get_bytes.c` |
+| `0x2710` | Audio | | `pebble/services/audio_endpoint/service.c` |
+| `0x2af8` | Voice | | `pebble/services/voice_endpoint/service.c` |
+| `0x2cb0` | Timeline action | | `pebble/services/timeline/actions_endpoint.c` |
+| `0xabcd` | App order | | `pebble/services/app_order_endpoint/service.c` |
+| `0xb1db` | BlobDB | | `pebble/services/blob_db/endpoint.c` |
+| `0xb2db` | BlobDB v2 | | `pebble/services/blob_db/endpoint2.c` |
+| `0xbeef` | Put Bytes | yes | `pebble/services/put_bytes/put_bytes.c` |
+| `0xcafe` | Poll remote | | `pebble/services/poll_remote/service.c` |
+| `0xcaff` | xsbug | | `pebble/applib/moddable/moddable.c`, with moddable |
+| `0xf00d` | Remote input | yes | `pebble/kernel/remote_input.c` |
 
-*Private* endpoints only accept messages from the Pebble mobile app, on a
-system or hybrid session; *any* endpoints also accept them from third party
-phone apps. The watch sends on any endpoint, including ones it does not
-receive on.
+The watch sends on any endpoint, including ones it does not receive on.
 
 (pp-meta)=
 ## Meta endpoint
@@ -80,7 +77,6 @@ its payload:
 
 | Error | Value | Meaning |
 |---|---|---|
-| Disallowed | `0xdd` | The endpoint is private and the session is an app session |
 | Unhandled | `0xdc` | No such endpoint in this firmware |
 | Corrupted | `0xd0` | A malformed message; the response is the error byte alone |
 

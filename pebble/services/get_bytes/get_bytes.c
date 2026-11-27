@@ -291,5 +291,4 @@ void get_bytes_protocol_msg_callback(struct pbl_pp_session *session, const uint8
   prv_protocol_send_next_chunk(state);
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_GET_BYTES, PBL_PP_ACCESS_PRIVATE,
-                       get_bytes_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_GET_BYTES, get_bytes_protocol_msg_callback);

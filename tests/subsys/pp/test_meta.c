@@ -35,7 +35,7 @@ void test_meta__initialize(void) {
   fake_kernel_malloc_mark();
   fake_comm_session_init();
 
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   s_session = fake_transport_set_connected(s_transport, true);
 }
 
@@ -48,7 +48,6 @@ void test_meta__cleanup(void) {
 
 void test_meta__endpoint(void) {
   cl_assert_equal_i(pbl_pp_endpoint_0x0000.id, PBL_PP_ENDPOINT_META);
-  cl_assert_equal_i(pbl_pp_endpoint_0x0000.access, PBL_PP_ACCESS_ANY);
   cl_assert(pbl_pp_endpoint_0x0000.handler);
 
   const uint8_t data[] = {0x01};
@@ -61,13 +60,6 @@ void test_meta__send_corrupted_message(void) {
   pbl_pp__meta_send_error(s_session, PBL_PP__META_CORRUPTED, 0x1234);
 
   const uint8_t expected_payload[] = {0xd0};
-  prv_process_and_assert_sent(expected_payload, sizeof(expected_payload));
-}
-
-void test_meta__send_disallowed_message(void) {
-  pbl_pp__meta_send_error(s_session, PBL_PP__META_DISALLOWED, 0xabcd);
-
-  const uint8_t expected_payload[] = {0xdd, 0xab, 0xcd};
   prv_process_and_assert_sent(expected_payload, sizeof(expected_payload));
 }
 

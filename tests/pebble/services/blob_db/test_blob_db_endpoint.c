@@ -70,7 +70,7 @@ void test_blob_db_endpoint__initialize(void) {
   blob_db_set_accepting_messages(true);
   fake_comm_session_init();
   struct fake_transport *transport =
-      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_data_cb);
+      fake_transport_create(PBL_PP_DESTINATION_SYSTEM, prv_sent_data_cb);
   s_session = fake_transport_set_connected(transport, true /* connected */);
   fake_sys_work_set_num_free(sys_work_queue_size);
 }

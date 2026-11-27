@@ -15,10 +15,6 @@ PBL_WEAK struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return (struct pbl_pp_session *)1;
 }
 
-PBL_WEAK bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
-  return false;
-}
-
 PBL_WEAK int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
                          size_t length, uint32_t timeout_ms) {
   return 0;

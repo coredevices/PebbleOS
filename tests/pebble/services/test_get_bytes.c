@@ -97,7 +97,7 @@ void test_get_bytes__initialize(void) {
   fake_comm_session_init();
   fake_event_reset_count();
 
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, prv_sent_cb);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, prv_sent_cb);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
 }
 

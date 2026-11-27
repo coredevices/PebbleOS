@@ -1261,8 +1261,7 @@ const struct pbl_pp_receiver_api g_put_bytes_receiver_impl = {
   .cleanup = prv_receiver_cleanup,
 };
 
-PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_PUT_BYTES, PBL_PP_ACCESS_PRIVATE,
-                                g_put_bytes_receiver_impl);
+PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_PUT_BYTES, g_put_bytes_receiver_impl);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // For Unit Testing

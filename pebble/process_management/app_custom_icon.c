@@ -138,8 +138,7 @@ void customizable_app_protocol_msg_callback(struct pbl_pp_session *session, cons
   (void)session;
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_CUSTOMIZE, PBL_PP_ACCESS_ANY,
-                       customizable_app_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_APP_CUSTOMIZE, customizable_app_protocol_msg_callback);
 
 static CustomizableAppType get_app_type_for_app_id(AppInstallId app_id) {
   if (app_id == APP_ID_SPORTS) {

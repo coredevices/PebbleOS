@@ -55,7 +55,6 @@ static bool prv_fwd_prepare(AppMessageReceiver *rcv, struct pbl_pp_session *sess
   static const struct pbl_pp_endpoint kernel_nack_endpoint = {
     .handler = app_message_app_protocol_system_nack_callback,
     .id = APP_MESSAGE_ENDPOINT_ID,
-    .access = PBL_PP_ACCESS_ANY,
     .task = PBL_PP_HANDLER_BG,
   };
   struct pbl_pp_receiver *kernel_receiver =
@@ -178,5 +177,4 @@ const struct pbl_pp_receiver_api g_app_message_receiver_implementation = {
   .cleanup = prv_app_message_receiver_cleanup,
 };
 
-PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_APP_MESSAGE, PBL_PP_ACCESS_ANY,
-                                g_app_message_receiver_implementation);
+PBL_PP_ENDPOINT_DEFINE_RECEIVER(PBL_PP_ENDPOINT_APP_MESSAGE, g_app_message_receiver_implementation);

@@ -24,7 +24,7 @@
  *   ...
  * }
  *
- * PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, PBL_PP_ACCESS_ANY, prv_ping_handler);
+ * PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_PING, prv_ping_handler);
  * @endcode
  *
  * The handler runs on SysWorkq once the whole message has arrived, with a copy of the payload on
@@ -36,18 +36,6 @@
 
 struct pbl_pp_session;
 struct pbl_pp_endpoint;
-
-/** @brief Who may send messages to an endpoint. */
-enum pbl_pp_access : uint8_t {
-  /** No one. */
-  PBL_PP_ACCESS_NONE = 0,
-  /** Third party phone apps. */
-  PBL_PP_ACCESS_PUBLIC = 1U << 0,
-  /** The Pebble mobile app. */
-  PBL_PP_ACCESS_PRIVATE = 1U << 1,
-  /** Anyone. */
-  PBL_PP_ACCESS_ANY = PBL_PP_ACCESS_PUBLIC | PBL_PP_ACCESS_PRIVATE,
-};
 
 /** @brief Task the default receiver runs an endpoint handler on. */
 enum pbl_pp_handler_task : uint8_t {
@@ -133,8 +121,6 @@ struct pbl_pp_endpoint {
   const struct pbl_pp_receiver_api *receiver;
   /** Endpoint ID. */
   uint16_t id;
-  /** Senders allowed to use the endpoint. */
-  enum pbl_pp_access access;
   /** Task the default receiver runs @ref handler on. */
   enum pbl_pp_handler_task task;
 };
@@ -146,14 +132,13 @@ struct pbl_pp_endpoint {
 #define PBL_PP__STR_(_a)           #_a
 #define PBL_PP__ENDPOINT_NAME(_id) PBL_PP__CAT(pbl_pp_endpoint_, _id)
 
-#define PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, _receiver, _task)                    \
+#define PBL_PP__ENDPOINT_DEFINE(_id, _handler, _receiver, _task)                             \
   extern const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id);                            \
   const struct pbl_pp_endpoint PBL_PP__ENDPOINT_NAME(_id)                                    \
       PBL_ITERABLE_SECTION(const struct pbl_pp_endpoint, pp_endpoints, PBL_PP__STR(_id)) = { \
         .handler = (_handler),                                                               \
         .receiver = (_receiver),                                                             \
         .id = (_id),                                                                         \
-        .access = (_access),                                                                 \
         .task = (_task),                                                                     \
   }
 /** @endcond */
@@ -162,30 +147,27 @@ struct pbl_pp_endpoint {
  * @brief Define an endpoint whose handler runs on SysWorkq.
  *
  * @param _id Endpoint ID, one of the PBL_PP_ENDPOINT_ macros.
- * @param _access Senders allowed to use the endpoint, a @ref pbl_pp_access.
  * @param _handler Handler, a @ref pbl_pp_endpoint_handler_t.
  */
-#define PBL_PP_ENDPOINT_DEFINE(_id, _access, _handler) \
-  PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, NULL, PBL_PP_HANDLER_BG)
+#define PBL_PP_ENDPOINT_DEFINE(_id, _handler) \
+  PBL_PP__ENDPOINT_DEFINE(_id, _handler, NULL, PBL_PP_HANDLER_BG)
 
 /**
  * @brief Define an endpoint whose handler runs on the main thread, see pbl_pp_main_call().
  *
  * @param _id Endpoint ID, one of the PBL_PP_ENDPOINT_ macros.
- * @param _access Senders allowed to use the endpoint, a @ref pbl_pp_access.
  * @param _handler Handler, a @ref pbl_pp_endpoint_handler_t.
  */
-#define PBL_PP_ENDPOINT_DEFINE_MAIN(_id, _access, _handler) \
-  PBL_PP__ENDPOINT_DEFINE(_id, _access, _handler, NULL, PBL_PP_HANDLER_MAIN)
+#define PBL_PP_ENDPOINT_DEFINE_MAIN(_id, _handler) \
+  PBL_PP__ENDPOINT_DEFINE(_id, _handler, NULL, PBL_PP_HANDLER_MAIN)
 
 /**
  * @brief Define an endpoint with its own receiver.
  *
  * @param _id Endpoint ID, one of the PBL_PP_ENDPOINT_ macros.
- * @param _access Senders allowed to use the endpoint, a @ref pbl_pp_access.
  * @param _receiver Receiver, a @ref pbl_pp_receiver_api.
  */
-#define PBL_PP_ENDPOINT_DEFINE_RECEIVER(_id, _access, _receiver) \
-  PBL_PP__ENDPOINT_DEFINE(_id, _access, NULL, &(_receiver), PBL_PP_HANDLER_BG)
+#define PBL_PP_ENDPOINT_DEFINE_RECEIVER(_id, _receiver) \
+  PBL_PP__ENDPOINT_DEFINE(_id, NULL, &(_receiver), PBL_PP_HANDLER_BG)
 
 /** @} */

@@ -213,8 +213,7 @@ void system_version_protocol_msg_callback(struct pbl_pp_session *session, const 
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_VERSION, PBL_PP_ACCESS_ANY,
-                            system_version_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_SYSTEM_VERSION, system_version_protocol_msg_callback);
 
 #ifdef CONFIG_SHELL
 static int prv_cmd_version(const struct pbl_shell *sh, size_t argc, char **argv) {

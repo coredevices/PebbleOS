@@ -19,11 +19,6 @@ extern const struct pbl_pp_endpoint pbl_pp_endpoint_0x0011;
 
 static struct pbl_pp_session s_session;
 
-static bool s_session_is_system;
-bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
-  return s_session_is_system;
-}
-
 static int s_requests_sent;
 int pbl_pp_send(struct pbl_pp_session *session, uint16_t endpoint_id, const uint8_t *data,
                 size_t length, uint32_t timeout_ms) {
@@ -97,7 +92,6 @@ void test_version__initialize(void) {
   s_set_remote_os_count = 0;
   s_session = (struct pbl_pp_session){};
   s_requests_sent = 0;
-  s_session_is_system = true;
   s_set_capabilities_count = 0;
   s_capabilities = 0;
   s_main_callback = nullptr;
@@ -110,7 +104,6 @@ void test_version__cleanup(void) {
 
 void test_version__endpoint(void) {
   cl_assert_equal_i(pbl_pp_endpoint_0x0011.id, PBL_PP_ENDPOINT_REMOTE_VERSION);
-  cl_assert_equal_i(pbl_pp_endpoint_0x0011.access, PBL_PP_ACCESS_ANY);
   cl_assert_equal_i(pbl_pp_endpoint_0x0011.task, PBL_PP_HANDLER_MAIN);
   cl_assert_equal_p(pbl_pp_endpoint_0x0011.receiver, nullptr);
 }
@@ -139,20 +132,12 @@ void test_version__receive_too_short_response(void) {
   cl_assert_equal_i(s_set_capabilities_count, 0);
 }
 
-void test_version__system_session(void) {
+void test_version__receive_response(void) {
   prv_receive_v3_response(EXPECTED_CAPABILITIES);
 
   cl_assert_equal_i(s_set_remote_os_count, 1);
   cl_assert_equal_i(s_remote_os, PBL_PP_REMOTE_OS_ANDROID);
   cl_assert_equal_i(s_set_capabilities_count, 1);
-  cl_assert_equal_i(s_capabilities, EXPECTED_CAPABILITIES);
-}
-
-void test_version__app_session(void) {
-  s_session_is_system = false;
-  prv_receive_v3_response(EXPECTED_CAPABILITIES);
-
-  cl_assert_equal_i(s_set_remote_os_count, 1);
   cl_assert_equal_i(s_capabilities, EXPECTED_CAPABILITIES);
 }
 

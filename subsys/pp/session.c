@@ -36,10 +36,6 @@ bool pbl_pp__session_is_open(const struct pbl_pp_session *session) {
   return (session != nullptr) && list_contains((ListNode *)s_sessions, &session->node);
 }
 
-static bool prv_is_system(const struct pbl_pp_session *session) {
-  return session->destination != PBL_PP_DESTINATION_APP;
-}
-
 const struct pbl_pp_transport *pbl_pp_session_get_transport(const struct pbl_pp_session *session) {
   const struct pbl_pp_transport *transport = nullptr;
 
@@ -61,14 +57,11 @@ static void prv_notify(struct pbl_pp_session *session, enum pbl_pp_session_event
 static void prv_log_event(const struct pbl_pp_session *session, bool is_open) {
   static const char destinations[] = {
     [PBL_PP_DESTINATION_SYSTEM] = 'S',
-    [PBL_PP_DESTINATION_APP] = 'A',
     [PBL_PP_DESTINATION_HYBRID] = 'H',
   };
-  char uuid_string[UUID_STRING_BUFFER_LENGTH];
 
-  uuid_to_string(&session->app_uuid, uuid_string);
-  PBL_LOG_INFO("Session event: is_open=%d, destination=%c, app_uuid=%s, transport=%s", is_open,
-               destinations[session->destination], uuid_string, session->transport->name);
+  PBL_LOG_INFO("Session event: is_open=%d, destination=%c, transport=%s", is_open,
+               destinations[session->destination], session->transport->name);
 }
 
 static int prv_close_system_session(void) {
@@ -77,7 +70,7 @@ static int prv_close_system_session(void) {
   pbl_pp__lock();
   for (struct pbl_pp_session *s = s_sessions; s != nullptr;
        s = (struct pbl_pp_session *)s->node.next) {
-    if (prv_is_system(s) && !s->transport->shared) {
+    if (!s->transport->shared) {
       existing = s;
       break;
     }
@@ -100,12 +93,10 @@ static int prv_close_system_session(void) {
 }
 
 struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transport,
-                                           enum pbl_pp_destination destination,
-                                           const Uuid *app_uuid) {
+                                           enum pbl_pp_destination destination) {
   struct pbl_pp_session *session;
 
-  if (destination != PBL_PP_DESTINATION_APP && !transport->shared &&
-      prv_close_system_session() != 0) {
+  if (!transport->shared && prv_close_system_session() != 0) {
     return nullptr;
   }
 
@@ -117,7 +108,6 @@ struct pbl_pp_session *pbl_pp_session_open(const struct pbl_pp_transport *transp
 
   *session = (struct pbl_pp_session){
     .transport = transport,
-    .app_uuid = (app_uuid != nullptr) ? *app_uuid : UUID_INVALID,
     .destination = destination,
   };
 
@@ -156,8 +146,7 @@ struct pbl_pp_session *pbl_pp_session_get_system(void) {
   pbl_pp__lock();
   for (struct pbl_pp_session *s = s_sessions; s != nullptr;
        s = (struct pbl_pp_session *)s->node.next) {
-    if (prv_is_system(s) &&
-        (best == nullptr || s->transport->priority > best->transport->priority)) {
+    if (best == nullptr || s->transport->priority > best->transport->priority) {
       best = s;
     }
   }
@@ -166,45 +155,23 @@ struct pbl_pp_session *pbl_pp_session_get_system(void) {
   return best;
 }
 
-struct pbl_pp_session *pbl_pp_session_get_app(const Uuid *app_uuid) {
-  struct pbl_pp_session *match = nullptr;
-  struct pbl_pp_session *fallback = nullptr;
-
-  if (app_uuid == nullptr || uuid_is_system(app_uuid) || uuid_is_invalid(app_uuid)) {
-    return nullptr;
-  }
+struct pbl_pp_session *pbl_pp_session_get_app(void) {
+  struct pbl_pp_session *hybrid = nullptr;
 
   pbl_pp__lock();
   for (struct pbl_pp_session *s = s_sessions; s != nullptr;
        s = (struct pbl_pp_session *)s->node.next) {
-    if (uuid_equal(&s->app_uuid, app_uuid)) {
-      match = s;
-      break;
+    if (s->destination != PBL_PP_DESTINATION_HYBRID) {
+      continue;
     }
-    if (s->destination == PBL_PP_DESTINATION_HYBRID ||
-        (s->destination == PBL_PP_DESTINATION_APP && uuid_is_invalid(&s->app_uuid))) {
-      fallback = s;
+
+    if (hybrid == nullptr || s->transport->priority > hybrid->transport->priority) {
+      hybrid = s;
     }
   }
   pbl_pp__unlock();
 
-  return (match != nullptr) ? match : fallback;
-}
-
-enum pbl_pp_session_type pbl_pp_session_get_type(const struct pbl_pp_session *session) {
-  enum pbl_pp_session_type type = PBL_PP_SESSION_INVALID;
-
-  pbl_pp__lock();
-  if (pbl_pp__session_is_open(session)) {
-    type = prv_is_system(session) ? PBL_PP_SESSION_SYSTEM : PBL_PP_SESSION_APP;
-  }
-  pbl_pp__unlock();
-
-  return type;
-}
-
-bool pbl_pp_session_is_system(const struct pbl_pp_session *session) {
-  return pbl_pp_session_get_type(session) == PBL_PP_SESSION_SYSTEM;
+  return hybrid;
 }
 
 int pbl_pp_session_get_destination(const struct pbl_pp_session *session,

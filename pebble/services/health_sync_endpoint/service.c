@@ -82,5 +82,4 @@ void health_sync_protocol_msg_callback(struct pbl_pp_session *session, const uin
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_HEALTH_SYNC, PBL_PP_ACCESS_PRIVATE,
-                       health_sync_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_HEALTH_SYNC, health_sync_protocol_msg_callback);

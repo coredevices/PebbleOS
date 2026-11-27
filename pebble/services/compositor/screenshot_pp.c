@@ -241,6 +241,5 @@ void screenshot_protocol_msg_callback(struct pbl_pp_session *session, const uint
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_SCREENSHOT, PBL_PP_ACCESS_PRIVATE,
-                       screenshot_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_SCREENSHOT, screenshot_protocol_msg_callback);
 #endif

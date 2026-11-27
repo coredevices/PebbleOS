@@ -41,5 +41,4 @@ void factory_registry_protocol_msg_callback(struct pbl_pp_session *session, cons
   prv_send_fail_response();
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_FACTORY_REGISTRY, PBL_PP_ACCESS_PRIVATE,
-                       factory_registry_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_FACTORY_REGISTRY, factory_registry_protocol_msg_callback);

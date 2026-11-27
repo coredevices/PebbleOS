@@ -127,7 +127,7 @@ void test_phone_call__initialize(void) {
   phone_call_service_init();
   prv_call_end();
   FFF_RESET_HISTORY();
-  //  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, NULL, NULL);
+  //  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, NULL);
   //  s_session = fake_transport_set_connected(s_transport, true /* connected */);
   //  pp_get_phone_state_set_enabled(false);
 }

@@ -68,10 +68,9 @@ static void prv_handle_response(struct pbl_pp_session *session, const uint8_t *d
   pbl_pp_session_set_capabilities(session, capabilities);
 
   const uint32_t platform_bits = pbl_be32_to_cpu(response->v2.v1.platform_bitfield);
-  const bool is_system = pbl_pp_session_is_system(session);
 
-  PBL_LOG_INFO("Phone app: is_system=%u, plf=0x%" PRIx32 ", capabilities=0x%" PRIx32, is_system,
-               platform_bits, capabilities);
+  PBL_LOG_INFO("Phone app: plf=0x%" PRIx32 ", capabilities=0x%" PRIx32, platform_bits,
+               capabilities);
 
   pbl_pp__session_set_remote_os(session,
                                 (enum pbl_pp_remote_os)(platform_bits & PBL_PP_REMOTE_OS_MASK));
@@ -87,4 +86,4 @@ static void prv_version_handler(struct pbl_pp_session *session, const uint8_t *d
   prv_handle_response(session, &data[1], length - 1U);
 }
 
-PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_REMOTE_VERSION, PBL_PP_ACCESS_ANY, prv_version_handler);
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_REMOTE_VERSION, prv_version_handler);

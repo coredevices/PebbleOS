@@ -43,7 +43,7 @@ static struct pbl_pp_session *s_session;
 void test_phone_pp__initialize(void) {
   fake_event_init();
   fake_comm_session_init();
-  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr, nullptr);
+  s_transport = fake_transport_create(PBL_PP_DESTINATION_SYSTEM, nullptr);
   s_session = fake_transport_set_connected(s_transport, true /* connected */);
   pp_get_phone_state_set_enabled(false);
 }

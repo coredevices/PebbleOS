@@ -24,18 +24,6 @@ static const struct pbl_pp_endpoint *prv_find_endpoint(uint16_t id) {
   return nullptr;
 }
 
-static bool prv_is_allowed(const struct pbl_pp_endpoint *endpoint,
-                           const struct pbl_pp_session *session) {
-  switch (pbl_pp_session_get_type(session)) {
-    case PBL_PP_SESSION_SYSTEM:
-      return (endpoint->access & PBL_PP_ACCESS_PRIVATE) != 0U;
-    case PBL_PP_SESSION_APP:
-      return (endpoint->access & PBL_PP_ACCESS_PUBLIC) != 0U;
-    default:
-      return false;
-  }
-}
-
 static void prv_reset(struct pbl_pp__receive_state *rx) {
   *rx = (struct pbl_pp__receive_state){};
 }
@@ -52,9 +40,8 @@ static void prv_start_message(struct pbl_pp_session *session) {
   const uint16_t length = pbl_be16_to_cpu(header->length);
   const struct pbl_pp_endpoint *endpoint = prv_find_endpoint(id);
 
-  if (endpoint == nullptr || !prv_is_allowed(endpoint, session)) {
-    pbl_pp__meta_send_error(
-        session, (endpoint == nullptr) ? PBL_PP__META_UNHANDLED : PBL_PP__META_DISALLOWED, id);
+  if (endpoint == nullptr) {
+    pbl_pp__meta_send_error(session, PBL_PP__META_UNHANDLED, id);
     prv_skip(rx, length);
     return;
   }

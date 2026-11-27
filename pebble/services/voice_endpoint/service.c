@@ -224,8 +224,7 @@ void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_VOICE, PBL_PP_ACCESS_PRIVATE,
-                       voice_endpoint_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_VOICE, voice_endpoint_protocol_msg_callback);
 #else
 void voice_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *data,
                                           size_t size) {

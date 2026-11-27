@@ -58,9 +58,7 @@ static const struct pbl_pp_transport s_transport = {
 
 #define NON_EXISTENT_ENDPOINT_ID       0x0000
 #define OTHER_NON_EXISTENT_ENDPOINT_ID 0xffff
-#define PRIVATE_TEST_ENDPOINT_ID       0x0001
-#define PUBLIC_TEST_ENDPOINT_ID        0x0002
-#define ANY_TEST_ENDPOINT_ID           0x0003
+#define TEST_ENDPOINT_ID               0x0001
 
 static struct {
   int foo;
@@ -105,9 +103,7 @@ static const struct pbl_pp_receiver_api s_test_receiver = {
   .cleanup = prv_cleanup,
 };
 
-PBL_PP_ENDPOINT_DEFINE_RECEIVER(PRIVATE_TEST_ENDPOINT_ID, PBL_PP_ACCESS_PRIVATE, s_test_receiver);
-PBL_PP_ENDPOINT_DEFINE_RECEIVER(PUBLIC_TEST_ENDPOINT_ID, PBL_PP_ACCESS_PUBLIC, s_test_receiver);
-PBL_PP_ENDPOINT_DEFINE_RECEIVER(ANY_TEST_ENDPOINT_ID, PBL_PP_ACCESS_ANY, s_test_receiver);
+PBL_PP_ENDPOINT_DEFINE_RECEIVER(TEST_ENDPOINT_ID, s_test_receiver);
 
 // Kernel receiver, used by endpoints without a receiver of their own.
 static int s_kernel_prepare_count;
@@ -133,7 +129,7 @@ const struct pbl_pp_receiver_api pbl_pp_kernel_receiver = {
 static void prv_handler(struct pbl_pp_session *session, const uint8_t *data, size_t length) {
 }
 
-PBL_PP_ENDPOINT_DEFINE(HANDLER_TEST_ENDPOINT_ID, PBL_PP_ACCESS_ANY, prv_handler);
+PBL_PP_ENDPOINT_DEFINE(HANDLER_TEST_ENDPOINT_ID, prv_handler);
 
 // Helpers
 ///////////////////////////////////////////////////////////
@@ -152,7 +148,7 @@ static struct pbl_pp_session *s_session;
 void test_receive__initialize(void) {
   fake_kernel_malloc_init();
   fake_kernel_malloc_mark();
-  s_session = pbl_pp_session_open(&s_transport, PBL_PP_DESTINATION_SYSTEM, nullptr);
+  s_session = pbl_pp_session_open(&s_transport, PBL_PP_DESTINATION_SYSTEM);
   s_prepare_count = 0;
   s_finish_count = 0;
   s_cleanup_count = 0;
@@ -184,9 +180,9 @@ void test_receive__header_byte_by_byte(void) {
   cl_assert_equal_i(s_prepare_count, 0);
 
   // Endpoint ID, big endian
-  RECEIVE(PRIVATE_TEST_ENDPOINT_ID >> 8);
+  RECEIVE(TEST_ENDPOINT_ID >> 8);
   cl_assert_equal_i(s_prepare_count, 0);
-  RECEIVE(PRIVATE_TEST_ENDPOINT_ID & 0xff);
+  RECEIVE(TEST_ENDPOINT_ID & 0xff);
   cl_assert_equal_i(s_prepare_count, 1);
   cl_assert_equal_i(s_prepare_length, 1);
 }
@@ -201,14 +197,14 @@ void test_receive__unhandled_endpoint(void) {
   cl_assert_equal_i(s_prepare_count, 0);
   assert_meta_error_sent(PBL_PP__META_UNHANDLED, OTHER_NON_EXISTENT_ENDPOINT_ID);
 
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+  RECEIVE(0x00, 0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   cl_assert_equal_i(s_prepare_count, 1);
   cl_assert_equal_i(s_meta_error_count, 2);
 }
 
 void test_receive__unhandled_and_supported_concat(void) {
   RECEIVE(0x00, 0x01, NON_EXISTENT_ENDPOINT_ID >> 8, NON_EXISTENT_ENDPOINT_ID & 0xff, 0x55, 0x00,
-          0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+          0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   assert_meta_error_sent(PBL_PP__META_UNHANDLED, NON_EXISTENT_ENDPOINT_ID);
   cl_assert_equal_i(s_prepare_count, 1);
   cl_assert_equal_i(s_write_length, 1);
@@ -218,44 +214,11 @@ void test_receive__unhandled_and_supported_concat(void) {
 void test_receive__skipped_payload_split_across_writes(void) {
   RECEIVE(0x00, 0x03, NON_EXISTENT_ENDPOINT_ID >> 8, NON_EXISTENT_ENDPOINT_ID & 0xff, 0x55);
   RECEIVE(0x55);
-  RECEIVE(0x55, 0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+  RECEIVE(0x55, 0x00, 0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   cl_assert_equal_i(s_meta_error_count, 1);
   cl_assert_equal_i(s_prepare_count, 1);
   cl_assert_equal_i(s_finish_count, 1);
   cl_assert_equal_i(s_write_buffer[0], 0xaa);
-}
-
-void test_receive__system_disallowed_endpoint(void) {
-  RECEIVE(0x00, 0x01, PUBLIC_TEST_ENDPOINT_ID >> 8, PUBLIC_TEST_ENDPOINT_ID & 0xff, 0x55);
-  cl_assert_equal_i(s_prepare_count, 0);
-  assert_meta_error_sent(PBL_PP__META_DISALLOWED, PUBLIC_TEST_ENDPOINT_ID);
-
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
-  cl_assert_equal_i(s_prepare_count, 1);
-}
-
-void test_receive__app_disallowed_endpoint(void) {
-  pbl_pp_session_close(s_session);
-  s_session = pbl_pp_session_open(&s_transport, PBL_PP_DESTINATION_APP, nullptr);
-
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
-  cl_assert_equal_i(s_prepare_count, 0);
-  assert_meta_error_sent(PBL_PP__META_DISALLOWED, PRIVATE_TEST_ENDPOINT_ID);
-
-  RECEIVE(0x00, 0x01, PUBLIC_TEST_ENDPOINT_ID >> 8, PUBLIC_TEST_ENDPOINT_ID & 0xff, 0x55);
-  cl_assert_equal_i(s_prepare_count, 1);
-}
-
-void test_receive__any_endpoint_allowed_on_both(void) {
-  RECEIVE(0x00, 0x01, ANY_TEST_ENDPOINT_ID >> 8, ANY_TEST_ENDPOINT_ID & 0xff, 0x55);
-  cl_assert_equal_i(s_prepare_count, 1);
-
-  pbl_pp_session_close(s_session);
-  s_session = pbl_pp_session_open(&s_transport, PBL_PP_DESTINATION_APP, nullptr);
-
-  RECEIVE(0x00, 0x01, ANY_TEST_ENDPOINT_ID >> 8, ANY_TEST_ENDPOINT_ID & 0xff, 0x55);
-  cl_assert_equal_i(s_prepare_count, 2);
-  cl_assert_equal_i(s_meta_error_count, 0);
 }
 
 void test_receive__default_receiver_for_handler_endpoints(void) {
@@ -271,18 +234,18 @@ void test_receive__default_receiver_for_handler_endpoints(void) {
 
 void test_receive__ignore_message_if_no_receiver_could_be_prepared(void) {
   s_prepare_return_null = true;
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+  RECEIVE(0x00, 0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   cl_assert_equal_i(s_prepare_count, 1);
   cl_assert_equal_i(s_finish_count, 0);
   s_prepare_return_null = false;
 
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+  RECEIVE(0x00, 0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   cl_assert_equal_i(s_prepare_count, 2);
   cl_assert_equal_i(s_finish_count, 1);
 }
 
 void test_receive__cleanup_receiver_if_session_is_closed(void) {
-  RECEIVE(0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8, PRIVATE_TEST_ENDPOINT_ID & 0xff);
+  RECEIVE(0x00, 0x01, TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff);
   cl_assert_equal_i(s_prepare_count, 1);
 
   pbl_pp_session_close(s_session);
@@ -294,8 +257,7 @@ void test_receive__cleanup_receiver_if_session_is_closed(void) {
 void test_receive__payload_in_pieces(void) {
   const uint8_t expected_payload[] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee};
 
-  RECEIVE(0x00, sizeof(expected_payload), PRIVATE_TEST_ENDPOINT_ID >> 8,
-          PRIVATE_TEST_ENDPOINT_ID & 0xff, 0xaa);
+  RECEIVE(0x00, sizeof(expected_payload), TEST_ENDPOINT_ID >> 8, TEST_ENDPOINT_ID & 0xff, 0xaa);
   cl_assert_equal_i(s_write_length, 1);
   cl_assert_equal_i(s_finish_count, 0);
 
@@ -304,12 +266,12 @@ void test_receive__payload_in_pieces(void) {
   cl_assert_equal_i(s_finish_count, 0);
 
   // Last payload byte, then the start of the next header
-  RECEIVE(0xee, 0x00, 0x01, PRIVATE_TEST_ENDPOINT_ID >> 8);
+  RECEIVE(0xee, 0x00, 0x01, TEST_ENDPOINT_ID >> 8);
   cl_assert_equal_i(s_finish_count, 1);
   cl_assert_equal_i(s_write_length, sizeof(expected_payload));
   cl_assert_equal_m(s_write_buffer, expected_payload, sizeof(expected_payload));
 
-  RECEIVE(PRIVATE_TEST_ENDPOINT_ID & 0xff, 0x11);
+  RECEIVE(TEST_ENDPOINT_ID & 0xff, 0x11);
   cl_assert_equal_i(s_prepare_count, 2);
   cl_assert_equal_i(s_finish_count, 2);
 }

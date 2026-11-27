@@ -80,8 +80,7 @@ void audio_endpoint_protocol_msg_callback(struct pbl_pp_session *session, const 
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_AUDIO, PBL_PP_ACCESS_PRIVATE,
-                       audio_endpoint_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_AUDIO, audio_endpoint_protocol_msg_callback);
 
 static void prv_start_active_mode(void *data) {
   struct pbl_pp_session *comm_session = pbl_pp_session_get_system();

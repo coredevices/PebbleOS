@@ -197,8 +197,7 @@ void music_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_MUSIC, PBL_PP_ACCESS_PRIVATE,
-                            music_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_MUSIC, music_protocol_msg_callback);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // MusicServerImplementation

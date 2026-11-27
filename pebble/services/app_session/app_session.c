@@ -16,7 +16,11 @@ struct pbl_pp_session *app_session_get_current(void) {
     return pbl_pp_session_get_system();
   }
 
-  return pbl_pp_session_get_app(&md->uuid);
+  if (uuid_is_system(&md->uuid) || uuid_is_invalid(&md->uuid)) {
+    return nullptr;
+  }
+
+  return pbl_pp_session_get_app();
 }
 
 void app_session_sanitize(struct pbl_pp_session **session) {

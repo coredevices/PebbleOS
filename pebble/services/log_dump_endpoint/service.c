@@ -153,5 +153,4 @@ void dump_log_protocol_msg_callback(struct pbl_pp_session *session, const uint8_
   }
 }
 
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_LOG_DUMP, PBL_PP_ACCESS_PRIVATE,
-                       dump_log_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_LOG_DUMP, dump_log_protocol_msg_callback);

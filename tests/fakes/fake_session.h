@@ -14,7 +14,7 @@
 // 1. Connect a fake transport for the system session:
 //
 //    struct fake_transport *transport =
-//        fake_transport_create(PBL_PP_DESTINATION_SYSTEM, NULL, NULL);
+//        fake_transport_create(PBL_PP_DESTINATION_SYSTEM, NULL);
 //    fake_transport_set_connected(transport, true /* connected */);
 //
 // 2. Simulate receiving some data by calling your module's endpoint handler:
@@ -52,13 +52,10 @@ typedef void (*FakeTransportSentCallback)(uint16_t endpoint_id, const uint8_t *d
 
 //! Creates a mock transport
 //! @param destination The destination type this transport is connected to.
-//! @param app_uuid The UUID of the app that this transport is connected to.
-//! Pass NULL if this information is not known or irrelevant.
 //! @param sent_cb The callback that needs to be called whenever data is sent out using this mock
 //! transport. Note that data will only be sent out when fake_comm_session_process_send_next() is
 //! called. It's recommended to leave this NULL and use fake_transport_assert_sent instead.
 struct fake_transport *fake_transport_create(enum pbl_pp_destination destination,
-                                             const Uuid *app_uuid,
                                              FakeTransportSentCallback sent_cb);
 
 //! Simulating (dis)connecting the transport.

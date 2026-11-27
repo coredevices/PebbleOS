@@ -254,6 +254,5 @@ void phone_protocol_msg_callback(struct pbl_pp_session *session, const uint8_t *
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_PHONE, PBL_PP_ACCESS_PRIVATE,
-                            phone_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE_MAIN(PBL_PP_ENDPOINT_PHONE, phone_protocol_msg_callback);
 #endif

@@ -96,7 +96,7 @@ static void prv_set_connected(bool connected) {
     if (connected) {
       s_transport.tx_seq = 0U;
       s_transport.session =
-          pbl_pp_session_open(&pbl_pp_console_transport, PBL_PP_DESTINATION_HYBRID, nullptr);
+          pbl_pp_session_open(&pbl_pp_console_transport, PBL_PP_DESTINATION_HYBRID);
       if (s_transport.session != nullptr) {
         pbl_pp_session_set_capabilities(
             s_transport.session, PBL_PP_CAP_RUN_STATE | PBL_PP_CAP_INFINITE_LOG_DUMPING |

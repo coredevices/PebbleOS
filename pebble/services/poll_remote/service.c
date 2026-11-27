@@ -159,8 +159,7 @@ void comm_poll_remote_protocol_msg_callback(struct pbl_pp_session *session, cons
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_POLL_REMOTE, PBL_PP_ACCESS_ANY,
-                       comm_poll_remote_protocol_msg_callback);
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_POLL_REMOTE, comm_poll_remote_protocol_msg_callback);
 #endif
 
 /*

@@ -152,6 +152,6 @@ void launcher_app_message_protocol_msg_callback_deprecated(struct pbl_pp_session
 }
 
 #ifndef CONFIG_RECOVERY_FW
-PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_LAUNCHER_APP_MESSAGE, PBL_PP_ACCESS_ANY,
+PBL_PP_ENDPOINT_DEFINE(PBL_PP_ENDPOINT_LAUNCHER_APP_MESSAGE,
                        launcher_app_message_protocol_msg_callback_deprecated);
 #endif
