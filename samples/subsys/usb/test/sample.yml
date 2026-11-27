@@ -2,4 +2,4 @@ description: The USB test function, for the integration tests in tests/integrati
 expect:
   - 'usb: test function up'
 roles: [udc]
-integration: [sf32lb57_dpi_hdk]
+integration: [sf32lb57_dpi_hdk, nrf54lm20dk]

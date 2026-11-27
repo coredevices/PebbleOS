@@ -4,3 +4,4 @@
 console_uart: uart20
 status_led: led0
 flash: flash0
+udc: usbhs
