@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
-#include <pbl/bluetooth/sm_types.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
 #include <pbl/drivers/flash.h>
@@ -57,9 +57,9 @@ static const struct ble_store_value_sec OUR = {
 
 static const char NAME[] = "Phone";
 
-static struct pbl_bt_sm_key s_root_keys[PBL_BT_SM_ROOT_KEY_TYPE_NUM] = {
-  {.data = {0x11}},
-  {.data = {0x22}},
+static uint8_t s_root_keys[PBL_BT_PRF_STORE_ROOT_KEY_NUM][PBL_BT_PRF_STORE_KEY_SIZE] = {
+  {0x11},
+  {0x22},
 };
 
 static void prv_read_slot(uint32_t slot, struct prf_record *record) {
@@ -125,10 +125,10 @@ static void prv_assert_pairing(const char *expected_name) {
 }
 
 static void prv_assert_root_keys(void) {
-  struct pbl_bt_sm_key key;
+  uint8_t key[PBL_BT_PRF_STORE_KEY_SIZE];
 
-  for (int type = 0; type < PBL_BT_SM_ROOT_KEY_TYPE_NUM; type++) {
-    cl_assert(pbl_bt_prf_store_get_root_key(type, &key));
+  for (int type = 0; type < PBL_BT_PRF_STORE_ROOT_KEY_NUM; type++) {
+    cl_assert(pbl_bt_prf_store_get_root_key(type, key));
     cl_assert_equal_m(&key, &s_root_keys[type], sizeof(key));
   }
 }
@@ -144,8 +144,8 @@ void test_prf_store_records__cleanup(void) {
 
 void test_prf_store_records__empty(void) {
   cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));
-  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION, nullptr));
-  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, nullptr));
+  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_ER, nullptr));
+  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR, nullptr));
 
   // Nothing to erase or name: nothing is written.
   pbl_bt_prf_store_erase_pairing();
@@ -283,8 +283,8 @@ void test_prf_store_records__root_keys(void) {
   prv_assert_root_keys();
 
   pbl_bt_prf_store_set_root_keys(nullptr);
-  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION, nullptr));
-  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, nullptr));
+  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_ER, nullptr));
+  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR, nullptr));
 }
 
 void test_prf_store_records__same_data_is_not_written_again(void) {
@@ -322,7 +322,7 @@ void test_prf_store_records__wipe(void) {
 
   cl_assert_equal_i(prv_num_written(), 0);
   cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));
-  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY, nullptr));
+  cl_assert(!pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR, nullptr));
 
   pbl_bt_prf_store_init();
   cl_assert(!pbl_bt_prf_store_get_pairing(nullptr, nullptr, nullptr));

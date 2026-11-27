@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/pp/session.h>
 #include <pbl/services/bluetooth/link.h>
 #include <pbl/services/bluetooth/local_id.h>

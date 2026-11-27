@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/addr.h>
 #include <pbl/drivers/als.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>

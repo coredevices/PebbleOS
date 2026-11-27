@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+#include <pbl/bluetooth/addr.h>
+
 #include <applib/app.h>
 #include <applib/app_malloc.h>
 #include <applib/ui/app_window_stack.h>

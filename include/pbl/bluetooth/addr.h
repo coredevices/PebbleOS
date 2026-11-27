@@ -4,9 +4,9 @@
 #pragma once
 
 /**
- * @defgroup bluetooth_types Types
+ * @defgroup bluetooth_addr Addresses
  * @ingroup bluetooth
- * @brief How to print addresses, and common sizes.
+ * @brief How to print addresses.
  *
  * Addresses are stored least significant octet first, as on air. Use PBL_BT_ADDR_FMT with
  * PBL_BT_ADDR_XPLODE() to print them most significant octet first:
@@ -21,9 +21,6 @@
 #define PBL_BT_ADDR_FMT "%02X:%02X:%02X:%02X:%02X:%02X"
 /** @brief Buffer size for an address printed with PBL_BT_ADDR_FMT, including the terminator. */
 #define PBL_BT_ADDR_FMT_BUFFER_SIZE (18)
-
-/** @brief Buffer size of a device name, including the terminator. */
-#define PBL_BT_DEVICE_NAME_BUFFER_SIZE (20)
 
 /**
  * @brief Expand an address into the printf() arguments of PBL_BT_ADDR_FMT, most significant

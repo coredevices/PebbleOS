@@ -6,8 +6,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/bluetooth/types.h>
-
 //! @file fake_gatt_client_types.h
 //! What the fakes of GATT client operations and subscriptions record: tests of the clients of a
 //! peer's services implement the client they use on these, and assert on what was read, written

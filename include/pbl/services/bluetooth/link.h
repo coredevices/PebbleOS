@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include <pbl/bluetooth/responsiveness.h>
-#include <pbl/bluetooth/types.h>
 
 #include <nimble/ble.h>
 

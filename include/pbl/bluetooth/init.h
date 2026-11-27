@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <pbl/bluetooth/sm_types.h>
+#include <stdint.h>
 
 /**
  * @defgroup bluetooth Bluetooth
@@ -54,13 +54,13 @@ void pbl_bt_init(void);
  * synchronize with the controller and set the identity address up. Does nothing if the stack is
  * already running.
  *
- * @param irk The local Identity Resolving Key. Only read during the call.
+ * @param irk The local Identity Resolving Key, 16 bytes. Only read during the call.
  * @retval 0 The stack is running.
  * @retval -EBUSY It is starting or stopping.
  * @retval -EIO The GATT services could not be registered.
  * @retval -EADDRNOTAVAIL There is no identity address.
  */
-int pbl_bt_start(const struct pbl_bt_sm_key *irk);
+int pbl_bt_start(const uint8_t irk[16]);
 
 /**
  * @brief Stop the Bluetooth stack.

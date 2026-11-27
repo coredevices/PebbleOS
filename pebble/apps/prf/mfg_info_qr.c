@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/addr.h>
 #include <pbl/services/battery/battery_state.h>
 #include <pbl/services/bluetooth/local_id.h>
 #include <pbl/util/size.h>

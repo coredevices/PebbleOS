@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/board/partitions.h>
 #include <pbl/crc/crc.h>
@@ -22,8 +23,8 @@ PBL_LOG_MODULE_DEFINE(bt_prf_store, CONFIG_BT_PRF_STORE_LOG_LEVEL);
 #define KEY_SIZE 16
 
 static_assert(SPRF_NAME_SIZE == PBL_BT_DEVICE_NAME_BUFFER_SIZE);
-static_assert(SPRF_NUM_ROOT_KEYS == PBL_BT_SM_ROOT_KEY_TYPE_NUM);
-static_assert(sizeof(struct sprf_key) == sizeof(struct pbl_bt_sm_key));
+static_assert(SPRF_NUM_ROOT_KEYS == PBL_BT_PRF_STORE_ROOT_KEY_NUM);
+static_assert(sizeof(struct sprf_key) == PBL_BT_PRF_STORE_KEY_SIZE);
 
 #define SPRF_NUM_PAGES (PART_SHARED_PRF_STORAGE_SIZE / sizeof(SharedPRFData))
 
@@ -354,8 +355,8 @@ int pbl_bt_prf_store_wipe(void) {
 //! BLE Root Key APIs
 //!
 
-bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
-                                   struct pbl_bt_sm_key *key_out) {
+bool pbl_bt_prf_store_get_root_key(enum pbl_bt_prf_store_root_key key_type,
+                                   uint8_t key_out[PBL_BT_PRF_STORE_KEY_SIZE]) {
   bool rv;
   prv_lock();
   {
@@ -365,13 +366,13 @@ bool pbl_bt_prf_store_get_root_key(enum pbl_bt_sm_root_key_type key_type,
       goto unlock;
     }
 
-    struct pbl_bt_sm_key nil_key = {};
+    const struct sprf_key nil_key = {};
     if (0 == memcmp(&nil_key, &data.keys[key_type], sizeof(nil_key))) {
       rv = false;
       goto unlock;
     }
     if (key_out) {
-      memcpy(key_out, &data.keys[key_type], sizeof(*key_out));
+      memcpy(key_out, &data.keys[key_type], PBL_BT_PRF_STORE_KEY_SIZE);
     }
 
     rv = true;
@@ -382,7 +383,7 @@ unlock:
   return rv;
 }
 
-int pbl_bt_prf_store_set_root_keys(struct pbl_bt_sm_key *keys_in) {
+int pbl_bt_prf_store_set_root_keys(uint8_t keys_in[][PBL_BT_PRF_STORE_KEY_SIZE]) {
   prv_lock();
   {
     SprfRootKeys data = {};

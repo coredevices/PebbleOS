@@ -6,7 +6,6 @@
 #include <errno.h>
 
 #include <pbl/bluetooth/gatts.h>
-#include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/logging/logging.h>
 
@@ -52,12 +51,11 @@ static int prv_access_data_write(uint16_t conn_handle, uint16_t attr_handle,
   return 0;
 }
 
-static const ble_uuid128_t s_svc_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_SERVICE_UUID_32BIT);
+static const ble_uuid128_t s_svc_uuid = PPOGATT_UUID128_INIT(PPOGATT_REVERSED_SERVICE_UUID);
 static const ble_uuid128_t s_data_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_CHARACTERISTIC_UUID_32BIT);
-static const ble_uuid128_t s_data_wr_uuid = PBL_BT_PEBBLE_UUID128_INIT(
-    PBL_BT_PEBBLE_PPOGATT_WATCH_SERVER_DATA_WR_CHARACTERISTIC_UUID_32BIT);
+    PPOGATT_UUID128_INIT(PPOGATT_REVERSED_DATA_CHARACTERISTIC_UUID);
+static const ble_uuid128_t s_data_wr_uuid =
+    PPOGATT_UUID128_INIT(PPOGATT_REVERSED_DATA_WR_CHARACTERISTIC_UUID);
 
 static const struct ble_gatt_svc_def s_ppog_reversed_svc[] = {
   {

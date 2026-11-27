@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pbl/bluetooth/addr.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/logging/logging.h>
 #include <pbl/services/bluetooth/local_id.h>
 

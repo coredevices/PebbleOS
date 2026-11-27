@@ -4,7 +4,7 @@
 #include "op_queue.h"
 
 #include <pbl/bluetooth/clients/gap.h>
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/kernel/malloc.h>
 #include <pbl/util/math.h>
 

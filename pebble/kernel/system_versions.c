@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/drivers/mcu.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/compiler.h>

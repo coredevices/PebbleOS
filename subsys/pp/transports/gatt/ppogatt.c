@@ -9,7 +9,6 @@
 
 #include <pbl/analytics/analytics.h>
 #include <pbl/bluetooth/clients/gatt.h>
-#include <pbl/bluetooth/pebble_bt.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/kernel/malloc.h>
@@ -32,12 +31,11 @@
 //! How many PPoGATT services of the phone are looked for: the Pebble app's, and those of apps.
 #define FORWARD_SERVICES_MAX 4
 
-static const ble_uuid128_t s_forward_svc_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_SERVICE_UUID_32BIT);
+static const ble_uuid128_t s_forward_svc_uuid = PPOGATT_UUID128_INIT(PPOGATT_SERVICE_UUID);
 static const ble_uuid128_t s_forward_data_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_DATA_CHARACTERISTIC_UUID_32BIT);
+    PPOGATT_UUID128_INIT(PPOGATT_DATA_CHARACTERISTIC_UUID);
 static const ble_uuid128_t s_forward_meta_uuid =
-    PBL_BT_PEBBLE_UUID128_INIT(PBL_BT_PEBBLE_PPOGATT_META_CHARACTERISTIC_UUID_32BIT);
+    PPOGATT_UUID128_INIT(PPOGATT_META_CHARACTERISTIC_UUID);
 
 static const ble_uuid_t *const s_forward_chr_uuids[PBL_PP_GATT_CHARACTERISTIC_NUM] = {
   [PBL_PP_GATT_CHARACTERISTIC_DATA] = &s_forward_data_uuid.u,

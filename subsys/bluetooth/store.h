@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <pbl/bluetooth/sm_types.h>
+#include <stdint.h>
 
 /** Install NimBLE's store, reporting bond changes to the firmware. */
 void pbl_bt__store_init(void);
 
 /** Set the local IRK, before the host starts. */
-void pbl_bt__store_set_local_irk(const struct pbl_bt_sm_key *irk);
+void pbl_bt__store_set_local_irk(const uint8_t irk[16]);

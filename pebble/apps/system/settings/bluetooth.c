@@ -11,8 +11,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/bluetooth/types.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/i18n/i18n.h>
 #include <pbl/kernel/assert.h>
 #include <pbl/logging/logging.h>

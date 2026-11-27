@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <pbl/bluetooth/types.h>
 #include <pbl/drivers/mag.h>
 #include <pbl/kernel/compiler.h>
 #include <pbl/pp/session.h>

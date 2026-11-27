@@ -7,8 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <pbl/bluetooth/sm_types.h>
-#include <pbl/bluetooth/types.h>
 #include <pbl/kernel/section.h>
 
 #include <host/ble_store.h>
@@ -32,7 +30,7 @@ struct pbl_bt_bond_info {
   /** Identity address of the peer. */
   ble_addr_t addr;
   /** Identity Resolving Key of the peer, valid if @ref irk_valid. */
-  struct pbl_bt_sm_key irk;
+  uint8_t irk[16];
   /** True if the peer distributed its Identity Resolving Key. */
   bool irk_valid;
 };

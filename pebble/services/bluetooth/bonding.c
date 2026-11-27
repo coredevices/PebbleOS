@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <pbl/bluetooth/bond.h>
+#include <pbl/bluetooth/gap.h>
 #include <pbl/bluetooth/prf_store.h>
 #include <pbl/drivers/rng.h>
 #include <pbl/logging/logging.h>
@@ -82,23 +83,23 @@ void bt_bonding_init(void) {
   }
 }
 
-int bt_bonding_get_root_keys(struct pbl_bt_sm_key *keys) {
-  if (pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION,
-                                    &keys[PBL_BT_SM_ROOT_KEY_TYPE_ENCRYPTION]) &&
-      pbl_bt_prf_store_get_root_key(PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY,
-                                    &keys[PBL_BT_SM_ROOT_KEY_TYPE_IDENTITY])) {
+int bt_bonding_get_root_keys(uint8_t keys[][PBL_BT_PRF_STORE_KEY_SIZE]) {
+  if (pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_ER,
+                                    keys[PBL_BT_PRF_STORE_ROOT_KEY_ER]) &&
+      pbl_bt_prf_store_get_root_key(PBL_BT_PRF_STORE_ROOT_KEY_IR,
+                                    keys[PBL_BT_PRF_STORE_ROOT_KEY_IR])) {
     return 0;
   }
 
-  for (size_t i = 0U; i < PBL_BT_SM_ROOT_KEY_TYPE_NUM; i++) {
-    for (size_t j = 0U; j < sizeof(keys[i].data); j += sizeof(uint32_t)) {
+  for (size_t i = 0U; i < PBL_BT_PRF_STORE_ROOT_KEY_NUM; i++) {
+    for (size_t j = 0U; j < sizeof(keys[i]); j += sizeof(uint32_t)) {
       uint32_t word;
 
       if (rng_rand(&word) != 0) {
         return -EIO;
       }
 
-      memcpy(&keys[i].data[j], &word, sizeof(word));
+      memcpy(&keys[i][j], &word, sizeof(word));
     }
   }
 
