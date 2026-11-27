@@ -214,6 +214,15 @@ config SRAM_SIZE
       Defaults to the part of the sram0 memory node no reserved memory
       region takes; boards without one set it.
 
+config XIP
+    bool "Run in place from flash"
+    default y
+    help
+      Link the image to run from the flash it is stored in. Without it,
+      the image is linked to run from RAM, code and data together, and
+      stored in its flash partition, from where something copies it to
+      RAM before it starts, such as another core.
+
 config FLASH_BASE
     hex
     help

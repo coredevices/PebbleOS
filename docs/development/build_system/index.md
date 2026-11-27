@@ -62,7 +62,9 @@ flowchart TD
    the RISC-V `nrf54l15dk/cpuflpr`, with `toolchain.<core>.cmake`. The
    RISC-V toolchain, `cmake/toolchain/riscv-none-elf.cmake`, is not in the
    SDK yet: it takes `riscv-none-elf-gcc` from `PATH`, or another prefix
-   from `-DCROSS_COMPILE=`, and builds picolibc from source.
+   from `-DCROSS_COMPILE=`, and builds picolibc from source. An image
+   without `CONFIG_XIP` is linked to run from RAM, and its hex to be stored
+   in its flash partition, as the FLPR's is.
 3. **Libraries.** PebbleOS's directories, then the firmware's, are added
    in turn. Each one
    contributes libraries, global include directories, linker script
