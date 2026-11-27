@@ -48,6 +48,7 @@ static const char *prv_kind_strings[DayPickerKindNumItems] = {
   [DayPickerKindWeekends] = pbl_i18n_noop("Weekends"),
   [DayPickerKindCustom] = pbl_i18n_noop("Custom"),
   [DayPickerKindJustOnce] = pbl_i18n_noop("Just Once"),
+  [DayPickerKindJustOnceThenDelete] = pbl_i18n_noop("Just once then delete"),
 };
 
 const char *day_picker_kind_get_string(DayPickerKind kind) {
@@ -57,34 +58,29 @@ const char *day_picker_kind_get_string(DayPickerKind kind) {
   return prv_kind_strings[kind];
 }
 
+#define DAY_PICKER_NUM_REPEATING_KINDS ((int)DayPickerKindJustOnce)
+#define DAY_PICKER_NUM_ONCE_KINDS      ((int)DayPickerKindNumItems - DAY_PICKER_NUM_REPEATING_KINDS)
+
 static DayPickerKind prv_row_to_kind(bool allow_once, int row) {
   if (allow_once) {
-    if (row == 0) {
-      return DayPickerKindJustOnce;
+    if (row >= 0 && row < DAY_PICKER_NUM_ONCE_KINDS) {
+      return (DayPickerKind)(DAY_PICKER_NUM_REPEATING_KINDS + row);
     }
-    int kind_row = row - 1;
-    if (kind_row >= 0 && kind_row < (DayPickerKindNumItems - 1)) {
-      return (DayPickerKind)kind_row;
-    }
-    return DayPickerKindEveryday;
+    row -= DAY_PICKER_NUM_ONCE_KINDS;
   }
-  if (row >= 0 && row < (DayPickerKindNumItems - 1)) {
+  if (row >= 0 && row < DAY_PICKER_NUM_REPEATING_KINDS) {
     return (DayPickerKind)row;
   }
   return DayPickerKindEveryday;
 }
 
 static int prv_kind_to_row(bool allow_once, DayPickerKind kind) {
+  const bool is_once = ((int)kind >= DAY_PICKER_NUM_REPEATING_KINDS);
   if (allow_once) {
-    if (kind == DayPickerKindJustOnce) {
-      return 0;
-    }
-    return (int)kind + 1;
+    return is_once ? (int)kind - DAY_PICKER_NUM_REPEATING_KINDS
+                   : (int)kind + DAY_PICKER_NUM_ONCE_KINDS;
   }
-  if (kind == DayPickerKindJustOnce) {
-    return 0;
-  }
-  return (int)kind;
+  return is_once ? 0 : (int)kind;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +94,7 @@ static uint16_t prv_day_picker_get_num_sections(struct MenuLayer *menu_layer,
 static uint16_t prv_day_picker_get_num_rows(struct MenuLayer *menu_layer, uint16_t section_index,
                                             void *callback_context) {
   DayPickerData *data = (DayPickerData *)callback_context;
-  return (DayPickerKindNumItems - 1) + (data->allow_once ? 1 : 0);
+  return DAY_PICKER_NUM_REPEATING_KINDS + (data->allow_once ? DAY_PICKER_NUM_ONCE_KINDS : 0);
 }
 
 static int16_t prv_day_picker_get_cell_height(struct MenuLayer *menu_layer, MenuIndex *cell_index,
