@@ -74,6 +74,17 @@
 			reg = <0xffd000 0x1000>;
 		};
 
+		usbhs: usb@50020000 {
+			compatible = "nordic,nrf54lm20a-usbhs", "snps,dwc2";
+			reg = <0x50020000 0x1a000>;
+			interrupts = <90>;
+			phys = <&usbhs_phy>;
+			phy-names = "usb2-phy";
+			g-rx-fifo-size = <290>;
+			g-np-tx-fifo-size = <16>;
+			g-tx-fifo-size = <128 128 128 128 32 32 32 32>;
+			status = "disabled";
+		};
 
 		spi00: spi@5004d000 {
 			compatible = "nordic,nrf54lm20a-spim", "nordic,nrf54l15-spim";
@@ -117,6 +128,15 @@
 			reg = <0x50059000 0x1000>, <0x50010000 0x10000>;
 			reg-names = "wrapper", "core";
 			interrupts = <89>;
+		};
+
+		usbhs_phy: phy@5005a000 {
+			compatible = "nordic,nrf54lm20a-usbhs-phy";
+			reg = <0x5005a000 0x1000>;
+			clocks = <&clock NRF54L_CLOCK_XO24M>;
+			#phy-cells = <0>;
+			nordic,vregusb = <&vregusb>;
+			status = "disabled";
 		};
 
 		radio: radio@5008a000 {
@@ -273,6 +293,12 @@
 				regulator-always-on;
 				regulator-initial-mode = <NRF54L15_REGULATOR_MODE_LDO>;
 			};
+		};
+
+		vregusb: regulator@50121000 {
+			compatible = "nordic,nrf54lm20a-vregusb";
+			reg = <0x50121000 0x1000>;
+			interrupts = <289>;
 		};
 
 		icache: cache-controller@e0082000 {
