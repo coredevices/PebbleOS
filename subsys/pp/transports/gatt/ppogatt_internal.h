@@ -28,15 +28,16 @@
                    (u) & 0xff, ((u) >> 8) & 0xff, ((u) >> 16) & 0xff, ((u) >> 24) & 0xff)
 
 //! The largest ATT MTU: what the host stack is configured to prefer.
-#define PPOGATT_MTU_MAX                   (247)
-#define PPOGATT_V1_DESIRED_RX_WINDOW_SIZE (4500 / (PPOGATT_MTU_MAX - 3))
+#define PPOGATT_MTU_MAX                (247)
+#define PPOGATT_DESIRED_RX_WINDOW_SIZE (4500 / (PPOGATT_MTU_MAX - 3))
 //! The smallest ATT MTU: anything below means that the connection is gone.
-#define PPOGATT_MTU_MIN                    (23)
-#define PPOGATT_MIN_VERSION                (0x00)
-#define PPOGATT_MAX_VERSION                (0x01)
-#define PPOGATT_SN_BITS                    (5)
-#define PPOGATT_SN_MOD_DIV                 (1 << PPOGATT_SN_BITS)
-#define PPOGATT_V0_WINDOW_SIZE             (4)
+#define PPOGATT_MTU_MIN (23)
+//! The one version spoken.
+#define PPOGATT_VERSION    (0x01)
+#define PPOGATT_SN_BITS    (5)
+#define PPOGATT_SN_MOD_DIV (1 << PPOGATT_SN_BITS)
+//! Window used when the phone does not tell its own.
+#define PPOGATT_FALLBACK_WINDOW_SIZE       (4)
 #define PPOGATT_TIMEOUT_TICK_INTERVAL_SECS (2)
 //! Effective timeout: between 5 - 6 secs, because packet could be sent out just before the
 //! timer tick is about to fire.
@@ -111,16 +112,10 @@ typedef struct PBL_PACKED {
 typedef struct PBL_PACKED {
   uint8_t ppogatt_max_rx_window;
   uint8_t ppogatt_max_tx_window;
-} PPoGATTResetCompleteClientIDPayloadV1;
-
-typedef struct PBL_PACKED {
-  uint8_t ppogatt_min_version;
-  uint8_t ppogatt_max_version;
-  Uuid app_uuid;
-} PPoGATTMetaV0;
+} PPoGATTResetCompleteClientIDPayload;
 
 typedef enum {
-  PPoGATTSessionType_InferredFromUuid = 0x00,
+  PPoGATTSessionType_System = 0x00,
   PPoGATTSessionType_Hybrid = 0x01,
   PPoGATTSessionTypeCount,
 } PPoGATTSessionType;
@@ -130,7 +125,7 @@ typedef struct PBL_PACKED {
   uint8_t ppogatt_max_version;
   Uuid app_uuid;
   PPoGATTSessionType pp_session_type : 8;
-} PPoGATTMetaV1;
+} PPoGATTMeta;
 
 //! The reversed service, where the phone is the client (CONFIG_PP_TRANSPORT_GATT_REVERSED).
 

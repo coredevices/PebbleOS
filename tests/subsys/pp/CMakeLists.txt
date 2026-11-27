@@ -64,8 +64,7 @@ pbl_clar_test(test_meta
     CONFIG_PP_LOG_LEVEL=0
 )
 
-pbl_clar_test(test_ppogatt_v0
-  SOURCE test_ppogatt.c
+pbl_clar_test(test_ppogatt
   MODULES rand
   SOURCES
     pebble/services/clock/time.c
@@ -83,29 +82,6 @@ pbl_clar_test(test_ppogatt_v0
     third_party/nimble/mynewt-nimble/porting/nimble/include
   DEFINES
     CONFIG_NIMBLE_LOG_LEVEL=0
-    USE_PPOGATT_VERSION=0
-)
-
-pbl_clar_test(test_ppogatt_v1
-  SOURCE test_ppogatt.c
-  MODULES rand
-  SOURCES
-    pebble/services/clock/time.c
-    subsys/logging/hexdump.c
-    subsys/pp/transports/gatt/ppogatt.c
-    tests/fakes/fake_gatt_client_operations.c
-    tests/fakes/fake_gatt_client_subscriptions.c
-    tests/fakes/fake_session.c
-    tests/stubs/stubs_nimble_port.c
-  INCLUDES
-    third_party/nimble/port/include
-    third_party/nimble/mynewt-nimble/nimble/include
-    third_party/nimble/mynewt-nimble/nimble/host/include
-    third_party/nimble/mynewt-nimble/nimble/transport/include
-    third_party/nimble/mynewt-nimble/porting/nimble/include
-  DEFINES
-    CONFIG_NIMBLE_LOG_LEVEL=0
-    USE_PPOGATT_VERSION=1
 )
 
 pbl_clar_test(test_ppogatt_reversed
@@ -126,5 +102,4 @@ pbl_clar_test(test_ppogatt_reversed
     third_party/nimble/mynewt-nimble/porting/nimble/include
   DEFINES
     CONFIG_NIMBLE_LOG_LEVEL=0
-    USE_PPOGATT_VERSION=1
 )
