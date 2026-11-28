@@ -1,0 +1,8 @@
+description: A hands-free device for the calls of a phone, over Bluetooth Classic, next to an LE peripheral
+expect:
+  - 'hfp_hf: address ([0-9a-f]{2}:){5}[0-9a-f]{2}'
+  - 'hfp_hf: advertising as PebbleOS HF'
+  - 'hfp_hf: connectable over Classic'
+roles: [mic, speaker]
+boards: [obelix]
+integration: [obelix@pvt]
