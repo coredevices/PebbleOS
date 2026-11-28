@@ -6,6 +6,9 @@ pbl_library_sources(
   trap.S
 )
 pbl_library_sources_ifdef(CONFIG_RISCV_CLIC clic.c)
+if(NOT CONFIG_RISCV_ISA_EXT_A)
+  pbl_library_sources(atomic.c)
+endif()
 
 pbl_include_directories(include)
 pbl_linker_include_directories(linker)

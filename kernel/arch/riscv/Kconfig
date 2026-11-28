@@ -18,6 +18,12 @@ config RISCV_ISA_EXT_M
     help
       Integer multiplication and division.
 
+config RISCV_ISA_EXT_A
+    bool
+    help
+      Atomic instructions. Without them, the kernel provides the atomic
+      operations the compiler calls out for.
+
 config RISCV_ISA_EXT_C
     bool
     help
