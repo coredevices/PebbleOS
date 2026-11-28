@@ -741,6 +741,7 @@ static void cancel_message_retry(void);
 static void schedule_message_timeout(void);
 static void schedule_message_send_retry(void);
 static void show_status(const char *message);
+static void show_pending_bubble(const char *text);
 static void status_clear_timer_callback(void *data);
 static const char *default_status_text(void);
 static bool send_command_with_status(const char *command, const char *chat_id, const char *text,
@@ -4825,6 +4826,9 @@ static bool touch_keyboard_has_draft(void) {
 
 static void touch_keyboard_send_result(bool ok) {
   if (!s_kb_awaiting_send) {
+    if (!ok) {
+      kb_mark_pending_failed();  // a voice or draft bar send: its bubble says it didn't go
+    }
     return;
   }
   if (ok) {
@@ -4834,14 +4838,6 @@ static void touch_keyboard_send_result(bool ok) {
       s_kb_draft[0] = '\0';
       s_kb_cursor = 0;
       s_kb_synced = 0;
-    }
-    int index = find_message_index_by_id("pending");
-    if (index >= 0) {
-      Message *message = &s_messages[index];
-      char text[TOUCH_KEYBOARD_MAX_TEXT];
-      copy_cstr(text, sizeof(text), message->text);
-      set_message_strings(message, NULL, text, NULL, "sent", NULL);
-      mark_messages_dirty();
     }
   } else {
     s_kb_send_keeps_draft = false;
@@ -4905,14 +4901,22 @@ static void kb_send(void) {
   s_kb_synced = 0;
   reset_touch_keyboard();
 
-  // Show the message straight away; the real one replaces it when it arrives.
+  show_pending_bubble(text);
+}
+
+// A message just sent shows straight away, with nothing under it: the real one replaces it when
+// the phone's sync brings it, with its time and status (Sent, Delivered, Seen).
+static void show_pending_bubble(const char *text) {
   int stale = find_message_index_by_id("failed");
   if (stale >= 0) {
     remove_message_at(stale);
   }
   Message *slot = append_message_slot();
+  if (!slot) {
+    return;
+  }
   copy_cstr(slot->id, sizeof(slot->id), "pending");
-  set_message_strings(slot, NULL, text, NULL, "...", NULL);
+  set_message_strings(slot, NULL, text, NULL, NULL, NULL);
   slot->outgoing = true;
   s_at_newest = true;
   s_user_scrolled_messages = false;
@@ -6741,7 +6745,9 @@ static void send_text_message(const char *text, bool as_reply) {
     reply_to = s_messages[s_selected_message].id;
   }
   show_status("Sending...");
-  send_command("send_message", s_current_chat_id, text, reply_to, NULL);
+  if (send_command("send_message", s_current_chat_id, text, reply_to, NULL) && s_at_newest) {
+    show_pending_bubble(text);
+  }
 }
 
 static void send_bar_draft(void) {
