@@ -94,7 +94,8 @@ static struct {
   int tail_count;
   int transfer_seq;
 
-  char launch_hint[64];
+  ChatLaunchHint hint;  // the notification the app was opened from, until its chat opens
+  bool has_hint;
   AppTimer *hint_timer;
 
   // Chat pictures: asked for one at a time, each chat once per launch
@@ -395,6 +396,18 @@ static void prv_check_meta(void) {
   s_ds.reset_asked = prv_forward(buf, dict_write_end(&iter));
 }
 
+// Each network's own features: the UI builds a chat's menus from its network's
+static void prv_deliver_features(void) {
+  char features[128];
+  for (uint8_t n = 0; n < ChatDbNetworkCount; n++) {
+    prv_read_features(n, features, sizeof(features));
+    DictionaryIterator *iter = prv_begin("features");
+    dict_write_int32(iter, MESSAGE_KEY_Network, n);
+    dict_write_cstring(iter, MESSAGE_KEY_Text, features);
+    prv_deliver(iter);
+  }
+}
+
 static void prv_deliver_settings(void) {
   char features[128];
   prv_read_features(ChatDbNetworkBeeper, features, sizeof(features));
@@ -426,21 +439,26 @@ static void prv_deliver_settings(void) {
   }
   dict_write_cstring(iter, MESSAGE_KEY_Text, features);
   prv_deliver(iter);
-
-  // Each network's own features: the UI builds a chat's menus from its network's
-  for (uint8_t n = 0; n < ChatDbNetworkCount; n++) {
-    prv_read_features(n, features, sizeof(features));
-    iter = prv_begin("features");
-    dict_write_int32(iter, MESSAGE_KEY_Network, n);
-    dict_write_cstring(iter, MESSAGE_KEY_Text, features);
-    prv_deliver(iter);
-  }
+  prv_deliver_features();
 }
 
 // Answers get_favorites: every favourite, then favorites_done.
 static void prv_deliver_favorites(void) {
   RowRef *rows = prv_rows_alloc(MAX_CHATS);
   const int count = prv_rows(CHAT_DB_KIND_FAVORITE, nullptr, rows, MAX_CHATS);
+  // In the phone's order (storage order changes as rows are rewritten)
+  for (int i = 0; i < count; i++) {
+    int len;
+    uint8_t *val = prv_read(&rows[i], &len);
+    ChatDbFavorite fav;
+    rows[i].time = (val && chat_db_parse_favorite(val, len, &fav)) ? fav.order : UINT8_MAX;
+    app_free(val);
+    for (int j = i; j > 0 && rows[j - 1].time > rows[j].time; j--) {
+      RowRef swap = rows[j];
+      rows[j] = rows[j - 1];
+      rows[j - 1] = swap;
+    }
+  }
   int delivered = 0;
   for (int i = 0; i < count; i++) {
     int len;
@@ -465,7 +483,7 @@ static void prv_deliver_favorites(void) {
 
 static void prv_hint_expired(void *data) {
   s_ds.hint_timer = nullptr;
-  s_ds.launch_hint[0] = '\0';
+  s_ds.has_hint = false;
 }
 
 static void prv_clear_hint(void) {
@@ -475,9 +493,97 @@ static void prv_clear_hint(void) {
   prv_hint_expired(nullptr);
 }
 
-// Answers get_chats. Returns the id of the newest chat whose title is the launch hint, if any
-// (two chats can share a name, e.g. the same person on two networks).
-static void prv_deliver_chats(char *hint_chat_id) {
+#define HINT_MESSAGES 5  // a chat's newest messages a notification's is looked for in
+// How far apart the notification's time and its message's may be: the notified message is the
+// new one, not an older one that happens to read the same
+#define HINT_SLACK_S 60
+#define HINT_CHATS 64
+
+// Whether the chat holds the notification's message: incoming, posted then, its text
+static bool prv_chat_holds_hinted_message(const uint8_t *chat_key, RowRef *rows) {
+  const int count = prv_rows(CHAT_DB_KIND_MESSAGE, chat_key, rows, MAX_ROWS);
+  const uint32_t t = s_ds.hint.time;
+  bool found = false;
+  for (int i = count - 1; i >= 0 && i >= count - HINT_MESSAGES && !found; i--) {
+    int len;
+    uint8_t *val = prv_read(&rows[i], &len);
+    ChatDbMessage m;
+    found = val && chat_db_parse_message(val, len, &m) &&
+            !(m.flags & ChatDbMessageFlagOutgoing) &&
+            m.time + HINT_SLACK_S >= t && m.time <= t + HINT_SLACK_S &&
+            chat_db_text_in_notification(m.text, s_ds.hint.body);
+    app_free(val);
+  }
+  return found;
+}
+
+// The notification's chat, when the watch has it and it is surely that one: the chat the phone
+// named, or, when it can't (iOS), the only chat holding the notified message. Never a guess (a
+// title can't tell two chats of the same name apart): a reply to the wrong chat goes to the
+// wrong people. out gets its id, or "".
+static bool prv_find_hinted_chat(char *out) {
+  out[0] = '\0';
+  uint8_t key[1 + CHAT_DB_CHAT_KEY_LEN] = {CHAT_DB_KIND_CHAT};
+  if (s_ds.hint.chat_id[0]) {
+    if (!prv_unhex(key + 1, s_ds.hint.chat_id) || chat_db_get_len(key, sizeof(key)) <= 0) {
+      return false;  // not on the watch yet
+    }
+    prv_hex(out, key + 1, CHAT_DB_CHAT_KEY_LEN);
+    return true;
+  }
+  if (!s_ds.hint.body[0]) {
+    return false;
+  }
+  RowRef *chats = prv_rows_alloc(HINT_CHATS);
+  RowRef *rows = prv_rows_alloc(MAX_ROWS);
+  const int chat_count = rows ? prv_rows(CHAT_DB_KIND_CHAT, nullptr, chats, HINT_CHATS) : 0;
+  int matches = 0;
+  for (int i = 0; i < chat_count && matches < 2; i++) {
+    int len;
+    uint8_t *val = prv_read(&chats[i], &len);
+    ChatDbChat chat;
+    // Only chats active about then: each look through messages reads the whole db
+    const bool recent = val && chat_db_parse_chat(val, len, &chat) && s_ds.hint.time &&
+                        chat.last_activity + HINT_SLACK_S >= s_ds.hint.time;
+    app_free(val);
+    if (recent && prv_chat_holds_hinted_message(chats[i].key + 1, rows) && matches++ == 0) {
+      prv_hex(out, chats[i].key + 1, CHAT_DB_CHAT_KEY_LEN);
+    }
+  }
+  app_free(rows);
+  app_free(chats);
+  if (matches != 1) {
+    out[0] = '\0';
+  }
+  return matches == 1;
+}
+
+// Answers get_chats.
+static void prv_deliver_chats(void);
+
+// Opens the notification's chat when the watch has it; true if it did. Otherwise, with or_list,
+// leaves any open chat for the list (a reply there would go to the wrong chat) and waits a while
+// for the phone to send the chat.
+static bool prv_open_hinted_chat(bool or_list) {
+  char id[CHAT_KEY_HEX_LEN + 1];
+  const bool found = prv_find_hinted_chat(id);
+  bool opened = false;
+  if (found || or_list) {
+    prv_deliver_chats();
+    opened = chat_ui_open_chat(id) && found;  // "": the list; a chat past the list's newest isn't
+    if (opened && s_ds.hint.draft[0]) {
+      chat_ui_set_draft(s_ds.hint.draft);
+    }
+  }
+  if (found) {
+    prv_clear_hint();  // opened, or past the list's newest: the list shows, no more tries
+  } else if (or_list && !s_ds.hint_timer) {
+    s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
+  }
+  return opened;
+}
+
+static void prv_deliver_chats(void) {
   RowRef *rows = prv_rows_alloc(MAX_CHATS);
   const int count = prv_rows(CHAT_DB_KIND_CHAT, nullptr, rows, MAX_CHATS);
   uint32_t oldest_sync = UINT32_MAX;
@@ -498,9 +604,6 @@ static void prv_deliver_chats(char *hint_chat_id) {
     snprintf(meta, sizeof(meta), "%s|%s%s%s", when, (chat.flags & ChatDbChatFlagGroup) ? "g" : "",
              (chat.flags & ChatDbChatFlagMuted) ? "m" : "",
              (chat.flags & ChatDbChatFlagContact) ? "c" : "");
-    if (hint_chat_id && !hint_chat_id[0] && s_ds.launch_hint[0] && prv_str_eq(chat.title, s_ds.launch_hint)) {
-      strcpy(hint_chat_id, id);
-    }
     if (chat.synced < oldest_sync) {
       oldest_sync = chat.synced;
     }
@@ -523,6 +626,7 @@ static void prv_deliver_chats(char *hint_chat_id) {
     delivered++;
   }
   app_free(rows);
+  prv_deliver_favorites();  // with the list, from storage: their bubbles show on the first paint
   prv_deliver_done("chats_done", delivered, 0);
 
   // Say how old the list is when the phone hasn't refreshed it lately
@@ -822,15 +926,10 @@ static void prv_handle_command(const uint8_t *dict, size_t len) {
     s_ds.chat_open = false;
     prv_check_meta();
     prv_deliver_settings();
-    char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
-    prv_deliver_chats(hint_chat);
-    if (s_ds.launch_hint[0]) {
-      chat_ui_open_chat(hint_chat);  // "" when no chat has that name: the UI shows the list
-      if (hint_chat[0]) {
-        prv_clear_hint();
-      } else if (!s_ds.hint_timer) {
-        s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
-      }
+    if (s_ds.has_hint) {
+      prv_open_hinted_chat(true);
+    } else {
+      prv_deliver_chats();
     }
     prv_request_avatars();
   } else if (strcmp(cmd, "get_messages") == 0 && has_chat) {
@@ -968,26 +1067,15 @@ static void prv_from_phone(const uint8_t *dict, size_t len) {
   s_ds.inbox_received(&iter, nullptr);
 }
 
-// The phone changed the chat db: show new messages of the open chat, or the new chat list.
-// Opens the notification's chat if the app has it now; true if it did.
-static bool prv_open_hinted_chat(void) {
-  char hint_chat[CHAT_KEY_HEX_LEN + 1] = "";
-  prv_deliver_chats(hint_chat);
-  if (!hint_chat[0]) {
-    return false;
-  }
-  prv_clear_hint();
-  chat_ui_open_chat(hint_chat);
-  return true;
-}
 
 static void prv_apply_changes(void *data) {
   s_ds.change_timer = nullptr;
-  if (s_ds.launch_hint[0] && prv_open_hinted_chat()) {
+  prv_deliver_features();  // a reset refills them after the app asked
+  if (s_ds.has_hint && prv_open_hinted_chat(false)) {
     return;  // the notification's chat just arrived
   }
   if (!s_ds.chat_open) {
-    prv_deliver_chats(nullptr);
+    prv_deliver_chats();
     prv_request_avatars();  // pictures of new chats, or all of them if the phone wasn't there at launch
     return;
   }
@@ -1021,12 +1109,11 @@ static void prv_hint_arrived(void) {
     app_timer_cancel(s_ds.hint_timer);
     s_ds.hint_timer = nullptr;
   }
-  if (!chat_service_take_launch_hint(s_ds.launch_hint, sizeof(s_ds.launch_hint))) {
+  if (!chat_service_take_launch_hint(&s_ds.hint)) {
     return;
   }
-  if (!prv_open_hinted_chat()) {  // not on the watch yet: open it when the phone sends it
-    s_ds.hint_timer = app_timer_register(HINT_WAIT_MS, prv_hint_expired, nullptr);
-  }
+  s_ds.has_hint = true;
+  prv_open_hinted_chat(true);
 }
 
 bool chat_ds_phone_connected(void) {
@@ -1034,12 +1121,12 @@ bool chat_ds_phone_connected(void) {
 }
 
 bool chat_ds_has_launch_hint(void) {
-  return s_ds.launch_hint[0] != '\0';
+  return s_ds.has_hint;
 }
 
 void chat_ds_init(void) {
   memset(&s_ds, 0, sizeof(s_ds));
-  chat_service_take_launch_hint(s_ds.launch_hint, sizeof(s_ds.launch_hint));
+  s_ds.has_hint = chat_service_take_launch_hint(&s_ds.hint);
   chat_service_set_handler(prv_from_phone);
   chat_service_set_hint_handler(prv_hint_arrived);
   s_ds.blob_db_event = (EventServiceInfo){

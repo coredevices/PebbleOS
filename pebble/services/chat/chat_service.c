@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <pbl/kernel/malloc.h>
+#include <pbl/kernel/mutex.h>
 #include <pbl/logging/logging.h>
 #include <pbl/pp/endpoint.h>
 #include <pbl/pp/protocol.h>
@@ -15,12 +16,16 @@
 #include <applib/dict.h>
 #include <apps/system/chat/chat_keys.h>
 #include <kernel/pebble_tasks.h>
+#include <process_management/app_install_manager.h>
+#include <process_management/app_manager.h>
 #include <process_management/process_manager.h>
-
-#define LAUNCH_HINT_SIZE 64
+#include <shell/system_app_ids.auto.h>
 
 static ChatServiceHandler s_handler;
-static char s_launch_hint[LAUNCH_HINT_SIZE];
+// Set on KernelMain (a notification's action), taken on the app task: copied whole under the lock
+static PBL_MUTEX_DEFINE(s_hint_lock);
+static ChatLaunchHint s_launch_hint;
+static bool s_has_launch_hint;
 static ChatServiceHintHandler s_hint_handler;
 
 typedef struct {
@@ -37,9 +42,64 @@ static void prv_deliver(void *data) {
   pbl_free(packet);
 }
 
+// A string tuple of the phone's dictionary, or nullptr: checked against its length, not trusted
+// (Pebble dictionary: count u8, then key u32, type u8, length u16, value per tuple)
+static const char *prv_dict_cstring(const uint8_t *dict, size_t len, uint32_t key) {
+  if (len < 1) {
+    return nullptr;
+  }
+  const uint8_t *p = dict + 1, *end = dict + len;
+  for (int i = 0; i < dict[0]; i++) {
+    if (end - p < 7) {
+      return nullptr;
+    }
+    const uint32_t k = p[0] | (p[1] << 8) | (p[2] << 16) | ((uint32_t)p[3] << 24);
+    const uint8_t type = p[4];
+    const uint16_t n = p[5] | (p[6] << 8);
+    p += 7;
+    if (end - p < n) {
+      return nullptr;
+    }
+    if (k == key) {
+      return (type == TUPLE_CSTRING && n > 0 && p[n - 1] == '\0') ? (const char *)p : nullptr;
+    }
+    p += n;
+  }
+  return nullptr;
+}
+
+// The phone's "open_chat" (Index: a message to someone not in the favourites, for the user to
+// send): the Chat app opens on that chat with the message in its bar, launched if it isn't running
+static bool prv_open_chat_from_phone(const uint8_t *dict, size_t len) {
+  const char *type = prv_dict_cstring(dict, len, MESSAGE_KEY_Type);
+  const char *chat_id = prv_dict_cstring(dict, len, MESSAGE_KEY_ChatId);
+  const char *text = prv_dict_cstring(dict, len, MESSAGE_KEY_Text);
+  if (!type || strcmp(type, "open_chat") != 0 || !chat_id) {
+    return false;
+  }
+  ChatLaunchHint *hint = pbl_zalloc(sizeof(ChatLaunchHint));
+  if (!hint) {
+    return true;
+  }
+  strncpy(hint->chat_id, chat_id, sizeof(hint->chat_id) - 1);
+  strncpy(hint->draft, text ? text : "", sizeof(hint->draft) - 1);
+  const bool running = s_hint_handler != nullptr;
+  chat_service_set_launch_hint(hint);
+  pbl_free(hint);
+#if defined(APP_ID_CHAT)
+  if (!running && APP_ID_CHAT != INSTALL_ID_INVALID) {
+    app_manager_put_launch_app_event(&(AppLaunchEventConfig){.id = APP_ID_CHAT});
+  }
+#endif
+  return true;
+}
+
 static void prv_handle_packet(struct pbl_pp_session *session, const uint8_t *data, size_t length) {
   if (length < 1 || data[0] != CHAT_SERVICE_VERSION) {
     PBL_LOG_WRN("Chat: dropping version %u", length ? data[0] : 0);
+    return;
+  }
+  if (prv_open_chat_from_phone(data + 1, length - 1)) {
     return;
   }
   if (!s_handler) {
@@ -87,8 +147,13 @@ static void prv_deliver_hint(void *data) {
   }
 }
 
-void chat_service_set_launch_hint(const char *title) {
-  strncpy(s_launch_hint, title ? title : "", sizeof(s_launch_hint) - 1);
+void chat_service_set_launch_hint(const ChatLaunchHint *hint) {
+  pbl_mutex_lock(&s_hint_lock, PBL_FOREVER);
+  s_has_launch_hint = hint != nullptr;
+  if (hint) {
+    s_launch_hint = *hint;
+  }
+  pbl_mutex_unlock(&s_hint_lock);
   if (s_hint_handler) {  // the app is running: it reads the hint now, not at its next launch
     process_manager_send_callback_event_to_process(PebbleTask_App, prv_deliver_hint, nullptr);
   }
@@ -98,11 +163,14 @@ void chat_service_set_hint_handler(ChatServiceHintHandler handler) {
   s_hint_handler = handler;
 }
 
-bool chat_service_take_launch_hint(char *out, size_t out_size) {
-  const bool has = s_launch_hint[0] != '\0';
-  strncpy(out, s_launch_hint, out_size - 1);
-  out[out_size - 1] = '\0';
-  s_launch_hint[0] = '\0';
+bool chat_service_take_launch_hint(ChatLaunchHint *out) {
+  pbl_mutex_lock(&s_hint_lock, PBL_FOREVER);
+  const bool has = s_has_launch_hint;
+  if (has) {
+    *out = s_launch_hint;
+  }
+  s_has_launch_hint = false;
+  pbl_mutex_unlock(&s_hint_lock);
   return has;
 }
 

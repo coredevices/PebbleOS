@@ -180,6 +180,13 @@ void test_chat_db__v2_vectors(void) {
   cl_assert_equal_i(fav.name.len, 3);
   cl_assert(memcmp(fav.name.str, "Mom", 3) == 0);
   cl_assert_equal_i(fav.address.len, 12);
+  cl_assert_equal_i(fav.order, 0);
+
+  uint8_t ordered[sizeof(s_fav) + 1];
+  memcpy(ordered, s_fav, sizeof(s_fav));
+  ordered[sizeof(s_fav)] = 5;
+  cl_assert(chat_db_parse_favorite(ordered, sizeof(ordered), &fav));
+  cl_assert_equal_i(fav.order, 5);
 }
 
 void test_chat_db__v2_rejects_bad_keys(void) {
@@ -190,4 +197,43 @@ void test_chat_db__v2_rejects_bad_keys(void) {
   cl_assert_equal_i(chat_db_insert(long_v_key, sizeof(long_v_key), s_v, sizeof(s_v)), -EINVAL);
   cl_assert_equal_i(chat_db_insert(s_fav_key, sizeof(s_fav_key), s_fav, sizeof(s_fav) - 1),
                     -EINVAL);
+}
+
+static ChatDbStr prv_str(const char *s) {
+  return (ChatDbStr){ .str = s, .len = strlen(s) };
+}
+
+void test_chat_db__text_in_notification(void) {
+  cl_assert(chat_db_text_in_notification(prv_str("see you at 5"), "see you at 5"));
+  cl_assert(chat_db_text_in_notification(prv_str("see you at 5"), "Alice: see you at 5"));
+  cl_assert(chat_db_text_in_notification(prv_str("new"), "old\nBob: new"));
+  cl_assert(chat_db_text_in_notification(prv_str("a long message that was cut"),
+                                         "a long message\xe2\x80\xa6"));
+  cl_assert(chat_db_text_in_notification(prv_str("a long message that was cut"),
+                                         "Alice: a long message\xe2\x80\xa6"));
+  // A message of several lines is the whole body, not its last line
+  cl_assert(chat_db_text_in_notification(prv_str("Meet tomorrow\nok"), "Meet tomorrow\nok"));
+  // Another message, or only part of this one, is not a match
+  cl_assert(!chat_db_text_in_notification(prv_str("ok"), "not ok"));
+  cl_assert(!chat_db_text_in_notification(prv_str("see you at 5"), "see you"));
+  cl_assert(!chat_db_text_in_notification(prv_str("hi"), "Alice: hello"));
+  cl_assert(!chat_db_text_in_notification(prv_str("new"), "Bob: new\nold"));
+  cl_assert(!chat_db_text_in_notification(prv_str("x"), ""));
+  cl_assert(!chat_db_text_in_notification(prv_str("a long message"), "a lo\xe2\x80\xa6"));
+  cl_assert(!chat_db_text_in_notification(prv_str(""), "x"));
+}
+
+void test_chat_db__hold(void) {
+  static const uint8_t key[] = {CHAT_DB_KIND_HOLD};
+  // version, until 1000, "com.automattic.beeper,com.tencent.xin"
+  uint8_t val[64] = {CHAT_DB_VERSION, 0xe8, 0x03, 0x00, 0x00};
+  const char apps[] = "com.automattic.beeper,com.tencent.xin";
+  val[5] = sizeof(apps) - 1;
+  memcpy(&val[6], apps, sizeof(apps) - 1);
+  cl_assert_equal_i(chat_db_insert(key, sizeof(key), val, 6 + sizeof(apps) - 1), 0);
+  cl_assert(chat_db_is_held("com.tencent.xin", 15, 999));
+  cl_assert(chat_db_is_held("com.automattic.beeper", 21, 999));
+  cl_assert(!chat_db_is_held("com.tencent.xin", 15, 1000));  // the lease ran out
+  cl_assert(!chat_db_is_held("com.tencent", 11, 999));
+  cl_assert(!chat_db_is_held("com.apple.MobileSMS", 19, 999));
 }

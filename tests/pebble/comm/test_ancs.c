@@ -25,6 +25,10 @@ PebblePhoneCaller *phone_call_util_create_caller(const char *number, const char 
   return nullptr;
 }
 
+bool chat_db_is_held(const char *app_id, size_t app_id_len, uint32_t now) {
+  return false;
+}
+
 // Fakes
 ///////////////////////////////////////////////////////////
 

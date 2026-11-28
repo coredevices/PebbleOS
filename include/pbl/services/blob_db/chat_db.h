@@ -17,6 +17,8 @@
  * - ``'M'`` + 8 byte chat key + 8 byte message key: a message of that chat.
  * - ``'F'`` + network id (1 byte, ::ChatDbNetwork): what the phone can do on that network.
  * - ``'P'`` + 8 byte chat key: a favourite, the chat to send to.
+ * - ``'H'``: the presence hold: while the user is at a computer, notifications from these iOS
+ *   apps aren't shown (the phone's Android notifications are held on the phone).
  * - ``'V'``: the db's meta record; the Chat app asks the phone to wipe and resend the db when it
  *   is missing or its schema is not ::CHAT_DB_VERSION.
  *
@@ -30,6 +32,8 @@
  * - Features: version, comma separated list (str8).
  * - Favourite: version, network (u8), name (str8), address (str8).
  * - Meta: version, schema (u8), epoch (u32, how many times the phone reset the db).
+ * - Hold: version, until (u32 UTC, the lease the computer renews: a stale hold lapses by itself),
+ *   iOS app ids (str8, comma separated).
  *
  * Every value starts with ::CHAT_DB_VERSION; other versions are refused. The db is a cache of the
  * phone's: a format change bumps the version and the phone resends everything.
@@ -48,6 +52,8 @@
 #define CHAT_DB_KIND_FEATURES 'F'
 /** @brief Key kind of a favourite. */
 #define CHAT_DB_KIND_FAVORITE 'P'
+/** @brief Key kind of the presence hold. */
+#define CHAT_DB_KIND_HOLD 'H'
 /** @brief Key kind of the meta record. */
 #define CHAT_DB_KIND_META 'V'
 /** @brief Version of every value, and the schema the meta record must name. */
@@ -115,6 +121,8 @@ typedef struct {
   ChatDbStr name;
   /** Address, may be empty. */
   ChatDbStr address;
+  /** Place among the favourites, 0 first (optional trailing byte, 0 when absent). */
+  uint8_t order;
 } ChatDbFavorite;
 
 /** @brief The parsed meta record. */
@@ -180,6 +188,37 @@ bool chat_db_parse_meta(const uint8_t *val, int val_len, ChatDbMeta *out);
  * @return true if the value is a complete message of ::CHAT_DB_VERSION.
  */
 bool chat_db_parse_message(const uint8_t *val, int val_len, ChatDbMessage *out);
+
+/**
+ * @brief Whether a notification's body shows this message text: the same text, the text after a
+ * sender ("Alice: hi"), or the start of a longer text the notification cut short (also after a
+ * sender). The whole body is tried, then its last line (a notification can list several
+ * messages).
+ *
+ * @param text Message text.
+ * @param body Notification body.
+ */
+bool chat_db_text_in_notification(ChatDbStr text, const char *body);
+
+/** @brief The parsed presence hold. */
+typedef struct {
+  /** Until when (UTC). */
+  uint32_t until;
+  /** iOS app ids, comma separated. */
+  ChatDbStr apps;
+} ChatDbHold;
+
+/** @brief Parse the presence hold value. */
+bool chat_db_parse_hold(const uint8_t *val, int val_len, ChatDbHold *out);
+
+/**
+ * @brief Whether a notification from this iOS app is held now: the user is at a computer.
+ *
+ * @param app_id iOS app id, not NUL terminated.
+ * @param app_id_len Its length.
+ * @param now UTC.
+ */
+bool chat_db_is_held(const char *app_id, size_t app_id_len, uint32_t now);
 
 /**
  * @brief Callback for chat_db_each().

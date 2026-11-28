@@ -2,6 +2,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <errno.h>
+#include <string.h>
 
 #include <pbl/bluetooth/ancs.h>
 #include <pbl/i18n/i18n.h>
@@ -856,8 +857,20 @@ void timeline_invoke_action(const TimelineItem *item, const TimelineItemAction *
     case TimelineItemActionTypeOpenChat: {
 #if defined(APP_ID_CHAT)
       if (APP_ID_CHAT != INSTALL_ID_INVALID) {
-        // The Chat app opens the chat whose name matches the notification's title
-        chat_service_set_launch_hint(attribute_get_string(&item->attr_list, AttributeIdTitle, ""));
+        // The phone names the chat (the action's address, its key in hex); for iOS it can't,
+        // so the Chat app looks for the chat holding the notification's message
+        ChatLaunchHint *hint = pbl_zalloc(sizeof(ChatLaunchHint));  // too big for this stack
+        if (hint) {
+          hint->time = item->header.timestamp;
+          strncpy(hint->chat_id, attribute_get_string(&action->attr_list, AttributeIdAddress, ""),
+                  sizeof(hint->chat_id) - 1);
+          strncpy(hint->title, attribute_get_string(&item->attr_list, AttributeIdTitle, ""),
+                  sizeof(hint->title) - 1);
+          strncpy(hint->body, attribute_get_string(&item->attr_list, AttributeIdBody, ""),
+                  sizeof(hint->body) - 1);
+          chat_service_set_launch_hint(hint);
+          pbl_free(hint);
+        }
         prv_open_app(APP_ID_CHAT, 0);
       }
 #endif

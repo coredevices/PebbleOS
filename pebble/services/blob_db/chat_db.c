@@ -91,6 +91,7 @@ bool chat_db_parse_favorite(const uint8_t *val, int val_len, ChatDbFavorite *out
   out->network = prv_read_uint(&r, 1);
   out->name = prv_read_str(&r, 1);
   out->address = prv_read_str(&r, 1);
+  out->order = (r.ok && r.pos < r.end) ? prv_read_uint(&r, 1) : 0;
   return prv_done(&r);
 }
 
@@ -101,6 +102,16 @@ bool chat_db_parse_meta(const uint8_t *val, int val_len, ChatDbMeta *out) {
   }
   out->schema = prv_read_uint(&r, 1);
   out->epoch = prv_read_uint(&r, 4);
+  return prv_done(&r);
+}
+
+bool chat_db_parse_hold(const uint8_t *val, int val_len, ChatDbHold *out) {
+  Reader r = {val, val + val_len, val_len > 0};
+  if (prv_read_uint(&r, 1) != CHAT_DB_VERSION) {
+    return false;
+  }
+  out->until = prv_read_uint(&r, 4);
+  out->apps = prv_read_str(&r, 1);
   return prv_done(&r);
 }
 
@@ -144,6 +155,7 @@ static bool prv_key_valid(const uint8_t *key, int key_len) {
     case CHAT_DB_KIND_FAVORITE:
       return key_len == 1 + CHAT_DB_CHAT_KEY_LEN;
     case CHAT_DB_KIND_META:
+    case CHAT_DB_KIND_HOLD:
       return key_len == 1;
     default:
       return false;
@@ -170,6 +182,10 @@ static bool prv_record_valid(const uint8_t *key, int key_len, const uint8_t *val
     case CHAT_DB_KIND_FAVORITE: {
       ChatDbFavorite favorite;
       return chat_db_parse_favorite(val, val_len, &favorite);
+    }
+    case CHAT_DB_KIND_HOLD: {
+      ChatDbHold hold;
+      return chat_db_parse_hold(val, val_len, &hold);
     }
     default: {
       ChatDbMeta meta;
@@ -305,4 +321,74 @@ int chat_db_compact(void) {
   rv = pbl_settings_compact(&s_chat_db.settings_file);
   prv_close_file_and_unlock_mutex();
   return rv;
+}
+
+// The text is all of line[0, n), or follows a sender's "Name: " there
+static bool prv_ends_line(ChatDbStr text, const char *line, size_t n) {
+  if (text.len > n || memcmp(&line[n - text.len], text.str, text.len) != 0) {
+    return false;
+  }
+  const size_t before = n - text.len;
+  return before == 0 || (before >= 2 && line[before - 1] == ' ' && line[before - 2] == ':');
+}
+
+// The line, cut short (n bytes, its "…" already dropped), starts the text, or does after a
+// sender's "Name: "; enough of it to tell (8 bytes)
+static bool prv_starts_text(ChatDbStr text, const char *line, size_t n) {
+  const char *colon = memchr(line, ':', n);
+  const size_t starts[] = {0, (colon && colon + 1 < line + n && colon[1] == ' ') ? (size_t)(colon - line) + 2 : n};
+  for (size_t i = 0; i < 2; i++) {
+    const size_t len = n - starts[i];
+    if (len >= 8 && len < text.len && memcmp(text.str, &line[starts[i]], len) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool prv_line_shows(ChatDbStr text, const char *line, size_t n) {
+  // A cut-short line ends in "…" (and maybe spaces)
+  bool cut = false;
+  while (n && (line[n - 1] == ' ' || (n >= 3 && memcmp(&line[n - 3], "\xe2\x80\xa6", 3) == 0))) {
+    if (line[n - 1] != ' ') {
+      cut = true;
+      n -= 2;
+    }
+    n--;
+  }
+  return n && (prv_ends_line(text, line, n) || (cut && prv_starts_text(text, line, n)));
+}
+
+bool chat_db_text_in_notification(ChatDbStr text, const char *body) {
+  if (!body || !text.len) {
+    return false;
+  }
+  if (prv_line_shows(text, body, strlen(body))) {
+    return true;
+  }
+  const char *last = strrchr(body, '\n');
+  return last && prv_line_shows(text, last + 1, strlen(last + 1));
+}
+
+bool chat_db_is_held(const char *app_id, size_t app_id_len, uint32_t now) {
+  static const uint8_t key[] = {CHAT_DB_KIND_HOLD};
+  const int len = chat_db_get_len(key, sizeof(key));
+  if (len <= 0 || len > 256 || !app_id_len) {
+    return false;
+  }
+  uint8_t val[len];
+  ChatDbHold hold;
+  if (chat_db_read(key, sizeof(key), val, len) != 0 || !chat_db_parse_hold(val, len, &hold) ||
+      now >= hold.until) {
+    return false;
+  }
+  for (const char *p = hold.apps.str, *end = hold.apps.str + hold.apps.len; p < end;) {
+    const char *comma = memchr(p, ',', end - p);
+    const char *item_end = comma ? comma : end;
+    if ((size_t)(item_end - p) == app_id_len && memcmp(p, app_id, app_id_len) == 0) {
+      return true;
+    }
+    p = item_end + 1;
+  }
+  return false;
 }

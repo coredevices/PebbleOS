@@ -16,6 +16,10 @@
 
 // Stubs
 ////////////////////////////////////////////////////////////////
+
+bool chat_db_is_held(const char *app_id, size_t app_id_len, uint32_t now) {
+  return false;
+}
 #include <stubs_uuid.h>
 
 iOSNotifPrefs *ios_notif_pref_db_get_prefs(const uint8_t *app_id, int length) {

@@ -393,6 +393,9 @@ typedef enum {
 } ActionMenuMode;
 
 typedef enum {
+  ActionItemSendDraft,
+  ActionItemRetryDraft,
+  ActionItemEditDraft,
   ActionItemCompose,
   ActionItemCanned,
   ActionItemReply,
@@ -554,12 +557,14 @@ static int s_full_text_height;
 static bool s_full_text_context;
 static bool s_native_has_deferred_mode;
 static bool s_native_deferred_dictation;
+static bool s_native_deferred_edit_draft;  // the keyboard opens on the draft once the menu closes
 // Search: the list's own menu (tap the header, or Up twice at the top) asks for a name by voice;
 // the phone then fills the chat list with the chats that match, newest message first.
 static bool s_list_menu;          // the menu being built is the list's, not a chat's
 static bool s_search_dictation;   // the dictation under way is a search, not a message
 static char s_search_query[40];   // what the list shows results for; "" = the inbox
 static uint8_t s_top_presses;     // Up presses on the first chat
+static int8_t s_fav_focus = -1;   // favourite bubble the buttons are on; -1 = the chats
 static int s_native_deferred_keyboard = -1;
 static int s_native_deferred_grid = -1;
 static bool s_native_deferred_grid_reply;
@@ -629,6 +634,11 @@ static int s_avatar_expected_offset;
 static int s_avatar_transfer_id;
 static char (*s_canned)[CANNED_TEXT_LEN];
 static char *s_pending_text;
+// The message bar's draft (s_bar_draft), from Index ("send a message to …" someone not in the
+// favourites): the bar shows two lines of it with a send arrow; Retry dictates it again. Kept
+// while scrolling the chat.
+static bool s_dictation_to_draft;  // the dictation replaces the draft instead of sending
+static char s_dictation_draft_chat[MAX_ID];  // the chat whose draft it replaces
 static char s_pending_edit_message_id[MAX_ID];
 static char s_pending_chat_command[24];
 static bool s_pending_send_as_reply;
@@ -713,6 +723,7 @@ static void destroy_message_images(void);
 static void release_images_for_heap(void);
 static int clamp_scroll_offset(int offset);
 static void main_back_click_handler(ClickRecognizerRef recognizer, void *context);
+static void open_favorite(void *data);
 static void send_text_message(const char *text, bool as_reply);
 static void edit_selected_message(const char *text);
 static void send_selected_chat_action(const char *command);
@@ -2189,8 +2200,75 @@ static uint16_t chat_menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t 
   return s_chat_count > 0 ? s_chat_count : 1;
 }
 
+// Favourites as bubbles above the inbox, three to a row
+#define FAV_COLS 3
+#define FAV_ROW_H (CHAT_AVATAR_R * 2 + 24)
+
+static int fav_strip_h(void) {
+  if (s_chat_count == 0 || s_search_query[0] || s_favorite_count == 0) {
+    return 0;
+  }
+  return ((s_favorite_count + FAV_COLS - 1) / FAV_COLS) * FAV_ROW_H + 4;
+}
+
+// Whether the buttons are on a bubble; a bubble gone (fewer favourites, a search) drops the focus
+static bool fav_focused(void) {
+  if (s_fav_focus >= s_favorite_count || fav_strip_h() == 0) {
+    s_fav_focus = -1;
+  }
+  return s_fav_focus >= 0;
+}
+
+// Scrolls the focused bubble's row into view (a long strip is taller than the screen)
+static void fav_reveal(void) {
+  int frame_h = layer_get_frame(menu_layer_get_layer(s_chat_menu)).size.h;
+  int bottom = (s_fav_focus / FAV_COLS + 1) * FAV_ROW_H + 4;
+  scroll_layer_set_content_offset(menu_layer_get_scroll_layer(s_chat_menu),
+                                  GPoint(0, -PG_MAX(0, bottom - frame_h)), false);
+}
+
+static void set_fav_focus(int focus) {
+  s_fav_focus = (int8_t)focus;
+  menu_layer_reload_data(s_chat_menu);
+  if (focus >= 0) {  // after the reload, which scrolls back to the selected chat
+    fav_reveal();
+  } else {
+    select_chat_row(menu_layer_get_selected_index(s_chat_menu).row, false);  // back on screen
+  }
+}
+
 static int16_t chat_menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-  return 0;
+  return fav_strip_h();
+}
+
+static GPoint fav_center(int i, int width) {
+  int pitch = PG_MIN(width / FAV_COLS, CHAT_AVATAR_R * 2 + 26);
+  int in_row = PG_MIN(FAV_COLS, s_favorite_count - (i / FAV_COLS) * FAV_COLS);
+  int left = width / 2 - (in_row * pitch) / 2 + pitch / 2;
+  return GPoint(left + (i % FAV_COLS) * pitch, (i / FAV_COLS) * FAV_ROW_H + CHAT_AVATAR_R + 4);
+}
+
+static void chat_menu_draw_header_callback(GContext *ctx, const Layer *cell_layer, uint16_t section_index,
+                                           void *data) {
+  GRect bounds = layer_get_bounds(cell_layer);
+  graphics_context_set_fill_color(ctx, TG_LIST_BG);
+  graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+  int pitch = PG_MIN(bounds.size.w / FAV_COLS, CHAT_AVATAR_R * 2 + 26);
+  for (int i = 0; i < s_favorite_count; i++) {
+    GPoint c = fav_center(i, bounds.size.w);
+    int chat = find_chat_index_by_id(s_favorites[i].id);
+    GBitmap *photo = chat >= 0 && s_appearance.photos ? s_chats[chat].avatar_bitmap : NULL;
+    const char *name = s_favorites[i].name[0] ? s_favorites[i].name : "Favorite";
+    if (i == s_fav_focus) {
+      graphics_context_set_fill_color(ctx, TG_LIST_SELECTED);
+      graphics_fill_circle(ctx, c, CHAT_AVATAR_R + 3);
+    }
+    draw_avatar(ctx, c, CHAT_AVATAR_R, s_favorites[i].id, name, photo,
+                i == s_fav_focus ? TG_LIST_SELECTED : TG_LIST_BG);
+    graphics_context_set_text_color(ctx, i == s_fav_focus ? TG_LINK : TG_TEXT);
+    graphics_draw_text(ctx, name, font_14(), GRect(c.x - pitch / 2 + 1, c.y + CHAT_AVATAR_R + 1, pitch - 2, 18),
+                       GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  }
 }
 
 static void clear_qr(void) {
@@ -2261,7 +2339,7 @@ static void draw_login_qr(GContext *ctx, GRect bounds) {
 static void chat_menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   GRect bounds = layer_get_bounds(cell_layer);
   GRect safe = round_safe_rect(bounds);
-  bool selected = menu_layer_is_index_selected(s_chat_menu, cell_index);
+  bool selected = menu_layer_is_index_selected(s_chat_menu, cell_index) && !fav_focused();
   if (ROUND_UI) {
     s_round_org = layer_convert_point_to_screen(cell_layer, GPointZero);
   }
@@ -2942,6 +3020,11 @@ static bool message_shows_status(int index) {
 #define GROUP_AVATAR_R 11
 #define GROUP_AVATAR_COL 24
 #define COMPOSE_BAR_H 32
+#define COMPOSE_BAR_DRAFT_H 50  // two lines of a draft from Index, then "…"
+static char s_bar_draft[MAX_TEXT];
+static int compose_bar_h(void) {
+  return s_bar_draft[0] ? COMPOSE_BAR_DRAFT_H : COMPOSE_BAR_H;
+}
 
 #define BOX_NAME 0x01
 #define BOX_TAIL 0x02
@@ -3489,7 +3572,7 @@ static void recalc_message_layout(void) {
     }
   }
   int bottom_pad = ROUND_UI ? 28 : 5;  // round: keeps the input bar inside the circle
-  int compose_min_y = visible_h - COMPOSE_BAR_H - (ROUND_UI ? 28 : 5);
+  int compose_min_y = visible_h - compose_bar_h() - (ROUND_UI ? 28 : 5);
   bool reserve_compose_bubble = s_at_newest && !s_touch_keyboard_open;
   // Short chats sit at the bottom, just above the input bar, like Telegram.
   if (reserve_compose_bubble && s_message_count > 0 && y + BUBBLE_GAP_OTHER < compose_min_y) {
@@ -3501,7 +3584,7 @@ static void recalc_message_layout(void) {
   }
   if (reserve_compose_bubble) {
     s_compose_bubble_y = PG_MAX(y + BUBBLE_GAP_OTHER, compose_min_y);
-    s_chat_content_height = s_compose_bubble_y + COMPOSE_BAR_H + bottom_pad;
+    s_chat_content_height = s_compose_bubble_y + compose_bar_h() + bottom_pad;
   } else {
     s_compose_bubble_y = y + BUBBLE_GAP_OTHER;
     s_chat_content_height = y + bottom_pad;
@@ -5613,15 +5696,24 @@ static void draw_mic_icon(GContext *ctx, GPoint c, GColor color) {
   graphics_context_set_stroke_width(ctx, 1);
 }
 
+static void draw_send_icon(GContext *ctx, GPoint c, GColor color) {
+  GPoint points[] = {{c.x - 6, c.y - 7}, {c.x + 8, c.y}, {c.x - 6, c.y + 7}, {c.x - 3, c.y}};
+  GPathInfo info = {.num_points = 4, .points = points};
+  GPath path;
+  gpath_init(&path, &info);
+  graphics_context_set_fill_color(ctx, color);
+  gpath_draw_filled(ctx, &path);
+}
+
 static GRect compose_mic_rect(GRect compose) {
-  return GRect(compose.origin.x + compose.size.w - compose.size.h, compose.origin.y,
-               compose.size.h, compose.size.h);
+  return GRect(compose.origin.x + compose.size.w - COMPOSE_BAR_H,
+               compose.origin.y + compose.size.h - COMPOSE_BAR_H, COMPOSE_BAR_H, COMPOSE_BAR_H);
 }
 
 static void draw_compose_bar(GContext *ctx, GRect compose, bool selected) {
   GRect mic = compose_mic_rect(compose);
   GRect field = GRect(compose.origin.x, compose.origin.y, compose.size.w - mic.size.w - 4, compose.size.h);
-  int r = compose.size.h / 2;
+  int r = COMPOSE_BAR_H / 2;
 #ifdef PBL_COLOR
   graphics_context_set_fill_color(ctx, TG_BUBBLE_SHADOW);
   graphics_fill_rect(ctx, GRect(field.origin.x, field.origin.y + 1, field.size.w, field.size.h), r, GCornersAll);
@@ -5634,10 +5726,12 @@ static void draw_compose_bar(GContext *ctx, GRect compose, bool selected) {
     graphics_draw_round_rect(ctx, field, r);
     graphics_context_set_stroke_width(ctx, 1);
   }
-  bool draft = touch_keyboard_has_draft();
+  bool draft = s_bar_draft[0] || touch_keyboard_has_draft();
   graphics_context_set_text_color(ctx, draft ? TG_ON_IN : TG_IN_META);
-  graphics_draw_text(ctx, draft ? "Continue draft" : "Message", font_18(),
-                     GRect(field.origin.x + 12, field.origin.y + (compose.size.h - 24) / 2, field.size.w - 16, 22),
+  graphics_draw_text(ctx, s_bar_draft[0] ? s_bar_draft : draft ? "Continue draft" : "Message", font_18(),
+                     s_bar_draft[0] ? GRect(field.origin.x + 12, field.origin.y + 2, field.size.w - 16, 44)
+                                    : GRect(field.origin.x + 12, field.origin.y + (compose.size.h - 24) / 2,
+                                            field.size.w - 16, 22),
                      GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
   GPoint mc = GPoint(mic.origin.x + mic.size.w / 2, mic.origin.y + mic.size.h / 2);
 #ifdef PBL_COLOR
@@ -5646,21 +5740,25 @@ static void draw_compose_bar(GContext *ctx, GRect compose, bool selected) {
 #endif
   graphics_context_set_fill_color(ctx, selected ? TG_SELECT_RING : TG_ACCENT);
   graphics_fill_circle(ctx, mc, r);
-  draw_mic_icon(ctx, mc, selected ? TG_ON_RING : TG_ON_ACCENT);
+  if (s_bar_draft[0]) {
+    draw_send_icon(ctx, mc, selected ? TG_ON_RING : TG_ON_ACCENT);
+  } else {
+    draw_mic_icon(ctx, mc, selected ? TG_ON_RING : TG_ON_ACCENT);
+  }
 }
 
 static GRect compose_rect_for_bounds(GRect bounds) {
   int compose_y = s_compose_bubble_y - s_chat_scroll_offset;
   if (s_compose_floating) {
     // Where the docked bar sits with the chat scrolled to its end, so floating meets docked seamlessly
-    int pinned = visible_message_height(bounds) - COMPOSE_BAR_H - (ROUND_UI ? 28 : 5);
+    int pinned = visible_message_height(bounds) - compose_bar_h() - (ROUND_UI ? 28 : 5);
     compose_y = s_at_newest ? PG_MIN(compose_y, pinned) : pinned;
   }
   if (ROUND_UI) {
     s_round_org = layer_get_frame(s_messages_root).origin;
-    return round_clamp(GRect((bounds.size.w - 170) / 2, compose_y, 170, COMPOSE_BAR_H), 6);
+    return round_clamp(GRect((bounds.size.w - 170) / 2, compose_y, 170, compose_bar_h()), 6);
   }
-  return GRect(6, compose_y, bounds.size.w - 12, COMPOSE_BAR_H);
+  return GRect(6, compose_y, bounds.size.w - 12, compose_bar_h());
 }
 
 static void draw_chat_background(GContext *ctx, GRect bounds) {
@@ -5904,7 +6002,7 @@ static void draw_messages_overlay(GContext *ctx, GRect bounds) {
   draw_day_pill(ctx, bounds);
   GRect compose_rect = compose_rect_for_bounds(bounds);
   if ((s_at_newest || s_compose_floating) && !s_touch_keyboard_open &&
-      compose_rect.origin.y < bounds.size.h && compose_rect.origin.y + COMPOSE_BAR_H > 0 &&
+      compose_rect.origin.y < bounds.size.h && compose_rect.origin.y + compose_rect.size.h > 0 &&
       compose_rect.size.w >= COMPOSE_BAR_H * 2) {
     draw_compose_bar(ctx, compose_rect, compose_target_is_selected());
   }
@@ -6065,6 +6163,9 @@ static void render_chat_list_with_transition(void) {
     layer_set_hidden(menu_layer, false);
     menu_layer_reload_data(s_chat_menu);
     select_chat_row(row, false);
+    if (fav_focused()) {
+      fav_reveal();
+    }
     animate_layer_frame(&s_chat_menu_animation, menu_layer, menu_from, menu_to, NULL);
   }
   if (s_messages_root) {
@@ -6085,6 +6186,11 @@ static void select_chat_row(int row, bool animated) {
   s_selected_chat = PG_MAX(0, PG_MIN(row, s_chat_count - 1));
   copy_cstr(s_chat_list_selected_id, sizeof(s_chat_list_selected_id), s_chats[s_selected_chat].id);
   menu_layer_set_selected_index(s_chat_menu, MenuIndex(0, s_selected_chat), MenuRowAlignCenter, animated);
+  // The top of the list, with the favourites' bubbles above the first chat, when both fit
+  if (s_selected_chat == 0 &&
+      fav_strip_h() + CHAT_ROW_H <= layer_get_frame(menu_layer_get_layer(s_chat_menu)).size.h) {
+    scroll_layer_set_content_offset(menu_layer_get_scroll_layer(s_chat_menu), GPointZero, animated);
+  }
 }
 
 static void reveal_available_chat_rows(void) {
@@ -6638,6 +6744,21 @@ static void send_text_message(const char *text, bool as_reply) {
   send_command("send_message", s_current_chat_id, text, reply_to, NULL);
 }
 
+static void send_bar_draft(void) {
+  if (s_bar_draft[0]) {
+    send_text_message(s_bar_draft, false);
+    chat_ui_set_draft("");
+  }
+}
+
+void chat_ui_set_draft(const char *text) {
+  copy_cstr(s_bar_draft, sizeof(s_bar_draft), text ? text : "");
+  if (s_view_state == ViewStateChat) {
+    recalc_message_layout();  // the bar is taller with a draft
+    mark_messages_dirty();
+  }
+}
+
 static void edit_selected_message(const char *text) {
   if (!s_pending_edit_message_id[0]) {
     show_status("No edit target");
@@ -6933,6 +7054,12 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
 
   if (strcmp(type, "favorites_done") == 0) {
     s_favorite_count = PG_MIN(s_favorite_count, tuple_int(iter, MESSAGE_KEY_Count, 0));
+    if (s_chat_menu) {
+      menu_layer_reload_data(s_chat_menu);  // their bubbles
+      if (fav_focused()) {
+        fav_reveal();
+      }
+    }
     return;
   }
 
@@ -6979,7 +7106,6 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
   s_expected_rows = count;
 
   if (strcmp(type, "chats_done") == 0) {
-    send_command_with_status("get_favorites", NULL, NULL, NULL, NULL, false);
     cancel_message_timeout();
     cancel_timer(&s_chat_retry_timer);
     char selected_id[MAX_ID];
@@ -7024,6 +7150,9 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
     if (s_chat_menu) {
       menu_layer_reload_data(s_chat_menu);
       select_chat_row(s_selected_chat, false);
+      if (fav_focused()) {
+        fav_reveal();  // the bubble the buttons are on stays in view
+      }
     }
     show_status("Chat");
     return;
@@ -7888,7 +8017,8 @@ static int action_item_count(void) {
   switch (s_action_mode) {
     case ActionMenuMain:
       if (!has_selected_message()) {
-        return 6 + (touch_keyboard_supported() ? 1 : 0);  // + Archive Chat, Mark as Unread
+        return 6 + (touch_keyboard_supported() ? 1 : 0) +  // + Archive Chat, Mark as Unread
+               (s_bar_draft[0] ? 2 + (touch_keyboard_supported() ? 1 : 0) : 0);  // the draft's
       }
       return (s_message_actions ? 3 : 2) + 2 +  // + Archive Chat, Mark as Unread
              (s_message_actions && s_messages[s_selected_message].outgoing ?
@@ -8121,6 +8251,13 @@ static ActionMenuLevel *native_build_main_level(void) {
     return NULL;
   }
 
+  if (!has_selected_message() && s_bar_draft[0]) {
+    native_add_action(level, "Send", ActionItemSendDraft, -1);
+    native_add_action(level, "Retry Voice", ActionItemRetryDraft, -1);
+    if (touch_keyboard_supported()) {
+      native_add_action(level, "Edit", ActionItemEditDraft, -1);
+    }
+  }
   if (!has_selected_message()) {
     native_add_action(level, "Voice", ActionItemCompose, -1);
     native_add_child(level, native_create_canned_level(false), "Canned Message");
@@ -8133,8 +8270,12 @@ static ActionMenuLevel *native_build_main_level(void) {
       native_add_action(level, "Keyboard", ActionItemKeyboard, -1);
     }
     native_add_action(level, "Go to Bottom", ActionItemGoToBottom, -1);
-    native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
-    native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
+    if (network_has_feature(s_current_chat_network, "archive")) {
+      native_add_action(level, "Archive Chat", ActionItemArchiveChat, -1);
+    }
+    if (network_has_feature(s_current_chat_network, "mark_unread")) {
+      native_add_action(level, "Mark as Unread", ActionItemMarkUnread, -1);
+    }
     return level;
   }
 
@@ -8312,6 +8453,17 @@ static void native_action_menu_did_close(ActionMenu *menu, const ActionMenuItem 
     return;
   }
 #endif
+  if (s_native_deferred_edit_draft) {
+    s_native_deferred_edit_draft = false;
+#if TOUCH_KEYBOARD_AVAILABLE
+    if (s_kb_draft) {
+      s_kb_draft[0] = '\0';  // the keyboard starts from the bar's draft
+    }
+#endif
+    open_touch_keyboard(KeyboardModeCompose, NULL, s_bar_draft);
+    s_bar_draft[0] = '\0';
+    return;
+  }
   if (keyboard_mode >= 0) {
     const char *target = s_native_deferred_keyboard_target[0] ? s_native_deferred_keyboard_target : NULL;
     int index = target ? find_message_index_by_id(target) : -1;
@@ -8379,9 +8531,11 @@ static void open_favorite(void *data) {
     row = -1 - index;
   } else {
     row = find_chat_index_by_id(s_favorites[index].id);
-    if (row < 0 && s_chat_count < MAX_CHATS) {
-      row = s_chat_count++;
+    if (row < 0) {
+      // A full list gives up its oldest row; the next sync puts it back.
+      row = s_chat_count < MAX_CHATS ? s_chat_count++ : MAX_CHATS - 1;
       Chat *chat = &s_chats[row];
+      destroy_chat_avatar(chat);
       copy_cstr(chat->id, sizeof(chat->id), s_favorites[index].id);
       set_chat_strings(chat, s_favorites[index].name, "");
       chat->network = s_favorites[index].network;
@@ -8396,8 +8550,7 @@ static void open_favorite(void *data) {
   if (row < 0 || row >= s_chat_count) {
     return;
   }
-  MenuIndex cell = {.section = 0, .row = row};
-  select_chat_row(row, false);
+  MenuIndex cell = {.section = 0, .row = row};  // opens in place: the list keeps its scroll
   chat_menu_select_callback(s_chat_menu, &cell, NULL);
 }
 
@@ -8454,6 +8607,20 @@ static void native_action_perform(ActionMenu *action_menu, const ActionMenuItem 
         copy_cstr(s_native_deferred_keyboard_target, sizeof(s_native_deferred_keyboard_target),
                   s_messages[s_selected_message].id);
       }
+      break;
+    case ActionItemSendDraft:
+      send_bar_draft();
+      break;
+    case ActionItemRetryDraft:
+      s_pending_edit_message_id[0] = '\0';
+      s_pending_chat_command[0] = '\0';
+      s_search_dictation = false;
+      s_dictation_to_draft = true;
+      copy_cstr(s_dictation_draft_chat, sizeof(s_dictation_draft_chat), s_current_chat_id);
+      s_native_deferred_dictation = true;
+      break;
+    case ActionItemEditDraft:
+      s_native_deferred_edit_draft = true;
       break;
     case ActionItemCompose:
       s_pending_edit_message_id[0] = '\0';
@@ -8680,10 +8847,24 @@ static void dictation_callback(DictationSession *session, DictationSessionStatus
     }
     return;
   }
+  if (s_dictation_to_draft) {
+    s_dictation_to_draft = false;
+    // Only into the chat it was dictated for: another chat may have opened meanwhile
+    if (status == DictationSessionStatusSuccess && transcription && transcription[0] &&
+        s_view_state == ViewStateChat && strcmp(s_dictation_draft_chat, s_current_chat_id) == 0) {
+      chat_ui_set_draft(transcription);  // Retry: a new draft, sent with the arrow
+    }
+    return;
+  }
   if (status == DictationSessionStatusSuccess && transcription) {
+    // Select on the recorder is the send; Back while recording is the cancel
     copy_cstr(s_pending_text, MAX_TEXT, transcription);
-    s_pending_chat_command[0] = '\0';
-    show_action_window(ActionMenuConfirm);
+    if (s_pending_edit_message_id[0]) {
+      edit_selected_message(s_pending_text);
+    } else {
+      send_text_message(s_pending_text, s_pending_send_as_reply);
+    }
+    s_pending_send_as_reply = false;
   } else {
     show_status("Dictation failed");
   }
@@ -8696,6 +8877,7 @@ static void start_dictation(void) {
   if (!s_dictation_session ||
       dictation_session_start(s_dictation_session) != DictationSessionStatusSuccess) {
     s_search_dictation = false;  // no callback comes: the next dictation is a message again
+    s_dictation_to_draft = false;
     show_status("Dictation failed");
   }
 }
@@ -8783,6 +8965,10 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
       show_status("Loading messages...");
       return;
     }
+    if (fav_focused()) {
+      open_favorite((void *)(intptr_t)s_fav_focus);  // Back returns to this bubble
+      return;
+    }
     MenuIndex index = menu_layer_get_selected_index(s_chat_menu);
     chat_menu_select_callback(s_chat_menu, &index, NULL);
   }
@@ -8790,7 +8976,7 @@ static void main_select_click_handler(ClickRecognizerRef recognizer, void *conte
 
 static void main_select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (BEEPER_CHAT_ACTIONS && s_view_state == ViewStateChatList && !s_chats_loading &&
-      !s_loading_messages && s_chat_count > 0 && s_chat_menu) {
+      !s_loading_messages && s_chat_count > 0 && s_chat_menu && !fav_focused()) {
     MenuIndex index = menu_layer_get_selected_index(s_chat_menu);
     s_selected_chat = index.row;
     show_action_window(ActionMenuChat);
@@ -8865,6 +9051,20 @@ static void main_up_click_handler(ClickRecognizerRef recognizer, void *context) 
 #if TOUCH_KEYBOARD_AVAILABLE
     touch_chat_list_follow();  // a throw may have left the highlight off screen
 #endif
+    // Up from the first chat walks back through the favourites; Up on the first one: the list's menu
+    if (fav_focused()) {
+      if (s_fav_focus > 0) {
+        set_fav_focus(s_fav_focus - 1);
+      } else if (!repeating) {
+        show_list_menu();
+      }
+      return;
+    }
+    if (menu_layer_get_selected_index(s_chat_menu).row == 0 && !repeating && fav_strip_h() > 0) {
+      s_top_presses = 0;
+      set_fav_focus(s_favorite_count - 1);
+      return;
+    }
     // Up on the first chat, twice: the list's menu, with Search
     if (menu_layer_get_selected_index(s_chat_menu).row == 0 && !repeating) {
       if (++s_top_presses >= 2) {
@@ -8916,6 +9116,10 @@ static void main_down_click_handler(ClickRecognizerRef recognizer, void *context
 #if TOUCH_KEYBOARD_AVAILABLE
     touch_chat_list_follow();
 #endif
+    if (fav_focused()) {
+      set_fav_focus(s_fav_focus + 1 < s_favorite_count ? s_fav_focus + 1 : -1);
+      return;
+    }
     menu_layer_set_selected_next(s_chat_menu, false, MenuRowAlignCenter, !repeating);
     s_selected_chat = menu_layer_get_selected_index(s_chat_menu).row;
     if (s_selected_chat >= 0 && s_selected_chat < s_chat_count) {
@@ -8973,6 +9177,7 @@ static void main_back_click_handler(ClickRecognizerRef recognizer, void *context
     s_message_transfer_id = 0;
     s_chat_view_pending = false;
     clear_message_stage();
+    s_bar_draft[0] = '\0';
     reset_touch_keyboard();  // saves the draft first
     s_leave_pending = !send_command_with_status("leave_chat", s_current_chat_id, NULL, NULL, NULL, false);
     render_chat_list_with_transition();
@@ -9303,7 +9508,7 @@ static int touch_chat_row_at(GPoint point) {
   }
   ScrollLayer *scroll = menu_layer_get_scroll_layer(s_chat_menu);
   GPoint offset = scroll_layer_get_content_offset(scroll);
-  int content_y = point.y - offset.y;
+  int content_y = point.y - offset.y - fav_strip_h();
   if (content_y < 0) {
     return -1;
   }
@@ -9312,6 +9517,7 @@ static int touch_chat_row_at(GPoint point) {
 }
 
 static void touch_chat_list_select(int row, bool animated) {
+  s_fav_focus = -1;
   s_selected_chat = row;
   menu_layer_set_selected_index(s_chat_menu, MenuIndex(0, row), MenuRowAlignNone, animated);
   if (row >= 0 && row < s_chat_count) {
@@ -9326,6 +9532,18 @@ static void touch_chat_list_tap(GPoint point) {
   }
   int row = touch_chat_row_at(point);
   if (row < 0) {
+    // A favourite's bubble or name
+    GPoint offset = scroll_layer_get_content_offset(menu_layer_get_scroll_layer(s_chat_menu));
+    int width = layer_get_bounds(menu_layer_get_layer(s_chat_menu)).size.w;
+    for (int i = 0; s_chat_menu && i < s_favorite_count && fav_strip_h() > 0; i++) {
+      GPoint c = fav_center(i, width);
+      int dy = point.y - offset.y - c.y;
+      if (touch_abs(point.x - c.x) <= CHAT_AVATAR_R + 8 && dy >= -CHAT_AVATAR_R - 4 && dy <= CHAT_AVATAR_R + 18) {
+        s_fav_focus = -1;
+        open_favorite((void *)(intptr_t)i);
+        return;
+      }
+    }
     return;
   }
   if (s_chat_count > 0) {
@@ -9355,8 +9573,9 @@ static void touch_chat_list_follow(void) {
   ScrollLayer *scroll = menu_layer_get_scroll_layer(s_chat_menu);
   GRect frame = layer_get_frame(menu_layer_get_layer(s_chat_menu));
   GPoint offset = scroll_layer_get_content_offset(scroll);
-  int first_full = (-offset.y + CHAT_ROW_H - 1) / CHAT_ROW_H;
-  int last_full = (-offset.y + frame.size.h) / CHAT_ROW_H - 1;
+  int top = -offset.y - fav_strip_h();
+  int first_full = PG_MAX(0, top + CHAT_ROW_H - 1) / CHAT_ROW_H;
+  int last_full = (top + frame.size.h) / CHAT_ROW_H - 1;
   first_full = PG_MAX(0, PG_MIN(s_chat_count - 1, first_full));
   last_full = PG_MAX(first_full, PG_MIN(s_chat_count - 1, last_full));
   int row = menu_layer_get_selected_index(s_chat_menu).row;
@@ -9460,6 +9679,15 @@ static void touch_chat_tap(GRect bounds, GPoint point) {
   if (touch_on_compose(bounds, point)) {
     cancel_tap_menu();
     GRect mic = compose_mic_rect(compose_rect_for_bounds(bounds));
+    if (s_bar_draft[0]) {
+      if (grect_contains_point(&mic, &point)) {
+        send_bar_draft();  // the arrow: one tap sends
+      } else {
+        s_selected_message = s_message_count;
+        show_action_window(ActionMenuMain);  // the draft: Send, Retry voice, Edit
+      }
+      return;
+    }
     if (grect_contains_point(&mic, &point)) {
       // Mic button: dictate a new message.
       s_pending_edit_message_id[0] = '\0';
@@ -9914,6 +10142,7 @@ static void main_window_load(Window *window) {
     .get_num_sections = chat_menu_get_num_sections_callback,
     .get_num_rows = chat_menu_get_num_rows_callback,
     .get_header_height = chat_menu_get_header_height_callback,
+    .draw_header = chat_menu_draw_header_callback,
     .draw_row = chat_menu_draw_row_callback,
     .get_cell_height = chat_menu_get_cell_height_callback,
     .select_click = chat_menu_select_callback
@@ -10035,7 +10264,36 @@ int chat_ui_avatar_size(void) {
   return s_appearance.photos ? CHAT_AVATAR_R * 2 : 0;
 }
 
-void chat_ui_open_chat(const char *chat_id) {
+// Opened from a notification: whatever was open (another chat, its compose or menu windows)
+// closes first, so nothing still sends to it
+static void return_to_chat_list(void) {
+  while (window_stack_get_top_window() && window_stack_get_top_window() != s_main_window) {
+    window_stack_pop(false);
+  }
+  if (s_touch_keyboard_open) {
+    close_touch_keyboard();
+  }
+  if (s_view_state == ViewStateChat) {
+    main_back_click_handler(NULL, NULL);
+  }
+  // A chat still loading (the list shows until its messages come) must not open after all
+  cancel_message_timeout();
+  cancel_message_retry();
+  s_loading_messages = false;
+  s_chat_view_pending = false;
+  s_message_transfer_id = 0;
+  s_current_chat_id[0] = '\0';
+  if (s_search_query[0]) {
+    end_search();
+  }
+}
+
+bool chat_ui_open_chat(const char *chat_id) {
+  if (s_view_state == ViewStateChat && chat_id && chat_id[0] && strcmp(chat_id, s_current_chat_id) == 0 &&
+      window_stack_get_top_window() == s_main_window) {
+    return true;  // already showing it
+  }
+  return_to_chat_list();
   const int index = find_chat_index_by_id(chat_id);
   if (index < 0 || !s_chat_menu) {
     // No such chat: show the list, kept hidden since launch
@@ -10043,13 +10301,14 @@ void chat_ui_open_chat(const char *chat_id) {
     if (s_chat_menu) {
       layer_set_hidden(menu_layer_get_layer(s_chat_menu), false);
     }
-    return;
+    return false;
   }
   // Opened from a notification: show the chat straight away, not the list sliding to it
   s_open_chat_instantly = true;
   MenuIndex cell = {.section = 0, .row = index};
   select_chat_row(index, false);
   chat_menu_select_callback(s_chat_menu, &cell, NULL);
+  return true;
 }
 
 void chat_ui_main(void) {

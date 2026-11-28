@@ -10,6 +10,7 @@
 #include <pbl/pp/protocol.h>
 #include <pbl/pp/send.h>
 #include <pbl/pp/session.h>
+#include <pbl/services/blob_db/chat_db.h>
 #include <pbl/services/blob_db/ios_notif_pref_db.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/blob_db/reminder_db.h>
@@ -263,7 +264,7 @@ static bool prv_should_ignore_because_muted(const iOSNotifPrefs *app_notif_prefs
   return ancs_filtering_is_muted(app_notif_prefs);
 }
 
-static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
+static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp, uint8_t category,
                                            const struct pbl_bt_ancs_attr *const *notif_attributes,
                                            iOSNotifPrefs *app_notif_prefs) {
   const struct pbl_bt_ancs_attr *app_id = notif_attributes[ANCS_NOTIF_ATTR_APP_ID];
@@ -278,6 +279,13 @@ static bool prv_should_ignore_notification(uint32_t uid, time_t timestamp,
     ancs_attr_to_cstring(app_id, app_id_buffer);
 
     PBL_LOG_DBG("Ignoring notification from <%s>: Muted", app_id_buffer);
+    return true;
+  }
+
+  // At a computer, the user reads Beeper and WeChat there (the phone writes the hold); calls ring
+  if (category != PBL_BT_ANCS_CATEGORY_INCOMING_CALL && category != PBL_BT_ANCS_CATEGORY_MISSED_CALL &&
+      app_id && chat_db_is_held((const char *)app_id->value, app_id->len, pbl_realtime())) {
+    PBL_LOG_DBG("Ignoring notification: user at a computer");
     return true;
   }
 
@@ -355,7 +363,7 @@ void ancs_notifications_handle_message(const struct pbl_bt_ancs_notif *notif, bo
 
   const time_t timestamp = prv_get_timestamp_from_ancs_date(date, app_id);
 
-  if (prv_should_ignore_notification(uid, timestamp, notif_attributes, app_notif_prefs)) {
+  if (prv_should_ignore_notification(uid, timestamp, notif->category, notif_attributes, app_notif_prefs)) {
     goto cleanup;
   }
 

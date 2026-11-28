@@ -18,7 +18,9 @@ void chat_ds_deinit(void);
 
 //! The chat the app was opened for, from a notification's "Open chat"; the UI opens it once the
 //! chat list is in. Implemented by chat_ui.c.
-void chat_ui_open_chat(const char *chat_id);
+bool chat_ui_open_chat(const char *chat_id);
+// Text for the open chat's message bar, sent with its arrow; "" for none.
+void chat_ui_set_draft(const char *text);
 
 //! Whether the app was opened for a chat; the UI then keeps the chat list hidden until it opens.
 bool chat_ds_has_launch_hint(void);

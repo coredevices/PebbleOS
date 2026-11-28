@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <pbl/services/blob_db/chat_db.h>
+
 /**
  * @defgroup services_chat Chat service
  * @ingroup services
@@ -46,12 +48,27 @@ void chat_service_set_handler(ChatServiceHandler handler);
  */
 bool chat_service_send(const uint8_t *dict, size_t len);
 
+/** @brief Where a notification's "Open chat" leads: the chat the Chat app opens. */
+typedef struct {
+  /** The chat's key in hex, from the phone (exact); "" when it gave none (iOS notifications). */
+  char chat_id[CHAT_DB_CHAT_KEY_LEN * 2 + 1];
+  /** Without one, the notification, for the app to find the chat holding its message. */
+  char title[64];
+  char body[256];  // ANCS messages are up to 200 bytes
+  /** When it was posted (UTC), 0 if unknown. */
+  uint32_t time;
+  /** Text for the chat's message bar, sent with its arrow (Index's message to someone not in
+   * the favourites), "" for none. */
+  char draft[256];
+} ChatLaunchHint;
+
 /**
- * @brief Remember the title of the notification the Chat app is being opened from.
+ * @brief Remember the notification the Chat app is being opened from.
  *
- * @param title Notification title, copied; NULL forgets it.
+ * @param hint Copied. The app opens a chat only when it is surely the notification's, so a reply
+ * never goes to another one; otherwise it shows the list.
  */
-void chat_service_set_launch_hint(const char *title);
+void chat_service_set_launch_hint(const ChatLaunchHint *hint);
 
 typedef void (*ChatServiceHintHandler)(void);
 
@@ -62,13 +79,12 @@ typedef void (*ChatServiceHintHandler)(void);
 void chat_service_set_hint_handler(ChatServiceHintHandler handler);
 
 /**
- * @brief Take the title set by chat_service_set_launch_hint(), clearing it.
+ * @brief Take the hint set by chat_service_set_launch_hint(), clearing it.
  *
- * @param[out] out Destination, NUL terminated.
- * @param out_size Size of @p out.
+ * @param[out] out The hint.
  * @return true if there was one.
  */
-bool chat_service_take_launch_hint(char *out, size_t out_size);
+bool chat_service_take_launch_hint(ChatLaunchHint *out);
 
 /**
  * @brief Ask the phone to archive the newest chat with this title.
