@@ -298,3 +298,4 @@ endmenu
 
 rsource "arch/arm/Kconfig"
 rsource "arch/posix/Kconfig"
+rsource "arch/riscv/Kconfig"
