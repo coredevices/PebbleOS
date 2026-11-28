@@ -151,8 +151,9 @@
 			/* LPSYS SRAM through the code bus, HPSYS SRAM */
 			dma-ranges = <0x00400000 0x20400000 0x10000>,
 				     <0x2a000000 0x20000000 0x80000>;
-			mboxes = <&mailbox1 0>, <&mailbox2 0>;
-			mbox-names = "tx", "rx";
+			mboxes = <&mailbox1 0>, <&mailbox2 0>,
+				 <&mailbox1 6>, <&mailbox2 6>;
+			mbox-names = "tx", "rx", "audio-tx", "audio-rx";
 			memory-region = <&lcpu_ipc>;
 			sram = <&lcpu_sram>;
 			clocks = <&lpsys_rcc SF32LB52_LPSYS_RCC_CLK_HCLK>,

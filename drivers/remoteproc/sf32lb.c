@@ -365,6 +365,14 @@ const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_rx_chan(const struct pbl_rproc 
   return &prv_lcpu(rproc)->rx_chan;
 }
 
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_audio_tx_chan(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->audio_tx_chan;
+}
+
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_audio_rx_chan(const struct pbl_rproc *rproc) {
+  return &prv_lcpu(rproc)->audio_rx_chan;
+}
+
 const struct pbl_rproc_ops pbl_rproc_sf32lb_ops = {
   .start = prv_start,
   .stop = prv_stop,
