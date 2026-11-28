@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+config RISCV
+    bool
+    help
+      32-bit RISC-V core, in machine mode. Selected through the CPU the
+      SoC selects. The SoC provides the interrupt that switches threads,
+      in soc_riscv.h.
+
+config RISCV_ISA_RV32E
+    bool
+    help
+      RV32E base: 16 integer registers.
+
+config RISCV_ISA_EXT_M
+    bool
+    help
+      Integer multiplication and division.
+
+config RISCV_ISA_EXT_A
+    bool
+    help
+      Atomic instructions. Without them, the kernel provides the atomic
+      operations the compiler calls out for.
+
+config RISCV_ISA_EXT_C
+    bool
+    help
+      Compressed instructions.
+
+config RISCV_HW_STACKING
+    bool
+    help
+      On an interrupt, the core stacks ra, t0-t2 and a0-a5 itself, then
+      the mcause and mepc of the trap it was in. mret returns as the
+      current mcause and mepc say, then takes them all back. Bit 0 of the
+      stacked mepc tells that the core moved sp down 4 bytes first, to
+      align the frame on 8. The trap entry relies on it.
+
+config RISCV_WFI_NEEDS_MIE
+    bool
+    help
+      The core only wakes from wfi with interrupts unmasked.
+
+config RISCV_SOC_CYCLE_COUNTER
+    bool
+    help
+      mcycle does not count: the SoC provides the cycle counter, in
+      soc_riscv.h.
+
+config RISCV_CLIC
+    bool
+    help
+      Core-local interrupt controller (CLIC), vectoring every line in
+      hardware through mtvt.
+
+config RISCV_CLIC_INTCTL_BITS
+    int
+    depends on RISCV_CLIC
+    default 2 if CPU_NORDIC_VPR
+    default 8
+    help
+      Bits of the interrupt control byte the CLIC implements, all of
+      them the level.
+
+config RISCV_CLIC_IRQ_OFFSET
+    int
+    depends on RISCV_CLIC
+    default 16 if CPU_NORDIC_VPR
+    default 0
+    help
+      Interrupt code, in mcause and mtvt, of the first CLIC line.
+
+config CPU_NORDIC_VPR
+    bool
+    select RISCV
+    select RISCV_ISA_RV32E
+    select RISCV_ISA_EXT_M
+    select RISCV_ISA_EXT_C
+    select RISCV_HW_STACKING
+    select RISCV_WFI_NEEDS_MIE
+    select RISCV_SOC_CYCLE_COUNTER
+    select RISCV_CLIC
+    help
+      Nordic VPR: an RV32EMC core with a CLIC, which stacks the
+      caller-saved registers itself on an interrupt, and whose mcycle
+      does not count.

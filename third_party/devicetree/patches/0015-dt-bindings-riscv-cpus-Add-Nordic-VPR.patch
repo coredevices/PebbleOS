@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 12:00:01 +0100
+Subject: [PATCH] dt-bindings: riscv: cpus: Add Nordic VPR
+
+Document the compatible of the Nordic VPR, the RISC-V core of the
+peripheral processors of the Nordic nRF54 series, such as the FLPR of
+the nRF54L15.
+
+These schemas are now used by PebbleOS, which runs on the FLPR.
+---
+ riscv/cpus.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/riscv/cpus.yaml b/riscv/cpus.yaml
+index 0da219a..84a0957 100644
+--- a/riscv/cpus.yaml
++++ b/riscv/cpus.yaml
+@@ -48,6 +48,7 @@ properties:
+               - amd,mbv64
+               - andestech,ax45mp
+               - canaan,k210
++              - nordic,vpr
+               - nuclei,ux900
+               - sifive,bullet0
+               - sifive,e5

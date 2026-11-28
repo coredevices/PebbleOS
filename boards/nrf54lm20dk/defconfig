@@ -1,5 +1,5 @@
 # nrf54lm20dk board configuration
 
-CONFIG_SOC_NRF54LM20A=y
+CONFIG_SOC_NRF54LM20A_CPUAPP=y
 
 CONFIG_UART=y

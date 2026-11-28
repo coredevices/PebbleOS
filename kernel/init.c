@@ -34,7 +34,9 @@ static void prv_main_entry(void *arg) {
 }
 
 void kernel_init(int (*entry)(void)) {
+#ifdef CONFIG_ARCH_HAS_MPU
   mpu_init();
+#endif
   arch_early_init();
   pbl_soc_early_init();
   pbl_irq_init();

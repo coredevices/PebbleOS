@@ -10,7 +10,6 @@ pbl_library_sources(
   init.c
   irq.c
   malloc.c
-  mpu.c
   mpu_region.c
   msgq.c
   mutex.c
@@ -30,6 +29,7 @@ pbl_library_sources(
   sys_work.c
   work.c
 )
+pbl_library_sources_ifdef(CONFIG_ARCH_HAS_MPU mpu.c)
 pbl_library_sources_ifdef(CONFIG_CPU_IDLE idle.c)
 if(CONFIG_CPU_IDLE)
   pbl_iterable_section(idle_hooks)

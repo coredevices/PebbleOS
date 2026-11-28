@@ -4,7 +4,7 @@
 if SOC_NRF54L
 
 choice NIMBLE_HCI
-    default NIMBLE_HCI_NRF_SDC
+    default NIMBLE_HCI_NRF_SDC if SOC_NRF54L_CPUAPP
 endchoice
 
 config FLASH_BASE

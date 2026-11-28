@@ -244,6 +244,8 @@
 			compatible = "nordic,nrf54lm20a-grtc", "nordic,nrf54l15-grtc";
 			reg = <0x500e2000 0x1000>;
 			interrupts = <228>;
+			clocks = <&clock NRF54L_CLOCK_LFCLK>;
+			nordic,compare-channel = <0>;
 		};
 
 		uart30: serial@50104000 {

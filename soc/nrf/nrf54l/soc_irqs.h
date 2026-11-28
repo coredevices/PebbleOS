@@ -1,7 +1,7 @@
 /* SPDX-FileCopyrightText: 2026 Core Devices LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-//! nRF54L IRQ lines of the application core.
+//! nRF54L IRQ lines, the same on every core.
 
 #pragma once
 

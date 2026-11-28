@@ -125,6 +125,12 @@ config KERNEL_PRINT_BUFFER_SIZE
       Buffer on the caller's stack that pbl_print() formats into. Text is cut
       at one byte less.
 
+config ARCH_HAS_MPU
+    bool
+    help
+      The architecture has an MPU, which the kernel programs with the
+      static regions and switches with each thread.
+
 config ARCH_HAS_COREDUMP
     bool
     help
@@ -292,3 +298,4 @@ endmenu
 
 rsource "arch/arm/Kconfig"
 rsource "arch/posix/Kconfig"
+rsource "arch/riscv/Kconfig"

@@ -1,10 +1,26 @@
 # SPDX-FileCopyrightText: 2026 Core Devices LLC
 # SPDX-License-Identifier: Apache-2.0
 
-config SOC_NRF54L15
-    bool "Nordic nRF54L15"
-    select SOC_NRF54L
+config SOC_NRF54L15_CPUAPP
+    bool "Nordic nRF54L15, application core"
+    select SOC_NRF54L15
+    select SOC_NRF54L_CPUAPP
+    help
+      The secure Cortex-M33 of the nRF54L15, which sets up the supply and
+      the clocks and starts the FLPR.
 
-config SOC_NRF54LM20A
-    bool "Nordic nRF54LM20A"
-    select SOC_NRF54L
+config SOC_NRF54L15_CPUFLPR
+    bool "Nordic nRF54L15, FLPR"
+    select SOC_NRF54L15
+    select SOC_NRF54L_CPUFLPR
+    help
+      The fast lightweight peripheral processor of the nRF54L15, a VPR
+      RISC-V core, which runs once the application core starts it, and
+      leaves the supply and the clocks to it.
+
+config SOC_NRF54LM20A_CPUAPP
+    bool "Nordic nRF54LM20A, application core"
+    select SOC_NRF54LM20A
+    select SOC_NRF54L_CPUAPP
+    help
+      The secure Cortex-M33 of the nRF54LM20A.

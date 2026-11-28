@@ -1,0 +1,4 @@
+# The FLPR, running from RAM, where the application core copies it to
+
+CONFIG_SOC_NRF54L15_CPUFLPR=y
+CONFIG_XIP=n

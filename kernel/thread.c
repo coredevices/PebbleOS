@@ -15,6 +15,7 @@ static uint32_t s_next_id;
 static const struct pbl_mpu_region *s_default_regions[PBL_THREAD_MAX_MEM_REGIONS];
 
 static void prv_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *const *regions) {
+#ifdef CONFIG_ARCH_HAS_MPU
   const struct pbl_mpu_region *merged[ARCH_THREAD_MPU_REGIONS] = {};
   for (unsigned int i = 0; i < PBL_THREAD_MAX_MEM_REGIONS; i++) {
     merged[i] = (regions != nullptr && regions[i] != nullptr) ? regions[i] : s_default_regions[i];
@@ -41,6 +42,10 @@ static void prv_regions_set(struct pbl_thread *t, const struct pbl_mpu_region *c
 #endif
 
   arch_thread_regions_set(t, merged);
+#else
+  (void)t;
+  (void)regions;
+#endif
 }
 
 int pbl_thread_create(struct pbl_thread *t, const struct pbl_thread_attr *attr) {

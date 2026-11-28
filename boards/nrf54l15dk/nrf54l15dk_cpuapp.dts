@@ -1,0 +1,58 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+/dts-v1/;
+
+// The kit as the application core runs it: the clocks, UARTE20 for its console, the external flash,
+// and the FLPR, which it copies to the top of the SRAM and starts
+
+#include "nordic/nrf54l15-qfaa.dtsi"
+#include "nordic/nrf54l15_cpuapp.dtsi"
+#include "nrf54l15dk.dtsi"
+
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		// The FLPR's, which it runs from
+		cpuflpr_sram: memory@20028000 {
+			reg = <0x20028000 0x18000>;
+			no-map;
+		};
+	};
+};
+
+&internal_flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "code";
+			reg = <0x0 0x165000>;
+		};
+
+		cpuflpr_code: partition@165000 {
+			label = "cpuflpr-code";
+			reg = <0x165000 0x18000>;
+		};
+	};
+};
+
+&cpuflpr_vpr {
+	nordic,firmware = <&cpuflpr_code>;
+	memory-region = <&cpuflpr_sram>;
+	nordic,auto-boot;
+	status = "okay";
+};
+
+&uart20 {
+	status = "okay";
+};
+
+&spi00 {
+	status = "okay";
+};

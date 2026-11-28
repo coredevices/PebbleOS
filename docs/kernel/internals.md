@@ -20,6 +20,7 @@ debug.c        thread walk, saved registers, stack and run-time stats
 kernel.h       the interface between the objects, the scheduler and the arch
 arch/arch.h    what an arch must provide
 arch/arm/      Cortex-M port: context switch, SVC, MPU, idle
+arch/riscv/    RISC-V port: trap entry, context switch, CLIC
 arch/posix/    host port: threads are pthreads, time is virtual; for tests
 kernel_test.h  harness entry points used by tests/kernel
 ```
@@ -119,6 +120,42 @@ returns to unprivileged code. Writing that section goes through the MPU on
 ARMv8-M, as `pbl_mpu_user_ro_write()` does, so PendSV only does it when
 switching to an unprivileged thread other than the last one, and a thread
 sets it when it first drops privilege.
+
+## RISC-V arch
+
+The port runs in machine mode, without an MPU (no `ARCH_HAS_MPU`) or
+unprivileged threads. It sticks to what the RISC-V specifications define;
+what a core does its own way comes in as capabilities its CPU option selects,
+and what the SoC adds, through `soc_riscv.h`, which the SoC provides:
+
+| Capability | Meaning |
+| --- | --- |
+| `RISCV_CLIC` | A CLIC, vectoring every line in hardware through `mtvt`. `RISCV_CLIC_INTCTL_BITS` and `RISCV_CLIC_IRQ_OFFSET` give the level bits it implements and the `mcause` code of its first line. |
+| `RISCV_HW_STACKING` | On an interrupt, the core stacks `ra`, `t0`-`t2` and `a0`-`a5`, then the `mcause` and `mepc` of the trap it was in. `mret` returns as the current `mcause` and `mepc` say, then takes them all back. Bit 0 of the stacked `mepc` tells that the core moved `sp` 4 bytes down first, to align the frame on 8. |
+| `RISCV_WFI_NEEDS_MIE` | The core only wakes from `wfi` with interrupts unmasked. |
+| `RISCV_SOC_CYCLE_COUNTER` | `mcycle` does not count: the SoC provides the cycle counter. |
+
+The trap entry (`kernel/arch/riscv/trap.S`) handles cores with a CLIC that
+stack in hardware. Every `mtvt` entry is the trap entry, which faults on
+exceptions and otherwise calls the line's `pbl_isr_<n>` from
+`arch_riscv_irq_table`, on the ISR stack for the outermost interrupt, with
+interrupts unmasked so that more urgent levels preempt it. The lowest CLIC
+level is the threads', which no interrupt preempts. `PBL_IRQ_CONNECT()`
+priorities map to the levels above the switch's, 0 the most urgent.
+
+The first level above the threads' is the thread switch's own, a line the SoC
+raises (`soc_riscv_switch_raise()`), as PendSV is on ARM: it only ever
+interrupts a thread, so every switched-out thread holds the frame the core
+stacked, with `s0`, `s1` and the `mepc` and `mcause` to return with below it,
+and `mret` resumes any of them. A new thread starts from such a context, made
+up. The kernel lock clears `mstatus.MIE`, masking every interrupt. A core may
+take the switch a few cycles after unmasking: a thread that unmasks with one
+pending waits for it (`soc_riscv_switch_pending()`), or it would run on past
+where it blocked.
+
+The Nordic VPR (`CPU_NORDIC_VPR`) has all four capabilities. Its SoC part,
+`soc/nrf/vpr`, raises the switch through a VEVIF task, the last one, and counts
+cycles with VTIM, its two 16-bit timers combined.
 
 ## POSIX arch and tests
 

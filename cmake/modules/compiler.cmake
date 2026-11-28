@@ -51,7 +51,6 @@ if(CONFIG_ARCH_POSIX)
 else()
   set(pbl_arch_flags
     -fvar-tracking-assignments
-    -mthumb
     -ffreestanding
     -ffunction-sections
     # let --gc-sections drop unreferenced const/data objects too
@@ -75,7 +74,32 @@ if(CONFIG_COMPILER_SAVE_TEMPS)
   list(APPEND pbl_arch_flags -save-temps=obj)
 endif()
 
+if(CONFIG_CPU_CORTEX_M)
+  list(APPEND pbl_arch_flags -mthumb)
+endif()
+
 if(CONFIG_ARCH_POSIX)
+elseif(CONFIG_RISCV)
+  if(CONFIG_RISCV_ISA_RV32E)
+    set(pbl_march rv32e)
+    set(pbl_mabi ilp32e)
+  else()
+    set(pbl_march rv32i)
+    set(pbl_mabi ilp32)
+  endif()
+  if(CONFIG_RISCV_ISA_EXT_M)
+    string(APPEND pbl_march m)
+  endif()
+  if(CONFIG_RISCV_ISA_EXT_A)
+    string(APPEND pbl_march a)
+  endif()
+  if(CONFIG_RISCV_ISA_EXT_C)
+    string(APPEND pbl_march c)
+  endif()
+  string(APPEND pbl_march _zicsr_zifencei)
+  # No gp-relative small data: the linker script has no small data sections
+  list(APPEND pbl_arch_flags -march=${pbl_march} -mabi=${pbl_mabi} -mcmodel=medany
+    -msmall-data-limit=0)
 elseif(CONFIG_CPU_STAR_MC1)
   set(pbl_cpu star-mc1)
 elseif(CONFIG_CPU_CORTEX_M33)

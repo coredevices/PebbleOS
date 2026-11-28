@@ -4,12 +4,36 @@
 config SOC_NRF54L
     bool
     select SOC_FAMILY_NRF
+    select NVMEM if SOC_NRF54L_CPUAPP
+    select TIMER_NRF_GRTC
+    help
+      Nordic nRF54L series, selected by its lines.
+
+config SOC_NRF54L15
+    bool
+    select SOC_NRF54L
+    help
+      Nordic nRF54L15, selected by its cores.
+
+config SOC_NRF54LM20A
+    bool
+    select SOC_NRF54L
+    help
+      Nordic nRF54LM20A, selected by its cores.
+
+config SOC_NRF54L_CPUAPP
+    bool
     select CPU_CORTEX_M33
     select CPU_HAS_FPU
     select SOC_HAS_POWER_OFF
     select SOC_HAS_UNIQUE_ID
-    select NVMEM
-    select TIMER_NRF_GRTC
+    select REMOTEPROC if DT_HAS_NORDIC_NRF54L15_VPR_ENABLED
     help
-      Nordic nRF54L series, selected by its lines. Runs on the secure
-      application core.
+      The secure application core of an nRF54L, which starts the FLPR
+      when its tree enables it.
+
+config SOC_NRF54L_CPUFLPR
+    bool
+    select CPU_NORDIC_VPR
+    help
+      The FLPR of an nRF54L, reaching the secure peripherals.

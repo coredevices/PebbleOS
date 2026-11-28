@@ -1,0 +1,69 @@
+// SPDX-FileCopyrightText: 2026 Core Devices LLC
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+
+// The nRF54L15 as its fast lightweight peripheral processor (FLPR), a VPR RISC-V core, sees it,
+// once the application core lets it reach the secure peripherals
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu1: cpu@1 {
+			compatible = "nordic,vpr", "riscv";
+			device_type = "cpu";
+			reg = <1>;
+			clock-frequency = <128000000>;
+			riscv,isa-base = "rv32e";
+			riscv,isa-extensions = "e", "m", "c", "zicsr", "zifencei";
+
+			cpu1_intc: interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <1>;
+			};
+		};
+	};
+
+	clic: interrupt-controller@f0000000 {
+		compatible = "nordic,vpr-clic";
+		reg = <0xf0000000 0x143c>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		#address-cells = <0>;
+	};
+};
+
+&soc {
+	interrupt-parent = <&clic>;
+};
+
+&gpiote20 {
+	interrupts = <218>;
+};
+
+&gpiote30 {
+	interrupts = <268>;
+};
+
+&grtc {
+	interrupts = <226>;
+	nordic,compare-channel = <3>;
+};
+
+// The application core's
+&clock {
+	status = "disabled";
+};
+
+&cracen {
+	status = "disabled";
+};
+
+&memconf {
+	status = "disabled";
+};
+
+&oscillators {
+	status = "disabled";
+};

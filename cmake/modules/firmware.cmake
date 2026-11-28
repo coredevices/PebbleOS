@@ -138,6 +138,10 @@ function(pbl_link_firmware)
   )
   get_property(link_options GLOBAL PROPERTY PBL_LINK_OPTIONS)
   target_link_options(pebbleos PRIVATE ${link_options})
+  if(NOT CONFIG_XIP)
+    # Code and data share the RAM the image runs from
+    target_link_options(pebbleos PRIVATE -Wl,--no-warn-rwx-segments)
+  endif()
   set_property(TARGET pebbleos APPEND PROPERTY LINK_DEPENDS ${ldscript})
   add_custom_target(pbl_linker_script DEPENDS ${ldscript})
   add_dependencies(pebbleos pbl_linker_script)
@@ -146,6 +150,13 @@ function(pbl_link_firmware)
   set(hex ${PROJECT_BINARY_DIR}/pebbleos.hex)
   set(bin ${PROJECT_BINARY_DIR}/pebbleos.bin)
   set(objcopy_args -S -R .stack -R .priv_bss -R .bss -R .retained)
+  # An image that runs from RAM is stored in its flash partition
+  set(hex_args "")
+  if(NOT CONFIG_XIP)
+    math(EXPR load_offset
+      "${CONFIG_FLASH_BASE} + ${CONFIG_FLASH_OFFSET} + ${CONFIG_FIRMWARE_OFFSET} - ${CONFIG_SRAM_BASE}")
+    set(hex_args --change-addresses=${load_offset})
+  endif()
 
   if(CONFIG_PBLBOOT)
     # The bootloader expects an image header ahead of the firmware.
@@ -169,7 +180,7 @@ function(pbl_link_firmware)
       WORKING_DIRECTORY ${PBL_BASE} VERBATIM)
   else()
     add_custom_command(OUTPUT ${hex}
-      COMMAND ${CMAKE_OBJCOPY} ${objcopy_args} -O ihex ${elf} ${hex}
+      COMMAND ${CMAKE_OBJCOPY} ${objcopy_args} ${hex_args} -O ihex ${elf} ${hex}
       DEPENDS pebbleos VERBATIM)
     add_custom_command(OUTPUT ${bin}
       COMMAND ${CMAKE_OBJCOPY} ${objcopy_args} -O binary ${elf} ${bin}

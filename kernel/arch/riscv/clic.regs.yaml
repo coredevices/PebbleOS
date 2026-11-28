@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Core Devices LLC
+# SPDX-License-Identifier: Apache-2.0
+
+# The interrupt controller of the core, up before there are devices
+config: RISCV_CLIC
+labels:
+  - clic
