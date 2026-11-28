@@ -36,6 +36,7 @@ config NIMBLE_HCI_SF32LB
     depends on DT_HAS_SIFLI_SF32LB52_LCPU_ENABLED || DT_HAS_SIFLI_SF32LB57_LCPU_ENABLED
     select REMOTEPROC
     select NIMBLE_HCI_HAS_BREDR
+    select NIMBLE_HCI_HAS_SCO if SOC_SF32LB52
     help
       Talk H4 HCI to the SiFli controller running on the LCPU, over the
       byte rings its ROM shares with the HCPU.
@@ -93,6 +94,11 @@ config NIMBLE_HCI_HAS_SCO
     bool
     help
       The transport carries synchronous data.
+
+config NIMBLE_HCI_SF32LB_SCO
+    bool
+    default y
+    depends on NIMBLE_HCI_SF32LB && NIMBLE_BLE_BREDR_SCO
 
 config NIMBLE_HCI_THREAD_STACK_SIZE
     int "HCI transport thread stack size in bytes"
