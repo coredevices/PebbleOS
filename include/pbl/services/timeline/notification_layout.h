@@ -121,6 +121,8 @@ typedef struct {
   TimelineItem *item;
   /** Whether to show how long ago the notification arrived. */
   bool show_notification_timestamp;
+  /** Shown as a popup, not in the Notifications app: its phone actions all still work. */
+  bool is_modal;
 } NotificationLayoutInfo;
 
 /** @brief A press-and-hold button under the notification text, on touch watches. */
@@ -132,10 +134,12 @@ typedef enum {
   NotificationPillArchive,
   /** Dismiss the notification. */
   NotificationPillDismiss,
+  /** A pill on a row of its own, labelled with notification_layout_pill_action's title. */
+  NotificationPillAction,
 } NotificationPill;
 
 /** @brief Most pills a notification shows. */
-#define NOTIFICATION_MAX_PILLS 2
+#define NOTIFICATION_MAX_PILLS 3
 
 /** @brief Notification and reminder layout; can be cast to a LayoutLayer. */
 typedef struct {
@@ -163,6 +167,8 @@ typedef struct {
   GRect pill_rects[NOTIFICATION_MAX_PILLS];
   /** Number of pills. */
   uint8_t num_pills;
+  /** Label of the NotificationPillAction pill; points into the item. */
+  const char *action_label;
   /** The pill being held, or NotificationPillNone. */
   NotificationPill held_pill;
   /** How far the held pill has filled, 0 to 100. */
@@ -215,6 +221,25 @@ static const TimelineResourceId REMINDER_FALLBACK_ICON = TIMELINE_RESOURCE_NOTIF
  * @return New layout, allocated on the calling task's heap.
  */
 LayoutLayer *notification_layout_create(const LayoutLayerConfig *config);
+
+/**
+ * @brief Whether a notification's action is offered (menu and pills): from the Notifications app
+ * an iOS notification's phone actions may be gone; an Android one acted on offers none.
+ * @param item The notification.
+ * @param action One of its actions.
+ * @param is_modal Shown as a popup, not in the Notifications app.
+ */
+bool notification_action_is_offered(const TimelineItem *item, const TimelineItemAction *action,
+                                    bool is_modal);
+
+/**
+ * @brief The action of a notification's labelled pill: Open chat for a chat, otherwise the first
+ * action of its menu that no other pill does (not Dismiss, Reply, Snooze or Postpone).
+ * @param item The notification.
+ * @param is_modal Shown as a popup, not in the Notifications app.
+ * @return The action, or nullptr when none is offered.
+ */
+TimelineItemAction *notification_layout_pill_action(const TimelineItem *item, bool is_modal);
 
 /**
  * @brief The pill under a point.

@@ -1,6 +1,7 @@
 /* SPDX-FileCopyrightText: 2024 Google LLC */
 /* SPDX-License-Identifier: Apache-2.0 */
 
+#include <pbl/pp/session.h>
 #include <pbl/services/blob_db/pin_db.h>
 #include <pbl/services/clock.h>
 #include <pbl/services/notifications/alerts_preferences_private.h>
@@ -14,6 +15,7 @@
 #include <pbl/util/testing.h>
 
 #include <applib/applib_malloc.auto.h>
+#include <applib/fonts/fonts.h>
 #include <applib/graphics/gdraw_command_image.h>
 #include <applib/graphics/gdraw_command_list.h>
 #include <applib/graphics/gtypes.h>
@@ -324,6 +326,19 @@ bool notification_layout_get_image_size(const LayoutLayer *layout_ref, GSize *si
 }
 #endif
 
+bool notification_action_is_offered(const TimelineItem *item, const TimelineItemAction *action,
+                                    bool is_modal) {
+  if (timeline_item_is_ancs_notif(item)) {
+    // A popup's notification is still in the iPhone's notification center, so all its actions
+    // work; from the Notifications app it may be gone, so only the watch's own actions are offered
+    return is_modal || !timeline_item_action_is_ancs(action);
+  }
+  // Android: none once acted on
+  return !item->header.actioned && !item->header.dismissed &&
+         (is_modal || pbl_pp_session_has_capability(pbl_pp_session_get_system(),
+                                                    PBL_PP_CAP_EXTENDED_NOTIFICATIONS));
+}
+
 #ifdef CONFIG_TOUCH
 #define PILL_HEIGHT 30
 #define PILL_GAP 6
@@ -333,8 +348,40 @@ static void prv_add_pill(NotificationLayout *layout, NotificationPill pill) {
   layout->pills[layout->num_pills++] = pill;
 }
 
-// Reply when the phone can reply; Archive for a Beeper chat, else Dismiss. Tapping the text opens
-// a Beeper chat.
+TimelineItemAction *notification_layout_pill_action(const TimelineItem *item, bool is_modal) {
+  TimelineItemAction *open_chat =
+      timeline_item_find_action_by_type(item, TimelineItemActionTypeOpenChat);
+  if (open_chat) {
+    return notification_action_is_offered(item, open_chat, is_modal) ? open_chat : nullptr;
+  }
+  // The menu lists Dismiss first, then the rest in item order; skip what other pills (Dismiss,
+  // Reply) or nothing (reminders' Snooze and Postpone, removals) stand for
+  for (int i = 0; i < item->action_group.num_actions; i++) {
+    TimelineItemAction *action = &item->action_group.actions[i];
+    switch (action->type) {
+      case TimelineItemActionTypeUnknown:
+      case TimelineItemActionTypeEmpty:
+      case TimelineItemActionTypeAncsNegative:
+      case TimelineItemActionTypeDismiss:
+      case TimelineItemActionTypeResponse:
+      case TimelineItemActionTypeAncsResponse:
+      case TimelineItemActionTypeSnooze:
+      case TimelineItemActionTypePostpone:
+      case TimelineItemActionTypeRemove:
+      case TimelineItemActionTypeRemoteRemove:
+        break;
+      default:
+        if (notification_action_is_offered(item, action, is_modal)) {
+          return action;
+        }
+        break;
+    }
+  }
+  return nullptr;
+}
+
+// Reply when the phone can reply; Archive for a chat, else Dismiss; then, on a row of its own,
+// Open chat for a chat, else the next action of the menu
 static void prv_init_pills(NotificationLayout *layout) {
   const TimelineItem *item = layout->info.item;
   layout->num_pills = 0;
@@ -344,10 +391,20 @@ static void prv_init_pills(NotificationLayout *layout) {
   if (timeline_item_find_reply_action(item)) {
     prv_add_pill(layout, NotificationPillReply);
   }
-  if (timeline_item_find_action_by_type(item, TimelineItemActionTypeOpenChat)) {
+  const TimelineItemAction *action = notification_layout_pill_action(item, layout->info.is_modal);
+  const bool is_chat = action && action->type == TimelineItemActionTypeOpenChat;
+  if (is_chat) {
     prv_add_pill(layout, NotificationPillArchive);
   } else if (timeline_item_find_dismiss_action(item)) {
     prv_add_pill(layout, NotificationPillDismiss);
+  }
+  layout->action_label =
+      action ? attribute_get_string(&action->attr_list, AttributeIdTitle, "") : "";
+  if (is_chat && !layout->action_label[0]) {
+    layout->action_label = "Open chat";
+  }
+  if (layout->action_label[0]) {
+    prv_add_pill(layout, NotificationPillAction);
   }
 }
 
@@ -360,7 +417,7 @@ static bool prv_recolor_mic(GDrawCommand *command, uint32_t index, void *context
 // The system's microphone and cross, and an archive box drawn to match them, in one color so the
 // icon can change as a pill fills
 static void prv_draw_pill_icon(GContext *ctx, NotificationLayout *layout, NotificationPill pill,
-                               GPoint c, GColor color) {
+                               GPoint c, int16_t w, GColor color) {
   switch (pill) {
     case NotificationPillReply:
       if (layout->mic_icon) {
@@ -392,28 +449,32 @@ static void prv_draw_pill_icon(GContext *ctx, NotificationLayout *layout, Notifi
       graphics_draw_line(ctx, GPoint(c.x - 3, c.y + 2), GPoint(c.x + 3, c.y + 2));
       break;
     }
+    case NotificationPillAction: {
+      GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+      const GRect text = GRect(c.x - w / 2 + PILL_HEIGHT / 2, c.y - 13, w - PILL_HEIGHT, 22);
+      graphics_context_set_text_color(ctx, color);
+      graphics_draw_text(ctx, layout->action_label, font, text, GTextOverflowModeTrailingEllipsis,
+                         GTextAlignmentCenter, nullptr);
+      break;
+    }
     case NotificationPillNone:
       break;
   }
 }
 
-// One row of pills under the text, so they share the first screen with a short message
-static void prv_pills_node_callback(GContext *ctx, const GRect *box,
-                                    const GTextNodeDrawConfig *config, bool render, GSize *size_out,
-                                    void *user_data) {
-  NotificationLayout *layout = user_data;
-  const int16_t row_h = PILL_TOP + PILL_HEIGHT;
-  int16_t band_h = row_h;
-  int16_t y = box->origin.y + PILL_TOP;
+// Lays out pills [first, first + count) on one row from row_top; returns the row's bottom
+static int16_t prv_pills_row(GContext *ctx, const GRect *box, const GTextNodeDrawConfig *config,
+                             bool render, NotificationLayout *layout, int first, int count,
+                             int16_t row_top) {
+  int16_t y = row_top + PILL_TOP;
 #if PBL_ROUND
   // Keep the row on one page: paging only knows how to break text
   if (config && config->paging && config->page_frame->size.h > 0) {
+    const int16_t row_h = PILL_TOP + PILL_HEIGHT;
     const int16_t page_h = config->page_frame->size.h;
-    const int16_t page_y =
-        config->origin_on_screen->y + box->origin.y - config->page_frame->origin.y;
+    const int16_t page_y = config->origin_on_screen->y + row_top - config->page_frame->origin.y;
     const int16_t into_page = (page_y > 0) ? (page_y % page_h) : 0;
     if (into_page && into_page + row_h > page_h) {
-      band_h += page_h - into_page;
       y += page_h - into_page;
     }
   }
@@ -434,10 +495,10 @@ static void prv_pills_node_callback(GContext *ctx, const GRect *box,
     }
   }
 #endif
-  const int16_t pill_w = (row_w - (layout->num_pills - 1) * PILL_GAP) / layout->num_pills;
+  const int16_t pill_w = (row_w - (count - 1) * PILL_GAP) / count;
   int16_t x = box->origin.x + (box->size.w - row_w) / 2;
   const GColor bg = layout->colors.bg_color;
-  for (int i = 0; i < layout->num_pills; i++) {
+  for (int i = first; i < first + count; i++) {
     const GRect pill = GRect(x, y, pill_w, PILL_HEIGHT);
     layout->pill_rects[i] = pill;
     x += pill_w + PILL_GAP;
@@ -450,7 +511,7 @@ static void prv_pills_node_callback(GContext *ctx, const GRect *box,
       graphics_context_set_stroke_width(ctx, 2);
       graphics_draw_round_rect(ctx, &pill, PILL_HEIGHT / 2);
       const GPoint center = grect_center_point(&pill);
-      prv_draw_pill_icon(ctx, layout, layout->pills[i], center, bg);
+      prv_draw_pill_icon(ctx, layout, layout->pills[i], center, pill_w, bg);
       if (fill_w > 0) {
         // The whole pill shape, clipped to how far it has filled
         const GRect saved_clip = ctx->draw_state.clip_box;
@@ -461,13 +522,34 @@ static void prv_pills_node_callback(GContext *ctx, const GRect *box,
         ctx->draw_state.clip_box = clip;
         graphics_context_set_fill_color(ctx, bg);
         graphics_fill_round_rect(ctx, &pill, PILL_HEIGHT / 2, GCornersAll);
-        prv_draw_pill_icon(ctx, layout, layout->pills[i], center, gcolor_legible_over(bg));
+        prv_draw_pill_icon(ctx, layout, layout->pills[i], center, pill_w,
+                           gcolor_legible_over(bg));
         ctx->draw_state.clip_box = saved_clip;
       }
     }
   }
+  return y + PILL_HEIGHT;
+}
+
+// A row of icon pills under the text, so they share the first screen with a short message, then
+// the labelled pill on a row of its own
+static void prv_pills_node_callback(GContext *ctx, const GRect *box,
+                                    const GTextNodeDrawConfig *config, bool render, GSize *size_out,
+                                    void *user_data) {
+  NotificationLayout *layout = user_data;
+  int16_t y = box->origin.y;
+  int first = 0;
+  while (first < layout->num_pills) {
+    int count = 1;
+    while (layout->pills[first] != NotificationPillAction && first + count < layout->num_pills &&
+           layout->pills[first + count] != NotificationPillAction) {
+      count++;
+    }
+    y = prv_pills_row(ctx, box, config, render, layout, first, count, y);
+    first += count;
+  }
   if (size_out) {
-    *size_out = GSize(box->size.w, band_h);
+    *size_out = GSize(box->size.w, y - box->origin.y);
   }
 }
 

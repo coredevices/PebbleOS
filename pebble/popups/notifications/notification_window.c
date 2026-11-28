@@ -556,7 +556,8 @@ PBL_T_STATIC LayoutLayer *prv_get_layout_handler(SwapLayer *swap_layer, int8_t r
   const LayoutId layout_id = (type == NotificationMobile) ? LayoutIdNotification : LayoutIdReminder;
   NotificationLayoutInfo layout_info = (NotificationLayoutInfo){
     .item = item,
-    .show_notification_timestamp = !prv_should_pop_due_to_inactivity()
+    .show_notification_timestamp = !prv_should_pop_due_to_inactivity(),
+    .is_modal = data->is_modal,
   };
   const LayoutLayerConfig config = {
     .frame = &data->window.layer.bounds,
@@ -688,24 +689,7 @@ static void prv_setup_reminder_watchdog(NotificationWindowData *data) {
 static bool prv_should_show_action_in_action_menu(NotificationWindowData *data,
                                                   const TimelineItem *item,
                                                   const TimelineItemAction *action) {
-  if (timeline_item_is_ancs_notif(item)) {
-    if (data->is_modal) {
-      // If we are in the modal popup show all available actions. We are fairly certain that the
-      // notification will still be in the notification center at this point so all ANCS actions
-      // should work
-      return true;
-    } else {
-      // If we are in the notifications app, only show non ANCS actions. Pre iOS9 we can't really
-      // know if the notification is still in the notification center or not, so we play it safe
-      // and only show non ANCS actions. Once iOS9 is more widespread we can look at updating this
-      return !timeline_item_action_is_ancs(action);
-    }
-  } else { // Android
-    // Show all actions unless the item has already been acted upon, in which case show none
-    return (!item->header.actioned && !item->header.dismissed &&
-            (data->is_modal || pbl_pp_session_has_capability(pbl_pp_session_get_system(),
-                                                             PBL_PP_CAP_EXTENDED_NOTIFICATIONS)));
-  }
+  return notification_action_is_offered(item, action, data->is_modal);
 }
 
 static bool prv_should_provide_action_menu_for_item(NotificationWindowData *data,
@@ -1105,6 +1089,9 @@ static void prv_perform_pill(NotificationWindowData *data, NotificationPill pill
     }
     case NotificationPillDismiss:
       break;
+    case NotificationPillAction:
+      action = notification_layout_pill_action(item, data->is_modal);
+      break;
     case NotificationPillNone:
       return;
   }
@@ -1168,22 +1155,6 @@ static void prv_press_handler(SwapLayer *swap_layer, bool pressed, GPoint point_
   }
 }
 
-// Tapping the text of a Beeper notification opens its chat; a tap on a pill does nothing
-static void prv_tap_handler(SwapLayer *swap_layer, GPoint point_on_screen, void *context) {
-  NotificationWindowData *data = context;
-  LayoutLayer *layout = swap_layer_get_current_layout(swap_layer);
-  TimelineItem *item = prv_get_current_notification(data);
-  if (!layout || !item || data->action_menu ||
-      notification_layout_pill_at(layout, prv_point_in_layout(layout, point_on_screen)) !=
-          NotificationPillNone) {
-    return;
-  }
-  TimelineItemAction *open_chat =
-      timeline_item_find_action_by_type(item, TimelineItemActionTypeOpenChat);
-  if (open_chat) {
-    timeline_actions_invoke_action(open_chat, item, nullptr, nullptr);
-  }
-}
 #endif
 
 static void prv_select_long_click_handler(ClickRecognizerRef recognizer, void *data) {
@@ -1533,7 +1504,6 @@ static void prv_init_notification_window(bool is_modal, bool allow_dismiss_all) 
 #endif
                              .interaction_handler = prv_interaction_handler,
 #ifdef CONFIG_TOUCH
-                             .tap_handler = prv_tap_handler,
                              .press_handler = prv_press_handler,
 #endif
                              .click_config_provider = prv_click_config_provider,
