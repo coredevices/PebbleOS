@@ -18,4 +18,8 @@ endchoice
 config NIMBLE_BLE_TRANSPORT_ACL_COUNT
     default 36 if NIMBLE_HCI_SF32LB
 
+# BR/EDR events take up to the largest size HCI allows.
+config NIMBLE_BLE_TRANSPORT_EVT_SIZE
+    default 257 if NIMBLE_BLE_BREDR
+
 endif # NIMBLE

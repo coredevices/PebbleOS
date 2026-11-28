@@ -20,6 +20,11 @@
 # listing.
 
 booleans:
+  # nimble/host, BR/EDR
+  - BLE_BREDR
+  - BLE_BREDR_HFP_HF
+  - BLE_BREDR_SCO
+
   # nimble (core)
   - BLE_CHANNEL_SOUNDING
   - BLE_CONN_SUBRATING

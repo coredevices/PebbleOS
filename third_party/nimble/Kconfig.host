@@ -573,4 +573,59 @@ config NIMBLE_BLE_ISO_MAX_BISES
 
 endmenu
 
+menu "BR/EDR"
+
+config NIMBLE_BLE_BREDR
+    bool "BR/EDR (Bluetooth Classic) support in the host"
+    depends on NIMBLE_HCI_HAS_BREDR
+    help
+      Enables BR/EDR (Bluetooth Classic) support in the host, next to
+      LE, on a dual-mode controller.
+
+config NIMBLE_BLE_BREDR_MAX_CONNECTIONS
+    int "Maximum number of concurrent BR/EDR ACL connections"
+    default 1
+
+config NIMBLE_BLE_BREDR_MAX_LINK_KEYS
+    int "Number of BR/EDR link keys the host keeps"
+    default 2
+
+config NIMBLE_BLE_BREDR_L2CAP_MAX_CHANS
+    int "Number of BR/EDR L2CAP channels, over all connections"
+    default 4
+
+config NIMBLE_BLE_BREDR_L2CAP_MTU
+    int "Largest SDU the host accepts on a BR/EDR L2CAP channel"
+    default 672
+
+config NIMBLE_BLE_BREDR_SDP_MAX_RECORDS
+    int "Number of service records the SDP server can hold"
+    default 2
+
+config NIMBLE_BLE_BREDR_RFCOMM_MAX_DLCS
+    int "Number of RFCOMM data link connections"
+    default 2
+
+config NIMBLE_BLE_BREDR_RFCOMM_MTU
+    int "Largest RFCOMM frame payload the host accepts"
+    default 127
+
+config NIMBLE_BLE_BREDR_SCO
+    bool "Synchronous (SCO and eSCO) connections"
+    depends on NIMBLE_BLE_BREDR && NIMBLE_HCI_HAS_SCO
+
+config NIMBLE_BLE_BREDR_HFP_HF
+    bool "Hands-Free role of the Hands-Free Profile"
+    depends on NIMBLE_BLE_BREDR_SCO
+    help
+      NimBLE restrictions, which Kconfig does not enforce:
+        - BLE_BREDR if 1
+        - BLE_BREDR_SCO if 1
+
+config NIMBLE_BLE_BREDR_HFP_HF_RFCOMM_CHANNEL
+    int "RFCOMM server channel of the Hands-Free service"
+    default 1
+
+endmenu
+
 endmenu

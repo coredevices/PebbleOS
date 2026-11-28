@@ -2,6 +2,8 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include "hci_alloc.h"
+#include "sf32lb_ring.h"
+#include "sf32lb_sco.h"
 
 #include <errno.h>
 #include <stdatomic.h>
@@ -61,21 +63,6 @@ PBL_LOG_MODULE_DECLARE(nimble, CONFIG_NIMBLE_LOG_LEVEL);
 static const uint8_t s_nvds_defaults[] = {0x12U, 0x01U, 0x01U, 0x2fU, 0x04U, 0x20U,
                                           0x00U, 0x00U, 0x00U, 0x15U, 0x01U, 0x01U};
 
-// HCI ring layout, fixed by the LCPU ROM. Indexes: offset in the upper half, a mirror flag
-// toggled on each wrap in the lower half (same offset: empty if mirrors match, full otherwise).
-struct ring {
-  uint32_t rd_buf;
-  uint32_t wr_buf;
-  uint32_t rd_idx;
-  uint32_t wr_idx;
-  int16_t size;
-};
-
-static_assert(sizeof(struct ring) == 20U);
-
-#define RING_IDX_MASK    PBL_GENMASK(31, 16)
-#define RING_MIRROR_MASK PBL_GENMASK(15, 0)
-
 #define RING_POOL_SIZE(region_size) (((region_size) - sizeof(struct ring)) & ~3U)
 
 // LCPU to HCPU ring, in the LCPU SRAM region
@@ -110,31 +97,8 @@ static inline volatile struct ring *prv_rx(void) {
   return (volatile struct ring *)(pbl_rproc_sf32lb_get_sram(BT_CONTROLLER)->base + RX_RING_OFFSET);
 }
 
-static uint32_t prv_ring_used(uint32_t rd, uint32_t wr, uint32_t size) {
-  uint32_t rd_idx = PBL_FIELD_GET(RING_IDX_MASK, rd);
-  uint32_t wr_idx = PBL_FIELD_GET(RING_IDX_MASK, wr);
-
-  if (rd_idx == wr_idx) {
-    return ((rd ^ wr) & RING_MIRROR_MASK) == 0U ? 0U : size;
-  }
-
-  return (wr_idx > rd_idx) ? (wr_idx - rd_idx) : (size - (rd_idx - wr_idx));
-}
-
-static uint32_t prv_ring_advance(uint32_t ptr, uint32_t len, uint32_t size) {
-  uint32_t idx = PBL_FIELD_GET(RING_IDX_MASK, ptr) + len;
-  uint32_t mirror = PBL_FIELD_GET(RING_MIRROR_MASK, ptr);
-
-  if (idx >= size) {
-    idx -= size;
-    mirror ^= RING_MIRROR_MASK;
-  }
-
-  return PBL_FIELD_PREP(RING_IDX_MASK, idx) | mirror;
-}
-
 static bool prv_ring_empty(volatile struct ring *ring) {
-  return prv_ring_used(ring->rd_idx, ring->wr_idx, (uint32_t)ring->size) == 0U;
+  return nimble_hci__ring_used(ring->rd_idx, ring->wr_idx, (uint32_t)ring->size) == 0U;
 }
 
 static void prv_ring_reset_tx(void) {
@@ -154,7 +118,7 @@ static size_t prv_ring_put(volatile struct ring *ring, const uint8_t *data, size
   uint32_t wr = ring->wr_idx;
   uint32_t idx = PBL_FIELD_GET(RING_IDX_MASK, wr);
   uint8_t *pool = (uint8_t *)ring->wr_buf;
-  uint32_t space = size - prv_ring_used(ring->rd_idx, wr, size);
+  uint32_t space = size - nimble_hci__ring_used(ring->rd_idx, wr, size);
   size_t first;
 
   len = PBL_MIN(len, space);
@@ -169,7 +133,7 @@ static size_t prv_ring_put(volatile struct ring *ring, const uint8_t *data, size
   memcpy(pool, &data[first], len - first);
 
   pbl_wmb();
-  ring->wr_idx = prv_ring_advance(wr, len, size);
+  ring->wr_idx = nimble_hci__ring_advance(wr, len, size);
 
   return len;
 }
@@ -192,7 +156,7 @@ static size_t prv_ring_peek(const uint8_t **data) {
     return 0U;
   }
 
-  used = prv_ring_used(rd, wr, size);
+  used = nimble_hci__ring_used(rd, wr, size);
   if (used == 0U) {
     return 0U;
   }
@@ -210,8 +174,8 @@ static void prv_ring_consume(size_t len) {
   pbl_mb();
 
   pbl_irq_lock();
-  s_rx_pending = prv_ring_used(rx->rd_idx, rx->wr_idx, size) - len;
-  rx->rd_idx = prv_ring_advance(rx->rd_idx, len, size);
+  s_rx_pending = nimble_hci__ring_used(rx->rd_idx, rx->wr_idx, size) - len;
+  rx->rd_idx = nimble_hci__ring_advance(rx->rd_idx, len, size);
   pbl_irq_unlock();
 }
 
@@ -231,7 +195,7 @@ static void prv_set_busy(bool busy) {
 static void prv_mbox_rx(const struct pbl_mbox_client *cl, const void *msg) {
   volatile struct ring *rx = prv_rx();
 
-  s_rx_pending = prv_ring_used(rx->rd_idx, rx->wr_idx, (uint32_t)rx->size);
+  s_rx_pending = nimble_hci__ring_used(rx->rd_idx, rx->wr_idx, (uint32_t)rx->size);
   pbl_sem_give(&s_hci_data_ready);
 }
 
@@ -269,7 +233,7 @@ static int prv_tx_begin(size_t len) {
 
   pbl_mutex_lock(&s_tx_lock, PBL_FOREVER);
 
-  while (size - prv_ring_used(tx->rd_idx, tx->wr_idx, size) < len) {
+  while (size - nimble_hci__ring_used(tx->rd_idx, tx->wr_idx, size) < len) {
     if (pbl_uptime_ms() - start >= HCI_WRITE_TIMEOUT_MS) {
       pbl_mutex_unlock(&s_tx_lock);
       return -ETIMEDOUT;
@@ -313,6 +277,10 @@ static int prv_hci_frame_cb(uint8_t pkt_type, void *data) {
           break;
         }
       }
+
+#ifdef CONFIG_NIMBLE_BLE_BREDR_SCO
+      nimble_hci__sf32lb_sco_event(ev);
+#endif
 
       return ble_transport_to_hs_evt(data);
     case HCI_H4_ACL:
@@ -384,8 +352,18 @@ static void prv_lcpu_boot(void) {
   pbl_sem_give(&s_lcpu_ready);
 }
 
+#ifdef CONFIG_NIMBLE_BLE_BREDR_SCO
+void nimble_hci__sf32lb_wake(void) {
+  pbl_sem_give(&s_hci_data_ready);
+}
+#endif
+
 static void prv_hci_task_main(void *unused) {
   prv_lcpu_boot();
+
+#ifdef CONFIG_NIMBLE_BLE_BREDR_SCO
+  nimble_hci__sf32lb_sco_init();
+#endif
 
   while (true) {
     const uint8_t *data;
@@ -405,6 +383,10 @@ static void prv_hci_task_main(void *unused) {
 
       prv_ring_consume((size_t)consumed);
     }
+
+#ifdef CONFIG_NIMBLE_BLE_BREDR_SCO
+    nimble_hci__sf32lb_sco_poll();
+#endif
   }
 }
 

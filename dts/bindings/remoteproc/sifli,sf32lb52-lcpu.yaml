@@ -43,11 +43,15 @@ properties:
     items:
       - description: Doorbell to the LCPU
       - description: Doorbell from the LCPU
+      - description: Doorbell to the LCPU, for the audio of calls
+      - description: Doorbell from the LCPU, for the audio of calls
 
   mbox-names:
     items:
       - const: tx
       - const: rx
+      - const: audio-tx
+      - const: audio-rx
 
   memory-region:
     description: HCPU memory holding the HCPU to LCPU ring.
@@ -152,8 +156,8 @@ examples:
         #size-cells = <1>;
         dma-ranges = <0x00400000 0x20400000 0x10000>,
                      <0x2a000000 0x20000000 0x80000>;
-        mboxes = <&mailbox1 0>, <&mailbox2 0>;
-        mbox-names = "tx", "rx";
+        mboxes = <&mailbox1 0>, <&mailbox2 0>, <&mailbox1 6>, <&mailbox2 6>;
+        mbox-names = "tx", "rx", "audio-tx", "audio-rx";
         memory-region = <&lcpu_ipc>;
         sram = <&lcpu_sram>;
         clocks = <&lpsys_rcc 1>, <&lpsys_rcc 2>, <&lpsys_rcc 3>, <&rtc>;

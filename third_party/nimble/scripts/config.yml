@@ -82,6 +82,13 @@ areas:
 #
 # `depends` is what the port needs for an option, as a Kconfig expression.
 overrides:
+  # A second transport of the controller, and a way for its audio to the host.
+  BLE_BREDR:
+    depends: "NIMBLE_HCI_HAS_BREDR"
+  BLE_BREDR_SCO:
+    depends: "NIMBLE_BLE_BREDR && NIMBLE_HCI_HAS_SCO"
+  BLE_BREDR_HFP_HF:
+    depends: "NIMBLE_BLE_BREDR_SCO"
   # The store persists with any backend but the RAM one.
   BLE_STORE_CONFIG_PERSIST:
     depends: "!NIMBLE_STORE_BACKEND_RAM"

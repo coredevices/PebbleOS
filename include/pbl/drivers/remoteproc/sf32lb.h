@@ -22,7 +22,8 @@
  * calibrates on start. The controller exchanges HCI with the HCPU over byte rings signalled with
  * a pair of doorbells; the LCPU to HCPU ring sits in LPSYS RAM, the HCPU to LCPU one in HCPU RAM
  * reserved for it, whose address the driver hands to the ROM. The HCI transport takes the
- * doorbells and the region from here.
+ * doorbells and the region from here. The audio of calls goes through rings of its own, in LPSYS
+ * RAM, with a second pair of doorbells.
  * @{
  */
 
@@ -46,6 +47,10 @@ struct pbl_rproc_sf32lb {
   struct pbl_mbox_chan tx_chan;
   /** Doorbell from the LCPU (@c mboxes entry @c rx). */
   struct pbl_mbox_chan rx_chan;
+  /** Audio doorbell to the LCPU (@c mboxes entry @c audio-tx). */
+  struct pbl_mbox_chan audio_tx_chan;
+  /** Audio doorbell from the LCPU (@c mboxes entry @c audio-rx). */
+  struct pbl_mbox_chan audio_rx_chan;
   /** HCPU RAM reserved for the HCPU to LCPU ring (@c memory-region). */
   struct pbl_mem_region mem;
   /** LPSYS SRAM region the LCPU works in (@c sram). */
@@ -143,6 +148,22 @@ const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_tx_chan(const struct pbl_rproc 
  */
 const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_rx_chan(const struct pbl_rproc *rproc);
 
+/**
+ * @brief Get the audio doorbell to the LCPU.
+ *
+ * @param rproc LCPU.
+ * @return The channel (@c mboxes entry @c audio-tx).
+ */
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_audio_tx_chan(const struct pbl_rproc *rproc);
+
+/**
+ * @brief Get the audio doorbell from the LCPU.
+ *
+ * @param rproc LCPU.
+ * @return The channel (@c mboxes entry @c audio-rx).
+ */
+const struct pbl_mbox_chan *pbl_rproc_sf32lb_get_audio_rx_chan(const struct pbl_rproc *rproc);
+
 /** @cond INTERNAL_HIDDEN */
 extern const struct pbl_rproc_ops pbl_rproc_sf32lb_ops;
 int pbl_rproc_sf32lb_init(const struct pbl_device *dev);
@@ -165,6 +186,8 @@ void pbl_rproc_sf32lb_coredump_prepare(void);
  * @param _patch_base ROM patch controller base address.
  * @param _tx_chan Doorbell to the LCPU, from PBL_MBOX_CHAN().
  * @param _rx_chan Doorbell from the LCPU, from PBL_MBOX_CHAN().
+ * @param _audio_tx_chan Audio doorbell to the LCPU, from PBL_MBOX_CHAN().
+ * @param _audio_rx_chan Audio doorbell from the LCPU, from PBL_MBOX_CHAN().
  * @param _mem_base Base of the HCPU RAM reserved for the HCPU to LCPU ring.
  * @param _mem_size Its size, in bytes.
  * @param _sram_base Base of the LPSYS SRAM region the LCPU works in.
@@ -179,15 +202,17 @@ void pbl_rproc_sf32lb_coredump_prepare(void);
  * @param _pclk LPSYS APB clock, from PBL_CLK().
  * @param _pclk2 LPSYS second APB clock, from PBL_CLK().
  */
-#define PBL_RPROC_SF32LB_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _mem_base, _mem_size, \
-                                _sram_base, _sram_size, _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa,  \
-                                _r1_size, _hclk, _pclk, _pclk2, _lpclk, _rfc, _phy, _capture,      \
-                                _mac, _gpadc, _dmac, _lpsys_rcc, _hpsys_cfg, _pmuc, _cal)          \
+#define PBL_RPROC_SF32LB_DEFINE(sym, _name, _patch_base, _tx_chan, _rx_chan, _audio_tx_chan,       \
+                                _audio_rx_chan, _mem_base, _mem_size, _sram_base, _sram_size,      \
+                                _r0_da, _r0_pa, _r0_size, _r1_da, _r1_pa, _r1_size, _hclk, _pclk,  \
+                                _pclk2, _lpclk, _rfc, _phy, _capture, _mac, _gpadc, _dmac,         \
+                                _lpsys_rcc, _hpsys_cfg, _pmuc, _cal)                               \
   PBL_RPROC_SF32LB_COREDUMP_DEFINE(sym, _sram_base, _sram_size);                                   \
   PBL_RPROC_STATE_DEFINE(sym);                                                                     \
   PBL_DEVICE_INSTANCE(sym, struct pbl_rproc_sf32lb, struct pbl_rproc, rproc) {                     \
     .rproc = PBL_RPROC_INIT(sym, _name, pbl_rproc_sf32lb_init, nullptr, &pbl_rproc_sf32lb_ops),    \
     .patch_base = _patch_base, .tx_chan = _tx_chan, .rx_chan = _rx_chan,                           \
+    .audio_tx_chan = _audio_tx_chan, .audio_rx_chan = _audio_rx_chan,                              \
     .mem = PBL_MEM_REGION(_mem_base, _mem_size), .sram = PBL_MEM_REGION(_sram_base, _sram_size),   \
     .ranges = {{(_r0_da), (_r0_pa), (_r0_size)}, {(_r1_da), (_r1_pa), (_r1_size)}}, .hclk = _hclk, \
     .pclk = _pclk, .pclk2 = _pclk2, .lpclk = _lpclk,                                               \
