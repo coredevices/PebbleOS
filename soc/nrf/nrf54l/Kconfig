@@ -29,3 +29,9 @@ config SOC_NRF54L_CPUAPP
     select SOC_HAS_UNIQUE_ID
     help
       The secure application core of an nRF54L.
+
+config SOC_NRF54L_CPUFLPR
+    bool
+    select CPU_NORDIC_VPR
+    help
+      The FLPR of an nRF54L, reaching the secure peripherals.

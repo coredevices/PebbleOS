@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gerard Marull-Paretas <gerard@teslabs.com>
+Date: Fri, 27 Nov 2026 12:00:00 +0100
+Subject: [PATCH] dt-bindings: riscv: Add the RV32E base
+
+Allow rv32e as the base ISA of a hart, and the "e" extension it comes
+with: the base integer instruction set with 16 registers, which small
+cores such as microcontroller coprocessors implement.
+
+These schemas are now used by PebbleOS, which runs on a Nordic VPR, an
+RV32EMC core.
+---
+ riscv/extensions.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/riscv/extensions.yaml b/riscv/extensions.yaml
+index 577d7ae..8402e27 100644
+--- a/riscv/extensions.yaml
++++ b/riscv/extensions.yaml
+@@ -50,6 +50,7 @@ properties:
+       The base ISA implemented by this hart, as described by the 20191213
+       version of the unprivileged ISA specification.
+     enum:
++      - rv32e
+       - rv32i
+       - rv64i
+ 
+@@ -69,6 +70,11 @@ properties:
+             the Zicntr and Zihpm extensions after the ratification of the
+             20191213 version of the unprivileged specification.
+ 
++        - const: e
++          description: |
++            The base integer instruction set with 16 registers, as ratified in
++            the 20191213 version of the unprivileged ISA specification.
++
+         - const: m
+           description:
+             The standard M extension for integer multiplication and division, as

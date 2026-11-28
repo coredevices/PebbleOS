@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 
 // The blocks the cores share, at the secure addresses of the peripherals. What a core has of its
-// own, and the interrupts as it sees them, come from the tree of the core, such as
-// nrf54l15_cpuapp.dtsi.
+// own, and the interrupts as it sees them, come from nrf54l15_cpuapp.dtsi or nrf54l15_cpuflpr.dtsi.
 
 #include <dt-bindings/clock/nordic,nrf54l15-clock.h>
 #include <dt-bindings/gpio/gpio.h>

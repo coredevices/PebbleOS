@@ -60,3 +60,9 @@
 0013-dt-bindings-usb-dwc2-Add-Nordic-nRF54LM20A-USBHS.patch:
   type: permanent
   reason: Upstream describes no nRF54L part.
+0014-dt-bindings-riscv-Add-the-RV32E-base.patch:
+  type: temporary
+  status: not-submitted
+0015-dt-bindings-riscv-cpus-Add-Nordic-VPR.patch:
+  type: temporary
+  status: not-submitted
