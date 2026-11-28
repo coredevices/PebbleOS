@@ -11,6 +11,26 @@ watch's debug UART, a reset line and, optionally, power to charge it.
 :Runners: `sftool`, `probe-rs`
 :Design files: [coredevices/pblprog-sifli](https://github.com/coredevices/pblprog-sifli) (MIT)
 
+## Versions
+
+There are two versions of the board. Confusingly, we have an older board
+also called rev.1, so go by the colour and the silkscreen, not the revision
+number:
+
+| | Current board (R1) | Older board (rev.1) |
+| --- | --- | --- |
+| Colour | Green | Blue |
+| Silkscreen | `pebble` logo, `pblprog-sifli-board r1` | `pblprog-sifli rev.1`, no logo |
+| Reset button | `RST` | `RESET` |
+| Charge switch | `<<CHG` | `ON<-CHG->OFF` |
+| Flex cable | `pblprog-sifli-flex` | `pblprog-sifli debug connect fpc V1.0` |
+
+The rest of this page describes the current green R1 board.
+
+### R1 (current, green)
+
+The current board, marked `pblprog-sifli-board r1`.
+
 ::::{grid} 1 1 2 2
 :gutter: 2
 
@@ -23,6 +43,43 @@ pblprog-sifli-board
 :::{grid-item}
 ```{figure} images/pblprog-sifli-flex.webp
 pblprog-sifli-flex
+```
+:::
+
+::::
+
+### rev.1 (older, blue)
+
+The older board, marked `pblprog-sifli rev.1`, with the
+`pblprog-sifli debug connect fpc V1.0` flex cable. Despite the similar
+name, it is not the same board as the green R1.
+
+::::{grid} 1 1 2 2
+:gutter: 2
+
+:::{grid-item}
+```{figure} images/pblprog-sifli-rev1-board.webp
+pblprog-sifli rev.1
+```
+:::
+
+:::{grid-item}
+```{figure} images/pblprog-sifli-rev1-connected.webp
+pblprog-sifli rev.1 connected to a watch
+```
+:::
+
+:::{grid-item}
+:columns: 12
+```{figure} images/pblprog-sifli-rev1-back.webp
+pblprog-sifli rev.1 connected to a watch, back of the board
+```
+:::
+
+:::{grid-item}
+:columns: 12
+```{figure} images/pblprog-sifli-rev1-flex.webp
+pblprog-sifli debug connect fpc V1.0
 ```
 :::
 

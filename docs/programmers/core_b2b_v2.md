@@ -66,6 +66,10 @@ provided
 
 The board page explains how to connect it: {doc}`../boards/asterix/index`.
 
+```{figure} images/core-b2b-v2-connected.webp
+Core B2B v2 connected to an asterix (Pebble 2 Duo) board
+```
+
 ## Troubleshooting
 
 - If the watch cannot be programmed, check the switches; they sometimes
